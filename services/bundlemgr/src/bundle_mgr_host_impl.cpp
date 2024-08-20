@@ -36,6 +36,8 @@
 #include "bundle_active_period_stats.h"
 #endif
 #include "system_ability_definition.h"
+#include "scope_guard.h"
+#include "xcollie_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -44,6 +46,16 @@ constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
 constexpr const char* APP_LINKING = "applinking";
 constexpr const char* EMPTY_ABILITY_NAME = "";
+const std::string FUNCATION_GET_NAME_FOR_UID = "BundleMgrHostImpl::GetNameForUid";
+const std::string FUNCATION_GET_OVERLAY_MANAGER_PROXY = "BundleMgrHostImpl::GetOverlayManagerProxy";
+const std::string FUNCATION_GET_BUNDLE_RESOURCE_PROXY = "BundleMgrHostImpl::GetBundleResourceProxy";
+const std::string FUNCATION_VERIFY_SYSTEM_API = "BundleMgrHostImpl::VerifySystemApi";
+const std::string FUNCATION_VERIFY_CALLING_PERMISSION = "BundleMgrHostImpl::VerifyCallingPermission";
+const std::string FUNCATION_GET_CLONE_BUNDLE_INFO = "BundleMgrHostImpl::GetCloneBundleInfo";
+const std::string FUNCATION_GET_SHARED_BUNDLE_INFO_BY_SELF = "BundleMgrHostImpl::GetSharedBundleInfoBySelf";
+const std::string FUNCATION_GET_HAP_MODULE_INFO = "BundleMgrHostImpl::GetHapModuleInfo";
+const std::string FUNCATION_BATCH_BUNDLE_INFO = "BundleMgrHostImpl::BatchGetBundleInfo";
+const std::string FUNCATION_GET_BUNDLE_INFO = "BundleMgrHostImpl::GetBundleInfo";
 }
 
 bool BundleMgrHostImpl::GetApplicationInfo(
@@ -173,6 +185,8 @@ bool BundleMgrHostImpl::GetBundleInfo(
     LOG_D(BMS_TAG_QUERY,
         "start GetBundleInfo, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         bundleName.c_str(), flags, userId);
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_BUNDLE_INFO);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     // API9 need to be system app
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
@@ -257,6 +271,8 @@ ErrCode BundleMgrHostImpl::BatchGetBundleInfo(const std::vector<std::string> &bu
 {
     APP_LOGI("start BatchGetBundleInfo, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         BundleUtil::ToString(bundleNames).c_str(), flags, userId);
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_BATCH_BUNDLE_INFO);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED})) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -505,6 +521,8 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start GetNameForUid, uid : %{public}d", uid);
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_NAME_FOR_UID);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
@@ -1179,6 +1197,8 @@ bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t
 {
     APP_LOGD("start GetHapModuleInfo with bundleName %{public}s and userId: %{public}d",
         abilityInfo.bundleName.c_str(), userId);
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_HAP_MODULE_INFO);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::IsBundleSelfCalling(abilityInfo.bundleName)) {
         APP_LOGE("verify permission failed");
@@ -2680,6 +2700,8 @@ std::string BundleMgrHostImpl::GetAppPrivilegeLevel(const std::string &bundleNam
 bool BundleMgrHostImpl::VerifyCallingPermission(const std::string &permission)
 {
     APP_LOGD("VerifyCallingPermission begin");
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_VERIFY_CALLING_PERMISSION);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     return BundlePermissionMgr::VerifyCallingPermissionForAll(permission);
 }
 
@@ -3119,6 +3141,8 @@ sptr<IQuickFixManager> BundleMgrHostImpl::GetQuickFixManagerProxy()
 sptr<IOverlayManager> BundleMgrHostImpl::GetOverlayManagerProxy()
 {
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_OVERLAY_MANAGER_PROXY);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetOverlayManagerProxy();
 #else
     return nullptr;
@@ -3262,6 +3286,8 @@ ErrCode BundleMgrHostImpl::SetDebugMode(bool isDebug)
 bool BundleMgrHostImpl::VerifySystemApi(int32_t beginApiVersion)
 {
     APP_LOGD("begin to verify system app");
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_VERIFY_SYSTEM_API);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     return BundlePermissionMgr::VerifySystemApp(beginApiVersion);
 }
 
@@ -3351,6 +3377,8 @@ ErrCode BundleMgrHostImpl::GetSharedBundleInfoBySelf(const std::string &bundleNa
     SharedBundleInfo &sharedBundleInfo)
 {
     APP_LOGD("begin to GetSharedBundleInfoBySelf bundleName: %{public}s", bundleName.c_str());
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_SHARED_BUNDLE_INFO_BY_SELF);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -3768,6 +3796,8 @@ ErrCode BundleMgrHostImpl::CreateBundleDataDir(int32_t userId)
 sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_BUNDLE_RESOURCE_PROXY);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleResourceProxy();
 #else
     return nullptr;
@@ -4105,6 +4135,8 @@ ErrCode BundleMgrHostImpl::QueryCloneAbilityInfo(const ElementName &element,
 ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int32_t flags,
     int32_t appIndex, BundleInfo &bundleInfo, int32_t userId)
 {
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_CLONE_BUNDLE_INFO);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
