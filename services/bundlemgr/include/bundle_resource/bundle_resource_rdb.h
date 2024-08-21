@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class BundleResourceRdb : public std::enable_shared_from_this<BundleResourceRdb> {
+class BundleResourceRdb {
 public:
     BundleResourceRdb();
     ~BundleResourceRdb();
@@ -79,11 +79,7 @@ private:
     void ParseKey(const std::string &key,
         BundleResourceInfo &bundleResourceInfo);
 
-    void BackupRdb();
-
     std::shared_ptr<RdbDataManager> rdbDataManager_;
-
-    std::atomic_bool isBackingUp_ = false;
 
 #define CHECK_RDB_RESULT_RETURN_IF_FAIL(errcode, errmsg)                           \
     do {                                                                           \

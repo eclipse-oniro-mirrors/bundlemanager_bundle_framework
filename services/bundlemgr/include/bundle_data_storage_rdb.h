@@ -40,10 +40,7 @@ private:
         std::map<std::string, InnerBundleInfo> &infos);
     void UpdateDataBase(std::map<std::string, InnerBundleInfo> &infos);
 
-    void BackupRdb();
-
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
-    std::atomic_bool isBackingUp_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
