@@ -20,6 +20,7 @@
 #include "bundle_util.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -109,7 +110,9 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
     int32_t publishUserId = (bundleUserId == Constants::DEFAULT_USERID) ?
         AccountHelper::GetCurrentActiveUserId() : bundleUserId;
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId);
+    IPCSkeleton::SetCallingIdentity(identity);
 }
 
 void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBundleEvents &installResult)
@@ -163,7 +166,9 @@ ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
     publishInfo.SetSubscriberPermissions(permissionVec);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+    IPCSkeleton::SetCallingIdentity(identity);
     return ERR_OK;
 }
 
@@ -183,7 +188,9 @@ void BundleCommonEventMgr::NotifyOverlayModuleStateStatus(const std::string &bun
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
     publishInfo.SetSubscriberPermissions(permissionVec);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+    IPCSkeleton::SetCallingIdentity(identity);
 }
 
 std::string BundleCommonEventMgr::GetCommonEventData(const NotifyType &type)
@@ -209,7 +216,9 @@ void BundleCommonEventMgr::NotifySetDiposedRule(
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { PERMISSION_GET_DISPOSED_STATUS };
     publishInfo.SetSubscriberPermissions(permissionVec);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+    IPCSkeleton::SetCallingIdentity(identity);
 }
 
 void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int32_t userId, int32_t appIndex)
@@ -223,7 +232,9 @@ void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { PERMISSION_GET_DISPOSED_STATUS };
     publishInfo.SetSubscriberPermissions(permissionVec);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+    IPCSkeleton::SetCallingIdentity(identity);
 }
 
 void BundleCommonEventMgr::NotifyDynamicIconEvent(
@@ -239,7 +250,9 @@ void BundleCommonEventMgr::NotifyDynamicIconEvent(
     want.SetParam(IS_ENABLE_DYNAMIC_ICON, isEnableDynamicIcon);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+    IPCSkeleton::SetCallingIdentity(identity);
 }
 
 void BundleCommonEventMgr::NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type)
@@ -252,7 +265,9 @@ void BundleCommonEventMgr::NotifyBundleResourcesChanged(const int32_t userId, co
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { ServiceConstants::PERMISSION_GET_BUNDLE_RESOURCES };
     publishInfo.SetSubscriberPermissions(permissionVec);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+    IPCSkeleton::SetCallingIdentity(identity);
 }
 } // AppExecFwk
 } // OHOS
