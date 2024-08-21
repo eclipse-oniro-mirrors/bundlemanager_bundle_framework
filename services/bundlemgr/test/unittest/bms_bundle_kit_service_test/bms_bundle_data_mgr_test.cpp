@@ -6620,6 +6620,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfosForContinuation_0100, Function | Sm
     abilityInfo.continuable = false;
     bundleInfo.abilityInfos.push_back(abilityInfo);
     bundleInfos.push_back(bundleInfo);
+    ClearDataMgr();
  
     ResetDataMgr();
     GetBundleDataMgr()->GetBundleInfosForContinuation(bundleInfos);
