@@ -1380,6 +1380,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     auto &mtx = dataMgr_->GetBundleMutex(bundleName);
     std::lock_guard lock {mtx};
     InnerBundleInfo oldInfo;
+    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
         LOG_W(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
@@ -1391,7 +1392,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     bundleType_ = oldInfo.GetApplicationBundleType();
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
-    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
