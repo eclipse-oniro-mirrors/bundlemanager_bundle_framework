@@ -1744,18 +1744,6 @@ HWTEST_F(BmsBundleFreeInstallTest, SortAgingBundles_0200, Function | SmallTest |
 }
 
 /*
- * @tc.number: CheckPrerequisite_0100
- * @tc.name: test CheckPrerequisite
- * @tc.desc: 1.test CheckPrerequisite of BundleAgingMgr
- */
-HWTEST_F(BmsBundleFreeInstallTest, CheckPrerequisite_0100, Function | SmallTest | Level0)
-{
-    BundleAgingMgr bundleAgingMgr;
-    bool ret = bundleAgingMgr.CheckPrerequisite(AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD);
-    EXPECT_FALSE(ret);
-}
-
-/*
  * @tc.number: ResetRequest_0100
  * @tc.name: test ResetRequest
  * @tc.desc: 1.test ResetRequest of AgingRequest

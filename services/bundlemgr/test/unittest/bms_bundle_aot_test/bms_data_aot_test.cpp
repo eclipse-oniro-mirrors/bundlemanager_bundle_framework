@@ -906,6 +906,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2400, Function | SmallTest | Level0)
 {
     std::string bundleName = "bundleName";
     std::vector<std::string> results;
+    ASSERT_NE(installdService_, nullptr);
     installdService_->Start();
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->AddUserId(USERID_ONE);
     InnerBundleInfo innerBundleInfo;
@@ -952,6 +953,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2600, Function | SmallTest | Level0)
 {
     std::string bundleName = "bundleName";
     std::vector<std::string> results;
+    ASSERT_NE(installdService_, nullptr);
     installdService_->Start();
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->AddUserId(USERID_ONE);
     InnerBundleInfo innerBundleInfo;
@@ -999,6 +1001,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2800, Function | SmallTest | Level0)
     std::string bundleName = "bundleName";
     string compileMode = ServiceConstants::COMPILE_PARTIAL;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     AOTHandler::GetInstance().OTACompileDeadline_ = false;
     InnerBundleInfo innerBundleInfo;
     InnerModuleInfo moduleInfo;
@@ -1029,6 +1032,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2900, Function | SmallTest | Level0)
     std::vector<std::string> bundleNames = { bundleName };
     string compileMode = ServiceConstants::COMPILE_PARTIAL;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     InnerBundleInfo innerBundleInfo;
     InnerModuleInfo moduleInfo;
     moduleInfo.moduleName = AOT_MODULE_NAME;
@@ -1059,6 +1063,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3000, Function | SmallTest | Level0)
     std::vector<std::string> bundleNames = { bundleName };
     string compileMode = ServiceConstants::COMPILE_PARTIAL;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetIsNewVersion(false);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(bundleName, innerBundleInfo);

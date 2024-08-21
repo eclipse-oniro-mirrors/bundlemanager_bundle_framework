@@ -1590,7 +1590,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0200, Function | MediumTest | Leve
 HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0400, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     ResetDataMgr();
     Want want;
@@ -1601,14 +1601,14 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0400, Function | MediumTest | L
 }
 
 /**
- * @tc.number: QueryAbilityInfos_0600
+ * @tc.number: QueryAbilityInfos_0500
  * @tc.name: GetBundleStats
  * @tc.desc: test GetBundleStats of BmsExtensionClient
  */
-HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0600, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0500, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     InnerBundleInfo innerBundleInfo;
     EXPECT_TRUE(GetBundleDataMgr());
@@ -1631,10 +1631,10 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0600, Function | MediumTest | L
  * @tc.name: GetBundleStats
  * @tc.desc: test GetBundleStats of BmsExtensionClient
  */
-HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0700, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0600, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     bmsExtensionClient->bmsExtensionImpl_ = nullptr;
 
@@ -1650,14 +1650,14 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0700, Function | MediumTest | L
  * @tc.name: GetBundleStats
  * @tc.desc: test GetBundleStats of BmsExtensionClient
  */
-HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0800, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0700, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     ResetDataMgr();
 
     bmsExtensionClient->bmsExtensionImpl_ = std::make_shared<BmsExtensionDataMgr>();
-
+    ASSERT_NE(bmsExtensionClient->bmsExtensionImpl_, nullptr);
     Want want;
     ElementName ele;
     ele.SetBundleName(BUNDLE_NAME_TEST);
@@ -1671,21 +1671,22 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0800, Function | MediumTest | L
 }
 
 /**
- * @tc.number: QueryAbilityInfos_0700
+ * @tc.number: QueryAbilityInfos_0800
  * @tc.name: GetBundleStats
  * @tc.desc: test GetBundleStats of BmsExtensionClient
  */
-HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0900, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0800, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
-    ResetDataMgr();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
 
     void* mockHandler = static_cast<void*>(malloc(sizeof(char)));
     BmsExtensionBundleMgr bmsExtensionBundleMgr;
     bmsExtensionBundleMgr.extensionName = "extension-name";
     bmsExtensionBundleMgr.libPath = "/data/test/";
     auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
+    ASSERT_NE(extensionDataMgr, nullptr);
     extensionDataMgr->bmsExtension_.bmsExtensionBundleMgr = bmsExtensionBundleMgr;
     extensionDataMgr->handler_ = mockHandler;
 
@@ -1716,20 +1717,21 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0900, Function | MediumTest | L
 }
 
 /**
- * @tc.number: QueryAbilityInfos_0700
+ * @tc.number: QueryAbilityInfos_0900
  * @tc.name: GetBundleStats
  * @tc.desc: test GetBundleStats of BmsExtensionClient
  */
-HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_1000, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0900, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     void* mockHandler = static_cast<void*>(malloc(sizeof(char)));
     BmsExtensionBundleMgr bmsExtensionBundleMgr;
     bmsExtensionBundleMgr.extensionName = "extension-name";
     bmsExtensionBundleMgr.libPath = "/data/test/";
     auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
+    ASSERT_NE(extensionDataMgr, nullptr);
     extensionDataMgr->bmsExtension_.bmsExtensionBundleMgr = bmsExtensionBundleMgr;
     extensionDataMgr->handler_ = mockHandler;
 
@@ -1763,7 +1765,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_1000, Function | MediumTest | L
 HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0010, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     std::vector<Want> wants;
     int32_t flags = 0;
     int32_t userId = 100;
@@ -1781,7 +1783,7 @@ HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0010, Function | MediumTes
 HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0020, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     InnerBundleInfo innerBundleInfo;
     EXPECT_TRUE(GetBundleDataMgr());
@@ -1808,7 +1810,7 @@ HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0020, Function | MediumTes
 HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0030, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     bmsExtensionClient->bmsExtensionImpl_ = nullptr;
 
@@ -1828,10 +1830,11 @@ HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0030, Function | MediumTes
 HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0040, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
-    ResetDataMgr();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
 
     bmsExtensionClient->bmsExtensionImpl_ = std::make_shared<BmsExtensionDataMgr>();
+    ASSERT_NE(bmsExtensionClient->bmsExtensionImpl_, nullptr);
 
     Want want;
     ElementName ele;
@@ -1854,8 +1857,8 @@ HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0040, Function | MediumTes
 HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0050, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
-    ResetDataMgr();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
 
     void* mockHandler = static_cast<void*>(malloc(sizeof(char)));
     BmsExtensionBundleMgr bmsExtensionBundleMgr;
@@ -1896,8 +1899,8 @@ HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0050, Function | MediumTes
 HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0060, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
-    ResetDataMgr();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
 
     void* mockHandler = static_cast<void*>(malloc(sizeof(char)));
     BmsExtensionBundleMgr bmsExtensionBundleMgr;
@@ -1938,8 +1941,8 @@ HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0060, Function | MediumTes
 HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0010, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
-    ResetDataMgr();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     std::string bundleName = BUNDLE_NAME_TEST;
     int32_t userId = 100;
     BundleInfo bundleInfo;
@@ -1956,10 +1959,10 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0010, Function | MediumTest | Level
 HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0020, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     InnerBundleInfo innerBundleInfo;
-    EXPECT_TRUE(GetBundleDataMgr());
+    ASSERT_NE(GetBundleDataMgr(), nullptr);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
 
     std::string bundleName = BUNDLE_NAME_TEST;
@@ -1980,7 +1983,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0020, Function | MediumTest | Level
 HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0030, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     bmsExtensionClient->bmsExtensionImpl_ = nullptr;
 
@@ -2000,13 +2003,14 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0030, Function | MediumTest | Level
 HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0040, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     void* mockHandler = static_cast<void*>(malloc(sizeof(char)));
     BmsExtensionBundleMgr bmsExtensionBundleMgr;
     bmsExtensionBundleMgr.extensionName = "extension-bundle";
     bmsExtensionBundleMgr.libPath = "/data/test/";
     auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
+    ASSERT_NE(extensionDataMgr, nullptr);
     extensionDataMgr->bmsExtension_.bmsExtensionBundleMgr = bmsExtensionBundleMgr;
     extensionDataMgr->handler_ = mockHandler;
 
@@ -2028,13 +2032,14 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0040, Function | MediumTest | Level
 HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0050, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     void* mockHandler = static_cast<void*>(malloc(sizeof(char)));
     BmsExtensionBundleMgr bmsExtensionBundleMgr;
     bmsExtensionBundleMgr.extensionName = "extension-bundle";
     bmsExtensionBundleMgr.libPath = "/data/test/";
     auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
+    ASSERT_NE(extensionDataMgr, nullptr);
     extensionDataMgr->bmsExtension_.bmsExtensionBundleMgr = bmsExtensionBundleMgr;
     extensionDataMgr->handler_ = mockHandler;
 
@@ -2068,8 +2073,8 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0050, Function | MediumTest | Level
 HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleInfo_0010, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
-    ResetDataMgr();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     std::vector<std::string> bundleNames{ BUNDLE_NAME_TEST };
     int32_t userId = 100;
     std::vector<BundleInfo> bundleInfos;
@@ -2086,7 +2091,7 @@ HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleInfo_0010, Function | MediumTest | 
 HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleInfo_0020, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     std::vector<std::string> bundleNames{ BUNDLE_NAME_TEST };
     int32_t userId = -3;
@@ -2104,13 +2109,14 @@ HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleInfo_0020, Function | MediumTest | 
 HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleInfo_0030, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     void* mockHandler = static_cast<void*>(malloc(sizeof(char)));
     BmsExtensionBundleMgr bmsExtensionBundleMgr;
     bmsExtensionBundleMgr.extensionName = "extension-bundle";
     bmsExtensionBundleMgr.libPath = "/data/test/";
     auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
+    ASSERT_NE(extensionDataMgr, nullptr);
     extensionDataMgr->bmsExtension_.bmsExtensionBundleMgr = bmsExtensionBundleMgr;
     extensionDataMgr->handler_ = mockHandler;
 
@@ -2139,8 +2145,8 @@ HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleInfo_0030, Function | MediumTest | 
 HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0010, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
-    ResetDataMgr();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     Want want;
     int32_t userId = 100;
     std::vector<AbilityInfo> abilityInfos;
@@ -2157,7 +2163,7 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0010, Function | Medium
 HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0020, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     Want want;
     ElementName ele;
@@ -2180,7 +2186,7 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0020, Function | Medium
 HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0030, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     Want want;
     ElementName ele;
@@ -2204,13 +2210,14 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0030, Function | Medium
 HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0040, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     void* mockHandler = static_cast<void*>(malloc(sizeof(char)));
     BmsExtensionBundleMgr bmsExtensionBundleMgr;
     bmsExtensionBundleMgr.extensionName = "extension-bundle";
     bmsExtensionBundleMgr.libPath = "/data/test/";
     auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
+    ASSERT_NE(extensionDataMgr, nullptr);
     extensionDataMgr->bmsExtension_.bmsExtensionBundleMgr = bmsExtensionBundleMgr;
     extensionDataMgr->handler_ = mockHandler;
 
@@ -2243,13 +2250,14 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0040, Function | Medium
 HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0050, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     void* mockHandler = static_cast<void*>(malloc(sizeof(char)));
     BmsExtensionBundleMgr bmsExtensionBundleMgr;
     bmsExtensionBundleMgr.extensionName = "extension-bundle";
     bmsExtensionBundleMgr.libPath = "/data/test/";
     auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
+    ASSERT_NE(extensionDataMgr, nullptr);
     extensionDataMgr->bmsExtension_.bmsExtensionBundleMgr = bmsExtensionBundleMgr;
     extensionDataMgr->handler_ = mockHandler;
 
@@ -2571,6 +2579,8 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllFormsInfo_0100, Function | SmallTest | Leve
     std::vector<FormInfo> formInfos;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    ASSERT_NE(GetBundleDataMgr(), nullptr);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     bool res = GetBundleDataMgr()->GetAllFormsInfo(formInfos);
     EXPECT_FALSE(res);
@@ -4786,9 +4796,10 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0004, Function | SmallTest 
 HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0500, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
-    bundleUserMgrHostImpl_->HandleSceneBoard(USERID);
     ASSERT_NE(GetBundleDataMgr(), nullptr);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ASSERT_NE(bundleUserMgrHostImpl_, nullptr);
+    bundleUserMgrHostImpl_->HandleSceneBoard(USERID);
     GetBundleDataMgr()->bundleInfos_.erase(BUNDLE_TEST1);
 }
 
@@ -5501,7 +5512,7 @@ HWTEST_F(BmsBundleDataMgrTest, ModifyLauncherAbilityInfoTest, Function | MediumT
 HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0300, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     Want want;
     want.SetElementName("", "com.ohos.settings", "", "");
     int32_t flags = 0;
@@ -5520,7 +5531,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0300, Function | MediumTest | L
 HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfo_0200, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     Want want;
     int32_t flags = 0;
     int32_t userId = -1;
@@ -5537,7 +5548,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfo_0200, Function | MediumTest | Le
 HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleInfo_0100, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     std::vector<std::string> bundleNames;
     int32_t flags = 0;
     std::vector<BundleInfo> bundleInfos;
@@ -5554,7 +5565,7 @@ HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleInfo_0100, Function | MediumTest | 
 HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleInfo_0200, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     std::vector<std::string> bundleNames;
     int32_t flags = 0;
     std::vector<BundleInfo> bundleInfos;
@@ -5571,7 +5582,7 @@ HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleInfo_0200, Function | MediumTest | 
 HWTEST_F(BmsBundleDataMgrTest, GetDataMgr_0100, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-   
+    ASSERT_NE(bmsExtensionClient, nullptr);
     const std::shared_ptr<BundleDataMgr> ptr = bmsExtensionClient->GetDataMgr();
     EXPECT_EQ(ptr, nullptr);
 }
@@ -5584,7 +5595,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetDataMgr_0100, Function | MediumTest | Level1)
 HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0100, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     Want want;
     int32_t flags = 0;
     int32_t userId = -1;
@@ -5601,7 +5612,7 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0100, Function | Medium
 HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0200, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     Want want;
     want.SetElementName("", "com.ohos.settings",  "MainAbility", "");
     int32_t flags = 0;
@@ -5619,7 +5630,7 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0200, Function | Medium
 HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0300, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     Want want;
     int32_t flags = 0;
     int32_t userId = 100;
@@ -5636,7 +5647,7 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0300, Function | Medium
 HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     std::string bundleName;
     int32_t userId = 100;
     std::vector<int64_t> bundleStats;
@@ -5653,7 +5664,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | MediumTest | Leve
 HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0400, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     std::string bundleName;
     int32_t userId = 100;
     std::vector<int64_t> bundleStats;
@@ -5670,7 +5681,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0400, Function | MediumTest | Leve
 HWTEST_F(BmsBundleDataMgrTest, ClearData_0200, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     std::string bundleName;
     int32_t userId = 100;
     bmsExtensionClient->bmsExtensionImpl_ = nullptr;
@@ -5686,7 +5697,7 @@ HWTEST_F(BmsBundleDataMgrTest, ClearData_0200, Function | MediumTest | Level1)
 HWTEST_F(BmsBundleDataMgrTest, ClearData_0300, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     std::string bundleName;
     int32_t userId = 100;
     ErrCode res = bmsExtensionClient->ClearData(bundleName, userId);
@@ -5701,7 +5712,7 @@ HWTEST_F(BmsBundleDataMgrTest, ClearData_0300, Function | MediumTest | Level1)
 HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0100, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     std::vector<Want> wants;
     int32_t flags = 1;
     int32_t userId = -3;
@@ -5719,7 +5730,7 @@ HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0100, Function | MediumTes
 HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0200, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
     std::vector<Want> wants;
     int32_t flags = 1;
     int32_t userId = 100;
@@ -6585,6 +6596,7 @@ HWTEST_F(BmsBundleDataMgrTest, NotifySandboxAppStatus_0100, Function | MediumTes
     int32_t uid = 0;
     int32_t userId = 100;
     SandboxInstallType type = (SandboxInstallType)3;
+    ASSERT_NE(commonEventMgr_, nullptr);
     ErrCode ret = commonEventMgr_->NotifySandboxAppStatus(info, uid, userId, type);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_UNKNOWN_INSTALL_TYPE);
 }
@@ -6598,6 +6610,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetCommonEventData_0100, Function | MediumTest | 
 {
     std::string bundleName;
     bool isEnableDynamicIcon = false;
+    ASSERT_NE(commonEventMgr_, nullptr);
     commonEventMgr_->NotifyDynamicIconEvent(bundleName, isEnableDynamicIcon);
 
     commonEventMgr_->commonEventMap_.clear();

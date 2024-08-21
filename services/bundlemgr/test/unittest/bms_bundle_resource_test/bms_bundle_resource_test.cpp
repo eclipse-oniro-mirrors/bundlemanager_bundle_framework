@@ -3745,6 +3745,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0164, Function | SmallTest
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0165, Function | SmallTest | Level0)
 {
     std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(bundleResourceHostImpl, nullptr);
     auto ret = bundleResourceHostImpl->AddResourceInfoByBundleName("", USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     ret = bundleResourceHostImpl->AddResourceInfoByBundleName(BUNDLE_NAME, USERID);
@@ -3761,6 +3762,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0165, Function | SmallTest
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0166, Function | SmallTest | Level0)
 {
     std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(bundleResourceHostImpl, nullptr);
     auto ret = bundleResourceHostImpl->AddResourceInfoByAbility("", "", "", USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     ret = bundleResourceHostImpl->AddResourceInfoByAbility(BUNDLE_NAME, "", "", USERID);
@@ -3781,6 +3783,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0166, Function | SmallTest
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0167, Function | SmallTest | Level0)
 {
     std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(bundleResourceHostImpl, nullptr);
     std::string key = "test_key";
     auto ret = bundleResourceHostImpl->DeleteResourceInfo("");
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
@@ -3798,6 +3801,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0167, Function | SmallTest
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0168, Function | SmallTest | Level0)
 {
     std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(bundleResourceHostImpl, nullptr);
     int32_t appIndex = 1;
     auto ret = bundleResourceHostImpl->CheckBundleNameValid(BUNDLE_NAME, 0);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
@@ -3837,6 +3841,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0170, Function | SmallTest
     OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
     auto subscriberPtr = std::make_shared<BundleResourceEventSubscriber>(subscribeInfo);
+    ASSERT_NE(subscriberPtr, nullptr);
     int32_t oldUserId = 1;
     int32_t newUserId = 2;
     subscriberPtr->OnUserIdChanged(oldUserId, newUserId);
@@ -3862,7 +3867,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0171, Function | SmallTest
     resourceInfo.label_ = "xxxx";
 
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
+    ASSERT_NE(manager, nullptr);
     bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
     EXPECT_TRUE(ret);
     ret = manager->UpdateCloneBundleResourceInfo(bundleName, appIndex, 0);
@@ -3887,7 +3892,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0172, Function | SmallTest
     std::vector<ResourceInfo> resourceInfos;
     resourceInfos.push_back(resourceInfo);
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
+    ASSERT_NE(manager, nullptr);
     manager->ProcessResourceInfoNoNeedToParseOtherIcon(resourceInfos);
     EXPECT_FALSE(resourceInfos[0].labelNeedParse_);
     EXPECT_EQ(resourceInfos[0].label_, "");
