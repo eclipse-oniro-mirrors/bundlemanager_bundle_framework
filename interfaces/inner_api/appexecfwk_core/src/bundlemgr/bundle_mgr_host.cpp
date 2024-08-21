@@ -29,6 +29,7 @@
 #include "json_util.h"
 #include "preinstalled_application_info.h"
 #include "string_ex.h"
+#include "securec.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -62,6 +63,29 @@ inline void ClearAshmem(sptr<Ashmem> &optMem)
         optMem->UnmapAshmem();
         optMem->CloseAshmem();
     }
+}
+
+bool GetData(void *&buffer, size_t size, const void *data)
+{
+    if (data == nullptr) {
+        APP_LOGE("GetData failed due to null data");
+        return false;
+    }
+    if (size == 0 || size > MAX_PARCEL_CAPACITY) {
+        APP_LOGE("GetData failed due to zero size");
+        return false;
+    }
+    buffer = malloc(size);
+    if (buffer == nullptr) {
+        APP_LOGE("GetData failed due to malloc buffer failed");
+        return false;
+    }
+    if (memcpy_s(buffer, size, data, size) != EOK) {
+        free(buffer);
+        APP_LOGE("GetData failed due to memcpy_s failed");
+        return false;
+    }
+    return true;
 }
 }  // namespace
 
@@ -3649,6 +3673,29 @@ ErrCode BundleMgrHost::WriteBigString(const std::string &str, MessageParcel &rep
     return ERR_OK;
 }
 
+template<typename T>
+ErrCode BundleMgrHost::ReadParcelInfoIntelligent(MessageParcel &data, T &parcelInfo)
+{
+    size_t dataSize = data.ReadUint32();
+    void *buffer = nullptr;
+    if (!GetData(buffer, dataSize, data.ReadRawData(dataSize))) {
+        APP_LOGE("GetData failed dataSize : %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel tempParcel;
+    if (!tempParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        APP_LOGE("ParseFrom failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    std::unique_ptr<T> info(tempParcel.ReadParcelable<T>());
+    if (info == nullptr) {
+        APP_LOGE("ReadParcelable failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    parcelInfo = *info;
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleCanOpenLink(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -3894,13 +3941,14 @@ ErrCode BundleMgrHost::HandleGetSignatureInfoByBundleName(MessageParcel &data, M
 ErrCode BundleMgrHost::HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::unique_ptr<ShortcutInfo> shortcutInfo(data.ReadParcelable<ShortcutInfo>());
-    if (shortcutInfo == nullptr) {
-        APP_LOGE("ReadParcelable<ShortcutInfo> failed");
+    ShortcutInfo shortcutInfo;
+    auto ret = ReadParcelInfoIntelligent(data, shortcutInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("Read ParcelInfo failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t userId = data.ReadInt32();
-    auto ret = AddDesktopShortcutInfo(*shortcutInfo, userId);
+    ret = AddDesktopShortcutInfo(shortcutInfo, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -3911,13 +3959,14 @@ ErrCode BundleMgrHost::HandleAddDesktopShortcutInfo(MessageParcel &data, Message
 ErrCode BundleMgrHost::HandleDeleteDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::unique_ptr<ShortcutInfo> shortcutInfo(data.ReadParcelable<ShortcutInfo>());
-    if (shortcutInfo == nullptr) {
-        APP_LOGE("ReadParcelable<ShortcutInfo> failed");
+    ShortcutInfo shortcutInfo;
+    auto ret = ReadParcelInfoIntelligent(data, shortcutInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("Read ParcelInfo failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t userId = data.ReadInt32();
-    auto ret = DeleteDesktopShortcutInfo(*shortcutInfo, userId);
+    ret = DeleteDesktopShortcutInfo(shortcutInfo, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -3935,7 +3984,7 @@ ErrCode BundleMgrHost::HandleGetAllDesktopShortcutInfo(MessageParcel &data, Mess
         APP_LOGE("Write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret == ERR_OK && !WriteParcelableVector(infos, reply)) {
+    if (ret == ERR_OK && !WriteVectorToParcelIntelligent(infos, reply)) {
         APP_LOGE("Write shortcut infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
