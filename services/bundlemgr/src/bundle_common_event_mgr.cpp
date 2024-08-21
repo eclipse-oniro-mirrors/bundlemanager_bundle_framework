@@ -16,6 +16,7 @@
 #include "bundle_common_event_mgr.h"
 
 #include "account_helper.h"
+#include "app_log_tag_wrapper.h"
 #include "bundle_common_event.h"
 #include "bundle_util.h"
 #include "common_event_manager.h"
@@ -78,10 +79,12 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     OHOS::AAFwk::Want want;
     SetNotifyWant(want, installResult);
     EventFwk::CommonEventData commonData { want };
+    LOG_I(BMS_TAG_DEFAULT, "eventBack begin");
     // trigger BundleEventCallback first
     if (dataMgr != nullptr) {
         dataMgr->NotifyBundleEventCallback(commonData);
     }
+    LOG_I(BMS_TAG_DEFAULT, "eventBack end");
 
     uint8_t installType = ((installResult.type == NotifyType::UNINSTALL_BUNDLE) ||
             (installResult.type == NotifyType::UNINSTALL_MODULE)) ?

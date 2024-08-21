@@ -1944,6 +1944,7 @@ bool InnerBundleInfo::IsExistLauncherAbility() const
 
 void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo)
 {
+    LOG_I(BMS_TAG_DEFAULT, "libPath:%{public}s", applicationInfo.nativeLibraryPath.c_str());
     baseApplicationInfo_->cpuAbi = applicationInfo.cpuAbi;
     baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
 }
