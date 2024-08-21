@@ -2494,6 +2494,7 @@ void InnerBundleInfo::ProcessBundleFlags(
         == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
         bundleInfo.signatureInfo.appId = baseBundleInfo_->appId;
         bundleInfo.signatureInfo.fingerprint = baseApplicationInfo_->fingerprint;
+        bundleInfo.signatureInfo.certificate = baseBundleInfo_->signatureInfo.certificate;
     }
 }
 
