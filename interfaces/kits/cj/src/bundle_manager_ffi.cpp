@@ -39,6 +39,7 @@ std::vector<std::string> CharPtrToVector(char** charPtr, int32_t size)
             result.push_back(std::string(charPtr[i]));
         }
     }
+    //ndskolgn
     return result;
 }
 
