@@ -82,7 +82,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     if (dataMgr != nullptr) {
         dataMgr->NotifyBundleEventCallback(commonData);
     }
-    LOG_I(BMS_TAG_DEFAULT, "eventBack begin");
+    LOG_I(BMS_TAG_DEFAULT, "eventBack end");
 
     uint8_t installType = ((installResult.type == NotifyType::UNINSTALL_BUNDLE) ||
             (installResult.type == NotifyType::UNINSTALL_MODULE)) ?
