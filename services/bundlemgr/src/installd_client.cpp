@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int LOAD_SA_TIMEOUT_MS = 4 * 1000;
+constexpr int16_t LOAD_SA_TIMEOUT_MS = 4 * 1000;
 } // namespace
 
 ErrCode InstalldClient::CreateBundleDir(const std::string &bundleDir)
@@ -568,6 +568,11 @@ ErrCode InstalldClient::CreateExtensionDataDir(const CreateDirParam &createDirPa
 ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
 {
     return CallService(&IInstalld::GetExtensionSandboxTypeList, typeList);
+}
+
+ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
+{
+    return CallService(&IInstalld::AddUserDirDeleteDfx, userId);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-const std::string WANT_PARAM_USER_ID = "userId";
+constexpr const char* WANT_PARAM_USER_ID = "userId";
 AppJumpInterceptorEventSubscriber::AppJumpInterceptorEventSubscriber(
     const std::shared_ptr<IAppJumpInterceptorlManagerDb> &appJumpDb)
 {

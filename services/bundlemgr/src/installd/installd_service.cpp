@@ -38,7 +38,7 @@ using namespace std::chrono_literals;
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr unsigned int INSTALLD_UMASK = 0000;
+constexpr uint8_t INSTALLD_UMASK = 0000;
 }
 REGISTER_SYSTEM_ABILITY_BY_ID(InstalldService, INSTALLD_SERVICE_ID, true);
 
@@ -60,9 +60,7 @@ InstalldService::~InstalldService()
 void InstalldService::OnStart()
 {
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd OnStart");
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        InstalldOperator::AddDeleteDfx(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el);
-    }
+    InstalldOperator::AddDeleteDfx(Constants::BUNDLE_CODE_DIR);
     Start();
     if (!Publish(hostImpl_)) {
         LOG_E(BMS_TAG_INSTALLD, "Publish failed");

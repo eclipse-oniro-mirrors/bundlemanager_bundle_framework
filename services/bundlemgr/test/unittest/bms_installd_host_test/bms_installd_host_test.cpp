@@ -159,6 +159,34 @@ HWTEST_F(BmsInstalldHostTest, HandleExecuteAOT_0100, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: HandlePendSignAOT_0100
+ * @tc.name: test HandlePendSignAOT
+ * @tc.desc: 1.HandlePendSignAOT test
+ */
+HWTEST_F(BmsInstalldHostTest, HandlePendSignAOT_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandlePendSignAOT(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleStopAOT_0100
+ * @tc.name: test HandleStopAOT
+ * @tc.desc: 1.HandleStopAOT test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleStopAOT_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleStopAOT(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleRenameModuleDir_0100
  * @tc.name: test HandleRenameModuleDir
  * @tc.desc: 1.HandleRenameModuleDir test
@@ -239,6 +267,20 @@ HWTEST_F(BmsInstalldHostTest, HandleRemoveDir_0100, Function | SmallTest | Level
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = installdHost.HandleRemoveDir(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleGetDiskUsage_0100
+ * @tc.name: test HandleGetDiskUsage
+ * @tc.desc: 1.HandleGetDiskUsage test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleGetDiskUsage_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleGetDiskUsage(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -659,6 +701,62 @@ HWTEST_F(BmsInstalldHostTest, HandleDeleteEncryptionKeyId_0100, Function | Small
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = installdHost.HandleDeleteEncryptionKeyId(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleRemoveExtensionDir_0100
+ * @tc.name: test HandleRemoveExtensionDir
+ * @tc.desc: 1.HandleRemoveExtensionDir test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleRemoveExtensionDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleRemoveExtensionDir(data, reply);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: HandleIsExistExtensionDir_0100
+ * @tc.name: test HandleIsExistExtensionDir
+ * @tc.desc: 1.HandleIsExistExtensionDir test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleIsExistExtensionDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleIsExistExtensionDir(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleCreateExtensionDataDir_0100
+ * @tc.name: test HandleCreateExtensionDataDir
+ * @tc.desc: 1.HandleCreateExtensionDataDir test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCreateExtensionDataDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleCreateExtensionDataDir(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleGetExtensionSandboxTypeList_0100
+ * @tc.name: test HandleGetExtensionSandboxTypeList
+ * @tc.desc: 1.HandleGetExtensionSandboxTypeList test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleGetExtensionSandboxTypeList_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleGetExtensionSandboxTypeList(data, reply);
     EXPECT_TRUE(res);
 }
 } // OHOS

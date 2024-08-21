@@ -233,6 +233,8 @@ public:
 
     ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList);
 
+    ErrCode AddUserDirDeleteDfx(int32_t userId);
+
 private:
     /**
      * @brief Get the installd proxy object.

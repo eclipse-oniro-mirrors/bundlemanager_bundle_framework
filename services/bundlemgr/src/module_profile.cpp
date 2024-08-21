@@ -16,6 +16,7 @@
 #include "module_profile.h"
 
 #include <sstream>
+#include <unordered_set>
 
 #include "parameter.h"
 #include "parameters.h"
@@ -23,15 +24,15 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
-const int32_t THRESHOLD_VAL_LEN = 40;
+constexpr const char* COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
+constexpr int8_t THRESHOLD_VAL_LEN = 40;
 constexpr uint8_t MAX_MODULE_NAME = 128;
 bool IsSupportCompressNativeLibs()
 {
     char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
+    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS, "", compressNativeLibs, THRESHOLD_VAL_LEN);
     if (ret <= 0) {
-        APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS.c_str());
+        APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS);
         return false;
     }
     if (std::strcmp(compressNativeLibs, "true") == 0) {
@@ -45,18 +46,18 @@ namespace Profile {
 int32_t g_parseResult = ERR_OK;
 std::mutex g_mutex;
 
-const std::set<std::string> MODULE_TYPE_SET = {
+const std::unordered_set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
     "shared"
 };
 
-const std::set<std::string> VIRTUAL_MACHINE_SET = {
+const std::unordered_set<std::string> VIRTUAL_MACHINE_SET = {
     "ark",
     "default"
 };
 
-const std::map<std::string, uint32_t> BACKGROUND_MODES_MAP = {
+const std::unordered_map<std::string, uint32_t> BACKGROUND_MODES_MAP = {
     {ProfileReader::KEY_DATA_TRANSFER, ProfileReader::VALUE_DATA_TRANSFER},
     {ProfileReader::KEY_AUDIO_PLAYBACK, ProfileReader::VALUE_AUDIO_PLAYBACK},
     {ProfileReader::KEY_AUDIO_RECORDING, ProfileReader::VALUE_AUDIO_RECORDING},
@@ -70,18 +71,18 @@ const std::map<std::string, uint32_t> BACKGROUND_MODES_MAP = {
     {ProfileReader::KEY_SCREEN_FETCH, ProfileReader::VALUE_SCREEN_FETCH}
 };
 
-const std::set<std::string> GRANT_MODE_SET = {
+const std::unordered_set<std::string> GRANT_MODE_SET = {
     "system_grant",
     "user_grant"
 };
 
-const std::set<std::string> AVAILABLE_LEVEL_SET = {
+const std::unordered_set<std::string> AVAILABLE_LEVEL_SET = {
     "system_core",
     "system_basic",
     "normal"
 };
 
-const std::map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
+const std::unordered_map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
     {"singleton", LaunchMode::SINGLETON},
     {"standard", LaunchMode::STANDARD},
     {"multiton", LaunchMode::STANDARD},
@@ -117,7 +118,7 @@ const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
 };
 const size_t MAX_QUERYSCHEMES_LENGTH = 50;
 
-const std::map<std::string, MultiAppModeType> MULTI_APP_MODE_MAP = {
+const std::unordered_map<std::string, MultiAppModeType> MULTI_APP_MODE_MAP = {
     {"multiInstance", MultiAppModeType::MULTI_INSTANCE},
     {"appClone", MultiAppModeType::APP_CLONE}
 };
@@ -145,61 +146,61 @@ struct HnpPackage {
 };
 
 struct Ability {
-    std::string name;
-    std::string srcEntrance;
-    std::string launchType = ABILITY_LAUNCH_TYPE_DEFAULT_VALUE;
-    std::string description;
-    int32_t descriptionId = 0;
-    std::string icon;
-    int32_t iconId = 0;
-    std::string label;
-    int32_t labelId = 0;
-    int32_t priority = 0;
-    std::vector<std::string> permissions;
-    std::vector<Metadata> metadata;
     bool visible = false;
     bool continuable = false;
-    std::vector<Skill> skills;
-    std::vector<std::string> backgroundModes;
-    std::string startWindowIcon;
-    int32_t startWindowIconId = 0;
-    std::string startWindowBackground;
-    int32_t startWindowBackgroundId = 0;
     bool removeMissionAfterTerminate = false;
-    std::string orientation = "unspecified";
-    std::vector<std::string> windowModes;
-    double maxWindowRatio = 0;
-    double minWindowRatio = 0;
-    uint32_t maxWindowWidth = 0;
-    uint32_t minWindowWidth = 0;
-    uint32_t maxWindowHeight = 0;
-    uint32_t minWindowHeight = 0;
     bool excludeFromMissions = false;
     bool recoverable = false;
     bool unclearableMission = false;
     bool excludeFromDock = false;
-    std::string preferMultiWindowOrientation = "default";
     bool isolationProcess = false;
-    std::vector<std::string> continueType;
+    int32_t descriptionId = 0;
+    int32_t iconId = 0;
+    int32_t labelId = 0;
+    int32_t priority = 0;
+    int32_t startWindowIconId = 0;
+    int32_t startWindowBackgroundId = 0;
+    uint32_t maxWindowWidth = 0;
+    uint32_t minWindowWidth = 0;
+    uint32_t maxWindowHeight = 0;
+    uint32_t minWindowHeight = 0;
     int32_t orientationId = 0;
+    double maxWindowRatio = 0;
+    double minWindowRatio = 0;
+    std::string name;
+    std::string srcEntrance;
+    std::string launchType = ABILITY_LAUNCH_TYPE_DEFAULT_VALUE;
+    std::string description;
+    std::string icon;
+    std::string label;
+    std::vector<std::string> permissions;
+    std::vector<Metadata> metadata;
+    std::vector<Skill> skills;
+    std::vector<std::string> backgroundModes;
+    std::string startWindowIcon;
+    std::string startWindowBackground;
+    std::string orientation = "unspecified";
+    std::vector<std::string> windowModes;
+    std::string preferMultiWindowOrientation = "default";
+    std::vector<std::string> continueType;
 };
 
 struct Extension {
+    bool visible = false;
+    int32_t iconId = 0;
+    int32_t labelId = 0;
+    int32_t descriptionId = 0;
+    int32_t priority = 0;
     std::string name;
     std::string srcEntrance;
     std::string icon;
-    int32_t iconId = 0;
     std::string label;
-    int32_t labelId = 0;
     std::string description;
-    int32_t descriptionId = 0;
-    int32_t priority = 0;
     std::string type;
     std::string readPermission;
     std::string writePermission;
     std::string uri;
     std::vector<std::string> permissions;
-    bool visible = false;
     std::vector<Skill> skills;
     std::vector<Metadata> metadata;
     std::string extensionProcessMode;
@@ -212,56 +213,60 @@ struct MultiAppMode {
 };
 
 struct App {
-    std::string bundleName;
     bool debug = false;
-    std::string icon;
-    int32_t iconId = 0;
-    std::string label;
-    int32_t labelId = 0;
-    std::string description;
-    int32_t descriptionId = 0;
-    std::string vendor;
-    int32_t versionCode = 0;
-    std::string versionName;
-    int32_t minCompatibleVersionCode = -1;
-    uint32_t minAPIVersion = 0;
-    int32_t targetAPIVersion = 0;
-    std::string apiReleaseType = APP_API_RELEASETYPE_DEFAULT_VALUE;
     bool keepAlive = false;
-    std::pair<bool, bool> removable = std::make_pair<>(false, true);
     bool singleton = false;
     bool userDataClearable = true;
     bool accessible = false;
-    std::vector<std::string> targetBundleList;
-    std::map<std::string, DeviceConfig> deviceConfigs;
     bool multiProjects = false;
-    std::string targetBundle;
-    int32_t targetPriority = 0;
     bool asanEnabled = false;
-    std::string bundleType = Profile::BUNDLE_TYPE_APP;
-    std::string compileSdkVersion;
-    std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
     bool gwpAsanEnabled = false;
     bool hwasanEnabled = false;
     bool tsanEnabled = false;
+    bool ubsanEnabled = false;
+    bool cloudFileSyncEnabled = false;
+    int32_t iconId = 0;
+    int32_t labelId = 0;
+    int32_t descriptionId = 0;
+    int32_t versionCode = 0;
+    int32_t minCompatibleVersionCode = -1;
+    uint32_t minAPIVersion = 0;
+    int32_t targetAPIVersion = 0;
+    int32_t targetPriority = 0;
+    int32_t maxChildProcess = OHOS::system::GetIntParameter(MAX_CHILD_PROCESS, 1);
+    std::string bundleName;
+    std::string icon;
+    std::string label;
+    std::string description;
+    std::string vendor;
+    std::string versionName;
+    std::string apiReleaseType = APP_API_RELEASETYPE_DEFAULT_VALUE;
+    std::pair<bool, bool> removable = std::make_pair<>(false, true);
+    std::vector<std::string> targetBundleList;
+    std::map<std::string, DeviceConfig> deviceConfigs;
+    std::string targetBundle;
+    std::string bundleType = Profile::BUNDLE_TYPE_APP;
+    std::string compileSdkVersion;
+    std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
     std::vector<ApplicationEnvironment> appEnvironments;
     MultiAppMode multiAppMode;
-    int32_t maxChildProcess = OHOS::system::GetIntParameter(MAX_CHILD_PROCESS, 1);
     std::string configuration;
-    bool cloudFileSyncEnabled = false;
 };
 
 struct Module {
+    bool deliveryWithInstall = false;
+    bool installationFree = false;
+    bool isLibIsolated = false;
+    bool compressNativeLibs = true;
+    int32_t descriptionId = 0;
+    int32_t targetPriority = 0;
     std::string name;
     std::string type;
     std::string srcEntrance;
     std::string description;
-    int32_t descriptionId = 0;
     std::string process;
     std::string mainElement;
     std::vector<std::string> deviceTypes;
-    bool deliveryWithInstall = false;
-    bool installationFree = false;
     std::string virtualMachine = MODULE_VIRTUAL_MACHINE_DEFAULT_VALUE;
     std::string pages;
     std::vector<Metadata> metadata;
@@ -272,14 +277,11 @@ struct Module {
     std::vector<DefinePermission> definePermissions;
     std::vector<Dependency> dependencies;
     std::string compileMode;
-    bool isLibIsolated = false;
     std::string targetModule;
-    int32_t targetPriority = 0;
     std::vector<ProxyData> proxyDatas;
     std::vector<ProxyData> proxyData;
     std::string buildHash;
     std::string isolationMode;
-    bool compressNativeLibs = true;
     std::string fileContextMenu;
     std::vector<std::string> querySchemes;
     std::string routerMap;
@@ -1343,6 +1345,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_UBSAN_ENABLED,
+        app.ubsanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1804,7 +1814,7 @@ bool ParserNativeSo(
     bool isLibIsolated = moduleJson.module.isLibIsolated;
     if (isDefault) {
         if (isSystemLib64Exist) {
-            if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM64_V8A)) {
+            if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A)) {
                 cpuAbi = ServiceConstants::ARM64_V8A;
                 soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM64_V8A);
                 UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
@@ -1814,14 +1824,14 @@ bool ParserNativeSo(
             return false;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI_V7A)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A)) {
             cpuAbi = ServiceConstants::ARM_EABI_V7A;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI_V7A);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
             return true;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI)) {
             cpuAbi = ServiceConstants::ARM_EABI;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
@@ -1935,7 +1945,7 @@ bool ParserArkNativeFilePath(
     APP_LOGD("an exist");
     if (isDefault) {
         if (isSystemLib64Exist) {
-            if (bundleExtractor.IsDirExist(ServiceConstants::AN + ServiceConstants::ARM64_V8A)) {
+            if (bundleExtractor.IsDirExist(std::string(ServiceConstants::AN) + ServiceConstants::ARM64_V8A)) {
                 innerBundleInfo.SetArkNativeFileAbi(ServiceConstants::ARM64_V8A);
                 return true;
             }
@@ -1943,12 +1953,12 @@ bool ParserArkNativeFilePath(
             return false;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::AN + ServiceConstants::ARM_EABI_V7A)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::AN) + ServiceConstants::ARM_EABI_V7A)) {
             innerBundleInfo.SetArkNativeFileAbi(ServiceConstants::ARM_EABI_V7A);
             return true;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::AN + ServiceConstants::ARM_EABI)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::AN) + ServiceConstants::ARM_EABI)) {
             innerBundleInfo.SetArkNativeFileAbi(ServiceConstants::ARM_EABI);
             return true;
         }
@@ -2110,6 +2120,7 @@ bool ToApplicationInfo(
     applicationInfo.gwpAsanEnabled = app.gwpAsanEnabled;
     applicationInfo.tsanEnabled = app.tsanEnabled;
     applicationInfo.hwasanEnabled = app.hwasanEnabled;
+    applicationInfo.ubsanEnabled = app.ubsanEnabled;
     applicationInfo.appEnvironments = app.appEnvironments;
     // bundleType is app && moduleType is entry or feature
     if (applicationInfo.bundleType == BundleType::APP &&
@@ -2728,8 +2739,7 @@ ErrCode ModuleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserNativeSo(moduleJson, bundleExtractor, innerBundleInfo)) {
-        APP_LOGE("Parser native so failed");
-        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+        APP_LOGW("Parser native so failed");
     }
     if (!ParserArkNativeFilePath(moduleJson, bundleExtractor, innerBundleInfo)) {
         APP_LOGE("Parser ark native file failed");

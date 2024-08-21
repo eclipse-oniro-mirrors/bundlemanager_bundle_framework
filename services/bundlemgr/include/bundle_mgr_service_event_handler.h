@@ -23,23 +23,26 @@
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_host_impl.h"
+#include "common_event_manager.h"
+#include "common_event_subscriber.h"
+#include "common_event_support.h"
 #include "pre_scan_info.h"
 #include "nlohmann/json.hpp"
 
 namespace OHOS {
 namespace AppExecFwk {
 class BundleMgrService;
-enum class ScanMode;
-enum class ResultMode;
+enum class ScanMode : uint8_t;
+enum class ResultMode : uint8_t;
 
-enum class ResultCode {
+enum class ResultCode : uint8_t {
     RECOVER_OK = 0,
     REINSTALL_OK,
     NO_INSTALLED_DATA,
     SYSTEM_ERROR,
 };
 
-enum OTAFlag {
+enum OTAFlag : uint32_t {
     CHECK_ELDIR = 0x00000001,
     CHECK_LOG_DIR = 0x00000010,
     CHECK_FILE_MANAGER_DIR = 0x00000100,
@@ -50,13 +53,13 @@ enum OTAFlag {
     CHECK_RECOVERABLE_APPLICATION_INFO = 0x00002000,
 };
 
-enum class ScanResultCode {
+enum class ScanResultCode : uint8_t {
     SCAN_HAS_DATA_PARSE_SUCCESS,
     SCAN_HAS_DATA_PARSE_FAILED,
     SCAN_NO_DATA,
 };
 
-enum class ModuleUpdateStatus {
+enum class ModuleUpdateStatus : uint8_t {
     DEFAULT = 1,
     UPDATE = 2,
     REVERT = 3
@@ -569,6 +572,7 @@ private:
     bool HandleInstallModuleUpdateSystemHsp(const std::vector<std::string> &appDirList);
     bool HandleInstallModuleUpdateNormalApp(const std::vector<std::string> &appDirList);
     bool CheckIsModuleUpdate(const std::string &str);
+    bool CheckAppIsUpdatedByUser(const std::string& appDir);
     void FilterModuleUpdate(const std::vector<std::string> &preInstallDirs,
         std::map<std::string, std::vector<std::string>> &moduleUpdateMap, bool isAppService);
     std::string GetBundleNameByPreInstallPath(const std::string& path);

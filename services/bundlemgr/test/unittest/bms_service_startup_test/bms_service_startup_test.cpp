@@ -1037,6 +1037,61 @@ HWTEST_F(BmsServiceStartupTest, BmsParam_0200, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: BmsParam_0300
+ * @tc.name: test GetBmsParam
+ * @tc.desc: 1.test GetBmsParam of BmsParam
+ */
+HWTEST_F(BmsServiceStartupTest, BmsParam_0300, Function | SmallTest | Level0)
+{
+    BmsParam param;
+
+    std::string key;
+    std::string value;
+    bool ret = param.GetBmsParam(key, value);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsParam_0400
+ * @tc.name: test SaveBmsParam
+ * @tc.desc: 1.test SaveBmsParam of BmsParam
+ */
+HWTEST_F(BmsServiceStartupTest, BmsParam_0400, Function | SmallTest | Level0)
+{
+    BmsParam param;
+
+    std::string paramKeyInfo;
+    std::string paramValueInfo;
+    bool ret = param.SaveBmsParam(paramKeyInfo, paramValueInfo);
+    EXPECT_FALSE(ret);
+
+    paramKeyInfo = "key";
+    paramValueInfo = "val";
+    param.rdbDataManager_ = nullptr;
+    ret = param.SaveBmsParam(paramKeyInfo, paramValueInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsParam_0500
+ * @tc.name: test DeleteBmsParam
+ * @tc.desc: 1.test DeleteBmsParam of BmsParam
+ */
+HWTEST_F(BmsServiceStartupTest, BmsParam_0500, Function | SmallTest | Level0)
+{
+    BmsParam param;
+
+    std::string key;
+    bool ret = param.DeleteBmsParam(key);
+    EXPECT_FALSE(ret);
+
+    key = "key";
+    param.rdbDataManager_ = nullptr;
+    ret = param.DeleteBmsParam(key);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: ConvertPermissionDef_0100
  * @tc.name: test ConvertPermissionDef
  * @tc.desc: 1.test ConvertPermissionDef of BundlePermissionMgr

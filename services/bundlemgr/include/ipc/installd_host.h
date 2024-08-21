@@ -212,6 +212,8 @@ private:
 
     bool HandleGetExtensionSandboxTypeList(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleAddUserDirDeleteDfx(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();

@@ -20,8 +20,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int32_t SLEEP_TIME_FOR_WAIT_SIGN_ENABLE = 1; // 1 s
-constexpr int32_t LOOP_TIMES_FOR_WAIT_SIGN_ENABLE = 5;
+constexpr int8_t SLEEP_TIME_FOR_WAIT_SIGN_ENABLE = 1; // 1 s
+constexpr int8_t LOOP_TIMES_FOR_WAIT_SIGN_ENABLE = 5;
 }
 
 AOTSignDataCacheMgr& AOTSignDataCacheMgr::GetInstance()

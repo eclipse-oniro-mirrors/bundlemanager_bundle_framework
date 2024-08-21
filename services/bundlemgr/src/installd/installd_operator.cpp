@@ -68,9 +68,9 @@ static const char CODE_CRYPTO_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15
     "EnforceMetadataProcessForAppERKNSt3__h13unordered_mapINS3_12basic_stringIcNS3_11char_traitsIcEENS3_"
     "9allocatorIcEEEESA_NS3_4hashISA_EENS3_8equal_toISA_EENS8_INS3_4pairIKSA_SA_EEEEEEjRbNS2_17InstallBundleTypeERKb";
 #endif
-static constexpr int32_t INSTALLS_UID = 3060;
-static constexpr int32_t MODE_BASE = 07777;
-static constexpr int32_t KEY_ID_STEP = 2;
+static constexpr int16_t INSTALLS_UID = 3060;
+static constexpr int16_t MODE_BASE = 07777;
+static constexpr int8_t KEY_ID_STEP = 2;
 constexpr const char* PROC_MOUNTS_PATH = "/proc/mounts";
 constexpr const char* QUOTA_DEVICE_DATA_PATH = "/data";
 constexpr const char* CACHE_DIR = "cache";
@@ -84,9 +84,9 @@ constexpr const char* ATOMIC_SERVICE_PATH = "+auid-";
 using namespace OHOS::Security::CodeSign;
 #endif
 #if defined(CODE_ENCRYPTION_ENABLE)
-static std::string CODE_DECRYPT = "/dev/code_decrypt";
-static int32_t INVALID_RETURN_VALUE = -1;
-static int32_t INVALID_FILE_DESCRIPTOR = -1;
+static const char* CODE_DECRYPT = "/dev/code_decrypt";
+static int8_t INVALID_RETURN_VALUE = -1;
+static int8_t INVALID_FILE_DESCRIPTOR = -1;
 #endif
 std::recursive_mutex mMountsLock;
 static std::map<std::string, std::string> mQuotaReverseMounts;
@@ -208,7 +208,7 @@ bool InstalldOperator::MkRecursiveDir(const std::string &path, bool isReadByOthe
 
 bool InstalldOperator::DeleteDir(const std::string &path)
 {
-    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "del %{public}s", path.c_str());
+    LOG_NOFUNC_I(BMS_TAG_COMMON, "del %{public}s", path.c_str());
     if (IsExistFile(path)) {
         return OHOS::RemoveFile(path);
     }
@@ -729,7 +729,7 @@ bool InstalldOperator::IsValidCodePath(const std::string &codePath)
         LOG_E(BMS_TAG_INSTALLD, "code path is empty");
         return false;
     }
-    return IsValidPath(BUNDLE_BASE_CODE_DIR + ServiceConstants::PATH_SEPARATOR, codePath);
+    return IsValidPath(std::string(BUNDLE_BASE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR, codePath);
 }
 
 bool InstalldOperator::DeleteFiles(const std::string &dataPath)
@@ -860,12 +860,12 @@ bool InstalldOperator::MkOwnerDir(const std::string &path, int mode, const int u
 int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
 {
     if (dir.empty() || (dir.size() > ServiceConstants::PATH_MAX_SIZE)) {
-        LOG_E(BMS_TAG_INSTALLD, "GetDiskUsage dir path invalid");
+        LOG_D(BMS_TAG_INSTALLD, "GetDiskUsage path invalid");
         return 0;
     }
     std::string filePath = dir;
     if (!isRealPath && !PathToRealPath(dir, filePath)) {
-        LOG_E(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", dir.c_str());
+        LOG_D(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", dir.c_str());
         return 0;
     }
     DIR *dirPtr = opendir(filePath.c_str());
@@ -902,12 +902,12 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
 void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, std::vector<std::string> &cacheDirs)
 {
     if (currentPath.empty() || (currentPath.size() > ServiceConstants::PATH_MAX_SIZE)) {
-        LOG_E(BMS_TAG_INSTALLD, "TraverseCacheDirectory current path invaild");
+        LOG_D(BMS_TAG_INSTALLD, "current path invaild");
         return;
     }
     std::string filePath = "";
     if (!PathToRealPath(currentPath, filePath)) {
-        LOG_E(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", currentPath.c_str());
+        LOG_D(BMS_TAG_INSTALLD, "not real path: %{public}s", currentPath.c_str());
         return;
     }
     DIR* dir = opendir(filePath.c_str());
@@ -1566,7 +1566,8 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
     LOG_D(BMS_TAG_INSTALLD,
         "bundleId %{public}d, installBundleType %{public}d, isCompressNativeLibrary %{public}d, path %{public}s",
-        bundleId, installBundleType, isCompressNativeLibrary, checkEncryptionParam.modulePath.c_str());
+        bundleId, static_cast<int32_t>(installBundleType),
+        isCompressNativeLibrary, checkEncryptionParam.modulePath.c_str());
 
     BundleExtractor extractor(checkEncryptionParam.modulePath);
     if (!extractor.Init()) {
@@ -1615,7 +1616,7 @@ bool InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEncry
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
     LOG_D(BMS_TAG_INSTALLD, "CheckHapEncryption the hapPath is %{public}s, installBundleType is %{public}d, "
         "bundleId is %{public}d, isCompressNativeLibrary is %{public}d", hapPath.c_str(),
-        installBundleType, bundleId, isCompressNativeLibrary);
+        static_cast<int32_t>(installBundleType), bundleId, isCompressNativeLibrary);
 #if defined(CODE_ENCRYPTION_ENABLE)
     std::unordered_map<std::string, std::string> entryMap;
     entryMap.emplace(ServiceConstants::CODE_SIGNATURE_HAP, hapPath);
@@ -2165,9 +2166,9 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
     }
 
     std::vector<std::string> dirs;
-    dirs.emplace_back(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
+    dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
         std::to_string(userId) + ServiceConstants::BASE + bundleName);
-    dirs.emplace_back(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
+    dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
         std::to_string(userId) + ServiceConstants::DATABASE + bundleName);
     for (const auto &dir : dirs) {
         auto fd = open(dir.c_str(), O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
@@ -2248,11 +2249,40 @@ void InstalldOperator::AddDeleteDfx(const std::string &path)
     flags |= HMFS_MONITOR_FL;
     ret = ioctl(fd, HMF_IOCTL_HW_SET_FLAGS, &flags);
     if (ret < 0) {
-        LOG_D(BMS_TAG_INSTALLD, "add dfx flag  failed errno:%{public}d path %{public}s", errno, path.c_str());
+        LOG_W(BMS_TAG_INSTALLD, "Add dfx flag failed errno:%{public}d path %{public}s", errno, path.c_str());
         close(fd);
         return;
     }
     LOG_I(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is set succeed", path.c_str());
+    close(fd);
+    return;
+}
+
+void InstalldOperator::RmvDeleteDfx(const std::string &path)
+{
+    int32_t fd = open(path.c_str(), O_RDONLY);
+    if (fd < 0) {
+        LOG_D(BMS_TAG_INSTALLD, "open dfx path %{public}s failed", path.c_str());
+        return;
+    }
+    unsigned int flags = 0;
+    int32_t ret = ioctl(fd, HMF_IOCTL_HW_GET_FLAGS, &flags);
+    if (ret < 0) {
+        LOG_D(BMS_TAG_INSTALLD, "check dfx flag path %{public}s failed errno:%{public}d", path.c_str(), errno);
+        close(fd);
+        return;
+    }
+    if (flags & HMFS_MONITOR_FL) {
+        // flag is already set
+        flags -= HMFS_MONITOR_FL;
+        ret = ioctl(fd, HMF_IOCTL_HW_SET_FLAGS, &flags);
+        if (ret < 0) {
+            LOG_W(BMS_TAG_INSTALLD, "Rmv dfx flag failed errno:%{public}d path %{public}s", errno, path.c_str());
+            close(fd);
+            return;
+        }
+        LOG_I(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is Rmv succeed", path.c_str());
+    }
     close(fd);
     return;
 }

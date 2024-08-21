@@ -45,6 +45,7 @@ public:
     std::vector<SkillUri> uris;
     bool domainVerify = false;
     std::vector<std::string> permissions;
+    static std::string GetOptParamUri(const std::string &uriString);
     bool Match(const OHOS::AAFwk::Want &want) const;
     bool Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
     bool MatchLauncher(const OHOS::AAFwk::Want &want) const;
@@ -61,14 +62,13 @@ private:
     bool MatchAction(const std::string &action) const;
     bool MatchEntities(const std::vector<std::string> &paramEntities) const;
     bool MatchActionAndEntities(const OHOS::AAFwk::Want &want) const;
-    bool MatchUriAndType(const std::string &uriString, const std::string &type) const;
-    bool MatchUriAndType(const std::string &uriString, const std::string &type, size_t &matchUriIndex) const;
+    bool MatchUriAndType(const std::string &rawUriString, const std::string &type) const;
+    bool MatchUriAndType(const std::string &rawUriString, const std::string &type, size_t &matchUriIndex) const;
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
     bool MatchMimeType(const std::string &uriString) const;
     bool MatchMimeType(const std::string &uriString, size_t &matchUriIndex) const;
     bool MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
-    std::string GetOptParamUri(const std::string &uriString) const;
     bool MatchUtd(const std::string &paramType, const std::string &skillUriType, bool &containsUtd) const;
     bool IsUtdMatch(const std::string &paramUtd, const std::string &skillUtd) const;
     bool IsUtd(const std::string &param) const;

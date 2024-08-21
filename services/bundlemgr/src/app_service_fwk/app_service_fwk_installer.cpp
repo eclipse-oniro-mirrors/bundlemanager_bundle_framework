@@ -23,11 +23,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string HSP_VERSION_PREFIX = "v";
-const std::string HSP_PATH = ", path: ";
-const std::string SHARED_MODULE_TYPE = "shared";
-const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
-const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+constexpr const char* HSP_VERSION_PREFIX = "v";
+constexpr const char* HSP_PATH = ", path: ";
+constexpr const char* SHARED_MODULE_TYPE = "shared";
+constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 
 std::string ObtainTempSoPath(
     const std::string &moduleName, const std::string &nativeLibPath)
@@ -83,7 +83,7 @@ ErrCode AppServiceFwkInstaller::Install(
     ErrCode result = BeforeInstall(hspPaths, installParam);
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
     result = ProcessInstall(hspPaths, installParam);
-    APP_LOGI("install result %{public}d", result);
+    APP_LOGI("%{public}s %{public}s result %{public}d", hspPaths[0].c_str(), bundleName_.c_str(), result);
     SendBundleSystemEvent(
         hspPaths,
         BundleEventType::INSTALL,
@@ -105,7 +105,8 @@ ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName)
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     std::string bundleDir =
-        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName;
+        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName;
     APP_LOGI("start to remove bundle dir: %{public}s", bundleDir.c_str());
     if (InstalldClient::GetInstance()->RemoveDir(bundleDir) != ERR_OK) {
         APP_LOGW("remove bundle dir %{public}s failed", bundleDir.c_str());
@@ -196,7 +197,8 @@ void AppServiceFwkInstaller::RemoveModuleDataDir(
 {
     APP_LOGI("start to remove module info of %{public}s in %{public}s ", moduleName.c_str(), bundleName.c_str());
     std::string moduleDir =
-        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName +
+        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName +
         AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(oldInfo.GetVersionCode()) +
         AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
     APP_LOGI("start to remove module dir: %{public}s", moduleDir.c_str());
@@ -342,7 +344,7 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
 
     // check syscap
     result = bundleInstallChecker_->CheckSysCap(checkedHspPaths);
-    bool isSysCapValid = (result == ERR_OK) ? true : false;
+    bool isSysCapValid = (result == ERR_OK);
     if (!isSysCapValid) {
         APP_LOGI("Hsp syscap check failed %{public}d", result);
     }
@@ -370,7 +372,7 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
         result = bundleInstallChecker_->CheckDeviceType(newInfos);
         if (result != ERR_OK) {
             APP_LOGE("Check device type failed : %{public}d", result);
-            return ERR_BUNDLE_MANAGER_INSTALL_SYSCAP_OR_DEVICE_TYPE_ERROR;
+            return ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR;
         }
     }
 
@@ -516,7 +518,8 @@ ErrCode AppServiceFwkInstaller::ExtractModule(
         newInfo.GetCurrentModulePackage().c_str(), bundlePath.c_str());
     ErrCode result = ERR_OK;
     std::string bundleDir =
-        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
+        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
     result = MkdirIfNotExist(bundleDir);
     CHECK_RESULT(result, "Check bundle dir failed %{public}d");
 
@@ -547,7 +550,8 @@ ErrCode AppServiceFwkInstaller::ExtractModule(InnerBundleInfo &oldInfo,
 {
     ErrCode result = ERR_OK;
     std::string bundleDir =
-        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
+        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
     result = MkdirIfNotExist(bundleDir);
     CHECK_RESULT(result, "Check bundle dir failed %{public}d");
 
@@ -934,8 +938,8 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
         APP_LOGD("bundleName %{public}s not existed local", bundleName_.c_str());
         return true;
     }
-    APP_LOGI_NOFUNC("fwk install old version:%{public}d new version:%{public}d",
-        oldInfo.GetVersionCode(), versionCode_);
+    APP_LOGI_NOFUNC("%{public}s old version:%{public}d, new version:%{public}d",
+        bundleName_.c_str(), oldInfo.GetVersionCode(), versionCode_);
 
     if ((oldInfo.GetVersionCode() == versionCode_) &&
         oldInfo.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
@@ -995,7 +999,8 @@ ErrCode AppServiceFwkInstaller::RemoveLowerVersionSoDir(uint32_t versionCode)
         return ERR_OK;
     }
     std::string bundleDir =
-        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
+        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
     std::string versionDir = bundleDir
         + AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
     APP_LOGI_NOFUNC("RemoveLowerVersionSoDir %{public}s", versionDir.c_str());

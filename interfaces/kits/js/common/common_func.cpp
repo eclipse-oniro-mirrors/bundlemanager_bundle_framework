@@ -198,8 +198,9 @@ napi_value CommonFunc::WrapVoidToJS(napi_env env)
 
 bool CommonFunc::CheckBundleFlagWithPermission(int32_t flag)
 {
-    if ((flag & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
-        != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION)) {
+    if ((static_cast<uint32_t>(flag) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
+        != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION)) {
         return false;
     }
     return true;
@@ -1512,6 +1513,10 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.cloudFileSyncEnabled, &nCloudFileSyncEnabled));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "cloudFileSyncEnabled",
         nCloudFileSyncEnabled));
+
+    napi_value nFlags;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.applicationFlags, &nFlags));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, FLAGS, nFlags));
 }
 
 void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)
@@ -1605,6 +1610,11 @@ void CommonFunc::ConvertSignatureInfo(napi_env env, const SignatureInfo &signatu
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, signatureInfo.appIdentifier.c_str(), NAPI_AUTO_LENGTH, &nAppIdentifier));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "appIdentifier", nAppIdentifier));
+
+    napi_value nCertificate;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, signatureInfo.certificate.c_str(), NAPI_AUTO_LENGTH, &nCertificate));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "certificate", nCertificate));
 }
 
 void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo)

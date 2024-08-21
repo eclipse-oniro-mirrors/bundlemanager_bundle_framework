@@ -119,7 +119,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "photoEditor", ExtensionAbilityType::PHOTO_EDITOR },
     { "sysPicker/photoEditor", ExtensionAbilityType::SYSPICKER_PHOTOEDITOR },
     { "sys/visualExtension", ExtensionAbilityType::SYS_VISUAL },
-    { "uiService", ExtensionAbilityType::UI_SERVICE }
+    { "uiService", ExtensionAbilityType::UI_SERVICE },
+    { "recentPhoto", ExtensionAbilityType::RECENT_PHOTO }
 };
 
 // the new extension type does not need to be added here
@@ -138,7 +139,8 @@ const std::set<std::string> NOT_NEED_CREATE_SANBOX_MODE = {
 const std::unordered_map<std::string, ExtensionProcessMode> EXTENSION_PROCESS_MODE_MAP = {
     { "instance", ExtensionProcessMode::INSTANCE },
     { "type", ExtensionProcessMode::TYPE },
-    { "bundle", ExtensionProcessMode::BUNDLE }
+    { "bundle", ExtensionProcessMode::BUNDLE },
+    { "runWithMainProcess", ExtensionProcessMode::RUN_WITH_MAIN_PROCESS }
 };
 
 bool ReadSkillInfoFromParcel(Parcel &parcel, std::vector<SkillUriForAbilityAndExtension> &skillUri)

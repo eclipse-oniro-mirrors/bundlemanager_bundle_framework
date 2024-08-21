@@ -20,11 +20,11 @@ namespace AppExecFwk {
 namespace {
 int32_t g_permJson = ERR_OK;
 std::mutex g_mutex;
-static const std::string PERMISSIONS_PROFILE_KEY_BUNDLENAME = "bundleName";
-static const std::string PERMISSIONS_PROFILE_KEY_PERMISSIONS = "permissions";
-static const std::string PERMISSIONS_PROFILE_KEY_NAME = "name";
-static const std::string PERMISSIONS_PROFILE_KEY_USER_CANCELLABLE = "userCancellable";
-static const std::string PERMISSIONS_PROFILE_KEY_APP_SIGNATURE = "app_signature";
+static constexpr const char* PERMISSIONS_PROFILE_KEY_BUNDLENAME = "bundleName";
+static constexpr const char* PERMISSIONS_PROFILE_KEY_PERMISSIONS = "permissions";
+static constexpr const char* PERMISSIONS_PROFILE_KEY_NAME = "name";
+static constexpr const char* PERMISSIONS_PROFILE_KEY_USER_CANCELLABLE = "userCancellable";
+static constexpr const char* PERMISSIONS_PROFILE_KEY_APP_SIGNATURE = "app_signature";
 }
 
 void from_json(const nlohmann::json &jsonObject, PermissionInfo &permissionInfo)

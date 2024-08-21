@@ -187,7 +187,7 @@ bool QuickFixBootScanner::ReprocessQuickFix(const std::string &quickFixPath, con
 {
     LOG_D(BMS_TAG_DEFAULT, "start to ReprocessQuickFix with bundleName %{public}s", bundleName.c_str());
     std::string destinationDir = ServiceConstants::HAP_COPY_PATH;
-    destinationDir += ServiceConstants::PATH_SEPARATOR + ServiceConstants::SECURITY_QUICK_FIX_PATH +
+    destinationDir += std::string(ServiceConstants::PATH_SEPARATOR) + ServiceConstants::SECURITY_QUICK_FIX_PATH +
         ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR;
     if (!BundleUtil::CreateDir(destinationDir)) {
         LOG_E(BMS_TAG_DEFAULT, "create dir failed");
@@ -279,17 +279,18 @@ void QuickFixBootScanner::RemoveInvalidDir() const
         });
     }
     // remove invalid temp install dir
-    std::string tempInstallDir = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR
+    std::string hapcopypathstring = std::string(ServiceConstants::HAP_COPY_PATH);
+    std::string tempInstallDir = hapcopypathstring + ServiceConstants::PATH_SEPARATOR
         + ServiceConstants::STREAM_INSTALL_PATH;
-    std::string tempQuickFixDir = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR
+    std::string tempQuickFixDir = hapcopypathstring + ServiceConstants::PATH_SEPARATOR
         + ServiceConstants::QUICK_FIX_PATH;
-    std::string tempSecureInstallDir = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
+    std::string tempSecureInstallDir = hapcopypathstring + ServiceConstants::PATH_SEPARATOR +
         ServiceConstants::SECURITY_STREAM_INSTALL_PATH;
-    std::string tempSecureQuickFixDir = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
+    std::string tempSecureQuickFixDir = hapcopypathstring + ServiceConstants::PATH_SEPARATOR +
         ServiceConstants::SECURITY_QUICK_FIX_PATH;
-    std::string tempSignatureFileDir = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
+    std::string tempSignatureFileDir = hapcopypathstring + ServiceConstants::PATH_SEPARATOR +
         ServiceConstants::SIGNATURE_FILE_PATH;
-    std::string tempSecureSignatureFileDir = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
+    std::string tempSecureSignatureFileDir = hapcopypathstring+ ServiceConstants::PATH_SEPARATOR +
         ServiceConstants::SECURITY_SIGNATURE_FILE_PATH;
     BundleUtil::DeleteDir(tempInstallDir);
     BundleUtil::DeleteDir(tempQuickFixDir);

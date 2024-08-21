@@ -16,20 +16,22 @@
 #include "bundle_profile.h"
 
 #include <sstream>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "parameter.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
-const int32_t THRESHOLD_VAL_LEN = 40;
+constexpr const char* COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
+constexpr int8_t THRESHOLD_VAL_LEN = 40;
 bool IsSupportCompressNativeLibs()
 {
     char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
+    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS, "", compressNativeLibs, THRESHOLD_VAL_LEN);
     if (ret <= 0) {
-        APP_LOGE("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS.c_str());
+        APP_LOGE("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS);
         return false;
     }
     if (std::strcmp(compressNativeLibs, "true") == 0) {
@@ -42,45 +44,45 @@ namespace ProfileReader {
 int32_t g_parseResult = ERR_OK;
 std::mutex g_mutex;
 
-const std::set<std::string> MODULE_TYPE_SET = {
+const std::unordered_set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
     "shared"
 };
-const std::map<std::string, AbilityType> ABILITY_TYPE_MAP = {
+const std::unordered_map<std::string, AbilityType> ABILITY_TYPE_MAP = {
     {"page", AbilityType::PAGE},
     {"service", AbilityType::SERVICE},
     {"data", AbilityType::DATA},
     {"form", AbilityType::FORM}
 };
-const std::map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MAP = {
+const std::unordered_map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MAP = {
     {"unspecified", DisplayOrientation::UNSPECIFIED},
     {"landscape", DisplayOrientation::LANDSCAPE},
     {"portrait", DisplayOrientation::PORTRAIT},
     {"followRecent", DisplayOrientation::FOLLOWRECENT}
 };
-const std::map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
+const std::unordered_map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
     {"singleton", LaunchMode::SINGLETON},
     {"standard", LaunchMode::STANDARD},
     {"specified", LaunchMode::SPECIFIED}
 };
-const std::map<std::string, int32_t> dimensionMap = {
+const std::unordered_map<std::string, int32_t> dimensionMap = {
     {"1*2", 1},
     {"2*2", 2},
     {"2*4", 3},
     {"4*4", 4},
     {"2*1", 5}
 };
-const std::map<std::string, FormType> formTypeMap = {
+const std::unordered_map<std::string, FormType> formTypeMap = {
     {"JS", FormType::JS},
     {"Java", FormType::JAVA}
 };
-const std::map<std::string, ModuleColorMode> moduleColorMode = {
+const std::unordered_map<std::string, ModuleColorMode> moduleColorMode = {
     {"auto", ModuleColorMode::AUTO},
     {"dark", ModuleColorMode::DARK},
     {"light", ModuleColorMode::LIGHT},
 };
-const std::map<std::string, FormsColorMode> formColorModeMap = {
+const std::unordered_map<std::string, FormsColorMode> formColorModeMap = {
     {"auto", FormsColorMode::AUTO_MODE},
     {"dark", FormsColorMode::DARK_MODE},
     {"light", FormsColorMode::LIGHT_MODE}
@@ -101,8 +103,8 @@ std::map<std::string, uint32_t> backgroundModeMap = {
 
 struct Version {
     int32_t code = 0;
-    std::string name;
     int32_t minCompatibleVersionCode = -1;
+    std::string name;
 };
 
 struct ApiVersion {
@@ -124,10 +126,10 @@ struct App {
     Version version;
     ApiVersion apiVersion;
     bool singleton = false;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
     bool userDataClearable = true;
     bool asanEnabled = false;
+    int32_t iconId = 0;
+    int32_t labelId = 0;
     std::vector<std::string> targetBundleList;
 };
 
@@ -164,12 +166,12 @@ struct Device {
     std::string jointUserId;
     std::string process;
     bool keepAlive = false;
-    Ark ark;
     bool directLaunch = false;
     bool supportBackup = false;
     bool compressNativeLibs = true;
-    Network network;
     bool debug = false;
+    Ark ark;
+    Network network;
 };
 // config.json  deviceConfig
 struct DeviceConfig {
@@ -207,10 +209,13 @@ struct Window {
 };
 
 struct Forms {
+    bool isDefault = false;
+    bool updateEnabled = false;
+    bool formVisibleNotify = false;
+    int32_t descriptionId = 0;
+    int32_t updateDuration = 0;
     std::string name;
     std::string description;
-    int32_t descriptionId = 0;
-    bool isDefault = false;
     std::string type;
     std::string src;
     Window window;
@@ -219,12 +224,9 @@ struct Forms {
     std::string defaultDimension;
     std::vector<std::string> landscapeLayouts;
     std::vector<std::string> portraitLayouts;
-    bool updateEnabled = false;
     std::string scheduledUpdateTime = "";
-    int32_t updateDuration = 0;
     std::string deepLink;
     std::string formConfigAbility;
-    bool formVisibleNotify = false;
     std::string jsComponentName;
     FormsMetaData metaData;
 };
@@ -245,21 +247,30 @@ struct UriPermission {
 };
 
 struct Ability {
+    bool visible = false;
+    bool continuable = false;
+    bool formEnabled = false;
+    bool grantPermission;
+    bool directLaunch = false;
+    bool multiUserShared = false;
+    bool supportPipMode = false;
+    bool formsEnabled = false;
+    bool removeMissionAfterTerminate = false;
+    int32_t descriptionId = 0;
+    int32_t iconId = 0;
+    int32_t labelId = 0;
+    int32_t priority = 0;
+    int32_t startWindowIconId = 0;
+    int32_t startWindowBackgroundId = 0;
     std::string name;
     std::string originalName;
     std::string description;
-    int32_t descriptionId = 0;
     std::string icon;
-    int32_t iconId = 0;
     std::string label;
-    int32_t labelId = 0;
-    int32_t priority = 0;
     std::string uri;
     std::string process;
     std::string launchType = "singleton";
     std::string theme;
-    bool visible = false;
-    bool continuable = false;
     std::vector<std::string> permissions;
     std::vector<Skill> skills;
     std::vector<std::string> deviceCapability;
@@ -267,27 +278,18 @@ struct Ability {
     std::string type;
     std::string srcPath;
     std::string srcLanguage = "js";
-    bool formEnabled = false;
     Form form;
     std::string orientation = "unspecified";
     std::vector<std::string> backgroundModes;
-    bool grantPermission;
     UriPermission uriPermission;
     std::string readPermission;
     std::string writePermission;
-    bool directLaunch = false;
     std::vector<std::string> configChanges;
     std::string mission;
     std::string targetAbility;
-    bool multiUserShared = false;
-    bool supportPipMode = false;
-    bool formsEnabled = false;
     std::vector<Forms> formses;
     std::string startWindowIcon;
-    int32_t startWindowIconId = 0;
     std::string startWindowBackground;
-    int32_t startWindowBackgroundId = 0;
-    bool removeMissionAfterTerminate = false;
 };
 
 struct Js {
@@ -324,6 +326,7 @@ struct Module {
     std::string package;
     std::string name;
     std::string description;
+    bool isLibIsolated = false;
     int32_t descriptionId = 0;
     std::string colorMode = "auto";
     std::vector<std::string> supportedModes;
@@ -340,7 +343,6 @@ struct Module {
     std::vector<DefinePermission> definePermissions;
     std::string mainAbility;
     std::string srcPath;
-    bool isLibIsolated = false;
     std::string buildHash;
 };
 
@@ -2112,7 +2114,7 @@ bool ParserNativeSo(
     bool isLibIsolated = configJson.module.isLibIsolated;
     if (isDefault) {
         if (isSystemLib64Exist) {
-            if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM64_V8A)) {
+            if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A)) {
                 cpuAbi = ServiceConstants::ARM64_V8A;
                 soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM64_V8A);
                 UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
@@ -2122,14 +2124,14 @@ bool ParserNativeSo(
             return false;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI_V7A)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A)) {
             cpuAbi = ServiceConstants::ARM_EABI_V7A;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI_V7A);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
             return true;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI)) {
             cpuAbi = ServiceConstants::ARM_EABI;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
@@ -2637,8 +2639,7 @@ ErrCode BundleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserNativeSo(configJson, bundleExtractor, innerBundleInfo)) {
-        APP_LOGE("Parser native so failed");
-        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+        APP_LOGW("Parser native so failed");
     }
     return ERR_OK;
 }

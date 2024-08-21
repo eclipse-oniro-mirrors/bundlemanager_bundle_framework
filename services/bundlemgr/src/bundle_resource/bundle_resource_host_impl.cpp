@@ -19,13 +19,19 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_manager.h"
 #include "bundle_mgr_service.h"
+#include "xcollie_helper.h"
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+const std::string FUNCATION_GET_BUNDLE_RESOURCE_INFO = "BundleResourceHostImpl::GetBundleResourceInfo";
+
 ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo, const int32_t appIndex)
 {
     APP_LOGD("start, bundleName: %{public}s, flags: %{public}u", bundleName.c_str(), flags);
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_BUNDLE_RESOURCE_INFO);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -107,6 +113,20 @@ ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->GetAllBundleResourceInfo(flags, bundleResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("get all resource from ext failed, flags:%{public}u", flags);
+    } else {
+        if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
+            APP_LOGD("need sort by label");
+            std::sort(bundleResourceInfos.begin(), bundleResourceInfos.end(),
+                [](BundleResourceInfo &resourceA, BundleResourceInfo &resourceB) {
+                    return resourceA.label < resourceB.label;
+                });
+        }
+    }
     BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
     return ERR_OK;
 }
@@ -138,6 +158,20 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
         APP_LOGE("get all resource failed, flags:%{public}u", flags);
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("get all resource from ext failed, flags:%{public}u", flags);
+    } else {
+        if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
+            APP_LOGD("need sort by label");
+            std::sort(launcherAbilityResourceInfos.begin(), launcherAbilityResourceInfos.end(),
+                [](LauncherAbilityResourceInfo &resourceA, LauncherAbilityResourceInfo &resourceB) {
+                    return resourceA.label < resourceB.label;
+                });
+        }
     }
     BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
     return ERR_OK;

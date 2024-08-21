@@ -15,6 +15,7 @@
 
 #include "bundle_resource_manager.h"
 
+#include "bms_extension_client.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_util.h"
 #include "bundle_resource_parser.h"
@@ -26,17 +27,17 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
-constexpr int32_t MAX_TASK_NUMBER = 2;
-const std::string THREAD_POOL_NAME = "BundleResourceThreadPool";
-constexpr int32_t CHECK_INTERVAL = 30; // 30ms
+constexpr int8_t MAX_TASK_NUMBER = 2;
+constexpr const char* THREAD_POOL_NAME = "BundleResourceThreadPool";
+constexpr int8_t CHECK_INTERVAL = 30; // 30ms
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
-constexpr int32_t SCENE_ID_UPDATE_RESOURCE = 1 << 1;
-const std::string SYSTEM_THEME_PATH = "/data/service/el1/public/themes/";
-const std::string THEME_ICONS_A = "/a/app/icons/";
-const std::string THEME_ICONS_B = "/b/app/icons/";
-const std::string INNER_UNDER_LINE = "_";
-const std::string THEME_ICONS_A_FLAG = "/a/app/flag";
-const std::string THEME_ICONS_B_FLAG = "/b/app/flag";
+constexpr int8_t SCENE_ID_UPDATE_RESOURCE = 1 << 1;
+constexpr const char* SYSTEM_THEME_PATH = "/data/service/el1/public/themes/";
+constexpr const char* THEME_ICONS_A = "/a/app/icons/";
+constexpr const char* THEME_ICONS_B = "/b/app/icons/";
+constexpr const char* INNER_UNDER_LINE = "_";
+constexpr const char* THEME_ICONS_A_FLAG = "/a/app/flag";
+constexpr const char* THEME_ICONS_B_FLAG = "/b/app/flag";
 }
 
 BundleResourceManager::BundleResourceManager()
@@ -146,9 +147,9 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
     SendBundleResourcesChangedEvent(userId, type);
     std::string systemState;
     if (bundleResourceRdb_->GetCurrentSystemState(systemState)) {
-        APP_LOGI("current resource rdb system state:%{public}s", systemState.c_str());
+        APP_LOGI_NOFUNC("current resource rdb system state:%{public}s", systemState.c_str());
     }
-    APP_LOGI("add all resource end");
+    APP_LOGI_NOFUNC("add all resource end");
     return true;
 }
 
@@ -411,6 +412,12 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo, appIndex);
+    if (ret == ERR_OK) {
+        APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
+        return true;
+    }
     APP_LOGE_NOFUNC("%{public}s not exist in resource rdb", bundleName.c_str());
     return false;
 }
@@ -422,6 +429,13 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
     uint32_t resourceFlags = CheckResourceFlags(flags);
     if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, resourceFlags,
         launcherAbilityResourceInfo, appIndex)) {
+        APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
+        return true;
+    }
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->GetLauncherAbilityResourceInfo(bundleName, resourceFlags,
+        launcherAbilityResourceInfo, appIndex);
+    if (ret == ERR_OK) {
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }

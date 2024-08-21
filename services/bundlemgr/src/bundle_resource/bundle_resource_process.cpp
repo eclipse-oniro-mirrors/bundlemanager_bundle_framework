@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string INNER_UNDER_LINE = "_";
+constexpr const char* INNER_UNDER_LINE = "_";
 }
 
 bool BundleResourceProcess::GetBundleResourceInfo(const InnerBundleInfo &innerBundleInfo,

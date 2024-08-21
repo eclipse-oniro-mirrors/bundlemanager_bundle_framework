@@ -45,7 +45,7 @@ public:
 
 protected:
     bool otaInstall_ = false;
-    enum class InstallerState {
+    enum class InstallerState : uint8_t {
         INSTALL_START,
         INSTALL_BUNDLE_CHECKED = 5,
         INSTALL_SYSCAP_CHECKED = 10,
@@ -768,6 +768,7 @@ private:
     std::string entryModuleName_ = "";
     std::map<std::string, std::string> pgoParams_;
     bool isEnterpriseBundle_ = false;
+    bool isInternaltestingBundle_ = false;
     std::string appIdentifier_ = "";
     Security::Verify::HapVerifyResult verifyRes_;
     std::map<std::string, std::string> targetSoPathMap_;

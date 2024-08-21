@@ -136,7 +136,7 @@ namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 }
 
-void HandleCleanEnv(void *data)
+void ClearCacheListener::HandleCleanEnv(void *data)
 {
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
     cache.clear();
@@ -929,7 +929,7 @@ void QueryAbilityInfosExec(napi_env env, void *data)
 
 void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
 {
-    APP_LOGI("begin");
+    APP_LOGI_NOFUNC("QueryAbilityInfosComplete begin");
     AbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
@@ -959,7 +959,7 @@ void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             QUERY_ABILITY_INFOS, BUNDLE_PERMISSIONS);
     }
-    APP_LOGI("QueryAbilityInfosComplete before return");
+    APP_LOGI_NOFUNC("QueryAbilityInfosComplete before return");
     CommonFunc::NapiReturnDeferred<AbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
@@ -3281,6 +3281,15 @@ void CreateApplicationFlagObject(napi_env env, napi_value value)
         nGetApplicationInfoWithDisable));
 }
 
+void CreateApplicationInfoFlagObject(napi_env env, napi_value value)
+{
+    napi_value nApplicationInfoFlagInstalled;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        ApplicationInfoFlag::FLAG_INSTALLED), &nApplicationInfoFlagInstalled));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLAG_INSTALLED",
+        nApplicationInfoFlagInstalled));
+}
+
 void CreateAppDistributionTypeObject(napi_env env, napi_value value)
 {
     napi_value nAppGallery;
@@ -3662,6 +3671,23 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL), &nGetBundleInfoWithSkill));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_SKILL",
         nGetBundleInfoWithSkill));
+
+    napi_value nGetBundleInfoOnlyWithLauncherAbility;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY), &nGetBundleInfoOnlyWithLauncherAbility));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY",
+        nGetBundleInfoOnlyWithLauncherAbility));
+
+    napi_value nGetBundleInfoExcludeClone;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE), &nGetBundleInfoExcludeClone));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_EXCLUDE_CLONE",
+        nGetBundleInfoExcludeClone));
+    napi_value nGetBundleInfoOfAnyUser;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER), &nGetBundleInfoOfAnyUser));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_OF_ANY_USER",
+        nGetBundleInfoOfAnyUser));
 }
 
 static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,
@@ -3874,7 +3900,6 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
-    napi_add_env_cleanup_hook(env, HandleCleanEnv, &cache);
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
         env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete);
     callbackPtr.release();
@@ -4574,7 +4599,6 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
     auto uid = IPCSkeleton::GetCallingUid();
     std::string bundleName = std::to_string(uid);
     int32_t userId = uid / Constants::BASE_USER_RANGE;
-    napi_add_env_cleanup_hook(env, HandleCleanEnv, &cache);
     napi_value nBundleInfo = nullptr;
     if (!CommonFunc::CheckBundleFlagWithPermission(flags)) {
         std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
@@ -4676,7 +4700,7 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetJsonProfile(static_cast<ProfileType>(profileType), bundleName, moduleName, profile, userId));
     if (ret != SUCCESS) {
-        APP_LOGE("GetJsonProfile call error, bundleName is %{public}s", bundleName.c_str());
+        APP_LOGD("napi GetJsonProfile err:%{public}d -n %{public}s", ret, bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_JSON_PROFILE, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);

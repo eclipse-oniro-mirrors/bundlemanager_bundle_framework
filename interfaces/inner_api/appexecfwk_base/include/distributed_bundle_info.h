@@ -25,15 +25,15 @@ namespace OHOS {
 namespace AppExecFwk {
 struct DistributedBundleInfo : public Parcelable {
     uint32_t version = 1;
-    std::string bundleName;
     uint32_t versionCode = 0;
+    std::string bundleName;
     std::string versionName;
     uint32_t minCompatibleVersion = 0;
     uint32_t targetVersionCode = 0;
     uint32_t compatibleVersionCode = 0;
+    bool enabled = true;
     std::string appId;
     std::vector<DistributedModuleInfo> moduleInfos;
-    bool enabled = true;
     // user related fields, assign when calling the get interface
     uint32_t accessTokenId = 0;
     // bundle update time

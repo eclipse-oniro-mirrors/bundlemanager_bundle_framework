@@ -33,8 +33,8 @@ enum BundlePackFlag {
 
 struct Version {
     uint32_t code = 0;
-    std::string name;
     uint32_t minCompatibleVersionCode = 0;
+    std::string name;
 };
 
 struct PackageApp {
@@ -46,8 +46,8 @@ struct AbilityFormInfo {
     std::string name;
     std::string type;
     bool updateEnabled = false;
-    std::string scheduledUpdateTime;
     uint32_t updateDuration = 0;
+    std::string scheduledUpdateTime;
     std::vector<std::string> supportDimensions;
     std::string defaultDimension;
 };
@@ -68,8 +68,8 @@ struct ModuleDistro {
 
 struct ApiVersion {
     uint32_t compatible = 0;
-    std::string releaseType;
     uint32_t target = 0;
+    std::string releaseType;
 };
 
 struct ExtensionAbilities {

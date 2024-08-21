@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <dirent.h>
 #include <fcntl.h>
+#include <fstream>
 #include <iostream>
 #include <gtest/gtest.h>
 #include <string>
@@ -1450,5 +1451,51 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9000, Function | Sma
     Security::CodeSign::EntryMap entryMap;
     ErrCode ret = InstalldOperator::PerformCodeSignatureCheck(codeSignatureParam, entryMap);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_9100
+ * @tc.name: test function of ExtractProfile
+ * @tc.desc: 1. calling ExtractProfile
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9100, Function | SmallTest | Level0)
+{
+    BundleExtractor extractor("");
+
+    std::filebuf file;
+    std::ostream dest(&file);
+    bool ret = extractor.ExtractProfile(dest);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_9200
+ * @tc.name: test function of ExtractProfile
+ * @tc.desc: 1. calling ExtractProfile
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9200, Function | SmallTest | Level0)
+{
+    BundleExtractor extractor("");
+
+    std::filebuf file;
+    std::ostream dest(&file);
+    bool ret = extractor.ExtractPackFile(dest);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_9300
+ * @tc.name: test function of ExtractTargetHnpFile
+ * @tc.desc: 1. calling ExtractFiles of ExtractTargetHnpFile
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9300, Function | SmallTest | Level1)
+{
+    BundleExtractor extractor("");
+    std::string entryName;
+    std::string targetPath;
+    InstalldOperator::ExtractTargetHnpFile(extractor, entryName, targetPath, ExtractFileType::ALL);
+    std::string path = "test.path";
+    auto ret = InstalldOperator::IsDiffFiles(TEST_STRING, path, TEST_STRING);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

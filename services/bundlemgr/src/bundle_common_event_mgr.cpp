@@ -29,7 +29,7 @@ constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
 constexpr const char* APP_ID = "appId";
 constexpr const char* IS_MODULE_UPDATE = "isModuleUpdate";
 constexpr const char* IS_ENABLE_DYNAMIC_ICON = "isEnableDynamicIcon";
-const std::string BUNDLE_RESOURCES_CHANGED = "usual.event.BUNDLE_RESOURCES_CHANGED";
+constexpr const char* BUNDLE_RESOURCES_CHANGED = "usual.event.BUNDLE_RESOURCES_CHANGED";
 constexpr const char* APP_IDENTIFIER = "appIdentifier";
 constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
 constexpr const char* BUNDLE_TYPE = "bundleType";
@@ -40,11 +40,12 @@ constexpr const char* BUNDLE_RESOURCE_CHANGE_TYPE = "bundleResourceChangeType";
 constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* TYPE = "type";
 constexpr const char* RESULT_CODE = "resultCode";
+constexpr const char* PERMISSION_GET_DISPOSED_STATUS = "ohos.permission.GET_DISPOSED_APP_STATUS";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
 {
-    APP_LOGI("enter BundleCommonEventMgr");
+    APP_LOGI_NOFUNC("enter BundleCommonEventMgr");
     Init();
 }
 
@@ -206,6 +207,8 @@ void BundleCommonEventMgr::NotifySetDiposedRule(
     EventFwk::CommonEventData commonData { want };
     commonData.SetData(data);
     EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { PERMISSION_GET_DISPOSED_STATUS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
 
@@ -218,6 +221,8 @@ void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int
     want.SetParam(APP_INDEX, appIndex);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { PERMISSION_GET_DISPOSED_STATUS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
 

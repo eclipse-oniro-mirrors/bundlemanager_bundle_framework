@@ -27,21 +27,21 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t UNLOAD_TIME = 3 * 60 * 1000; // 3 min for installd to unload
-constexpr int32_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
-const std::string UNLOAD_TASK_NAME = "UnloadInstalldTask";
-const std::string UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
+constexpr int32_t UNLOAD_TIME = 3 * 60 * 1000; // 3 min for installd to unload
+constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
+constexpr const char* UNLOAD_TASK_NAME = "UnloadInstalldTask";
+constexpr const char* UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
 }
 
 InstalldHost::InstalldHost()
 {
     InitEventHandler();
-    LOG_I(BMS_TAG_INSTALLD, "installd host instance is created");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd host created");
 }
 
 InstalldHost::~InstalldHost()
 {
-    LOG_I(BMS_TAG_INSTALLD, "installd host instance is destroyed");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd host destroyed");
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -207,6 +207,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_EXTENSION_SANDBOX_TYPE_LIST):
             result = this->HandleGetExtensionSandboxTypeList(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::ADD_USER_DIR_DELETE_DFX):
+            result = this->HandleAddUserDirDeleteDfx(data, reply);
             break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
@@ -870,6 +873,17 @@ bool InstalldHost::HandleGetExtensionSandboxTypeList(MessageParcel &data, Messag
             APP_LOGE("write failed");
             return false;
         }
+    }
+    return true;
+}
+
+bool InstalldHost::HandleAddUserDirDeleteDfx(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t userId = data.ReadInt32();
+    ErrCode result = AddUserDirDeleteDfx(userId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (result != ERR_OK) {
+        return false;
     }
     return true;
 }

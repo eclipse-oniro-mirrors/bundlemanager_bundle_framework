@@ -193,6 +193,10 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_001, TestSize.
     EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleInstall(BUNDLE_NAME, userId_, appIdx_),
         ERR_APPEXECFWK_CLONE_INSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID);
 
+    int32_t appIndex = 0;
+    SetUserIdToDataMgr(installer);
+    EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleInstall(BUNDLE_NAME, installer, appIndex),
+        ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 
     EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleUninstall("", userId_, appIdx_),
         ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
@@ -202,6 +206,9 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_001, TestSize.
 
     EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, 6),
         ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX);
+
+    EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, installer, appIndex),
+        ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_CLONED);
 }
 
 /**
@@ -258,4 +265,52 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_005, TestSize.
     EXPECT_EQ(
         bundleCloneInstall_->RemoveCloneDataDir("", userId_, appIdx_), ERR_APPEXECFWK_CLONE_INSTALL_INTERNAL_ERROR);
 }
+
+/**
+ * @tc.number: BmsBundleCloneInstallerTest_006
+ * @tc.name: UninstallAllCloneApps
+ * @tc.desc: test UninstallAllCloneApps()
+ */
+HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_006, TestSize.Level1)
+{
+    std::string bundleName = "";
+    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, userId_),
+        ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
+    bundleName = "bundleName006";
+    int32_t userId = 101;
+    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, userId),
+        ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST);
+    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, userId_),
+        ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED);
+    SetInnerBundleInfo(bundleName);
+    ScopeGuard deleteGuard([this, bundleName] { DeleteBundle(bundleName); });
+    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, userId_),
+        ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID);
+    int32_t appIndex = 0;
+    bundleCloneInstall_->InstallCloneApp(bundleName, installer, appIndex);
+    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, installer), ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleCloneInstallerTest_007
+ * @tc.name: GetDataMgr
+ * @tc.desc: test GetDataMgr()
+ */
+HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_007, TestSize.Level1)
+{
+    EXPECT_EQ(bundleCloneInstall_->GetDataMgr(), ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleCloneInstallerTest_008
+ * @tc.name: ResetInstallProperties
+ * @tc.desc: test ResetInstallProperties()
+ */
+HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_008, TestSize.Level1)
+{
+    bundleCloneInstall_->ResetInstallProperties();
+    EXPECT_EQ(bundleCloneInstall_->uid_, 0);
+    EXPECT_EQ(bundleCloneInstall_->accessTokenId_, 0);
+}
+
 }

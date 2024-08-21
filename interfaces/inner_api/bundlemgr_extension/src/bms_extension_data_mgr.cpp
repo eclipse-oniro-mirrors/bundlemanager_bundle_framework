@@ -417,5 +417,80 @@ ErrCode BmsExtensionDataMgr::OptimizeDisposedPredicates(const std::string &calli
         ret, absRdbPredicates.ToString().c_str());
     return ret;
 }
+
+ErrCode BmsExtensionDataMgr::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
+    BundleResourceInfo &bundleResourceInfo, const int32_t appIndex)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    ErrCode ret = bundleMgrExtPtr->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex);
+    APP_LOGD("call bundle mgr ext GetBundleResourceInfo, return %{public}d, bundleName:%{public}s",
+        ret, bundleName.c_str());
+    return ret;
+}
+
+ErrCode BmsExtensionDataMgr::GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    ErrCode ret =
+        bundleMgrExtPtr->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo, appIndex);
+    APP_LOGD("call bundle mgr ext GetLauncherAbilityResourceInfo, return %{public}d, bundleName:%{public}s",
+        ret, bundleName.c_str());
+    return ret;
+}
+
+ErrCode BmsExtensionDataMgr::GetAllBundleResourceInfo(const uint32_t flags,
+    std::vector<BundleResourceInfo> &bundleResourceInfos)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    ErrCode ret = bundleMgrExtPtr->GetAllBundleResourceInfo(flags, bundleResourceInfos);
+    APP_LOGD("call bundle mgr ext GetAllBundleResourceInfo, return %{public}d", ret);
+    return ret;
+}
+
+ErrCode BmsExtensionDataMgr::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    ErrCode ret = bundleMgrExtPtr->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
+    APP_LOGD("call bundle mgr ext GetAllLauncherAbilityResourceInfo, return %{public}d", ret);
+    return ret;
+}
 } // AppExecFwk
 } // OHOS

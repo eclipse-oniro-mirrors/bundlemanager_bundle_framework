@@ -24,8 +24,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string SYSTEM_PARAM_DATA_SIZE_THRESHOLD = "persist.sys.bms.aging.policy.data.size.threshold";
-const std::string SYSTEM_PARAM_RECENILY_USED_THRESHOLD = "persist.sys.bms.aging.policy.recently.used.threshold";
+constexpr const char* SYSTEM_PARAM_DATA_SIZE_THRESHOLD = "persist.sys.bms.aging.policy.data.size.threshold";
+constexpr const char* SYSTEM_PARAM_RECENILY_USED_THRESHOLD = "persist.sys.bms.aging.policy.recently.used.threshold";
 }
 int64_t AgingRequest::totalDataBytesThreshold_ = AgingConstants::DEFAULT_AGING_DATA_SIZE_THRESHOLD;
 int64_t AgingRequest::oneDayTimeMs_ = AgingConstants::ONE_DAYS_MS;
@@ -44,7 +44,7 @@ size_t AgingRequest::SortAgingBundles()
 void AgingRequest::InitAgingDatasizeThreshold()
 {
     char szDatasizeThreshold[AgingConstants::THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(SYSTEM_PARAM_DATA_SIZE_THRESHOLD.c_str(), "", szDatasizeThreshold,
+    int32_t ret = GetParameter(SYSTEM_PARAM_DATA_SIZE_THRESHOLD, "", szDatasizeThreshold,
         AgingConstants::THRESHOLD_VAL_LEN);
     APP_LOGD("ret is %{public}d, szDatasizeThreshold is %{public}d", ret, atoi(szDatasizeThreshold));
     if (ret <= 0) {
@@ -61,7 +61,7 @@ void AgingRequest::InitAgingDatasizeThreshold()
 void AgingRequest::InitAgingOneDayTimeMs()
 {
     char szOneDayTimeMs[AgingConstants::THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(SYSTEM_PARAM_RECENILY_USED_THRESHOLD.c_str(), "", szOneDayTimeMs,
+    int32_t ret = GetParameter(SYSTEM_PARAM_RECENILY_USED_THRESHOLD, "", szOneDayTimeMs,
         AgingConstants::THRESHOLD_VAL_LEN);
     APP_LOGD("ret is %{public}d, szOneDayTimeMs is %{public}d", ret, atoi(szOneDayTimeMs));
     if (ret <= 0) {

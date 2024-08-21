@@ -24,12 +24,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct SharedModuleInfo : public Parcelable {
-    std::string name;
+    bool compressNativeLibs = true;
     uint32_t versionCode = 0;
+    uint32_t descriptionId = 0;
+    std::string name;
     std::string versionName;
     std::string description;
-    uint32_t descriptionId = 0;
-    bool compressNativeLibs = true;
     std::string hapPath;
     std::string cpuAbi;
     std::string nativeLibraryPath;

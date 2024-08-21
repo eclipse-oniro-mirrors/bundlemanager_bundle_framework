@@ -946,12 +946,15 @@ public:
 
     ErrCode GetAppIdByBundleName(const std::string &bundleName, std::string &appId) const;
 
+    ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) const;
+
     ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
     ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
     ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos);
     ErrCode DeleteDesktopShortcutInfo(const std::string &bundleName);
     ErrCode DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
 
+    void GetBundleInfosForContinuation(std::vector<BundleInfo> &bundleInfos) const;
 private:
     /**
      * @brief Init transferStates.
@@ -1138,12 +1141,17 @@ private:
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
     void ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const;
     void updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
+    void updateUbsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
         std::vector<AbilityInfo> &abilityInfos) const;
     void GetMultiLauncherAbilityInfo(const Want& want,
         const InnerBundleInfo& info, const InnerBundleUserInfo &bundleUserInfo,
         int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const;
+
+    void PreProcessAnyUserFlag(const std::string &bundleName, int32_t flags, int32_t &userId) const;
+    void PostProcessAnyUserFlags(int32_t flags, int32_t userId,
+        int32_t originalUserId, BundleInfo &bundleInfo) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;

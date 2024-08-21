@@ -22,9 +22,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int32_t INITIAL_USER_ID = -1;
-const std::string DEFAULT_APP_JSON_PATH = "/etc/app/default_app.json";
-const std::string BACK_UP_DEFAULT_APP_JSON_PATH = "/etc/app/backup_default_app.json";
+constexpr int8_t INITIAL_USER_ID = -1;
+constexpr const char* DEFAULT_APP_JSON_PATH = "/etc/app/default_app.json";
+constexpr const char* BACK_UP_DEFAULT_APP_JSON_PATH = "/etc/app/backup_default_app.json";
 constexpr const char* DEFAULT_APP_RDB_TABLE_NAME = "default_app";
 }
 DefaultAppRdb::DefaultAppRdb()
@@ -172,13 +172,15 @@ void DefaultAppRdb::ConvertMimeTypeToUtd()
         }
         std::map<std::string, Element> newInfos;
         for (auto& item : infos) {
-            std::string normalizedType = DefaultAppMgr::Normalize(item.first);
-            if (normalizedType.empty()) {
+            std::vector<std::string> normalizedTypeVector = DefaultAppMgr::Normalize(item.first);
+            if (normalizedTypeVector.empty()) {
                 LOG_W(BMS_TAG_DEFAULT, "normalize %{public}s failed", item.first.c_str());
                 continue;
             }
-            item.second.type = normalizedType;
-            newInfos.emplace(normalizedType, item.second);
+            for (const std::string& normalizedType : normalizedTypeVector) {
+                item.second.type = normalizedType;
+                newInfos.emplace(normalizedType, item.second);
+            }
         }
         (void)SetDefaultApplicationInfos(userId, newInfos);
     }

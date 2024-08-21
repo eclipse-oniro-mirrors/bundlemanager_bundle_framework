@@ -24,8 +24,8 @@ namespace OHOS {
 namespace AppExecFwk {
 struct InnerBundleUserInfo {
     BundleUserInfo bundleUserInfo;
-    int32_t uid = Constants::INVALID_UID;
     std::vector<int32_t> gids;
+    int32_t uid = Constants::INVALID_UID;
     uint32_t accessTokenId = 0;
     uint64_t accessTokenIdEx = 0;
     std::string bundleName;

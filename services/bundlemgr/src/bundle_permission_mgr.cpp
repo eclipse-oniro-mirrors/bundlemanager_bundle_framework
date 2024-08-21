@@ -32,7 +32,7 @@ constexpr const char* INSTALL_LIST_PERMISSIONS_CONFIG = "/etc/app/install_list_p
 constexpr const char* SCENEBOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 // install list permissions file
 constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/app/install_list_permissions.json";
-const int32_t BASE_API_VERSION = 1000;
+constexpr int16_t BASE_API_VERSION = 1000;
 }
 
 using namespace OHOS::Security;
@@ -489,6 +489,20 @@ bool BundlePermissionMgr::IsNativeTokenType()
         return true;
     }
     LOG_E(BMS_TAG_DEFAULT, "caller tokenType not native, verify failed");
+    return false;
+}
+
+bool BundlePermissionMgr::IsShellTokenType()
+{
+    LOG_D(BMS_TAG_DEFAULT, "IsShellTokenType begin");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    LOG_D(BMS_TAG_DEFAULT, "tokenType is %{private}d", tokenType);
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        LOG_D(BMS_TAG_DEFAULT, "caller is shell, success");
+        return true;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "caller not shell");
     return false;
 }
 

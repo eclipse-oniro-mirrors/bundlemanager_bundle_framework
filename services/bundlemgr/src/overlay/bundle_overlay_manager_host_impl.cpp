@@ -18,9 +18,23 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_overlay_data_manager.h"
 #include "bundle_overlay_manager.h"
+#include "xcollie_helper.h"
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+const std::string FUNCATION_GET_ALL_OVERLAY_MODULE_INFO = "OverlayManagerHost::GetAllOverlayModuleInfo";
+const std::string FUNCATION_GET_OVERLAY_MODULE_INFO = "OverlayManagerHost::GetOverlayModuleInfo";
+const std::string FUNCATION_GET_OVERLAY_MODULE_INFO_NO_BUNDLENAME =
+    "OverlayManagerHost::GetOverlayModuleInfoWithoutBundleName";
+const std::string FUNCATION_GET_TARGET_OVERLAY_MODULE_INFO = "OverlayManagerHost::GetTargetOverlayModuleInfo";
+const std::string FUNCATION_GET_OVERLAY_MODULE_INFO_BY_BUNDLENAME =
+    "OverlayManagerHost::GetOverlayModuleInfoByBundleName";
+const std::string FUNCATION_GET_OVERLAY_BUNDLE_INFOFOR_TARGET = "OverlayManagerHost::GetOverlayBundleInfoForTarget";
+const std::string FUNCATION_GET_OVERLAY_MODULE_INFOFOR_TARGET = "OverlayManagerHost::GetOverlayModuleInfoForTarget";
+const std::string FUNCATION_SET_OVERLAY_ENABLED_FOR_SELF = "OverlayManagerHost::SetOverlayEnabledForSelf";
+const std::string FUNCATION_SET_OVERLAY_ENABLED = "OverlayManagerHost::SetOverlayEnabled";
+
 OverlayManagerHostImpl::OverlayManagerHostImpl()
 {
     APP_LOGI("create");
@@ -35,6 +49,8 @@ ErrCode OverlayManagerHostImpl::GetAllOverlayModuleInfo(const std::string &bundl
     std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
     APP_LOGD("start to get all overlay moduleInfo of bundle %{public}s", bundleName.c_str());
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_ALL_OVERLAY_MODULE_INFO);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (bundleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -56,6 +72,8 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &bundleNa
 {
     APP_LOGD("start to get overlay moduleInfo of bundle %{public}s and module %{public}s", bundleName.c_str(),
         moduleName.c_str());
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_OVERLAY_MODULE_INFO);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -77,6 +95,8 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &moduleNa
     OverlayModuleInfo &overlayModuleInfo, int32_t userId)
 {
     APP_LOGD("start to get overlay moduleInfo of module %{public}s", moduleName.c_str());
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_OVERLAY_MODULE_INFO_NO_BUNDLENAME);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (moduleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -100,6 +120,8 @@ ErrCode OverlayManagerHostImpl::GetTargetOverlayModuleInfo(const std::string &ta
     std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
 {
     APP_LOGD("start to get target overlay moduleInfo of target module %{public}s", targetModuleName.c_str());
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_TARGET_OVERLAY_MODULE_INFO);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (targetModuleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -124,6 +146,8 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoByBundleName(const std::stri
 {
     APP_LOGD("start to get overlay moduleInfo of bundle %{public}s and module %{public}s", bundleName.c_str(),
         moduleName.c_str());
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_OVERLAY_MODULE_INFO_BY_BUNDLENAME);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (bundleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -162,6 +186,8 @@ ErrCode OverlayManagerHostImpl::GetOverlayBundleInfoForTarget(const std::string 
     std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId)
 {
     APP_LOGD("start to get target overlay bundleInfo of bundle %{public}s", targetBundleName.c_str());
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_OVERLAY_BUNDLE_INFOFOR_TARGET);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (targetBundleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -184,6 +210,8 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoForTarget(const std::string 
 {
     APP_LOGD("start to get target overlay moduleInfo of target bundle %{public}s and target module %{public}s",
         targetBundleName.c_str(), targetModuleName.c_str());
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_OVERLAY_MODULE_INFOFOR_TARGET);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (targetBundleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -210,6 +238,8 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoForTarget(const std::string 
 ErrCode OverlayManagerHostImpl::SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
     int32_t userId)
 {
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_SET_OVERLAY_ENABLED_FOR_SELF);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (moduleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
@@ -231,6 +261,8 @@ ErrCode OverlayManagerHostImpl::SetOverlayEnabled(const std::string &bundleName,
     bool isEnabled, int32_t userId)
 {
     APP_LOGD("start");
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_SET_OVERLAY_ENABLED);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;

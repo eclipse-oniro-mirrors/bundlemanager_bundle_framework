@@ -540,6 +540,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX):
             errCode = this->HandleQueryCloneExtensionAbilityInfoWithAppIndex(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SIGNATURE_INFO):
+            errCode = this->HandleGetSignatureInfoByBundleName(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_CLONE_APPLICATION_ENABLED):
             errCode = this->HandleSetCloneApplicationEnabled(data, reply);
             break;
@@ -563,6 +566,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID_BY_BUNDLENAME):
             errCode = this->HandleGetOdidByBundleName(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_FOR_CONTINUATION):
+            errCode = this->HandleGetBundleInfosForContinuation(data, reply);
             break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
@@ -3870,6 +3876,21 @@ ErrCode BundleMgrHost::HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageP
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleGetSignatureInfoByBundleName(MessageParcel &data, MessageParcel &reply)
+{
+    std::string name = data.ReadString();
+    SignatureInfo info;
+    ErrCode ret = GetSignatureInfoByBundleName(name, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        return WriteParcelInfoIntelligent<SignatureInfo>(info, reply);
+    }
+    return ret;
+}
+
 ErrCode BundleMgrHost::HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -3936,6 +3957,28 @@ ErrCode BundleMgrHost::HandleGetOdidByBundleName(MessageParcel &data, MessagePar
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     APP_LOGD("odid is %{private}s", odid.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleInfosForContinuation(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int flags = data.ReadInt32();
+    int userId = data.ReadInt32();
+ 
+    std::vector<BundleInfo> infos;
+    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
+    bool ret = GetBundleInfosForContinuation(flags, infos, userId);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

@@ -807,6 +807,8 @@ private:
 
     ErrCode HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetSignatureInfoByBundleName(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleDeleteDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
@@ -814,6 +816,14 @@ private:
     ErrCode HandleGetAllDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply);
+
+    /**
+     * @brief Handles the GetBundleInfosForContinuation function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetBundleInfosForContinuation(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

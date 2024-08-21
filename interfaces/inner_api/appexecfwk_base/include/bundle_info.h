@@ -63,6 +63,12 @@ enum class GetBundleInfoFlag {
     GET_BUNDLE_INFO_WITH_ROUTER_MAP = 0x00000200,
     GET_BUNDLE_INFO_WITH_SKILL = 0x00000800,
     GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY = 0x00001000,
+    GET_BUNDLE_INFO_OF_ANY_USER = 0x00002000,
+    GET_BUNDLE_INFO_EXCLUDE_CLONE = 0x00004000,
+};
+
+enum class ApplicationInfoFlag {
+    FLAG_INSTALLED = 0x00000001,
 };
 
 struct RequestPermissionUsedScene : public Parcelable {
@@ -90,6 +96,7 @@ struct SignatureInfo : public Parcelable {
     std::string appId;
     std::string fingerprint;
     std::string appIdentifier;
+    std::string certificate;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
@@ -100,14 +107,14 @@ struct SignatureInfo : public Parcelable {
 struct BundleInfo : public Parcelable {
     std::string name;
 
-    bool isNewVersion = false;
     uint32_t versionCode = 0;
-    std::string versionName;
     uint32_t minCompatibleVersionCode = 0;
+    std::string versionName;
 
     uint32_t compatibleVersion = 0;
     uint32_t targetVersion = 0;
 
+    bool isNewVersion = false;
     bool isKeepAlive = false;
     bool singleton = false;
     bool isPreInstallApp = false;
@@ -115,10 +122,10 @@ struct BundleInfo : public Parcelable {
     std::string vendor;
     std::string releaseType;
     bool isNativeApp = false;
-
+    
+    bool entryInstallationFree = false; // application : false; atomic service : true
     std::string mainEntry; // modulePackage
     std::string entryModuleName; // moduleName
-    bool entryInstallationFree = false; // application : false; atomic service : true
     std::string appId;
     std::vector<std::string> oldAppIds; // used for appId changed
 

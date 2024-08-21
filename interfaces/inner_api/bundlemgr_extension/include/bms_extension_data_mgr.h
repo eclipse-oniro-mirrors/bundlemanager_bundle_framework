@@ -22,6 +22,8 @@
 #include "appexecfwk_errors.h"
 #include "bms_extension.h"
 #include "bundle_info.h"
+#include "bundle_resource_info.h"
+#include "launcher_ability_resource_info.h"
 #include "interfaces/hap_verify.h"
 #include "want.h"
 #include "abs_rdb_predicates.h"
@@ -61,6 +63,13 @@ public:
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
     bool IsAppInBlocklist(const std::string &bundleName);
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName);
+    ErrCode GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
+        BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
+    ErrCode GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
+    ErrCode GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
+    ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
 private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;

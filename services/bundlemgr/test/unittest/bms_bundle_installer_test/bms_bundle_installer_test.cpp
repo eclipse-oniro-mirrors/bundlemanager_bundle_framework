@@ -5426,6 +5426,22 @@ HWTEST_F(BmsBundleInstallerTest, BeforeInstall_0100, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: BeforeInstall_0200
+ * @tc.name: test BeforeInstall
+ * @tc.desc: 1.Test the BeforeInstall
+*/
+HWTEST_F(BmsBundleInstallerTest, BeforeInstall_0200, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    std::vector<std::string> hspPaths;
+    InstallParam installParam;
+    installParam.isPreInstallApp = false;
+
+    ErrCode res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
  * @tc.number: CheckFileType_0100
  * @tc.name: test CheckFileType
  * @tc.desc: 1.Test the CheckFileType
@@ -6151,6 +6167,50 @@ HWTEST_F(BmsBundleInstallerTest, GetAllBundleStats_0100, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: RollbackHmpCommonInfo_0100
+ * @tc.name: test RollbackHmpCommonInfo
+ * @tc.desc: test RollbackHmpCommonInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, RollbackHmpCommonInfo_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+
+    InnerBundleInfo info;
+    std::string dir;
+    installer.CreateScreenLockProtectionExistDirs(info, dir);
+
+    std::vector<std::string> extensionDataGroupIds;
+    std::vector<std::string> bundleDataGroupIds;
+    std::vector<std::string> validGroupIds;
+    installer.GetValidDataGroupIds(extensionDataGroupIds, bundleDataGroupIds, validGroupIds);
+
+    installer.CreateDataGroupDir(info);
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    installer.SetAppDistributionType(infos);
+
+    EventInfo eventInfo;
+    installer.GetInstallEventInfo(info, eventInfo);
+
+    NotifyBundleEvents notifyBundleEvents;
+    installer.AddNotifyBundleEvents(notifyBundleEvents);
+
+    std::string bundleName;
+    ErrCode ret = installer.RollbackHmpUserInfo(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_INVALID_NAME);
+
+    ret = installer.RollbackHmpCommonInfo(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_INVALID_NAME);
+
+    bundleName = "com.ohos.settings";
+    ret = installer.RollbackHmpUserInfo(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+
+    ret = installer.RollbackHmpCommonInfo(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+}
+
+/**
  * @tc.number: IsExistApFile_0100
  * @tc.name: test IsExistApFile
  * @tc.desc: test IsExistApFile of InstalldHostImpl
@@ -6282,5 +6342,99 @@ HWTEST_F(BmsBundleInstallerTest, VerifyCodeSignatureForNativeFiles_0100, Functio
     ErrCode ret = appServiceFwkInstaller.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath);
 
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetFileStat_0100
+ * @tc.name: test GetFileStat
+ * @tc.desc: test GetFileStat of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, GetFileStat_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string file;
+    FileStat fileStat;
+    ErrCode ret = hostImpl.GetFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractDiffFiles_0100
+ * @tc.name: test ExtractDiffFiles
+ * @tc.desc: test ExtractDiffFiles of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractDiffFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string filePath = "test.path";
+    std::string targetPath = "test.target.path";
+    std::string cpuAbi;
+    ErrCode  ret = hostImpl.ExtractDiffFiles(filePath, targetPath, cpuAbi);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_0100
+ * @tc.name: test SetEncryptionPolicy
+ * @tc.desc: test SetEncryptionPolicy of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, SetEncryptionPolicy_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    int32_t uid = EDM_UID;
+    std::string bundleName = "";
+    int32_t userId = USERID;
+    std::string keyId;
+    ErrCode ret = hostImpl.SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    bundleName = BUNDLE_NAME;
+    ret = hostImpl.SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+}
+
+/**
+ * @tc.number: DeleteEncryptionKeyId_0100
+ * @tc.name: test DeleteEncryptionKeyId
+ * @tc.desc: test DeleteEncryptionKeyId of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, DeleteEncryptionKeyId_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string keyId = "";
+    ErrCode ret = hostImpl.DeleteEncryptionKeyId(keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    keyId = "test.keyId";
+    ret = hostImpl.DeleteEncryptionKeyId(keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED);
+}
+
+/**
+ * @tc.number: ExtractModule_0100
+ * @tc.name: test ExtractModule
+ * @tc.desc: 1.Test the ExtractModule
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractModule_0100, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InnerBundleInfo newInfo;
+    std::string bundlePath;
+
+    appServiceFwkInstaller.newInnerBundleInfo_.baseApplicationInfo_->bundleName = "com.acts.example";
+    appServiceFwkInstaller.MergeBundleInfos(newInfo);
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+
+    appServiceFwkInstaller.GenerateOdid(infos, hapVerifyRes);
+
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.push_back(hapVerifyResult);
+
+    appServiceFwkInstaller.GenerateOdid(infos, hapVerifyRes);
+
+    ErrCode ret = appServiceFwkInstaller.ExtractModule(newInfo, bundlePath);
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS

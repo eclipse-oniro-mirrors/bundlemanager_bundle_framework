@@ -118,7 +118,8 @@ void BundleInstaller::InstallByBundleName(const std::string &bundleName, const I
 void BundleInstaller::Uninstall(const std::string &bundleName, const InstallParam &installParam)
 {
     ErrCode resultCode = ERR_OK;
-    if (installParam.userId == Constants::ALL_USERID || HasDriverExtensionAbility(bundleName)) {
+    if (installParam.userId == Constants::ALL_USERID ||
+        (!installParam.isRemoveUser && HasDriverExtensionAbility(bundleName))) {
         std::vector<ErrCode> errCode;
         auto userInstallParam = installParam;
         for (auto userId : GetExistsCommonUserIds()) {
@@ -194,7 +195,7 @@ void BundleInstaller::Uninstall(
 
 void BundleInstaller::UpdateInstallerState(const InstallerState state)
 {
-    LOG_I(BMS_TAG_INSTALLER, "state: %{public}d", state);
+    LOG_I(BMS_TAG_INSTALLER, "state: %{public}d", static_cast<int32_t>(state));
     SetInstallerState(state);
     if (statusReceiver_) {
         statusReceiver_->OnStatusNotify(static_cast<int>(state));

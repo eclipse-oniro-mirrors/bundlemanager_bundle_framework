@@ -22,7 +22,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class AbilityManagerHelper {
 public:
-    enum IsRunningResult {
+    enum IsRunningResult : int8_t {
         FAILED = -1,
         NOT_RUNNING = 0,
         RUNNING = 1,

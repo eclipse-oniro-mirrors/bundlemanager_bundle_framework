@@ -79,6 +79,7 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+    void SetBundleDataMgr();
 
 private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
@@ -107,6 +108,12 @@ void BmsBundleVerifyManagerTest::SetUp()
 void BmsBundleVerifyManagerTest::TearDown()
 {}
 
+void BmsBundleVerifyManagerTest::SetBundleDataMgr()
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<AppExecFwk::BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+}
+
 /**
  * @tc.number: VerifyAbc
  * @tc.name: test VerifyAbc
@@ -119,7 +126,7 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0100, Function | SmallTes
     abcPaths.push_back(FILE_PATH);
     abcPaths.push_back(ERR_FILE_PATH);
     abcPaths.push_back(EMPTY_STRING);
-    
+    SetBundleDataMgr();
     auto ret = impl.VerifyAbc(abcPaths);
     EXPECT_FALSE(ret);
 }
@@ -393,5 +400,17 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1400, Function | SmallTes
     bool ret = VerifyUtil::VerifyAbc(abcPath);
 
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetBundleMutex
+ * @tc.name: test GetBundleMutex
+ * @tc.desc: 1.GetBundleMutex test
+ */
+HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1500, Function | SmallTest | Level1)
+{
+    VerifyManagerHostImpl impl;
+    auto &mtx = impl.GetBundleMutex(BUNDLE_NAME);
+    EXPECT_EQ(&mtx, &impl.bundleMutexMap_[BUNDLE_NAME]);
 }
 } // OHOS

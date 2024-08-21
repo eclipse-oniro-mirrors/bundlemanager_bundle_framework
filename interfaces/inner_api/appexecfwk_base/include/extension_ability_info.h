@@ -98,12 +98,14 @@ enum class ExtensionAbilityType {
     SYSPICKER_APPSELECTOR = 407,
     SYSPICKER_FILEPICKER = 408,
     SYSPICKER_AUDIOPICKER = 409,
+
     SYS_COMMON_UI = 500,
     AUTO_FILL_PASSWORD = 501,
     VPN = 502,
     AUTO_FILL_SMART = 503,
     SYSPICKER_PHOTOEDITOR = 504,
-    SYS_VISUAL = 505
+    SYS_VISUAL = 505,
+    RECENT_PHOTO = 506
 };
 
 enum class CompileMode {
@@ -116,6 +118,7 @@ enum class ExtensionProcessMode {
     INSTANCE = 0,
     TYPE = 1,
     BUNDLE = 2,
+    RUN_WITH_MAIN_PROCESS = 3,
 };
 
 struct SkillUriForAbilityAndExtension {
@@ -127,8 +130,8 @@ struct SkillUriForAbilityAndExtension {
     std::string pathRegex;
     std::string type;
     std::string utd;
-    int32_t maxFileSupported = 0;
     std::string linkFeature;
+    int32_t maxFileSupported = 0;
     bool isMatch = false;
 };
 
@@ -139,8 +142,8 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::string srcEntrance;
     std::string icon;
     int32_t iconId = 0;
-    std::string label;
     int32_t labelId = 0;
+    std::string label;
     std::string description;
     int32_t descriptionId = 0;
     int32_t priority = 0;
@@ -150,14 +153,15 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::string uri;
     ExtensionAbilityType type = ExtensionAbilityType::UNSPECIFIED;
     std::string extensionTypeName;
-    bool visible = false;
     std::vector<Metadata> metadata;
     ApplicationInfo applicationInfo;
     ExtensionProcessMode extensionProcessMode = ExtensionProcessMode::UNDEFINED;
+    bool visible = false;
+
     // set when install
+    bool enabled = true;
     std::string resourcePath;
     std::string hapPath;
-    bool enabled = true;
     std::string process;
     CompileMode compileMode = CompileMode::JS_BUNDLE;
     // for NAPI, save self query cache

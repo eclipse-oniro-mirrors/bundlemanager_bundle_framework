@@ -194,8 +194,9 @@ bool Skill::MatchActionAndEntities(const OHOS::AAFwk::Want &want) const
     return true;
 }
 
-bool Skill::MatchUriAndType(const std::string &uriString, const std::string &type) const
+bool Skill::MatchUriAndType(const std::string &rawUriString, const std::string &type) const
 {
+    const std::string uriString = GetOptParamUri(rawUriString);
     if (uriString.empty() && type.empty()) {
         // case1 : param uri empty, param type empty
         if (uris.empty()) {
@@ -241,7 +242,7 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
 
 bool Skill::MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const
 {
-    std::string paramUriString = want.GetUriString();
+    std::string paramUriString = GetOptParamUri(want.GetUriString());
     std::string paramType = want.GetType();
     // only linkFeature
     if (paramUriString.empty() && paramType.empty()) {
@@ -268,22 +269,25 @@ bool Skill::MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::
         if (!onlyUri) {
             continue;
         }
-        std::string paramUtd;
-        if (!MimeTypeMgr::GetUtdByUri(paramUriString, paramUtd)) {
+        std::vector<std::string> paramUtdVector;
+        if (!MimeTypeMgr::GetUtdVectorByUri(paramUriString, paramUtdVector)) {
             continue;
         }
-        if ((MatchUri(paramUriString, skillUri) ||
-            (skillUri.scheme.empty() && paramUriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
-            MatchType(paramUtd, skillUri.type)) {
-            matchUriIndex = uriIndex;
-            return true;
+        for (const std::string &paramUtd : paramUtdVector) {
+            if ((MatchUri(paramUriString, skillUri) ||
+                (skillUri.scheme.empty() && paramUriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+                MatchType(paramUtd, skillUri.type)) {
+                matchUriIndex = uriIndex;
+                return true;
+            }
         }
     }
     return false;
 }
 
-bool Skill::MatchUriAndType(const std::string &uriString, const std::string &type, size_t &matchUriIndex) const
+bool Skill::MatchUriAndType(const std::string &rawUriString, const std::string &type, size_t &matchUriIndex) const
 {
+    const std::string uriString = GetOptParamUri(rawUriString);
     if (uriString.empty() && type.empty()) {
         // case1 : param uri empty, param type empty
         if (uris.empty()) {
@@ -340,7 +344,7 @@ bool Skill::StartsWith(const std::string &sourceString, const std::string &targe
     return sourceString.rfind(targetPrefix, 0) == 0;
 }
 
-std::string Skill::GetOptParamUri(const std::string &uriString) const
+std::string Skill::GetOptParamUri(const std::string &uriString)
 {
     std::size_t pos = uriString.find(PARAM_SEPARATOR);
     if (pos == std::string::npos) {
@@ -479,20 +483,30 @@ bool Skill::MatchUtd(const std::string &paramType, const std::string &skillUriTy
         return IsUtdMatch(paramType, skillUriType);
     } else if (!isParamUtd && isSkillUtd) {
         // 3.param : mimeType, skill : utd
-        std::string paramUtd;
-        auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(paramType, paramUtd);
-        if (ret != ERR_OK) {
+        std::vector<std::string> paramUtdVector;
+        auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypesByMIMEType(paramType, paramUtdVector);
+        if (ret != ERR_OK || paramUtdVector.empty()) {
             return false;
         }
-        return IsUtdMatch(paramUtd, skillUriType);
+        for (const std::string &paramUtd : paramUtdVector) {
+            if (IsUtdMatch(paramUtd, skillUriType)) {
+                return true;
+            }
+        }
+        return false;
     } else {
         // 4.param : utd, skill : mimeType
-        std::string skillUtd;
-        auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(skillUriType, skillUtd);
-        if (ret != ERR_OK) {
+        std::vector<std::string> skillUtdVector;
+        auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypesByMIMEType(skillUriType, skillUtdVector);
+        if (ret != ERR_OK || skillUtdVector.empty()) {
             return false;
         }
-        return IsUtdMatch(paramType, skillUtd);
+        for (const std::string &skillUtd : skillUtdVector) {
+            if (IsUtdMatch(paramType, skillUtd)) {
+                return true;
+            }
+        }
+        return false;
     }
 #else
     containsUtd = false;
@@ -532,15 +546,17 @@ bool Skill::IsUtd(const std::string &param) const
 
 bool Skill::MatchMimeType(const std::string & uriString) const
 {
-    std::string paramUtd;
-    if (!MimeTypeMgr::GetUtdByUri(uriString, paramUtd)) {
+    std::vector<std::string> paramUtdVector;
+    if (!MimeTypeMgr::GetUtdVectorByUri(uriString, paramUtdVector)) {
         return false;
     }
     for (const SkillUri &skillUri : uris) {
-        if ((MatchUri(uriString, skillUri) ||
-            (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
-            MatchType(paramUtd, skillUri.type)) {
-            return true;
+        for (const std::string &paramUtd : paramUtdVector) {
+            if ((MatchUri(uriString, skillUri) ||
+                (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+                MatchType(paramUtd, skillUri.type)) {
+                return true;
+            }
         }
     }
     return false;
@@ -549,17 +565,19 @@ bool Skill::MatchMimeType(const std::string & uriString) const
 
 bool Skill::MatchMimeType(const std::string & uriString, size_t &matchUriIndex) const
 {
-    std::string paramUtd;
-    if (!MimeTypeMgr::GetUtdByUri(uriString, paramUtd)) {
+    std::vector<std::string> paramUtdVector;
+    if (!MimeTypeMgr::GetUtdVectorByUri(uriString, paramUtdVector)) {
         return false;
     }
     for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
         const SkillUri &skillUri = uris[uriIndex];
-        if ((MatchUri(uriString, skillUri) ||
-            (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
-            MatchType(paramUtd, skillUri.type)) {
-            matchUriIndex = uriIndex;
-            return true;
+        for (const std::string &paramUtd : paramUtdVector) {
+            if ((MatchUri(uriString, skillUri) ||
+                (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+                MatchType(paramUtd, skillUri.type)) {
+                matchUriIndex = uriIndex;
+                return true;
+            }
         }
     }
     return false;

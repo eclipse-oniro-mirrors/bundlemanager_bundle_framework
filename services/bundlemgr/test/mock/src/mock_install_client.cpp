@@ -304,5 +304,11 @@ ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &ty
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
+{
+        return ERR_OK;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

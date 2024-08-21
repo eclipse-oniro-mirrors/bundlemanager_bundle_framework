@@ -45,8 +45,8 @@ std::mutex g_mutex;
 struct App {
     std::string bundleName;
     uint32_t versionCode = 0;
-    std::string versionName;
     uint32_t patchVersionCode = 0;
+    std::string versionName;
     std::string patchVersionName;
 };
 
@@ -218,7 +218,7 @@ bool PatchProfile::DefaultNativeSo(
     const PatchExtractor &patchExtractor, bool isSystemLib64Exist, AppqfInfo &appqfInfo)
 {
     if (isSystemLib64Exist) {
-        if (patchExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM64_V8A)) {
+        if (patchExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A)) {
             appqfInfo.cpuAbi = ServiceConstants::ARM64_V8A;
             auto iter = ServiceConstants::ABI_MAP.find(ServiceConstants::ARM64_V8A);
             if (iter != ServiceConstants::ABI_MAP.end()) {
@@ -232,7 +232,7 @@ bool PatchProfile::DefaultNativeSo(
         return false;
     }
 
-    if (patchExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI_V7A)) {
+    if (patchExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A)) {
         appqfInfo.cpuAbi = ServiceConstants::ARM_EABI_V7A;
         auto iter = ServiceConstants::ABI_MAP.find(ServiceConstants::ARM_EABI_V7A);
         if (iter != ServiceConstants::ABI_MAP.end()) {
@@ -243,7 +243,7 @@ bool PatchProfile::DefaultNativeSo(
         return false;
     }
 
-    if (patchExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI)) {
+    if (patchExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI)) {
         appqfInfo.cpuAbi = ServiceConstants::ARM_EABI;
         auto iter = ServiceConstants::ABI_MAP.find(ServiceConstants::ARM_EABI);
         if (iter != ServiceConstants::ABI_MAP.end()) {
@@ -336,8 +336,7 @@ ErrCode PatchProfile::TransformTo(
     // hot reload does not process so files
     if ((appQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) &&
         (!ParseNativeSo(patchExtractor, appQuickFix.deployingAppqfInfo))) {
-        LOG_E(BMS_TAG_DEFAULT, "ParseNativeSo failed");
-        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+        LOG_W(BMS_TAG_DEFAULT, "ParseNativeSo failed");
     }
     return ERR_OK;
 }

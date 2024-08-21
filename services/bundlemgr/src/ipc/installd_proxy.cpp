@@ -22,9 +22,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int32_t WAIT_TIME = 3000;
-constexpr int32_t MAX_VEC_SIZE = 1000;
-constexpr int32_t MAX_STRING_SIZE = 1024;
+constexpr int16_t WAIT_TIME = 3000;
+constexpr int16_t MAX_VEC_SIZE = 1000;
+constexpr int16_t MAX_STRING_SIZE = 1024;
 }
 
 InstalldProxy::InstalldProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IInstalld>(object)
@@ -878,6 +878,21 @@ ErrCode InstalldProxy::GetExtensionSandboxTypeList(std::vector<std::string> &typ
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::AddUserDirDeleteDfx(int32_t userId)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::ADD_USER_DIR_DELETE_DFX, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::CreateExtensionDataDir(const CreateDirParam &createDirParam)
 {
     MessageParcel data;
@@ -897,12 +912,14 @@ ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessagePa
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u cmd to service due to remote object is null", code);
+        LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u cmd to service due to remote object is null",
+            (unsigned int)(code));
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
 
     if (remote->SendRequest(static_cast<uint32_t>(code), data, reply, option) != OHOS::NO_ERROR) {
-        LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u request to service due to transact error", code);
+        LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u request to service due to transact error",
+            (unsigned int)(code));
         return ERR_APPEXECFWK_INSTALLD_SERVICE_DIED;
     }
     return reply.ReadInt32();

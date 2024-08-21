@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class CreateDirFlag {
+enum class CreateDirFlag : uint8_t {
     // Create all data directories regardless of whether the device is unlocked.
     // Inaccessible directories will fail to be created and errors will be ignored.
     CREATE_DIR_ALL = 0,
@@ -30,15 +30,15 @@ enum class CreateDirFlag {
 };
 
 struct CreateDirParam : public Parcelable {
-    std::string bundleName;
-    std::vector<std::string> extensionDirs;
-    int32_t userId;
-    int32_t uid;
-    int32_t gid;
-    std::string apl;
     bool isPreInstallApp = false;
     bool debug = false;
     bool isDlpSandbox = false;
+    int32_t userId;
+    int32_t uid;
+    int32_t gid;
+    std::string bundleName;
+    std::vector<std::string> extensionDirs;
+    std::string apl;
     CreateDirFlag createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
 
     bool ReadFromParcel(Parcel &parcel);

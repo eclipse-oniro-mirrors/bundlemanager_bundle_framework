@@ -30,7 +30,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleAgingMgr : public std::enable_shared_from_this<BundleAgingMgr> {
 public:
-    enum AgingTriggertype {
+    enum AgingTriggertype : uint8_t {
         PREIOD = 0,
         FREE_INSTALL = 1,
         UPDATE_REMOVABLE_FLAG = 2,

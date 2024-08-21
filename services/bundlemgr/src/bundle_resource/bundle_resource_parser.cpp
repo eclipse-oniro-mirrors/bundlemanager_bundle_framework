@@ -18,6 +18,7 @@
 #include "bundle_resource_configuration.h"
 #include "bundle_resource_image_info.h"
 #include "bundle_resource_drawable.h"
+#include "bundle_service_constants.h"
 #include "json_util.h"
 
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
@@ -28,14 +29,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* TYPE_JSON = "json";
-const char* TYPE_PNG = "png";
-const char* FOREGROUND = "foreground";
-const char* BACKGROUND = "background";
-const char CHAR_COLON = ':';
+constexpr const char* TYPE_JSON = "json";
+constexpr const char* TYPE_PNG = "png";
+constexpr const char* FOREGROUND = "foreground";
+constexpr const char* BACKGROUND = "background";
+constexpr char CHAR_COLON = ':';
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
-const std::string OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
-const int32_t BADGE_SIZE = 62;
+constexpr const char* OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
+constexpr int8_t BADGE_SIZE = 62;
 #endif
 
 struct LayeredImage {
@@ -149,12 +150,12 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
         }
 
         if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfos[index])) {
-            APP_LOGW_NOFUNC("ParseResourceInfo failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
+            APP_LOGW_NOFUNC("ParseResourceInfo fail key:%{public}s", resourceInfos[index].GetKey().c_str());
         }
     }
     if ((resourceInfos[0].labelNeedParse_ && resourceInfos[0].label_.empty()) ||
         (resourceInfos[0].iconNeedParse_ && resourceInfos[0].icon_.empty())) {
-        APP_LOGE("bundleName:%{public}s moduleName:%{public}s prase resource failed",
+        APP_LOGE_NOFUNC("ParseResourceInfos fail -n %{public}s -m %{public}s",
             resourceInfos[0].bundleName_.c_str(), resourceInfos[0].moduleName_.c_str());
         return false;
     }
@@ -165,6 +166,10 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
 bool BundleResourceParser::IsNeedToParseResourceInfo(
     const ResourceInfo &newResourceInfo, const ResourceInfo &oldResourceInfo)
 {
+    if (ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(newResourceInfo.bundleName_) !=
+        ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
+        return true;
+    }
     // same labelId and iconId no need to parse again
     if (newResourceInfo.moduleName_ == oldResourceInfo.moduleName_) {
         if ((newResourceInfo.labelId_ == oldResourceInfo.labelId_) &&
@@ -204,7 +209,7 @@ bool BundleResourceParser::ParseResourceInfoWithSameHap(const int32_t userId, Re
         return false;
     }
     if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfo)) {
-        APP_LOGE_NOFUNC("ParseResourceInfo failed, key:%{public}s", resourceInfo.GetKey().c_str());
+        APP_LOGE_NOFUNC("ParseResourceInfo fail key:%{public}s", resourceInfo.GetKey().c_str());
         return false;
     }
     return true;
@@ -232,7 +237,7 @@ bool BundleResourceParser::ParseLabelResourceByPath(
         return false;
     }
     if (!ParseLabelResourceByResourceManager(resourceManager, labelId, label)) {
-        APP_LOGE("ParseLabelResource failed, label %{public}d", labelId);
+        APP_LOGE("ParseLabelResource fail label %{public}d", labelId);
         return false;
     }
     return true;
@@ -273,12 +278,12 @@ bool BundleResourceParser::ParseResourceInfoByResourceManager(
     bool ans = true;
     if (resourceInfo.labelNeedParse_ && !ParseLabelResourceByResourceManager(
         resourceManager, resourceInfo.labelId_, resourceInfo.label_)) {
-        APP_LOGE_NOFUNC("ParseLabelResource failed, key %{public}s", resourceInfo.GetKey().c_str());
+        APP_LOGE_NOFUNC("ParseLabelResource fail key %{public}s", resourceInfo.GetKey().c_str());
         ans = false;
     }
 
     if (resourceInfo.iconNeedParse_ && !ParseIconResourceByResourceManager(resourceManager, resourceInfo)) {
-        APP_LOGE_NOFUNC("ParseIconResource failed, key %{public}s", resourceInfo.GetKey().c_str());
+        APP_LOGE_NOFUNC("ParseIconResource fail key %{public}s", resourceInfo.GetKey().c_str());
         ans = false;
     }
 
@@ -294,7 +299,7 @@ bool BundleResourceParser::ParseLabelResourceByResourceManager(
         return false;
     }
     if (labelId <= 0) {
-        APP_LOGW("ParseLabelResource labelId is 0 or less than 0, label is bundleName");
+        APP_LOGW_NOFUNC("ParseLabelResource labelId invalid label is bundleName");
         return false;
     }
     auto ret = resourceManager->GetStringById(static_cast<uint32_t>(labelId), label);

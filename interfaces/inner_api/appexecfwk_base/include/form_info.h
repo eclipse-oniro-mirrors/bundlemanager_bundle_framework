@@ -48,6 +48,10 @@ struct FormInfo : public Parcelable {
     bool formVisibleNotify = false;
     bool updateEnabled = false;
     bool isStatic = true;
+    bool dataProxyEnabled = false;
+    bool isDynamic = true;
+    bool transparencyEnabled = false;
+    bool fontScaleFollowSystem = true;
     FormType type = FormType::JS;
     FormType uiSyntax = FormType::JS;
     std::vector<int32_t> supportDimensions;
@@ -55,12 +59,8 @@ struct FormInfo : public Parcelable {
     std::vector<std::string> landscapeLayouts;
     std::vector<std::string> portraitLayouts;
     std::vector<FormCustomizeData> customizeDatas;
-    bool dataProxyEnabled = false;
-    bool isDynamic = true;
-    bool transparencyEnabled = false;
-    int32_t privacyLevel = 0;
-    bool fontScaleFollowSystem = true;
     std::vector<int32_t> supportShapes;
+    int32_t privacyLevel = 0;
     uint32_t versionCode = 0;
     BundleType bundleType = BundleType::APP;
 

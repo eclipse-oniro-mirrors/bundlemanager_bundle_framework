@@ -24,20 +24,12 @@ class HmpBundleInstaller : public BaseBundleInstaller {
 public:
     HmpBundleInstaller();
     virtual ~HmpBundleInstaller() override;
-    /**
-     * @brief Install hmp bundle.
-     * @param filePath Indicates the filePath.
-     * @return Returns ERR_OK if this function called successfully; returns error code otherwise.
-     */
-    ErrCode InstallHmpBundle(const std::string &filePath, bool isNeedRollback);
 
     ErrCode InstallSystemHspInHmp(const std::string &bundleDir) const;
 
     ErrCode InstallNormalAppInHmp(const std::string &bundleDir, bool removable = true);
 
-    std::set<int32_t> GetRequiredUserIds(std::string bundleName);
-
-    std::set<std::string> GetRollbackHapList(std::set<std::string> hapList);
+    bool GetRequiredUserIds(std::string bundleName, std::set<int32_t> &userIds);
 
     void RollbackHmpBundle(const std::set<std::string> &systemHspList,
         const std::set<std::string> &hapList);
@@ -45,6 +37,8 @@ public:
     void UpdateBundleInfo(const std::string &bundleName, const std::string &bundleDir, const std::string &hspDir);
 
 private:
+    bool CheckAppIsUpdatedByUser(const std::string &bundleName);
+
     std::set<std::string> GetHmpBundleList(const std::string &path) const;
 
     void UpdateInnerBundleInfo(const std::string &bundleName,

@@ -26,14 +26,14 @@ namespace AppExecFwk {
 namespace ServiceConstants {
 constexpr const char* ASSETS_DIR = "assets";
 constexpr const char* RESOURCES_INDEX = "resources.index";
-constexpr int32_t INVALID_GID = -1;
-const int32_t BUNDLE_RDB_VERSION = 1;
-const std::string PATH_SEPARATOR = "/";
-const std::string LIBS = "libs/";
-const std::string AN = "an/";
-const std::string RES_FILE_PATH = "resources/resfile/";
-const std::string HNPS_FILE_PATH = "hnp_tmp_extract_dir/";
-const std::string HNPS = "hnp/";
+constexpr int8_t INVALID_GID = -1;
+constexpr int8_t BUNDLE_RDB_VERSION = 1;
+constexpr const char* PATH_SEPARATOR = "/";
+constexpr const char* LIBS = "libs/";
+constexpr const char* AN = "an/";
+constexpr const char* RES_FILE_PATH = "resources/resfile/";
+constexpr const char* HNPS_FILE_PATH = "hnp_tmp_extract_dir/";
+constexpr const char* HNPS = "hnp/";
 constexpr const char* DIR_EL1 = "el1";
 constexpr const char* DIR_EL2 = "el2";
 constexpr const char* DIR_EL3 = "el3";
@@ -52,7 +52,7 @@ const std::map<std::string, std::string> ABI_MAP = {
     {X86, "x86"},
     {X86_64, "x86_64"},
 };
-const std::string CLONE_BUNDLE_PREFIX = "clone_";
+constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
 constexpr const char* HSP_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
@@ -108,6 +108,7 @@ constexpr int32_t LOG_DIR_GID = 1007;
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_BUNDLE";
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_NORMAL_BUNDLE";
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_MDM_BUNDLE";
+constexpr const char* PERMISSION_INSTALL_INTERNALTESTING_BUNDLE = "ohos.permission.INSTALL_INTERNALTESTING_BUNDLE";
 constexpr const char* PERMISSION_MANAGE_DISPOSED_APP_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 constexpr const char* PERMISSION_INSTALL_SELF_BUNDLE = "ohos.permission.INSTALL_SELF_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_BUNDLE = "ohos.permission.UNINSTALL_BUNDLE";
@@ -166,9 +167,9 @@ constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
 constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlename";
 // apiReleaseType
-const std::string API_RELEASE_TYPE_RELEASE = "Release";
-const std::string API_RELEASE_TYPE_BETA = "Beta";
-const std::string API_RELEASE_TYPE_CANARY = "Canary";
+constexpr const char* API_RELEASE_TYPE_RELEASE = "Release";
+constexpr const char* API_RELEASE_TYPE_BETA = "Beta";
+constexpr const char* API_RELEASE_TYPE_CANARY = "Canary";
 // allow multi icon bundle
 const std::set<std::string> ALLOW_MULTI_ICON_BUNDLE = {
     "com.ohos.contacts"

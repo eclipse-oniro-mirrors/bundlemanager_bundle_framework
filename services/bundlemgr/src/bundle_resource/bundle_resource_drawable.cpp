@@ -29,7 +29,7 @@ namespace {
 // bundle name
 constexpr const char* COM_OHOS_CONTACTS = "com.ohos.contacts";
 constexpr const char* IS_SUPPORT_TELEPHONY_VOICE = "const.telephony.voice.capable";
-constexpr int32_t THRESHOLD_VAL_LEN = 10;
+constexpr int8_t THRESHOLD_VAL_LEN = 10;
 
 bool IsSupportTelephonyVoice()
 {
@@ -67,7 +67,8 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
     std::string themeMask = resourceManager->GetThemeMask();
     std::pair<std::unique_ptr<uint8_t[]>, size_t> foregroundInfo;
     std::pair<std::unique_ptr<uint8_t[]>, size_t> backgroundInfo;
-    Global::Resource::RState state = resourceManager->GetThemeIcons(iconId, foregroundInfo, backgroundInfo, density);
+    Global::Resource::RState state = resourceManager->GetThemeIcons(iconId, foregroundInfo, backgroundInfo, density,
+        resourceInfo.abilityName_);
     if (state == Global::Resource::SUCCESS) {
         LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s find theme resource", resourceInfo.bundleName_.c_str());
         auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(foregroundInfo, backgroundInfo,

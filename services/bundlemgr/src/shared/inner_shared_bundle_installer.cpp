@@ -23,10 +23,10 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
 namespace {
-const std::string HSP_VERSION_PREFIX = "v";
-const int32_t MAX_FILE_NUMBER = 2;
-const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
-const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+constexpr const char* HSP_VERSION_PREFIX = "v";
+constexpr int8_t MAX_FILE_NUMBER = 2;
+constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 }
 
 InnerSharedBundleInstaller::InnerSharedBundleInstaller(const std::string &path)
@@ -64,7 +64,7 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
 
     // check syscap
     result = bundleInstallChecker_->CheckSysCap(bundlePaths);
-    bool isSysCapValid = (result == ERR_OK) ? true : false;
+    bool isSysCapValid = (result == ERR_OK);
     if (!isSysCapValid) {
         APP_LOGI("hap syscap check failed %{public}d", result);
     }
@@ -93,7 +93,7 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
         result = bundleInstallChecker_->CheckDeviceType(parsedBundles_);
         if (result != ERR_OK) {
             APP_LOGE("check device type failed %{public}d", result);
-            return ERR_BUNDLE_MANAGER_INSTALL_SYSCAP_OR_DEVICE_TYPE_ERROR;
+            return ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR;
         }
     }
 
@@ -322,7 +322,7 @@ ErrCode InnerSharedBundleInstaller::MkdirIfNotExist(const std::string &dir)
 ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bundlePath, InnerBundleInfo &newInfo)
 {
     ErrCode result = ERR_OK;
-    std::string bundleDir = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_;
+    std::string bundleDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_;
     result = MkdirIfNotExist(bundleDir);
     CHECK_RESULT(result, "check bundle dir failed %{public}d");
     newInfo.SetAppCodePath(bundleDir);

@@ -1075,6 +1075,8 @@ public:
     virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName, int32_t flags,
         int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    
+    virtual ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) override;
 
     virtual ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
 
@@ -1083,6 +1085,16 @@ public:
     virtual ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) override;
 
     virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) override;
+
+    /**
+     * @brief Obtains BundleInfo of all continuable bundles available in the system through the proxy object.
+     * @param flag Indicates the flag used to specify information contained in the BundleInfo that will be returned.
+     * @param bundleInfos Indicates all of the obtained BundleInfo objects.
+     * @param userId Indicates the user ID.
+     * @return Returns true if the BundleInfos is successfully obtained; returns false otherwise.
+     */
+    virtual bool GetBundleInfosForContinuation(int32_t flags, std::vector<BundleInfo> &bundleInfos,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

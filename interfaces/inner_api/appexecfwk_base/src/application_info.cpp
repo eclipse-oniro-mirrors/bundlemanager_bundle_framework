@@ -135,6 +135,8 @@ const char* APPLICATION_INSTALL_SOURCE = "installSource";
 const char* APPLICATION_CONFIGURATION = "configuration";
 const char* APPLICATION_HWASAN_ENABLED = "hwasanEnabled";
 const char* APPLICATION_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
+const char* APPLICATION_APPLICATION_FLAGS = "applicationFlags";
+const char* APPLICATION_UBSAN_ENABLED = "ubsanEnabled";
 }
 
 bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
@@ -586,6 +588,8 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
 
     configuration = Str16ToStr8(parcel.ReadString16());
     cloudFileSyncEnabled = parcel.ReadBool();
+    applicationFlags = parcel.ReadInt32();
+    ubsanEnabled = parcel.ReadBool();
     return true;
 }
 
@@ -760,6 +764,8 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(configuration));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, cloudFileSyncEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, applicationFlags);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, ubsanEnabled);
     return true;
 }
 
@@ -1012,7 +1018,9 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_APP_INDEX, applicationInfo.appIndex},
         {APPLICATION_INSTALL_SOURCE, applicationInfo.installSource},
         {APPLICATION_CONFIGURATION, applicationInfo.configuration},
-        {APPLICATION_CLOUD_FILE_SYNC_ENABLED, applicationInfo.cloudFileSyncEnabled}
+        {APPLICATION_CLOUD_FILE_SYNC_ENABLED, applicationInfo.cloudFileSyncEnabled},
+        {APPLICATION_APPLICATION_FLAGS, applicationInfo.applicationFlags},
+        {APPLICATION_UBSAN_ENABLED, applicationInfo.ubsanEnabled}
     };
 }
 
@@ -1212,6 +1220,10 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.configuration, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_FILE_SYNC_ENABLED,
         applicationInfo.cloudFileSyncEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_APPLICATION_FLAGS,
+        applicationInfo.applicationFlags, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_UBSAN_ENABLED,
+        applicationInfo.ubsanEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error : %{public}d", parseResult);
     }

@@ -18,17 +18,17 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string INNER_BUNDLE_USER_INFO_UID = "uid";
-const std::string INNER_BUNDLE_USER_INFO_GIDS = "gids";
-const std::string INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID = "accessTokenId";
-const std::string INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID_EX = "accessTokenIdEx";
-const std::string INNER_BUNDLE_USER_INFO_BUNDLE_NAME = "bundleName";
-const std::string INNER_BUNDLE_USER_INFO_INSTALL_TIME = "installTime";
-const std::string INNER_BUNDLE_USER_INFO_UPDATE_TIME = "updateTime";
-const std::string INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO = "bundleUserInfo";
-const std::string INNER_BUNDLE_USER_INFO_IS_REMOVABLE = "isRemovable";
-const std::string INNER_BUNDLE_USER_INFO_CLONE_INFOS = "cloneInfos";
-const std::string INNER_BUNDLE_USER_INFO_KEYID = "keyId";
+constexpr const char* INNER_BUNDLE_USER_INFO_UID = "uid";
+constexpr const char* INNER_BUNDLE_USER_INFO_GIDS = "gids";
+constexpr const char* INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID = "accessTokenId";
+constexpr const char* INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID_EX = "accessTokenIdEx";
+constexpr const char* INNER_BUNDLE_USER_INFO_BUNDLE_NAME = "bundleName";
+constexpr const char* INNER_BUNDLE_USER_INFO_INSTALL_TIME = "installTime";
+constexpr const char* INNER_BUNDLE_USER_INFO_UPDATE_TIME = "updateTime";
+constexpr const char* INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO = "bundleUserInfo";
+constexpr const char* INNER_BUNDLE_USER_INFO_IS_REMOVABLE = "isRemovable";
+constexpr const char* INNER_BUNDLE_USER_INFO_CLONE_INFOS = "cloneInfos";
+constexpr const char* INNER_BUNDLE_USER_INFO_KEYID = "keyId";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleUserInfo)

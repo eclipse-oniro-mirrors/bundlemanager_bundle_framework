@@ -56,24 +56,25 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string APP_SUFFIX = "/app";
-const std::string TEMP_PREFIX = "temp_";
-const std::string MODULE_PREFIX = "module_";
-const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
-const std::string BMS_TEST_UPGRADE = "persist.bms.test-upgrade";
-const std::string MODULE_UPDATE_PATH = "module_update";
-const std::string MODULE_UPDATE_PARAM = "persist.moduleupdate.bms.scan";
-const std::string MODULE_UPDATE_VALUE_UPDATE = "update";
-const std::string MODULE_UPDATE_VALUE_REVERT_BMS = "revert_bms";
-const std::string MODULE_UPDATE_VALUE_REVERT = "revert";
-const std::string MODULE_UPDATE_APP_SERVICE_DIR = "appServiceFwk";
-const std::string MODULE_UPDATE_INSTALL_RESULT = "persist.moduleupdate.bms.install.";
-const std::string MODULE_UPDATE_INSTALL_RESULT_FALSE = "false";
-const std::string MODULE_UPDATE_PARAM_EMPTY = "";
-const std::string FINGERPRINT = "fingerprint";
-const std::string UNKNOWN = "";
-const std::string VALUE_TRUE = "true";
-const int32_t VERSION_LEN = 64;
+constexpr const char* APP_SUFFIX = "/app";
+constexpr const char* TEMP_PREFIX = "temp_";
+constexpr const char* MODULE_PREFIX = "module_";
+constexpr const char* PRE_INSTALL_HSP_PATH = "/shared_bundles/";
+constexpr const char* BMS_TEST_UPGRADE = "persist.bms.test-upgrade";
+constexpr const char* MODULE_UPDATE_PATH = "module_update";
+constexpr const char* MODULE_UPDATE_PARAM = "persist.moduleupdate.bms.scan";
+constexpr const char* MODULE_UPDATE_VALUE_UPDATE = "update";
+constexpr const char* MODULE_UPDATE_VALUE_REVERT_BMS = "revert_bms";
+constexpr const char* MODULE_UPDATE_VALUE_REVERT = "revert";
+constexpr const char* MODULE_UPDATE_APP_SERVICE_DIR = "appServiceFwk";
+constexpr const char* MODULE_UPDATE_INSTALL_RESULT = "persist.moduleupdate.bms.install.";
+constexpr const char* HAP_PATH_DATA_AREA = "/data/app/el1/bundle/public";
+constexpr const char* MODULE_UPDATE_INSTALL_RESULT_FALSE = "false";
+constexpr const char* MODULE_UPDATE_PARAM_EMPTY = "";
+constexpr const char* FINGERPRINT = "fingerprint";
+constexpr const char* UNKNOWN = "";
+constexpr const char* VALUE_TRUE = "true";
+constexpr int8_t VERSION_LEN = 64;
 const std::vector<std::string> FINGERPRINTS = {
     "const.product.software.version",
     "const.product.build.type",
@@ -83,8 +84,8 @@ const std::vector<std::string> FINGERPRINTS = {
     "const.product.incremental.version",
     "const.comp.hl.product_base_version.real"
 };
-const std::string HSP_VERSION_PREFIX = "v";
-const std::string OTA_FLAG = "otaFlag";
+constexpr const char* HSP_VERSION_PREFIX = "v";
+constexpr const char* OTA_FLAG = "otaFlag";
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
 constexpr const char* PRODUCT_SUFFIX = "/etc/app";
@@ -125,7 +126,7 @@ void MoveTempPath(const std::vector<std::string> &fromPaths,
     const std::string &bundleName, std::vector<std::string> &toPaths)
 {
     std::string tempDir =
-        ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR + TEMP_PREFIX + bundleName;
+        std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR + TEMP_PREFIX + bundleName;
     if (!BundleUtil::CreateDir(tempDir)) {
         LOG_E(BMS_TAG_DEFAULT, "create tempdir failed %{public}s", tempDir.c_str());
         return;
@@ -164,7 +165,7 @@ public:
             return;
         }
 
-        std::string tempDir = ServiceConstants::HAP_COPY_PATH
+        std::string tempDir = std::string(ServiceConstants::HAP_COPY_PATH)
             + ServiceConstants::PATH_SEPARATOR + TEMP_PREFIX + bundleName_;
         LOG_D(BMS_TAG_DEFAULT, "delete tempDir %{public}s", tempDir.c_str());
         BundleUtil::DeleteDir(tempDir);
@@ -281,7 +282,6 @@ void BMSEventHandler::AfterBmsStart()
     }
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
-    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterChargeIdleListener();
     BundleResourceHelper::RegisterCommonEventSubscriber();
     BundleResourceHelper::RegisterConfigurationObserver();
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
@@ -548,7 +548,7 @@ void BMSEventHandler::ScanInstallDir(
 
     for (const auto &bundleName : bundleNameList) {
         std::vector<std::string> hapPaths;
-        auto appCodePath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName;
+        auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
         if (!ScanDir(appCodePath, ScanMode::SUB_FILE_FILE, ResultMode::ABSOLUTE_PATH, hapPaths)) {
             LOG_E(BMS_TAG_DEFAULT, "Scan the appCodePath(%{public}s) failed", appCodePath.c_str());
             continue;
@@ -788,7 +788,7 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
     }
 
     auto bundleName = info.GetBundleName();
-    auto appCodePath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName;
+    auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
     info.SetAppCodePath(appCodePath);
 
     std::string dataBaseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1]
@@ -2089,7 +2089,7 @@ bool BMSEventHandler::IsModuleUpdate()
         LOG_E(BMS_TAG_DEFAULT, "get system paramter failed");
         return false;
     }
-    LOG_I(BMS_TAG_DEFAULT, "parameter %{public}s is %{public}s", MODULE_UPDATE_PARAM.c_str(), paramValue.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "parameter %{public}s is %{public}s", MODULE_UPDATE_PARAM, paramValue.c_str());
     if (paramValue == MODULE_UPDATE_VALUE_UPDATE) {
         moduleUpdateStatus_ = ModuleUpdateStatus::UPDATE;
     } else if (paramValue == MODULE_UPDATE_VALUE_REVERT_BMS) {
@@ -2123,7 +2123,9 @@ void BMSEventHandler::HandleModuleUpdate()
 
 bool BMSEventHandler::CheckIsModuleUpdate(const std::string &str)
 {
-    return str.find(MODULE_UPDATE_PATH) == 0 || str.find(ServiceConstants::PATH_SEPARATOR + MODULE_UPDATE_PATH) == 0;
+    return str.find(MODULE_UPDATE_PATH) == 0 ||
+        str.find(std::string(ServiceConstants::PATH_SEPARATOR) +
+        MODULE_UPDATE_PATH) == 0;
 }
 
 bool BMSEventHandler::GetModuleUpdatePathList(
@@ -2239,13 +2241,45 @@ bool BMSEventHandler::HandleInstallModuleUpdateNormalApp(const std::vector<std::
         std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();
         bool removable = GetRemovableInfo(appDir);
         auto res = installer->InstallNormalAppInHmp(normalizedAppDir, removable);
-        if (res != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "install %{public}s path failed", appDir.c_str());
-            result = false;
+        LOG_I(BMS_TAG_DEFAULT, "install %{public}s %{public}d", appDir.c_str(), res);
+        if (res == ERR_OK || (res == ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE && CheckAppIsUpdatedByUser(appDir))) {
+            continue;
+        }
+        LOG_E(BMS_TAG_DEFAULT, "install %{public}s path failed", appDir.c_str());
+        result = false;
+    }
+    return result;
+}
+
+bool BMSEventHandler::CheckAppIsUpdatedByUser(const std::string& appDir)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
+        return false;
+    }
+    std::string bundleName = GetBundleNameByPreInstallPath(appDir);
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "get bundleName failed, %{public}s", appDir.c_str());
+        return false;
+    }
+    BundleInfo bundleInfo;
+    auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, baseFlag, bundleInfo, Constants::ANY_USERID);
+    if (ret != ERR_OK) {
+        LOG_I(BMS_TAG_DEFAULT, "%{public}s not found", bundleName.c_str());
+        return false;
+    }
+    for (const auto &hapInfo : bundleInfo.hapModuleInfos) {
+        if (hapInfo.hapPath.size() > std::string(HAP_PATH_DATA_AREA).size() &&
+            hapInfo.hapPath.compare(0, std::string(HAP_PATH_DATA_AREA).size(), std::string(HAP_PATH_DATA_AREA)) == 0) {
+            LOG_I(BMS_TAG_DEFAULT, "%{public}s has been updated by user", hapInfo.name.c_str());
+            return true;
         }
     }
-
-    return result;
+    LOG_I(BMS_TAG_DEFAULT, "%{public}s has not been updated by user", bundleName.c_str());
+    return false;
 }
 
 bool BMSEventHandler::GetRemovableInfo(const std::string& bundleDir)
@@ -2267,7 +2301,7 @@ void BMSEventHandler::FilterModuleUpdate(const std::vector<std::string> &preInst
         if (!CheckIsModuleUpdate(preInstallDir)) {
             continue;
         }
-        std::string moduleUpdatePath = MODULE_UPDATE_PATH + ServiceConstants::PATH_SEPARATOR;
+        std::string moduleUpdatePath = std::string(MODULE_UPDATE_PATH) + ServiceConstants::PATH_SEPARATOR;
         size_t start = preInstallDir.find(moduleUpdatePath);
         if (start == std::string::npos) {
             continue;
@@ -2405,7 +2439,7 @@ void BMSEventHandler::ProcessModuleUpdateSystemParameters()
         }
         if (hasFailed) {
             LOG_I(BMS_TAG_DEFAULT, "module update failed, parameter %{public}s modified to revert",
-                MODULE_UPDATE_PARAM.c_str());
+                MODULE_UPDATE_PARAM);
             system::SetParameter(MODULE_UPDATE_PARAM, MODULE_UPDATE_VALUE_REVERT);
         } else {
             LOG_I(BMS_TAG_DEFAULT, "module update success");
@@ -2486,7 +2520,7 @@ std::string BMSEventHandler::GetCurSystemFingerprint()
 bool BMSEventHandler::GetSystemParameter(const std::string &key, std::string &value)
 {
     char firmware[VERSION_LEN] = {0};
-    int32_t ret = GetParameter(key.c_str(), UNKNOWN.c_str(), firmware, VERSION_LEN);
+    int32_t ret = GetParameter(key.c_str(), UNKNOWN, firmware, VERSION_LEN);
     if (ret <= 0) {
         LOG_E(BMS_TAG_DEFAULT, "GetParameter failed");
         return false;
@@ -2526,7 +2560,7 @@ void BMSEventHandler::AddParseInfosToMap(
 
 void BMSEventHandler::ProcessRebootBundleUninstall()
 {
-    LOG_I(BMS_TAG_DEFAULT, "Reboot scan and OTA uninstall start");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Reboot scan and OTA uninstall start");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
@@ -2572,7 +2606,7 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
         for (auto preBundlePath : loadIter.second.GetBundlePaths()) {
             auto parserInfoIter = parserInfoMap.find(preBundlePath);
             if (parserInfoIter != parserInfoMap.end()) {
-                LOG_I(BMS_TAG_DEFAULT, "OTA uninstall app(%{public}s) module path(%{public}s) exits",
+                LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA uninstall -n %{public}s modulePath:%{public}s exits",
                     bundleName.c_str(), preBundlePath.c_str());
                 continue;
             }
@@ -2604,7 +2638,7 @@ bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
         }
     }
     if (bundleInfo.hapModuleNames.size() == 1) {
-        LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s only has one module, can not be uninstalled",
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "InnerProcessUninstallModule -n %{public}s only one module forbid uninstall",
             bundleInfo.name.c_str());
         return false;
     }
@@ -2647,12 +2681,12 @@ void BMSEventHandler::DeletePreInfoInDb(
     PreInstallBundleInfo preInstallBundleInfo;
     preInstallBundleInfo.SetBundleName(bundleName);
     if (bundleLevel) {
-        LOG_I(BMS_TAG_DEFAULT, "DeletePreInfoInDb bundle %{public}s bundleLevel", bundleName.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "DeletePreInfoInDb bundle %{public}s bundleLevel", bundleName.c_str());
         dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
         return;
     }
 
-    LOG_I(BMS_TAG_DEFAULT, "DeletePreInfoInDb bundle %{public}s not bundleLevel with path(%{public}s)",
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "DeletePreInfoInDb -n %{public}s bundleLevel=false path:%{public}s",
         bundleName.c_str(), bundlePath.c_str());
     dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo);
     preInstallBundleInfo.DeleteBundlePath(bundlePath);
@@ -2705,30 +2739,30 @@ void BMSEventHandler::HandlePreInstallException()
         return;
     }
 
-    LOG_I(BMS_TAG_DEFAULT, "HandlePreInstallExceptions pathSize: %{public}zu, bundleNameSize: %{public}zu",
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "HandlePreInstallException pathSize:%{public}zu bundleNameSize:%{public}zu",
         exceptionPaths.size(), exceptionBundleNames.size());
     for (const auto &pathIter : exceptionPaths) {
-        LOG_I(BMS_TAG_DEFAULT, "HandlePreInstallException path: %{public}s", pathIter.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "HandlePreInstallException path:%{public}s", pathIter.c_str());
         std::vector<std::string> filePaths { pathIter };
         bool removable = IsPreInstallRemovable(pathIter);
         if (!OTAInstallSystemBundle(filePaths, Constants::AppType::SYSTEM_APP, removable)) {
-            LOG_W(BMS_TAG_DEFAULT, "HandlePreInstallException path(%{public}s) error", pathIter.c_str());
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException path(%{public}s) error", pathIter.c_str());
         }
 
         preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
-        LOG_I(BMS_TAG_DEFAULT, "Deleted pre-install exception path: %{public}s", pathIter.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Del pre-install exception path:%{public}s", pathIter.c_str());
     }
 
     if (exceptionBundleNames.size() > 0) {
-        LOG_I(BMS_TAG_DEFAULT, "Loading all pre-install bundle infos");
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Loading all pre-install bundle infos");
         LoadAllPreInstallBundleInfos();
     }
 
     for (const auto &bundleNameIter : exceptionBundleNames) {
-        LOG_I(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName: %{public}s", bundleNameIter.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName: %{public}s", bundleNameIter.c_str());
         auto iter = loadExistData_.find(bundleNameIter);
         if (iter == loadExistData_.end()) {
-            LOG_W(BMS_TAG_DEFAULT, "HandlePreInstallException no bundleName(%{public}s) in PreInstallDb",
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException no bundleName(%{public}s) in PreInstallDb",
                 bundleNameIter.c_str());
             continue;
         }
@@ -2736,15 +2770,16 @@ void BMSEventHandler::HandlePreInstallException()
         const auto &preInstallBundleInfo = iter->second;
         if (!OTAInstallSystemBundle(preInstallBundleInfo.GetBundlePaths(),
             Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable())) {
-            LOG_W(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName(%{public}s) error", bundleNameIter.c_str());
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName(%{public}s) error",
+                bundleNameIter.c_str());
         }
 
-        LOG_I(BMS_TAG_DEFAULT, "Deleting %{public}s from pre-install exception list", bundleNameIter.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Deleting %{public}s from pre-install exception list", bundleNameIter.c_str());
         preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
     }
 
     preInstallExceptionMgr->ClearAll();
-    LOG_I(BMS_TAG_DEFAULT, "Pre-install exception information cleared successfully");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Pre-install exception information cleared successfully");
 }
 
 bool BMSEventHandler::OTAInstallSystemBundle(
@@ -3284,7 +3319,8 @@ void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<
         // not exist in appProvisionInfo table, then parse profile info and save it
         if ((allBundleNames.find(sharedBundleInfo.name) == allBundleNames.end()) &&
             !sharedBundleInfo.sharedModuleInfos.empty()) {
-            std::string hspPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + sharedBundleInfo.name
+            std::string hspPath = std::string(Constants::BUNDLE_CODE_DIR)
+                + ServiceConstants::PATH_SEPARATOR + sharedBundleInfo.name
                 + ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX
                 + std::to_string(sharedBundleInfo.sharedModuleInfos[0].versionCode) + ServiceConstants::PATH_SEPARATOR
                 + sharedBundleInfo.sharedModuleInfos[0].name + ServiceConstants::PATH_SEPARATOR

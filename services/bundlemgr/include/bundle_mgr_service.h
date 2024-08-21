@@ -19,7 +19,6 @@
 #include <atomic>
 #include <memory>
 
-#include "aot/charge_idle_listener.h"
 #include "singleton.h"
 #include "system_ability.h"
 
@@ -71,6 +70,11 @@ public:
      * @return
      */
     virtual void OnStop() override;
+    /**
+     * @brief Implement action when device level changed.
+     * @return
+     */
+    virtual void OnDeviceLevelChanged(int32_t type, int32_t level, std::string& action) override;
     /**
      * @brief Check whether if the bundle manager service is ready.
      * @return Returns true if the bundle manager service is ready; returns false otherwise.
@@ -152,8 +156,6 @@ public:
 
     bool IsBrokerServiceStarted() const;
 
-    void RegisterChargeIdleListener();
-
 protected:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
@@ -187,7 +189,6 @@ private:
     std::shared_ptr<BMSEventHandler> handler_;
     std::shared_ptr<BundleDataMgr> dataMgr_;
     std::shared_ptr<HidumpHelper> hidumpHelper_;
-    std::shared_ptr<ChargeIdleListener> chargeIdleListener_;
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     mutable std::mutex bundleConnectMutex_;
     std::shared_ptr<BundleAgingMgr> agingMgr_;
