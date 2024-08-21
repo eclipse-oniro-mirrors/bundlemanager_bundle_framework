@@ -60,6 +60,7 @@ struct AsyncCallbackInfo {
     bool isCallBack = false;
     ErrCode callbackResult;
     bool deliverErrcode = false;
+    ZlibCallbackInfo *data = nullptr;
 };
 
 struct OriginalSizeCallbackInfo : public BaseCallbackInfo {
