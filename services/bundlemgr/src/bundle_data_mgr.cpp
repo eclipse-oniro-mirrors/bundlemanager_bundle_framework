@@ -321,7 +321,7 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
 bool BundleDataMgr::AddNewModuleInfo(
     const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
-    APP_LOGD("add new module info module name %{public}s ", newInfo.GetCurrentModulePackage().c_str());
+    LOG_I(BMS_TAG_DEFAULT, "addInfo:%{public}s", newInfo.GetCurrentModulePackage().c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
@@ -519,7 +519,7 @@ bool BundleDataMgr::RemoveInnerBundleUserInfo(
 bool BundleDataMgr::UpdateInnerBundleInfo(
     const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
-    APP_LOGD("UpdateInnerBundleInfo:%{public}s", bundleName.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "updateInfo:%{public}s", bundleName.c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
