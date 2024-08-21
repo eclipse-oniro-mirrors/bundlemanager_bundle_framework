@@ -16,6 +16,7 @@
 #include "bundle_common_event_mgr.h"
 
 #include "account_helper.h"
+#include "app_log_tag_wrapper.h"
 #include "bundle_common_event.h"
 #include "bundle_util.h"
 #include "common_event_manager.h"
