@@ -2618,8 +2618,6 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId, int32_t appIndex) const
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    int32_t originalUserId = userId;
-    PreProcessAnyUserFlag(bundleName, flags, userId);
 
     if (userId == Constants::ANY_USERID) {
         std::vector<InnerBundleUserInfo> innerBundleUserInfos;
@@ -2634,6 +2632,9 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
+
+    int32_t originalUserId = requestUserId;
+    PreProcessAnyUserFlag(bundleName, flags, requestUserId);
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
 
@@ -2646,7 +2647,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId, appIndex);
-    PostProcessAnyUserFlags(flags, userId, originalUserId, bundleInfo);
+    PostProcessAnyUserFlags(flags, requestUserId, originalUserId, bundleInfo);
 
     ProcessBundleMenu(bundleInfo, flags, true);
     ProcessBundleRouterMap(bundleInfo, flags);
@@ -2738,9 +2739,9 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag)
     RouterMapHelper::MergeRouter(bundleInfo);
 }
 
-void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t flags, int32_t &userId) const
+void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const
 {
-    if ((flags & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0) {
+    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0) {
         std::vector<InnerBundleUserInfo> innerBundleUserInfos;
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
             LOG_W(BMS_TAG_QUERY, "no userInfos for this bundle(%{public}s)", bundleName.c_str());
@@ -2757,6 +2758,7 @@ void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t
             }
         }
         userId = targetUserId;
+        flags |= static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
     }
 }
 
@@ -2770,8 +2772,8 @@ void BundleDataMgr::PostProcessAnyUserFlags(
         (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER))
             == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
     if (withApplicationFlag && ofAnyUserFlag) {
-        if (userId == originalUserId) {
-            bundleInfo.applicationInfo.applicationFlags |= static_cast<uint64_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+        if (userId == originalUserId || userId < Constants::START_USERID) {
+            bundleInfo.applicationInfo.applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
         }
     }
 }
