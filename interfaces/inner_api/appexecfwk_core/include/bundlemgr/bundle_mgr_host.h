@@ -848,6 +848,9 @@ private:
 
     ErrCode WriteBigString(const std::string &str, MessageParcel &reply) const;
 
+    template<typename T>
+    ErrCode ReadParcelInfoIntelligent(MessageParcel &data, T &parcelInfo);
+
     std::mutex bundleAshmemMutex_;
     int32_t ashmemNum_ = 0;
     DISALLOW_COPY_AND_MOVE(BundleMgrHost);

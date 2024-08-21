@@ -4709,6 +4709,28 @@ ErrCode BundleMgrProxy::InnerGetParcelInfo(MessageParcel &reply, T &parcelInfo)
     return ERR_OK;
 }
 
+template<typename T>
+ErrCode BundleMgrProxy::WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const
+{
+    Parcel tempParcel;
+    (void)tempParcel.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
+    if (!tempParcel.WriteParcelable(&parcelInfo)) {
+        APP_LOGE("Write parcelable failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    size_t dataSize = tempParcel.GetDataSize();
+    if (!reply.WriteUint32(dataSize)) {
+        APP_LOGE("Write parcel size failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
+        APP_LOGE("Write parcel raw data failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result)
 {
     MessageParcel reply;
@@ -5065,12 +5087,13 @@ ErrCode BundleMgrProxy::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo,
         APP_LOGE("AddDesktopShortcutInfo write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteParcelable(&shortcutInfo)) {
-        APP_LOGE("AddDesktopShortcutInfo write shortcutInfo fail");
+    auto ret = WriteParcelInfoIntelligent(shortcutInfo, data);
+    if (ret != ERR_OK) {
+        APP_LOGE("AddDesktopShortcutInfo write ParcelInfo fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("AddDesktopShortcutInfo write bundleName fail");
+        APP_LOGE("AddDesktopShortcutInfo write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
@@ -5089,12 +5112,13 @@ ErrCode BundleMgrProxy::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutIn
         APP_LOGE("DeleteDesktopShortcutInfo write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteParcelable(&shortcutInfo)) {
-        APP_LOGE("DeleteDesktopShortcutInfo write shortcutInfo");
+    auto ret = WriteParcelInfoIntelligent(shortcutInfo, data);
+    if (ret != ERR_OK) {
+        APP_LOGE("DeleteDesktopShortcutInfo write ParcelInfo fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("DeleteDesktopShortcutInfo write bundleName fail");
+        APP_LOGE("DeleteDesktopShortcutInfo write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
@@ -5117,7 +5141,7 @@ ErrCode BundleMgrProxy::GetAllDesktopShortcutInfo(int32_t userId, std::vector<Sh
         APP_LOGE("GetAllDesktopShortcutInfo write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<ShortcutInfo>(
+    return GetVectorFromParcelIntelligentWithErrCode<ShortcutInfo>(
         BundleMgrInterfaceCode::GET_ALL_DESKTOP_SHORTCUT_INFO, data, shortcutInfos);
 }
 
