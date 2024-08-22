@@ -54,23 +54,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     std::string abilityName = ABILITY_NAME_MY_APPLICATION;
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     bundleDistributedManager.CheckAbilityEnableInstall(want, missionId, userId, callerToken);
-    std::string nullString = EMPTY_STRING;
     bundleDistributedManager.OnQueryRpcIdFinished(EMPTY_STRING);
-    TargetAbilityInfo targetAbilityInfo;
-    bundleDistributedManager.ConvertTargetAbilityInfo(want, targetAbilityInfo);
-    targetAbilityInfo.targetInfo.abilityName = ABILITY_NAME_MY_APPLICATION;
-    targetAbilityInfo.targetInfo.moduleName = MODULE_NAME_MY_APPLICATION;
-    targetAbilityInfo.targetInfo.bundleName = BUNDLE_NAME_MY_APPLICATION;
-    bundleDistributedManager.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
-    int32_t resultCode = static_cast<int32_t>(GetU32Data(data));
-    const std::string transactId(data, size);
-    bundleDistributedManager.SendCallbackRequest(resultCode, transactId);
-    QueryRpcIdParams queryRpcIdParams;
-    bundleDistributedManager.SendCallback(resultCode, queryRpcIdParams);
-    RpcIdResult rcIdResult;
-    bundleDistributedManager.ComparePcIdString(want, rcIdResult);
-    bundleDistributedManager.OutTimeMonitor(transactId);
-    bundleDistributedManager.GetTransactId();
     return true;
 }
 }
