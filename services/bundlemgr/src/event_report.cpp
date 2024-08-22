@@ -24,19 +24,24 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::unordered_map<BundleEventType, BMSEventType> BUNDLE_EXCEPTION_SYS_EVENT_MAP = {
-    { BundleEventType::INSTALL, BMSEventType::BUNDLE_INSTALL_EXCEPTION },
-    { BundleEventType::UNINSTALL, BMSEventType::BUNDLE_UNINSTALL_EXCEPTION },
-    { BundleEventType::UPDATE, BMSEventType::BUNDLE_UPDATE_EXCEPTION },
-    { BundleEventType::RECOVER, BMSEventType::PRE_BUNDLE_RECOVER_EXCEPTION },
+const BundleEventType BUNDLE_EXCEPTION_SYS_EVENT_MAP_KEY[] = {
+    BundleEventType::INSTALL, BundleEventType::UNINSTALL,
+    BundleEventType::UPDATE, BundleEventType::RECOVER
+};
+const BMSEventType BUNDLE_EXCEPTION_SYS_EVENT_MAP_VALUE[] = {
+    BMSEventType::BUNDLE_INSTALL_EXCEPTION, BMSEventType::BUNDLE_UNINSTALL_EXCEPTION,
+    BMSEventType::BUNDLE_UPDATE_EXCEPTION, BMSEventType::PRE_BUNDLE_RECOVER_EXCEPTION
 };
 
-const std::unordered_map<BundleEventType, BMSEventType> BUNDLE_SYS_EVENT_MAP = {
-    { BundleEventType::INSTALL, BMSEventType::BUNDLE_INSTALL },
-    { BundleEventType::UNINSTALL, BMSEventType::BUNDLE_UNINSTALL },
-    { BundleEventType::UPDATE, BMSEventType::BUNDLE_UPDATE },
-    { BundleEventType::RECOVER, BMSEventType::PRE_BUNDLE_RECOVER },
-    { BundleEventType::QUICK_FIX, BMSEventType::APPLY_QUICK_FIX }
+const BundleEventType BUNDLE_SYS_EVENT_MAP_KEY[] = {
+    BundleEventType::INSTALL, BundleEventType::UNINSTALL,
+    BundleEventType::UPDATE, BundleEventType::RECOVER,
+    BundleEventType::QUICK_FIX,
+};
+const BMSEventType BUNDLE_SYS_EVENT_MAP_VALUE[] = {
+    BMSEventType::BUNDLE_INSTALL, BMSEventType::BUNDLE_UNINSTALL,
+    BMSEventType::BUNDLE_UPDATE, BMSEventType::PRE_BUNDLE_RECOVER,
+    BMSEventType::APPLY_QUICK_FIX,
 };
 }
 
@@ -45,18 +50,23 @@ void EventReport::SendBundleSystemEvent(BundleEventType bundleEventType, const E
     BMSEventType bmsEventType = BMSEventType::UNKNOW;
     std::unordered_map<BundleEventType, BMSEventType>::const_iterator iter;
     if (eventInfo.errCode != ERR_OK) {
-        iter = BUNDLE_EXCEPTION_SYS_EVENT_MAP.find(bundleEventType);
-        if (iter != BUNDLE_EXCEPTION_SYS_EVENT_MAP.end()) {
-            bmsEventType = iter->second;
+        size_t len = sizeof(BUNDLE_EXCEPTION_SYS_EVENT_MAP_KEY) / sizeof(BundleEventType);
+        for (size_t i = 0; i < len; i++) {
+            if (bundleEventType == BUNDLE_EXCEPTION_SYS_EVENT_MAP_KEY[i]) {
+                bmsEventType = BUNDLE_EXCEPTION_SYS_EVENT_MAP_VALUE[i];
+                break;
+            }
         }
-
         SendSystemEvent(bmsEventType, eventInfo);
         return;
     }
 
-    iter = BUNDLE_SYS_EVENT_MAP.find(bundleEventType);
-    if (iter != BUNDLE_SYS_EVENT_MAP.end()) {
-        bmsEventType = iter->second;
+    size_t len = sizeof(BUNDLE_SYS_EVENT_MAP_KEY) / sizeof(BundleEventType);
+    for (size_t i = 0; i < len; i++) {
+        if (bundleEventType == BUNDLE_SYS_EVENT_MAP_KEY[i]) {
+            bmsEventType = BUNDLE_SYS_EVENT_MAP_VALUE[i];
+            break;
+        }
     }
 
     SendSystemEvent(bmsEventType, eventInfo);
