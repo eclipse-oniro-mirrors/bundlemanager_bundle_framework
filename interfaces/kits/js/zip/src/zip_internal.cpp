@@ -203,7 +203,7 @@ bool TimeToZipFileInfo(const struct tm *fileTime, zip_fileinfo &zipInfo)
     }
 
     zipInfo.tmz_date.tm_year = (int)fileTime->tm_year + 1900;
-    zipInfo.tmz_date.tm_mon = (int)fileTime->tm_mon + 1;
+    zipInfo.tmz_date.tm_mon = (int)fileTime->tm_mon;
     zipInfo.tmz_date.tm_mday = (int)fileTime->tm_mday;
     zipInfo.tmz_date.tm_hour = (int)fileTime->tm_hour;
     zipInfo.tmz_date.tm_min = (int)fileTime->tm_min;
