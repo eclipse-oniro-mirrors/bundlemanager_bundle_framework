@@ -726,7 +726,11 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
         return InnerRemoveAtomicServiceBundleDataDir(bundleName, userId);
     }
     
-    return InnerRemoveBundleDataDir(bundleName, userId);
+    ErrCode result = InnerRemoveBundleDataDir(bundleName, userId);
+    if (result != ERR_OK) {
+        return InnerRemoveBundleDataDir(bundleName, userId);
+    }
+    return ERR_OK;
 }
 
 ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, const int userid)
