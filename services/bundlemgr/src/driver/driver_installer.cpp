@@ -54,7 +54,7 @@ ErrCode DriverInstaller::CopyDriverSoFile(const InnerBundleInfo &info, const std
     std::string cpuAbi = "";
     std::string nativeLibraryPath = "";
     if (!info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath)) {
-        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+        return result;
     }
     for (const auto &extAbilityInfo : extensionAbilityInfos) {
         if (extAbilityInfo.second.type != ExtensionAbilityType::DRIVER) {
