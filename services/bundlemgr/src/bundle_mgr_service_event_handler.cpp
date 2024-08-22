@@ -2006,7 +2006,7 @@ bool BMSEventHandler::InnerProcessUninstallAppServiceModule(const InnerBundleInf
         }
     }
     if (moduleNeedUnsinstall.empty()) {
-        return ERR_OK;
+        return true;
     }
     for (const std::string &moduleName : moduleNeedUnsinstall) {
         AppServiceFwkInstaller installer;

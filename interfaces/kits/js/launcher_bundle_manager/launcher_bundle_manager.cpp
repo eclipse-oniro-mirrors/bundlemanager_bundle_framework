@@ -39,8 +39,9 @@ namespace {
     constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
     constexpr const char* BUNDLE_NAME = "bundleName";
     constexpr const char* USER_ID = "userId";
-    constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
-    constexpr const char* PARSE_START_OPTIONS = "ParseStartOptions";
+    constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
+    constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
+    constexpr const char* PARSE_START_OPTIONS = "parse StartOptions failed";
     constexpr const char* START_SHORTCUT = "StartShortcut";
     const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 
@@ -392,8 +393,8 @@ static ErrCode InnerStartShortcut(const OHOS::AppExecFwk::ShortcutInfo &shortcut
     const OHOS::AAFwk::StartOptions &startOptions)
 {
     if (shortcutInfo.intents.empty()) {
-        APP_LOGW("verify permission failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        APP_LOGW("intents is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     AAFwk::Want want;
     ElementName element;
@@ -404,6 +405,7 @@ static ErrCode InnerStartShortcut(const OHOS::AppExecFwk::ShortcutInfo &shortcut
     for (const auto &item : shortcutInfo.intents[0].parameters) {
         want.SetParam(item.first, item.second);
     }
+    want.SetParam(AAFwk::Want::PARAM_APP_CLONE_INDEX_KEY, shortcutInfo.appIndex);
     auto res = AAFwk::AbilityManagerClient::GetInstance()->StartShortcut(want, startOptions);
     auto it = START_SHORTCUT_RES_MAP.find(res);
     if (it == START_SHORTCUT_RES_MAP.end()) {
@@ -464,6 +466,10 @@ napi_value StartShortcut(napi_env env, napi_callback_info info)
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo)) {
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+                return nullptr;
+            }
+            if (asyncCallbackInfo->shortcutInfo.intents.empty()) {
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, ERROR_EMPTY_WANT);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
