@@ -56,21 +56,24 @@ constexpr const char* EXCEL = "EXCEL";
 constexpr const char* PPT = "PPT";
 constexpr const char* EMAIL = "EMAIL";
 constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
-const std::map<std::string, std::set<std::string>> APP_TYPES = {
-    {IMAGE, {"image/*"}},
-    {AUDIO, {"audio/*"}},
-    {VIDEO, {"video/*"}},
-    {PDF, {"application/pdf"}},
-    {WORD, {"application/msword",
+constexpr const char* APP_TYPES_KEY[] = {
+    IMAGE, AUDIO, VIDEO, PDF, WORD, EXCEL, PPT
+};
+const std::set<std::string> APP_TYPES_VALUE[] = {
+    {"image/*"},
+    {"audio/*"},
+    {"video/*"},
+    {"application/pdf"},
+    {"application/msword",
         "application/vnd.ms-word.document",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.template"}},
-    {EXCEL, {"application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.template"},
+    {"application/vnd.ms-excel",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.template"}},
-    {PPT, {"application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.template"},
+    {"application/vnd.ms-powerpoint",
         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "application/vnd.openxmlformats-officedocument.presentationml.template"}},
+        "application/vnd.openxmlformats-officedocument.presentationml.template"},
 };
 const std::set<std::string> supportAppTypes = {BROWSER, IMAGE, AUDIO, VIDEO, PDF, WORD, EXCEL, PPT, EMAIL};
 }
@@ -523,13 +526,15 @@ ErrCode DefaultAppMgr::GetBundleInfoByUtd(
         }
     }
     // match default app type
+    size_t len = sizeof(APP_TYPES_KEY) / sizeof(APP_TYPES_KEY[0]);
     for (const auto& item : defaultAppTypeInfos) {
-        const auto iter = APP_TYPES.find(item.first);
-        if (iter == APP_TYPES.end()) {
-            continue;
+        size_t i = 0;
+        for (i = 0; i < len; i++) {
+            if (APP_TYPES_KEY[i] == item.first) break;
         }
+        if (i == len) continue;
         Skill skill;
-        for (const auto& mimeType : iter->second) {
+        for (const auto& mimeType : APP_TYPES_VALUE[i]) {
             if (skill.MatchType(utd, mimeType) && GetBundleInfo(userId, utd, item.second, bundleInfo)) {
                 LOG_I(BMS_TAG_DEFAULT, "match default app type success");
                 return ERR_OK;
@@ -627,12 +632,16 @@ bool DefaultAppMgr::MatchAppType(const std::string& type, const std::vector<Skil
     if (type == EMAIL) {
         return IsEmailSkillsValid(skills);
     }
-    auto item = APP_TYPES.find(type);
-    if (item == APP_TYPES.end()) {
+    size_t i = 0;
+    size_t len = sizeof(APP_TYPES_KEY) / sizeof(APP_TYPES_KEY[0]);
+    for (i = 0; i < len; i++) {
+        if (APP_TYPES_KEY[i] == type) break;
+    }
+    if (i == len) {
         LOG_E(BMS_TAG_DEFAULT, "invalid app type : %{public}s", type.c_str());
         return false;
     }
-    for (const std::string& mimeType : item->second) {
+    for (const std::string& mimeType : APP_TYPES_VALUE[i]) {
         if (MatchActionAndType(ACTION_VIEW_DATA, mimeType, skills)) {
             return true;
         }

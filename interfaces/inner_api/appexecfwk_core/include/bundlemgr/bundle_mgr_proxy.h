@@ -1166,6 +1166,9 @@ private:
 
     ErrCode GetMediaDataFromAshMem(MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len);
     static inline BrokerDelegator<BundleMgrProxy> delegator_;
+
+    template<typename T>
+    ErrCode WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const;
 };
 
 }  // namespace AppExecFwk

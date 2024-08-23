@@ -15,6 +15,7 @@
         "asanEnabled": false,
         "GWPAsanEnabled": false,
         "tsanEnabled": true,
-        "hwasanEnabled": false
+        "hwasanEnabled": false,
+        "ubsanEnabled": false
     }
 }

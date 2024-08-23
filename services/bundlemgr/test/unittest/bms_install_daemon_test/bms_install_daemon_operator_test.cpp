@@ -1212,21 +1212,21 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7500, Function | Sma
     std::string destinedDir = "invalid";
     std::string originalDir = "invalid";
     BundleExtractor extractor("");
-    bool res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
+    bool res = InstalldOperator::CopyDriverSoFiles(originalDir, destinedDir);
     EXPECT_EQ(res, false);
 
     destinedDir = "invalid/";
-    res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
+    res = InstalldOperator::CopyDriverSoFiles(originalDir, destinedDir);
     EXPECT_EQ(res, false);
 
     destinedDir = "invalid/test";
     originalDir = "invalid/test";
-    res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
+    res = InstalldOperator::CopyDriverSoFiles(originalDir, destinedDir);
     EXPECT_EQ(res, false);
 
     destinedDir = "data/test";
     originalDir = "data/test";
-    res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
+    res = InstalldOperator::CopyDriverSoFiles(originalDir, destinedDir);
     EXPECT_EQ(res, false);
 }
 

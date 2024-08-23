@@ -144,6 +144,7 @@ constexpr const char* MODULE_GWP_ASAN_ENABLED = "gwpAsanEnabled";
 constexpr const char* MODULE_PACKAGE_NAME = "packageName";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
 constexpr const char* MODULE_HWASAN_ENABLED = "hwasanEnabled";
+constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -445,6 +446,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_APP_STARTUP, info.appStartup},
         {MODULE_HWASAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
             static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED))},
+        {MODULE_UBSAN_ENABLED, info.ubsanEnabled},
     };
 }
 
@@ -1048,6 +1050,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_HWASAN_ENABLED,
         hwasanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_UBSAN_ENABLED,
+        info.ubsanEnabled,
         JsonType::BOOLEAN,
         false,
         parseResult,
@@ -1947,6 +1957,7 @@ bool InnerBundleInfo::IsExistLauncherAbility() const
 
 void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo)
 {
+    LOG_I(BMS_TAG_DEFAULT, "libPath:%{public}s", applicationInfo.nativeLibraryPath.c_str());
     baseApplicationInfo_->cpuAbi = applicationInfo.cpuAbi;
     baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
 }
@@ -4304,6 +4315,23 @@ bool InnerBundleInfo::IsHwasanEnabled() const
             hwasanEnabled = static_cast<bool>(module.innerModuleInfoFlag &
                 static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
             if (hwasanEnabled) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool InnerBundleInfo::IsUbsanEnabled() const
+{
+    for (const auto &item : innerModuleInfos_) {
+        if (item.second.ubsanEnabled) {
+            return true;
+        }
+    }
+    for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
+        for (const auto &module : modules) {
+            if (module.ubsanEnabled) {
                 return true;
             }
         }

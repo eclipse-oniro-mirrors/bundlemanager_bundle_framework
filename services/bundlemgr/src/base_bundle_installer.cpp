@@ -2573,14 +2573,22 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
                                         ServiceConstants::PATH_SEPARATOR +
                                         std::to_string(userId_);
         std::string baseDataDir = baseBundleDataDir + ServiceConstants::BASE + info.GetBundleName();
-        bool isExist = true;
-        ErrCode result = InstalldClient::GetInstance()->IsExistDir(baseDataDir, isExist);
+        std::string databaseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + info.GetBundleName();
+        bool isBaseExist = true;
+        bool isDatabaseExist = true;
+        ErrCode result = InstalldClient::GetInstance()->IsExistDir(baseDataDir, isBaseExist);
+        ErrCode dataResult = InstalldClient::GetInstance()->IsExistDir(databaseDataDir, isDatabaseExist);
         if (result != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "IsExistDir failed, error is %{public}d", result);
+            LOG_E(BMS_TAG_INSTALLER, "IsExistDir error is %{public}d", result);
             return result;
         }
-        if (!isExist) {
-            LOG_D(BMS_TAG_INSTALLER, "baseDir: %{public}s is not exist", baseDataDir.c_str());
+        if (dataResult != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "IsExistDataDir error is %{public}d", dataResult);
+            return dataResult;
+        }
+        if (!isBaseExist || !isDatabaseExist) {
+            LOG_D(BMS_TAG_INSTALLER, "base %{public}s or data %{public}s is not exist", baseDataDir.c_str(),
+                databaseDataDir.c_str());
             continue;
         }
         result = InstalldClient::GetInstance()->SetDirApl(
@@ -2590,7 +2598,6 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
             LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl baseDir dir, error is %{public}d", result);
             return result;
         }
-        std::string databaseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + info.GetBundleName();
         result = InstalldClient::GetInstance()->SetDirApl(
             databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
             info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
@@ -2599,7 +2606,6 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
             return result;
         }
     }
-
     return ERR_OK;
 }
 

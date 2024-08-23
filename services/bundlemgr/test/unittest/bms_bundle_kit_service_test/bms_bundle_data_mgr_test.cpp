@@ -6153,8 +6153,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplAddDesktopShortcutInfo_0001, Fun
     ErrCode ret = localBundleMgrHostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_NE(ret, ERR_OK);
 
-    bundleMgrService_->dataMgr_ = nullptr;
+    ClearDataMgr();
     ret = bundleMgrHostImpl_->AddDesktopShortcutInfo(shortcutInfo, USERID);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -6172,8 +6173,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplAddDesktopShortcutInfo_0002, Fun
     ErrCode ret = localBundleMgrHostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_NE(ret, ERR_OK);
 
-    bundleMgrService_->dataMgr_ = nullptr;
+    ClearDataMgr();
     ret = localBundleMgrHostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -6191,8 +6193,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplDeleteDesktopShortcutInfo_0001, 
     ErrCode ret = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_NE(ret, ERR_OK);
 
-    bundleMgrService_->dataMgr_ = nullptr;
+    ClearDataMgr();
     ret = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -6210,8 +6213,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplDeleteDesktopShortcutInfo_0002, 
     ErrCode ret = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_NE(ret, ERR_OK);
 
-    bundleMgrService_->dataMgr_ = nullptr;
+    ClearDataMgr();
     ret = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -6231,8 +6235,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAllDesktopShortcutInfo_0001, 
     ErrCode ret = lcalBundleMgrHostImpl->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
     EXPECT_NE(ret, ERR_OK);
 
-    bundleMgrService_->dataMgr_ = nullptr;
+    ClearDataMgr();
     ret = lcalBundleMgrHostImpl->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -6252,8 +6257,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAllDesktopShortcutInfo_0002, 
     ErrCode ret = localBundleMgrHostImpl->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
     EXPECT_NE(ret, ERR_OK);
 
-    bundleMgrService_->dataMgr_ = nullptr;
+    ClearDataMgr();
     ret = localBundleMgrHostImpl->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -6458,6 +6464,497 @@ HWTEST_F(BmsBundleDataMgrTest, ReadFromParcel_0200, Function | SmallTest | Level
 
     bool result = recoverableApplicationInfo.ReadFromParcel(parcel);
     EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: BmsExtensionClientAddResourceInfoByBundleName_0100
+ * @tc.name: AddResourceInfoByBundleName
+ * @tc.desc: test AddResourceInfoByBundleName of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientAddResourceInfoByBundleName_0100, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::string bundleName = "bundleName";
+    int32_t userId = 100;
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ErrCode ret = bmsExtensionClient->AddResourceInfoByBundleName(bundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientAddResourceInfoByBundleName_0200
+ * @tc.name: AddResourceInfoByBundleName
+ * @tc.desc: test AddResourceInfoByBundleName of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientAddResourceInfoByBundleName_0200, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::string bundleName = "bundleName";
+    int32_t userId = 100;
+    ErrCode ret = bmsExtensionClient->AddResourceInfoByBundleName(bundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientAddResourceInfoByAbility_0100
+ * @tc.name: AddResourceInfoByAbility
+ * @tc.desc: test AddResourceInfoByAbility of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientAddResourceInfoByAbility_0100, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::string bundleName = "bundleName";
+    std::string moduleName = "moduleName";
+    std::string abilityName = "abilityName";
+    int32_t userId = 100;
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ErrCode res = bmsExtensionClient->AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientAddResourceInfoByAbility_0200
+ * @tc.name: AddResourceInfoByAbility
+ * @tc.desc: test AddResourceInfoByAbility of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientAddResourceInfoByAbility_0200, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::string bundleName = "bundleName";
+    std::string moduleName = "moduleName";
+    std::string abilityName = "abilityName";
+    int32_t userId = 100;
+    ErrCode res = bmsExtensionClient->AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+
+/**
+ * @tc.number: BmsExtensionClientDeleteResourceInfo_0100
+ * @tc.name: DeleteResourceInfo
+ * @tc.desc: test DeleteResourceInfo of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientDeleteResourceInfo_0100, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::string key = "abilityName";
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ErrCode res = bmsExtensionClient->DeleteResourceInfo(key);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientDeleteResourceInfo_0200
+ * @tc.name: DeleteResourceInfo
+ * @tc.desc: test DeleteResourceInfo of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientDeleteResourceInfo_0200, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::string key = "abilityName";
+    ErrCode res = bmsExtensionClient->DeleteResourceInfo(key);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientOptimizeDisposedPredicates_0100
+ * @tc.name: OptimizeDisposedPredicates
+ * @tc.desc: test OptimizeDisposedPredicates of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientOptimizeDisposedPredicates_0100, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::string callingName = "callingName";
+    std::string appId = "appId";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ErrCode res = bmsExtensionClient->OptimizeDisposedPredicates(
+        callingName, appId, userId, appIndex, absRdbPredicates);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientOptimizeDisposedPredicates_0200
+ * @tc.name: OptimizeDisposedPredicates
+ * @tc.desc: test OptimizeDisposedPredicates of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientOptimizeDisposedPredicates_0200, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::string callingName = "callingName";
+    std::string appId = "appId";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
+    ErrCode res = bmsExtensionClient->OptimizeDisposedPredicates(
+        callingName, appId, userId, appIndex, absRdbPredicates);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientGetBundleInfos_0100
+ * @tc.name: test BundleDataMgr::GetBundleInfos
+ * @tc.desc: test GetBundleInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientGetBundleInfos_0100, Function | MediumTest | Level1)
+{
+    int32_t flags = 0;
+    int32_t userId = Constants::ALL_USERID;
+    std::vector<BundleInfo> bundleInfos;
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ErrCode ret = bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientGetBundleInfos_0200
+ * @tc.name: test BundleDataMgr::GetBundleInfos
+ * @tc.desc: test GetBundleInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientGetBundleInfos_0200, Function | MediumTest | Level1)
+{
+    int32_t flags = 0;
+    int32_t userId = Constants::ALL_USERID;
+    std::vector<BundleInfo> bundleInfos;
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    ErrCode ret = bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: BmsExtensionClientGetBundleInfo_0100
+ * @tc.name: test BundleDataMgr::GetBundleInfo
+ * @tc.desc: test GetBundleInfo of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientGetBundleInfo_0100, Function | MediumTest | Level1)
+{
+    std::string bundleName;
+    int32_t flags = 0;
+    int32_t userId = Constants::ALL_USERID;
+    BundleInfo bundleInfo;
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ErrCode ret = bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientGetBundleInfo_0200
+ * @tc.name: test BundleDataMgr::GetBundleInfo
+ * @tc.desc: test GetBundleInfo of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientGetBundleInfo_0200, Function | MediumTest | Level1)
+{
+    std::string bundleName;
+    int32_t flags = 0;
+    int32_t userId = Constants::ALL_USERID;
+    BundleInfo bundleInfo;
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    bool flag = false;
+    if (bundleMgrService_->dataMgr_ == nullptr) {
+        ResetDataMgr();
+        flag = true;
+    }
+    ErrCode ret = bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId);
+    if (flag) {
+        ClearDataMgr();
+    }
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: BmsExtensionClientGetUidByBundleName_0100
+ * @tc.name: test BmsExtensionClient::GetUidByBundleName
+ * @tc.desc: test GetUidByBundleName of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientGetUidByBundleName_0100, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    int32_t userId = USERID;
+    int32_t uid = TEST_UID;
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ErrCode ret = bmsExtensionClient->GetUidByBundleName(BUNDLE_NAME_TEST, userId, uid);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientQueryAbilityInfos_0100
+ * @tc.name: QueryAbilityInfos
+ * @tc.desc: test QueryAbilityInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientQueryAbilityInfos_0100, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    Want want;
+    want.SetElementName("", "com.ohos.settings", "", "");
+    int32_t flags = 0;
+    int32_t userId = Constants::ALL_USERID;
+    std::vector<AbilityInfo> abilityInfos;
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    bool flag = false;
+    if (bundleMgrService_->dataMgr_ == nullptr) {
+        ResetDataMgr();
+        flag = true;
+    }
+    ErrCode res = bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
+    if (flag) {
+        ClearDataMgr();
+    }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientQueryAbilityInfos_0200
+ * @tc.name: QueryAbilityInfos
+ * @tc.desc: test QueryAbilityInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientQueryAbilityInfos_0200, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    Want want;
+    want.SetElementName("", "", "", "");
+    int32_t flags = 0;
+    int32_t userId = Constants::ALL_USERID;
+    std::vector<AbilityInfo> abilityInfos;
+    bool flag = false;
+    if (bundleMgrService_->dataMgr_ == nullptr) {
+        ResetDataMgr();
+        flag = true;
+    }
+    ErrCode res = bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
+    if (flag) {
+        ClearDataMgr();
+    }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: BmsExtensionClientQueryAbilityInfos_0300
+ * @tc.name: QueryAbilityInfos
+ * @tc.desc: test QueryAbilityInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientQueryAbilityInfos_0300, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    Want want;
+    want.SetElementName("notEmpty", "", "", "");
+    int32_t flags = 0;
+    int32_t userId = Constants::ALL_USERID;
+    std::vector<AbilityInfo> abilityInfos;
+    bool flag = false;
+    if (bundleMgrService_->dataMgr_ == nullptr) {
+        ResetDataMgr();
+        flag = true;
+    }
+    ErrCode res = bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
+    if (flag) {
+        ClearDataMgr();
+    }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: BmsExtensionClientQueryAbilityInfos_0400
+ * @tc.name: QueryAbilityInfos
+ * @tc.desc: test QueryAbilityInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientQueryAbilityInfos_0400, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    Want want;
+    want.SetElementName("notEmpty", "", "", "");
+    int32_t flags = 0;
+    int32_t userId = Constants::ALL_USERID;
+    std::vector<AbilityInfo> abilityInfos;
+    bool flag = false;
+    if (bundleMgrService_->dataMgr_ == nullptr) {
+        ResetDataMgr();
+        flag = true;
+    }
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ErrCode res = bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
+    if (flag) {
+        ClearDataMgr();
+    }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientBatchGetBundleInfo_0100
+ * @tc.name: BatchGetBundleInfo
+ * @tc.desc: test BatchGetBundleInfo of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientBatchGetBundleInfo_0100, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::vector<std::string> bundleNames;
+    int32_t flags = 0;
+    std::vector<BundleInfo> bundleInfos;
+    int32_t userId = -100;
+    bool flag = false;
+    if (bundleMgrService_->dataMgr_ == nullptr) {
+        ResetDataMgr();
+        flag = true;
+    }
+    ErrCode res = bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
+    if (flag) {
+        ClearDataMgr();
+    }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BmsExtensionClientBatchGetBundleInfo_0200
+ * @tc.name: BatchGetBundleInfo
+ * @tc.desc: test BatchGetBundleInfo of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientBatchGetBundleInfo_0200, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::vector<std::string> bundleNames;
+    int32_t flags = 0;
+    std::vector<BundleInfo> bundleInfos;
+    int32_t userId = Constants::ALL_USERID;
+    bool flag = false;
+    if (bundleMgrService_->dataMgr_ == nullptr) {
+        ResetDataMgr();
+        flag = true;
+    }
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ErrCode res = bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
+    if (flag) {
+        ClearDataMgr();
+    }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientBatchGetBundleInfo_0300
+ * @tc.name: BatchGetBundleInfo
+ * @tc.desc: test BatchGetBundleInfo of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientBatchGetBundleInfo_0300, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::vector<std::string> bundleNames;
+    int32_t flags = 0;
+    std::vector<BundleInfo> bundleInfos;
+    int32_t userId = Constants::ALL_USERID;
+    bool flag = false;
+    if (bundleMgrService_->dataMgr_ == nullptr) {
+        ResetDataMgr();
+        flag = true;
+    }
+    ErrCode res = bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
+    if (flag) {
+        ClearDataMgr();
+    }
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsExtensionClientBatchQueryAbilityInfos_0100
+ * @tc.name: BatchQueryAbilityInfos
+ * @tc.desc: test BatchQueryAbilityInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientBatchQueryAbilityInfos_0100, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::vector<Want> wants;
+    Want want;
+    wants.push_back(want);
+    int32_t flags = 1;
+    int32_t userId = Constants::ALL_USERID;
+    std::vector<AbilityInfo> abilityInfos;
+    bool isNewVersion = true;
+    bool flag = false;
+    if (bundleMgrService_->dataMgr_ == nullptr) {
+        ResetDataMgr();
+        flag = true;
+    }
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ErrCode res = bmsExtensionClient->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos, isNewVersion);
+    if (flag) {
+        ClearDataMgr();
+    }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsExtensionClientBatchQueryAbilityInfos_0200
+ * @tc.name: BatchQueryAbilityInfos
+ * @tc.desc: test BatchQueryAbilityInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientBatchQueryAbilityInfos_0200, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    std::vector<Want> wants;
+    Want want;
+    wants.push_back(want);
+    int32_t flags = 1;
+    int32_t userId = Constants::ALL_USERID;
+    std::vector<AbilityInfo> abilityInfos;
+    bool isNewVersion = true;
+    bool flag = false;
+    if (bundleMgrService_->dataMgr_ == nullptr) {
+        ResetDataMgr();
+        flag = true;
+    }
+    ErrCode res = bmsExtensionClient->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos, isNewVersion);
+    if (flag) {
+        ClearDataMgr();
+    }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: BmsExtensionClientQueryLauncherAbility_0100
+ * @tc.name: QueryLauncherAbility
+ * @tc.desc: test QueryLauncherAbility of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientQueryLauncherAbility_0100, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    Want want;
+    int32_t userId = Constants::ALL_USERID;
+    std::vector<AbilityInfo> abilityInfos;
+    bool flag = false;
+    if (bundleMgrService_->dataMgr_ == nullptr) {
+        ResetDataMgr();
+        flag = true;
+    }
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    ErrCode res = bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos);
+    if (flag) {
+        ClearDataMgr();
+    }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**

@@ -16,7 +16,9 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#define private public
 #include "bundle_resource_host.h"
+#undef private
 #include "bundle_resource_interface.h"
 #include "iremote_stub.h"
 
@@ -131,5 +133,195 @@ HWTEST_F(BundleResourceHostTest, GetAllLauncherAbilityResourceInfo_0100, Functio
     ASSERT_EQ(ret, ERR_OK);
 }
 
+/**
+ * @tc.number: OnRemoteRequest_0100
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. descriptor and remoteDescriptor diff
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BundleResourceHostTest, OnRemoteRequest_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0100 start";
+    BundleResourceHost bundleResourceHost;
+    uint32_t code = 100;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    auto ret = bundleResourceHost.OnRemoteRequest(code, data, reply, option);
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0100 end, " << ret;
+    EXPECT_EQ(ret, OBJECT_NULL);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0200
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BundleResourceHostTest, OnRemoteRequest_0200, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0200 start";
+    BundleResourceHost bundleResourceHost;
+    uint32_t code = 100;
+    MessageParcel data;
+    std::u16string descriptor = BundleResourceHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    auto ret = bundleResourceHost.OnRemoteRequest(code, data, reply, option);
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0200 end, " << ret;
+    EXPECT_EQ(ret, IPC_STUB_UNKNOW_TRANS_ERR);
+}
+
+/**
+ * @tc.number: HandleGetBundleResourceInfo_0100
+ * @tc.name: test the HandleGetBundleResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetBundleResourceInfo
+ */
+HWTEST_F(BundleResourceHostTest, HandleGetBundleResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "HandleGetBundleResourceInfo_0100 start";
+    BundleResourceHost bundleResourceHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleResourceHost.HandleGetBundleResourceInfo(data, reply);
+    GTEST_LOG_(INFO) << "HandleGetBundleResourceInfo_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetLauncherAbilityResourceInfo_0100
+ * @tc.name: test the HandleGetLauncherAbilityResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BundleResourceHostTest, HandleGetLauncherAbilityResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "HandleGetLauncherAbilityResourceInfo_0100 start";
+    BundleResourceHost bundleResourceHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleResourceHost.HandleGetLauncherAbilityResourceInfo(data, reply);
+    GTEST_LOG_(INFO) << "HandleGetLauncherAbilityResourceInfo_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetAllBundleResourceInfo_0100
+ * @tc.name: test the HandleGetAllBundleResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetAllBundleResourceInfo
+ */
+HWTEST_F(BundleResourceHostTest, HandleGetAllBundleResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "HandleGetAllBundleResourceInfo_0100 start";
+    BundleResourceHost bundleResourceHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleResourceHost.HandleGetAllBundleResourceInfo(data, reply);
+    GTEST_LOG_(INFO) << "HandleGetAllBundleResourceInfo_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetAllLauncherAbilityResourceInfo_0100
+ * @tc.name: test the HandleGetAllLauncherAbilityResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetAllLauncherAbilityResourceInfo
+ */
+HWTEST_F(BundleResourceHostTest, HandleGetAllLauncherAbilityResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "HandleGetAllLauncherAbilityResourceInfo_0100 start";
+    BundleResourceHost bundleResourceHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleResourceHost.HandleGetAllLauncherAbilityResourceInfo(data, reply);
+    GTEST_LOG_(INFO) << "HandleGetAllLauncherAbilityResourceInfo_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleAddResourceInfoByBundleName_0100
+ * @tc.name: test the HandleAddResourceInfoByBundleName
+ * @tc.desc: 1. system running normally
+ *           2. test HandleAddResourceInfoByBundleName
+ */
+HWTEST_F(BundleResourceHostTest, HandleAddResourceInfoByBundleName_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "HandleAddResourceInfoByBundleName_0100 start";
+    BundleResourceHost bundleResourceHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleResourceHost.HandleAddResourceInfoByBundleName(data, reply);
+    GTEST_LOG_(INFO) << "HandleAddResourceInfoByBundleName_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleAddResourceInfoByAbility_0100
+ * @tc.name: test the HandleAddResourceInfoByAbility
+ * @tc.desc: 1. system running normally
+ *           2. test HandleAddResourceInfoByAbility
+ */
+HWTEST_F(BundleResourceHostTest, HandleAddResourceInfoByAbility_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "HandleAddResourceInfoByAbility_0100 start";
+    BundleResourceHost bundleResourceHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleResourceHost.HandleAddResourceInfoByAbility(data, reply);
+    GTEST_LOG_(INFO) << "HandleAddResourceInfoByAbility_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleDeleteResourceInfo_0100
+ * @tc.name: test the HandleDeleteResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleDeleteResourceInfo
+ */
+HWTEST_F(BundleResourceHostTest, HandleDeleteResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "HandleDeleteResourceInfo_0100 start";
+    BundleResourceHost bundleResourceHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleResourceHost.HandleDeleteResourceInfo(data, reply);
+    GTEST_LOG_(INFO) << "HandleDeleteResourceInfo_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AllocatAshmemNum_0100
+ * @tc.name: test the AllocatAshmemNum
+ * @tc.desc: 1. system running normally
+ *           2. test AllocatAshmemNum
+ */
+HWTEST_F(BundleResourceHostTest, AllocatAshmemNum_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "AllocatAshmemNum_0100 start";
+    BundleResourceHost bundleResourceHost;
+    bundleResourceHost.AllocatAshmemNum();
+    GTEST_LOG_(INFO) << "AllocatAshmemNum_0100 end, ";
+    EXPECT_NE(bundleResourceHost.ashmemNum_, 0);
+}
+
+/**
+ * @tc.number: WriteParcelableIntoAshmem_0100
+ * @tc.name: test the WriteParcelableIntoAshmem
+ * @tc.desc: 1. system running normally
+ *           2. test WriteParcelableIntoAshmem
+ */
+HWTEST_F(BundleResourceHostTest, WriteParcelableIntoAshmem_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "WriteParcelableIntoAshmem_0100 start";
+    BundleResourceHost bundleResourceHost;
+    MessageParcel tempParcel;
+    MessageParcel reply;
+    auto ret = bundleResourceHost.WriteParcelableIntoAshmem(tempParcel, reply);
+    GTEST_LOG_(INFO) << "WriteParcelableIntoAshmem_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
 }
 }

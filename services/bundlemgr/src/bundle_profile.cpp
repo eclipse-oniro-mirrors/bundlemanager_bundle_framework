@@ -87,18 +87,31 @@ const std::unordered_map<std::string, FormsColorMode> formColorModeMap = {
     {"dark", FormsColorMode::DARK_MODE},
     {"light", FormsColorMode::LIGHT_MODE}
 };
-std::map<std::string, uint32_t> backgroundModeMap = {
-    {KEY_DATA_TRANSFER, VALUE_DATA_TRANSFER},
-    {KEY_AUDIO_PLAYBACK, VALUE_AUDIO_PLAYBACK},
-    {KEY_AUDIO_RECORDING, VALUE_AUDIO_RECORDING},
-    {KEY_LOCATION, VALUE_LOCATION},
-    {KEY_BLUETOOTH_INTERACTION, VALUE_BLUETOOTH_INTERACTION},
-    {KEY_MULTI_DEVICE_CONNECTION, VALUE_MULTI_DEVICE_CONNECTION},
-    {KEY_WIFI_INTERACTION, VALUE_WIFI_INTERACTION},
-    {KEY_VOIP, VALUE_VOIP},
-    {KEY_TASK_KEEPING, VALUE_TASK_KEEPING},
-    {KEY_PICTURE_IN_PICTURE, VALUE_PICTURE_IN_PICTURE},
-    {KEY_SCREEN_FETCH, VALUE_SCREEN_FETCH}
+constexpr const char* BACKGROUND_MODE_MAP_KEY[] = {
+    KEY_DATA_TRANSFER,
+    KEY_AUDIO_PLAYBACK,
+    KEY_AUDIO_RECORDING,
+    KEY_LOCATION,
+    KEY_BLUETOOTH_INTERACTION,
+    KEY_MULTI_DEVICE_CONNECTION,
+    KEY_WIFI_INTERACTION,
+    KEY_VOIP,
+    KEY_TASK_KEEPING,
+    KEY_PICTURE_IN_PICTURE,
+    KEY_SCREEN_FETCH
+};
+const uint32_t BACKGROUND_MODE_MAP_VALUE[] = {
+    VALUE_DATA_TRANSFER,
+    VALUE_AUDIO_PLAYBACK,
+    VALUE_AUDIO_RECORDING,
+    VALUE_LOCATION,
+    VALUE_BLUETOOTH_INTERACTION,
+    VALUE_MULTI_DEVICE_CONNECTION,
+    VALUE_WIFI_INTERACTION,
+    VALUE_VOIP,
+    VALUE_TASK_KEEPING,
+    VALUE_PICTURE_IN_PICTURE,
+    VALUE_SCREEN_FETCH
 };
 
 struct Version {
@@ -2281,9 +2294,14 @@ void GetMetaData(MetaData &metaData, const ProfileReader::MetaData &profileMetaD
 uint32_t GetBackgroundModes(const std::vector<std::string>& backgroundModes)
 {
     uint32_t backgroundMode = 0;
+    size_t len = sizeof(ProfileReader::BACKGROUND_MODE_MAP_KEY) /
+        sizeof(ProfileReader::BACKGROUND_MODE_MAP_KEY[0]);
     for (const auto& item : backgroundModes) {
-        if (ProfileReader::backgroundModeMap.find(item) != ProfileReader::backgroundModeMap.end()) {
-            backgroundMode |= ProfileReader::backgroundModeMap[item];
+        for (size_t i = 0; i < len; i++) {
+            if (item == ProfileReader::BACKGROUND_MODE_MAP_KEY[i]) {
+                backgroundMode |= ProfileReader::BACKGROUND_MODE_MAP_VALUE[i];
+                break;
+            }
         }
     }
     return backgroundMode;

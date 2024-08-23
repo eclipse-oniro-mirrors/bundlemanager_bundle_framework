@@ -51,6 +51,11 @@ ErrCode DriverInstaller::CopyDriverSoFile(const InnerBundleInfo &info, const std
     std::unordered_multimap<std::string, std::string> dirMap;
     // 1. filter driver so files
     ErrCode result = ERR_OK;
+    std::string cpuAbi = "";
+    std::string nativeLibraryPath = "";
+    if (!info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath)) {
+        return result;
+    }
     for (const auto &extAbilityInfo : extensionAbilityInfos) {
         if (extAbilityInfo.second.type != ExtensionAbilityType::DRIVER) {
             continue;
@@ -69,7 +74,11 @@ ErrCode DriverInstaller::CopyDriverSoFile(const InnerBundleInfo &info, const std
         return ERR_OK;
     }
     // 2. copy driver so file to destined dir
-    return InstalldClient::GetInstance()->ExtractDriverSoFiles(srcPath, dirMap);
+    std::string realSoDir;
+    realSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+        .append(info.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR)
+        .append(nativeLibraryPath);
+    return InstalldClient::GetInstance()->ExtractDriverSoFiles(realSoDir, dirMap);
 }
 
 ErrCode DriverInstaller::FilterDriverSoFile(const InnerBundleInfo &info, const Metadata &meta,

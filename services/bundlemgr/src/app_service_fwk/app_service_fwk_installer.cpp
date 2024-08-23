@@ -128,7 +128,7 @@ ErrCode AppServiceFwkInstaller::UnInstall(
 {
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("bundleName or moduleName is empty, param error");
-        ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
+        return ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
     }
     APP_LOGI("bundle %{public}s module %{public}s need to be unstalled", bundleName.c_str(), moduleName.c_str());
     if (BeforeUninstall(bundleName) != ERR_OK) {
