@@ -1609,6 +1609,11 @@ public:
         baseApplicationInfo_->allowAppRunWhenDeviceFirstLocked = allowAppRunWhenDeviceFirstLocked;
     }
 
+    void SetAllowEnableNotification(bool allowEnableNotification)
+    {
+        baseApplicationInfo_->allowEnableNotification = allowEnableNotification;
+    }
+
     const std::string &GetCpuAbi() const
     {
         return baseApplicationInfo_->cpuAbi;
