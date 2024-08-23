@@ -19,6 +19,7 @@
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
 #include "bundle_user_info.h"
+#include "code_protect_bundle_info.h"
 #include "common_event_info.h"
 #include "data_group_info.h"
 #include "distributed_ability_info.h"
@@ -156,6 +157,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationEnvironment &applicati
 void from_json(const nlohmann::json &jsonObject, ApplicationEnvironment &applicationEnvironment);
 void to_json(nlohmann::json &jsonObject, const Skill &skill);
 void from_json(const nlohmann::json &jsonObject, Skill &skill);
+void to_json(nlohmann::json &jsonObject, const CodeProtectBundleInfo &codeProtectBundleInfo);
+void from_json(const nlohmann::json &jsonObject, CodeProtectBundleInfo &codeProtectBundleInfo);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H
