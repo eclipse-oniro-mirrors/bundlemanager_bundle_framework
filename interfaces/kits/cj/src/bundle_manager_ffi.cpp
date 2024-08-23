@@ -14,7 +14,7 @@
  */
 
 #include "securec.h"
-#include "bundle_manager_log.h"
+#include "app_log_wrapper.h"
 #include "cj_common_ffi.h"
 #include "bundle_manager_utils.h"
 #include "bundle_manager.h"
@@ -39,7 +39,6 @@ std::vector<std::string> CharPtrToVector(char** charPtr, int32_t size)
             result.push_back(std::string(charPtr[i]));
         }
     }
-    //ndskolgn
     return result;
 }
 
@@ -47,7 +46,7 @@ CArrString VectorToCArrString(std::vector<std::string> &vec)
 {
     char** result = new char* [vec.size()];
     if (result == nullptr) {
-        LOGE("VectorToCArrString malloc failed");
+        APP_LOGE("VectorToCArrString malloc failed");
         return {nullptr, 0};
     }
     size_t temp = 0;
@@ -58,7 +57,7 @@ CArrString VectorToCArrString(std::vector<std::string> &vec)
         }
         auto res = strcpy_s(result[i], vec[i].length() + 1, vec[i].c_str());
         if (res != EOK) {
-            LOGE("failed to strcpy_s.")
+            APP_LOGE("failed to strcpy_s.");
         }
         temp++;
     }
@@ -82,55 +81,55 @@ extern "C" {
 
     RetBundleInfo FfiOHOSGetBundleInfoForSelf(int32_t bundleFlags)
     {
-        LOGI("BundleManager::FfiOHOSGetBundleInfoForSelf");
+        APP_LOGI("BundleManager::FfiOHOSGetBundleInfoForSelf");
         AppExecFwk::BundleInfo bundleInfo = BundleManagerImpl::GetBundleInfoForSelf(bundleFlags);
         RetBundleInfo cjInfo = ConvertBundleInfo(bundleInfo, bundleFlags);
-        LOGI("BundleManager::FfiOHOSGetBundleInfoForSelf success");
+        APP_LOGI("BundleManager::FfiOHOSGetBundleInfoForSelf success");
         return cjInfo;
     }
  
     int32_t FfiOHOSVerifyAbc(CArrString cAbcPaths, bool deleteOriginalFiles)
     {
-        LOGI("BundleManager::FfiOHOSVerifyAbc");
+        APP_LOGI("BundleManager::FfiOHOSVerifyAbc");
         std::vector<std::string> abcPaths = CharPtrToVector(cAbcPaths.head, cAbcPaths.size);
         auto code = BundleManagerImpl::VerifyAbc(abcPaths, deleteOriginalFiles);
         if (code != 0) {
-            LOGE("FfiOHOSVerifyAbc failed, code is %{public}d", code);
+            APP_LOGE("FfiOHOSVerifyAbc failed, code is %{public}d", code);
             return code;
         }
-        LOGI("BundleManager::FfiOHOSVerifyAbc success");
+        APP_LOGI("BundleManager::FfiOHOSVerifyAbc success");
         return code;
     }
 
     RetCArrString FfiGetProfileByExtensionAbility(char* moduleName, char* extensionAbilityName, char* metadataName)
     {
-        LOGI("BundleManager::FfiGetProfileByExtensionAbility");
+        APP_LOGI("BundleManager::FfiGetProfileByExtensionAbility");
         RetCArrString res = { .code = -1, .value = {}};
         auto [status, extensionAbilityInfo] = BundleManagerImpl::GetProfileByExtensionAbility(
             std::string(moduleName), std::string(extensionAbilityName), metadataName);
         if (status != 0) {
-            LOGE("FfiGetProfileByExtensionAbility failed, code is %{public}d", status);
+            APP_LOGE("FfiGetProfileByExtensionAbility failed, code is %{public}d", status);
             return {status, {}};
         }
         res.code = SUCCESS_CODE;
         res.value = VectorToCArrString(extensionAbilityInfo);
-        LOGI("BundleManager::FfiGetProfileByExtensionAbility success");
+        APP_LOGI("BundleManager::FfiGetProfileByExtensionAbility success");
         return res;
     }
 
     RetCArrString FfiGetProfileByAbility(char* moduleName, char* extensionAbilityName, char* metadataName)
     {
-        LOGI("BundleManager::FfiGetProfileByAbility");
+        APP_LOGI("BundleManager::FfiGetProfileByAbility");
         RetCArrString res = { .code = -1, .value = {}};
         auto [status, extensionAbilityInfo] = BundleManagerImpl::GetProfileByAbility(
             std::string(moduleName), std::string(extensionAbilityName), metadataName);
         if (status != 0) {
-            LOGE("FfiGetProfileByAbility failed, code is %{public}d", status);
+            APP_LOGE("FfiGetProfileByAbility failed, code is %{public}d", status);
             return {status, {}};
         }
         res.code = SUCCESS_CODE;
         res.value = VectorToCArrString(extensionAbilityInfo);
-        LOGI("BundleManager::FfiGetProfileByAbility success");
+        APP_LOGI("BundleManager::FfiGetProfileByAbility success");
         return res;
     }
 }

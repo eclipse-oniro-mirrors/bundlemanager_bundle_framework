@@ -13,29 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_BUNDLE_MANAGER_LOG_H
-#define OHOS_BUNDLE_MANAGER_LOG_H
+#ifndef OHOS_DEFAULT_APP_H
+#define OHOS_DEFAULT_APP_H
 
-#include "hilog/log.h"
+#include <string>
+#include "native/ffi_remote_data.h"
+#include "cj_common_ffi.h"
 
-#ifdef LOG_DOMAIN
-#undef LOG_DOMAIN
-#endif
-#ifdef LOG_TAG
-#undef LOG_TAG
-#endif
+namespace OHOS {
+namespace AppExecFwk {
 
-#define LOG_DOMAIN 0xD001100
-#define LOG_TAG "BundleManager"
-
-#define LOGI(...)                                           \
-if (HiLogIsLoggable(LOG_DOMAIN, LOG_TAG, LOG_INFO)) {       \
-    HILOG_INFO(LOG_CORE, ##__VA_ARGS__);                    \
+extern "C" {
+    FFI_EXPORT RetDataBool FfiIsDefaultApplication(char* type);
 }
-
-#define LOGE(...)                                           \
-if (HiLogIsLoggable(LOG_DOMAIN, LOG_TAG, LOG_ERROR)) {      \
-    HILOG_ERROR(LOG_CORE, __VA_ARGS__);                     \
+}
 }
 
 #endif
