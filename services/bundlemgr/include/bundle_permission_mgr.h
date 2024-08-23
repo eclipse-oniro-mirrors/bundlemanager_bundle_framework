@@ -83,6 +83,8 @@ public:
 
     static bool IsNativeTokenType();
 
+    static bool IsShellTokenType();
+
     static bool VerifyCallingUid();
 
     static bool VerifyPreload(const AAFwk::Want &want);
