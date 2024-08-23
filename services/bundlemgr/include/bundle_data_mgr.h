@@ -1148,7 +1148,7 @@ private:
         const InnerBundleInfo& info, const InnerBundleUserInfo &bundleUserInfo,
         int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const;
 
-    void PreProcessAnyUserFlag(const std::string &bundleName, int32_t flags, int32_t &userId) const;
+    void PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const;
     void PostProcessAnyUserFlags(int32_t flags, int32_t userId,
         int32_t originalUserId, BundleInfo &bundleInfo) const;
 
