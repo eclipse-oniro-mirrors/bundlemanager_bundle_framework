@@ -77,10 +77,6 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
-    if (userId <= Constants::DEFAULT_USERID) {
-        APP_LOGE("userId(%{public}d) invalid", userId);
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-    }
     if (GetDataMgr() != ERR_OK) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -95,6 +91,10 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     }
 
     // 2. obtain userId
+    if (userId < Constants::DEFAULT_USERID) {
+        APP_LOGE("userId(%{public}d) invalid", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
     if (!dataMgr_->HasUserId(userId)) {
         APP_LOGE("install app user %{public}d not exist", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
