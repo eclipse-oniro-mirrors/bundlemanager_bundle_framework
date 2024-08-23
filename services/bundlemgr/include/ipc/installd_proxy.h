@@ -218,7 +218,7 @@ public:
     virtual ErrCode SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
         const int32_t userId, std::string &keyId) override;
 
-    virtual ErrCode DeleteEncryptionKeyId(const std::string &keyId) override;
+    virtual ErrCode DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId) override;
 
     virtual ErrCode RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs) override;
 
@@ -227,7 +227,7 @@ public:
     virtual ErrCode CreateExtensionDataDir(const CreateDirParam &createDirParam) override;
 
     virtual ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList) override;
-   
+
     virtual ErrCode AddUserDirDeleteDfx(int32_t userId) override;
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

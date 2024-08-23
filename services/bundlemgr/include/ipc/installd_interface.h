@@ -392,7 +392,7 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode DeleteEncryptionKeyId(const std::string &keyId)
+    virtual ErrCode DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId)
     {
         return ERR_OK;
     }

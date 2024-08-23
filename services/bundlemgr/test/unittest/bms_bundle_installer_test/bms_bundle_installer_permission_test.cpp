@@ -628,8 +628,9 @@ HWTEST_F(BmsBundleInstallerPermissionTest, GetExtensionSandboxTypeList_0100, Fun
 HWTEST_F(BmsBundleInstallerPermissionTest, DeleteEncryptionKeyId_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl installdHostImpl;
-    std::string keyId = "test.key.id";
-    ErrCode ret = installdHostImpl.DeleteEncryptionKeyId(keyId);
+    std::string bundleName = "com.example.testbundle";
+    int32_t userId = USERID;
+    ErrCode ret = installdHostImpl.DeleteEncryptionKeyId(bundleName, userId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

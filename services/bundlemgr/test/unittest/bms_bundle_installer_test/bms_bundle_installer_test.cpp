@@ -6401,11 +6401,12 @@ HWTEST_F(BmsBundleInstallerTest, SetEncryptionPolicy_0100, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, DeleteEncryptionKeyId_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl hostImpl;
-    std::string keyId = "";
-    ErrCode ret = hostImpl.DeleteEncryptionKeyId(keyId);
+    std::string bundleName = "";
+    int32_t userId = USERID;
+    ErrCode ret = hostImpl.DeleteEncryptionKeyId(bundleName, userId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    keyId = "test.keyId";
-    ret = hostImpl.DeleteEncryptionKeyId(keyId);
+    bundleName = BUNDLE_NAME;
+    ret = hostImpl.DeleteEncryptionKeyId(bundleName, userId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED);
 }
 

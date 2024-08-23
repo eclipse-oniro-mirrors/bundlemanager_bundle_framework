@@ -2951,12 +2951,7 @@ void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, 
         }
     }
 
-    InnerBundleUserInfo userInfo;
-    if (!oldInfo.GetInnerBundleUserInfo(userId_, userInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "%{public}s get user %{public}d failed", oldInfo.GetBundleName().c_str(), userId_);
-        return;
-    }
-    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(userInfo.keyId) != ERR_OK) {
+    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(oldInfo.GetBundleName(), userId_) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "delete encryption key id failed");
     }
 }

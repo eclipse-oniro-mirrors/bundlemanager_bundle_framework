@@ -287,7 +287,7 @@ public:
     static bool GenerateKeyIdAndSetPolicy(int32_t uid, const std::string &bundleName,
         const int32_t userId, std::string &keyId);
 
-    static bool DeleteKeyId(const std::string &keyId);
+    static bool DeleteKeyId(const std::string &bundleName, const int32_t userId);
 
     /**
      * @brief Add file Delete dfx
@@ -295,7 +295,7 @@ public:
      * @return
      */
     static void AddDeleteDfx(const std::string &path);
-    
+
    /**
      * @brief Rmv file Delete dfx
      * @param path Indicates the directory path to add dfx.
