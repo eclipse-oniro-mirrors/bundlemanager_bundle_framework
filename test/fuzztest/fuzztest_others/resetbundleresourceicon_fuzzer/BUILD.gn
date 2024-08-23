@@ -162,6 +162,9 @@ ohos_fuzztest("ResetBundleResourceIconFuzzTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [
+      "udmf:udmf_client",
+      "udmf:utd_client",
+    ]
   }
 }
