@@ -20,6 +20,7 @@
 #include "ability_info.h"
 #include "bundle_info.h"
 #include "bundle_resource_info.h"
+#include "code_protect_bundle_info.h"
 #include "launcher_ability_resource_info.h"
 #include "interfaces/hap_verify.h"
 #include "want.h"
@@ -115,6 +116,10 @@ public:
     virtual bool IsAppInBlocklist(const std::string &bundleName)
     {
         return false;
+    }
+    virtual ErrCode KeyOperation(const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type)
+    {
+        return ERR_OK;
     }
     virtual bool CheckWhetherCanBeUninstalled(const std::string &bundleName)
     {

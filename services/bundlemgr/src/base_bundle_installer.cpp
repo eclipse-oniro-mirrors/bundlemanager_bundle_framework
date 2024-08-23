@@ -43,6 +43,7 @@
 #include "bundle_clone_installer.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
+#include "code_protect_bundle_info.h"
 #include "datetime_ex.h"
 #include "driver_installer.h"
 #include "hitrace_meter.h"
@@ -737,6 +738,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     LOG_I(BMS_TAG_INSTALLER, "isAppExist:%{public}d", isAppExist_);
+    SetOldAppIsEncrypted(oldInfo);
 
     KillRelatedProcessIfArkWeb(bundleName_, isAppExist_, installParam.isOTA);
     ErrCode result = ERR_OK;
@@ -1254,6 +1256,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         quickFixDeleter->Execute();
     }
 #endif
+    UpdateEncryptedStatus();
     GetInstallEventInfo(sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
@@ -1417,6 +1420,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "UninstallAndRecover bundle is not pre-install app");
         return ERR_APPEXECFWK_UNINSTALL_AND_RECOVER_NOT_PREINSTALLED_BUNDLE;
     }
+    oldApplicationReservedFlag_ = oldInfo.GetApplicationReservedFlag();
     bundleType_ = oldInfo.GetApplicationBundleType();
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
@@ -1546,6 +1550,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_I(BMS_TAG_INSTALLER, "Pre-installed app %{public}s detected, Marking as uninstalled", bundleName.c_str());
         MarkPreInstallState(bundleName, true);
     }
+    DeleteEncryptedStatus(bundleName, uid);
     BundleResourceHelper::DeleteResourceInfo(bundleName, userId_);
     // remove profile from code signature
     RemoveProfileFromCodeSign(bundleName);
@@ -4269,6 +4274,94 @@ ErrCode BaseBundleInstaller::CheckNativeSoWithOldInfo(
 
     LOG_D(BMS_TAG_INSTALLER, "CheckNativeSoWithOldInfo end");
     return ERR_OK;
+}
+
+void BaseBundleInstaller::SetOldAppIsEncrypted(const InnerBundleInfo &oldInfo)
+{
+    if (!isAppExist_) {
+        return;
+    }
+    oldApplicationReservedFlag_ = oldInfo.GetApplicationReservedFlag();
+}
+
+bool BaseBundleInstaller::UpdateEncryptedStatus()
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed");
+        return false;
+    }
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, innerBundleInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "get failed");
+        return false;
+    }
+    CodeProtectBundleInfo info;
+    info.bundleName = innerBundleInfo.GetBundleName();
+    info.versionCode = innerBundleInfo.GetVersionCode();
+    info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
+    info.uid = innerBundleInfo.GetUid(userId_);
+    std::vector<CodeProtectBundleInfo> infos { info };
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    if (!isAppExist_ && (innerBundleInfo.GetApplicationReservedFlag() ==
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION))) {
+        // add a new encrypted app, need to add operation
+        return bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::ADD) == ERR_OK;
+    }
+    if (isAppExist_ && (oldApplicationReservedFlag_ ==
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION))
+        && (innerBundleInfo.GetApplicationReservedFlag() !=
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION))) {
+        // new app is not a encrypted app, need to delete operation on main app & all clone app
+        return bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::DELETE) == ERR_OK;
+    }
+    if (isAppExist_ && (innerBundleInfo.GetApplicationReservedFlag() ==
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION))) {
+        // update a new encrypted app, need to update operation
+        GetAllConeCodeProtectBundleInfos(infos, innerBundleInfo);
+        return bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::UPDATE) == ERR_OK;
+    }
+    return true;
+}
+
+void BaseBundleInstaller::GetAllConeCodeProtectBundleInfos(std::vector<CodeProtectBundleInfo> &infos,
+    const InnerBundleInfo &innerBundleInfo)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed");
+        return;
+    }
+    auto innerBundleUserInfos = innerBundleInfo.GetInnerBundleUserInfos();
+    std::set<int32_t> appIndexSet;
+    for (const auto &item : innerBundleUserInfos) {
+        for (const auto &cloneInfo : item.second.cloneInfos) {
+            if (appIndexSet.find(cloneInfo.second.appIndex) != appIndexSet.end()) {
+                continue;
+            }
+            appIndexSet.insert(cloneInfo.second.appIndex);
+            CodeProtectBundleInfo info;
+            info.bundleName = bundleName_;
+            info.appIndex = cloneInfo.second.appIndex;
+            info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
+            info.uid = cloneInfo.second.uid;
+            info.versionCode = innerBundleInfo.GetVersionCode();
+            infos.emplace_back(info);
+        }
+    }
+}
+
+bool BaseBundleInstaller::DeleteEncryptedStatus(const std::string &bundleName, int32_t uid)
+{
+    if (oldApplicationReservedFlag_ != static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION)) {
+        return true;
+    }
+    CodeProtectBundleInfo info;
+    info.bundleName = bundleName;
+    info.applicationReservedFlag = oldApplicationReservedFlag_;
+    info.versionCode = versionCode_;
+    info.uid = uid;
+    std::vector<CodeProtectBundleInfo> infos { info };
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    return bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::DELETE) == ERR_OK;
 }
 
 ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
