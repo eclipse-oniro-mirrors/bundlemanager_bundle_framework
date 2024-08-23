@@ -1118,6 +1118,7 @@ void BMSEventHandler::ProcessRebootBundle()
 #ifdef CHECK_ELDIR_ENABLED
     ProcessCheckAppDataDir();
 #endif
+    ProcessCheckAppEl1Dir();
     ProcessCheckAppLogDir();
     ProcessCheckAppFileManagerDir();
     ProcessCheckPreinstallData();
@@ -2005,7 +2006,7 @@ bool BMSEventHandler::InnerProcessUninstallAppServiceModule(const InnerBundleInf
         }
     }
     if (moduleNeedUnsinstall.empty()) {
-        return ERR_OK;
+        return true;
     }
     for (const std::string &moduleName : moduleNeedUnsinstall) {
         AppServiceFwkInstaller installer;
@@ -3570,6 +3571,28 @@ void BMSEventHandler::InnerProcessRebootUninstallWrongBundle()
                 installParam.userId);
         }
     }
+}
+
+void BMSEventHandler::ProcessCheckAppEl1Dir()
+{
+    LOG_I(BMS_TAG_DEFAULT, "ProcessCheckAppEl1Dir begin");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::vector<BundleInfo> bundleInfos;
+        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+            LOG_W(BMS_TAG_DEFAULT, "ProcessCheckAppEl1Dir GetBundleInfos failed");
+            continue;
+        }
+
+        UpdateAppDataMgr::ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL1);
+    }
+    LOG_I(BMS_TAG_DEFAULT, "ProcessCheckAppEl1Dir end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -111,11 +111,12 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
         createDirParam.apl = bundleInfo.applicationInfo.appPrivilegeLevel;
         createDirParam.isPreInstallApp = bundleInfo.isPreInstallApp;
         createDirParam.debug = bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
-        createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
+        if (elDir != ServiceConstants::BUNDLE_EL[0]) {
+            createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
+        }
         ProcessExtensionDir(bundleInfo, createDirParam.extensionDirs);
         if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam) != ERR_OK) {
-            APP_LOGE("failed to CreateBundleDataDir");
-            return false;
+            APP_LOGW("failed to CreateBundleDataDir");
         }
     }
     CreateDataGroupDir(bundleInfo, userId);

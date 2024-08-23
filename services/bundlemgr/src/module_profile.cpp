@@ -57,18 +57,31 @@ const std::unordered_set<std::string> VIRTUAL_MACHINE_SET = {
     "default"
 };
 
-const std::unordered_map<std::string, uint32_t> BACKGROUND_MODES_MAP = {
-    {ProfileReader::KEY_DATA_TRANSFER, ProfileReader::VALUE_DATA_TRANSFER},
-    {ProfileReader::KEY_AUDIO_PLAYBACK, ProfileReader::VALUE_AUDIO_PLAYBACK},
-    {ProfileReader::KEY_AUDIO_RECORDING, ProfileReader::VALUE_AUDIO_RECORDING},
-    {ProfileReader::KEY_LOCATION, ProfileReader::VALUE_LOCATION},
-    {ProfileReader::KEY_BLUETOOTH_INTERACTION, ProfileReader::VALUE_BLUETOOTH_INTERACTION},
-    {ProfileReader::KEY_MULTI_DEVICE_CONNECTION, ProfileReader::VALUE_MULTI_DEVICE_CONNECTION},
-    {ProfileReader::KEY_WIFI_INTERACTION, ProfileReader::VALUE_WIFI_INTERACTION},
-    {ProfileReader::KEY_VOIP, ProfileReader::VALUE_VOIP},
-    {ProfileReader::KEY_TASK_KEEPING, ProfileReader::VALUE_TASK_KEEPING},
-    {ProfileReader::KEY_PICTURE_IN_PICTURE, ProfileReader::VALUE_PICTURE_IN_PICTURE},
-    {ProfileReader::KEY_SCREEN_FETCH, ProfileReader::VALUE_SCREEN_FETCH}
+constexpr const char* BACKGROUND_MODES_MAP_KEY[] = {
+    ProfileReader::KEY_DATA_TRANSFER,
+    ProfileReader::KEY_AUDIO_PLAYBACK,
+    ProfileReader::KEY_AUDIO_RECORDING,
+    ProfileReader::KEY_LOCATION,
+    ProfileReader::KEY_BLUETOOTH_INTERACTION,
+    ProfileReader::KEY_MULTI_DEVICE_CONNECTION,
+    ProfileReader::KEY_WIFI_INTERACTION,
+    ProfileReader::KEY_VOIP,
+    ProfileReader::KEY_TASK_KEEPING,
+    ProfileReader::KEY_PICTURE_IN_PICTURE,
+    ProfileReader::KEY_SCREEN_FETCH
+};
+const uint32_t BACKGROUND_MODES_MAP_VALUE[] = {
+    ProfileReader::VALUE_DATA_TRANSFER,
+    ProfileReader::VALUE_AUDIO_PLAYBACK,
+    ProfileReader::VALUE_AUDIO_RECORDING,
+    ProfileReader::VALUE_LOCATION,
+    ProfileReader::VALUE_BLUETOOTH_INTERACTION,
+    ProfileReader::VALUE_MULTI_DEVICE_CONNECTION,
+    ProfileReader::VALUE_WIFI_INTERACTION,
+    ProfileReader::VALUE_VOIP,
+    ProfileReader::VALUE_TASK_KEEPING,
+    ProfileReader::VALUE_PICTURE_IN_PICTURE,
+    ProfileReader::VALUE_SCREEN_FETCH
 };
 
 const std::unordered_set<std::string> GRANT_MODE_SET = {
@@ -88,22 +101,39 @@ const std::unordered_map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
     {"multiton", LaunchMode::STANDARD},
     {"specified", LaunchMode::SPECIFIED}
 };
-const std::unordered_map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MAP = {
-    {"unspecified", DisplayOrientation::UNSPECIFIED},
-    {"landscape", DisplayOrientation::LANDSCAPE},
-    {"portrait", DisplayOrientation::PORTRAIT},
-    {"follow_recent", DisplayOrientation::FOLLOWRECENT},
-    {"landscape_inverted", DisplayOrientation::LANDSCAPE_INVERTED},
-    {"portrait_inverted", DisplayOrientation::PORTRAIT_INVERTED},
-    {"auto_rotation", DisplayOrientation::AUTO_ROTATION},
-    {"auto_rotation_landscape", DisplayOrientation::AUTO_ROTATION_LANDSCAPE},
-    {"auto_rotation_portrait", DisplayOrientation::AUTO_ROTATION_PORTRAIT},
-    {"auto_rotation_restricted", DisplayOrientation::AUTO_ROTATION_RESTRICTED},
-    {"auto_rotation_landscape_restricted", DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED},
-    {"auto_rotation_portrait_restricted", DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED},
-    {"locked", DisplayOrientation::LOCKED},
-    {"auto_rotation_unspecified", DisplayOrientation::AUTO_ROTATION_UNSPECIFIED},
-    {"follow_desktop", DisplayOrientation::FOLLOW_DESKTOP},
+constexpr const char* DISPLAY_ORIENTATION_MAP_KEY[] = {
+    "unspecified",
+    "landscape",
+    "portrait",
+    "follow_recent",
+    "landscape_inverted",
+    "portrait_inverted",
+    "auto_rotation",
+    "auto_rotation_landscape",
+    "auto_rotation_portrait",
+    "auto_rotation_restricted",
+    "auto_rotation_landscape_restricted",
+    "auto_rotation_portrait_restricted",
+    "locked",
+    "auto_rotation_unspecified",
+    "follow_desktop"
+};
+const DisplayOrientation DISPLAY_ORIENTATION_MAP_VALUE[] = {
+    DisplayOrientation::UNSPECIFIED,
+    DisplayOrientation::LANDSCAPE,
+    DisplayOrientation::PORTRAIT,
+    DisplayOrientation::FOLLOWRECENT,
+    DisplayOrientation::LANDSCAPE_INVERTED,
+    DisplayOrientation::PORTRAIT_INVERTED,
+    DisplayOrientation::AUTO_ROTATION,
+    DisplayOrientation::AUTO_ROTATION_LANDSCAPE,
+    DisplayOrientation::AUTO_ROTATION_PORTRAIT,
+    DisplayOrientation::AUTO_ROTATION_RESTRICTED,
+    DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED,
+    DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED,
+    DisplayOrientation::LOCKED,
+    DisplayOrientation::AUTO_ROTATION_UNSPECIFIED,
+    DisplayOrientation::FOLLOW_DESKTOP
 };
 const std::unordered_map<std::string, SupportWindowMode> WINDOW_MODE_MAP = {
     {"fullscreen", SupportWindowMode::FULLSCREEN},
@@ -2180,9 +2210,14 @@ bool ToBundleInfo(
 uint32_t GetBackgroundModes(const std::vector<std::string> &backgroundModes)
 {
     uint32_t backgroundMode = 0;
+    size_t len = sizeof(Profile::BACKGROUND_MODES_MAP_KEY) /
+            sizeof(Profile::BACKGROUND_MODES_MAP_KEY[0]);
     for (const std::string &item : backgroundModes) {
-        if (Profile::BACKGROUND_MODES_MAP.find(item) != Profile::BACKGROUND_MODES_MAP.end()) {
-            backgroundMode |= Profile::BACKGROUND_MODES_MAP.at(item);
+        for (size_t i = 0; i < len; i++) {
+            if (item == Profile::BACKGROUND_MODES_MAP_KEY[i]) {
+                backgroundMode |= Profile::BACKGROUND_MODES_MAP_VALUE[i];
+                break;
+            }
         }
     }
     return backgroundMode;
@@ -2265,11 +2300,13 @@ bool ToAbilityInfo(
     abilityInfo.startWindowBackgroundId = ability.startWindowBackgroundId;
     abilityInfo.removeMissionAfterTerminate = ability.removeMissionAfterTerminate;
     abilityInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
-    auto iterOrientation = std::find_if(std::begin(Profile::DISPLAY_ORIENTATION_MAP),
-        std::end(Profile::DISPLAY_ORIENTATION_MAP),
-        [&ability](const auto &item) { return item.first == ability.orientation; });
-    if (iterOrientation != Profile::DISPLAY_ORIENTATION_MAP.end()) {
-        abilityInfo.orientation = iterOrientation->second;
+    size_t len = sizeof(Profile::DISPLAY_ORIENTATION_MAP_KEY) /
+            sizeof(Profile::DISPLAY_ORIENTATION_MAP_KEY[0]);
+    for (size_t i = 0; i < len; i++) {
+        if (ability.orientation == Profile::DISPLAY_ORIENTATION_MAP_KEY[i]) {
+            abilityInfo.orientation = Profile::DISPLAY_ORIENTATION_MAP_VALUE[i];
+            break;
+        }
     }
 
     auto modesSet = ConvertToAbilityWindowMode(ability.windowModes, Profile::WINDOW_MODE_MAP);
@@ -2515,6 +2552,7 @@ bool ToInnerBundleInfo(
     innerModuleInfo.asanEnabled = applicationInfo.asanEnabled;
     innerModuleInfo.gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
     innerModuleInfo.hwasanEnabled = applicationInfo.hwasanEnabled;
+    innerModuleInfo.ubsanEnabled = applicationInfo.ubsanEnabled;
     SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 
     BundleInfo bundleInfo;

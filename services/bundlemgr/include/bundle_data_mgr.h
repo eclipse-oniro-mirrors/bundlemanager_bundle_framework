@@ -1141,7 +1141,6 @@ private:
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
     void ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const;
     void updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
-    void updateUbsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
         std::vector<AbilityInfo> &abilityInfos) const;
@@ -1149,7 +1148,7 @@ private:
         const InnerBundleInfo& info, const InnerBundleUserInfo &bundleUserInfo,
         int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const;
 
-    void PreProcessAnyUserFlag(const std::string &bundleName, int32_t flags, int32_t &userId) const;
+    void PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const;
     void PostProcessAnyUserFlags(int32_t flags, int32_t userId,
         int32_t originalUserId, BundleInfo &bundleInfo) const;
 

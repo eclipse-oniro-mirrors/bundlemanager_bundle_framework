@@ -188,6 +188,36 @@ bool ParseInfoFromJsonStr(const char *data, T &t)
     t = jsonObject.get<T>();
     return true;
 }
+
+template<typename T, typename dataType>
+void GetBigStringIfFindKey(const nlohmann::json &jsonObject,
+    const nlohmann::detail::iter_impl<const nlohmann::json> &end, const std::string &key, dataType &data,
+    JsonType jsonType, bool isNecessary, int32_t &parseResult, ArrayType arrayType)
+{
+    if (parseResult) {
+        return;
+    }
+    if (jsonObject.find(key) != end) {
+        switch (jsonType) {
+            case JsonType::STRING:
+                if (!jsonObject.at(key).is_string()) {
+                    APP_LOGE("type error %{public}s not string", key.c_str());
+                    parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+                    break;
+                }
+                data = jsonObject.at(key).get<T>();
+                break;
+            default:
+                APP_LOGE("type error %{public}s not jsonType", key.c_str());
+                parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+        }
+        return;
+    }
+    if (isNecessary) {
+        APP_LOGE("profile prop %{public}s mission", key.c_str());
+        parseResult = ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP;
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_UTIL_H

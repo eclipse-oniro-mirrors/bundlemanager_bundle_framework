@@ -1279,6 +1279,22 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0011, Function | SmallTest |
 }
 
 /**
+ * @tc.number: CheckAppLabel_0012
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0012, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetUbsanEnabled(false);
+    newInfo.SetUbsanEnabled(true);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: CheckAppLabelInfo_0008
  * @tc.name: test the start function of CheckAppLabelInfo
  * @tc.desc: 1. CheckAppLabelInfo_0008
@@ -1748,6 +1764,25 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0026, Function | SmallTe
     InnerBundleInfo innerBundleInfo2;
     innerBundleInfo1.SetHwasanEnabled(true);
     innerBundleInfo2.SetHwasanEnabled(false);
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0027
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: CheckAppLabelInfo return ERR_OK
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0027, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo1.SetUbsanEnabled(true);
+    innerBundleInfo2.SetUbsanEnabled(false);
     infos.emplace(HAP, innerBundleInfo1);
     infos.emplace(HAP_ONE, innerBundleInfo2);
     auto ret = installChecker.CheckAppLabelInfo(infos);

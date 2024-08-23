@@ -1,0 +1,135 @@
+{
+    "module": {
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777218,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777219,
+                "name": "MainAbility",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "exported": true
+            },
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777218,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777219,
+                "name": "SecondAbility",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.hello"
+                        ],
+                        "entities": [
+                            "entity.hello"
+                        ]
+                    }
+                ],
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "exported": true
+            },
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777218,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777219,
+                "name": "ThirdAbility",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.hello"
+                        ],
+                        "entities": [
+                            "entity.hello"
+                        ]
+                    }
+                ],
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "exported": true
+            }
+        ],
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777220,
+        "deviceTypes": [
+            "2in1",
+            "default",
+            "phone",
+            "tablet"
+        ],
+        "extensionAbilities": [
+            {
+                "name": "extensionAbility_A",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "srcEntry": "",
+                "type": "backup"
+            },
+            {
+                "name": "extensionAbility_B",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.hello"
+                        ],
+                        "entities": [
+                            "entity.hello"
+                        ]
+                    }
+                ],
+                "srcEntry": "",
+                "type": "backup"
+            },
+            {
+                "name": "extensionAbility_C",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.hello"
+                        ],
+                        "entities": [
+                            "entity.hello"
+                        ]
+                    }
+                ],
+                "srcEntry": "",
+                "type": "backup"
+            }
+        ],
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "name": "entry1",
+        "pages": "$profile:main_pages",
+        "srcEntry": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark",
+        "compressNativeLibs": false,
+        "libIsolation": false,
+        "process":"basis"
+    }
+}

@@ -158,6 +158,7 @@ bool SignatureInfo::ReadFromParcel(Parcel &parcel)
     appId = Str16ToStr8(parcel.ReadString16());
     fingerprint = Str16ToStr8(parcel.ReadString16());
     appIdentifier = Str16ToStr8(parcel.ReadString16());
+    certificate = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -166,6 +167,7 @@ bool SignatureInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appId));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fingerprint));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(certificate));
     return true;
 }
 
