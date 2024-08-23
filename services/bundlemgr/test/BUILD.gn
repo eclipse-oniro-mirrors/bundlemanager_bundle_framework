@@ -67,6 +67,7 @@ group("unittest") {
       "unittest/bms_bundle_installers_test:unittest",
       "unittest/bms_bundle_kit_service_test:unittest",
       "unittest/bms_bundle_manager_test:unittest",
+      "unittest/bms_bundle_mgr_proxy_test:unittest",
       "unittest/bms_bundle_mgr_service_death_recipient_test:unittest",
       "unittest/bms_bundle_navigation_test:unittest",
       "unittest/bms_bundle_parser_test:unittest",
