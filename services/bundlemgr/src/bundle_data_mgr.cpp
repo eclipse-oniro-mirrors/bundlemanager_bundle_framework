@@ -2648,7 +2648,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId, appIndex);
-    PostProcessAnyUserFlags(flags, requestUserId, originalUserId, bundleInfo);
+    PostProcessAnyUserFlags(flags, responseUserId, originalUserId, bundleInfo);
 
     ProcessBundleMenu(bundleInfo, flags, true);
     ProcessBundleRouterMap(bundleInfo, flags);
@@ -2743,6 +2743,7 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag)
 void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const
 {
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0) {
+        flags |= static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
         std::vector<InnerBundleUserInfo> innerBundleUserInfos;
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
             LOG_W(BMS_TAG_QUERY, "no userInfos for this bundle(%{public}s)", bundleName.c_str());
@@ -2751,15 +2752,15 @@ void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t
         if (innerBundleUserInfos.empty()) {
             return;
         }
-        int32_t targetUserId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
         for (auto &bundleUserInfo: innerBundleUserInfos) {
             if (bundleUserInfo.bundleUserInfo.userId == userId) {
-                targetUserId = userId;
-                break;
+                return;
+            }
+            if (bundleUserInfo.bundleUserInfo.userId < Constants::START_USERID) {
+                return;
             }
         }
-        userId = targetUserId;
-        flags |= static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
     }
 }
 
@@ -2769,12 +2770,12 @@ void BundleDataMgr::PostProcessAnyUserFlags(
     bool withApplicationFlag =
         (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION))
             == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
-    bool ofAnyUserFlag =
-        (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER))
-            == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
-    if (withApplicationFlag && ofAnyUserFlag) {
-        if (userId == originalUserId || userId < Constants::START_USERID) {
-            bundleInfo.applicationInfo.applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+    if (withApplicationFlag) {
+        if (userId >= Constants::START_USERID && userId != originalUserId) {
+            uint32_t flagInstalled = static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+            if ((bundleInfo.applicationInfo.applicationFlags & flagInstalled) != 0) {
+                bundleInfo.applicationInfo.applicationFlags ^= flagInstalled;
+            }
         }
     }
 }

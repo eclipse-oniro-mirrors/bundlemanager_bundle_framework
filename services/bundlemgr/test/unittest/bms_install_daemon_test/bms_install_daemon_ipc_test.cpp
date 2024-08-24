@@ -854,7 +854,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4200, Function | SmallTest |
 HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4300, Function | SmallTest | Level0)
 {
     auto proxy = GetInstallProxy();
-    EXPECT_NE(proxy, nullptr);
+    ASSERT_NE(proxy, nullptr);
 
     std::string bundleName = TEST_STRING;
     int userId = 100;

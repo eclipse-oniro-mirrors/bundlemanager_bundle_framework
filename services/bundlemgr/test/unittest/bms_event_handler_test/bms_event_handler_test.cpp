@@ -899,6 +899,7 @@ HWTEST_F(BmsEventHandlerTest, MatchSignature_0102, Function | SmallTest | Level0
 HWTEST_F(BmsEventHandlerTest, CheckExtensionTypeInConfig_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     std::string typeName;
     auto ret = handler->CheckExtensionTypeInConfig(typeName);
     EXPECT_FALSE(ret);
@@ -912,6 +913,7 @@ HWTEST_F(BmsEventHandlerTest, CheckExtensionTypeInConfig_0100, Function | SmallT
 HWTEST_F(BmsEventHandlerTest, CheckExtensionTypeInConfig_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     std::string typeName;
     handler->LoadPreInstallProFile();
     auto ret = handler->CheckExtensionTypeInConfig(typeName);
@@ -926,6 +928,7 @@ HWTEST_F(BmsEventHandlerTest, CheckExtensionTypeInConfig_0200, Function | SmallT
 HWTEST_F(BmsEventHandlerTest, CheckExtensionTypeInConfig_0300, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     handler->LoadPreInstallProFile();
     handler->ParsePreBundleProFile(BUNDLE_PATH);
     std::string typeName = BUNDLE_TEST_NAME;
@@ -941,6 +944,7 @@ HWTEST_F(BmsEventHandlerTest, CheckExtensionTypeInConfig_0300, Function | SmallT
 HWTEST_F(BmsEventHandlerTest, ScanAndAnalyzeUserDatas_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
     auto ret = handler->ScanAndAnalyzeUserDatas(userMaps);
     EXPECT_EQ(ret, ScanResultCode::SCAN_NO_DATA);
@@ -954,6 +958,7 @@ HWTEST_F(BmsEventHandlerTest, ScanAndAnalyzeUserDatas_0100, Function | SmallTest
 HWTEST_F(BmsEventHandlerTest, AddTaskParallel_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     int32_t taskPriority = 1;
     int32_t userId = 1;
     std::vector<PreScanInfo> tasks;
@@ -971,7 +976,9 @@ HWTEST_F(BmsEventHandlerTest, AddTaskParallel_0100, Function | SmallTest | Level
 HWTEST_F(BmsEventHandlerTest, ProcessCheckAppDataDir_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     InnerBundleInfo innerBundleInfo;
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
     InnerBundleUserInfo info;
@@ -993,6 +1000,7 @@ HWTEST_F(BmsEventHandlerTest, ProcessCheckAppDataDir_0100, Function | SmallTest 
 HWTEST_F(BmsEventHandlerTest, OTAInstallSystemHsp_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     std::vector<std::string> filePaths;
     filePaths.push_back(BUNDLE_PATH);
     auto ret = handler->OTAInstallSystemHsp(filePaths);
@@ -1007,6 +1015,7 @@ HWTEST_F(BmsEventHandlerTest, OTAInstallSystemHsp_0100, Function | SmallTest | L
 HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedHspByHash_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     InnerBundleInfo oldInfo;
     InnerBundleInfo newInfo;
     bool ret = handler->IsNeedToUpdateSharedHspByHash(oldInfo, newInfo);
@@ -1021,6 +1030,7 @@ HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedHspByHash_0100, Function | Sma
 HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedHspByHash_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     InnerBundleInfo oldInfo;
     InnerBundleInfo newInfo;
     newInfo.currentPackage_ = BUNDLE_NAME;
@@ -1040,6 +1050,7 @@ HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedHspByHash_0200, Function | Sma
 HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedHspByHash_0300, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     InnerBundleInfo oldInfo;
     InnerBundleInfo newInfo;
     newInfo.currentPackage_ = BUNDLE_NAME;
@@ -1061,7 +1072,9 @@ HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedHspByHash_0300, Function | Sma
 HWTEST_F(BmsEventHandlerTest, DeletePreInfoInDb_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     handler->DeletePreInfoInDb(BUNDLE_NAME, BUNDLE_PATH, false);
     EXPECT_NE(dataMgr->preInstallDataStorage_, nullptr);
 }
@@ -1074,7 +1087,9 @@ HWTEST_F(BmsEventHandlerTest, DeletePreInfoInDb_0100, Function | SmallTest | Lev
 HWTEST_F(BmsEventHandlerTest, UpdateRemovable_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     handler->UpdateRemovable(BUNDLE_NAME, false);
     EXPECT_TRUE(dataMgr->bundleInfos_.empty());
 }
@@ -1087,7 +1102,9 @@ HWTEST_F(BmsEventHandlerTest, UpdateRemovable_0100, Function | SmallTest | Level
 HWTEST_F(BmsEventHandlerTest, UpdateAllPrivilegeCapability_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     handler->UpdateAllPrivilegeCapability();
     EXPECT_TRUE(dataMgr->bundleInfos_.empty());
 }
@@ -1100,7 +1117,9 @@ HWTEST_F(BmsEventHandlerTest, UpdateAllPrivilegeCapability_0100, Function | Smal
 HWTEST_F(BmsEventHandlerTest, UpdatePrivilegeCapability_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     PreBundleConfigInfo preBundleConfigInfo;
     handler->UpdatePrivilegeCapability(preBundleConfigInfo);
     EXPECT_TRUE(dataMgr->bundleInfos_.empty());
@@ -1114,7 +1133,9 @@ HWTEST_F(BmsEventHandlerTest, UpdatePrivilegeCapability_0100, Function | SmallTe
 HWTEST_F(BmsEventHandlerTest, FetchInnerBundleInfo_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     InnerBundleInfo innerBundleInfo;
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
     InnerBundleUserInfo info;
@@ -1137,6 +1158,7 @@ HWTEST_F(BmsEventHandlerTest, FetchInnerBundleInfo_0100, Function | SmallTest | 
 HWTEST_F(BmsEventHandlerTest, IsQuickfixFlagExsit_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     BundleInfo bundleInfo;
     Metadata metadata;
     metadata.name = "ohos.app.quickfix";
@@ -1155,6 +1177,7 @@ HWTEST_F(BmsEventHandlerTest, IsQuickfixFlagExsit_0100, Function | SmallTest | L
 HWTEST_F(BmsEventHandlerTest, IsQuickfixFlagExsit_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     BundleInfo bundleInfo;
     bool ret = handler->IsQuickfixFlagExsit(bundleInfo);
     EXPECT_FALSE(ret);
@@ -1179,6 +1202,7 @@ HWTEST_F(BmsEventHandlerTest, IsQuickfixFlagExsit_0200, Function | SmallTest | L
 HWTEST_F(BmsEventHandlerTest, GetValueFromJson_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     nlohmann::json jsonObject = R"(
     {
         "list": [
@@ -1203,6 +1227,7 @@ HWTEST_F(BmsEventHandlerTest, GetValueFromJson_0100, Function | SmallTest | Leve
 HWTEST_F(BmsEventHandlerTest, UpdatePreinstallDBForUninstalledBundle_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
     std::unordered_map<std::string, InnerBundleInfo> innerBundleInfos;
     InnerBundleInfo innerBundleInfo;
     handler->UpdatePreinstallDBForUninstalledBundle(BUNDLE_NAME, innerBundleInfos);

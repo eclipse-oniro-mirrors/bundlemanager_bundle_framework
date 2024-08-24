@@ -1630,6 +1630,7 @@ HWTEST_F(BmsBundleAppControlTest, GetAbilityRunningControlRule_0100, Function | 
     int32_t appIndex = 100;
     int32_t userId = 100;
     std::vector<DisposedRule> disposedRules;
+    ASSERT_NE(appControlManagerDb_, nullptr);
     ErrCode result = appControlManagerDb_->GetAbilityRunningControlRule(appId, appIndex, userId, disposedRules);
     EXPECT_EQ(result, ERR_OK);
 }
@@ -1643,8 +1644,9 @@ HWTEST_F(BmsBundleAppControlTest, GetAbilityRunningControlRule_0100, Function | 
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5700, Function | SmallTest | Level1)
 {
     auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
-
+    ASSERT_NE(appControlProxy, nullptr);
     std::string appId;
     DisposedRule disposedRule;
     int32_t userId = 0;
@@ -1660,8 +1662,9 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5700, Function | Sma
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5800, Function | SmallTest | Level1)
 {
     auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
-
+    ASSERT_NE(appControlProxy, nullptr);
     std::string appId;
     DisposedRule disposedRule;
     int32_t appIndex = 0;
@@ -1678,8 +1681,9 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5800, Function | Sma
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5900, Function | SmallTest | Level1)
 {
     auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
-
+    ASSERT_NE(appControlProxy, nullptr);
     std::string appId;
     DisposedRule rule;
     int32_t appIndex = 0;
@@ -1696,8 +1700,9 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5900, Function | Sma
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6000, Function | SmallTest | Level1)
 {
     auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
-
+    ASSERT_NE(appControlProxy, nullptr);
     std::string appId;
     int32_t appIndex = 0;
     int32_t userId = 0;
@@ -1713,6 +1718,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6000, Function | Sma
 HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorManagerRdb_6100, Function | SmallTest | Level1)
 {
     auto rdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
 
     std::vector<AppJumpControlRule> controlRules;
     int32_t userId = 100;
@@ -1728,6 +1734,7 @@ HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorManagerRdb_6100, Function | 
 HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorManagerRdb_6200, Function | SmallTest | Level1)
 {
     auto rdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
 
     std::vector<AppJumpControlRule> controlRules;
     int32_t userId = 100;

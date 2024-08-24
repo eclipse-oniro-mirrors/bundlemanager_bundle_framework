@@ -4192,6 +4192,16 @@ void InnerBundleInfo::SetAppIdentifier(const std::string &appIdentifier)
     baseBundleInfo_->signatureInfo.appIdentifier = appIdentifier;
 }
 
+void InnerBundleInfo::SetCertificate(const std::string &certificate)
+{
+    baseBundleInfo_->signatureInfo.certificate = certificate;
+}
+
+std::string InnerBundleInfo::GetCertificate() const
+{
+    return baseBundleInfo_->signatureInfo.certificate;
+}
+
 void InnerBundleInfo::UpdateDebug(bool debug, bool isEntry)
 {
     if (isEntry) {

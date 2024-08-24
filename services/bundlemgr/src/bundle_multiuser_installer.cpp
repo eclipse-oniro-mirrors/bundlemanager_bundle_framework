@@ -16,6 +16,7 @@
 #include "bundle_multiuser_installer.h"
 
 #include "ability_manager_helper.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
@@ -105,6 +106,14 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     if (info.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGE("the origin application had installed at current user");
         return ERR_OK;
+    }
+ 
+    std::string appDistributionType = info.GetAppDistributionType();
+    if (appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE
+        || appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL
+        || appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM) {
+        APP_LOGE("the origin application is enterprise, not allow to install here");
+        return ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED;
     }
 
     // uid

@@ -956,6 +956,7 @@ HWTEST_F(BmsInstallDaemonTest, GetNativeLibraryFileNames_0001, Function | SmallT
 HWTEST_F(BmsInstallDaemonTest, OnStart_0001, Function | SmallTest | Level0)
 {
     std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    ASSERT_NE(service, nullptr);
     service->OnStart();
     bool isRead = service->IsServiceReady();
     EXPECT_TRUE(isRead);
@@ -969,6 +970,7 @@ HWTEST_F(BmsInstallDaemonTest, OnStart_0001, Function | SmallTest | Level0)
 HWTEST_F(BmsInstallDaemonTest, OnStop_0001, Function | SmallTest | Level0)
 {
     std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    ASSERT_NE(service, nullptr);
     service->OnStop();
     bool isRead = service->IsServiceReady();
     EXPECT_FALSE(isRead);

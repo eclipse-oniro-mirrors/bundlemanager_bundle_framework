@@ -76,6 +76,10 @@ enum class MultiAppModeType : uint8_t {
     APP_CLONE = 2,
 };
 
+enum class ApplicationInfoFlag {
+    FLAG_INSTALLED = 0x00000001,
+};
+
 struct MultiAppModeData : public Parcelable {
     MultiAppModeType multiAppModeType = MultiAppModeType::UNSPECIFIED;
     int32_t maxCount = 0;
@@ -305,7 +309,7 @@ struct ApplicationInfo : public Parcelable {
     std::string installSource;
     std::string configuration;
 
-    int32_t applicationFlags = 0;
+    int32_t applicationFlags = static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
