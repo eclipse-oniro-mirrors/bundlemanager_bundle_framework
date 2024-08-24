@@ -184,6 +184,16 @@ void EventReport::SendFreeInstallEvent(const std::string &bundleName, const std:
     EventReport::SendSystemEvent(BMSEventType::FREE_INSTALL_EVENT, eventInfo);
 }
 
+void EventReport::SendDiskSpaceEvent(const std::string &fileName,
+    int64_t freeSize, int32_t operationType)
+{
+    EventInfo eventInfo;
+    eventInfo.fileName = fileName;
+    eventInfo.freeSize = freeSize;
+    eventInfo.operationType = operationType;
+    EventReport::SendSystemEvent(BMSEventType::BMS_DISK_SPACE, eventInfo);
+}
+
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
 {
 #ifdef HISYSEVENT_ENABLE

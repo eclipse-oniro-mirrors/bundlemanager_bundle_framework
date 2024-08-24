@@ -53,6 +53,7 @@ public:
 
     void BackupRdb();
 
+    void CheckSystemSizeAndHisysEvent(const std::string &path, const std::string &fileName);
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
     std::mutex rdbMutex_;

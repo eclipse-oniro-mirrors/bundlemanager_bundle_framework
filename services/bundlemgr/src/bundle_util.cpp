@@ -63,6 +63,7 @@ const char* NO_DISABLING_CONFIG_PATH = "/etc/ability_runtime/resident_process_in
 const char* NO_DISABLING_CONFIG_PATH_DEFAULT =
     "/system/etc/ability_runtime/resident_process_in_extreme_memory.json";
 const std::string EMPTY_STRING = "";
+constexpr int64_t DISK_REMAINING_SIZE_LIMIT = 1024 * 1024 * 10; // 10M
 }
 
 std::mutex BundleUtil::g_mutex;
@@ -215,6 +216,17 @@ bool BundleUtil::CheckSystemFreeSize(const std::string &path, int64_t size)
     }
     int64_t freeSize = diskInfo.f_bavail * diskInfo.f_bsize;
     return freeSize >= size;
+}
+
+bool BundleUtil::CheckSystemSizeAndHisysEvent(const std::string &path, const std::string &fileName)
+{
+    struct statfs diskInfo = { 0 };
+    if (statfs(path.c_str(), &diskInfo) != 0) {
+        APP_LOGE("call statfs error:%{public}d", errno);
+        return false;
+    }
+    int64_t freeSize = diskInfo.f_bavail * diskInfo.f_bsize;
+    return freeSize < DISK_REMAINING_SIZE_LIMIT;
 }
 
 bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath, std::vector<std::string>& hapFileList)
