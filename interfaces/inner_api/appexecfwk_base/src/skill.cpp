@@ -70,16 +70,17 @@ bool Skill::Match(const OHOS::AAFwk::Want &want) const
         return false;
     }
     std::vector<std::string> vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_URITYPES);
+    std::string uriString = want.GetUriString();
     if (vecTypes.size() > 0) {
         for (std::string strType : vecTypes) {
-            if (MatchUriAndType(want.GetUriString(), strType)) {
+            if (MatchUriAndType(uriString, strType)) {
                 APP_LOGD("type %{public}s, Is Matched", strType.c_str());
                 return true;
             }
         }
         return false;
     }
-    bool matchUriAndType = MatchUriAndType(want.GetUriString(), want.GetType());
+    bool matchUriAndType = MatchUriAndType(uriString, want.GetType());
     if (!matchUriAndType) {
         APP_LOGD("Uri or Type does not match");
         return false;

@@ -213,7 +213,7 @@ bool BundleUtil::CheckSystemFreeSize(const std::string &path, int64_t size)
         APP_LOGE("call statfs error:%{public}d", errno);
         return false;
     }
-    int64_t freeSize = diskInfo.f_bavail * diskInfo.f_bsize;
+    int64_t freeSize = static_cast<int64_t>(diskInfo.f_bavail * diskInfo.f_bsize);
     return freeSize >= size;
 }
 
