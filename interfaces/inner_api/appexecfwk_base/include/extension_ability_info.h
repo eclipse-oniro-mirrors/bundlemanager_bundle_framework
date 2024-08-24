@@ -103,7 +103,8 @@ enum class ExtensionAbilityType {
     VPN = 502,
     AUTO_FILL_SMART = 503,
     SYSPICKER_PHOTOEDITOR = 504,
-    SYS_VISUAL = 505
+    SYS_VISUAL = 505,
+    RECENT_PHOTO = 506
 };
 
 enum class CompileMode {
