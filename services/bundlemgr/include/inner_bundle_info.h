@@ -76,7 +76,7 @@ struct InnerModuleInfo {
     bool asanEnabled = false;
     bool gwpAsanEnabled = false;
     bool needDelete = false;
-    bool hwasanEnabled = false;
+    uint32_t innerModuleInfoFlag = 0;
     bool ubsanEnabled = false;
     int32_t labelId = 0;
     int32_t descriptionId = 0;
@@ -159,6 +159,10 @@ enum InstallExceptionStatus : uint8_t {
     UNINSTALL_BUNDLE_START,
     UNINSTALL_PACKAGE_START,
     UNKNOWN_STATUS,
+};
+
+enum class GetInnerModuleInfoFlag {
+    GET_INNER_MODULE_INFO_WITH_HWASANENABLED = 0x00000001,
 };
 
 struct InstallMark {
