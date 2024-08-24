@@ -1183,9 +1183,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0001, Function | SmallTes
 */
 HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0002, Function | SmallTest | Level0)
 {
-    if (bundleMgrService_ == nullptr) {
-        return;
-    }
+    ASSERT_NE(bundleMgrService_, nullptr);
 
     auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
     bool ret = preInstallExceptionMgr != nullptr;

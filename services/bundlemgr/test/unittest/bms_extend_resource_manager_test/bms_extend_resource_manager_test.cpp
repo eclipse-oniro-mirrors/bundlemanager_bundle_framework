@@ -485,7 +485,7 @@ HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0100, Function | 
 {
     ExtendResourceManagerHostImpl impl;
     bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME);
-    EXPECT_EQ(ret, false);
+    EXPECT_FALSE(ret);
 }
 
 /**

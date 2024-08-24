@@ -691,6 +691,7 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixManagerHostImplTest_0013,
     EXPECT_EQ(ret, ERR_OK) << "Install bundle failed";
 
     auto impl = std::make_shared<QuickFixManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
     std::string fileName = "entry.hqf";
     int32_t fd;
     std::string path = "/data/app/el1/bundle/public/com.example.l3jsdemo/patch_1000001/";

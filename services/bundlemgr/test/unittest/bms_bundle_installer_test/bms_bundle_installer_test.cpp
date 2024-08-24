@@ -3001,7 +3001,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0500, Function | SmallTest | Leve
     BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
 
     bool ret = extractor.Init();
-    EXPECT_EQ(ret, true);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -3017,7 +3017,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0600, Function | SmallTest | Leve
     fileNames.push_back("test1.zip");
     fileNames.push_back("test2.zip");
     bool ret = extractor.GetZipFileNames(fileNames);
-    EXPECT_EQ(ret, true);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -3032,16 +3032,16 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0700, Function | SmallTest | Leve
 
     std::string dir = "/data";
     bool ret = extractor.IsDirExist(dir);
-    EXPECT_EQ(ret, false);
+    EXPECT_FALSE(ret);
 
     dir = "";
     ret = extractor.IsDirExist(dir);
-    EXPECT_EQ(ret, false);
+    EXPECT_FALSE(ret);
 
     extractor.initial_ = true;
     dir = "/data";
     ret = extractor.IsDirExist(dir);
-    EXPECT_EQ(ret, false);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -3056,7 +3056,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0800, Function | SmallTest | Leve
 
     std::string abilityName = "EntryAbility";
     bool ret = extractor.IsStageBasedModel(abilityName);
-    EXPECT_EQ(ret, false);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -3069,7 +3069,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0900, Function | SmallTest | Leve
     BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
 
     bool ret = extractor.IsNewVersion();
-    EXPECT_EQ(ret, true);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -6296,7 +6296,7 @@ HWTEST_F(BmsBundleInstallerTest, LoadExtensionNeedCreateSandbox_0100, Function |
     hostImpl.LoadNeedCreateSandbox(object, typeList);
     std::string extensionTypeName;
     bool ret = hostImpl.LoadExtensionNeedCreateSandbox(object, extensionTypeName);
-    EXPECT_EQ(ret, false);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -6325,7 +6325,7 @@ HWTEST_F(BmsBundleInstallerTest, ReadFileIntoJson_0100, Function | SmallTest | L
     filePath.resize(PATH_MAX + 1);
     nlohmann::json jsonBuf;
     bool ret = hostImpl.ReadFileIntoJson(filePath, jsonBuf);
-    EXPECT_EQ(ret, false);
+    EXPECT_FALSE(ret);
 }
 
 /**

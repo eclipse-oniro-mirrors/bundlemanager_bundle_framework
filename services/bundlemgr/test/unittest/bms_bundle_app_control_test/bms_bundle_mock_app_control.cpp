@@ -321,6 +321,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0150, Function | Smal
 HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0160, Function | SmallTest | Level1)
 {
     AppControlManagerRdb rdb;
+    ASSERT_NE(rdb.rdbDataManager_, nullptr);
     rdb.rdbDataManager_->bmsRdbConfig_.tableName = TARGET_BUNDLE_NAME;
     std::vector<DisposedRule> disposedRules;
     auto res = rdb.GetAbilityRunningControlRule(APPID, APP_INDEX, USERID, disposedRules);
@@ -335,6 +336,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0160, Function | Smal
 HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0170, Function | SmallTest | Level1)
 {
     AppControlManagerRdb rdb;
+    ASSERT_NE(rdb.rdbDataManager_, nullptr);
     rdb.rdbDataManager_->bmsRdbConfig_.tableName = TARGET_BUNDLE_NAME;
     std::vector<DisposedRule> disposedRules;
     auto res = rdb.DeleteAllDisposedRuleByBundle(APPID, APP_INDEX, USERID);

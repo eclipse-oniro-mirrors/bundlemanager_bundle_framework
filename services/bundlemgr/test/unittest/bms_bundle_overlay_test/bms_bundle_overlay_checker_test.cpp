@@ -3038,7 +3038,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, FindSignatureFileDir_0030, Function | Smal
 HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0100, Function | SmallTest | Level0)
 {
     auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
+    ASSERT_NE(dataMgr, nullptr);
     int32_t userIdNew = -3;
     dataMgr->AddUserId(userIdNew);
 
@@ -3061,7 +3061,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0100, Function | Sm
 HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0200, Function | SmallTest | Level0)
 {
     auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
+    ASSERT_NE(dataMgr, nullptr);
     int32_t userIdNew = -3;
     dataMgr->AddUserId(userIdNew);
 
@@ -3086,7 +3086,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0200, Function | Sm
 HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0300, Function | SmallTest | Level0)
 {
     auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
+    ASSERT_NE(dataMgr, nullptr);
     int32_t userIdNew = -3;
     dataMgr->AddUserId(userIdNew);
 
@@ -3116,7 +3116,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0300, Function | Sm
 HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0400, Function | SmallTest | Level0)
 {
     auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
+    ASSERT_NE(dataMgr, nullptr);
     int32_t userIdNew = -3;
     dataMgr->AddUserId(userIdNew);
 
