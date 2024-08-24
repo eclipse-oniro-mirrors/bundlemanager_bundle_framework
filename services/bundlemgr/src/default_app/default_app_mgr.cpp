@@ -38,6 +38,7 @@ constexpr int8_t INDEX_ZERO = 0;
 constexpr int8_t INDEX_ONE = 1;
 constexpr uint16_t TYPE_MAX_SIZE = 200;
 constexpr const char* SPLIT = "/";
+constexpr const char* SCHEME_SIGN = "://";
 constexpr const char* EMAIL_ACTION = "ohos.want.action.sendToData";
 constexpr const char* EMAIL_SCHEME = "mailto";
 constexpr const char* ENTITY_BROWSER = "entity.system.browsable";
@@ -45,6 +46,8 @@ constexpr const char* HTTP = "http";
 constexpr const char* HTTPS = "https";
 constexpr const char* HTTP_SCHEME = "http://";
 constexpr const char* HTTPS_SCHEME = "https://";
+constexpr const char* FILE_SCHEME = "file://";
+constexpr const char* CONTENT_SCHEME = "content://";
 constexpr const char* WILDCARD = "*";
 constexpr const char* BROWSER = "BROWSER";
 constexpr const char* IMAGE = "IMAGE";
@@ -438,13 +441,19 @@ std::string DefaultAppMgr::GetTypeFromWant(const Want& want) const
     if (want.GetAction() != ACTION_VIEW_DATA) {
         return Constants::EMPTY_STRING;
     }
+    std::string uri = Skill::GetOptParamUri(want.GetUriString());
+    bool containsScheme = uri.find(SCHEME_SIGN) != std::string::npos;
+    bool isLocalScheme = uri.rfind(FILE_SCHEME, 0) == 0 || uri.rfind(CONTENT_SCHEME, 0) == 0;
+    if (containsScheme && !isLocalScheme) {
+        LOG_D(BMS_TAG_DEFAULT, "not local scheme");
+        return Constants::EMPTY_STRING;
+    }
     // get from type
     std::string type = want.GetType();
     if (!type.empty()) {
         return type;
     }
     // get from uri
-    std::string uri = Skill::GetOptParamUri(want.GetUriString());
     std::string suffix;
     (void)MimeTypeMgr::GetUriSuffix(uri, suffix);
     return suffix;
