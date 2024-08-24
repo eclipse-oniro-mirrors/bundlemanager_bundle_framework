@@ -40,6 +40,7 @@ constexpr const char* ATOMIC_SERVICE_MODULE_UPGRADE = "atomicServiceModuleUpgrad
 constexpr const char* BUNDLE_RESOURCE_CHANGE_TYPE = "bundleResourceChangeType";
 constexpr const char* TYPE = "type";
 constexpr const char* RESULT_CODE = "resultCode";
+constexpr const char* PERMISSION_GET_DISPOSED_STATUS = "ohos.permission.GET_DISPOSED_APP_STATUS";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -206,6 +207,8 @@ void BundleCommonEventMgr::NotifySetDiposedRule(
     EventFwk::CommonEventData commonData { want };
     commonData.SetData(data);
     EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { PERMISSION_GET_DISPOSED_STATUS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
 
@@ -218,6 +221,8 @@ void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int
     want.SetParam(APP_INDEX, appIndex);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { PERMISSION_GET_DISPOSED_STATUS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
 
