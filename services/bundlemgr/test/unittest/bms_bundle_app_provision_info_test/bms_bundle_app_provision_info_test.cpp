@@ -1768,6 +1768,44 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, DeliveryProfileToCodeSign_0001, Function
 }
 
 /**
+ * @tc.number: DeliveryProfileToCodeSign_0002
+ * @tc.name: test the start function of DeliveryProfileToCodeSign
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, DeliveryProfileToCodeSign_0002, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.profileBlockLength = 0;
+    provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+
+    ErrCode ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: DeliveryProfileToCodeSign_0003
+ * @tc.name: test the start function of DeliveryProfileToCodeSign
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, DeliveryProfileToCodeSign_0003, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.profileBlockLength = 1;
+    provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+
+    ErrCode ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
  * @tc.number: MergeBundleInfos_0001
  * @tc.name: test the start function of MergeBundleInfos
 */

@@ -14,6 +14,7 @@
  */
 
 #define private public
+#define protected public
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -4997,6 +4998,106 @@ HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0003, Function | SmallTest | Leve
         ret = deployer->CheckHqfResourceIsValid(paths, bundleInfo);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_RELEASE_HAP_HAS_RESOURCES_FILE_FAILED);
     }
+}
+
+/**
+ * @tc.number: QuickFixBootScanner_0200
+ * @tc.name: Test QuickFixBootScanner
+ * @tc.desc: 1.Test SetQuickFixState
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixBootScanner_0200, Function | SmallTest | Level0)
+{
+    QuickFixBootScanner scanner;
+    const std::shared_ptr<QuickFixState> state;
+    scanner.SetQuickFixState(state);
+    EXPECT_EQ(scanner.state_, nullptr);
+}
+
+/**
+ * @tc.number: DefaultNativeSo_0200
+ * Function: DefaultNativeSo
+ * @tc.name: test DefaultNativeSo
+ */
+HWTEST_F(BmsBundleQuickFixTest, DefaultNativeSo_0200, Function | SmallTest | Level0)
+{
+    PatchProfile patchProfile;
+    PatchExtractor patchExtractor(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A);
+    patchExtractor.zipFile_.isOpen_ = true;
+    ZipEntry zipEntry;
+    bool res = patchExtractor.Init();
+    patchExtractor.zipFile_.entriesMap_.emplace(
+        std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A + ServiceConstants::BASE, zipEntry);
+    EXPECT_TRUE(res);
+    bool isSystemLib64Exist = true;
+    AppqfInfo appqfInfo;
+    res = patchProfile.DefaultNativeSo(patchExtractor, isSystemLib64Exist, appqfInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: DefaultNativeSo_0300
+ * Function: DefaultNativeSo
+ * @tc.name: test DefaultNativeSo
+ */
+HWTEST_F(BmsBundleQuickFixTest, DefaultNativeSo_0300, Function | SmallTest | Level0)
+{
+    PatchProfile patchProfile;
+    PatchExtractor patchExtractor(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A);
+    patchExtractor.zipFile_.isOpen_ = true;
+    ZipEntry zipEntry;
+    bool res = patchExtractor.Init();
+    patchExtractor.zipFile_.entriesMap_.emplace(
+        std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A + ServiceConstants::BASE, zipEntry);
+    EXPECT_TRUE(res);
+    bool isSystemLib64Exist = false;
+    AppqfInfo appqfInfo;
+    res = patchProfile.DefaultNativeSo(patchExtractor, isSystemLib64Exist, appqfInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: DefaultNativeSo_0400
+ * Function: DefaultNativeSo
+ * @tc.name: test DefaultNativeSo
+ */
+HWTEST_F(BmsBundleQuickFixTest, DefaultNativeSo_0400, Function | SmallTest | Level0)
+{
+    PatchProfile patchProfile;
+    PatchExtractor patchExtractor(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI);
+    patchExtractor.zipFile_.isOpen_ = true;
+    ZipEntry zipEntry;
+    bool res = patchExtractor.Init();
+    patchExtractor.zipFile_.entriesMap_.emplace(
+        std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI + ServiceConstants::BASE, zipEntry);
+    EXPECT_TRUE(res);
+    bool isSystemLib64Exist = false;
+    AppqfInfo appqfInfo;
+    res = patchProfile.DefaultNativeSo(patchExtractor, isSystemLib64Exist, appqfInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: ParseNativeSo_0100
+ * Function: ParseNativeSo
+ * @tc.name: test ParseNativeSo
+ */
+HWTEST_F(BmsBundleQuickFixTest, ParseNativeSo_0100, Function | SmallTest | Level0)
+{
+    PatchProfile patchProfile;
+    PatchExtractor patchExtractor(ServiceConstants::LIBS);
+    patchExtractor.zipFile_.isOpen_ = true;
+    ZipEntry zipEntry;
+    bool res = patchExtractor.Init();
+    patchExtractor.zipFile_.entriesMap_.emplace(std::string(ServiceConstants::LIBS) + ServiceConstants::BASE, zipEntry);
+    EXPECT_TRUE(res);
+    AppqfInfo deployedAppqfInfo;
+    deployedAppqfInfo.versionCode = QUICK_FIX_VERSION_CODE;
+    deployedAppqfInfo.versionName = QUICK_FIX_VERSION_NAME;
+    deployedAppqfInfo.cpuAbi = "arm";
+    deployedAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+    deployedAppqfInfo.type = QuickFixType::HOT_RELOAD;
+    res = patchProfile.ParseNativeSo(patchExtractor, deployedAppqfInfo);
+    EXPECT_FALSE(res);
 }
 
 /**
