@@ -2168,6 +2168,8 @@ public:
     void SetResourcesApply(const std::vector<int32_t> &resourcesApply);
     void SetAppIdentifier(const std::string &appIdentifier);
     std::string GetAppIdentifier() const;
+    void SetCertificate(const std::string &certificate);
+    std::string GetCertificate() const;
     void AddOldAppId(const std::string &appId);
     std::vector<std::string> GetOldAppIds() const;
     void SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted);
