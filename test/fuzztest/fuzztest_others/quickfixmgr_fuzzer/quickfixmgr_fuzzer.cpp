@@ -35,11 +35,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string targetPath;
     std::string bundleName(reinterpret_cast<const char*>(data), size);
     bool enable = false;
-    std::shared_ptr<QuickFixMgr> quickFixMgr_;
-    quickFixMgr_->DeployQuickFix(bundleFilePaths, statusCallback, isDebug, targetPath);
-    quickFixMgr_->SwitchQuickFix(bundleName, enable, statusCallback);
-    quickFixMgr_->DeleteQuickFix(bundleName, statusCallback);
-    quickFixMgr_->CreateQuickFixer(statusCallback);
+    auto quickFixMgr = std::make_shared<QuickFixMgr>();
+    quickFixMgr->DeployQuickFix(bundleFilePaths, statusCallback, isDebug, targetPath);
+    quickFixMgr->SwitchQuickFix(bundleName, enable, statusCallback);
+    quickFixMgr->DeleteQuickFix(bundleName, statusCallback);
+    quickFixMgr->CreateQuickFixer(statusCallback);
     return true;
 }
 } // namespace OHOS

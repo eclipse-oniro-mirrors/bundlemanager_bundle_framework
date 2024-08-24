@@ -39,22 +39,22 @@ uint32_t GetU32Data(const char* ptr)
 }
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    QuickFixManagerHostImpl quickFixManagerHostImpl;
+    auto quickFixManagerHostImpl = std::make_shared<QuickFixManagerHostImpl>();
     std::vector<std::string> bundleFilePaths;
     sptr<IQuickFixStatusCallback> statusCallback = nullptr;
     std::string targetPath(data, size);
-    quickFixManagerHostImpl.DeployQuickFix(bundleFilePaths, statusCallback, false, targetPath);
+    quickFixManagerHostImpl->DeployQuickFix(bundleFilePaths, statusCallback, false, targetPath);
     std::string bundleName(data, size);
-    quickFixManagerHostImpl.SwitchQuickFix(bundleName, false, statusCallback);
-    quickFixManagerHostImpl.DeleteQuickFix(bundleName, statusCallback);
+    quickFixManagerHostImpl->SwitchQuickFix(bundleName, false, statusCallback);
+    quickFixManagerHostImpl->DeleteQuickFix(bundleName, statusCallback);
     std::string fileName(data, size);
     int32_t fd = static_cast<int32_t>(GetU32Data(data));
     std::string path(data, size);
-    quickFixManagerHostImpl.CreateFd(fileName, fd, path);
-    quickFixManagerHostImpl.GetQuickFixMgr();
-    quickFixManagerHostImpl.IsFileNameValid(fileName);
+    quickFixManagerHostImpl->CreateFd(fileName, fd, path);
+    quickFixManagerHostImpl->GetQuickFixMgr();
+    quickFixManagerHostImpl->IsFileNameValid(fileName);
     std::vector<std::string> securityFilePaths;
-    quickFixManagerHostImpl.CopyHqfToSecurityDir(bundleFilePaths, securityFilePaths);
+    quickFixManagerHostImpl->CopyHqfToSecurityDir(bundleFilePaths, securityFilePaths);
     return true;
 }
 } // namespace OHOS
