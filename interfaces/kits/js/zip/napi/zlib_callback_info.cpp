@@ -43,11 +43,7 @@ ZlibCallbackInfo::ZlibCallbackInfo(napi_env env, napi_ref callback, napi_deferre
     APP_LOGD("ZlibCallbackInfo() status %{public}d", status);
 }
 
-ZlibCallbackInfo::~ZlibCallbackInfo()
-{
-    napi_status status = napi_remove_env_cleanup_hook(env_, HandleEnvCleanup, this);
-    APP_LOGD("~ZlibCallbackInfo() status %{public}d", status);
-}
+ZlibCallbackInfo::~ZlibCallbackInfo() {}
 
 int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
 {
@@ -102,6 +98,9 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
                 delete work;
                 work = nullptr;
             }
+            napi_status ret = napi_remove_env_cleanup_hook(asyncCallbackInfo->env, HandleEnvCleanup,
+                asyncCallbackInfo->data);
+            APP_LOGD("rm env hook %{public}d", ret);
             napi_close_handle_scope(asyncCallbackInfo->env, scope);
         });
     return ret;
@@ -142,6 +141,7 @@ void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
         .isCallBack = isCallBack_,
         .callbackResult = err,
         .deliverErrcode = deliverErrcode_,
+        .data = this,
     };
     std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (asyncCallbackInfo == nullptr) {
