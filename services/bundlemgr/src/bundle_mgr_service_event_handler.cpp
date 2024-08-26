@@ -2022,6 +2022,7 @@ ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &fil
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.removable = false;
+    installParam.isOTA = true;
     AppServiceFwkInstaller installer;
 
     return installer.Install(filePaths, installParam);
