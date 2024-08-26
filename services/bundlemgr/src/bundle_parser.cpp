@@ -64,7 +64,7 @@ bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std:
 bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf)
 {
     if (access(filePath.c_str(), F_OK) != 0) {
-        APP_LOGD("access file %{public}s failed, error: %{public}s", filePath.c_str(), strerror(errno));
+        APP_LOGW("access file %{public}s failed, error: %{public}s", filePath.c_str(), strerror(errno));
         return false;
     }
 
@@ -81,7 +81,7 @@ bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json 
     in.seekg(0, std::ios::end);
     int64_t size = in.tellg();
     if (size <= 0) {
-        APP_LOGE("file empty, errno:%{public}d", errno);
+        APP_LOGE("file %{public}s empty, errno:%{public}d", filePath.c_str(), errno);
         in.close();
         return false;
     }
@@ -90,7 +90,7 @@ bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json 
     jsonBuf = nlohmann::json::parse(in, nullptr, false);
     in.close();
     if (jsonBuf.is_discarded()) {
-        APP_LOGE("bad profile file");
+        APP_LOGE("bad profile file %{public}s ", filePath.c_str());
         return false;
     }
 
