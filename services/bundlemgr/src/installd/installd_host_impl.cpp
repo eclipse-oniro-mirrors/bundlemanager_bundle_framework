@@ -390,9 +390,7 @@ ErrCode InstalldHostImpl::AddUserDirDeleteDfx(int32_t userId)
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
-    elPath.push_back("el5");
-    for (const auto &el : elPath) {
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
         std::string bundleDataDir = GetBundleDataDir(el, userId) + ServiceConstants::BASE;
         if (access(bundleDataDir.c_str(), F_OK) != 0) {
             LOG_W(BMS_TAG_INSTALLD, "Base directory %{public}s does not existed, userId:%{public}d",
@@ -1152,10 +1150,6 @@ ErrCode InstalldHostImpl::Mkdir(
     if (!InstalldOperator::MkOwnerDir(dir, mode, uid, gid)) {
         LOG_E(BMS_TAG_INSTALLD, "Mkdir %{public}s failed errno:%{public}d", dir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_MKDIR_FAILED;
-    }
-
-    if (dir.find(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) == 0) {
-        InstalldOperator::RmvDeleteDfx(dir);
     }
 
     return ERR_OK;

@@ -36,8 +36,7 @@ int32_t BmsRdbOpenCallback::OnCreate(NativeRdb::RdbStore &rdbStore)
 {
     APP_LOGI("OnCreate");
 
-    std::string rdbFilePath = bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName;
-    int32_t fd = open(rdbFilePath.c_str(), O_RDWR, 0777);
+    int32_t fd = open((bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName).c_str(), O_RDWR, 0777);
     if (fd < 0) {
         APP_LOGW("Failed to open file");
         return NativeRdb::E_OK;
@@ -45,17 +44,14 @@ int32_t BmsRdbOpenCallback::OnCreate(NativeRdb::RdbStore &rdbStore)
     unsigned int flags = 0;
     if (ioctl(fd, BMS_IOCTL_GET_FLAGS, &flags) < 0) {
         APP_LOGW("Failed to get flags, errno:%{public}d", errno);
-        close(fd);
         return NativeRdb::E_OK;
     }
     flags |= BMS_MONITOR_FL;
     if (ioctl(fd, BMS_IOCTL_SET_FLAGS, &flags) < 0) {
         APP_LOGW("Failed to set flags, errno:%{public}d", errno);
-        close(fd);
         return NativeRdb::E_OK;
     }
-    close(fd);
-    APP_LOGI("Delete control flag of %{public}s is set succeed", rdbFilePath.c_str());
+    APP_LOGI("Set delete monitor success");
     return NativeRdb::E_OK;
 }
 
