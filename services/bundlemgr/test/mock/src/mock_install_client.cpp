@@ -280,7 +280,7 @@ ErrCode InstalldClient::SetEncryptionPolicy(int32_t uid, const std::string &bund
     return ERR_OK;
 }
 
-ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
+ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId)
 {
     return ERR_OK;
 }

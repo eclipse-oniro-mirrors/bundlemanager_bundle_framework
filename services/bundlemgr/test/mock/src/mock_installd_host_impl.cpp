@@ -276,7 +276,7 @@ ErrCode InstalldHostImpl::SetEncryptionPolicy(int32_t uid, const std::string &bu
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::DeleteEncryptionKeyId(const std::string &keyId)
+ErrCode InstalldHostImpl::DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId)
 {
     return ERR_OK;
 }

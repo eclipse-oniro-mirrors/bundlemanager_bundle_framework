@@ -276,7 +276,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ProcessBundleInstallNative
     std::string hapPath = SRC_PATH;
     std::string cpuAbi = CPU_ABI;
     std::string packageName = "com.example.test";
-    
+
     ErrCode result = installClient_->ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::ProcessBundleInstallNative,
         userId, hnpRootPath, hapPath, cpuAbi, packageName));
@@ -293,7 +293,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ProcessBundleUnInstallNati
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ProcessBundleUnInstallNative_0100 start";
     std::string userId = std::to_string(USERID);
     std::string packageName = "com.example.test";
-    
+
     ErrCode result = installClient_->ProcessBundleUnInstallNative(userId, packageName);
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::ProcessBundleUnInstallNative, userId, packageName));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ProcessBundleUnInstallNative_0100 end";
@@ -1121,7 +1121,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetEncryptionPolicy_0100, 
  */
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeleteEncryptionKeyId_0100, TestSize.Level1)
 {
-    ErrCode result = installClient_->DeleteEncryptionKeyId("");
+    ErrCode result = installClient_->DeleteEncryptionKeyId("", 100);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1205,7 +1205,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsage_0200, TestSiz
     ErrCode result = installClient_->GetDiskUsage(dir, isRealPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
- 
+
  /**
  * @tc.number: BmsInstalldClientTest_IsExistFile_0100
  * @tc.name: IsExistFile
