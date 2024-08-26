@@ -69,7 +69,7 @@ ErrCode PreBundleProfile::TransformTo(
         APP_LOGE("value is not array");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
     }
-
+    int32_t result = ERR_OK;
     PreScanInfo preScanInfo;
     for (const auto &array : arrays) {
         if (!array.is_object()) {
@@ -106,8 +106,9 @@ ErrCode PreBundleProfile::TransformTo(
         }
 
         if (parseResult != ERR_OK) {
-            APP_LOGE("parse from json failed");
-            return parseResult;
+            APP_LOGE("parse from install json failed, error %{public}d", parseResult);
+            result = parseResult;
+            continue;
         }
 
         APP_LOGD("preScanInfo(%{public}s)", preScanInfo.ToString().c_str());
@@ -120,7 +121,7 @@ ErrCode PreBundleProfile::TransformTo(
         scanInfos.insert(preScanInfo);
     }
 
-    return ERR_OK;
+    return result;
 }
 
 ErrCode PreBundleProfile::TransformTo(
@@ -187,6 +188,7 @@ ErrCode PreBundleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
     }
 
+    int32_t result = ERR_OK;
     PreBundleConfigInfo preBundleConfigInfo;
     for (const auto &array : arrays) {
         if (!array.is_object()) {
@@ -386,8 +388,9 @@ ErrCode PreBundleProfile::TransformTo(
         }
 
         if (parseResult != ERR_OK) {
-            APP_LOGE("parse from json failed");
-            return parseResult;
+            APP_LOGE("parse from capability json failed, error %{public}d", parseResult);
+            result = parseResult;
+            continue;
         }
 
         APP_LOGD("preBundleConfigInfo(%{public}s)", preBundleConfigInfo.ToString().c_str());
@@ -401,7 +404,7 @@ ErrCode PreBundleProfile::TransformTo(
         preBundleConfigInfos.insert(preBundleConfigInfo);
     }
 
-    return ERR_OK;
+    return result;
 }
 
 ErrCode PreBundleProfile::TransformJsonToExtensionTypeList(

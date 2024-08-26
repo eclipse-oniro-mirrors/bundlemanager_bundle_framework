@@ -649,6 +649,10 @@ bool BMSEventHandler::HasPreInstallProfile()
 
 void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
 {
+    if (!BundleUtil::IsExistDirNoLog(dir)) {
+        LOG_W(BMS_TAG_DEFAULT, "parse dir %{public}s not exist", dir.c_str());
+        return;
+    }
     BundleParser bundleParser;
     bundleParser.ParsePreInstallConfig(
         dir + INSTALL_LIST_CONFIG, installList_);
