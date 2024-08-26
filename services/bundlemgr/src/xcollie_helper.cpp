@@ -40,5 +40,10 @@ void XCollieHelper::CancelTimer(int id)
     HiviewDFX::XCollie::GetInstance().CancelTimer(id);
 #endif
 }
+
+int32_t XCollieHelper::SetRecoveryTimer(const std::string &methodName, unsigned int timeout)
+{
+    return SetTimer(methodName, timeout, nullptr, nullptr);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
