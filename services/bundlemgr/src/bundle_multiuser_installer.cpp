@@ -113,7 +113,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         || appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL
         || appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM) {
         APP_LOGE("the origin application is enterprise, not allow to install here");
-        return ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED;
+        return ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED;
     }
 
     // uid
