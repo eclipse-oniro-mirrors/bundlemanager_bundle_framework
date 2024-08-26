@@ -733,6 +733,7 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
     newInfo.SetResourcesApply(preBundleConfigInfo.resourcesApply);
     newInfo.SetAllowAppRunWhenDeviceFirstLocked(preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked);
+    newInfo.SetAllowEnableNotification(preBundleConfigInfo.allowEnableNotification);
 }
 
 void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInfo,
