@@ -4182,6 +4182,22 @@ ErrCode BundleMgrHostImpl::QueryCloneExtensionAbilityInfoWithAppIndex(const Elem
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        LOG_E(BMS_TAG_DEFAULT, "uid: %{public}d not foundation", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetSignatureInfoByBundleName(bundleName, signatureInfo);
+}
+
 bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
 {
     std::vector<std::string> noDisablingList;

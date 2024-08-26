@@ -807,6 +807,8 @@ private:
 
     ErrCode HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetSignatureInfoByBundleName(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleDeleteDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);

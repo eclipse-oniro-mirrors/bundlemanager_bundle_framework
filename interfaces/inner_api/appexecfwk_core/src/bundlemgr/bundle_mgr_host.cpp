@@ -540,6 +540,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX):
             errCode = this->HandleQueryCloneExtensionAbilityInfoWithAppIndex(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SIGNATURE_INFO):
+            errCode = this->HandleGetSignatureInfoByBundleName(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_CLONE_APPLICATION_ENABLED):
             errCode = this->HandleSetCloneApplicationEnabled(data, reply);
             break;
@@ -3868,6 +3871,21 @@ ErrCode BundleMgrHost::HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageP
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetSignatureInfoByBundleName(MessageParcel &data, MessageParcel &reply)
+{
+    std::string name = data.ReadString();
+    SignatureInfo info;
+    ErrCode ret = GetSignatureInfoByBundleName(name, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        return WriteParcelInfoIntelligent<SignatureInfo>(info, reply);
+    }
+    return ret;
 }
 
 ErrCode BundleMgrHost::HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)

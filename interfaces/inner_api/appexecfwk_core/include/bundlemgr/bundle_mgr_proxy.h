@@ -1075,6 +1075,8 @@ public:
     virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName, int32_t flags,
         int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    
+    virtual ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) override;
 
     virtual ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
 
