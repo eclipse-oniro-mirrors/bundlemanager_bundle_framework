@@ -120,6 +120,8 @@ HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_AppIndexNotValid, Func
     const std::string bundleName = "com.example.myapplication";
     const int32_t userId = 100;
     int32_t appIndex = 0;
+    auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
+    EXPECT_TRUE(result != ERR_OK);
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_BundleNameEmpty, Function | SmallTest | Level0)
