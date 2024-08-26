@@ -30,6 +30,11 @@ public:
     // return: the timer id
     static int SetTimer(const std::string &name, unsigned int timeout, std::function<void (void *)> func, void *arg);
 
+    // set timer
+    // name : timer name
+    // timeout : timeout, unit s
+    static int SetRecoveryTimer(const std::string &methodName, unsigned int timeout = 60);
+
     // cancel timer
     // id: timer id
     static void CancelTimer(int id);
