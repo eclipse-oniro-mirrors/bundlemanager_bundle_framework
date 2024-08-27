@@ -83,7 +83,12 @@ ErrCode AppServiceFwkInstaller::Install(
     ErrCode result = BeforeInstall(hspPaths, installParam);
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
     result = ProcessInstall(hspPaths, installParam);
-    APP_LOGI("%{public}s %{public}s result %{public}d", hspPaths[0].c_str(), bundleName_.c_str(), result);
+    APP_LOGI("%{public}s %{public}s result %{public}d first time", hspPaths[0].c_str(), bundleName_.c_str(), result);
+    if (result != ERR_OK && installParam.isOTA) {
+        auto uninstallRes = UnInstall(bundleName_, true);
+        result = ProcessInstall(hspPaths, installParam);
+        APP_LOGI("uninstallRes %{public}d installRes second time %{public}d", uninstallRes, result);
+    }
     SendBundleSystemEvent(
         hspPaths,
         BundleEventType::INSTALL,
@@ -93,7 +98,7 @@ ErrCode AppServiceFwkInstaller::Install(
     return result;
 }
 
-ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName)
+ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName, bool isKeepData)
 {
     APP_LOGI("Uninstall bundle %{public}s", bundleName.c_str());
     if (BeforeUninstall(bundleName) != ERR_OK) {
@@ -111,6 +116,9 @@ ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName)
     if (InstalldClient::GetInstance()->RemoveDir(bundleDir) != ERR_OK) {
         APP_LOGW("remove bundle dir %{public}s failed", bundleDir.c_str());
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    if (!isKeepData) {
+        InstalldClient::GetInstance()->RemoveBundleDataDir(bundleName, 0, false);
     }
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
         APP_LOGE("delete inner info failed for bundle %{public}s", bundleName.c_str());
