@@ -44,12 +44,6 @@ struct tm *GetCurrentSystemTime(void)
 {
     auto tt = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     struct tm *time = localtime(&tt);
-    if (time == nullptr) {
-        return nullptr;
-    }
-    int baseYear = 1900;
-    time->tm_mday = time->tm_mday + baseYear;
-    time->tm_mday = time->tm_mon + 1;
     return time;
 }
 
