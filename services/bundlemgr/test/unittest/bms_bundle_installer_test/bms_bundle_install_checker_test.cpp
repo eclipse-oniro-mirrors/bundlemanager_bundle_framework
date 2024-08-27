@@ -2605,4 +2605,17 @@ HWTEST_F(BmsBundleInstallCheckerTest, FindModuleInInstallingPackage_0100, Functi
     ret = installChecker.FindModuleInInstallingPackage(moduleName, bundleName, infos);
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: CheckAllowEnterpriseBundle_0100
+ * @tc.name: Test CheckAllowEnterpriseBundle
+ * @tc.desc: 1.Test CheckAllowEnterpriseBundle
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAllowEnterpriseBundle_0100, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    auto ret = installChecker.CheckAllowEnterpriseBundle(hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

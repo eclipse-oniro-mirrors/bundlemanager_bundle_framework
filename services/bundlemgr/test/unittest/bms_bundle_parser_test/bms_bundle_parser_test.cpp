@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -3068,5 +3068,46 @@ HWTEST_F(BmsBundleParserTest, BundleParser_1800, Function | MediumTest | Level1)
     std::vector<std::string> noDisablingList;
     ErrCode ret = bundleParser.ParseNoDisablingList(configPath, noDisablingList);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
+}
+
+/**
+ * @tc.number: BundleParser_1900
+ * @tc.name: Test CheckRouterData
+ * @tc.desc: Test the CheckRouterData of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_1900, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+    nlohmann::json data;
+    auto ret = bundleParser.CheckRouterData(data);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleParser_2000
+ * @tc.name: Test ParseNoDisablingList
+ * @tc.desc: Test the ParseNoDisablingList of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_2000, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+    std::string configPath;
+    std::vector<std::string> noDisablingList;
+    ErrCode ret = bundleParser.ParseNoDisablingList(configPath, noDisablingList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
+}
+
+/**
+ * @tc.number: BundleParser_2100
+ * @tc.name: Test CheckRouterData
+ * @tc.desc: Test the CheckRouterData of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_2100, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+    nlohmann::json data;
+    data["data"] = "data";
+    auto ret = bundleParser.CheckRouterData(data);
+    EXPECT_FALSE(ret);
 }
 } // OHOS
