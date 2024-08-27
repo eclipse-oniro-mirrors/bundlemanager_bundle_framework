@@ -8390,5 +8390,35 @@ void BundleDataMgr::GetBundleInfosForContinuation(std::vector<BundleInfo> &bundl
         return true;
         }), bundleInfos.end());
 }
+
+ErrCode BundleDataMgr::GetContinueBundleNames(
+    const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId)
+{
+    auto requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("Input invalid userid, userId:%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (continueBundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &[key, innerInfo] : bundleInfos_) {
+        if (CheckInnerBundleInfoWithFlags(
+            innerInfo, BundleFlag::GET_BUNDLE_WITH_ABILITIES, innerInfo.GetResponseUserId(requestUserId)) != ERR_OK) {
+            continue;
+        }
+        for (const auto &[key, abilityInfo] : innerInfo.GetInnerAbilityInfos()) {
+            if (abilityInfo.continueBundleNames.find(continueBundleName) != abilityInfo.continueBundleNames.end()) {
+                bundleNames.emplace_back(abilityInfo.bundleName);
+                break;
+            }
+        }
+    }
+
+    APP_LOGD("The number of found continue packs, size:[%{public}d]", static_cast<int32_t>(bundleNames.size()));
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

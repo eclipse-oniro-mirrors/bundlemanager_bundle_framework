@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_ABILITY_INFO_H
 
 #include <string>
+#include <unordered_set>
 
 #include "parcel.h"
 #include "application_info.h"
@@ -293,6 +294,7 @@ struct AbilityInfo : public Parcelable {
     std::vector<std::string> supportExtNames;
     std::vector<std::string> supportMimeTypes;
     std::vector<std::string> continueType;
+    std::unordered_set<std::string> continueBundleNames;
     LinkType linkType = LinkType::DEEP_LINK;
 
     bool ReadFromParcel(Parcel &parcel);
