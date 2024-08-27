@@ -1878,8 +1878,6 @@ napi_value InstallPreexistingApp(napi_env env, napi_callback_info info)
     }
     size_t argc = args.GetMaxArgc();
     for (size_t i = 0; i < argc; ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
                 APP_LOGW("parse bundleName failed");
@@ -1889,8 +1887,6 @@ napi_value InstallPreexistingApp(napi_env env, napi_callback_info info)
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 APP_LOGW("parse userId failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-                return nullptr;
             }
         } else {
             APP_LOGW("The number of parameters is incorrect");
