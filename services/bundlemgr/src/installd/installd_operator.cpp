@@ -1202,35 +1202,57 @@ void InstalldOperator::CloseHandle(void **handle)
 }
 
 #if defined(CODE_ENCRYPTION_ENABLE)
-bool InstalldOperator::OpenEncryptionHandle(void **handle)
+void *InstalldOperator::encryptionHandle_ = nullptr;
+
+bool InstalldOperator::OpenEncryptionHandle()
 {
+    if (encryptionHandle_ != nullptr) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "encrypt handle opened");
+        return true;
+    }
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "OpenEncryption start");
-    if (handle == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "OpenEncryptionHandle error handle is nullptr");
-        return false;
+    encryptionHandle_ = dlopen(LIB64_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
+    if (encryptionHandle_ == nullptr) {
+        LOG_W(BMS_TAG_INSTALLD, "open encrypt lib64 failed %{public}s", dlerror());
+        encryptionHandle_ = dlopen(LIB_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
     }
-    *handle = dlopen(LIB64_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
-    if (*handle == nullptr) {
-        LOG_W(BMS_TAG_INSTALLD, "failed to open lib64 libcode_crypto_metadata_process_utils.z.so, err:%{public}s",
-            dlerror());
-        *handle = dlopen(LIB_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
-    }
-    if (*handle == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to open lib libcode_crypto_metadata_process_utils.z.so, err:%{public}s",
-            dlerror());
+    if (encryptionHandle_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "open encrypt lib failed %{public}s", dlerror());
         return false;
     }
     return true;
 }
 
-void InstalldOperator::CloseEncryptionHandle(void **handle)
+void InstalldOperator::CloseEncryptionHandle()
 {
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "CloseEncryption start");
-    if ((handle != nullptr) && (*handle != nullptr)) {
-        dlclose(*handle);
-        *handle = nullptr;
-        LOG_D(BMS_TAG_INSTALLD, "CloseEncryptionHandle, err:%{public}s", dlerror());
+    if (encryptionHandle_ != nullptr) {
+        if (dlclose(encryptionHandle_) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "CloseEncryption failed, err:%{public}s", dlerror());
+        }
+        encryptionHandle_ = nullptr;
     }
+}
+
+bool InstalldOperator::EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap, int32_t bundleId,
+    bool &isEncryption, InstallBundleType installBundleType, bool isCompressNativeLibrary)
+{
+    if (!OpenEncryptionHandle()) {
+        return false;
+    }
+    auto enforceMetadataProcessForApp =
+        reinterpret_cast<EnforceMetadataProcessForApp>(dlsym(encryptionHandle_, CODE_CRYPTO_FUNCTION_NAME));
+    if (enforceMetadataProcessForApp == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "dlsym encrypt err:%{public}s", dlerror());
+        return false;
+    }
+    ErrCode ret = enforceMetadataProcessForApp(entryMap, bundleId,
+        isEncryption, static_cast<int32_t>(installBundleType), isCompressNativeLibrary);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "CheckEncryption failed due to %{public}d", ret);
+        return false;
+    }
+    return true;
 }
 #endif
 
@@ -1530,32 +1552,6 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
 #endif
     return true;
 }
-
-#if defined(CODE_ENCRYPTION_ENABLE)
-bool InstalldOperator::EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap, int32_t bundleId,
-    bool &isEncryption, InstallBundleType installBundleType, bool isCompressNativeLibrary)
-{
-    void *handle = nullptr;
-    if (!OpenEncryptionHandle(&handle)) {
-        return false;
-    }
-    auto enforceMetadataProcessForApp =
-        reinterpret_cast<EnforceMetadataProcessForApp>(dlsym(handle, CODE_CRYPTO_FUNCTION_NAME));
-    if (enforceMetadataProcessForApp == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to get enforceMetadataProcessForApp err:%{public}s", dlerror());
-        CloseEncryptionHandle(&handle);
-        return false;
-    }
-    ErrCode ret = enforceMetadataProcessForApp(entryMap, bundleId,
-        isEncryption, static_cast<int32_t>(installBundleType), isCompressNativeLibrary);
-    CloseEncryptionHandle(&handle);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "CheckEncryption failed due to %{public}d", ret);
-        return false;
-    }
-    return true;
-}
-#endif
 
 bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
 {

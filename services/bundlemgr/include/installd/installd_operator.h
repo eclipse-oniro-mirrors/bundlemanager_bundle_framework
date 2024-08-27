@@ -302,15 +302,19 @@ public:
      * @return
      */
     static void RmvDeleteDfx(const std::string &path);
+
+#if defined(CODE_ENCRYPTION_ENABLE)
+    static void CloseEncryptionHandle();
+#endif
+
 private:
     static bool OpenHandle(void **handle);
 
     static void CloseHandle(void **handle);
 
 #if defined(CODE_ENCRYPTION_ENABLE)
-    static bool OpenEncryptionHandle(void **handle);
-
-    static void CloseEncryptionHandle(void **handle);
+    static void *encryptionHandle_;
+    static bool OpenEncryptionHandle();
 #endif
 
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,

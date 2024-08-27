@@ -72,6 +72,9 @@ void InstalldService::OnStart()
 
 void InstalldService::OnStop()
 {
+#if defined(CODE_ENCRYPTION_ENABLE)
+    InstalldOperator::CloseEncryptionHandle();
+#endif
     Stop();
 #ifdef DFX_SIGDUMP_HANDLER_ENABLE
     DeinitSigDumpHandler();
