@@ -6552,4 +6552,166 @@ HWTEST_F(BmsBundleInstallerTest, GetValidDataGroupIds_0100, Function | SmallTest
     std::string dataGroupId = validGroupIds.back();
     EXPECT_EQ(dataGroupId, TEST_STRING);
 }
+
+/**
+ * @tc.number: SendStartInstallNotify_0100
+ * @tc.name: test SendStartInstallNotify
+ * @tc.desc: test SendStartInstallNotify of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, SendStartInstallNotify_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.isPreInstallApp = true;
+    installParam.noSkipsKill = true;
+    installParam.needSendEvent = false;
+    installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    installer.bundleName_.clear();
+    installer.SendStartInstallNotify(installParam, infos);
+    EXPECT_TRUE(installer.bundleName_.empty());
+}
+
+/**
+ * @tc.number: RollbackHmpUserInfo_0100
+ * @tc.name: test RollbackHmpUserInfo
+ * @tc.desc: test RollbackHmpUserInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, RollbackHmpUserInfo_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName;
+    ErrCode ret = installer.RollbackHmpUserInfo(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_INVALID_NAME);
+
+    bundleName = NORMAL_BUNDLE_NAME;
+    ret = installer.RollbackHmpUserInfo(bundleName);
+    EXPECT_NE(ret, ERR_APPEXECFWK_UNINSTALL_INVALID_NAME);
+}
+
+/**
+ * @tc.number: RemoveTempSoDir_0100
+ * @tc.name: test RemoveTempSoDir
+ * @tc.desc: test RemoveTempSoDir of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, RemoveTempSoDir_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string tempSoDir;
+    installer.RemoveTempSoDir(tempSoDir);
+
+    tempSoDir += ServiceConstants::TMP_SUFFIX;
+    installer.RemoveTempSoDir(tempSoDir);
+
+    tempSoDir += ServiceConstants::PATH_SEPARATOR;
+    installer.RemoveTempSoDir(tempSoDir);
+
+    tempSoDir += " ";
+    tempSoDir += ServiceConstants::PATH_SEPARATOR;
+    installer.RemoveTempSoDir(tempSoDir);
+    EXPECT_FALSE(tempSoDir.empty());
+}
+
+/**
+ * @tc.number: MoveFileToRealInstallationDir_0100
+ * @tc.name: test MoveFileToRealInstallationDir
+ * @tc.desc: test MoveFileToRealInstallationDir of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, MoveFileToRealInstallationDir_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> innerBundleInfos;
+    ApplicationInfo applicationInfo;
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(applicationInfo);
+    std::string appDistributionType = "hos_normal_type";
+    info.SetAppDistributionType(appDistributionType);
+    innerBundleInfos.try_emplace("so", info);
+    ErrCode ret = installer.MoveFileToRealInstallationDir(innerBundleInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: CreateExtensionDataDir_0100
+ * @tc.name: test CreateExtensionDataDir
+ * @tc.desc: test CreateExtensionDataDir of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateExtensionDataDir_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    std::vector<std::string> createExtensionDirs;
+    installer.createExtensionDirs_.push_back("test.extension.dir");
+    installer.CreateExtensionDataDir(info);
+    installer.CreateDataGroupDir(info);
+    EXPECT_FALSE(installer.createExtensionDirs_.empty());
+}
+
+/**
+ * @tc.number: ProcessBundleInstallNative_0100
+ * @tc.name: test ProcessBundleInstallNative
+ * @tc.desc: test ProcessBundleInstallNative of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessBundleInstallNative_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo info;
+    std::string moduleName = "test.moduleName";
+    info.moduleName = moduleName;
+    HnpPackage hnpPackage;
+    std::string package = "test.package";
+    hnpPackage.package = package;
+    info.hnpPackages.push_back(hnpPackage);
+    innerModuleInfos.try_emplace(moduleName, info);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerModuleInfo(innerModuleInfos);
+    innerBundleInfo.currentPackage_ = moduleName;
+    int32_t userId = USERID;
+    ErrCode ret = installer.ProcessBundleInstallNative(innerBundleInfo, userId);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ProcessBundleUnInstallNative_0100
+ * @tc.name: test ProcessBundleUnInstallNative
+ * @tc.desc: test ProcessBundleUnInstallNative of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessBundleUnInstallNative_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo info;
+    std::string moduleName = "test.moduleName.uninstall";
+    info.moduleName = moduleName;
+    HnpPackage hnpPackage;
+    std::string package = "test.package";
+    hnpPackage.package = package;
+    info.hnpPackages.push_back(hnpPackage);
+    innerModuleInfos.try_emplace(moduleName, info);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerModuleInfo(innerModuleInfos);
+    int32_t userId = USERID;
+    std::string bundleName;
+    ErrCode ret = installer.ProcessBundleUnInstallNative(innerBundleInfo, userId, bundleName);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CopyHapsToSecurityDir_0100
+ * @tc.name: test CopyHapsToSecurityDir
+ * @tc.desc: test CopyHapsToSecurityDir of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CopyHapsToSecurityDir_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.withCopyHaps = true;
+    std::vector<std::string> bundlePaths;
+    installer.bundlePaths_.push_back("test.bundle.path");
+    ErrCode ret = installer.CopyHapsToSecurityDir(installParam, bundlePaths);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
