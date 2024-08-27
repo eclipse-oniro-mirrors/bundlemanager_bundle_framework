@@ -12169,7 +12169,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetSharedDependencies_0100, Function | SmallTe
     }
     std::vector<Dependency> dependencies;
     auto ret = bundleMgrProxy->GetSharedDependencies("", "", dependencies);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
     ret = bundleMgrProxy->GetSharedDependencies(
             BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependencies);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
