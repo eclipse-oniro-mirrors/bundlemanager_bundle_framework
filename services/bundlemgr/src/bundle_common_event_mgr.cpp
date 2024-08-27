@@ -16,6 +16,7 @@
 #include "bundle_common_event_mgr.h"
 
 #include "account_helper.h"
+#include "app_log_tag_wrapper.h"
 #include "bundle_common_event.h"
 #include "bundle_util.h"
 #include "common_event_manager.h"
@@ -78,8 +79,11 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     SetNotifyWant(want, installResult);
     EventFwk::CommonEventData commonData { want };
     // trigger BundleEventCallback first
-    if (dataMgr != nullptr) {
+    if (dataMgr != nullptr && !(want.GetAction() == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED &&
+        installResult.resultCode != ERR_OK)) {
+        LOG_I(BMS_TAG_DEFAULT, "eventBack begin");
         dataMgr->NotifyBundleEventCallback(commonData);
+        LOG_I(BMS_TAG_DEFAULT, "eventBack end");
     }
 
     uint8_t installType = ((installResult.type == NotifyType::UNINSTALL_BUNDLE) ||
