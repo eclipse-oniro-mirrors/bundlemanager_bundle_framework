@@ -15,6 +15,9 @@
 
 #include "verify_manager_host_impl.h"
 
+#include <sys/wait.h>
+#include <unistd.h>
+
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "installd_client.h"
@@ -316,18 +319,45 @@ bool VerifyManagerHostImpl::VerifyAbc(
 
 bool VerifyManagerHostImpl::VerifyAbc(const std::vector<std::string> &abcPaths)
 {
-    for (const auto &abcPath : abcPaths) {
-        if (!BundleUtil::IsExistFile(abcPath)) {
-            APP_LOGE("abcPath is not exist: %{public}s", abcPath.c_str());
+    APP_LOGD("current process pid: %{public}d, ppid: %{public}d", getpid(), getppid());
+    pid_t pid = fork();
+    if (pid < 0) {
+        APP_LOGE("fork child process failed");
+        return false;
+    } else if (pid == 0) {
+        APP_LOGD("child process pid: %{public}d, ppid: %{public}d", getpid(), getppid());
+        for (const auto &abcPath : abcPaths) {
+            if (!BundleUtil::IsExistFile(abcPath)) {
+                APP_LOGE("abcPath is not exist: %{public}s", abcPath.c_str());
+                _exit(1);
+            }
+
+            if (!VerifyUtil::VerifyAbc(abcPath)) {
+                APP_LOGE("verify abc failed");
+                _exit(1);
+            }
+        }
+        APP_LOGI("verify abc successfully");
+        _exit(0);
+    } else {
+        int status;
+        pid_t childPid = waitpid(pid, &status, 0);
+        if (childPid == -1) {
+            APP_LOGE("waitpid failed");
             return false;
         }
-
-        if (!VerifyUtil::VerifyAbc(abcPath)) {
-            APP_LOGE("verify abc failed");
+        if (WIFEXITED(status)) {
+            int exitStatus = WEXITSTATUS(status);
+            if (exitStatus != 0) {
+                APP_LOGE("verify abc failed");
+                return false;
+            }
+        } else {
+            APP_LOGE("child process did not exit normally");
             return false;
         }
     }
-
+    APP_LOGD("end process pid: %{public}d, ppid: %{public}d", getpid(), getppid());
     return true;
 }
 
