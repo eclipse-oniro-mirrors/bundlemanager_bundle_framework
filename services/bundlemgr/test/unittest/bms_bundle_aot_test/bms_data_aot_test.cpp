@@ -34,6 +34,7 @@
 #include "parcel.h"
 #include "scope_guard.h"
 #include "installd/installd_service.h"
+#include "installd_client.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -1263,4 +1264,292 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0500, Function | SmallTest | Level0)
     EXPECT_EQ(ret, ERR_OK);
 }
 
+/**
+ * @tc.number: AOTExecutor_1500
+ * @tc.name: test DecToHex
+ * @tc.desc: test DecToHex function return value
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1500, Function | SmallTest | Level0)
+{
+    std::string result = AOTExecutor::GetInstance().DecToHex(50);
+    EXPECT_EQ(result, "0x32");
+}
+
+/**
+ * @tc.number: AOTExecutor_1600
+ * @tc.name: test CheckArgs
+ * @tc.desc: test CheckArgs function return value
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1600, Function | SmallTest | Level0)
+{
+    AOTArgs aotArgs;
+    bool result = AOTExecutor::GetInstance().CheckArgs(aotArgs);
+    EXPECT_FALSE(result);
+    aotArgs.compileMode = "partial";
+    aotArgs.hapPath = "hapPath";
+    aotArgs.outputPath = "outputPath";
+    result = AOTExecutor::GetInstance().CheckArgs(aotArgs);
+    EXPECT_FALSE(result);
+    aotArgs.arkProfilePath = "arkProfilePath";
+    result = AOTExecutor::GetInstance().CheckArgs(aotArgs);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: AOTExecutor_1700
+ * @tc.name: test GetAbcFileInfo
+ * @tc.desc: test GetAbcFileInfo function return value
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1700, Function | SmallTest | Level0)
+{
+    std::string hapPath = "";
+    uint32_t offset = OFFSET;
+    uint32_t length = LENGTH;
+    bool result = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, offset, length);
+    EXPECT_FALSE(result);
+    hapPath = HAP_PATH;
+    result = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, offset, length);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: AOTExecutor_1800
+ * @tc.name: test PrepareArgs
+ * @tc.desc: test PrepareArgs function return value
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1800, Function | SmallTest | Level0)
+{
+    AOTArgs aotArgs;
+    aotArgs.hapPath = HAP_PATH;
+    aotArgs.compileMode = "compileMode";
+    aotArgs.outputPath = "outputPath";
+    aotArgs.arkProfilePath = "arkProfilePath";
+    aotArgs.offset = OFFSET;
+    aotArgs.length = LENGTH;
+    AOTArgs completeArgs;
+    ErrCode result = ERR_OK;
+    result = AOTExecutor::GetInstance().PrepareArgs(aotArgs, completeArgs);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_AOT_ABC_NOT_EXIST);
+}
+
+/**
+ * @tc.number: AOTExecutor_1900
+ * @tc.name: test InitState
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1900, Function | SmallTest | Level0)
+{
+    AOTArgs aotArgs;
+    aotArgs.outputPath = OUT_PUT_PATH;
+    AOTExecutor::GetInstance().InitState(aotArgs);
+    EXPECT_TRUE(AOTExecutor::GetInstance().state_.running);
+    EXPECT_EQ(AOTExecutor::GetInstance().state_.outputPath, aotArgs.outputPath);
+}
+
+/**
+ * @tc.number: AOTExecutor_2000
+ * @tc.name: test ResetState
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_2000, Function | SmallTest | Level0)
+{
+    AOTExecutor::GetInstance().ResetState();
+    EXPECT_FALSE(AOTExecutor::GetInstance().state_.running);
+}
+
+/**
+ * @tc.number: AOTHandler_3200
+ * @tc.name: test MkApDestDirIfNotExist
+ * @tc.desc: test MkApDestDirIfNotExist function running
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3200, Function | SmallTest | Level0)
+{
+    ErrCode ret = AOTHandler::GetInstance().MkApDestDirIfNotExist();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AOTHandler_3300
+ * @tc.name: test AOTHandler
+ * @tc.desc: test GetSouceAp function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3300, Function | SmallTest | Level0)
+{
+    std::string bundleName = "bundleName";
+    std::string arkProfilePath;
+    int32_t userId = 100;
+    arkProfilePath.append(ServiceConstants::ARK_PROFILE_PATH).append(std::to_string(userId))
+        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName).append(ServiceConstants::PATH_SEPARATOR);
+    std::string mergedAp = arkProfilePath + "merged_" + bundleName + ServiceConstants::AP_SUFFIX;
+    std::string rtAp = arkProfilePath + "rt_" + bundleName + ServiceConstants::AP_SUFFIX;
+    std::string result = AOTHandler::GetInstance().GetSouceAp(mergedAp, rtAp);
+    EXPECT_EQ(result.empty(), true);
+}
+
+/**
+ * @tc.number: AOTHandler_3400
+ * @tc.name: test AOTHandler
+ * @tc.desc: test IsSupportARM64 function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3400, Function | SmallTest | Level0)
+{
+    bool result = AOTHandler::GetInstance().IsSupportARM64();
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: AOTHandler_3500
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleCompileWithSingleHap function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3500, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    std::string bundleName = "bundleName";
+    std::string compileMode;
+    ErrCode ret = AOTHandler::GetInstance().HandleCompileWithSingleHap(info, bundleName, compileMode, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_AOT_ARGS_EMPTY);
+}
+
+/**
+ * @tc.number: AOTHandler_3600
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleCompileModules function running
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3600, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    std::string moduleName = "moduleName";
+    std::vector<std::string> moduleNames = {moduleName};
+    string compileMode = ServiceConstants::COMPILE_PARTIAL;
+    std::string compileResult;
+    ErrCode ret = AOTHandler::GetInstance().HandleCompileModules(
+        moduleNames, compileMode, info, compileResult);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+}
+
+/**
+ * @tc.number: AOTHandler_3700
+ * @tc.name: test AOTHandler
+ * @tc.desc: test ClearArkCacheDir function running
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3700, Function | SmallTest | Level0)
+{
+    AOTHandler::GetInstance().ClearArkCacheDir();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
+    std::for_each(bundleNames.cbegin(), bundleNames.cend(), [dataMgr](const auto &bundleName) {
+        std::string removeDir = ServiceConstants::ARK_CACHE_PATH + bundleName;
+        ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
+        ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->RemoveDir(removeDir);
+        EXPECT_EQ(ret, ERR_OK);
+    });
+}
+
+/**
+ * @tc.number: AOTHandler_3800
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleOTACompile function running
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3800, Function | SmallTest | Level0)
+{
+    system::SetParameter(OTA_COMPILE_SWITCH, "on");
+    AOTHandler::GetInstance().HandleOTACompile();
+    EXPECT_EQ(AOTHandler::GetInstance().OTACompileDeadline_, true);
+}
+
+/**
+ * @tc.number: AOTHandler_3900
+ * @tc.name: test AOTHandler
+ * @tc.desc: test GetUserBehaviourAppList function running
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3900, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleNames;
+    bool result = AOTHandler::GetInstance().GetUserBehaviourAppList(bundleNames, 0);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: AOTHandler_4000
+ * @tc.name: test AOTHandler
+ * @tc.desc: test DeleteArkAp function running
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_4000, Function | SmallTest | Level0)
+{
+    BundleInfo bundleInfo;
+    AOTHandler::GetInstance().DeleteArkAp(bundleInfo, 0);
+    EXPECT_NE(AppExecFwk::InstalldClient::GetInstance()->installdProxy_, nullptr);
+}
+
+/**
+ * @tc.number: AOTHandler_4100
+ * @tc.name: test AOTHandler
+ * @tc.desc: test GetCurAOTVersion function running
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_4100, Function | SmallTest | Level0)
+{
+    std::string result = AOTHandler::GetInstance().GetCurAOTVersion();
+    EXPECT_FALSE(result.empty());
+}
+
+/**
+ * @tc.number: AOTHandler_4200
+ * @tc.name: test AOTHandler
+ * @tc.desc: test GetOldAOTVersion function running
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_4200, Function | SmallTest | Level0)
+{
+    std::string oldAOTVersion = "";
+    bool result = AOTHandler::GetInstance().GetOldAOTVersion(oldAOTVersion);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: AOTHandler_4300
+ * @tc.name: test AOTHandler
+ * @tc.desc: test SaveAOTVersion function running
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_4300, Function | SmallTest | Level0)
+{
+    std::string curAOTVersion = "2.5";
+    AOTHandler::GetInstance().SaveAOTVersion(curAOTVersion);
+    bool result = AOTHandler::GetInstance().GetOldAOTVersion(curAOTVersion);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: AOTArgs_0300
+ * @tc.name: test Unmarshalling
+ * @tc.desc: Marshalling and Unmarshalling false
+ */
+HWTEST_F(BmsAOTMgrTest, AOTArgs_0300, Function | SmallTest | Level1)
+{
+    HspInfo hspInfo = CreateHspInfo();
+    Parcel parcel;
+    std::shared_ptr<HspInfo> hspInfoPtr(hspInfo.Unmarshalling(parcel));
+    EXPECT_EQ(hspInfoPtr, nullptr);
+}
+
+/**
+ * @tc.number: AOTSignDataCacheMgr_0600
+ * @tc.name: test ExecutePendSign
+ * @tc.desc: test ExecutePendSign function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0600, Function | SmallTest | Level0)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    std::optional<AOTArgs> aotArgs;
+    AOTArgs aotArg;
+    aotArg.bundleName = "bundleName";
+    aotArg.moduleName = "moduleName";
+    aotArgs = aotArg;
+    int32_t versionCode = 1;
+    std::vector<uint8_t> pendSignData(HAP_PATH.begin(), HAP_PATH.end());
+    ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+    AOTSignDataCacheMgr::GetInstance().AddPendSignData(*aotArgs, versionCode, pendSignData, ret);
+    ret = signDataCacheMgr.ExecutePendSign();
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
