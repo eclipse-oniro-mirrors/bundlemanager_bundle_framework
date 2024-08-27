@@ -767,15 +767,13 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
             preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
             preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
-            auto bundleInfo = innerBundleInfo.second.GetBaseBundleInfo();
-            if (bundleInfo.isNewVersion) {
-                preInstallBundleInfo.SetBundleType(applicationInfo.bundleType);
-            } else if (!bundleInfo.hapModuleInfos.empty() &&
-                bundleInfo.hapModuleInfos[0].installationFree) {
+            auto moduleMap = innerBundleInfo.second.GetInnerModuleInfos();
+            if (innerBundleInfo.second.GetIsNewVersion()) {
+                preInstallBundleInfo.SetBundleType(innerBundleInfo.second.GetApplicationBundleType());
+            } else if (!moduleMap.empty() && moduleMap.begin()->second.distro.installationFree) {
                 preInstallBundleInfo.SetBundleType(BundleType::ATOMIC_SERVICE);
             }
-            if (!bundleInfo.hapModuleInfos.empty() &&
-                bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+            if (!moduleMap.empty() && moduleMap.begin()->second.distro.moduleType == Profile::MODULE_TYPE_ENTRY) {
                 break;
             }
         }
