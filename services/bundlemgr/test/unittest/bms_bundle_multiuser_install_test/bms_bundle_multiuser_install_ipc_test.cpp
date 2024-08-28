@@ -110,6 +110,72 @@ sptr<IBundleInstaller> BmsBundleMultiuserInstallIPCTest::GetInstallerProxy()
     return installerProxy;
 }
 
+class EmptyTestBundleInstaller : public IBundleInstaller {
+public:
+    bool Install(const std::string &bundleFilePath, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return false;
+    }
+    bool Recover(const std::string &bundleName, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return false;
+    }
+    bool Install(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return false;
+    }
+    bool Uninstall(const std::string &bundleName, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return false;
+    }
+    bool Uninstall(const UninstallParam &uninstallParam,
+        const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return false;
+    }
+    bool Uninstall(const std::string &bundleName, const std::string &modulePackage,
+        const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return false;
+    }
+    bool InstallByBundleName(const std::string &bundleName, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return false;
+    }
+    ErrCode InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId,
+        int32_t &appIndex)
+    {
+        return ERR_OK;
+    }
+    ErrCode UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId)
+    {
+        return ERR_OK;
+    }
+    sptr<IBundleStreamInstaller> CreateStreamInstaller(const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return nullptr;
+    }
+    bool DestoryBundleStreamInstaller(uint32_t streamInstallerId)
+    {
+        return false;
+    }
+    ErrCode StreamInstall(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return ERR_OK;
+    }
+    sptr<IRemoteObject> AsObject()
+    {
+        return nullptr;
+    }
+};
+
 HWTEST_F(BmsBundleMultiuserInstallIPCTest,
     InstallMultiuserInstallTest001_BundleNameEmpty, Function | SmallTest | Level0)
 {
@@ -153,5 +219,15 @@ HWTEST_F(BmsBundleMultiuserInstallIPCTest,
 
     auto result = installerProxy->InstallExisted(bundleName, userId);
     EXPECT_TRUE(result == ERR_BUNDLE_MANAGER_INVALID_USER_ID || result == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+HWTEST_F(BmsBundleMultiuserInstallIPCTest,
+    InstallMultiuserInstallTest001_PureInstall, Function | SmallTest | Level0)
+{
+    EmptyTestBundleInstaller installer;
+    std::string bundleName = "bundleName";
+    int32_t userId = 100;
+    auto res = installer.InstallExisted(bundleName, userId);
+    EXPECT_EQ(res, ERR_OK);
 }
 } // OHOS
