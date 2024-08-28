@@ -3915,5 +3915,48 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0173, Function | SmallTest
     ret = bundleResourceCallback.SetThemeIdForThemeChanged(themeId);
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.number: BmsBundleResourceTest_0174
+ * Function: DeleteResourceInfo
+ * @tc.name: test DeleteResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0174, Function | SmallTest | Level0)
+{
+    BundleResourceHelper::BundleSystemStateInit();
+    BundleResourceHelper::RegisterConfigurationObserver();
+    BundleResourceHelper::RegisterCommonEventSubscriber();
+    BundleResourceHelper::AddResourceInfoByBundleName(BUNDLE_NAME, 100);
+
+    std::string key;
+    bool ret = BundleResourceHelper::DeleteResourceInfo(key);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0175
+ * Function: DeleteResourceInfo
+ * @tc.name: test DeleteResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0175, Function | SmallTest | Level0)
+{
+    bool ret = BundleResourceHelper::DeleteAllResourceInfo();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0176
+ * Function: DeleteResourceInfo
+ * @tc.name: test DeleteResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0176, Function | SmallTest | Level0)
+{
+    std::vector<std::string> resourceNames;
+    BundleResourceHelper::GetAllBundleResourceName(resourceNames);
+    BundleResourceHelper::SetOverlayEnabled(BUNDLE_NAME, "ModuleName", true, 100);
+    BundleResourceHelper::DeleteNotExistResourceInfo();
+    std::string ret = BundleResourceHelper::ParseBundleName("keyName");
+    EXPECT_EQ(ret, "keyName");
+}
 #endif
 } // OHOS
