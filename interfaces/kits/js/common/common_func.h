@@ -213,7 +213,7 @@ static napi_value AsyncCallNativeMethod(napi_env env,
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource, execFunc, completeFunc,
         reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCallbackInfo->asyncWork, napi_qos_user_initiated));
     return promise;
 }
 
