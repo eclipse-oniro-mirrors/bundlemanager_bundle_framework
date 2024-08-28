@@ -975,6 +975,57 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3400, Function | SmallTest |
 }
 
 /**
+ * @tc.number: BundlePermissionMgr_3500
+ * @tc.name: test GetPermissionDefList
+ * @tc.desc: 1.test GetPermissionDefList of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3500, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    RequestPermission reqPermission;
+    innerModuleInfo.requestPermissions.push_back(reqPermission);
+    innerBundleInfo.innerModuleInfos_
+        .emplace(innerBundleInfo.currentPackage_, innerModuleInfo);
+    std::vector<AccessToken::PermissionDef> permDef = BundlePermissionMgr::GetPermissionDefList(innerBundleInfo);
+    EXPECT_EQ(permDef.size(), 0);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_3600
+ * @tc.name: test GetPermissionDefList
+ * @tc.desc: 1.test GetPermissionDefList of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3600, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    
+    DefaultPermission permission;
+    permission.appSignature.push_back("appSignature1");
+    permission.appSignature.push_back("appSignature2");
+    const std::string signature = "appSignature1";
+    bool result = BundlePermissionMgr::MatchSignature(permission, signature);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_3700
+ * @tc.name: test GetPermissionDefList
+ * @tc.desc: 1.test GetPermissionDefList of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3700, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    
+    bool result = BundlePermissionMgr::IsShellTokenType();
+    EXPECT_FALSE(result);
+}
+
+/**
  * @tc.number: AbilityManagerHelper_0100
  * @tc.name: test IsRunning
  * @tc.desc: 1.test IsRunning of AbilityManagerHelper
