@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -109,6 +109,7 @@ const char* JSON_KEY_CONTINUE_TYPE = "continueType";
 const char* JSON_KEY_APP_INDEX = "appIndex";
 const char* JSON_KEY_SKILLS = "skills";
 const char* JSON_KEY_ORIENTATION_ID = "orientationId";
+const char* JSON_KEY_CONTINUE_BUNDLE_NAME = "continueBundleName";
 const uint16_t ABILITY_CAPACITY = 10240; // 10K
 }  // namespace
 
@@ -302,6 +303,14 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     for (auto i = 0; i < continueTypeSize; i++) {
         continueType.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
+
+    int32_t continueBundleNameSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, continueBundleNameSize);
+    CONTAINER_SECURITY_VERIFY(parcel, continueBundleNameSize, &continueBundleNames);
+    for (auto i = 0; i < continueBundleNameSize; ++i) {
+        continueBundleNames.emplace(Str16ToStr8(parcel.ReadString16()));
+    }
+
     linkType = static_cast<LinkType>(parcel.ReadInt32());
 
     int32_t skillsSize;
@@ -480,6 +489,10 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     for (auto &continueTypeItem : continueType) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(continueTypeItem));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, continueBundleNames.size());
+    for (auto &continueBundleNameItem : continueBundleNames) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(continueBundleNameItem));
+    }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(linkType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skills.size());
     for (auto &skill : skills) {
@@ -617,6 +630,7 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_SUPPORT_MIME_TYPES, abilityInfo.supportMimeTypes},
         {JSON_KEY_ISOLATION_PROCESS, abilityInfo.isolationProcess},
         {JSON_KEY_CONTINUE_TYPE, abilityInfo.continueType},
+        {JSON_KEY_CONTINUE_BUNDLE_NAME, abilityInfo.continueBundleNames},
         {JSON_KEY_SKILLS, abilityInfo.skills},
         {JSON_KEY_APP_INDEX, abilityInfo.appIndex},
         {JSON_KEY_ORIENTATION_ID, abilityInfo.orientationId}
@@ -1297,6 +1311,14 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         jsonObjectEnd,
         JSON_KEY_CONTINUE_TYPE,
         abilityInfo.continueType,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::unordered_set<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_CONTINUE_BUNDLE_NAME,
+        abilityInfo.continueBundleNames,
         JsonType::ARRAY,
         false,
         parseResult,

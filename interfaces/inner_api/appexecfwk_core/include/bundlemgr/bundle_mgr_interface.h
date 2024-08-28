@@ -1568,6 +1568,19 @@ public:
     {
         return false;
     }
+
+    /**
+     * @brief Get a list of application package names that continue the specified package name.
+     * @param continueBundleName The package name that is being continued.
+     * @param bundleNames Continue the list of specified package names.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetContinueBundleNames(const std::string &continueBundleName, std::vector<std::string> &bundleNames,
+        int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

@@ -863,6 +863,7 @@ protected:
                     "supportMimeTypes": [],
                     "isolationProcess": false,
                     "continueType": [],
+                    "continueBundleName": [],
                     "appIndex": 0,
                     "orientationId": 0
                 },
