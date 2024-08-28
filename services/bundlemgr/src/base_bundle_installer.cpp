@@ -4367,12 +4367,6 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
 {
     // check app label for inheritance installation
     LOG_D(BMS_TAG_INSTALLER, "CheckAppLabel begin");
-    if (oldInfo.GetMinCompatibleVersionCode() != newInfo.GetMinCompatibleVersionCode()) {
-        return ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME;
-    }
-    if (oldInfo.GetTargetVersion()!= newInfo.GetTargetVersion()) {
-        return ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME;
-    }
     if (!CheckReleaseTypeIsCompatible(oldInfo, newInfo)) {
         return ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME;
     }

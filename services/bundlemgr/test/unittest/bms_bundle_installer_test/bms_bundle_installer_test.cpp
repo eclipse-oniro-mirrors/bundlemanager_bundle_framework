@@ -4927,7 +4927,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0020, Function | SmallTest | Leve
     InnerBundleInfo newInfo;
     oldInfo.baseBundleInfo_->minCompatibleVersionCode = USERID;
     ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -4942,7 +4942,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0040, Function | SmallTest | Leve
     InnerBundleInfo newInfo;
     oldInfo.baseBundleInfo_->targetVersion = USERID;
     ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
