@@ -90,6 +90,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nMultiAppModeType));
     CreateMultiAppModeTypeObject(env, nMultiAppModeType);
 
+    napi_value nApplicationInfoFlag = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nApplicationInfoFlag));
+    CreateApplicationInfoFlagObject(env, nApplicationInfoFlag);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfoSync", GetBundleArchiveInfoSync),
@@ -166,6 +170,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAppCloneBundleInfo", GetAppCloneBundleInfo),
         DECLARE_NAPI_FUNCTION("getAllAppCloneBundleInfo", GetAllAppCloneBundleInfo),
         DECLARE_NAPI_FUNCTION("getAppCloneIdentity", GetAppCloneIdentity),
+        DECLARE_NAPI_PROPERTY("ApplicationInfoFlag", nApplicationInfoFlag),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

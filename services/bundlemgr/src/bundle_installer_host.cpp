@@ -19,6 +19,7 @@
 #include "bundle_clone_installer.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
+#include "bundle_multiuser_installer.h"
 #include "bundle_permission_mgr.h"
 #include "hmp_bundle_installer.h"
 #include "ipc_skeleton.h"
@@ -104,6 +105,9 @@ int BundleInstallerHost::OnRemoteRequest(
             break;
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_HMP_BUNDLE):
             HandleInstallHmpBundle(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_EXISTED):
+            HandleInstallExisted(data, reply);
             break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -863,6 +867,42 @@ ErrCode BundleInstallerHost::InstallHmpBundle(const std::string &filePath, bool 
     }
     std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();
     return installer->InstallHmpBundle(filePath, isNeedRollback);
+}
+
+ErrCode BundleInstallerHost::InstallExisted(const std::string &bundleName, int32_t userId)
+{
+    LOG_D(BMS_TAG_INSTALLER, "params[bundleName: %{public}s, user_id: %{public}d]",
+        bundleName.c_str(), userId);
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "install existed app failed due to error parameters");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api bundleName: %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        LOG_E(BMS_TAG_INSTALLER, "InstallExisted permission denied");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    std::shared_ptr<BundleMultiUserInstaller> installer = std::make_shared<BundleMultiUserInstaller>();
+    return installer->InstallExistedApp(bundleName, userId);
+}
+
+void BundleInstallerHost::HandleInstallExisted(MessageParcel &data, MessageParcel &reply)
+{
+    LOG_D(BMS_TAG_INSTALLER, "handle install existed app message");
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+
+    LOG_I(BMS_TAG_INSTALLER, "receive InstallExisted Request -n %{public}s -u %{public}d",
+        bundleName.c_str(), userId);
+
+    auto ret = InstallExisted(bundleName, userId);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "write failed");
+    }
+    LOG_D(BMS_TAG_INSTALLER, "handle installExisted message finished");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

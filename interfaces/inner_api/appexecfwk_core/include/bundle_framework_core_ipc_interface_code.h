@@ -235,6 +235,7 @@ enum class BundleInstallerInterfaceCode : uint8_t {
     INSTALL_CLONE_APP,
     UNINSTALL_CLONE_APP,
     INSTALL_HMP_BUNDLE,
+    INSTALL_EXISTED,
 };
 
 /* SAID: 401-28 Interface No.28 subservice also provides the following interfaces */

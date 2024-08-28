@@ -82,6 +82,7 @@ const char* HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
 const char* CREATE_APP_CLONE = "CreateAppClone";
 const char* DESTROY_APP_CLONE = "destroyAppClone";
+const char* INSTALL_PREEXISTING_APP = "installPreexistingApp";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
@@ -398,6 +399,8 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_UNINSTALL_FROM_BMS_EXTENSION_FAILED, ERROR_BUNDLE_NOT_EXIST},
         { IStatusReceiver::ERR_INSTALL_SELF_UPDATE_NOT_MDM, ERROR_INSTALL_SELF_UPDATE_NOT_MDM},
         { IStatusReceiver::ERR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED, ERROR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED},
+        { IStatusReceiver::ERR_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED,
+            ERROR_INSTALL_EXISTED_ENTERPRISE_NOT_ALLOWED_ERROR},
         { IStatusReceiver::ERR_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME, ERROR_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME},
         { IStatusReceiver::ERR_INSTALL_GWP_ASAN_ENABLED_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT},
         { IStatusReceiver::ERR_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED, ERROR_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED},
@@ -1801,6 +1804,103 @@ napi_value DestroyAppClone(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo.get(), DESTROY_APP_CLONE, DestroyAppCloneExec, DestroyAppCloneComplete);
     asyncCallbackInfo.release();
     APP_LOGI("call napi destroyAppTwin done");
+    return promise;
+}
+
+static ErrCode InnerInstallPreexistingApp(std::string &bundleName, int32_t userId)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode result = iBundleInstaller->InstallExisted(bundleName, userId);
+    APP_LOGD("result is %{public}d", result);
+    return result;
+}
+
+void InstallPreexistingAppExec(napi_env env, void *data)
+{
+    InstallPreexistingAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallPreexistingAppCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
+        return;
+    }
+    APP_LOGD("param: bundleName = %{public}s, userId = %{public}d",
+        asyncCallbackInfo->bundleName.c_str(),
+        asyncCallbackInfo->userId);
+    asyncCallbackInfo->err =
+        InnerInstallPreexistingApp(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId);
+}
+
+void InstallPreexistingAppComplete(napi_env env, napi_status status, void *data)
+{
+    InstallPreexistingAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallPreexistingAppCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<InstallPreexistingAppCallbackInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
+    APP_LOGD("err is %{public}d", asyncCallbackInfo->err);
+
+    napi_value result[ARGS_SIZE_ONE] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
+    } else {
+        result[FIRST_PARAM] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            INSTALL_PREEXISTING_APP, Constants::PERMISSION_INSTALL_BUNDLE);
+    }
+    CommonFunc::NapiReturnDeferred<InstallPreexistingAppCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value InstallPreexistingApp(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("begin");
+    NapiArg args(env, info);
+    std::unique_ptr<InstallPreexistingAppCallbackInfo> asyncCallbackInfo
+        = std::make_unique<InstallPreexistingAppCallbackInfo>(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGW("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGW("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    size_t argc = args.GetMaxArgc();
+    for (size_t i = 0; i < argc; ++i) {
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
+                APP_LOGW("parse bundleName failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGW("parse userId failed");
+            }
+        } else {
+            APP_LOGW("The number of parameters is incorrect");
+            BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    if (asyncCallbackInfo->userId == Constants::UNSPECIFIED_USERID) {
+        asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<InstallPreexistingAppCallbackInfo>(
+        env, asyncCallbackInfo.get(), INSTALL_PREEXISTING_APP,
+        InstallPreexistingAppExec, InstallPreexistingAppComplete);
+    asyncCallbackInfo.release();
+    APP_LOGI("call napi done");
     return promise;
 }
 } // AppExecFwk
