@@ -1382,7 +1382,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::lock_guard lock {mtx};
     InnerBundleInfo oldInfo;
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName, oldInfo)) {
         LOG_W(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
@@ -1444,6 +1444,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
         return RemoveBundleUserData(oldInfo, installParam.isKeepData);
     }
+    dataMgr_->DisableBundle(bundleName);
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall already start");
