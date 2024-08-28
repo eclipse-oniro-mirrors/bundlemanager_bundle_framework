@@ -176,9 +176,9 @@ void BaseBundleInstaller::SendStartInstallNotify(const InstallParam &installPara
             bundleName_.c_str(), item.second.GetCurModuleName().c_str(),
             item.second.GetAppId().c_str(), item.second.GetAppIdentifier().c_str());
         NotifyBundleEvents installRes = {
+            .type = NotifyType::START_INSTALL,
             .bundleName = bundleName_,
             .modulePackage = item.second.GetCurModuleName(),
-            .type = NotifyType::START_INSTALL,
             .appId = item.second.GetAppId(),
             .appIdentifier = item.second.GetAppIdentifier()
         };
@@ -200,17 +200,17 @@ ErrCode BaseBundleInstaller::InstallBundle(
     ErrCode result = ProcessBundleInstall(bundlePaths, installParam, appType, uid);
     if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty()) {
         NotifyBundleEvents installRes = {
+            .isModuleUpdate = isModuleUpdate_,
+            .type = GetNotifyType(),
+            .resultCode = result,
+            .accessTokenId = accessTokenId_,
+            .uid = uid,
+            .bundleType = static_cast<int32_t>(bundleType_),
+            .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .bundleName = bundleName_,
             .modulePackage = moduleName_,
             .abilityName = mainAbility_,
-            .resultCode = result,
-            .type = GetNotifyType(),
-            .uid = uid,
-            .accessTokenId = accessTokenId_,
-            .isModuleUpdate = isModuleUpdate_,
             .appDistributionType = appDistributionType_,
-            .bundleType = static_cast<int32_t>(bundleType_),
-            .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_
         };
         if (installParam.allUser) {
             AddBundleStatus(installRes);
@@ -246,14 +246,14 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
     ErrCode result = ProcessInstallBundleByBundleName(bundleName, installParam, uid);
     if (installParam.needSendEvent && dataMgr_ && !bundleName.empty()) {
         NotifyBundleEvents installRes = {
-            .bundleName = bundleName,
-            .resultCode = result,
             .type = NotifyType::INSTALL,
-            .uid = uid,
+            .resultCode = result,
             .accessTokenId = accessTokenId_,
-            .appDistributionType = appDistributionType_,
+            .uid = uid,
             .bundleType = static_cast<int32_t>(bundleType_),
-            .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_
+            .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
+            .bundleName = bundleName,
+            .appDistributionType = appDistributionType_
         };
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
@@ -282,13 +282,13 @@ ErrCode BaseBundleInstaller::Recover(
     ErrCode result = ProcessRecover(bundleName, installParam, uid);
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
-            .bundleName = bundleName,
-            .resultCode = result,
             .type = NotifyType::INSTALL,
-            .uid = uid,
+            .resultCode = result,
             .accessTokenId = accessTokenId_,
-            .appDistributionType = appDistributionType_,
-            .bundleType = static_cast<int32_t>(bundleType_)
+            .uid = uid,
+            .bundleType = static_cast<int32_t>(bundleType_),
+            .bundleName = bundleName,
+            .appDistributionType = appDistributionType_
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
@@ -331,15 +331,15 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     }
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
-            .bundleName = bundleName,
-            .resultCode = result,
-            .type = NotifyType::UNINSTALL_BUNDLE,
-            .uid = uid,
-            .accessTokenId = accessTokenId_,
             .isAgingUninstall = installParam.isAgingUninstall,
             .isBmsExtensionUninstalled = isUninstalledFromBmsExtension,
-            .appId = uninstallBundleAppId_,
-            .bundleType = static_cast<int32_t>(bundleType_)
+            .type = NotifyType::UNINSTALL_BUNDLE,
+            .resultCode = result,
+            .accessTokenId = accessTokenId_,
+            .uid = uid,
+            .bundleType = static_cast<int32_t>(bundleType_),
+            .bundleName = bundleName,
+            .appId = uninstallBundleAppId_
         };
 
         if (installParam.concentrateSendEvent) {
@@ -527,16 +527,16 @@ ErrCode BaseBundleInstaller::UninstallBundle(
     }
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
-            .bundleName = bundleName,
-            .modulePackage = modulePackage,
-            .resultCode = result,
-            .type = NotifyType::UNINSTALL_MODULE,
-            .uid = uid,
-            .accessTokenId = accessTokenId_,
             .isAgingUninstall = installParam.isAgingUninstall,
             .isBmsExtensionUninstalled = isUninstalledFromBmsExtension,
-            .appId = uninstallBundleAppId_,
-            .bundleType = static_cast<int32_t>(bundleType_)
+            .type = NotifyType::UNINSTALL_MODULE,
+            .resultCode = result,
+            .accessTokenId = accessTokenId_,
+            .uid = uid,
+            .bundleType = static_cast<int32_t>(bundleType_),
+            .bundleName = bundleName,
+            .modulePackage = modulePackage,
+            .appId = uninstallBundleAppId_
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");

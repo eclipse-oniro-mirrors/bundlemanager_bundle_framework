@@ -1433,11 +1433,11 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
         return;
     }
     NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = ERR_OK,
         .type = NotifyType::BUNDLE_CACHE_CLEARED,
+        .resultCode = ERR_OK,
+        .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
-        .accessTokenId = innerBundleUserInfo.accessTokenId
+        .bundleName = bundleName
     };
     NotifyBundleStatus(installRes);
 }
@@ -1584,12 +1584,12 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             }
             int32_t uid = cloneInfoIter->second.uid;
             installRes = {
-                .bundleName = bundleName,
-                .resultCode = ERR_OK,
                 .type = NotifyType::BUNDLE_CACHE_CLEARED,
-                .uid = uid,
+                .resultCode = ERR_OK,
                 .accessTokenId = innerBundleUserInfo.accessTokenId,
-                .appIndex = appIndex
+                .uid = uid,
+                .appIndex = appIndex,
+                .bundleName = bundleName
             };
             NotifyBundleStatus(installRes);
             return;
@@ -2089,12 +2089,12 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
     }
 
     NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = ERR_OK,
+        .isApplicationEnabled = isEnable,
         .type = NotifyType::APPLICATION_ENABLE,
-        .uid = innerBundleUserInfo.uid,
+        .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
-        .isApplicationEnabled = isEnable
+        .uid = innerBundleUserInfo.uid,
+        .bundleName = bundleName
     };
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     NotifyBundleStatus(installRes);
@@ -2142,12 +2142,12 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
     }
 
     NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = ERR_OK,
         .type = NotifyType::APPLICATION_ENABLE,
-        .uid = innerBundleUserInfo.uid,
+        .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
-        .appIndex = appIndex
+        .uid = innerBundleUserInfo.uid,
+        .appIndex = appIndex,
+        .bundleName = bundleName
     };
     NotifyBundleStatus(installRes);
     APP_LOGD("SetCloneApplicationEnabled finish");
@@ -2226,9 +2226,13 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    NotifyBundleEvents installRes = {.bundleName = abilityInfo.bundleName, .abilityName = abilityInfo.name,
-        .resultCode = ERR_OK, .type = NotifyType::APPLICATION_ENABLE, .uid = innerBundleUserInfo.uid,
+    NotifyBundleEvents installRes = {
+        .type = NotifyType::APPLICATION_ENABLE,
+        .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
+        .uid = innerBundleUserInfo.uid,
+        .bundleName = abilityInfo.bundleName,
+        .abilityName = abilityInfo.name
     };
     NotifyBundleStatus(installRes);
     return ERR_OK;
@@ -2271,9 +2275,13 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    NotifyBundleEvents installRes = {.bundleName = abilityInfo.bundleName, .abilityName = abilityInfo.name,
-        .resultCode = ERR_OK, .type = NotifyType::APPLICATION_ENABLE, .uid = innerBundleUserInfo.uid,
-        .accessTokenId = innerBundleUserInfo.accessTokenId, .appIndex = appIndex
+    NotifyBundleEvents installRes = {
+        .type = NotifyType::APPLICATION_ENABLE,
+        .resultCode = ERR_OK,
+        .accessTokenId = innerBundleUserInfo.accessTokenId, .appIndex = appIndex,
+        .uid = innerBundleUserInfo.uid,
+        .bundleName = abilityInfo.bundleName,
+        .abilityName = abilityInfo.name
     };
     NotifyBundleStatus(installRes);
     return ERR_OK;

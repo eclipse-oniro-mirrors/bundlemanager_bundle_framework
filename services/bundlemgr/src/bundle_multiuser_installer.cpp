@@ -54,12 +54,12 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     ErrCode result = ProcessBundleInstall(bundleName, userId);
     NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = result,
         .type = NotifyType::INSTALL,
-        .uid = uid_,
+        .resultCode = result,
         .accessTokenId = accessTokenId_,
+        .uid = uid_,
         .appIndex = 0,
+        .bundleName = bundleName
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);

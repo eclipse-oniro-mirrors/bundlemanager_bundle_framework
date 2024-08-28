@@ -54,12 +54,12 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
 
     ErrCode result = ProcessCloneBundleInstall(bundleName, userId, appIndex);
     NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = result,
         .type = NotifyType::INSTALL,
-        .uid = uid_,
+        .resultCode = result,
         .accessTokenId = accessTokenId_,
+        .uid = uid_,
         .appIndex = appIndex,
+        .bundleName = bundleName,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -80,12 +80,12 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
 
     ErrCode result = ProcessCloneBundleUninstall(bundleName, userId, appIndex);
     NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = result,
         .type = NotifyType::UNINSTALL_BUNDLE,
-        .uid = uid_,
+        .resultCode = result,
+        .bundleName = bundleName,
         .accessTokenId = accessTokenId_,
-        .appIndex = appIndex,
+        .uid = uid_,
+        .appIndex = appIndex
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
