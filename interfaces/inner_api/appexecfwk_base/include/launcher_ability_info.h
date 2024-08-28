@@ -27,8 +27,8 @@ struct LauncherAbilityInfo {
 public:
     ApplicationInfo applicationInfo;
     ElementName elementName; // bundle name , ability name, deviceid
-    int32_t labelId = 0;
-    int32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t iconId = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     int64_t installTime = 0;
 };

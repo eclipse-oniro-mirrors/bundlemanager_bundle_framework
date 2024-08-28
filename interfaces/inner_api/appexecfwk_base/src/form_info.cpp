@@ -157,8 +157,8 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     formVisibleNotify = parcel.ReadBool();
     isStatic = parcel.ReadBool();
     defaultDimension = parcel.ReadInt32();
-    displayNameId = parcel.ReadInt32();
-    descriptionId = parcel.ReadInt32();
+    displayNameId = parcel.ReadUint32();
+    descriptionId = parcel.ReadUint32();
     updateDuration = parcel.ReadInt32();
 
     int32_t typeData;
@@ -251,8 +251,8 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, formVisibleNotify);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isStatic);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, defaultDimension);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, displayNameId);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, displayNameId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, updateDuration);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(uiSyntax));

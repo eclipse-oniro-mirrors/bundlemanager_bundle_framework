@@ -55,8 +55,8 @@ struct Distro {
 struct DefinePermission {
     bool provisionEnable = true;
     bool distributedSceneEnable = false;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
     std::string name;
     std::string grantMode = Profile::DEFINEPERMISSION_GRANT_MODE_SYSTEM_GRANT;
     std::string availableLevel = Profile::DEFINEPERMISSION_AVAILABLE_LEVEL_DEFAULT_VALUE;
@@ -78,9 +78,9 @@ struct InnerModuleInfo {
     bool needDelete = false;
     uint32_t innerModuleInfoFlag = 0;
     bool ubsanEnabled = false;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
-    int32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
+    uint32_t iconId = 0;
     int32_t upgradeFlag = 0;
     int32_t targetPriority;
     uint32_t versionCode = 0;
@@ -145,7 +145,7 @@ struct InnerModuleInfo {
 };
 
 struct ExtendResourceInfo {
-    int32_t iconId = 0;
+    uint32_t iconId = 0;
     std::string moduleName;
     std::string filePath;
 };
@@ -1219,12 +1219,12 @@ public:
         curDynamicIconModule_ = curDynamicIconModule;
     }
 
-    int32_t GetIconId() const
+    uint32_t GetIconId() const
     {
         return baseApplicationInfo_->iconId;
     }
 
-    void SetIconId(int32_t iconId)
+    void SetIconId(uint32_t iconId)
     {
         baseApplicationInfo_->iconId = iconId;
     }

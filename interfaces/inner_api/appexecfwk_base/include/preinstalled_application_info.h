@@ -25,8 +25,8 @@ namespace AppExecFwk {
 struct PreinstalledApplicationInfo : public Parcelable {
     std::string bundleName;
     std::string moduleName;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

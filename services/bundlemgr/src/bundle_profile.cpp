@@ -141,8 +141,8 @@ struct App {
     bool singleton = false;
     bool userDataClearable = true;
     bool asanEnabled = false;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
     std::vector<std::string> targetBundleList;
 };
 
@@ -225,7 +225,7 @@ struct Forms {
     bool isDefault = false;
     bool updateEnabled = false;
     bool formVisibleNotify = false;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     int32_t updateDuration = 0;
     std::string name;
     std::string description;
@@ -269,12 +269,12 @@ struct Ability {
     bool supportPipMode = false;
     bool formsEnabled = false;
     bool removeMissionAfterTerminate = false;
-    int32_t descriptionId = 0;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
+    uint32_t descriptionId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
     int32_t priority = 0;
-    int32_t startWindowIconId = 0;
-    int32_t startWindowBackgroundId = 0;
+    uint32_t startWindowIconId = 0;
+    uint32_t startWindowBackgroundId = 0;
     std::string name;
     std::string originalName;
     std::string description;
@@ -329,8 +329,8 @@ struct Shortcut {
     std::string shortcutId;
     std::string label;
     std::string icon;
-    int32_t iconId;
-    int32_t labelId;
+    uint32_t iconId;
+    uint32_t labelId;
     std::vector<Intent> intents;
 };
 
@@ -340,7 +340,7 @@ struct Module {
     std::string name;
     std::string description;
     bool isLibIsolated = false;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     std::string colorMode = "auto";
     std::vector<std::string> supportedModes;
     std::vector<std::string> reqCapabilities;
@@ -500,7 +500,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         PROFILE_KEY_ICON_ID,
         app.iconId,
@@ -508,7 +508,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         PROFILE_KEY_LABEL_ID,
         app.labelId,
@@ -1491,7 +1491,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         BUNDLE_MODULE_PROFILE_KEY_START_WINDOW_ICON_ID,
         ability.startWindowIconId,
@@ -1507,7 +1507,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         BUNDLE_MODULE_PROFILE_KEY_START_WINDOW_BACKGROUND_ID,
         ability.startWindowBackgroundId,
@@ -1671,7 +1671,7 @@ void from_json(const nlohmann::json &jsonObject, Shortcut &shortcut)
         g_parseResult,
         ArrayType::OBJECT);
     // get label id
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
          jsonObjectEnd,
          PROFILE_KEY_LABEL_ID,
          shortcut.labelId,
@@ -1680,7 +1680,7 @@ void from_json(const nlohmann::json &jsonObject, Shortcut &shortcut)
          g_parseResult,
          ArrayType::NOT_ARRAY);
     // get icon id
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
          jsonObjectEnd,
          BUNDLE_MODULE_PROFILE_KEY_ICON_ID,
          shortcut.iconId,
@@ -1743,7 +1743,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         PROFILE_KEY_DESCRIPTION_ID,
         module.descriptionId,

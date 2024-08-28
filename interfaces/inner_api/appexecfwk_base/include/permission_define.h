@@ -30,10 +30,10 @@ struct PermissionDef : public Parcelable {
     int32_t availableLevel = 1;
     bool provisionEnable = true;
     bool distributedSceneEnable = false;
-    int32_t labelId = 0;
+    uint32_t labelId = 0;
     std::string label;
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     int32_t availableType = 1;
 
     bool ReadFromParcel(Parcel &parcel);
