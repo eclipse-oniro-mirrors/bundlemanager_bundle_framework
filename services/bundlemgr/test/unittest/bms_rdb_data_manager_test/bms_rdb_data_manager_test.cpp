@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -288,6 +288,50 @@ HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0600, Function | SmallTest 
     ASSERT_NE(dataStorage, nullptr);
     bool ret = dataStorage->ResetKvStore();
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleDataStorageRdb_0700
+ * @tc.name: SaveStorageBundleInfo
+ * @tc.desc: 1.SaveStorageBundleInfo
+ */
+HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0700, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+    dataStorage->rdbDataManager_ = nullptr;
+    InnerBundleInfo innerBundleInfo;
+    bool ret = dataStorage->SaveStorageBundleInfo(innerBundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleDataStorageRdb_0800
+ * @tc.name: DeleteStorageBundleInfo
+ * @tc.desc: 1.DeleteStorageBundleInfo
+ */
+HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0800, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+    dataStorage->rdbDataManager_ = nullptr;
+    InnerBundleInfo innerBundleInfo;
+    bool ret = dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleDataStorageRdb_0900
+ * @tc.name: BackupRdb
+ * @tc.desc: 1.BackupRdb
+ */
+HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0900, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+    dataStorage->isBackingUp_ = false;
+    dataStorage->BackupRdb();
+    EXPECT_TRUE(dataStorage->isBackingUp_);
 }
 
 /**
