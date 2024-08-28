@@ -32,6 +32,8 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
 
+std::mutex gCloneInstallerMutex;
+
 BundleCloneInstaller::BundleCloneInstaller()
 {
     APP_LOGD("bundle clone installer instance is created");
@@ -143,10 +145,10 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
 
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
 
+    std::lock_guard<std::mutex> cloneGuard(gCloneInstallerMutex);
     // 1. check whether original application installed or not
-    ScopeGuard bundleEnabledGuard([&] { dataMgr->EnableBundle(bundleName); });
     InnerBundleInfo info;
-    bool isExist = dataMgr->GetInnerBundleInfo(bundleName, info);
+    bool isExist = dataMgr->FetchInnerBundleInfo(bundleName, info);
     if (!isExist) {
         APP_LOGE("the bundle is not installed");
         return ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED;
@@ -204,13 +206,6 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     };
     uid_ = uid;
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
-    ScopeGuard addCloneBundleGuard([&] { dataMgr->RemoveCloneBundle(bundleName, userId, appIndex); });
-    ErrCode addRes = dataMgr->AddCloneBundle(bundleName, attr);
-    if (addRes != ERR_OK) {
-        APP_LOGE("dataMgr add clone bundle fail, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
-            bundleName.c_str(), userId, appIndex);
-        return addRes;
-    }
 
     ErrCode result = CreateCloneDataDir(info, userId, uid, appIndex);
     if (result != ERR_OK) {
@@ -218,6 +213,14 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         return result;
     }
     ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex); });
+
+    ScopeGuard addCloneBundleGuard([&] { dataMgr->RemoveCloneBundle(bundleName, userId, appIndex); });
+    ErrCode addRes = dataMgr->AddCloneBundle(bundleName, attr);
+    if (addRes != ERR_OK) {
+        APP_LOGE("dataMgr add clone bundle fail, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+            bundleName.c_str(), userId, appIndex);
+        return addRes;
+    }
 
     // process icon and label
     {
@@ -228,6 +231,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         }
     }
     AddKeyOperation(bundleName, appIndex, userId, uid);
+
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
     createCloneDataDirGuard.Dismiss();
