@@ -21,7 +21,7 @@ using ErrCode = int;
 namespace OHOS {
 namespace CJSystemapi {
 namespace BundleManager {
- 
+
 constexpr ErrCode SUCCESS_CODE = 0;
 constexpr ErrCode ERROR_PERMISSION_DENIED_ERROR = 201;
 constexpr ErrCode ERROR_NOT_SYSTEM_APP = 202;
@@ -91,6 +91,11 @@ constexpr ErrCode ERROR_DELETE_ABC = 17700202;
 constexpr ErrCode ERR_ZLIB_SRC_FILE_INVALID = 900001;
 constexpr ErrCode ERR_ZLIB_DEST_FILE_INVALID = 900002;
 constexpr ErrCode ERR_ZLIB_SRC_FILE_FORMAT_ERROR_OR_DAMAGED = 900003;
+
+constexpr ErrCode ERR_ZLIB_SRC_FILE_DISABLED = 8521240;
+constexpr ErrCode ERR_ZLIB_DEST_FILE_DISABLED = 8521241;
+constexpr ErrCode ERR_ZLIB_SERVICE_DISABLED = 8521242;
+constexpr ErrCode ERR_ZLIB_SRC_FILE_FORMAT_ERROR = 8521243;
  
 } // BundleManager
 } // CJSystemapi

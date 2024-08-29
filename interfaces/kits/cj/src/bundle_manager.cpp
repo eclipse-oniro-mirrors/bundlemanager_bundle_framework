@@ -16,7 +16,7 @@
 #include <shared_mutex>
 
 #include "bundle_manager.h"
-#include "bundle_manager_log.h"
+#include "app_log_wrapper.h"
 #include "bundle_info.h"
 #include "bundle_mgr_proxy.h"
 #include "common_func.h"
@@ -33,7 +33,7 @@ namespace BundleManager {
 
 AppExecFwk::BundleInfo BundleManagerImpl::GetBundleInfoForSelf(int32_t bundleFlags)
 {
-    LOGI("BundleManagerImpl::GetBundleInfoForSelf inter");
+    APP_LOGI("BundleManagerImpl::GetBundleInfoForSelf inter");
     auto iBundleMgr = AppExecFwk::CommonFunc::GetBundleMgr();
     AppExecFwk::BundleInfo bundleInfo;
     iBundleMgr->GetBundleInfoForSelf(bundleFlags, bundleInfo);
@@ -44,7 +44,7 @@ int32_t BundleManagerImpl::VerifyAbc(std::vector<std::string> abcPaths, bool fla
 {
     auto verifyManager = AppExecFwk::CommonFunc::GetVerifyManager();
     if (verifyManager == nullptr) {
-        LOGE("VerifyAbc failed due to iBundleMgr is null");
+        APP_LOGE("VerifyAbc failed due to iBundleMgr is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
  
@@ -61,7 +61,7 @@ int32_t checkExtensionAbilityInfoExist(const std::string& abilityName,
 {
     if (abilityInfo.name == abilityName) {
         if (!abilityInfo.enabled) {
-            LOGE("checkExtensionAbilityInfoExist failed by ability disabled");
+            APP_LOGE("checkExtensionAbilityInfoExist failed by ability disabled");
             return ERROR_ABILITY_IS_DISABLED;
         }
         targetAbilityInfo = abilityInfo;
@@ -109,12 +109,12 @@ std::tuple<int32_t, std::vector<std::string>> BundleManagerImpl::GetProfileByExt
     std::string moduleName, std::string extensionAbilityName, char* metadataName)
 {
     if (moduleName.empty()) {
-        LOGE("GetProfileByExtensionAbility failed due to empty moduleName");
+        APP_LOGE("GetProfileByExtensionAbility failed due to empty moduleName");
         return {ERROR_MODULE_NOT_EXIST, {}};
     }
 
     if (extensionAbilityName.empty()) {
-        LOGE("GetProfileByExtensionAbility failed due to empty extensionAbilityName");
+        APP_LOGE("GetProfileByExtensionAbility failed due to empty extensionAbilityName");
         return {ERROR_ABILITY_NOT_EXIST, {}};
     }
     auto naBundleMgr = AppExecFwk::CommonFunc::GetBundleMgr();
@@ -130,19 +130,19 @@ std::tuple<int32_t, std::vector<std::string>> BundleManagerImpl::GetProfileByExt
     ErrCode ret = AppExecFwk::CommonFunc::ConvertErrCode(
         naBundleMgr->GetBundleInfoForSelf(getExtensionFlag, bundleInfo));
     if (ret != ERR_OK) {
-        LOGE("GetProfileByExAbility failed");
+        APP_LOGE("GetProfileByExAbility failed");
         return {ret, {}};
     }
     AppExecFwk::ExtensionAbilityInfo targetExtensionInfo;
     ret = CheckExtensionFromBundleInfo(bundleInfo, extensionAbilityName, moduleName, targetExtensionInfo);
     if (ret != ERR_OK) {
-        LOGE("GetProfileByExAbility failed by CheckExtensionFromBundleInfo");
+        APP_LOGE("GetProfileByExAbility failed by CheckExtensionFromBundleInfo");
         return {ret, {}};
     }
     AppExecFwk::BundleMgrClient client;
     std::vector<std::string> profileVec;
     if (!client.GetProfileFromExtension(targetExtensionInfo, metadataName, profileVec)) {
-        LOGE("GetProfileByExAbility failed by GetProfileFromExtension");
+        APP_LOGE("GetProfileByExAbility failed by GetProfileFromExtension");
         return {ERROR_PROFILE_NOT_EXIST, {}};
     }
     return {SUCCESS_CODE, profileVec};
@@ -153,7 +153,7 @@ int32_t checkAbilityInfoExist(const std::string& abilityName, const AppExecFwk::
 {
     if (abilityInfo.name == abilityName) {
         if (!abilityInfo.enabled) {
-            LOGE("checkAbilityInfoExist failed by ability disabled");
+            APP_LOGE("checkAbilityInfoExist failed by ability disabled");
             return ERROR_ABILITY_IS_DISABLED;
         }
         targetAbilityInfo = abilityInfo;
@@ -199,13 +199,13 @@ ErrCode CheckAbilityFromBundleInfo(const AppExecFwk::BundleInfo& bundleInfo, con
 std::tuple<int32_t, std::vector<std::string>> BundleManagerImpl::GetProfileByAbility(
     std::string moduleName, std::string abilityName, char* metadataName)
 {
-    LOGI("GetProfileByAbility called");
+    APP_LOGI("GetProfileByAbility called");
     if (moduleName.empty()) {
-        LOGE("GetProfileByAbility failed due to empty moduleName");
+        APP_LOGE("GetProfileByAbility failed due to empty moduleName");
         return {ERROR_MODULE_NOT_EXIST, {}};
     }
     if (abilityName.empty()) {
-        LOGE("GetProfileByAbility failed due to empty abilityName");
+        APP_LOGE("GetProfileByAbility failed due to empty abilityName");
         return {ERROR_ABILITY_NOT_EXIST, {}};
     }
     auto iBundleMgr = AppExecFwk::CommonFunc::GetBundleMgr();
@@ -219,19 +219,19 @@ std::tuple<int32_t, std::vector<std::string>> BundleManagerImpl::GetProfileByAbi
     AppExecFwk::BundleInfo bundleInfo;
     ErrCode ret = AppExecFwk::CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoForSelf(getAbilityFlag, bundleInfo));
     if (ret != ERR_OK) {
-        LOGE("GetProfileByAbility failed");
+        APP_LOGE("GetProfileByAbility failed");
         return {ret, {}};
     }
     AppExecFwk::AbilityInfo targetAbilityInfo;
     ret = CheckAbilityFromBundleInfo(bundleInfo, abilityName, moduleName, targetAbilityInfo);
     if (ret != ERR_OK) {
-        LOGE("GetProfileByAbility failed by CheckAbilityFromBundleInfo");
+        APP_LOGE("GetProfileByAbility failed by CheckAbilityFromBundleInfo");
         return {ret, {}};
     }
     AppExecFwk::BundleMgrClient client;
     std::vector<std::string> profileVec;
     if (!client.GetProfileFromAbility(targetAbilityInfo, metadataName, profileVec)) {
-        LOGE("GetProfileByAbility failed by GetProfileFromAbility");
+        APP_LOGE("GetProfileByAbility failed by GetProfileFromAbility");
         return {ERROR_PROFILE_NOT_EXIST, {}};
     }
     return {SUCCESS_CODE, profileVec};

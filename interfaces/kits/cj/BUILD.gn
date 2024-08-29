@@ -22,9 +22,12 @@ ohos_shared_library("cj_bundle_manager_ffi") {
   }
 
   include_dirs = [
+    "${bundle_framework_path}/common/log/include",
     "src",
     "${base_path}/include",
     "${kits_path}/js/bundle_manager",
+    "${kits_path}/js/default_app",
+    "${kits_path}/js/zip/include",
     "${kits_path}/js/common",
   ]
 
@@ -37,9 +40,17 @@ ohos_shared_library("cj_bundle_manager_ffi") {
 
   if (product_name != "ohos-sdk") {
     sources = [
+      "${kits_path}/js/zip/src/file_path.cpp",
+      "${kits_path}/js/zip/src/zip_internal.cpp",
+      "${kits_path}/js/zip/src/zip_reader.cpp",
+      "${kits_path}/js/zip/src/zip_utils.cpp",
+      "${kits_path}/js/zip/src/zip_writer.cpp",
       "src/bundle_manager.cpp",
       "src/bundle_manager_convert.cpp",
       "src/bundle_manager_ffi.cpp",
+      "src/cj_zip.cpp",
+      "src/default_app.cpp",
+      "src/zip_ffi.cpp",
     ]
 
     deps = [
@@ -47,15 +58,19 @@ ohos_shared_library("cj_bundle_manager_ffi") {
       "${common_path}:libappexecfwk_common",
       "${core_path}:appexecfwk_core",
       "${kits_path}/js/common:bundle_napi_common",
+      "${kits_path}/js/zip:zlib",
     ]
 
     external_deps = [
       "ability_base:want",
       "c_utils:utils",
+      "eventhandler:libeventhandler",
       "hilog:libhilog",
       "ipc:ipc_core",
       "napi:ace_napi",
       "napi:cj_bind_ffi",
+      "samgr:samgr_proxy",
+      "zlib:shared_libz",
     ]
   } else {
     defines += [ "PREVIEWER" ]

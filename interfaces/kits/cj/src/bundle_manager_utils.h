@@ -53,8 +53,12 @@ namespace BundleManager {
         char** head;
         int64_t size;
     };
-    
 
+    struct MultiAppMode {
+        int32_t multiAppModeType;
+        int32_t count;
+    };
+    
     struct RetApplicationInfo {
         char* name;
         char* description;
@@ -81,6 +85,11 @@ namespace BundleManager {
         bool debug;
         bool dataUnclearable;
         bool cloudFileSyncEnabled;
+        char* nativeLibraryPath;
+        MultiAppMode multiAppMode;
+        int32_t appIndex;
+        char* installSource;
+        char* releaseType;
     };
 
     struct CArrInt32 {
@@ -97,6 +106,35 @@ namespace BundleManager {
         uint32_t minWindowHeight;
     };
 
+    struct RetSkillUri {
+        char* scheme;
+        char* host;
+        char* port;
+        char* path;
+        char* pathStartWith;
+        char* pathRegex;
+        char* type;
+        char* utd;
+        int32_t maxFileSupported;
+        char* linkFeature;
+    };
+
+    struct RetCArrSkillUri {
+        RetSkillUri* head;
+        int64_t size;
+    };
+
+    struct RetSkill {
+        CArrString actions;
+        CArrString entities;
+        RetCArrSkillUri uris;
+        bool domainVerify;
+    };
+
+    struct RetCArrSkill {
+        RetSkill* head;
+        int64_t size;
+    };
 
     struct RetAbilityInfo {
         char* bundleName;
@@ -119,6 +157,9 @@ namespace BundleManager {
         bool enabled;
         CArrInt32 supportWindowModes;
         RetWindowSize windowSize;
+        bool excludeFromDock;
+        RetCArrSkill skills;
+        int32_t appIndex;
     };
 
     struct CArrRetAbilityInfo {
@@ -142,6 +183,8 @@ namespace BundleManager {
         char* readPermission;
         char* writePermission;
         char* extensionAbilityTypeName;
+        RetCArrSkill skills;
+        int32_t appIndex;
     };
 
     struct CArrRetExtensionAbilityInfo {
@@ -169,6 +212,28 @@ namespace BundleManager {
         int64_t size;
     };
 
+    struct CDataItem {
+        char* key;
+        char* value;
+    };
+
+    struct CArrDataItem {
+        CDataItem* head;
+        int64_t size;
+    };
+    struct CRouterItem {
+        char* name;
+        char* pageSourceFile;
+        char* buildFunction;
+        CArrDataItem data;
+        char* customData;
+    };
+
+    struct CArrRouterItem {
+        CRouterItem* head;
+        int64_t size;
+    };
+
     struct RetHapModuleInfo {
         char* name;
         char* icon;
@@ -188,6 +253,9 @@ namespace BundleManager {
         CArrRetPreloadItem preloads;
         CArrRetDependency dependencies;
         char* fileContextMenuConfig;
+        CArrRouterItem routerMap;
+        char* codePath;
+        char* nativeLibraryPath;
     };
 
     struct CArrHapInfo {
@@ -240,7 +308,7 @@ namespace BundleManager {
         int32_t code;
         CArrRecoverableApplicationInfo data;
     };
-    
+
     struct RetBundleInfo {
         char* name;
         char* vendor;
@@ -256,6 +324,8 @@ namespace BundleManager {
         int64_t installTime;
         int64_t updateTime;
         int32_t uid;
+        CArrRouterItem routerMap;
+        int32_t appIndex;
     };
 
     enum BundleFlag {
@@ -284,6 +354,8 @@ namespace BundleManager {
         GET_BUNDLE_INFO_WITH_DISABLE = 0x00000040,
         GET_BUNDLE_INFO_WITH_SIGNATURE_INFO = 0x00000080,
         GET_BUNDLE_INFO_WITH_MENU = 0x00000100,
+        GET_BUNDLE_INFO_WITH_ROUTER_MAP = 0x00000200,
+        GET_BUNDLE_INFO_WITH_SKILL = 0x00000800,
     };
 } // BundleManager
 } // CJSystemapi
