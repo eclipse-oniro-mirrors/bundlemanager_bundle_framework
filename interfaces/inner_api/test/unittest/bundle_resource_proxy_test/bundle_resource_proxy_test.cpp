@@ -138,7 +138,7 @@ HWTEST_F(BundleResourceProxyTest, GetBundleResourceInfo_0100, Function | SmallTe
     int32_t appIndex = 1;
     auto ret = proxy->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex);
     GTEST_LOG_(INFO) << "GetBundleResourceInfo_0100 end, " << ret;
-    EXPECT_FALSE(ret);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
