@@ -406,7 +406,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "multiAppModeType":2,
             "maxCount":5
         },
-        "configuration":""
+        "configuration":"",
+        "applicationFlags":1
     },
     "baseBundleInfo":{
         "abilityInfos":[],
@@ -525,7 +526,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
                 "multiAppModeType":2,
                 "maxCount":5
             },
-            "configuration":""
+            "configuration":"",
+            "applicationFlags":1
         },
         "compatibleVersion":9,
         "cpuAbi":"",
@@ -1153,7 +1155,8 @@ protected:
                 "maxChildProcess": 0,
                 "installSource": "unknown",
                 "configuration":"",
-                "cloudFileSyncEnabled": false
+                "cloudFileSyncEnabled": false,
+                "applicationFlags":1
             },
             "baseBundleInfo": {
                 "abilityInfos": [

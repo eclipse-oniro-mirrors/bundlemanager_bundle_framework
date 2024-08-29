@@ -119,6 +119,8 @@ public:
 
     virtual ErrCode InstallHmpBundle(const std::string &filePath, bool isNeedRollback) override;
 
+    virtual ErrCode InstallExisted(const std::string &bundleName, int32_t userId) override;
+
 private:
     bool SendInstallRequest(BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply,
         MessageOption& option);

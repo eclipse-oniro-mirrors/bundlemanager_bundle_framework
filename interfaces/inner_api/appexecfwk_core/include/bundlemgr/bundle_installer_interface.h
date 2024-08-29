@@ -147,6 +147,11 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode InstallExisted(const std::string &bundleName, int32_t userId)
+    {
+        return ERR_OK;
+    }
 };
 
 #define PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                                 \
