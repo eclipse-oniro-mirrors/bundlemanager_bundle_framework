@@ -2978,6 +2978,7 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     appInfo.allowCommonEvent = preBundleConfigInfo.allowCommonEvent;
     appInfo.resourcesApply = preBundleConfigInfo.resourcesApply;
     appInfo.allowAppRunWhenDeviceFirstLocked = preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked;
+    appInfo.allowEnableNotification = preBundleConfigInfo.allowEnableNotification;
     dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
 }
 #endif
