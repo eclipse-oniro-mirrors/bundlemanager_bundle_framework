@@ -722,6 +722,7 @@ private:
     bool IsAppInBlocklist(const std::string &bundleName) const;
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName) const;
     void CheckSystemFreeSizeAndClean() const;
+    void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

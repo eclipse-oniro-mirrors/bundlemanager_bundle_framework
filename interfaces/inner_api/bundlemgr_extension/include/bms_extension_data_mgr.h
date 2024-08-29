@@ -72,6 +72,7 @@ public:
     ErrCode GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
     ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
+    void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier);
 private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;

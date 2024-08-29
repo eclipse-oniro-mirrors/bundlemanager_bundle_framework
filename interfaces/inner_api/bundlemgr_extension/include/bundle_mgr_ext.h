@@ -144,6 +144,10 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
+    virtual void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier)
+    {
+        return;
+    }
 };
 
 } // AppExecFwk

@@ -324,6 +324,9 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     int32_t uid = Constants::INVALID_UID;
     bool isUninstalledFromBmsExtension = false;
     ErrCode result = ProcessBundleUninstall(bundleName, installParam, uid);
+    if (result == ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL) {
+        CheckBundleNameAndStratAbility(bundleName, appIdentifier_);
+    }
     if ((result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE) &&
         (UninstallBundleFromBmsExtension(bundleName) == ERR_OK)) {
         isUninstalledFromBmsExtension = true;
@@ -1422,6 +1425,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     bundleType_ = oldInfo.GetApplicationBundleType();
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
+    appIdentifier_ = oldInfo.GetAppIdentifier();
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
@@ -5819,6 +5823,14 @@ void BaseBundleInstaller::CheckSystemFreeSizeAndClean() const
     BundleMgrHostImpl impl;
     ErrCode ret = impl.CleanBundleCacheFilesAutomatic(FIVE_MB);
     LOG_I(BMS_TAG_INSTALLER, "clean disk ret:%{public}d", ret);
+}
+
+void BaseBundleInstaller::CheckBundleNameAndStratAbility(const std::string &bundleName,
+    const std::string &appIdentifier) const
+{
+    LOG_I(BMS_TAG_INSTALLER, "CheckBundleNameAndStratAbility %{public}s", bundleName.c_str());
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bmsExtensionDataMgr.CheckBundleNameAndStratAbility(bundleName, appIdentifier);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
