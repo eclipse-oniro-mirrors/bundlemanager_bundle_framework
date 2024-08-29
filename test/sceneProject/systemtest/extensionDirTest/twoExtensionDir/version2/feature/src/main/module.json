@@ -31,7 +31,7 @@
         "srcEntry": "./ets/featureability/FeatureAbility.ts",
         "label": "$string:FeatureAbility_label",
         "description": "$string:FeatureAbility_desc",
-        "type": "inputMethod",
+        "type": "form",
         "dataGroupIds": [
           "test1",
           "test2"
@@ -42,7 +42,7 @@
         "srcEntry": "./ets/entryability/EntryAbility.ts",
         "label": "$string:FeatureAbility_label",
         "description": "$string:FeatureAbility_desc",
-        "type": "inputMethod",
+        "type": "form",
         "dataGroupIds": [
           "test1",
           "test3"
