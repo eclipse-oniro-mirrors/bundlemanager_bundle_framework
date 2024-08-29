@@ -30,6 +30,9 @@
 #include "ipc/extract_param.h"
 #include "nocopyable.h"
 
+using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
+    uint32_t, bool &, const int32_t, const bool &);
+
 namespace OHOS {
 namespace AppExecFwk {
 class InstalldOperator {
@@ -303,19 +306,10 @@ public:
      */
     static void RmvDeleteDfx(const std::string &path);
 
-#if defined(CODE_ENCRYPTION_ENABLE)
-    static void CloseEncryptionHandle();
-#endif
-
 private:
     static bool OpenHandle(void **handle);
 
     static void CloseHandle(void **handle);
-
-#if defined(CODE_ENCRYPTION_ENABLE)
-    static void *encryptionHandle_;
-    static bool OpenEncryptionHandle();
-#endif
 
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
@@ -326,6 +320,12 @@ private:
     static bool ExtractResourceFiles(const ExtractParam &extractParam, const BundleExtractor &extractor);
     static bool CheckPathIsSame(const std::string &path, int32_t mode, const int32_t uid, const int32_t gid,
         bool &isPathExist);
+#if defined(CODE_ENCRYPTION_ENABLE)
+    static std::mutex encryptionMutex_;
+    static void *encryptionHandle_;
+    static EnforceMetadataProcessForApp enforceMetadataProcessForApp_;
+    static bool OpenEncryptionHandle();
+#endif
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
