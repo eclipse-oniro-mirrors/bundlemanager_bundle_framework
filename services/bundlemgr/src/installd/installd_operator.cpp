@@ -2254,11 +2254,6 @@ bool InstalldOperator::EnforceEncryption(std::unordered_map<std::string, std::st
     if (!OpenEncryptionHandle()) {
         return false;
     }
-    std::lock_guard<std::mutex> lock(encryptionMutex_);
-    if (enforceMetadataProcessForApp_ == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "dlsym encrypt err:%{public}s", dlerror());
-        return false;
-    }
     ErrCode ret = enforceMetadataProcessForApp_(entryMap, bundleId,
         isEncryption, static_cast<int32_t>(installBundleType), isCompressNativeLibrary);
     if (ret != ERR_OK) {

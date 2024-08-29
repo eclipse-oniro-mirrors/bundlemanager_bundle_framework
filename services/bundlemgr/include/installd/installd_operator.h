@@ -30,11 +30,11 @@
 #include "ipc/extract_param.h"
 #include "nocopyable.h"
 
+namespace OHOS {
+namespace AppExecFwk {
 using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
     uint32_t, bool &, const int32_t, const bool &);
 
-namespace OHOS {
-namespace AppExecFwk {
 class InstalldOperator {
 public:
     /**
