@@ -54,6 +54,7 @@ constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
 constexpr const char* VERIFY_ABC = "VerifyAbc";
 constexpr const char* DELETE_ABC = "DeleteAbc";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
+constexpr const char* ERR_MSG_LAUNCH_WANT_INVALID = "The launch want is not found.";
 constexpr const char* ADDITIONAL_INFO = "additionalInfo";
 constexpr const char* LINK = "link";
 constexpr const char* DEVELOPER_ID = "developerId";
@@ -572,6 +573,35 @@ napi_value GetAppCloneIdentity(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("call GetAppCloneIdentity done");
     return promise;
+}
+
+napi_value GetLaunchWant(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetLaunchWant call");
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    OHOS::AAFwk::Want want;
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetLaunchWant(want));
+    if (ret != NO_ERROR) {
+        APP_LOGE("GetLaunchWant failed");
+        BusinessError::ThrowError(env, ERROR_GET_LAUNCH_WANT_INVALID, ERR_MSG_LAUNCH_WANT_INVALID);
+        return nullptr;
+    }
+    ElementName elementName = want.GetElement();
+    if (elementName.GetBundleName().empty() || elementName.GetAbilityName().empty()) {
+        APP_LOGE("bundleName or abilityName is empty");
+        BusinessError::ThrowError(env, ERROR_GET_LAUNCH_WANT_INVALID, ERR_MSG_LAUNCH_WANT_INVALID);
+        return nullptr;
+    }
+    napi_value nWant = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nWant));
+    CommonFunc::ConvertWantInfo(env, nWant, want);
+    APP_LOGD("call GetLaunchWant done");
+    return nWant;
 }
 
 napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
