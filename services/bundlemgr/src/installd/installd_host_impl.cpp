@@ -1153,11 +1153,9 @@ ErrCode InstalldHostImpl::Mkdir(
         LOG_E(BMS_TAG_INSTALLD, "Mkdir %{public}s failed errno:%{public}d", dir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_MKDIR_FAILED;
     }
-
     if (dir.find(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) == 0) {
         InstalldOperator::RmvDeleteDfx(dir);
     }
-
     return ERR_OK;
 }
 
