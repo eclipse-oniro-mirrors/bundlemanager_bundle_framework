@@ -45,6 +45,7 @@ public:
     std::vector<SkillUri> uris;
     bool domainVerify = false;
     std::vector<std::string> permissions;
+    static std::string GetOptParamUri(const std::string &uriString);
     bool Match(const OHOS::AAFwk::Want &want) const;
     bool Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
     bool MatchLauncher(const OHOS::AAFwk::Want &want) const;
@@ -68,7 +69,6 @@ private:
     bool MatchMimeType(const std::string &uriString) const;
     bool MatchMimeType(const std::string &uriString, size_t &matchUriIndex) const;
     bool MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
-    std::string GetOptParamUri(const std::string &uriString) const;
     bool MatchUtd(const std::string &paramType, const std::string &skillUriType, bool &containsUtd) const;
     bool IsUtdMatch(const std::string &paramUtd, const std::string &skillUtd) const;
     bool IsUtd(const std::string &param) const;

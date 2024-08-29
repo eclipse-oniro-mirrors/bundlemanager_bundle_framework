@@ -340,7 +340,7 @@ bool Skill::StartsWith(const std::string &sourceString, const std::string &targe
     return sourceString.rfind(targetPrefix, 0) == 0;
 }
 
-std::string Skill::GetOptParamUri(const std::string &uriString) const
+std::string Skill::GetOptParamUri(const std::string &uriString)
 {
     std::size_t pos = uriString.find(PARAM_SEPARATOR);
     if (pos == std::string::npos) {
