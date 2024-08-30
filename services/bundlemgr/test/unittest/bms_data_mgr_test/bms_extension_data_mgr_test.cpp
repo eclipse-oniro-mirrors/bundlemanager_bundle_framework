@@ -96,7 +96,7 @@ public:
     void SetUp();
     void TearDown();
     const std::shared_ptr<BundleDataMgr> GetDataMgr() const;
-
+    bool CheckBmsExtensionProfile();
 private:
     std::shared_ptr<BundleDataMgr> dataMgr_ = std::make_shared<BundleDataMgr>();
     std::ostringstream pathStream_;
@@ -140,6 +140,17 @@ const std::shared_ptr<BundleDataMgr> BmsExtensionDataMgrTest::GetDataMgr() const
 
 bool BundleMgrExtTest::CheckApiInfo(const BundleInfo& bundleInfo)
 {
+    return true;
+}
+
+bool BmsExtensionDataMgrTest::CheckBmsExtensionProfile()
+{
+    BmsExtensionProfile bmsExtensionProfile;
+    BmsExtension bmsExtension;
+    auto res = bmsExtensionProfile.ParseBmsExtension(BMS_EXTENSION_PATH, bmsExtension);
+    if (res != ERR_OK) {
+        return false;
+    }
     return true;
 }
 
@@ -797,7 +808,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0017, Function | SmallTest
     int32_t userId = 100;
     std::set<std::string> uninstallBundles;
     ErrCode res = bmsExtensionDataMgr.GetBackupUninstallList(userId, uninstallBundles);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
 }
 
 /**
@@ -811,7 +826,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0018, Function | SmallTest
 
     int32_t userId = 100;
     ErrCode res = bmsExtensionDataMgr.ClearBackupUninstallFile(userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
 }
 
 /**
@@ -858,7 +877,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0021, Function | SmallTest
     std::string key{ "10-15-26" };
     int32_t userId = 100;
     ErrCode res = bmsExtensionDataMgr.DeleteResourceInfo(key);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
 }
 
 /**
@@ -897,8 +920,12 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0023, Function | SmallTest
 HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0024, Function | SmallTest | Level0)
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    bool res = bmsExtensionDataMgr.Init();
-    EXPECT_TRUE(res);
+    ErrCode res = bmsExtensionDataMgr.Init();
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_UNEXPECTED);
+    }
 }
 
 /**

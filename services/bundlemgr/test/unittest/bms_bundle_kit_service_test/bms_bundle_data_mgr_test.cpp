@@ -26,6 +26,7 @@
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_client.h"
+#include "bms_extension_profile.h"
 #include "bundle_data_mgr.h"
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
@@ -153,6 +154,7 @@ const std::string TEST_URI_HTTPS = "https://www.test.com";
 const std::string TEST_URI_HTTP = "http://www.test.com";
 const std::string META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr int32_t MOCK_BUNDLE_MGR_EXT_FLAG = 10;
+const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
 const nlohmann::json INSTALL_LIST = R"(
 {
     "install_list": [
@@ -363,6 +365,7 @@ public:
     void ResetDataMgr();
     void RemoveBundleinfo(const std::string &bundleName);
     ShortcutInfo InitShortcutInfo();
+    bool CheckBmsExtensionProfile();
 
 public:
     static std::shared_ptr<InstalldService> installdService_;
@@ -903,6 +906,17 @@ ShortcutInfo BmsBundleDataMgrTest::InitShortcutInfo()
     shortcutInfos.isHomeShortcut = true;
     shortcutInfos.isEnables = true;
     return shortcutInfos;
+}
+
+bool BmsBundleDataMgrTest::CheckBmsExtensionProfile()
+{
+    BmsExtensionProfile bmsExtensionProfile;
+    BmsExtension bmsExtension;
+    auto res = bmsExtensionProfile.ParseBmsExtension(BMS_EXTENSION_PATH, bmsExtension);
+    if (res != ERR_OK) {
+        return false;
+    }
+    return true;
 }
 
 class IBundleStatusCallbackTest : public IBundleStatusCallback {
@@ -1667,7 +1681,11 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0700, Function | MediumTest | L
     int32_t userId = -3;
     std::vector<AbilityInfo> abilityInfos;
     auto ret = bmsExtensionClient->QueryAbilityInfos(want, 0, userId, abilityInfos, false);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    } else {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    }
 }
 
 /**
@@ -1846,7 +1864,11 @@ HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0040, Function | MediumTes
     std::vector<AbilityInfo> abilityInfos;
     std::vector<Want> wants{ want };
     ErrCode res = bmsExtensionClient->BatchQueryAbilityInfos(wants, 0, userId, abilityInfos, false);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    }
 }
 
 /**
@@ -2198,7 +2220,11 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0030, Function | Medium
     std::vector<AbilityInfo> abilityInfos;
     bool isNewVersion = true;
     ErrCode res = bmsExtensionClient->ImplicitQueryAbilityInfos(want, 0, userId, abilityInfos, isNewVersion);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    }
 }
 
 
@@ -5701,7 +5727,11 @@ HWTEST_F(BmsBundleDataMgrTest, ClearData_0300, Function | MediumTest | Level1)
     std::string bundleName;
     int32_t userId = 100;
     ErrCode res = bmsExtensionClient->ClearData(bundleName, userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
 }
 
 /**
@@ -6570,7 +6600,11 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientDeleteResourceInfo_0200, Functi
     ASSERT_NE(bmsExtensionClient, nullptr);
     std::string key = "abilityName";
     ErrCode res = bmsExtensionClient->DeleteResourceInfo(key);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
 }
 
 /**
@@ -6609,7 +6643,11 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientOptimizeDisposedPredicates_0200
     NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
     ErrCode res = bmsExtensionClient->OptimizeDisposedPredicates(
         callingName, appId, userId, appIndex, absRdbPredicates);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    }
 }
 
 /**
@@ -6642,7 +6680,11 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientGetBundleInfos_0200, Function |
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     ASSERT_NE(bmsExtensionClient, nullptr);
     ErrCode ret = bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    } else {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    }
 }
 
 /**
@@ -6685,7 +6727,11 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientGetBundleInfo_0200, Function | 
     if (flag) {
         ClearDataMgr();
     }
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    } else {
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    }
 }
 
 /**
@@ -6754,7 +6800,11 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientQueryAbilityInfos_0200, Functio
     if (flag) {
         ClearDataMgr();
     }
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    }
 }
 
 /**
@@ -6780,7 +6830,11 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientQueryAbilityInfos_0300, Functio
     if (flag) {
         ClearDataMgr();
     }
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    }
 }
 
 /**
@@ -6940,7 +6994,11 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientBatchQueryAbilityInfos_0200, Fu
     if (flag) {
         ClearDataMgr();
     }
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    if (CheckBmsExtensionProfile()) {
+        EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    } else {
+        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    }
 }
 
 /**
