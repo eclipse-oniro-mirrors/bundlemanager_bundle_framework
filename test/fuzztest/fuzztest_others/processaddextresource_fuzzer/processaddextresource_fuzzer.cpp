@@ -27,9 +27,16 @@ namespace {
         ExtendResourceManagerHostImpl impl;
         std::vector<std::string> filePaths;
         auto ret = impl.ProcessAddExtResource(TEST_BUNDLE, filePaths);
-        if (ret == ERR_OK) {
-            return true;
-        }
+        std::vector<ExtendResourceInfo> extendResourceInfos;
+        impl.InnerSaveExtendResourceInfo(TEST_BUNDLE, filePaths, extendResourceInfos);
+        impl.UpateExtResourcesDb(TEST_BUNDLE, extendResourceInfos);
+        std::vector<std::string> moduleNames;
+        impl.RemoveExtResourcesDb(TEST_BUNDLE, moduleNames);
+        impl.InnerRemoveExtendResources(TEST_BUNDLE, moduleNames, extendResourceInfos);
+        std::string moduleName(reinterpret_cast<const char*>(data), size);
+        impl.EnableDynamicIcon(TEST_BUNDLE, moduleName);
+        ExtendResourceInfo extendResourceInfo;
+        impl.GetExtendResourceInfo(TEST_BUNDLE, moduleName, extendResourceInfo);
         return false;
     }
 }

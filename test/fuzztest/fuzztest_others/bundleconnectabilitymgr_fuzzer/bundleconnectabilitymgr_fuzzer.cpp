@@ -46,8 +46,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     int32_t flags = reinterpret_cast<uintptr_t>(data);
     AbilityInfo abilityInfo;
     sptr<IRemoteObject> callBack = nullptr;
-    bundleConnectAbilityMgr.QueryAbilityInfo(want, flags, userId, abilityInfo, callBack);
-    bundleConnectAbilityMgr.SilentInstall(want, userId, callBack);
     bundleConnectAbilityMgr.UpgradeAtomicService(want, userId);
     bundleConnectAbilityMgr.UpgradeAtomicService(want, userId);
     bundleConnectAbilityMgr.UpgradeAtomicService(want, userId);
@@ -67,7 +65,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     bundleConnectAbilityMgr.SendRequest(code, datas, reply);
     TargetAbilityInfo targetAbilityInfo1;
     FreeInstallParams freeInstallParams;
-    bundleConnectAbilityMgr.SilentInstall(targetAbilityInfo1, want, freeInstallParams, userId);
     bundleConnectAbilityMgr.UpgradeCheck(targetAbilityInfo1, want, freeInstallParams, userId);
     int32_t callingUid = reinterpret_cast<uintptr_t>(data);
     std::vector<std::string> bundleNames = { std::string(data, size) };
@@ -125,8 +122,6 @@ void DoSomething2(const char* data, size_t size)
     OHOS::sptr<TargetAbilityInfo> targetAbilityInfo1 = nullptr;
     bundleConnectAbilityMgr.GetPreloadList(bundleName, moduleName, userId, targetAbilityInfo1);
     bundleConnectAbilityMgr.LoadDownloadService();
-    BmsExperienceRule rule;
-    bundleConnectAbilityMgr.CheckEcologicalRule(want, callerInfo, rule);
     bundleConnectAbilityMgr.CheckIsOnDemandLoad(targetAbilityInfo);
     bundleConnectAbilityMgr.GetModuleName(innerBundleInfo, want, moduleName);
     bundleConnectAbilityMgr.CheckIsModuleNeedUpdateWrap(innerBundleInfo, want, userId, callBack);

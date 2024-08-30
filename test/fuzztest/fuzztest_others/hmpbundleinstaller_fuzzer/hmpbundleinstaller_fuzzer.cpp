@@ -14,9 +14,10 @@
  */
 
 #define private public
-#include "bundleagingmgr_fuzzer.h"
+#include "hmpbundleinstaller_fuzzer.h"
 
-#include "bundle_aging_mgr.h"
+#include "hmp_bundle_installer.h"
+#include "inner_bundle_info.h"
 #include "securec.h"
 
 using namespace OHOS::AppExecFwk;
@@ -24,21 +25,29 @@ namespace OHOS {
 
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
+constexpr uint8_t ENABLE = 2;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
-    std::shared_ptr<BundleDataMgr> dataMgr = nullptr;
-    bundleAgingMgr->Start(BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
-    bundleAgingMgr->InitAgingtTimer();
-    bundleAgingMgr->ResetRequest();
-    bundleAgingMgr->IsReachStartAgingThreshold();
-    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
-    bundleAgingMgr->QueryBundleStatsInfoByInterval(results);
-    bundleAgingMgr->InitAgingRequest();
-    bundleAgingMgr->Process(dataMgr);
+    HmpBundleInstaller hmpBundleInstaller;
+    std::set<std::string> hapList;
+    std::set<std::string> systemHspList;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    hmpBundleInstaller.InstallSystemHspInHmp(std::string(data, size));
+    hmpBundleInstaller.InstallNormalAppInHmp(std::string(data, size));
+    std::set<int32_t> userIds;
+    hmpBundleInstaller.GetRequiredUserIds(std::string(data, size), userIds);
+    hmpBundleInstaller.RollbackHmpBundle(systemHspList, hapList);
+    hmpBundleInstaller.UpdateBundleInfo(std::string(data, size), std::string(data, size), std::string(data, size));
+    hmpBundleInstaller.GetHmpBundleList(std::string(data, size));
+    hmpBundleInstaller.UpdateInnerBundleInfo(std::string(data, size), infos);
+    hmpBundleInstaller.ParseInfos(std::string(data, size), std::string(data, size), infos);
+    hmpBundleInstaller.ParseHapFiles(std::string(data, size), infos);
+    hmpBundleInstaller.UninstallSystemBundle(std::string(data, size), std::string(data, size));
+    hmpBundleInstaller.CheckUninstallSystemHsp(std::string(data, size));
+    hmpBundleInstaller.UpdatePreInfoInDb(std::string(data, size), infos);
+    hmpBundleInstaller.UpdateBundleInfoForHmp(std::string(data, size), hapList, systemHspList);
     return true;
 }
-
 } // namespace OHOS
 
 // Fuzzer entry point.
