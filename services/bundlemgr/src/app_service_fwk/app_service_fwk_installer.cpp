@@ -28,6 +28,8 @@ constexpr const char* HSP_PATH = ", path: ";
 constexpr const char* SHARED_MODULE_TYPE = "shared";
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
+const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 
 std::string ObtainTempSoPath(
     const std::string &moduleName, const std::string &nativeLibPath)
@@ -713,8 +715,8 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
 void AppServiceFwkInstaller::RollBack()
 {
     APP_LOGI("RollBack: %{public}s", bundleName_.c_str());
-    if (newInnerBundleInfo_.IsPreInstallApp()) {
-        APP_LOGW("pre bundle: %{public}s no rollback", bundleName_.c_str());
+    if (newInnerBundleInfo_.IsPreInstallApp() && !BundleUtil::CheckSystemFreeSize(APP_INSTALL_PATH, FIVE_MB)) {
+        APP_LOGW("pre bundle: %{public}s no rollback due to no space", bundleName_.c_str());
         return;
     }
     // 1.RemoveBundleDir

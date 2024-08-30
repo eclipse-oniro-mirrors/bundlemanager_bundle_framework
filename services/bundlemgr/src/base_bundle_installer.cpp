@@ -1277,12 +1277,13 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
     InnerBundleInfo &oldInfo)
 {
     LOG_D(BMS_TAG_INSTALLER, "start rollback due to install failed");
-    if (!newInfos.empty() && newInfos.begin()->second.IsPreInstallApp()) {
-        LOG_I(BMS_TAG_INSTALLER, "pre bundleName:%{public}s no need rollback",
-            newInfos.begin()->second.GetBundleName().c_str());
-        return;
-    }
     if (!isAppExist_) {
+        if (!newInfos.empty() && newInfos.begin()->second.IsPreInstallApp() &&
+            !BundleUtil::CheckSystemFreeSize(APP_INSTALL_PATH, FIVE_MB)) {
+            LOG_I(BMS_TAG_INSTALLER, "pre bundleName:%{public}s no need rollback due to no space",
+                newInfos.begin()->second.GetBundleName().c_str());
+            return;
+        }
         if (newInfos.begin()->second.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
             int32_t uid = newInfos.begin()->second.GetUid(userId_);
             if (uid != Constants::INVALID_UID) {
