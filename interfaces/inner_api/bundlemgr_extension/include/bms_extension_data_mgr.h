@@ -62,7 +62,7 @@ public:
     ErrCode DeleteResourceInfo(const std::string &key);
     ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
-    bool IsAppInBlocklist(const std::string &bundleName);
+    bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId);
     ErrCode KeyOperation(const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type);
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName);
     ErrCode GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,

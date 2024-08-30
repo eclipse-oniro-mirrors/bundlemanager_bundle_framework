@@ -3851,10 +3851,21 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
         APP_LOGE("dataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGE("userId %{public}d is invalid", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
     std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos();
     for (auto recoverableBundleInfo: recoverableBundleInfos) {
+        std::string bundleName = recoverableBundleInfo.GetBundleName();
+        BmsExtensionDataMgr bmsExtensionDataMgr;
+        if (bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId)) {
+            APP_LOGI("recover app %{public}s is in blocklist", bundleName.c_str());
+            continue;
+        }
         RecoverableApplicationInfo recoverableApplication;
-        recoverableApplication.bundleName = recoverableBundleInfo.GetBundleName();
+        recoverableApplication.bundleName = bundleName;
         recoverableApplication.labelId = recoverableBundleInfo.GetLabelId();
         recoverableApplication.iconId = recoverableBundleInfo.GetIconId();
         recoverableApplication.systemApp = recoverableBundleInfo.GetSystemApp();

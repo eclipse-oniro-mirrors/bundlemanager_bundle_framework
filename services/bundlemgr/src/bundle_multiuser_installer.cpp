@@ -16,6 +16,7 @@
 #include "bundle_multiuser_installer.h"
 
 #include "ability_manager_helper.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
@@ -46,6 +47,12 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("-n %{public}s -u %{public}d begin", bundleName.c_str(), userId);
+
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    if (bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId)) {
+        APP_LOGE("app %{public}s is in blocklist", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
+    }
 
     if (GetDataMgr() != ERR_OK) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
