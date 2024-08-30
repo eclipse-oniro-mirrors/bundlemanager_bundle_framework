@@ -10,5 +10,9 @@
     {
       "first_introduced": "11",
       "name": "OH_NativeBundle_GetAppIdentifier"
+    },
+    {
+      "first_introduced": "13",
+      "name": "OH_NativeBundle_GetMainElementName"
     }
 ]
