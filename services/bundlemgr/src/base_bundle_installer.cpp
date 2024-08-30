@@ -4335,9 +4335,6 @@ bool BaseBundleInstaller::CheckReleaseTypeIsCompatible(
         LOG_W(BMS_TAG_INSTALLER, "the releaseType not same: [%{public}s, %{public}s] vs [%{public}s, %{public}s]",
             oldInfo.GetCurModuleName().c_str(), oldInfo.GetReleaseType().c_str(),
             newInfo.GetCurModuleName().c_str(), newInfo.GetReleaseType().c_str());
-        if (!oldInfo.IsHsp() && !newInfo.IsHsp()) {
-            return false;
-        }
     }
     return true;
 }
