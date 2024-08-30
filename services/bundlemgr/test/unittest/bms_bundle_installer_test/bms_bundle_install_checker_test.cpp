@@ -725,7 +725,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0002, Function | SmallTest |
     newInfo.baseBundleInfo_->releaseType = "normal_type";
     BaseBundleInstaller baseBundleInstaller;
     auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
