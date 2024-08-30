@@ -3345,24 +3345,38 @@ bool BundleDataMgr::HasUserInstallInBundle(
 bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem == bundleInfos_.end()) {
-        return false;
+    int32_t responseUserId = -1;
+    int32_t uid = -1;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        const auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            return false;
+        }
+        responseUserId = infoItem->second.GetResponseUserId(userId);
+        uid = infoItem->second.GetUid(responseUserId, appIndex);
     }
-    int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
-    int32_t uid = infoItem->second.GetUid(responseUserId, appIndex);
+
     ErrCode ret =
         InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats, uid, appIndex);
     if (ret != ERR_OK) {
-        APP_LOGW("bundle%{public}s GetBundleStats failed ", bundleName.c_str());
+        APP_LOGW("%{public}s getStats failed", bundleName.c_str());
         return false;
     }
-    if (appIndex == 0 && infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
-        for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
-            bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
+
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        const auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            return false;
+        }
+        if (appIndex == 0 && infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
+            for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+                bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
+            }
         }
     }
+
     return true;
 }
 

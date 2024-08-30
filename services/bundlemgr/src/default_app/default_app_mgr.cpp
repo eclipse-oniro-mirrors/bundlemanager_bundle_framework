@@ -38,6 +38,7 @@ constexpr int32_t INDEX_ZERO = 0;
 constexpr int32_t INDEX_ONE = 1;
 constexpr size_t TYPE_MAX_SIZE = 200;
 const std::string SPLIT = "/";
+const std::string SCHEME_SIGN = "://";
 const std::string EMAIL_ACTION = "ohos.want.action.sendToData";
 const std::string EMAIL_SCHEME = "mailto";
 const std::string ENTITY_BROWSER = "entity.system.browsable";
@@ -45,6 +46,8 @@ const std::string HTTP = "http";
 const std::string HTTPS = "https";
 const std::string HTTP_SCHEME = "http://";
 const std::string HTTPS_SCHEME = "https://";
+const std::string FILE_SCHEME = "file://";
+const std::string CONTENT_SCHEME = "content://";
 const std::string WILDCARD = "*";
 const std::string BROWSER = "BROWSER";
 const std::string IMAGE = "IMAGE";
@@ -736,6 +739,13 @@ ErrCode DefaultAppMgr::VerifyPermission(const std::string& permissionName) const
 
 std::string DefaultAppMgr::GetUtdByWant(const AAFwk::Want& want) const
 {
+    std::string uri = Skill::GetOptParamUri(want.GetUriString());
+    bool containsScheme = uri.find(SCHEME_SIGN) != std::string::npos;
+    bool isLocalScheme = uri.rfind(FILE_SCHEME, 0) == 0 || uri.rfind(CONTENT_SCHEME, 0) == 0;
+    if (containsScheme && !isLocalScheme) {
+        LOG_D(BMS_TAG_DEFAULT, "not local scheme");
+        return Constants::EMPTY_STRING;
+    }
     // get from type
     std::string type = want.GetType();
     if (!type.empty()) {
@@ -745,7 +755,6 @@ std::string DefaultAppMgr::GetUtdByWant(const AAFwk::Want& want) const
         return BundleUtil::GetUtdByMimeType(type);
     }
     // get from uri
-    std::string uri = want.GetUriString();
     if (uri.empty()) {
         LOG_W(BMS_TAG_DEFAULT, "uri is empty");
         return Constants::EMPTY_STRING;
