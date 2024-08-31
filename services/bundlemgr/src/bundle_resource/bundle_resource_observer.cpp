@@ -48,22 +48,40 @@ void BundleResourceObserver::OnConfigurationUpdated(const AppExecFwk::Configurat
         APP_LOGI("language change %{public}s", language.c_str());
         type = (type == 0) ? static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE) :
             (type | static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
-        std::thread systemLanguageChangedThread(OnSystemLanguageChange, language, type);
-        systemLanguageChangedThread.detach();
     }
     std::string theme = configuration.GetItem(AAFwk::GlobalConfigurationKey::THEME);
+    int32_t id = 0;
     if (!theme.empty()) {
         std::string themeId = configuration.GetItem(AAFwk::GlobalConfigurationKey::THEME_ID);
         APP_LOGI("theme change %{public}s, themeId %{public}s", theme.c_str(), themeId.c_str());
-        int32_t id = 0;
         if (!OHOS::StrToInt(themeId, id)) {
             id = 0;
         }
         type = (type == 0) ? static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE) :
             (type | static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE));
-        std::thread applicationThemeChangedThread(OnApplicationThemeChanged, theme, id, type);
-        applicationThemeChangedThread.detach();
     }
+    switch (type) {
+        case 0 : {
+            break;
+        }
+        case static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE) : {
+            std::thread systemLanguageChangedThread(OnSystemLanguageChange, language, type);
+            systemLanguageChangedThread.detach();
+            break;
+        }
+        case static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE) : {
+            std::thread applicationThemeChangedThread(OnApplicationThemeChanged, theme, id, type);
+            applicationThemeChangedThread.detach();
+            break;
+        }
+        default: {
+            BundleSystemState::GetInstance().SetSystemLanguage(language);
+            std::thread applicationThemeChangedThread(OnApplicationThemeChanged, theme, id, type);
+            applicationThemeChangedThread.detach();
+            break;
+        }
+    }
+
     APP_LOGI("end change type %{public}u", type);
 }
 

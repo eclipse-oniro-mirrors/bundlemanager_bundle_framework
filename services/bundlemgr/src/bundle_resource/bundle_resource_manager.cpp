@@ -198,44 +198,41 @@ bool BundleResourceManager::AddResourceInfos(const int32_t userId, std::vector<R
 
 void BundleResourceManager::InnerProcessResourceInfoByResourceUpdateType(
     std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-    const uint32_t type, const int32_t userId, const int32_t oldUserId, bool &needDeleteAllResource)
+    const uint32_t type, const int32_t userId, const int32_t oldUserId)
 {
     APP_LOGI("current resource update, code:%{public}u", type);
     switch (type) {
         case static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE) : {
-            InnerProcessResourceInfoBySystemLanguageChanged(resourceInfosMap, needDeleteAllResource);
+            InnerProcessResourceInfoBySystemLanguageChanged(resourceInfosMap);
             break;
         }
         case static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE) : {
-            InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, userId, needDeleteAllResource);
+            InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, userId);
             break;
         }
         case static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE) : {
-            InnerProcessResourceInfoByUserIdChanged(resourceInfosMap, userId, oldUserId, needDeleteAllResource);
+            InnerProcessResourceInfoByUserIdChanged(resourceInfosMap, userId, oldUserId);
             break;
         }
         default: {
-            needDeleteAllResource = true;
             break;
         }
     }
 }
 
 void BundleResourceManager::InnerProcessResourceInfoBySystemLanguageChanged(
-    std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-    bool &needDeleteAllResource)
+    std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap)
 {
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
         for (auto &resourceInfo : iter->second) {
             resourceInfo.iconNeedParse_ = false;
         }
     }
-    needDeleteAllResource = false;
 }
 
 void BundleResourceManager::InnerProcessResourceInfoBySystemThemeChanged(
     std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-    const int32_t userId, bool &needDeleteAllResource)
+    const int32_t userId)
 {
     // judge whether the bundle theme exists
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
@@ -250,12 +247,11 @@ void BundleResourceManager::InnerProcessResourceInfoBySystemThemeChanged(
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
         ProcessResourceInfoNoNeedToParseOtherIcon(iter->second);
     }
-    needDeleteAllResource = false;
 }
 
 void BundleResourceManager::InnerProcessResourceInfoByUserIdChanged(
     std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-    const int32_t userId, const int32_t oldUserId, bool &needDeleteAllResource)
+    const int32_t userId, const int32_t oldUserId)
 {
     APP_LOGI("start process switch oldUserId:%{public}d to userId:%{public}d", oldUserId, userId);
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
@@ -279,8 +275,6 @@ void BundleResourceManager::InnerProcessResourceInfoByUserIdChanged(
         }
         ++iter;
     }
-
-    needDeleteAllResource = false;
 }
 
 void BundleResourceManager::DeleteNotExistResourceInfo(
@@ -331,8 +325,7 @@ bool BundleResourceManager::AddResourceInfosByMap(
         APP_LOGE("resourceInfosMap is empty");
         return false;
     }
-    bool needDeleteAllResource = false;
-    InnerProcessResourceInfoByResourceUpdateType(resourceInfosMap, type, userId, oldUserId, needDeleteAllResource);
+    InnerProcessResourceInfoByResourceUpdateType(resourceInfosMap, type, userId, oldUserId);
     if (resourceInfosMap.empty()) {
         APP_LOGI("resourceInfosMap is empty, no need to parse");
         return true;
@@ -344,10 +337,6 @@ bool BundleResourceManager::AddResourceInfosByMap(
     }
     threadPool->Start(MAX_TASK_NUMBER);
     threadPool->SetMaxTaskNum(MAX_TASK_NUMBER);
-    // first delete all resource info, then add new resource
-    if (needDeleteAllResource && !bundleResourceRdb_->DeleteAllResourceInfo()) {
-        APP_LOGE("delete all bundle resource info failed, then add new resource info");
-    }
 
     for (const auto &item : resourceInfosMap) {
         if (tempTaskNumber != currentTaskNum_) {
