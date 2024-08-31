@@ -14,9 +14,10 @@
  */
 
 #define private public
-#include "bundleagingmgr_fuzzer.h"
+#include "innereventreport_fuzzer.h"
 
-#include "bundle_aging_mgr.h"
+#include "inner_event_report.h"
+#include "inner_bundle_info.h"
 #include "securec.h"
 
 using namespace OHOS::AppExecFwk;
@@ -24,21 +25,17 @@ namespace OHOS {
 
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
+constexpr uint8_t ENABLE = 2;
+constexpr uint8_t CODE_MAX = 22;
+
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
-    std::shared_ptr<BundleDataMgr> dataMgr = nullptr;
-    bundleAgingMgr->Start(BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
-    bundleAgingMgr->InitAgingtTimer();
-    bundleAgingMgr->ResetRequest();
-    bundleAgingMgr->IsReachStartAgingThreshold();
-    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
-    bundleAgingMgr->QueryBundleStatsInfoByInterval(results);
-    bundleAgingMgr->InitAgingRequest();
-    bundleAgingMgr->Process(dataMgr);
+    EventInfo eventInfo;
+    for (uint8_t code = 0; code <= CODE_MAX; code++) {
+        InnerEventReport::SendSystemEvent(BMSEventType(code), eventInfo);
+    }
     return true;
 }
-
 } // namespace OHOS
 
 // Fuzzer entry point.

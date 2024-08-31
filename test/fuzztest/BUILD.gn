@@ -168,6 +168,8 @@ group("fuzztest") {
     "fuzztest_others/getappjumpcontrolrule_fuzzer:GetAppJumpControlRuleFuzzTest",
     "fuzztest_others/getdynamicicon_fuzzer:GetDynamicIconFuzzTest",
     "fuzztest_others/getinnerbundleinfo_fuzzer:GetInnerBundleInfoFuzzTest",
+    "fuzztest_others/hmpbundleinstaller_fuzzer:HmpBundleInstallerFuzzTest",
+    "fuzztest_others/innereventreport_fuzzer:InnerEventReportFuzzTest",
     "fuzztest_others/innersaveextendresourceinfo_fuzzer:InnerSaveExtendResourceInfoFuzzTest",
     "fuzztest_others/installparamunmarshalling_fuzzer:InstallParamUnmarshallingFuzzTest",
     "fuzztest_others/launcherservice_fuzzer:LauncherServiceFuzzTest",
