@@ -779,7 +779,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0019, Function | SmallTest | Leve
 {
     BundleMgrExtTest bundleMgrExtTest;
     std::string bundleName{ "extension" };
-    auto res = bundleMgrExtTest.IsAppInBlocklist(bundleName);
+    auto res = bundleMgrExtTest.IsAppInBlocklist(bundleName, 100);
     EXPECT_FALSE(res);
 }
 
@@ -894,7 +894,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0022, Function | SmallTest
     BmsExtensionDataMgr bmsExtensionDataMgr;
 
     std::string bundleName{ "extension" };
-    auto res = bmsExtensionDataMgr.IsAppInBlocklist(bundleName);
+    auto res = bmsExtensionDataMgr.IsAppInBlocklist(bundleName, 100);
     EXPECT_FALSE(res);
 }
 

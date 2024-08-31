@@ -278,6 +278,10 @@ ErrCode BaseBundleInstaller::Recover(
 {
     LOG_I(BMS_TAG_INSTALLER, "begin to process bundle recover by bundleName, which is %{public}s", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
+    int32_t userId = GetUserId(installParam.userId);
+    if (IsAppInBlocklist(bundleName, userId)) {
+        return ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
+    }
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessRecover(bundleName, installParam, uid);
     if (installParam.needSendEvent && dataMgr_) {
@@ -1117,7 +1121,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
                 break;
             }
         }
-        if (IsAppInBlocklist((newInfos.begin()->second).GetBundleName())) {
+        if (IsAppInBlocklist((newInfos.begin()->second).GetBundleName(), userId_)) {
             result = ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
         }
     }
@@ -5856,10 +5860,10 @@ ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName
     return ERR_OK;
 }
 
-bool BaseBundleInstaller::IsAppInBlocklist(const std::string &bundleName) const
+bool BaseBundleInstaller::IsAppInBlocklist(const std::string &bundleName, const int32_t userId) const
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    bool res = bmsExtensionDataMgr.IsAppInBlocklist(bundleName);
+    bool res = bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId);
     if (res) {
         LOG_E(BMS_TAG_INSTALLER, "app %{public}s is in blocklist", bundleName.c_str());
         return true;

@@ -719,7 +719,7 @@ private:
     std::string GetInstallSource(const InstallParam &installParam) const;
     void SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InstallParam &installParam) const;
-    bool IsAppInBlocklist(const std::string &bundleName) const;
+    bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId) const;
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName) const;
     void CheckSystemFreeSizeAndClean() const;
     void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier) const;
