@@ -924,9 +924,11 @@ void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
     installParam.isPreInstallApp = true;
     installParam.removable = false;
     AppServiceFwkInstaller installer;
+    SavePreInstallExceptionAppService(preScanInfo.bundleDir);
     ErrCode ret = installer.Install({preScanInfo.bundleDir}, installParam);
-    if (ret != ERR_OK) {
-        LOG_W(BMS_TAG_DEFAULT, "Install systemHsp %{public}s error", preScanInfo.bundleDir.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "Install systemHsp %{public}s result %{public}d", preScanInfo.bundleDir.c_str(), ret);
+    if (ret == ERR_OK) {
+        DeletePreInstallExceptionAppService(preScanInfo.bundleDir);
     }
 }
 
@@ -1886,6 +1888,7 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPath, infos) || infos.empty()) {
             LOG_E(BMS_TAG_DEFAULT, "obtain bundleinfo failed : %{public}s ", scanPath.c_str());
+            SavePreInstallExceptionAppService(scanPath);
             continue;
         }
         auto bundleName = infos.begin()->second.GetBundleName();
@@ -1893,10 +1896,12 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
         AddParseInfosToMap(bundleName, infos);
         auto mapIter = loadExistData_.find(bundleName);
         if (mapIter == loadExistData_.end()) {
-            LOG_I(BMS_TAG_DEFAULT, "OTA Install new system hsp(%{public}s) by path(%{public}s)",
-                bundleName.c_str(), scanPath.c_str());
-            if (OTAInstallSystemHsp({scanPath}) != ERR_OK) {
-                LOG_E(BMS_TAG_DEFAULT, "OTA Install new system hsp(%{public}s) error", bundleName.c_str());
+            SavePreInstallExceptionAppService(scanPath);
+            auto ret = OTAInstallSystemHsp({scanPath});
+            LOG_I(BMS_TAG_DEFAULT, "OTA Install new system hsp(%{public}s) by path(%{public}s) ret %{public}d",
+                bundleName.c_str(), scanPath.c_str(), ret);
+            if (ret == ERR_OK) {
+                DeletePreInstallExceptionAppService(scanPath);
             }
             continue;
         }
@@ -1918,8 +1923,12 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
                 }
             }
         }
-        if (OTAInstallSystemHsp({scanPath}) != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "OTA update shared bundle(%{public}s) error", bundleName.c_str());
+        SavePreInstallExceptionAppService(scanPath);
+        auto ret = OTAInstallSystemHsp({scanPath});
+        LOG_I(BMS_TAG_DEFAULT, "OTA Install system hsp(%{public}s) by path(%{public}s) ret %{public}d",
+            bundleName.c_str(), scanPath.c_str(), ret);
+        if (ret == ERR_OK) {
+            DeletePreInstallExceptionAppService(scanPath);
         }
     }
 }
@@ -2728,6 +2737,32 @@ void BMSEventHandler::SavePreInstallException(const std::string &bundleDir)
     preInstallExceptionMgr->SavePreInstallExceptionPath(bundleDir);
 }
 
+void BMSEventHandler::SavePreInstallExceptionAppService(const std::string &bundleDir)
+{
+    auto preInstallExceptionMgr =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
+    if (preInstallExceptionMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
+        return;
+    }
+
+    LOG_I(BMS_TAG_DEFAULT, "save pre-install exception for app service: %{public}s", bundleDir.c_str());
+    preInstallExceptionMgr->SavePreInstallExceptionAppServicePath(bundleDir);
+}
+
+void BMSEventHandler::DeletePreInstallExceptionAppService(const std::string &bundleDir)
+{
+    auto preInstallExceptionMgr =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
+    if (preInstallExceptionMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
+        return;
+    }
+
+    LOG_I(BMS_TAG_DEFAULT, "save pre-install exception for app service: %{public}s", bundleDir.c_str());
+    preInstallExceptionMgr->DeletePreInstallExceptionAppServicePath(bundleDir);
+}
+
 void BMSEventHandler::HandlePreInstallException()
 {
     auto preInstallExceptionMgr =
@@ -2739,14 +2774,57 @@ void BMSEventHandler::HandlePreInstallException()
 
     std::set<std::string> exceptionPaths;
     std::set<std::string> exceptionBundleNames;
+    std::set<std::string> exceptionAppServicePaths;
+    std::set<std::string> exceptionAppServiceBundleNames;
     if (!preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
-        exceptionPaths, exceptionBundleNames)) {
+        exceptionPaths, exceptionBundleNames, exceptionAppServicePaths, exceptionAppServiceBundleNames)) {
         LOG_I(BMS_TAG_DEFAULT, "No pre-install exception information found");
         return;
     }
 
-    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "HandlePreInstallException pathSize:%{public}zu bundleNameSize:%{public}zu",
-        exceptionPaths.size(), exceptionBundleNames.size());
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "handle exception %{public}zu %{public}zu %{public}zu %{public}zu",
+        exceptionPaths.size(), exceptionBundleNames.size(),
+        exceptionAppServicePaths.size(), exceptionAppServiceBundleNames.size());
+    HandlePreInstallAppServicePathsException(preInstallExceptionMgr, exceptionAppServicePaths);
+    HandlePreInstallAppPathsException(preInstallExceptionMgr, exceptionPaths);
+    if (!exceptionBundleNames.empty() || !exceptionAppServiceBundleNames.empty()) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Loading all pre-install bundle infos");
+        LoadAllPreInstallBundleInfos();
+    }
+    HandlePreInstallAppServiceBundleNamesException(preInstallExceptionMgr, exceptionAppServiceBundleNames);
+    HandlePreInstallBundleNamesException(preInstallExceptionMgr, exceptionBundleNames);
+
+    preInstallExceptionMgr->ClearAll();
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Pre-install exception information cleared successfully");
+}
+
+void BMSEventHandler::HandlePreInstallAppServicePathsException(
+    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+    const std::set<std::string> &exceptionAppServicePaths)
+{
+    if (preInstallExceptionMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
+        return;
+    }
+    for (const auto &pathIter : exceptionAppServicePaths) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "fwk path:%{public}s", pathIter.c_str());
+        std::vector<std::string> filePaths { pathIter };
+        if (OTAInstallSystemHsp(filePaths) != ERR_OK) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "ota install fwk path(%{public}s) error", pathIter.c_str());
+        }
+
+        preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Del pre-install exception path:%{public}s", pathIter.c_str());
+    }
+}
+
+void BMSEventHandler::HandlePreInstallAppPathsException(
+    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr, const std::set<std::string> &exceptionPaths)
+{
+    if (preInstallExceptionMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
+        return;
+    }
     for (const auto &pathIter : exceptionPaths) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "HandlePreInstallException path:%{public}s", pathIter.c_str());
         std::vector<std::string> filePaths { pathIter };
@@ -2758,12 +2836,41 @@ void BMSEventHandler::HandlePreInstallException()
         preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Del pre-install exception path:%{public}s", pathIter.c_str());
     }
+}
 
-    if (exceptionBundleNames.size() > 0) {
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Loading all pre-install bundle infos");
-        LoadAllPreInstallBundleInfos();
+void BMSEventHandler::HandlePreInstallAppServiceBundleNamesException(
+    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+    const std::set<std::string> &exceptionAppServiceBundleNames)
+{
+    if (preInstallExceptionMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
+        return;
     }
+    for (const auto &bundleNameIter : exceptionAppServiceBundleNames) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "handle fwk exception -n: %{public}s", bundleNameIter.c_str());
+        auto iter = loadExistData_.find(bundleNameIter);
+        if (iter == loadExistData_.end()) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "there is no(%{public}s) in PreInstallDb",
+                bundleNameIter.c_str());
+            continue;
+        }
+        const auto &preInstallBundleInfo = iter->second;
+        if (OTAInstallSystemHsp(preInstallBundleInfo.GetBundlePaths()) != ERR_OK) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "ota install fwk(%{public}s) error", bundleNameIter.c_str());
+        }
 
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Deleting %{public}s from pre-install exception list", bundleNameIter.c_str());
+        preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+    }
+}
+
+void BMSEventHandler::HandlePreInstallBundleNamesException(
+    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr, const std::set<std::string> &exceptionBundleNames)
+{
+    if (preInstallExceptionMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
+        return;
+    }
     for (const auto &bundleNameIter : exceptionBundleNames) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName: %{public}s", bundleNameIter.c_str());
         auto iter = loadExistData_.find(bundleNameIter);
@@ -2783,9 +2890,6 @@ void BMSEventHandler::HandlePreInstallException()
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Deleting %{public}s from pre-install exception list", bundleNameIter.c_str());
         preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
     }
-
-    preInstallExceptionMgr->ClearAll();
-    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Pre-install exception information cleared successfully");
 }
 
 bool BMSEventHandler::OTAInstallSystemBundle(
