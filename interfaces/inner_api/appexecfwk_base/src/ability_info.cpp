@@ -119,9 +119,9 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     label = Str16ToStr8(parcel.ReadString16());
     description = Str16ToStr8(parcel.ReadString16());
     iconPath = Str16ToStr8(parcel.ReadString16());
-    labelId = parcel.ReadInt32();
-    descriptionId = parcel.ReadInt32();
-    iconId = parcel.ReadInt32();
+    labelId = parcel.ReadUint32();
+    descriptionId = parcel.ReadUint32();
+    iconId = parcel.ReadUint32();
     theme = Str16ToStr8(parcel.ReadString16());
     visible = parcel.ReadBool();
     kind = Str16ToStr8(parcel.ReadString16());
@@ -225,9 +225,9 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     priority = parcel.ReadInt32();
 
     startWindowIcon = Str16ToStr8(parcel.ReadString16());
-    startWindowIconId = parcel.ReadInt32();
+    startWindowIconId = parcel.ReadUint32();
     startWindowBackground = Str16ToStr8(parcel.ReadString16());
-    startWindowBackgroundId = parcel.ReadInt32();
+    startWindowBackgroundId = parcel.ReadUint32();
 
     originalBundleName = Str16ToStr8(parcel.ReadString16());
     appName = Str16ToStr8(parcel.ReadString16());
@@ -325,7 +325,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
         skills.emplace_back(*abilitySkillPtr);
     }
     appIndex = parcel.ReadInt32();
-    orientationId = parcel.ReadInt32();
+    orientationId = parcel.ReadUint32();
     return true;
 }
 
@@ -347,9 +347,9 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(iconPath));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, labelId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, iconId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(theme));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, visible);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(kind));
@@ -422,9 +422,9 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, priority);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(startWindowIcon));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, startWindowIconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowIconId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(startWindowBackground));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, startWindowBackgroundId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundId);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(originalBundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appName));
@@ -499,7 +499,7 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &skill);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, orientationId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, orientationId);
     return true;
 }
 
@@ -763,7 +763,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_LABEL_ID,
         abilityInfo.labelId,
@@ -771,7 +771,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_DESCRIPTION_ID,
         abilityInfo.descriptionId,
@@ -779,7 +779,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_ICON_ID,
         abilityInfo.iconId,
@@ -1139,7 +1139,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_START_WINDOW_ICON_ID,
         abilityInfo.startWindowIconId,
@@ -1155,7 +1155,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_START_WINDOW_BACKGROUND_ID,
         abilityInfo.startWindowBackgroundId,
@@ -1339,7 +1339,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_ORIENTATION_ID,
         abilityInfo.orientationId,

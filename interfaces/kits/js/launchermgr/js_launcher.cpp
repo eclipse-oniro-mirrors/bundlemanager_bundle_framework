@@ -154,7 +154,7 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo,
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "description", nDescription));
 
     napi_value nDescriptionId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.descriptionId, &nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appInfo.descriptionId, &nDescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "descriptionId", nDescriptionId));
 
     napi_value nIsSystemApp;
@@ -174,7 +174,7 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo,
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "label", nLabel));
 
     napi_value nLabelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appInfo.labelId, &nLabelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "labelId", nLabelId));
 
     napi_value nIconPath;
@@ -182,7 +182,7 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo,
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "icon", nIconPath));
 
     napi_value nIconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appInfo.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "iconId", nIconId));
 
     napi_value nSupportedModes;
@@ -280,12 +280,12 @@ static void ConvertLauncherAbilityInfo(napi_env env, napi_value objAbilityInfo,
 {
     // wrap labelId
     napi_value labelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, launcherAbilityInfo.labelId, &labelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, launcherAbilityInfo.labelId, &labelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "labelId", labelId));
 
     // wrap iconId
     napi_value iconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, launcherAbilityInfo.iconId, &iconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, launcherAbilityInfo.iconId, &iconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "iconId", iconId));
 
     // wrap userId
@@ -410,7 +410,7 @@ static void ConvertShortcutInfo(
 
     // wrap iconId
     napi_value iconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.iconId, &iconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, shortcutInfo.iconId, &iconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "iconId", iconId));
 
     // wrap label
@@ -420,7 +420,7 @@ static void ConvertShortcutInfo(
 
     // wrap labelId
     napi_value labelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.labelId, &labelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, shortcutInfo.labelId, &labelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "labelId", labelId));
 
     // wrap disableMessage

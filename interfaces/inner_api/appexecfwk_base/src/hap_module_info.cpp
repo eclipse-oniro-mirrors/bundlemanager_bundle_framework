@@ -516,11 +516,11 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     package = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
     description = Str16ToStr8(parcel.ReadString16());
-    descriptionId = parcel.ReadInt32();
+    descriptionId = parcel.ReadUint32();
     iconPath = Str16ToStr8(parcel.ReadString16());
-    iconId = parcel.ReadInt32();
+    iconId = parcel.ReadUint32();
     label = Str16ToStr8(parcel.ReadString16());
-    labelId = parcel.ReadInt32();
+    labelId = parcel.ReadUint32();
     backgroundImg = Str16ToStr8(parcel.ReadString16());
     mainAbility = Str16ToStr8(parcel.ReadString16());
     srcPath = Str16ToStr8(parcel.ReadString16());
@@ -705,11 +705,11 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(package));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(iconPath));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, iconId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(backgroundImg));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(mainAbility));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcPath));
@@ -901,7 +901,7 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_DESCRIPTION_ID,
         hapModuleInfo.descriptionId,
@@ -917,7 +917,7 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_ICON_ID,
         hapModuleInfo.iconId,
@@ -933,7 +933,7 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_LABEL_ID,
         hapModuleInfo.labelId,

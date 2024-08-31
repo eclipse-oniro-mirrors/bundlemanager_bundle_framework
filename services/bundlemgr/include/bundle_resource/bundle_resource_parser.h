@@ -36,7 +36,7 @@ public:
     bool ParseResourceInfos(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
 
     // parse icon resource by hapPath
-    bool ParseIconResourceByPath(const std::string &hapPath, const int32_t iconId, ResourceInfo &resourceInfo);
+    bool ParseIconResourceByPath(const std::string &hapPath, const uint32_t iconId, ResourceInfo &resourceInfo);
 
     // parse clone bundle resource info
     bool ParserCloneResourceInfo(const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos);
@@ -46,14 +46,14 @@ private:
     bool ParseResourceInfoWithSameHap(const int32_t userId, ResourceInfo &resourceInfo);
 
     // parse label resource by hapPath
-    bool ParseLabelResourceByPath(const std::string &hapPath, const int32_t labelId, std::string &label);
+    bool ParseLabelResourceByPath(const std::string &hapPath, const uint32_t labelId, std::string &label);
 
     bool ParseResourceInfoByResourceManager(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
         ResourceInfo &resourceInfo);
 
     // parse label resource by resourceManager
     bool ParseLabelResourceByResourceManager(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
-        const int32_t labelId, std::string &label);
+        const uint32_t labelId, std::string &label);
 
     // parse foreground/background/mask icons resource by resourceManager
     bool ParseIconResourceByResourceManager(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,

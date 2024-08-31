@@ -80,7 +80,7 @@ struct RequestPermission : public Parcelable {
     std::string name;
     std::string moduleName;
     std::string reason;
-    int32_t reasonId = 0;
+    uint32_t reasonId = 0;
     RequestPermissionUsedScene usedScene;
 
     bool ReadFromParcel(Parcel &parcel);

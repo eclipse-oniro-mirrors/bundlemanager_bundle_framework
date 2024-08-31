@@ -167,9 +167,9 @@ struct CompatibleAbilityInfo : public Parcelable {
     int32_t minFormWidth = 0; // minimum width of ability.
     int32_t defaultFormWidth = 0; // default width of ability.
 
-    int32_t iconId = 0;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
     bool enabled = true;
 
     bool ReadFromParcel(Parcel& parcel);
@@ -185,9 +185,9 @@ struct AbilityInfo : public Parcelable {
     std::string label;
     std::string description;
     std::string iconPath;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
-    int32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
+    uint32_t iconId = 0;
     std::string theme;
     bool visible = false;
     std::string kind;  // ability category
@@ -195,7 +195,7 @@ struct AbilityInfo : public Parcelable {
     ExtensionAbilityType extensionAbilityType = ExtensionAbilityType::UNSPECIFIED;
     std::string extensionTypeName;
     DisplayOrientation orientation = DisplayOrientation::UNSPECIFIED;
-    int32_t orientationId = 0;
+    uint32_t orientationId = 0;
     LaunchMode launchMode = LaunchMode::SINGLETON;
     std::string srcPath;
     std::string srcLanguage = "js";
@@ -247,9 +247,9 @@ struct AbilityInfo : public Parcelable {
 
     // configuration fields on startup page
     std::string startWindowIcon;
-    int32_t startWindowIconId = 0;
+    uint32_t startWindowIconId = 0;
     std::string startWindowBackground;
-    int32_t startWindowBackgroundId = 0;
+    uint32_t startWindowBackgroundId = 0;
     // whether to display in the missions list
     bool excludeFromMissions = false;
     bool unclearableMission = false;
