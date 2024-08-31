@@ -55,9 +55,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-static const char LIB_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib/libdiff_patch_shared.z.so";
-static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patch_shared.z.so";
-static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 constexpr const char* PREFIX_LIBS_PATH = "/libs/";
 constexpr const char* PREFIX_TARGET_PATH = "/print_service/";
@@ -1168,37 +1165,6 @@ bool InstalldOperator::ExtractDiffFiles(const std::string &filePath, const std::
     return true;
 }
 
-bool InstalldOperator::OpenHandle(void **handle)
-{
-    LOG_I(BMS_TAG_INSTALLD, "InstalldOperator::OpenHandle start");
-    if (handle == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "InstalldOperator::OpenHandle error handle is nullptr");
-        return false;
-    }
-    *handle = dlopen(LIB64_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
-    if (*handle == nullptr) {
-        LOG_W(BMS_TAG_INSTALLD, "ApplyDiffPatch failed to open libdiff_patch_shared.z.so, err:%{public}s", dlerror());
-        *handle = dlopen(LIB_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
-    }
-    if (*handle == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "ApplyDiffPatch failed to open libdiff_patch_shared.z.so, err:%{public}s", dlerror());
-        return false;
-    }
-    LOG_I(BMS_TAG_INSTALLD, "InstalldOperator::OpenHandle end");
-    return true;
-}
-
-void InstalldOperator::CloseHandle(void **handle)
-{
-    LOG_I(BMS_TAG_INSTALLD, "InstalldOperator::CloseHandle start");
-    if ((handle != nullptr) && (*handle != nullptr)) {
-        dlclose(*handle);
-        *handle = nullptr;
-        LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::CloseHandle, err:%{public}s", dlerror());
-    }
-    LOG_I(BMS_TAG_INSTALLD, "InstalldOperator::CloseHandle end");
-}
-
 bool InstalldOperator::ProcessApplyDiffPatchPath(
     const std::string &oldSoPath, const std::string &diffFilePath,
     const std::string &newSoPath, std::vector<std::string> &oldSoFileNames, std::vector<std::string> &diffFileNames)
@@ -1243,60 +1209,7 @@ bool InstalldOperator::ProcessApplyDiffPatchPath(
 bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
     const std::string &newSoPath, int32_t uid)
 {
-    LOG_I(BMS_TAG_INSTALLD, "ApplyDiffPatch start");
-    std::vector<std::string> oldSoFileNames;
-    std::vector<std::string> diffFileNames;
-    if (InstalldOperator::IsDirEmpty(oldSoPath) || InstalldOperator::IsDirEmpty(diffFilePath)) {
-        LOG_D(BMS_TAG_INSTALLD, "oldSoPath or diffFilePath is empty, not require ApplyPatch");
-        return true;
-    }
-    if (!ProcessApplyDiffPatchPath(oldSoPath, diffFilePath, newSoPath, oldSoFileNames, diffFileNames)) {
-        LOG_E(BMS_TAG_INSTALLD, "ApplyDiffPatch ProcessApplyDiffPatchPath failed");
-        return false;
-    }
-    std::string realOldSoPath;
-    std::string realDiffFilePath;
-    std::string realNewSoPath;
-    if (!PathToRealPath(oldSoPath, realOldSoPath) || !PathToRealPath(diffFilePath, realDiffFilePath) ||
-        !PathToRealPath(newSoPath, realNewSoPath)) {
-        LOG_E(BMS_TAG_INSTALLD, "ApplyDiffPatch Path is not real path");
-        return false;
-    }
-    void *handle = nullptr;
-    if (!OpenHandle(&handle)) {
-        return false;
-    }
-    auto applyPatch = reinterpret_cast<ApplyPatch>(dlsym(handle, APPLY_PATCH_FUNCTION_NAME));
-    if (applyPatch == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "ApplyDiffPatch failed to get applyPatch err:%{public}s", dlerror());
-        CloseHandle(&handle);
-        return false;
-    }
-    std::vector<std::string> newSoList;
-    for (const auto &diffFileName : diffFileNames) {
-        std::string soFileName = diffFileName.substr(0, diffFileName.rfind(DIFF_SUFFIX));
-        LOG_D(BMS_TAG_INSTALLD, "ApplyDiffPatch soName: %{public}s, diffName: %{public}s",
-            soFileName.c_str(), diffFileName.c_str());
-        if (find(oldSoFileNames.begin(), oldSoFileNames.end(), soFileName) != oldSoFileNames.end()) {
-            int32_t ret = applyPatch(realDiffFilePath + ServiceConstants::PATH_SEPARATOR + diffFileName,
-                                     realOldSoPath + ServiceConstants::PATH_SEPARATOR + soFileName,
-                                     realNewSoPath + ServiceConstants::PATH_SEPARATOR + soFileName);
-            if (ret != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLD, "ApplyDiffPatch failed, applyPatch errcode: %{public}d", ret);
-                for (const auto &file : newSoList) {
-                    DeleteDir(file);
-                }
-                CloseHandle(&handle);
-                return false;
-            }
-            newSoList.emplace_back(realNewSoPath + ServiceConstants::PATH_SEPARATOR + soFileName);
-        }
-    }
-    CloseHandle(&handle);
-#if defined(CODE_ENCRYPTION_ENABLE)
-    RemoveEncryptedKey(uid, newSoList);
-#endif
-    LOG_I(BMS_TAG_INSTALLD, "ApplyDiffPatch end");
+    LOG_I(BMS_TAG_INSTALLD, "ApplyDiffPatch no need to process");
     return true;
 }
 

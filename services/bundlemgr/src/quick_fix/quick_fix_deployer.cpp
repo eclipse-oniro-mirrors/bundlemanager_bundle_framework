@@ -363,15 +363,6 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
     if (isDebug_ && (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG)) {
         return ExtractQuickFixSoFile(appQuickFix, patchPath, bundleInfo);
     }
-    std::string oldSoPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
-        appQuickFix.bundleName + ServiceConstants::TMP_SUFFIX + ServiceConstants::LIBS;
-    ScopeGuard guardRemoveOldSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
-
-    ret = ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "error: ExtractSoAndApplyDiff failed");
-        return ret;
-    }
     return ERR_OK;
 }
 
