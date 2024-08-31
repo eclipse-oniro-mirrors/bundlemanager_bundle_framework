@@ -1755,6 +1755,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1000, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1100, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
     std::string nativeLibraryPath = "X86";
     std::string cpuAbi = "armeabi";
     InnerBundleInfo newInfo;
@@ -2061,6 +2062,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2300, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2400, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
     installer.userId_ = USERID;
     InnerBundleInfo info;
     ErrCode res = installer.CreateBundleDataDir(info);
@@ -2166,6 +2168,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2900, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3000, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
     installer.isFeatureNeedUninstall_ = false;
     std::string nativeLibraryPath = "/data/test";
     std::string cpuAbi = "123";
@@ -2309,6 +2312,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3900, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4000, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
     installer.userId_ = USERID;
     InnerBundleInfo info;
     ErrCode res = installer.CreateBundleDataDir(info);
@@ -4883,6 +4887,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0030, Function | SmallTest | Level
 HWTEST_F(BmsBundleInstallerTest, UninstallLowerVersionFeature_0010, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
     std::vector<std::string> packageVec;
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
