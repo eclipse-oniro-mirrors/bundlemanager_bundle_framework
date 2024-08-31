@@ -73,6 +73,8 @@ public:
     ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
     void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier);
+
+    bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum);
 private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;
