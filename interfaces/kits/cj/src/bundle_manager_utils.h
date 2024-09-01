@@ -46,7 +46,7 @@ namespace BundleManager {
     struct CResource {
         char* bundleName;
         char* moduleName;
-        int32_t id;
+        uint32_t id;
     };
 
     struct CArrString {
@@ -58,12 +58,12 @@ namespace BundleManager {
     struct RetApplicationInfo {
         char* name;
         char* description;
-        int32_t descriptionId;
+        uint32_t descriptionId;
         bool enabled;
         char* label;
-        int32_t labelId;
+        uint32_t labelId;
         char* icon;
-        int32_t iconId;
+        uint32_t iconId;
         char* process;
         CArrString permissions;
         char* codePath;
@@ -103,11 +103,11 @@ namespace BundleManager {
         char* moduleName;
         char* name;
         char* label;
-        int32_t labelId;
+        uint32_t labelId;
         char* description;
-        int32_t descriptionId;
+        uint32_t descriptionId;
         char* icon;
-        int32_t iconId;
+        uint32_t iconId;
         char* process;
         bool exported;
         int32_t orientation;
@@ -130,9 +130,9 @@ namespace BundleManager {
         char* bundleName;
         char* moduleName;
         char* name;
-        int32_t labelId;
-        int32_t descriptionId;
-        int32_t iconId;
+        uint32_t labelId;
+        uint32_t descriptionId;
+        uint32_t iconId;
         bool exported;
         int32_t extensionAbilityType;
         CArrString permissions;
@@ -172,11 +172,11 @@ namespace BundleManager {
     struct RetHapModuleInfo {
         char* name;
         char* icon;
-        int32_t iconId;
+        uint32_t iconId;
         char* label;
-        int32_t labelId;
+        uint32_t labelId;
         char* description;
-        int32_t descriptionId;
+        uint32_t descriptionId;
         char* mainElementName;
         CArrRetAbilityInfo abilitiesInfo;
         CArrRetExtensionAbilityInfo extensionAbilitiesInfo;
@@ -204,7 +204,7 @@ namespace BundleManager {
         char* name;
         char* moduleName;
         char* reason;
-        int32_t reasonId;
+        uint32_t reasonId;
         RetUsedScene usedScence;
     };
 
@@ -227,8 +227,8 @@ namespace BundleManager {
     struct CRecoverableApplicationInfo {
         char* bundleName;
         char* moduleName;
-        int32_t labelId;
-        int32_t iconId;
+        uint32_t labelId;
+        uint32_t iconId;
     };
  
     struct CArrRecoverableApplicationInfo {

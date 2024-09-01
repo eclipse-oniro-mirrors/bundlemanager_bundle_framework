@@ -149,11 +149,11 @@ struct Ability {
     std::string srcEntrance;
     std::string launchType = ABILITY_LAUNCH_TYPE_DEFAULT_VALUE;
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     std::string icon;
-    int32_t iconId = 0;
+    uint32_t iconId = 0;
     std::string label;
-    int32_t labelId = 0;
+    uint32_t labelId = 0;
     int32_t priority = 0;
     std::vector<std::string> permissions;
     std::vector<Metadata> metadata;
@@ -162,9 +162,9 @@ struct Ability {
     std::vector<Skill> skills;
     std::vector<std::string> backgroundModes;
     std::string startWindowIcon;
-    int32_t startWindowIconId = 0;
+    uint32_t startWindowIconId = 0;
     std::string startWindowBackground;
-    int32_t startWindowBackgroundId = 0;
+    uint32_t startWindowBackgroundId = 0;
     bool removeMissionAfterTerminate = false;
     std::string orientation = "unspecified";
     std::vector<std::string> windowModes;
@@ -187,11 +187,11 @@ struct Extension {
     std::string name;
     std::string srcEntrance;
     std::string icon;
-    int32_t iconId = 0;
+    uint32_t iconId = 0;
     std::string label;
-    int32_t labelId = 0;
+    uint32_t labelId = 0;
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     int32_t priority = 0;
     std::string type;
     std::string readPermission;
@@ -214,11 +214,11 @@ struct App {
     std::string bundleName;
     bool debug = false;
     std::string icon;
-    int32_t iconId = 0;
+    uint32_t iconId = 0;
     std::string label;
-    int32_t labelId = 0;
+    uint32_t labelId = 0;
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     std::string vendor;
     int32_t versionCode = 0;
     std::string versionName;
@@ -254,7 +254,7 @@ struct Module {
     std::string type;
     std::string srcEntrance;
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     std::string process;
     std::string mainElement;
     std::vector<std::string> deviceTypes;
@@ -391,7 +391,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         ability.descriptionId,
@@ -407,7 +407,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ICON_ID,
         ability.iconId,
@@ -423,7 +423,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         LABEL_ID,
         ability.labelId,
@@ -504,7 +504,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ABILITY_START_WINDOW_ICON_ID,
         ability.startWindowIconId,
@@ -520,7 +520,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ABILITY_START_WINDOW_BACKGROUND_ID,
         ability.startWindowBackgroundId,
@@ -698,7 +698,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ICON_ID,
         extension.iconId,
@@ -714,7 +714,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         LABEL_ID,
         extension.labelId,
@@ -730,7 +730,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         extension.descriptionId,
@@ -998,7 +998,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ICON_ID,
         app.iconId,
@@ -1006,7 +1006,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         LABEL_ID,
         app.labelId,
@@ -1022,7 +1022,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         app.descriptionId,
@@ -1399,7 +1399,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         module.descriptionId,

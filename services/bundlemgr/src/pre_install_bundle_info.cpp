@@ -66,9 +66,9 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         isUninstalled_, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, MODULE_NAME,
         moduleName_, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, LABEL_ID,
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, LABEL_ID,
         labelId_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, ICON_ID,
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, ICON_ID,
         iconId_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, SYSTEM_APP,
         systemApp_, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);

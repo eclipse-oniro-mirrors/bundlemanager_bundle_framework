@@ -118,11 +118,11 @@ struct HapModuleInfo : public Parcelable {
     std::string package;
     std::string moduleName;  // module.distro.moduleName in config.json
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     std::string iconPath;
-    int32_t iconId = 0;
+    uint32_t iconId = 0;
     std::string label;
-    int32_t labelId = 0;
+    uint32_t labelId = 0;
     std::string backgroundImg;
     std::string mainAbility;
     std::string srcPath;

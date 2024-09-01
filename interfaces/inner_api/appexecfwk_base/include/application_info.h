@@ -131,7 +131,7 @@ struct Resource : public Parcelable {
     std::string moduleName;
 
     /** the resource id in hap */
-    int32_t id = 0;
+    uint32_t id = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
@@ -159,9 +159,9 @@ struct CompatibleApplicationInfo : public Parcelable {
     std::string process;
     bool isCompressNativeLibs = true;
 
-    int32_t iconId = 0;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
 
     bool systemApp = false;
 
@@ -192,15 +192,15 @@ struct ApplicationInfo : public Parcelable {
     int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE;
 
     std::string iconPath;
-    int32_t iconId = 0;
+    uint32_t iconId = 0;
     Resource iconResource;
 
     std::string label;
-    int32_t labelId = 0;
+    uint32_t labelId = 0;
     Resource labelResource;
 
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     Resource descriptionResource;
 
     bool keepAlive = false;

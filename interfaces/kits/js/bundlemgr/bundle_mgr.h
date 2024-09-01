@@ -252,8 +252,8 @@ struct AsyncHandleBundleContext : public AsyncWorkData {
     OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
     std::string bundleName;
     std::string className;
-    int32_t labelId = 0;
-    int32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t iconId = 0;
     bool ret = false;
     int32_t err = 0;
 };

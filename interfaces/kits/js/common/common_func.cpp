@@ -226,6 +226,23 @@ bool CommonFunc::ParseInt(napi_env env, napi_value args, int32_t &param)
     return true;
 }
 
+bool CommonFunc::ParseUint(napi_env env, napi_value args, uint32_t &param)
+{
+    napi_valuetype valuetype = napi_undefined;
+    napi_typeof(env, args, &valuetype);
+    if (valuetype != napi_number) {
+        APP_LOGD("Wrong argument type. uint32 expected");
+        return false;
+    }
+    uint32_t value = 0;
+    if (napi_get_value_uint32(env, args, &value) != napi_ok) {
+        APP_LOGD("napi_get_value_uint32 failed");
+        return false;
+    }
+    param = value;
+    return true;
+}
+
 bool CommonFunc::ParsePropertyArray(napi_env env, napi_value args, const std::string &propertyName,
     std::vector<napi_value> &valueVec)
 {
@@ -973,7 +990,7 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, LABEL, nLabel));
 
     napi_value nLabelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, abilityInfo.labelId, &nLabelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, LABEL_ID, nLabelId));
 
     napi_value nDescription;
@@ -982,7 +999,7 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, DESCRIPTION, nDescription));
 
     napi_value nDescriptionId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.descriptionId, &nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, abilityInfo.descriptionId, &nDescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, DESCRIPTION_ID, nDescriptionId));
 
     napi_value nIconPath;
@@ -991,7 +1008,7 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, ICON, nIconPath));
 
     napi_value nIconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, abilityInfo.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, ICON_ID, nIconId));
 
     napi_value nProcess;
@@ -1227,15 +1244,15 @@ void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, NAME, nName));
 
     napi_value nLabelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, extensionInfo.labelId, &nLabelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, LABEL_ID, nLabelId));
 
     napi_value nDescriptionId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfo.descriptionId, &nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, extensionInfo.descriptionId, &nDescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, DESCRIPTION_ID, nDescriptionId));
 
     napi_value nIconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, extensionInfo.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, ICON_ID, nIconId));
 
     napi_value nVisible;
@@ -1333,7 +1350,7 @@ void CommonFunc::ConvertResource(napi_env env, const Resource &resource, napi_va
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objResource, MODULE_NAME, nModuleName));
 
     napi_value nId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, resource.id, &nId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, resource.id, &nId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objResource, "id", nId));
 }
 
@@ -1358,7 +1375,7 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, DESCRIPTION, nDescription));
 
     napi_value nDescriptionId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.descriptionId, &nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appInfo.descriptionId, &nDescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, DESCRIPTION_ID, nDescriptionId));
 
     napi_value nEnabled;
@@ -1370,7 +1387,7 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, LABEL, nLabel));
 
     napi_value nLabelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appInfo.labelId, &nLabelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, LABEL_ID, nLabelId));
 
     napi_value nIconPath;
@@ -1378,7 +1395,7 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, ICON, nIconPath));
 
     napi_value nIconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appInfo.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, ICON_ID, nIconId));
 
     napi_value nProcess;
@@ -1534,11 +1551,11 @@ void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const Per
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "grantMode", nGrantMode));
 
     napi_value nLabelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, permissionDef.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, permissionDef.labelId, &nLabelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "labelId", nLabelId));
 
     napi_value nDescriptionId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, permissionDef.descriptionId, &nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, permissionDef.descriptionId, &nDescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "descriptionId", nDescriptionId));
 }
 
@@ -1575,7 +1592,7 @@ void CommonFunc::ConvertRequestPermission(napi_env env, const RequestPermission 
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "reason", nReason));
 
     napi_value nReasonId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, requestPermission.reasonId, &nReasonId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, requestPermission.reasonId, &nReasonId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "reasonId", nReasonId));
 
     napi_value nUsedScene;
@@ -1627,7 +1644,7 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, ICON, nIcon));
 
     napi_value nIconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, hapModuleInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, hapModuleInfo.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, ICON_ID, nIconId));
 
     napi_value nLabel;
@@ -1635,7 +1652,7 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, LABEL, nLabel));
 
     napi_value nLabelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, hapModuleInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, hapModuleInfo.labelId, &nLabelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, LABEL_ID, nLabelId));
 
     napi_value nDescription;
@@ -1644,7 +1661,7 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, DESCRIPTION, nDescription));
 
     napi_value ndescriptionId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, hapModuleInfo.descriptionId, &ndescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, hapModuleInfo.descriptionId, &ndescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, DESCRIPTION_ID, ndescriptionId));
 
     napi_value nMainElementName;
@@ -1964,12 +1981,12 @@ void CommonFunc::ConvertLauncherAbilityInfo(napi_env env,
 {
     // wrap labelId
     napi_value labelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, launcherAbility.labelId, &labelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, launcherAbility.labelId, &labelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "labelId", labelId));
 
     // wrap iconId
     napi_value iconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, launcherAbility.iconId, &iconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, launcherAbility.iconId, &iconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "iconId", iconId));
 
     // wrap userId
@@ -2084,7 +2101,7 @@ void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutI
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "icon", icon));
     // wrap iconId
     napi_value iconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.iconId, &iconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, shortcutInfo.iconId, &iconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "iconId", iconId));
     // wrap label
     napi_value label;
@@ -2092,7 +2109,7 @@ void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutI
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "label", label));
     // wrap labelId
     napi_value labelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.labelId, &labelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, shortcutInfo.labelId, &labelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "labelId", labelId));
 
     // wrap wants
@@ -2298,11 +2315,11 @@ void CommonFunc::ConvertRecoverableApplicationInfo(
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, MODULE_NAME, nModuleName));
 
     napi_value nLabelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, recoverableApplication.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, recoverableApplication.labelId, &nLabelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, LABEL_ID, nLabelId));
 
     napi_value nIconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, recoverableApplication.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, recoverableApplication.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, ICON_ID, nIconId));
 
     napi_value nSystemApp;
@@ -2460,8 +2477,8 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
 
     // parse iconId
     napi_get_named_property(env, param, "iconId", &prop);
-    int32_t iconId;
-    if (!ParseInt(env, prop, iconId)) {
+    uint32_t iconId;
+    if (!ParseUint(env, prop, iconId)) {
         iconId = 0;
     }
     shortcutInfo.iconId = iconId;
@@ -2476,8 +2493,8 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
 
     // parse labelId
     napi_get_named_property(env, param, "labelId", &prop);
-    int32_t labelId;
-    if (!ParseInt(env, prop, labelId)) {
+    uint32_t labelId;
+    if (!ParseUint(env, prop, labelId)) {
         labelId = 0;
     }
     shortcutInfo.labelId = labelId;
