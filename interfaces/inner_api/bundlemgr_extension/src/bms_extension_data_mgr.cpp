@@ -533,5 +533,25 @@ void BmsExtensionDataMgr::CheckBundleNameAndStratAbility(const std::string &bund
     }
     bundleMgrExtPtr->CheckBundleNameAndStratAbility(bundleName, appIdentifier);
 }
+
+bool BmsExtensionDataMgr::DetermineCloneNum(
+    const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return false;
+    }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName empty");
+        return false;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return false;
+    }
+    return bundleMgrExtPtr->DetermineCloneNum(bundleName, appIdentifier, cloneNum);
+}
 } // AppExecFwk
 } // OHOS

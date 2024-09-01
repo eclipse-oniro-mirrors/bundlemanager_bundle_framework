@@ -148,6 +148,11 @@ public:
     {
         return;
     }
+    
+    virtual bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum)
+    {
+        return false;
+    }
 };
 
 } // AppExecFwk
