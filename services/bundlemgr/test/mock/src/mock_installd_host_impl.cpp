@@ -142,8 +142,7 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath,
-    const std::string &signatureFilePath)
+ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath)
 {
     return ERR_OK;
 }
@@ -306,5 +305,10 @@ ErrCode InstalldHostImpl::AddUserDirDeleteDfx(int32_t userId)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath,
+    const std::string &signatureFilePath)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

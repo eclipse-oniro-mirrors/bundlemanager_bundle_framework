@@ -846,7 +846,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0300, TestSize.Le
     std::string oldPath = OLD_PATH;
     std::string newPath = NEW_PATH;
     ErrCode result = installClient_->CopyFile(oldPath, newPath);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyFile, oldPath, newPath, ""));
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyFile, oldPath, newPath));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0300 end";
 }
 

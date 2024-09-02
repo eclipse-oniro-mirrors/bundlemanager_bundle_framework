@@ -15,6 +15,8 @@
 
 #include "inner_shared_bundle_installer.h"
 
+#include <fcntl.h>
+
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
 #include "installd_client.h"
@@ -577,15 +579,20 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
     std::string tempHspPath = tempHspDir + ServiceConstants::PATH_SEPARATOR + moduleName +
         ServiceConstants::HSP_FILE_SUFFIX;
     if (!signatureFileDir_.empty()) {
-        result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, signatureFileDir_);
+        result = InstalldClient::GetInstance()->MoveHapToCodeDir(bundlePath, tempHspPath, signatureFileDir_);
     } else {
-        result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath);
+        result = InstalldClient::GetInstance()->MoveHapToCodeDir(bundlePath, tempHspPath);
         CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
         bool isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
         result = VerifyCodeSignatureForHsp(tempHspPath, appIdentifier_, isEnterpriseBundle_,
             isCompileSdkOpenHarmony, bundleName_);
     }
     CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
+    int32_t hspFd = open(tempHspPath.c_str(), O_RDONLY);
+    if (fsync(hspFd) != 0) {
+        APP_LOGE("fsync %{public}s failed", tempHspPath.c_str());
+    }
+    close(hspFd);
 
     // 3. move hsp to real installation dir
     APP_LOGD("move file from temp path %{public}s to real path %{public}s", tempHspPath.c_str(), realHspPath.c_str());

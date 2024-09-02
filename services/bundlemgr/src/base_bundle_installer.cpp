@@ -4590,11 +4590,11 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
         if ((signatureFileMap_.find(hapPathRecord.first) != signatureFileMap_.end()) &&
             (!signatureFileMap_.at(hapPathRecord.first).empty())) {
-            result = InstalldClient::GetInstance()->CopyFile(hapPathRecord.first, hapPathRecord.second,
+            result = InstalldClient::GetInstance()->MoveHapToCodeDir(hapPathRecord.first, hapPathRecord.second,
                 signatureFileMap_.at(hapPathRecord.first));
             CHECK_RESULT(result, "Copy hap to install path failed or code signature hap failed %{public}d");
         } else {
-            if (InstalldClient::GetInstance()->CopyFile(
+            if (InstalldClient::GetInstance()->MoveHapToCodeDir(
                 hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "Copy hap to install path failed");
                 return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
@@ -5165,6 +5165,11 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
             BundleUtil::DeleteDir(bundlePaths[index]);
         }
         bundlePaths[index] = destination;
+        int32_t hapFd = open(destination.c_str(), O_RDONLY);
+        if (fsync(hapFd) != 0) {
+            LOG_E(BMS_TAG_INSTALLER, "fsync %{public}s failed", destination.c_str());
+        }
+        close(hapFd);
     }
     bundlePaths_ = bundlePaths;
     return ERR_OK;
@@ -5313,11 +5318,6 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
             LOG_E(BMS_TAG_INSTALLER, "move file to real path failed %{public}d", result);
             return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
         }
-        int32_t hapFd = open(realInstallationPath.c_str(), O_RDONLY);
-        if (fsync(hapFd) != 0) {
-            LOG_E(BMS_TAG_INSTALLER, "fsync %{public}s failed", realInstallationPath.c_str());
-        }
-        close(hapFd);
     }
     return ERR_OK;
 }

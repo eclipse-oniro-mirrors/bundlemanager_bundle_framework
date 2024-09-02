@@ -162,8 +162,7 @@ ErrCode InstalldClient::MoveFile(const std::string &oldPath, const std::string &
     return 0;
 }
 
-ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath,
-    const std::string &signatureFilePath)
+ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath)
 {
     return 0;
 }
@@ -307,8 +306,13 @@ ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &ty
 
 ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
 {
-        return ERR_OK;
+    return ERR_OK;
 }
 
+ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath,
+    const std::string &signatureFilePath)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
