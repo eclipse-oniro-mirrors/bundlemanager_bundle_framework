@@ -5590,26 +5590,27 @@ void BaseBundleInstaller::SetCheckResultMsg(const std::string checkResultMsg) co
 
 bool BaseBundleInstaller::VerifyActivationLock() const
 {
-    char enableActivationLock[BMS_ACTIVATION_LOCK_VAL_LEN] = {0};
-    int32_t ret = GetParameter(BMS_ACTIVATION_LOCK, "", enableActivationLock, BMS_ACTIVATION_LOCK_VAL_LEN);
-    if (ret <= 0) {
-        return true;
-    }
-    if (std::strcmp(enableActivationLock, BMS_TRUE) != 0) {
-        LOG_D(BMS_TAG_INSTALLER, "activation lock no check, because lock is off");
-        return true;
-    }
-
     int32_t mode = GetIntParameter(IS_ROOT_MODE_PARAM, USER_MODE);
     if (mode != USER_MODE) {
-        BmsExtensionDataMgr bmsExtensionDataMgr;
-        bool pass = false;
-        ErrCode res = bmsExtensionDataMgr.VerifyActivationLock(pass);
-        if ((res == ERR_OK) && !pass) {
-            LOG_E(BMS_TAG_INSTALLER, "machine be controlled, not allow to install app");
-            return false;
+        char enableActivationLock[BMS_ACTIVATION_LOCK_VAL_LEN] = {0};
+        int32_t ret = GetParameter(BMS_ACTIVATION_LOCK, "", enableActivationLock, BMS_ACTIVATION_LOCK_VAL_LEN);
+        if (ret <= 0) {
+            return true;
+        }
+        if (std::strcmp(enableActivationLock, BMS_TRUE) != 0) {
+            LOG_D(BMS_TAG_INSTALLER, "activation lock no check, because lock is off");
+            return true;
         }
     }
+
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bool pass = false;
+    ErrCode res = bmsExtensionDataMgr.VerifyActivationLock(pass);
+    if ((res == ERR_OK) && !pass) {
+        LOG_E(BMS_TAG_INSTALLER, "machine be controlled, not allow to install app");
+        return false;
+    }
+
     LOG_D(BMS_TAG_INSTALLER, "activation lock pass");
     // otherwise, pass
     return true;
