@@ -2724,7 +2724,8 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag)
 void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const
 {
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0) {
-        flags |= static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+        flags = static_cast<int32_t>(
+            static_cast<uint32_t>(flags) | static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE));
         std::vector<InnerBundleUserInfo> innerBundleUserInfos;
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
             LOG_W(BMS_TAG_QUERY, "no userInfos for this bundle(%{public}s)", bundleName.c_str());
@@ -2754,8 +2755,9 @@ void BundleDataMgr::PostProcessAnyUserFlags(
     if (withApplicationFlag) {
         if (userId >= Constants::START_USERID && userId != originalUserId) {
             uint32_t flagInstalled = static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
-            if ((bundleInfo.applicationInfo.applicationFlags & flagInstalled) != 0) {
-                bundleInfo.applicationInfo.applicationFlags ^= flagInstalled;
+            uint32_t applicationFlags = static_cast<uint32_t>(bundleInfo.applicationInfo.applicationFlags);
+            if ((applicationFlags & flagInstalled) != 0) {
+                bundleInfo.applicationInfo.applicationFlags = static_cast<int32_t>(applicationFlags ^ flagInstalled);
             }
         }
     }
