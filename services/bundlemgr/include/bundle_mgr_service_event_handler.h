@@ -26,6 +26,7 @@
 #include "common_event_manager.h"
 #include "common_event_subscriber.h"
 #include "common_event_support.h"
+#include "pre_install_exception_mgr.h"
 #include "pre_scan_info.h"
 #include "nlohmann/json.hpp"
 
@@ -561,6 +562,16 @@ private:
     bool MatchOldSignatures(const PreBundleConfigInfo &configInfo, const std::vector<std::string> &appSignatures);
     void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
 #endif
+    void DeletePreInstallExceptionAppService(const std::string &bundleDir);
+    void SavePreInstallExceptionAppService(const std::string &bundleDir);
+    void HandlePreInstallAppServicePathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+        const std::set<std::string> &exceptionAppServicePaths);
+    void HandlePreInstallAppPathsException(
+        std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr, const std::set<std::string> &exceptionPaths);
+    void HandlePreInstallAppServiceBundleNamesException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+        const std::set<std::string> &exceptionAppServiceBundleNames);
+    void HandlePreInstallBundleNamesException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+        const std::set<std::string> &exceptionBundleNames);
     bool IsModuleUpdate();
     void HandleModuleUpdate();
     bool GetModuleUpdatePathList(

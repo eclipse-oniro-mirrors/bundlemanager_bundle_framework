@@ -42,21 +42,27 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     oldExceptionPaths.insert(std::string(data, size));
     std::set<std::string> oldExceptionBundleNames;
     oldExceptionBundleNames.insert(std::string(data, size));
-    preInstallExceptionMgr->GetAllPreInstallExceptionInfo(oldExceptionPaths, oldExceptionBundleNames);
+    std::set<std::string> exceptionAppServicePaths;
+    std::set<std::string> exceptionAppServiceBundleNames;
+    preInstallExceptionMgr->GetAllPreInstallExceptionInfo(oldExceptionPaths, oldExceptionBundleNames,
+        exceptionAppServicePaths, exceptionAppServiceBundleNames);
 
     preInstallExceptionMgr->ClearAll();
     std::set<std::string> exceptionPaths;
     exceptionPaths.insert(std::string(data, size));
     std::set<std::string> exceptionBundleNames;
     exceptionBundleNames.insert(std::string(data, size));
-    preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames);
+    preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames,
+        exceptionAppServicePaths, exceptionAppServiceBundleNames);
 
     preInstallExceptionMgr->SavePreInstallExceptionBundleName(BUNDLE_TEMP_NAME);
     preInstallExceptionMgr->SavePreInstallExceptionPath(BUNDLE_PATH);
-    preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames);
+    preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames,
+        exceptionAppServicePaths, exceptionAppServiceBundleNames);
     preInstallExceptionMgr->DeletePreInstallExceptionBundleName(BUNDLE_TEMP_NAME);
     preInstallExceptionMgr->DeletePreInstallExceptionPath(BUNDLE_PATH);
-    preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames);
+    preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames,
+        exceptionAppServicePaths, exceptionAppServiceBundleNames);
 
     if (oldExceptionPaths.size() > 0) {
         for (const auto& pathIter : oldExceptionPaths) {
