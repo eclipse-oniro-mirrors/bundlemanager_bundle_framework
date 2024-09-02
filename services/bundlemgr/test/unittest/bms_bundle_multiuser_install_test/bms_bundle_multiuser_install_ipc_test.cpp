@@ -122,7 +122,7 @@ HWTEST_F(BmsBundleMultiuserInstallIPCTest,
     const int32_t userId = 100;
 
     auto result = installerProxy->InstallExisted(bundleName, userId);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_EXISTED_PARAM_ERROR);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 HWTEST_F(BmsBundleMultiuserInstallIPCTest,
