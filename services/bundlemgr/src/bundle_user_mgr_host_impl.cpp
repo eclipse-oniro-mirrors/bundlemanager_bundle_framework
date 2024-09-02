@@ -361,7 +361,7 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
     for (const auto &info : bundleInfos) {
         InstallParam installParam;
         installParam.userId = userId;
-        installParam.forceExecuted = true;
+        installParam.SetForceExecuted(true);
         installParam.concentrateSendEvent = true;
         installParam.isPreInstallApp = info.isPreInstallApp;
         installParam.installFlag = InstallFlag::NORMAL;

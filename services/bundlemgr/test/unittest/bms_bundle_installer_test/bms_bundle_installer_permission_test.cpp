@@ -114,7 +114,7 @@ bool BmsBundleInstallerPermissionTest::InstallSystemBundle(const std::string &fi
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetNoSkipsKill(false);
     installParam.copyHapToInstallPath = false;
     return installer->InstallSystemBundle(
         filePath, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
@@ -131,7 +131,7 @@ bool BmsBundleInstallerPermissionTest::OTAInstallSystemBundle(const std::string 
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetNoSkipsKill(false);
     installParam.copyHapToInstallPath = false;
     return installer->OTAInstallSystemBundle(
         filePaths, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;

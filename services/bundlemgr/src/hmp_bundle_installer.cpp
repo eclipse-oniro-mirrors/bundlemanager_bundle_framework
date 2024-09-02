@@ -91,7 +91,7 @@ ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir, 
     }
     InstallParam installParam;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetNoSkipsKill(false);
     installParam.needSendEvent = true;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -311,7 +311,7 @@ bool HmpBundleInstaller::UninstallSystemBundle(const std::string &bundleName, co
         installParam.userId = userId;
         installParam.needSavePreInstallInfo = true;
         installParam.isPreInstallApp = true;
-        installParam.noSkipsKill = false;
+        installParam.SetNoSkipsKill(false);
         installParam.needSendEvent = false;
         MarkPreBundleSyeEventBootTag(false);
         ErrCode result = UninstallBundle(bundleName, modulePackage, installParam);
@@ -355,7 +355,7 @@ void HmpBundleInstaller::CheckUninstallSystemHsp(const std::string &bundleName)
         installParam.userId = Constants::DEFAULT_USERID;
         installParam.needSavePreInstallInfo = true;
         installParam.isPreInstallApp = true;
-        installParam.noSkipsKill = false;
+        installParam.SetNoSkipsKill(false);
         installParam.needSendEvent = false;
         installParam.isKeepData = true;
         MarkPreBundleSyeEventBootTag(false);

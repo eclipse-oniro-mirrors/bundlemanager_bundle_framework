@@ -138,7 +138,7 @@ bool BmsBundleManagerTest::InstallSystemBundle(const std::string &filePath) cons
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetNoSkipsKill(false);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;

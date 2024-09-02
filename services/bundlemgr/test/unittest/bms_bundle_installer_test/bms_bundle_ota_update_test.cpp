@@ -131,7 +131,7 @@ bool BmsBundleOtaUpdateTest::InstallSystemBundle(const std::string &filePath) co
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetNoSkipsKill(false);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -146,7 +146,7 @@ bool BmsBundleOtaUpdateTest::OTAInstallSystemBundle(const std::vector<std::strin
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetNoSkipsKill(false);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -512,7 +512,7 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0009, Function | SmallTest | Level3
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetNoSkipsKill(false);
     installParam.needSendEvent = false;
     installParam.copyHapToInstallPath = false;
     auto installer = std::make_unique<SystemBundleInstaller>();
