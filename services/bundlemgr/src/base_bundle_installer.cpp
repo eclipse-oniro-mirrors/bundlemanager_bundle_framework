@@ -1204,13 +1204,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
 
-    // copy hap or hsp to real install dir
-    SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
-    if (installParam.copyHapToInstallPath) {
-        LOG_D(BMS_TAG_INSTALLER, "begin to copy hap to install path");
-        result = SaveHapToInstallPath(newInfos);
-        CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
-    }
     // delete old native library path
     if (NeedDeleteOldNativeLib(newInfos, oldInfo)) {
         LOG_I(BMS_TAG_INSTALLER, "Delete old library");
@@ -1220,6 +1213,14 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // move so file to real installation dir
     result = MoveSoFileToRealInstallationDir(newInfos);
     CHECK_RESULT_WITH_ROLLBACK(result, "move so file to install path failed %{public}d", newInfos, oldInfo);
+
+    // copy hap or hsp to real install dir
+    SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
+    if (installParam.copyHapToInstallPath) {
+        LOG_D(BMS_TAG_INSTALLER, "begin to copy hap to install path");
+        result = SaveHapToInstallPath(newInfos);
+        CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
+    }
 
     // attention pls, rename operation shoule be almost the last operation to guarantee the rollback operation
     // when someone failure occurs in the installation flow
@@ -4648,7 +4649,6 @@ void BaseBundleInstaller::ResetInstallProperties()
     isEnterpriseBundle_ = false;
     isInternaltestingBundle_ = false;
     appIdentifier_.clear();
-    targetSoPathMap_.clear();
     isAppService_ = false;
 }
 
@@ -4977,7 +4977,6 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
             targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
                 .append(info.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath)
                 .append(ServiceConstants::PATH_SEPARATOR);
-            targetSoPathMap_.emplace(info.GetCurModuleName(), targetSoPath);
         }
     }
 
@@ -5048,10 +5047,10 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     if (ret != ERR_OK) {
         return ret;
     }
-    auto targetSoPath = targetSoPathMap_.find(moduleName);
     CodeSignatureParam codeSignatureParam;
-    if (targetSoPath != targetSoPathMap_.end()) {
-        codeSignatureParam.targetSoPath = targetSoPath->second;
+    if (!nativeLibraryPath.empty()) {
+        codeSignatureParam.targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+            .append(bundleName_).append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath);
     }
     codeSignatureParam.cpuAbi = cpuAbi;
     codeSignatureParam.modulePath = realHapPath;
