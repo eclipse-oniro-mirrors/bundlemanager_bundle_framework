@@ -81,9 +81,8 @@ static OHOS::sptr<OHOS::AppExecFwk::IDefaultApp> GetDefaultAppProxy()
 }
 
 extern "C" {
-    RetDataBool FfiIsDefaultApplication(char* type)
+    RetDataBool FfiBundleManagerIsDefaultApplication(char* type)
     {
-        APP_LOGI("begin to FfiIsDefaultApplicationSync");
         RetDataBool nRet = {.code = -1, .data = false};
         bool isDefaultApp = false;
         std::string strType(type);
@@ -100,13 +99,12 @@ extern "C" {
         ErrCode ret = defaultAppProxy->IsDefaultApplication(strType, isDefaultApp);
         ret = CommonFunc::ConvertErrCode(ret);
         if (ret != SUCCESS_CODE) {
-            APP_LOGE("FfiIsDefaultApplicationSync failed: %{public}d", ret);
+            APP_LOGE("FfiBundleManagerIsDefaultApplication failed: %{public}d", ret);
             nRet.code = ret;
             return nRet;
         }
         nRet.data = isDefaultApp;
         nRet.code = ret;
-        APP_LOGI("call FfiIsDefaultApplicationSync done.");
         return nRet;
     }
 }

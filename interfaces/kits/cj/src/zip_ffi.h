@@ -36,9 +36,9 @@ struct CArrUI8 {
 };
 
 extern "C" {
-    FFI_EXPORT int32_t FfiCompressFile(CArrUI8 inFile, CArrUI8 outFile, RetOptions options);
-    FFI_EXPORT int32_t FfiDeCompressFileOptions(CArrUI8 inFile, CArrUI8 outFile, RetOptions options);
-    FFI_EXPORT int32_t FfiDeCompressFile(CArrUI8 inFile, CArrUI8 outFile);
+    FFI_EXPORT int32_t FfiBundleManagerCompressFile(CArrUI8 inFile, CArrUI8 outFile, RetOptions options);
+    FFI_EXPORT int32_t FfiBundleManagerDeCompressFileOptions(CArrUI8 inFile, CArrUI8 outFile, RetOptions options);
+    FFI_EXPORT int32_t FfiBundleManagerDeCompressFile(CArrUI8 inFile, CArrUI8 outFile);
 }
 
 
