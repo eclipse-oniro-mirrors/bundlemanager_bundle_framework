@@ -162,7 +162,7 @@ bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) co
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.SetNoSkipsKill(false);
+    installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -179,7 +179,7 @@ bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath)
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.SetNoSkipsKill(false);
+    installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -2109,9 +2109,9 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2700, Function | SmallTest 
     InnerBundleInfo newInfo;
     newInfo.currentPackage_ = "";
     bool isReplace = false;
-    bool noSkipsKill = false;
+    bool killProcess = false;
 
-    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
 
@@ -2128,9 +2128,9 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2800, Function | SmallTest 
     InnerBundleInfo newInfo;
     newInfo.currentPackage_ = MODULE_NAME;
     bool isReplace = false;
-    bool noSkipsKill = false;
+    bool killProcess = false;
 
-    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
 }
 
@@ -2147,9 +2147,9 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2900, Function | SmallTest 
     newInfo.currentPackage_ = MODULE_NAME;
     newInfo.baseApplicationInfo_->singleton = true;
     bool isReplace = false;
-    bool noSkipsKill = false;
+    bool killProcess = false;
 
-    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
 
     installer.modulePackage_ = MODULE_NAME;
@@ -4724,9 +4724,9 @@ HWTEST_F(BmsBundleInstallerTest, ProcessModuleUpdate_0020, Function | SmallTest 
     InnerBundleInfo innerBundleInfo;
     InnerBundleInfo oldInfo;
     bool isReplace = true;
-    bool noSkipsKill = false;
+    bool killProcess = false;
     innerBundleInfo.userId_ = USERID;
-    ErrCode res = installer.ProcessModuleUpdate(innerBundleInfo, oldInfo, isReplace, noSkipsKill);
+    ErrCode res = installer.ProcessModuleUpdate(innerBundleInfo, oldInfo, isReplace, killProcess);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INCONSISTENT_MODULE_NAME);
 }
 
@@ -4848,11 +4848,11 @@ HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0010, Function | SmallTest | Level
 {
     BaseBundleInstaller installer;
     installer.singletonState_ = AppExecFwk::BaseBundleInstaller::SingletonState::SINGLETON_TO_NON;
-    bool noSkipsKill = false;
+    bool killProcess = false;
     std::unordered_map<std::string, InnerBundleInfo> info;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->compileSdkType = "OpenHarmony";
-    installer.OnSingletonChange(noSkipsKill);
+    installer.OnSingletonChange(killProcess);
     info.try_emplace("OpenHarmony", innerBundleInfo);
 
     bool res = installer.CheckApiInfo(info);
@@ -4868,12 +4868,12 @@ HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0030, Function | SmallTest | Level
 {
     BaseBundleInstaller installer;
     installer.singletonState_ = AppExecFwk::BaseBundleInstaller::SingletonState::NON_TO_SINGLETON;
-    bool noSkipsKill = false;
+    bool killProcess = false;
     std::unordered_map<std::string, InnerBundleInfo> info;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->compileSdkType = "OpenHarmony1";
     innerBundleInfo.baseBundleInfo_->compatibleVersion = COMPATIBLE_VERSION;
-    installer.OnSingletonChange(noSkipsKill);
+    installer.OnSingletonChange(killProcess);
     info.try_emplace("OpenHarmony2", innerBundleInfo);
 
     bool res = installer.CheckApiInfo(info);
@@ -6608,7 +6608,7 @@ HWTEST_F(BmsBundleInstallerTest, SendStartInstallNotify_0100, Function | SmallTe
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.SetNoSkipsKill(true);
+    installParam.SetKillProcess(true);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;

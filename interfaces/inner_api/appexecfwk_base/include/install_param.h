@@ -101,7 +101,7 @@ private:
     // should force uninstall when delete userinfo.
     bool forceExecuted = false;
     // OTA upgrade skips the killing process
-    bool noSkipsKill = true;
+    bool killProcess = true;
     // system app can be uninstalled when uninstallUpdates
     bool isUninstallAndRecover = false;
 
@@ -118,15 +118,15 @@ public:
         }
     }
 
-    bool GetNoSkipsKill() const
+    bool GetKillProcess() const
     {
-        return noSkipsKill;
+        return killProcess;
     }
 
-    void SetNoSkipsKill(bool value)
+    void SetKillProcess(bool value)
     {
         if (CheckPermission()) {
-            noSkipsKill = value;
+            killProcess = value;
         }
     }
 
