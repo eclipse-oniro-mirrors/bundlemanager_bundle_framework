@@ -95,7 +95,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref addCallback = nullptr;
     napi_value addValue = nullptr;
     napi_status status = napi_get_named_property(env, args, "add", &addValue);
-    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect", false);
+    NAPI_CALL_BASE(env, status, false);
     napi_typeof(env, addValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("add param type mismatch");
@@ -107,7 +107,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref updateCallback = nullptr;
     napi_value updateValue = nullptr;
     status = napi_get_named_property(env, args, "update", &updateValue);
-    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect", false);
+    NAPI_CALL_BASE(env, status, false);
     napi_typeof(env, updateValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("update param type mismatch");
@@ -119,7 +119,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref removeCallback = nullptr;
     napi_value removeValue = nullptr;
     status = napi_get_named_property(env, args, "remove", &removeValue);
-    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect", false);
+    NAPI_CALL_BASE(env, status, false);
     napi_typeof(env, removeValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("remove param type mismatch");
@@ -503,7 +503,7 @@ static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
     void *data = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    NAPI_ASSERT(env, argc >= requireArgc, "requires 2 parameter");
+    NAPI_CALL(env, (argc >= requireArgc) ? napi_ok : napi_invalid_arg);
     std::string command;
 
     AsyncHandleBundleContext *asyncCallbackInfo = new (std::nothrow) AsyncHandleBundleContext();
@@ -653,7 +653,7 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
     void *data = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    NAPI_ASSERT(env, argc >= requireArgc, "requires 1 parameter");
+    NAPI_CALL(env, (argc >= requireArgc) ? napi_ok : napi_invalid_arg);
     std::string command;
     AsyncHandleBundleContext *asyncCallbackInfo = new (std::nothrow) AsyncHandleBundleContext();
     if (asyncCallbackInfo == nullptr) {
@@ -687,11 +687,9 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JSLauncherServiceOn", NAPI_AUTO_LENGTH, &resource);
     napi_create_async_work(
-        env, nullptr, resource,
-        [](napi_env env, void* data) {
+        env, nullptr, resource, [](napi_env env, void* data) {
             APP_LOGI("JSLauncherServiceOn asyn work done");
-        }, LauncherServiceOffComplete,
-        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
+        }, LauncherServiceOffComplete, reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
     return promise;
 }
@@ -822,7 +820,7 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
     std::string bundleName;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    NAPI_ASSERT(env, argc >= requireArgc, "requires 2 parameter");
+    NAPI_CALL(env, (argc >= requireArgc) ? napi_ok : napi_invalid_arg);
     AsyncHandleBundleContext *asyncCallbackInfo = new (std::nothrow) AsyncHandleBundleContext();
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("failed to get callback info");
@@ -930,7 +928,7 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
     void *data = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    NAPI_ASSERT(env, argc >= requireArgc, "requires 1 parameter");
+    NAPI_CALL(env, (argc >= requireArgc) ? napi_ok : napi_invalid_arg);
     AsyncHandleBundleContext *asyncCallbackInfo = new (std::nothrow) AsyncHandleBundleContext();
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("failed to get callback info");
