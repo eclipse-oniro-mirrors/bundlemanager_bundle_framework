@@ -1595,11 +1595,11 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             return;
         }
         installRes = {
-            .bundleName = bundleName,
-            .resultCode = ERR_OK,
             .type = NotifyType::BUNDLE_CACHE_CLEARED,
+            .resultCode = ERR_OK,
+            .accessTokenId = innerBundleUserInfo.accessTokenId,
             .uid = innerBundleUserInfo.uid,
-            .accessTokenId = innerBundleUserInfo.accessTokenId
+            .bundleName = bundleName
         };
         NotifyBundleStatus(installRes);
     };
@@ -2278,8 +2278,9 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
     NotifyBundleEvents installRes = {
         .type = NotifyType::APPLICATION_ENABLE,
         .resultCode = ERR_OK,
-        .accessTokenId = innerBundleUserInfo.accessTokenId, .appIndex = appIndex,
+        .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
+        .appIndex = appIndex,
         .bundleName = abilityInfo.bundleName,
         .abilityName = abilityInfo.name
     };

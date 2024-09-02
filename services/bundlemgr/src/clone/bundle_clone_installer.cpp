@@ -82,8 +82,8 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
     NotifyBundleEvents installRes = {
         .type = NotifyType::UNINSTALL_BUNDLE,
         .resultCode = result,
-        .bundleName = bundleName,
         .accessTokenId = accessTokenId_,
+        .bundleName = bundleName,
         .uid = uid_,
         .appIndex = appIndex
     };
