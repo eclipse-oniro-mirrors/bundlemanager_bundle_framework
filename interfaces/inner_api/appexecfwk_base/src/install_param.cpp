@@ -156,9 +156,8 @@ bool UninstallParam::Marshalling(Parcel &parcel) const
 
 bool InstallParam::CheckPermission() const
 {
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     const int32_t FOUNDATION_UID = 5523;
-    if (callingUid != FOUNDATION_UID) {
+    if (IPCSkeleton::GetCallingUid() != FOUNDATION_UID) {
         APP_LOGE("set installParam failed");
         return false;
     }

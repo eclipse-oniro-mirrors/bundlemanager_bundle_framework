@@ -162,7 +162,9 @@ bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) co
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
+    setuid(Constants::FOUNDATION_UID);
     installParam.SetKillProcess(false);
+    setuid(Constants::ROOT_UID);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -179,7 +181,9 @@ bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath)
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
+    setuid(Constants::FOUNDATION_UID);
     installParam.SetKillProcess(false);
+    setuid(Constants::ROOT_UID);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -6608,7 +6612,6 @@ HWTEST_F(BmsBundleInstallerTest, SendStartInstallNotify_0100, Function | SmallTe
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.SetKillProcess(true);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
