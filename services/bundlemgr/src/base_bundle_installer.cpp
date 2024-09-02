@@ -280,7 +280,7 @@ ErrCode BaseBundleInstaller::Recover(
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     int32_t userId = GetUserId(installParam.userId);
     if (IsAppInBlocklist(bundleName, userId)) {
-        return ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessRecover(bundleName, installParam, uid);
@@ -1121,9 +1121,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
                 break;
             }
         }
-        if (IsAppInBlocklist((newInfos.begin()->second).GetBundleName(), userId_)) {
-            result = ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
-        }
     }
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
     result = CheckInstallPermission(installParam, hapVerifyResults);
@@ -1145,7 +1142,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_PARSED);                          // ---- 20%
 
     userId_ = GetConfirmUserId(userId_, newInfos);
-
+    if (!installParam.isPreInstallApp && IsAppInBlocklist((newInfos.begin()->second).GetBundleName(), userId_)) {
+        result = ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
+        CHECK_RESULT(result, "app is in block list %{public}d");
+    }
     // check hap hash param
     result = CheckHapHashParams(newInfos, installParam.hashParams);
     CHECK_RESULT(result, "check hap hash param failed %{public}d");
