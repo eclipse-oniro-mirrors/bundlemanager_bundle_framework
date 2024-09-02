@@ -30,6 +30,12 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     std::shared_ptr<BundleDataMgr> dataMgr = nullptr;
     bundleAgingMgr->Start(BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
     bundleAgingMgr->InitAgingtTimer();
+    bundleAgingMgr->ResetRequest();
+    bundleAgingMgr->IsReachStartAgingThreshold();
+    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
+    bundleAgingMgr->QueryBundleStatsInfoByInterval(results);
+    bundleAgingMgr->InitAgingRequest();
+    bundleAgingMgr->Process(dataMgr);
     return true;
 }
 

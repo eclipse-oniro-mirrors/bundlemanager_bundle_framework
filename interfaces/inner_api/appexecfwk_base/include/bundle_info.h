@@ -67,10 +67,6 @@ enum class GetBundleInfoFlag {
     GET_BUNDLE_INFO_EXCLUDE_CLONE = 0x00004000,
 };
 
-enum class ApplicationInfoFlag {
-    FLAG_INSTALLED = 0x00000001,
-};
-
 struct RequestPermissionUsedScene : public Parcelable {
     std::vector<std::string> abilities;
     std::string when;
@@ -84,7 +80,7 @@ struct RequestPermission : public Parcelable {
     std::string name;
     std::string moduleName;
     std::string reason;
-    int32_t reasonId = 0;
+    uint32_t reasonId = 0;
     RequestPermissionUsedScene usedScene;
 
     bool ReadFromParcel(Parcel &parcel);

@@ -37,8 +37,8 @@ bool RecoverableApplicationInfo::ReadFromParcel(Parcel &parcel)
 {
     bundleName = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
-    labelId = parcel.ReadInt32();
-    iconId = parcel.ReadInt32();
+    labelId = parcel.ReadUint32();
+    iconId = parcel.ReadUint32();
     systemApp = parcel.ReadBool();
     bundleType = static_cast<BundleType>(parcel.ReadInt32());
     int32_t codePathsSize;
@@ -54,8 +54,8 @@ bool RecoverableApplicationInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, labelId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, iconId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, systemApp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(bundleType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, codePaths.size());
@@ -97,9 +97,9 @@ void from_json(const nlohmann::json &jsonObject, RecoverableApplicationInfo &rec
         recoverableApplicationInfo.bundleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_MODULE_NAME,
         recoverableApplicationInfo.moduleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, JSON_KEY_LABEL_ID,
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, JSON_KEY_LABEL_ID,
         recoverableApplicationInfo.labelId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, JSON_KEY_ICON_ID,
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, JSON_KEY_ICON_ID,
         recoverableApplicationInfo.iconId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, JSON_KEY_SYSTEM_APP,
         recoverableApplicationInfo.systemApp, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);

@@ -110,6 +110,8 @@ constexpr const char* ERR_MSG_SELF_UPDATE_BUNDLENAME_NOT_SAME =
     "Failed to install the HAP because the bundleName is different from the bundleName of the caller application.";
 constexpr const char* ERR_MSG_ENTERPRISE_BUNDLE_NOT_ALLOWED =
     "Failed to install the HAP because an enterprise normal/MDM bundle cannot be installed on non-enterprise devices.";
+constexpr const char* ERR_MSG_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED =
+    "It is not allowed to install the enterprise bundle.";
 constexpr const char* ERR_MSG_DEBUG_BUNDLE_NOT_ALLOWED =
     "Failed to install the HAP because a debug bundle can be installed only in developer mode.";
 constexpr const char* ERR_MSG_ERROR_VERIFY_ABC = "Failed to verify the abc file.";
@@ -202,6 +204,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INSTALL_SELF_UPDATE_NOT_MDM, ERR_MSG_SELF_UPDATE_NOT_MDM},
     { ERROR_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME, ERR_MSG_SELF_UPDATE_BUNDLENAME_NOT_SAME},
     { ERROR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED, ERR_MSG_ENTERPRISE_BUNDLE_NOT_ALLOWED },
+    { ERROR_INSTALL_EXISTED_ENTERPRISE_NOT_ALLOWED_ERROR, ERR_MSG_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED },
     { ERROR_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED, ERR_MSG_DEBUG_BUNDLE_NOT_ALLOWED},
     { ERROR_VERIFY_ABC, ERR_MSG_ERROR_VERIFY_ABC},
     { ERROR_NOT_APP_GALLERY_CALL, ERROR_MSG_NOT_APP_GALLERY_CALL},

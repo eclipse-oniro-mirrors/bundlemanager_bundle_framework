@@ -16,6 +16,7 @@
 #include "bundle_install_checker.h"
 
 #include "app_log_tag_wrapper.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
@@ -414,6 +415,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
                 return result;
             }
         }
+        DetermineCloneNum(newInfo);
 
         infos.emplace(bundlePaths[i], newInfo);
     }
@@ -733,6 +735,7 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
     newInfo.SetResourcesApply(preBundleConfigInfo.resourcesApply);
     newInfo.SetAllowAppRunWhenDeviceFirstLocked(preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked);
+    newInfo.SetAllowEnableNotification(preBundleConfigInfo.allowEnableNotification);
 }
 
 void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInfo,
@@ -925,16 +928,8 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
                 LOG_E(BMS_TAG_INSTALLER, "versionCode not same");
                 return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
             }
-            if (minCompatibleVersionCode != info.second.GetMinCompatibleVersionCode()) {
-                LOG_E(BMS_TAG_INSTALLER, "minCompatibleVersionCode not same");
-                return ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME;
-            }
         }
         // check release type
-        if (target != info.second.GetTargetVersion()) {
-            LOG_E(BMS_TAG_INSTALLER, "target version not same");
-            return ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME;
-        }
         if (releaseType != info.second.GetReleaseType()) {
             LOG_W(BMS_TAG_INSTALLER, "releaseType not same: [%{public}s, %{public}s] vs [%{public}s, %{public}s]",
                 moduleName.c_str(), releaseType.c_str(),
@@ -1630,5 +1625,28 @@ void BundleInstallChecker::SetCheckResultMsg(const std::string checkResultMsg)
 {
     checkResultMsg_ = checkResultMsg;
 }
+
+void BundleInstallChecker::DetermineCloneNum(InnerBundleInfo &innerBundleInfo)
+{
+    ApplicationInfo applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
+    if (applicationInfo.multiAppMode.multiAppModeType != MultiAppModeType::APP_CLONE
+        || applicationInfo.multiAppMode.maxCount == 0) {
+        BmsExtensionDataMgr bmsExtensionDataMgr;
+        int32_t cloneNum = 0;
+        const std::string appIdentifier = innerBundleInfo.GetAppIdentifier();
+        if (!bmsExtensionDataMgr.DetermineCloneNum(applicationInfo.bundleName, appIdentifier, cloneNum)) {
+            return;
+        }
+        LOG_I(BMS_TAG_INSTALLER, "install -n %{public}s -c %{public}d",
+            applicationInfo.bundleName.c_str(), cloneNum);
+        if (cloneNum == 0) {
+            return;
+        }
+        applicationInfo.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+        applicationInfo.multiAppMode.maxCount = cloneNum;
+        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    }
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

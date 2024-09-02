@@ -1183,9 +1183,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0001, Function | SmallTes
 */
 HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0002, Function | SmallTest | Level0)
 {
-    if (bundleMgrService_ == nullptr) {
-        return;
-    }
+    ASSERT_NE(bundleMgrService_, nullptr);
 
     auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
     bool ret = preInstallExceptionMgr != nullptr;
@@ -1410,5 +1408,180 @@ HWTEST_F(BmsServiceStartupTest, ImplicitQueryAbilityInfosTest, Function | Medium
     std::vector<AbilityInfo> abilityInfos;
     auto ret = bmsExtensionClient->ImplicitQueryAbilityInfos(want, FLAG, FLAG, abilityInfos, false);
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsParam_0600
+ * @tc.name: GetBmsParam
+ * @tc.desc: test GetBmsParam of BmsParam
+ */
+HWTEST_F(BmsServiceStartupTest, BmsParam_0600, Function | MediumTest | Level1)
+{
+    BmsParam param;
+
+    std::string key;
+    std::string value = "value";
+    bool ret = param.GetBmsParam(key, value);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsParam_0700
+ * @tc.name: SaveBmsParam
+ * @tc.desc: test SaveBmsParam of BmsParam
+ */
+HWTEST_F(BmsServiceStartupTest, BmsParam_0700, Function | MediumTest | Level1)
+{
+    BmsParam param;
+
+    std::string paramKeyInfo = "key";
+    std::string paramValueInfo = "value";
+    bool ret = param.SaveBmsParam(paramKeyInfo, paramValueInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsParam_0800
+ * @tc.name: SaveBmsParam
+ * @tc.desc: test SaveBmsParam of BmsParam
+ */
+HWTEST_F(BmsServiceStartupTest, BmsParam_0800, Function | MediumTest | Level1)
+{
+    BmsParam param;
+
+    std::string paramKeyInfo;
+    std::string paramValueInfo;
+    bool ret = param.SaveBmsParam(paramKeyInfo, paramValueInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsParam_0900
+ * @tc.name: DeleteBmsParam
+ * @tc.desc: test DeleteBmsParam of BmsParam
+ */
+HWTEST_F(BmsServiceStartupTest, BmsParam_0900, Function | MediumTest | Level1)
+{
+    BmsParam param;
+
+    std::string key = "key";
+    bool ret = param.DeleteBmsParam(key);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsParam_1000
+ * @tc.name: DeleteBmsParam
+ * @tc.desc: test DeleteBmsParam of BmsParam
+ */
+HWTEST_F(BmsServiceStartupTest, BmsParam_1000, Function | MediumTest | Level1)
+{
+    BmsParam param;
+
+    std::string key;
+    bool ret = param.DeleteBmsParam(key);
+    EXPECT_FALSE(ret);
+}
+
+/**
+* @tc.number: PreInstallExceptionMgr_0003
+* @tc.name: test PreInstallExceptionMgr
+* @tc.desc: 1. test GetAllPreInstallExceptionInfo
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0003, Function | SmallTest | Level0)
+{
+    if (bundleMgrService_ == nullptr) {
+        return;
+    }
+
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    ASSERT_NE(preInstallExceptionMgr, nullptr);
+
+    std::string bundleDir;
+    std::string bundleName;
+
+    preInstallExceptionMgr->SavePreInstallExceptionPath(bundleDir);
+    preInstallExceptionMgr->SavePreInstallExceptionBundleName(bundleName);
+
+    std::set<std::string> exceptionPaths;
+    std::set<std::string> exceptionBundleNames;
+    bool ret = preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames);
+    EXPECT_FALSE(ret);
+}
+
+/**
+* @tc.number: PreInstallExceptionMgr_0004
+* @tc.name: test PreInstallExceptionMgr
+* @tc.desc: 1. test GetAllPreInstallExceptionInfo
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0004, Function | SmallTest | Level0)
+{
+    if (bundleMgrService_ == nullptr) {
+        return;
+    }
+
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    ASSERT_NE(preInstallExceptionMgr, nullptr);
+
+    std::string bundleDir = "/data";
+    std::string bundleName = "com.acts.example";
+
+    preInstallExceptionMgr->SavePreInstallExceptionPath(bundleDir);
+    preInstallExceptionMgr->SavePreInstallExceptionBundleName(bundleName);
+
+    std::set<std::string> exceptionPaths;
+    std::set<std::string> exceptionBundleNames;
+    bool ret = preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames);
+    EXPECT_FALSE(ret);
+}
+
+/**
+* @tc.number: PreInstallExceptionMgr_0005
+* @tc.name: test PreInstallExceptionMgr
+* @tc.desc: 1. test GetAllPreInstallExceptionInfo
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0005, Function | SmallTest | Level0)
+{
+    if (bundleMgrService_ == nullptr) {
+        return;
+    }
+
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    ASSERT_NE(preInstallExceptionMgr, nullptr);
+
+    std::string bundleDir;
+    std::string bundleName;
+
+    preInstallExceptionMgr->DeletePreInstallExceptionPath(bundleDir);
+    preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleName);
+    std::set<std::string> exceptionPaths;
+    std::set<std::string> exceptionBundleNames;
+    bool ret = preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames);
+    EXPECT_FALSE(ret);
+}
+
+/**
+* @tc.number: PreInstallExceptionMgr_0006
+* @tc.name: test PreInstallExceptionMgr
+* @tc.desc: 1. test GetAllPreInstallExceptionInfo
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0006, Function | SmallTest | Level0)
+{
+    if (bundleMgrService_ == nullptr) {
+        return;
+    }
+
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    ASSERT_NE(preInstallExceptionMgr, nullptr);
+
+    std::string bundleDir = "/data";
+    std::string bundleName = "com.acts.example";
+
+    preInstallExceptionMgr->DeletePreInstallExceptionPath(bundleDir);
+    preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleName);
+    std::set<std::string> exceptionPaths;
+    std::set<std::string> exceptionBundleNames;
+    bool ret = preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

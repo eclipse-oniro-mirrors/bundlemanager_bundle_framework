@@ -2648,7 +2648,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId, appIndex);
-    PostProcessAnyUserFlags(flags, requestUserId, originalUserId, bundleInfo);
+    PostProcessAnyUserFlags(flags, responseUserId, originalUserId, bundleInfo);
 
     ProcessBundleMenu(bundleInfo, flags, true);
     ProcessBundleRouterMap(bundleInfo, flags);
@@ -2743,6 +2743,8 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag)
 void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const
 {
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0) {
+        flags = static_cast<int32_t>(
+            static_cast<uint32_t>(flags) | static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE));
         std::vector<InnerBundleUserInfo> innerBundleUserInfos;
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
             LOG_W(BMS_TAG_QUERY, "no userInfos for this bundle(%{public}s)", bundleName.c_str());
@@ -2751,15 +2753,15 @@ void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t
         if (innerBundleUserInfos.empty()) {
             return;
         }
-        int32_t targetUserId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
         for (auto &bundleUserInfo: innerBundleUserInfos) {
             if (bundleUserInfo.bundleUserInfo.userId == userId) {
-                targetUserId = userId;
-                break;
+                return;
+            }
+            if (bundleUserInfo.bundleUserInfo.userId < Constants::START_USERID) {
+                return;
             }
         }
-        userId = targetUserId;
-        flags |= static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
     }
 }
 
@@ -2769,12 +2771,13 @@ void BundleDataMgr::PostProcessAnyUserFlags(
     bool withApplicationFlag =
         (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION))
             == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
-    bool ofAnyUserFlag =
-        (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER))
-            == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
-    if (withApplicationFlag && ofAnyUserFlag) {
-        if (userId == originalUserId || userId < Constants::START_USERID) {
-            bundleInfo.applicationInfo.applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+    if (withApplicationFlag) {
+        if (userId >= Constants::START_USERID && userId != originalUserId) {
+            uint32_t flagInstalled = static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+            uint32_t applicationFlags = static_cast<uint32_t>(bundleInfo.applicationInfo.applicationFlags);
+            if ((applicationFlags & flagInstalled) != 0) {
+                bundleInfo.applicationInfo.applicationFlags = static_cast<int32_t>(applicationFlags ^ flagInstalled);
+            }
         }
     }
 }
@@ -3377,24 +3380,38 @@ bool BundleDataMgr::HasUserInstallInBundle(
 bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem == bundleInfos_.end()) {
-        return false;
+    int32_t responseUserId = -1;
+    int32_t uid = -1;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        const auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            return false;
+        }
+        responseUserId = infoItem->second.GetResponseUserId(userId);
+        uid = infoItem->second.GetUid(responseUserId, appIndex);
     }
-    int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
-    int32_t uid = infoItem->second.GetUid(responseUserId, appIndex);
+
     ErrCode ret =
         InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats, uid, appIndex);
     if (ret != ERR_OK) {
-        APP_LOGW("bundle%{public}s GetBundleStats failed ", bundleName.c_str());
+        APP_LOGW("%{public}s getStats failed", bundleName.c_str());
         return false;
     }
-    if (appIndex == 0 && infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
-        for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
-            bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
+
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        const auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            return false;
+        }
+        if (appIndex == 0 && infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
+            for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+                bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
+            }
         }
     }
+
     return true;
 }
 
@@ -7794,6 +7811,7 @@ ErrCode BundleDataMgr::AddCloneBundle(const std::string &bundleName, const Inner
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         innerBundleInfo.SetBundleStatus(nowBundleStatus);
+        innerBundleInfo.RemoveCloneBundle(attr.userId, attr.appIndex);
         APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -8397,6 +8415,36 @@ void BundleDataMgr::GetBundleInfosForContinuation(std::vector<BundleInfo> &bundl
         }
         return true;
         }), bundleInfos.end());
+}
+
+ErrCode BundleDataMgr::GetContinueBundleNames(
+    const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId)
+{
+    auto requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("Input invalid userid, userId:%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (continueBundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &[key, innerInfo] : bundleInfos_) {
+        if (CheckInnerBundleInfoWithFlags(
+            innerInfo, BundleFlag::GET_BUNDLE_WITH_ABILITIES, innerInfo.GetResponseUserId(requestUserId)) != ERR_OK) {
+            continue;
+        }
+        for (const auto &[key, abilityInfo] : innerInfo.GetInnerAbilityInfos()) {
+            if (abilityInfo.continueBundleNames.find(continueBundleName) != abilityInfo.continueBundleNames.end()) {
+                bundleNames.emplace_back(abilityInfo.bundleName);
+                break;
+            }
+        }
+    }
+
+    APP_LOGD("The number of found continue packs, size:[%{public}d]", static_cast<int32_t>(bundleNames.size()));
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -21,4 +21,8 @@ FFI_EXPORT int32_t FfiOHOSGetBundleInfoForSelf = 0;
 FFI_EXPORT int32_t FfiOHOSVerifyAbc = 0;
 FFI_EXPORT int32_t FfiGetProfileByExtensionAbility = 0;
 FFI_EXPORT int32_t FfiGetProfileByAbility = 0;
+FFI_EXPORT int32_t FfiIsDefaultApplication = 0;
+FFI_EXPORT int32_t FfiCompressFile = 0;
+FFI_EXPORT int32_t FfiDeCompressFileOptions = 0;
+FFI_EXPORT int32_t FfiDeCompressFile = 0;
 }

@@ -15,6 +15,8 @@
 
 #include "bundleinstallerhost_fuzzer.h"
 
+#define private public
+
 #include <cstddef>
 #include <cstdint>
 #include "bundle_installer_host.h"
@@ -27,6 +29,7 @@ namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr size_t MESSAGE_SIZE = 10;
+constexpr size_t CODE_MAX = 13;
 
 uint32_t GetU32Data(const char* ptr)
 {
@@ -35,19 +38,54 @@ uint32_t GetU32Data(const char* ptr)
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
+    auto bundleInstallerHost = std::make_unique<BundleInstallerHost>();
 #ifdef ON_64BIT_SYSTEM
-    uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
-    MessageParcel datas;
-    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    BundleInstallerHost installerHost;
-    DelayedSingleton<BundleMgrService>::GetInstance()->OnStop();
-    installerHost.OnRemoteRequest(code, datas, reply, option);
+    for (uint32_t code = 0; code <= CODE_MAX; code++) {
+        MessageParcel datas;
+        std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+        datas.WriteInterfaceToken(descriptor);
+        datas.WriteBuffer(data, size);
+        datas.RewindRead(0);
+        MessageParcel reply;
+        MessageOption option;
+        DelayedSingleton<BundleMgrService>::GetInstance()->OnStop();
+        bundleInstallerHost->OnRemoteRequest(code, datas, reply, option);
+    }
 #endif
+    int32_t userId = 0;
+    int32_t appIndex = 0;
+    int32_t dplType = 0;
+    int32_t streamInstallerId = 0;
+    std::string bundleFilePath(std::string(data, size));
+    std::string bundleName(std::string(data, size));
+    std::string modulePackage(std::string(data, size));
+    std::vector<std::string> bundleFilePaths;
+    InstallParam installParam;
+    UninstallParam uninstallParam;
+    sptr<IStatusReceiver> statusReceiver;
+    bundleInstallerHost->Init();
+    bundleInstallerHost->Install(bundleFilePath, installParam, statusReceiver);
+    bundleInstallerHost->Recover(bundleName, installParam, statusReceiver);
+    bundleInstallerHost->Install(bundleFilePaths, installParam, statusReceiver);
+    bundleInstallerHost->Uninstall(bundleName, installParam, statusReceiver);
+    bundleInstallerHost->Uninstall(bundleName, modulePackage, installParam, statusReceiver);
+    bundleInstallerHost->Uninstall(uninstallParam, statusReceiver);
+    bundleInstallerHost->InstallByBundleName(bundleName, installParam, statusReceiver);
+    bundleInstallerHost->InstallSandboxApp(bundleName, dplType, userId, appIndex);
+    bundleInstallerHost->UninstallSandboxApp(bundleName, appIndex, userId);
+    bundleInstallerHost->CreateStreamInstaller(installParam, statusReceiver);
+    bundleInstallerHost->DestoryBundleStreamInstaller(streamInstallerId);
+    bundleInstallerHost->StreamInstall(bundleFilePaths, installParam, statusReceiver);
+    bundleInstallerHost->UpdateBundleForSelf(bundleFilePaths, installParam, statusReceiver);
+    bundleInstallerHost->UninstallAndRecover(bundleName, installParam, statusReceiver);
+    bundleInstallerHost->GetCurTaskNum();
+    bundleInstallerHost->GetThreadsNum();
+    bundleInstallerHost->InstallCloneApp(bundleName, userId, appIndex);
+    bundleInstallerHost->UninstallCloneApp(bundleName, userId, appIndex);
+    bundleInstallerHost->InstallExisted(bundleName, userId);
+    bundleInstallerHost->CheckInstallParam(installParam);
+    InstallParam installParam2;
+    bundleInstallerHost->IsPermissionVaild(installParam, installParam2);
     return true;
 }
 }

@@ -314,7 +314,7 @@ ErrCode BmsExtensionDataMgr::ClearBackupUninstallFile(int32_t userId)
     return bundleMgrExtPtr->ClearBackupUninstallFile(userId);
 }
 
-bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName)
+bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName, const int32_t userId)
 {
     if ((Init() != ERR_OK) || handler_ == nullptr) {
         APP_LOGW("link failed");
@@ -326,7 +326,7 @@ bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName)
         APP_LOGW("GetBundleMgrExt failed");
         return false;
     }
-    return bundleMgrExtPtr->IsAppInBlocklist(bundleName);
+    return bundleMgrExtPtr->IsAppInBlocklist(bundleName, userId);
 }
 
 bool BmsExtensionDataMgr::CheckWhetherCanBeUninstalled(const std::string &bundleName)
@@ -396,6 +396,27 @@ ErrCode BmsExtensionDataMgr::DeleteResourceInfo(const std::string &key)
     }
     ErrCode ret = bundleMgrExtPtr->DeleteResourceInfo(key);
     APP_LOGD("call bundle mgr ext return %{public}d by key:%{private}s", ret, key.c_str());
+    return ret;
+}
+
+ErrCode BmsExtensionDataMgr::KeyOperation(
+    const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type)
+{
+    if ((Init() != ERR_OK) || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_OK;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_OK;
+    }
+    auto ret = bundleMgrExtPtr->KeyOperation(codeProtectBundleInfos, type);
+    if (!codeProtectBundleInfos.empty()) {
+        APP_LOGI("KeyOperation %{public}s %{public}d ret %{public}d",
+            codeProtectBundleInfos[0].bundleName.c_str(), type, ret);
+    }
     return ret;
 }
 
@@ -491,6 +512,46 @@ ErrCode BmsExtensionDataMgr::GetAllLauncherAbilityResourceInfo(const uint32_t fl
     ErrCode ret = bundleMgrExtPtr->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
     APP_LOGD("call bundle mgr ext GetAllLauncherAbilityResourceInfo, return %{public}d", ret);
     return ret;
+}
+
+void BmsExtensionDataMgr::CheckBundleNameAndStratAbility(const std::string &bundleName,
+    const std::string &appIdentifier)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return;
+    }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName empty");
+        return;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return;
+    }
+    bundleMgrExtPtr->CheckBundleNameAndStratAbility(bundleName, appIdentifier);
+}
+
+bool BmsExtensionDataMgr::DetermineCloneNum(
+    const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return false;
+    }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName empty");
+        return false;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return false;
+    }
+    return bundleMgrExtPtr->DetermineCloneNum(bundleName, appIdentifier, cloneNum);
 }
 } // AppExecFwk
 } // OHOS

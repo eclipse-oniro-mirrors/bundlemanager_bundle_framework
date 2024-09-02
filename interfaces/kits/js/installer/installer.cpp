@@ -401,6 +401,8 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_UNINSTALL_FROM_BMS_EXTENSION_FAILED, ERROR_BUNDLE_NOT_EXIST},
         { IStatusReceiver::ERR_INSTALL_SELF_UPDATE_NOT_MDM, ERROR_INSTALL_SELF_UPDATE_NOT_MDM},
         { IStatusReceiver::ERR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED, ERROR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED},
+        { IStatusReceiver::ERR_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED,
+            ERROR_INSTALL_EXISTED_ENTERPRISE_NOT_ALLOWED_ERROR},
         { IStatusReceiver::ERR_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME, ERROR_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME},
         { IStatusReceiver::ERR_INSTALL_GWP_ASAN_ENABLED_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT},
         { IStatusReceiver::ERR_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED, ERROR_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED},
@@ -1608,7 +1610,6 @@ void CreateAppCloneExec(napi_env env, void *data)
     CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("CreateAppCloneExec param: bundleName = %{public}s, userId = %{public}d, appIndex = %{public}d",
@@ -1723,7 +1724,6 @@ void DestroyAppCloneExec(napi_env env, void *data)
     CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("DestroyAppCloneExec param: bundleName = %{public}s, userId = %{public}d, appIndex = %{public}d",
@@ -1828,7 +1828,6 @@ void InstallPreexistingAppExec(napi_env env, void *data)
     InstallPreexistingAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallPreexistingAppCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("param: bundleName = %{public}s, userId = %{public}d",
@@ -1876,8 +1875,6 @@ napi_value InstallPreexistingApp(napi_env env, napi_callback_info info)
     }
     size_t argc = args.GetMaxArgc();
     for (size_t i = 0; i < argc; ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
                 APP_LOGW("parse bundleName failed");
@@ -1887,8 +1884,6 @@ napi_value InstallPreexistingApp(napi_env env, napi_callback_info info)
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 APP_LOGW("parse userId failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-                return nullptr;
             }
         } else {
             APP_LOGW("The number of parameters is incorrect");

@@ -16,9 +16,11 @@
 #include "bundle_clone_installer.h"
 
 #include "ability_manager_helper.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
+#include "code_protect_bundle_info.h"
 #include "datetime_ex.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
@@ -29,6 +31,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
+
+std::mutex gCloneInstallerMutex;
 
 BundleCloneInstaller::BundleCloneInstaller()
 {
@@ -50,12 +54,12 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
 
     ErrCode result = ProcessCloneBundleInstall(bundleName, userId, appIndex);
     NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = result,
         .type = NotifyType::INSTALL,
-        .uid = uid_,
+        .resultCode = result,
         .accessTokenId = accessTokenId_,
+        .uid = uid_,
         .appIndex = appIndex,
+        .bundleName = bundleName,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -76,12 +80,12 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
 
     ErrCode result = ProcessCloneBundleUninstall(bundleName, userId, appIndex);
     NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = result,
         .type = NotifyType::UNINSTALL_BUNDLE,
-        .uid = uid_,
+        .resultCode = result,
+        .bundleName = bundleName,
         .accessTokenId = accessTokenId_,
-        .appIndex = appIndex,
+        .uid = uid_,
+        .appIndex = appIndex
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -141,10 +145,10 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
 
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
 
+    std::lock_guard<std::mutex> cloneGuard(gCloneInstallerMutex);
     // 1. check whether original application installed or not
-    ScopeGuard bundleEnabledGuard([&] { dataMgr->EnableBundle(bundleName); });
     InnerBundleInfo info;
-    bool isExist = dataMgr->GetInnerBundleInfo(bundleName, info);
+    bool isExist = dataMgr->FetchInnerBundleInfo(bundleName, info);
     if (!isExist) {
         APP_LOGE("the bundle is not installed");
         return ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED;
@@ -202,13 +206,6 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     };
     uid_ = uid;
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
-    ScopeGuard addCloneBundleGuard([&] { dataMgr->RemoveCloneBundle(bundleName, userId, appIndex); });
-    ErrCode addRes = dataMgr->AddCloneBundle(bundleName, attr);
-    if (addRes != ERR_OK) {
-        APP_LOGE("dataMgr add clone bundle fail, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
-            bundleName.c_str(), userId, appIndex);
-        return addRes;
-    }
 
     ErrCode result = CreateCloneDataDir(info, userId, uid, appIndex);
     if (result != ERR_OK) {
@@ -216,6 +213,14 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         return result;
     }
     ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex); });
+
+    ScopeGuard addCloneBundleGuard([&] { dataMgr->RemoveCloneBundle(bundleName, userId, appIndex); });
+    ErrCode addRes = dataMgr->AddCloneBundle(bundleName, attr);
+    if (addRes != ERR_OK) {
+        APP_LOGE("dataMgr add clone bundle fail, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+            bundleName.c_str(), userId, appIndex);
+        return addRes;
+    }
 
     // process icon and label
     {
@@ -225,6 +230,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
             BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, appIndex, userId);
         }
     }
+    AddKeyOperation(bundleName, appIndex, userId, uid);
+
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
     createCloneDataDirGuard.Dismiss();
@@ -303,6 +310,33 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
 #endif
     APP_LOGI("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
+}
+
+bool BundleCloneInstaller::AddKeyOperation(
+    const std::string &bundleName, int32_t appIndex, int32_t userId, int32_t uid)
+{
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("get failed");
+        return false;
+    }
+    if (innerBundleInfo.GetApplicationReservedFlag() !=
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION)) {
+        return true;
+    }
+    CodeProtectBundleInfo info;
+    info.bundleName = innerBundleInfo.GetBundleName();
+    info.versionCode = innerBundleInfo.GetVersionCode();
+    info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
+    info.uid = uid;
+    info.appIndex = appIndex;
+
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    return bmsExtensionDataMgr.KeyOperation(std::vector<CodeProtectBundleInfo> { info }, CodeOperation::ADD) == ERR_OK;
 }
 
 ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,

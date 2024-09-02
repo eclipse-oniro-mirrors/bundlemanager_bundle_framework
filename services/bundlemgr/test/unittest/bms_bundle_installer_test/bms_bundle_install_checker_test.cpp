@@ -1353,7 +1353,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0010, Function | SmallTe
     infos.emplace(HAP, innerBundleInfo1);
     infos.emplace(HAP_ONE, innerBundleInfo2);
     auto ret = installChecker.CheckAppLabelInfo(infos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -2564,6 +2564,23 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckEnterpriseBundle_0100, Function | Sma
 }
 
 /**
+ * @tc.number: CheckInternaltestingBundle_0100
+ * @tc.name: test CheckInternaltestingBundle
+ * @tc.desc: 1.test check Internaltesting bundle
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckInternaltestingBundle_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    provisionInfo.distributionType = Security::Verify::AppDistType::INTERNALTESTING;
+    result.SetProvisionInfo(provisionInfo);
+    bool ret = installChecker.CheckInternaltestingBundle(result);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: ParseBundleInfo_0100
  * @tc.name: test ParseBundleInfo
  * @tc.desc: 1.test parse bundle info
@@ -2604,5 +2621,18 @@ HWTEST_F(BmsBundleInstallCheckerTest, FindModuleInInstallingPackage_0100, Functi
     infos.emplace(HAP, innerBundleInfo);
     ret = installChecker.FindModuleInInstallingPackage(moduleName, bundleName, infos);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: CheckAllowEnterpriseBundle_0100
+ * @tc.name: Test CheckAllowEnterpriseBundle
+ * @tc.desc: 1.Test CheckAllowEnterpriseBundle
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAllowEnterpriseBundle_0100, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    auto ret = installChecker.CheckAllowEnterpriseBundle(hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS

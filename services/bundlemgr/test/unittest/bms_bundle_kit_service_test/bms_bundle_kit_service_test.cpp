@@ -4119,6 +4119,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_1000, Function | Small
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     ErrCode testRet = hostImpl->SetApplicationEnabled(BUNDLE_NAME_TEST, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(testRet, ERR_OK);
     bool isEnable = false;
@@ -4376,6 +4377,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0900, Function | SmallTes
     CreateFileDir();
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     hostImpl->isBrokerServiceExisted_ = true;
     bool testRet = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_DEMO, DEFAULT_USERID);
     EXPECT_FALSE(testRet);
@@ -8841,7 +8843,7 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0010, Function | SmallTest | Level0)
 
     AgingRequest request;
     bool ret = bundleAgingMgr.ProcessBundle(request);
-    EXPECT_EQ(ret, false);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -8855,7 +8857,7 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0011, Function | SmallTest | Level0)
 
     AgingRequest request;
     bool ret = bundleAgingMgr.NeedContinue(request);
-    EXPECT_EQ(ret, false);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -8869,7 +8871,7 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0012, Function | SmallTest | Level0)
 
     AgingRequest request;
     bool ret = bundleAgingMgr.UpdateUsedTotalDataBytes(request);
-    EXPECT_EQ(ret, true);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -8883,7 +8885,7 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0013, Function | SmallTest | Level0)
 
     AgingBundleInfo agingBundle;
     bool ret = bundleAgingMgr.CleanCache(agingBundle);
-    EXPECT_EQ(ret, false);
+    EXPECT_FALSE(ret);
 }
 
 #endif
@@ -9072,6 +9074,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoV9_0200, Function | SmallTest | L
 HWTEST_F(BmsBundleKitServiceTest, GetBundleInfosImpl_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::vector<BundleInfo> bundleInfos;
     bool ret = hostImpl->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, DEFAULT_USERID);
     EXPECT_TRUE(ret);
@@ -9085,7 +9088,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfosImpl_0100, Function | SmallTest 
 HWTEST_F(BmsBundleKitServiceTest, GetBundleInfosImpl_0200, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     InnerBundleInfo innerBundleInfo;
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
     InnerBundleUserInfo info;
@@ -9109,6 +9114,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetNameForUidImpl_0100, Function | SmallTest |
 {
     std::string name;
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     auto ret = hostImpl->GetNameForUid(DEMO_UID, name);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
     hostImpl->isBrokerServiceExisted_ = true;
@@ -9126,6 +9132,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetNameAndIndexForUidImpl_0100, Function | Sma
     int32_t appIndex = -1;
     std::string name;
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     auto ret = hostImpl->GetNameAndIndexForUid(DEMO_UID, name, appIndex);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
@@ -9140,6 +9147,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoImpl_0100, Function | SmallTes
     Want want;
     AbilityInfo abilityInfo;
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     auto ret = hostImpl->QueryAbilityInfo(want, abilityInfo);
     EXPECT_FALSE(ret);
 }
@@ -9154,6 +9162,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfoImpl_0100, Function | SmallTes
     AbilityInfo abilityInfo;
     HapModuleInfo hapModuleInfo;
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     auto ret = hostImpl->GetHapModuleInfo(abilityInfo, hapModuleInfo);
     EXPECT_FALSE(ret);
 }
@@ -9166,6 +9175,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfoImpl_0100, Function | SmallTes
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAutomaticImpl_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     uint64_t cacheSize = 1;
     ErrCode ret = hostImpl->CleanBundleCacheFilesAutomatic(cacheSize);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ALL_BUNDLES_ARE_RUNNING);
@@ -9179,8 +9189,10 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAutomaticImpl_0100, Funct
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesGetCleanSize_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     uint64_t cacheSize = 1;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     InnerBundleInfo innerBundleInfo;
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
     InnerBundleUserInfo info;
@@ -9202,6 +9214,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesGetCleanSize_0100, Functi
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesGetCleanSize_0200, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     uint64_t cacheSize = 1;
     ErrCode ret = hostImpl->CleanBundleCacheFilesGetCleanSize(BUNDLE_NAME_TEST, ALL_USERID, cacheSize);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
@@ -9219,6 +9232,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesGetCleanSize_0200, Functi
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheTaskGetCleanSize_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     uint64_t cacheSize = 1;
     hostImpl->CleanBundleCacheTaskGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cacheSize);
     EXPECT_FALSE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.empty());
@@ -9232,6 +9246,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheTaskGetCleanSize_0100, Functio
 HWTEST_F(BmsBundleKitServiceTest, CompileProcessAOT_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::string bundleName;
     std::string compileMode = "test";
     std::vector<std::string> compileResults;
@@ -9247,6 +9262,7 @@ HWTEST_F(BmsBundleKitServiceTest, CompileProcessAOT_0100, Function | SmallTest |
 HWTEST_F(BmsBundleKitServiceTest, CompileReset_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::string bundleName;
     ErrCode ret = hostImpl->CompileReset(bundleName, true);
     EXPECT_EQ(ret, ERR_OK);
@@ -9260,6 +9276,7 @@ HWTEST_F(BmsBundleKitServiceTest, CompileReset_0100, Function | SmallTest | Leve
 HWTEST_F(BmsBundleKitServiceTest, CopyAp_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::string bundleName;
     std::vector<std::string> compileResults;
     ErrCode ret = hostImpl->CopyAp(bundleName, true, compileResults);
@@ -9274,6 +9291,7 @@ HWTEST_F(BmsBundleKitServiceTest, CopyAp_0100, Function | SmallTest | Level1)
 HWTEST_F(BmsBundleKitServiceTest, IsCloneApplicationEnabled_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::string bundleName;
     int32_t appIndex = 0;
     bool isEnable;
@@ -9289,6 +9307,7 @@ HWTEST_F(BmsBundleKitServiceTest, IsCloneApplicationEnabled_0100, Function | Sma
 HWTEST_F(BmsBundleKitServiceTest, IsCloneAbilityEnabled_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     AbilityInfo abilityInfo;
     int32_t appIndex = 0;
     bool isEnable;
@@ -9304,6 +9323,7 @@ HWTEST_F(BmsBundleKitServiceTest, IsCloneAbilityEnabled_0100, Function | SmallTe
 HWTEST_F(BmsBundleKitServiceTest, SetCloneAbilityEnabled_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     AbilityInfo abilityInfo;
     int32_t appIndex = 0;
     bool isEnable = false;
@@ -9319,6 +9339,7 @@ HWTEST_F(BmsBundleKitServiceTest, SetCloneAbilityEnabled_0100, Function | SmallT
 HWTEST_F(BmsBundleKitServiceTest, SetCloneAbilityEnabled_0200, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     AbilityInfo abilityInfo;
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
     abilityInfo.name = BUNDLE_NAME_TEST;
@@ -9336,6 +9357,7 @@ HWTEST_F(BmsBundleKitServiceTest, SetCloneAbilityEnabled_0200, Function | SmallT
 HWTEST_F(BmsBundleKitServiceTest, VerifyCallingPermission_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::string permission;
     bool ret = hostImpl->VerifyCallingPermission(permission);
     EXPECT_TRUE(ret);
@@ -9349,6 +9371,7 @@ HWTEST_F(BmsBundleKitServiceTest, VerifyCallingPermission_0100, Function | Small
 HWTEST_F(BmsBundleKitServiceTest, FilterAbilityInfos_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::vector<AbilityInfo> abilityInfos;
     AbilityInfo abilityInfo;
     abilityInfo.kind = APP_LINKING;
@@ -9365,6 +9388,7 @@ HWTEST_F(BmsBundleKitServiceTest, FilterAbilityInfos_0100, Function | SmallTest 
 HWTEST_F(BmsBundleKitServiceTest, FilterAbilityInfos_0200, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::vector<AbilityInfo> abilityInfos;
     AbilityInfo abilityInfo;
     abilityInfos.push_back(abilityInfo);
@@ -9380,6 +9404,7 @@ HWTEST_F(BmsBundleKitServiceTest, FilterAbilityInfos_0200, Function | SmallTest 
 HWTEST_F(BmsBundleKitServiceTest, GetAbilityInfo_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::string bundleName;
     std::string abilityName;
     AbilityInfo abilityInfo;
@@ -9395,6 +9420,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAbilityInfo_0100, Function | SmallTest | Le
 HWTEST_F(BmsBundleKitServiceTest, GetBundleStats_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::vector<int64_t> bundleStats;
     int32_t appIndex = 0;
     hostImpl->isBrokerServiceExisted_ = true;
@@ -9410,6 +9436,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleStats_0100, Function | SmallTest | Le
 HWTEST_F(BmsBundleKitServiceTest, GetBundleStats_0200, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::vector<int64_t> bundleStats;
     int32_t appIndex = 0;
     bool ret = hostImpl->GetBundleStats("", DEFAULT_USERID, bundleStats, appIndex);
@@ -9429,6 +9456,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleStats_0200, Function | SmallTest | Le
 HWTEST_F(BmsBundleKitServiceTest, SetBrokerServiceStatus_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     hostImpl->SetBrokerServiceStatus(true);
     EXPECT_TRUE(hostImpl->isBrokerServiceExisted_);
 }
@@ -9441,6 +9469,7 @@ HWTEST_F(BmsBundleKitServiceTest, SetBrokerServiceStatus_0100, Function | SmallT
 HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosWithTypeName_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     Want want;
     want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
     want.SetModuleName(MODULE_NAME_TEST);
@@ -9459,6 +9488,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosWithTypeName_0100, F
 HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosWithTypeName_0200, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     Want want;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     int32_t flags = 1;
@@ -9474,6 +9504,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosWithTypeName_0200, F
 HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosOnlyWithTypeName_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::vector<ExtensionAbilityInfo> extensionInfos;
     std::string typeName = TYPE_001;
     int32_t flags = 1;
@@ -9489,6 +9520,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosOnlyWithTypeName_010
 HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosOnlyWithTypeName_0200, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::vector<ExtensionAbilityInfo> extensionInfos;
     std::string typeName = "";
     int32_t flags = 1;
@@ -9504,6 +9536,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosOnlyWithTypeName_020
 HWTEST_F(BmsBundleKitServiceTest, ResetAOTCompileStatus_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     int32_t triggerMode = 1;
     ErrCode ret = hostImpl->ResetAOTCompileStatus(BUNDLE_NAME_TEST, MODULE_NAME_TEST, triggerMode);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
@@ -9517,6 +9550,7 @@ HWTEST_F(BmsBundleKitServiceTest, ResetAOTCompileStatus_0100, Function | SmallTe
 HWTEST_F(BmsBundleKitServiceTest, GetJsonProfile_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::string profile;
     ErrCode ret = hostImpl->GetJsonProfile(
         ProfileType::UTD_SDT_PROFILE, BUNDLE_NAME_TEST, MODULE_NAME_TEST, profile, DEFAULT_USERID);
@@ -9531,6 +9565,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetJsonProfile_0100, Function | SmallTest | Le
 HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDir_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     ErrCode ret = hostImpl->CreateBundleDataDir(DEFAULT_USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
@@ -9543,7 +9578,9 @@ HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDir_0100, Function | SmallTest
 HWTEST_F(BmsBundleKitServiceTest, GetUninstalledBundleInfo_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     InnerBundleInfo innerBundleInfo;
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
     InnerBundleUserInfo info;
@@ -9566,6 +9603,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetUninstalledBundleInfo_0100, Function | Smal
 HWTEST_F(BmsBundleKitServiceTest, GetUninstalledBundleInfo_0200, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     BundleInfo bundleInfo;
     ErrCode ret = hostImpl->GetUninstalledBundleInfo(BUNDLE_NAME_DEMO, bundleInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO);
@@ -9579,6 +9617,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetUninstalledBundleInfo_0200, Function | Smal
 HWTEST_F(BmsBundleKitServiceTest, ClearCache_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     sptr<ICleanCacheCallback> cleanCacheCallback = new (std::nothrow) ICleanCacheCallbackTest();
     ErrCode ret = hostImpl->ClearCache(BUNDLE_NAME_DEMO, cleanCacheCallback, DEFAULT_USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
@@ -9592,6 +9631,7 @@ HWTEST_F(BmsBundleKitServiceTest, ClearCache_0100, Function | SmallTest | Level1
 HWTEST_F(BmsBundleKitServiceTest, IsBundleExist_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     bool ret = hostImpl->IsBundleExist(BUNDLE_NAME_DEMO);
     EXPECT_FALSE(ret);
 }
@@ -9604,6 +9644,7 @@ HWTEST_F(BmsBundleKitServiceTest, IsBundleExist_0100, Function | SmallTest | Lev
 HWTEST_F(BmsBundleKitServiceTest, CanOpenLink_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     bool canOpen;
     ErrCode ret = hostImpl->CanOpenLink(BUNDLE_NAME_DEMO, canOpen);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES);
@@ -9617,6 +9658,7 @@ HWTEST_F(BmsBundleKitServiceTest, CanOpenLink_0100, Function | SmallTest | Level
 HWTEST_F(BmsBundleKitServiceTest, GetAllPreinstalledApplicationInfos_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
     ErrCode ret = hostImpl->GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
     EXPECT_EQ(ret, ERR_OK);
@@ -9630,6 +9672,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllPreinstalledApplicationInfos_0100, Funct
 HWTEST_F(BmsBundleKitServiceTest, GetAllBundleInfoByDeveloperId_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::string developerId;
     std::vector<BundleInfo> bundleInfos;
     ErrCode ret = hostImpl->GetAllBundleInfoByDeveloperId(developerId, bundleInfos, DEFAULT_USERID);
@@ -9644,6 +9687,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllBundleInfoByDeveloperId_0100, Function |
 HWTEST_F(BmsBundleKitServiceTest, GetDeveloperIds_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::string appDistributionType;
     std::vector<std::string> developerIdList;
     ErrCode ret = hostImpl->GetDeveloperIds(appDistributionType, developerIdList, DEFAULT_USERID);
@@ -9658,6 +9702,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetDeveloperIds_0100, Function | SmallTest | L
 HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     ErrCode ret = hostImpl->SwitchUninstallState(BUNDLE_NAME_DEMO, true);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
@@ -9670,6 +9715,7 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0100, Function | SmallTes
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoByContinueType_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     AbilityInfo abilityInfo;
     ErrCode ret = hostImpl->QueryAbilityInfoByContinueType(BUNDLE_NAME_DEMO, TYPE_001, abilityInfo, DEFAULT_USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
@@ -9683,6 +9729,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoByContinueType_0100, Function 
 HWTEST_F(BmsBundleKitServiceTest, QueryCloneAbilityInfo_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     ElementName element;
     int32_t flags = 1;
     int32_t appIndex = 0;
@@ -9699,6 +9746,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryCloneAbilityInfo_0100, Function | SmallTe
 HWTEST_F(BmsBundleKitServiceTest, GetCloneBundleInfo_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     int32_t flags = 1;
     int32_t appIndex = 0;
     BundleInfo bundleInfo;
@@ -9714,6 +9762,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetCloneBundleInfo_0100, Function | SmallTest 
 HWTEST_F(BmsBundleKitServiceTest, GetCloneAppIndexes_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     std::vector<int32_t> appIndexes;
     ErrCode ret = hostImpl->GetCloneAppIndexes(BUNDLE_NAME_DEMO, appIndexes, DEFAULT_USERID);
     EXPECT_EQ(ret, ERR_OK);
@@ -9727,6 +9776,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetCloneAppIndexes_0100, Function | SmallTest 
 HWTEST_F(BmsBundleKitServiceTest, QueryCloneExtensionAbilityInfoWithAppIndex_0100, Function | SmallTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
     ElementName element;
     int32_t flags = 1;
     int32_t appIndex = 0;
@@ -10445,7 +10495,7 @@ HWTEST_F(BmsBundleKitServiceTest, SystemAbilityHelper_0200, Function | SmallTest
     int32_t systemAbilityId = 100;
     sptr<IRemoteObject> systemAbility;
     bool ret = helper.AddSystemAbility(systemAbilityId, systemAbility);
-    EXPECT_EQ(ret, true);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -10461,7 +10511,7 @@ HWTEST_F(BmsBundleKitServiceTest, SystemAbilityHelper_0300, Function | SmallTest
     int32_t uid = 100;
     int32_t appIndex = 1;
     bool ret = helper.UninstallApp(bundleName, uid,  appIndex);
-    EXPECT_EQ(ret, false);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -10477,7 +10527,7 @@ HWTEST_F(BmsBundleKitServiceTest, SystemAbilityHelper_0400, Function | SmallTest
     int32_t uid = 1;
     int32_t appIndex = 100;
     bool ret = helper.UpgradeApp(bundleName, uid, appIndex);
-    EXPECT_EQ(ret, false);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -10491,7 +10541,7 @@ HWTEST_F(BmsBundleKitServiceTest, SystemAbilityHelper_0500, Function | SmallTest
 
     int32_t systemAbilityId = 100;
     bool ret = helper.UnloadSystemAbility(systemAbilityId);
-    EXPECT_EQ(ret, true);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -12119,7 +12169,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetSharedDependencies_0100, Function | SmallTe
     }
     std::vector<Dependency> dependencies;
     auto ret = bundleMgrProxy->GetSharedDependencies("", "", dependencies);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
     ret = bundleMgrProxy->GetSharedDependencies(
             BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependencies);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
@@ -13358,14 +13408,10 @@ HWTEST_F(BmsBundleKitServiceTest, GetCloneAppIndexes_0001, Function | SmallTest 
 HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_CopyAp_0001, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    } else {
-        std::vector<std::string> results;
-        auto ret = bundleMgrProxy->CopyAp(BUNDLE_NAME_TEST, false, results);
-        EXPECT_EQ(ret, ERR_OK);
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<std::string> results;
+    auto ret = bundleMgrProxy->CopyAp(BUNDLE_NAME_TEST, false, results);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -13377,14 +13423,10 @@ HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_CopyAp_0001, Function | SmallTest | 
 HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetVerifyManager_0001, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    } else {
-        std::vector<std::string> results;
-        auto ret = bundleMgrProxy->GetVerifyManager();
-        EXPECT_NE(ret, nullptr);
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<std::string> results;
+    auto ret = bundleMgrProxy->GetVerifyManager();
+    EXPECT_NE(ret, nullptr);
 }
 
 /**
@@ -13396,18 +13438,14 @@ HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetVerifyManager_0001, Function | Sm
 HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_SetExtNameOrMIMEToApp_0001, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    } else {
-        std::string bundleName{ "bundle" };
-        std::string moduleName{ "module" };
-        std::string abilityName{ "ability" };
-        std::string extName{ "extension" };
-        std::string mimeType{ "1" };
-        auto ret = bundleMgrProxy->SetExtNameOrMIMEToApp(bundleName, moduleName, abilityName, extName, mimeType);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleName { "bundle" };
+    std::string moduleName { "module" };
+    std::string abilityName { "ability" };
+    std::string extName { "extension" };
+    std::string mimeType { "1" };
+    auto ret = bundleMgrProxy->SetExtNameOrMIMEToApp(bundleName, moduleName, abilityName, extName, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -13419,18 +13457,14 @@ HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_SetExtNameOrMIMEToApp_0001, Function
 HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_DelExtNameOrMIMEToApp_0001, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    } else {
-        std::string bundleName{ "bundle" };
-        std::string moduleName{ "module" };
-        std::string abilityName{ "ability" };
-        std::string extName{ "extension" };
-        std::string mimeType{ "1" };
-        auto ret = bundleMgrProxy->DelExtNameOrMIMEToApp(bundleName, moduleName, abilityName, extName, mimeType);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleName { "bundle" };
+    std::string moduleName { "module" };
+    std::string abilityName { "ability" };
+    std::string extName { "extension" };
+    std::string mimeType { "1" };
+    auto ret = bundleMgrProxy->DelExtNameOrMIMEToApp(bundleName, moduleName, abilityName, extName, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -13442,15 +13476,11 @@ HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_DelExtNameOrMIMEToApp_0001, Function
 HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetUninstalledBundleInfo_0001, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    } else {
-        std::string bundleName{ "bundle" };
-        BundleInfo bundleInfo;
-        auto ret = bundleMgrProxy->GetUninstalledBundleInfo(bundleName, bundleInfo);
-        EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO);
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleName { "bundle" };
+    BundleInfo bundleInfo;
+    auto ret = bundleMgrProxy->GetUninstalledBundleInfo(bundleName, bundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO);
 }
 
 /**

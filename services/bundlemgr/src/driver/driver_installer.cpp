@@ -53,9 +53,7 @@ ErrCode DriverInstaller::CopyDriverSoFile(const InnerBundleInfo &info, const std
     ErrCode result = ERR_OK;
     std::string cpuAbi = "";
     std::string nativeLibraryPath = "";
-    if (!info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath)) {
-        return result;
-    }
+    info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath);
     for (const auto &extAbilityInfo : extensionAbilityInfos) {
         if (extAbilityInfo.second.type != ExtensionAbilityType::DRIVER) {
             continue;

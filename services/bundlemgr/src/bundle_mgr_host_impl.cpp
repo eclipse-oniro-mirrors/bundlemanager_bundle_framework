@@ -1433,11 +1433,11 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
         return;
     }
     NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = ERR_OK,
         .type = NotifyType::BUNDLE_CACHE_CLEARED,
+        .resultCode = ERR_OK,
+        .accessTokenId = innerBundleUserInfo.accessTokenId,
         .uid = innerBundleUserInfo.uid,
-        .accessTokenId = innerBundleUserInfo.accessTokenId
+        .bundleName = bundleName
     };
     NotifyBundleStatus(installRes);
 }
@@ -1584,12 +1584,12 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             }
             int32_t uid = cloneInfoIter->second.uid;
             installRes = {
-                .bundleName = bundleName,
-                .resultCode = ERR_OK,
                 .type = NotifyType::BUNDLE_CACHE_CLEARED,
-                .uid = uid,
+                .resultCode = ERR_OK,
                 .accessTokenId = innerBundleUserInfo.accessTokenId,
-                .appIndex = appIndex
+                .uid = uid,
+                .appIndex = appIndex,
+                .bundleName = bundleName
             };
             NotifyBundleStatus(installRes);
             return;
@@ -2089,12 +2089,12 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
     }
 
     NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = ERR_OK,
+        .isApplicationEnabled = isEnable,
         .type = NotifyType::APPLICATION_ENABLE,
-        .uid = innerBundleUserInfo.uid,
+        .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
-        .isApplicationEnabled = isEnable
+        .uid = innerBundleUserInfo.uid,
+        .bundleName = bundleName
     };
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     NotifyBundleStatus(installRes);
@@ -2142,12 +2142,12 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
     }
 
     NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = ERR_OK,
         .type = NotifyType::APPLICATION_ENABLE,
-        .uid = innerBundleUserInfo.uid,
+        .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
-        .appIndex = appIndex
+        .uid = innerBundleUserInfo.uid,
+        .appIndex = appIndex,
+        .bundleName = bundleName
     };
     NotifyBundleStatus(installRes);
     APP_LOGD("SetCloneApplicationEnabled finish");
@@ -2226,9 +2226,13 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    NotifyBundleEvents installRes = {.bundleName = abilityInfo.bundleName, .abilityName = abilityInfo.name,
-        .resultCode = ERR_OK, .type = NotifyType::APPLICATION_ENABLE, .uid = innerBundleUserInfo.uid,
+    NotifyBundleEvents installRes = {
+        .type = NotifyType::APPLICATION_ENABLE,
+        .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
+        .uid = innerBundleUserInfo.uid,
+        .bundleName = abilityInfo.bundleName,
+        .abilityName = abilityInfo.name
     };
     NotifyBundleStatus(installRes);
     return ERR_OK;
@@ -2271,9 +2275,13 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    NotifyBundleEvents installRes = {.bundleName = abilityInfo.bundleName, .abilityName = abilityInfo.name,
-        .resultCode = ERR_OK, .type = NotifyType::APPLICATION_ENABLE, .uid = innerBundleUserInfo.uid,
-        .accessTokenId = innerBundleUserInfo.accessTokenId, .appIndex = appIndex
+    NotifyBundleEvents installRes = {
+        .type = NotifyType::APPLICATION_ENABLE,
+        .resultCode = ERR_OK,
+        .accessTokenId = innerBundleUserInfo.accessTokenId, .appIndex = appIndex,
+        .uid = innerBundleUserInfo.uid,
+        .bundleName = abilityInfo.bundleName,
+        .abilityName = abilityInfo.name
     };
     NotifyBundleStatus(installRes);
     return ERR_OK;
@@ -3843,10 +3851,21 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
         APP_LOGE("dataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGE("userId %{public}d is invalid", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
     std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos();
     for (auto recoverableBundleInfo: recoverableBundleInfos) {
+        std::string bundleName = recoverableBundleInfo.GetBundleName();
+        BmsExtensionDataMgr bmsExtensionDataMgr;
+        if (bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId)) {
+            APP_LOGI("recover app %{public}s is in blocklist", bundleName.c_str());
+            continue;
+        }
         RecoverableApplicationInfo recoverableApplication;
-        recoverableApplication.bundleName = recoverableBundleInfo.GetBundleName();
+        recoverableApplication.bundleName = bundleName;
         recoverableApplication.labelId = recoverableBundleInfo.GetLabelId();
         recoverableApplication.iconId = recoverableBundleInfo.GetIconId();
         recoverableApplication.systemApp = recoverableBundleInfo.GetSystemApp();
@@ -4049,6 +4068,11 @@ void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hap
     info.SetProvisionId(provisionInfo.appId);
     info.SetCertificateFingerprint(provisionInfo.fingerprint);
     info.SetAppIdentifier(provisionInfo.bundleInfo.appIdentifier);
+    if (provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+        info.SetCertificate(provisionInfo.bundleInfo.developmentCertificate);
+    } else {
+        info.SetCertificate(provisionInfo.bundleInfo.distributionCertificate);
+    }
     info.SetAppPrivilegeLevel(provisionInfo.bundleInfo.apl);
     bool isDebug = provisionInfo.type == Security::Verify::ProvisionType::DEBUG;
     info.SetAppProvisionType(isDebug ? Constants::APP_PROVISION_TYPE_DEBUG : Constants::APP_PROVISION_TYPE_RELEASE);
@@ -4337,5 +4361,26 @@ bool BundleMgrHostImpl::GetBundleInfosForContinuation(int32_t flags, std::vector
     dataMgr->GetBundleInfosForContinuation(bundleInfos);
     return !bundleInfos.empty();
 }
+
+ErrCode BundleMgrHostImpl::GetContinueBundleNames(
+    const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId)
+{
+    if (continueBundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetContinueBundleNames(continueBundleName, bundleNames, userId);
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1630,6 +1630,7 @@ HWTEST_F(BmsBundleAppControlTest, GetAbilityRunningControlRule_0100, Function | 
     int32_t appIndex = 100;
     int32_t userId = 100;
     std::vector<DisposedRule> disposedRules;
+    ASSERT_NE(appControlManagerDb_, nullptr);
     ErrCode result = appControlManagerDb_->GetAbilityRunningControlRule(appId, appIndex, userId, disposedRules);
     EXPECT_EQ(result, ERR_OK);
 }
@@ -1643,8 +1644,9 @@ HWTEST_F(BmsBundleAppControlTest, GetAbilityRunningControlRule_0100, Function | 
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5700, Function | SmallTest | Level1)
 {
     auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
-
+    ASSERT_NE(appControlProxy, nullptr);
     std::string appId;
     DisposedRule disposedRule;
     int32_t userId = 0;
@@ -1660,8 +1662,9 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5700, Function | Sma
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5800, Function | SmallTest | Level1)
 {
     auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
-
+    ASSERT_NE(appControlProxy, nullptr);
     std::string appId;
     DisposedRule disposedRule;
     int32_t appIndex = 0;
@@ -1678,8 +1681,9 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5800, Function | Sma
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5900, Function | SmallTest | Level1)
 {
     auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
-
+    ASSERT_NE(appControlProxy, nullptr);
     std::string appId;
     DisposedRule rule;
     int32_t appIndex = 0;
@@ -1696,8 +1700,9 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5900, Function | Sma
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6000, Function | SmallTest | Level1)
 {
     auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
-
+    ASSERT_NE(appControlProxy, nullptr);
     std::string appId;
     int32_t appIndex = 0;
     int32_t userId = 0;
@@ -1713,6 +1718,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6000, Function | Sma
 HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorManagerRdb_6100, Function | SmallTest | Level1)
 {
     auto rdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
 
     std::vector<AppJumpControlRule> controlRules;
     int32_t userId = 100;
@@ -1728,10 +1734,451 @@ HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorManagerRdb_6100, Function | 
 HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorManagerRdb_6200, Function | SmallTest | Level1)
 {
     auto rdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
 
     std::vector<AppJumpControlRule> controlRules;
     int32_t userId = 100;
     ErrCode ret = rdb->DeleteAppJumpControlRule(controlRules, userId);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlProxyGetDisposedRule_0100
+ * @tc.name: test GetDisposedRule by AppControlProxy
+ * @tc.desc: 1.GetDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlProxyGetDisposedRule_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    std::string appId = "0";
+    DisposedRule disposedRule;
+    int32_t userId = 0;
+    ErrCode res = appControlProxy->GetDisposedRule(appId, disposedRule, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlProxyGetAbilityRunningControlRule_0100
+ * @tc.name: test GetAbilityRunningControlRule by AppControlProxy
+ * @tc.desc: 1.GetAbilityRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlProxyGetAbilityRunningControlRule_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    std::string bundleName = "bundleName";
+    int32_t userId = 100;
+    std::vector<DisposedRule> disposedRules;
+    int32_t appIndex = 0;
+    ErrCode result = appControlProxy->GetAbilityRunningControlRule(bundleName, userId, disposedRules, appIndex);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlProxyAppInstallControlRule_0100
+ * @tc.name: test AddAppInstallControlRule by AppControlProxy
+ * @tc.desc: 1.AddAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlProxyAppInstallControlRule_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    const int32_t size = AppControlConstants::LIST_MAX_SIZE + 1;
+    std::vector<std::string> appIds(size);
+    auto res = appControlProxy->AddAppInstallControlRule(
+        appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: AppControlProxyConfirmAppJumpControlRule_0100
+ * @tc.name: test ConfirmAppJumpControlRule by AppControlProxy
+ * @tc.desc: 1.ConfirmAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlProxyConfirmAppJumpControlRule_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    auto res = appControlProxy->ConfirmAppJumpControlRule("", "", USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    res = appControlProxy->ConfirmAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlHostHandleSetDisposedRuleForCloneApp_0100
+ * @tc.name: test HandleSetDisposedRuleForCloneApp by AppControlHost
+ * @tc.desc: 1.HandleSetDisposedRuleForCloneApp test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlHostHandleSetDisposedRuleForCloneApp_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleSetDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlHostHandleSetDisposedRule_0100
+ * @tc.name: test HandleSetDisposedRule by AppControlHost
+ * @tc.desc: 1.HandleSetDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlHostHandleSetDisposedRule_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleSetDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlHostHandleSetDisposedStatus_0100
+ * @tc.name: test HandleSetDisposedStatus by AppControlHost
+ * @tc.desc: 1.HandleSetDisposedStatus test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlHostHandleSetDisposedStatus_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleSetDisposedStatus(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_6300
+ * @tc.name: Test DeleteRuleByTargetBundleName by AppControlManagerHostImpl
+ * @tc.desc: 1.DeleteRuleByTargetBundleName test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6300, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    ErrCode res = impl->DeleteRuleByTargetBundleName(CALLER_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_6400
+ * @tc.name: Test GetDisposedRuleForCloneApp by AppControlManagerHostImpl
+ * @tc.desc: 1.GetDisposedRuleForCloneApp test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6400, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    DisposedRule rule;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    auto ret = impl->GetDisposedRuleForCloneApp(APPID, rule, APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_6500
+ * @tc.name: Test GetAppRunningControlRule by AppControlManager
+ * @tc.desc: 1.GetAppRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6500, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AppRunningControlRuleResult controlRuleResult;
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    appControlManager->appRunningControlRuleResult_.clear();
+    ErrCode res = appControlManager->GetAppRunningControlRule(BUNDLE_NAME, USERID, controlRuleResult);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_6600
+ * @tc.name: Test GetAppRunningControlRule by AppControlManager
+ * @tc.desc: 1.GetAppRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6600, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AppRunningControlRuleResult controlRuleResult;
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    std::string key = std::string("_") + std::to_string(USERID);
+    AppRunningControlRuleResult value;
+    value.controlMessage = "_MESSAGE";
+    appControlManager->appRunningControlRuleResult_.clear();
+    appControlManager->appRunningControlRuleResult_.emplace(key, value);
+    ErrCode res = appControlManager->GetAppRunningControlRule(BUNDLE_NAME, USERID, controlRuleResult);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_6700
+ * @tc.name: Test GetAppRunningControlRule by AppControlManager
+ * @tc.desc: 1.GetAppRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6700, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AppRunningControlRuleResult controlRuleResult;
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    std::string key = std::string("_") + std::to_string(USERID);
+    AppRunningControlRuleResult value;
+    value.controlMessage = "INVALID_MESSAGE";
+    appControlManager->appRunningControlRuleResult_.clear();
+    appControlManager->appRunningControlRuleResult_.emplace(key, value);
+    ErrCode res = appControlManager->GetAppRunningControlRule(BUNDLE_NAME, USERID, controlRuleResult);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_6800
+ * @tc.name: Test GetDisposedRule by AppControlManager
+ * @tc.desc: 1.GetDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6800, Function | SmallTest | Level1)
+{
+    AppControlManager appControlManager;
+    DisposedRule rule;
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    ASSERT_NE(rdb->rdbDataManager_, nullptr);
+    rdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
+    appControlManager.appControlManagerDb_ = rdb;
+    auto res = appControlManager.GetDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_6900
+ * @tc.name: Test DeleteDisposedRule by AppControlManager
+ * @tc.desc: 1.DeleteDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6900, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    std::string key = APPID + std::string("_") + std::to_string(USERID) + std::string("_") + std::to_string(APP_INDEX);
+    std::vector<DisposedRule> value;
+    appControlManager->abilityRunningControlRuleCache_.emplace(key, value);
+    auto res = appControlManager->DeleteDisposedRule(CALLER_BUNDLE_NAME, APPID, APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_7000
+ * @tc.name: Test GetDisposedRule by AppControlManager
+ * @tc.desc: 1.GetDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7000, Function | SmallTest | Level1)
+{
+    AppControlManager appControlManager;
+    DisposedRule rule;
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    ASSERT_NE(rdb->rdbDataManager_, nullptr);
+    rdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
+    appControlManager.appControlManagerDb_ = rdb;
+    auto res = appControlManager.GetDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_7100
+ * @tc.name: Test DeleteAllDisposedRuleByBundle by AppControlManager
+ * @tc.desc: 1.DeleteAllDisposedRuleByBundle test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7100, Function | SmallTest | Level1)
+{
+    AppControlManager appControlManager;
+    InnerBundleInfo bundleInfo;
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    ASSERT_NE(rdb->rdbDataManager_, nullptr);
+    rdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
+    appControlManager.appControlManagerDb_ = rdb;
+    auto res = appControlManager.DeleteAllDisposedRuleByBundle(bundleInfo, APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_7200
+ * @tc.name: Test DeleteAllDisposedRuleByBundle by AppControlManager
+ * @tc.desc: 1.DeleteAllDisposedRuleByBundle test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7200, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    InnerBundleInfo bundleInfo;
+    auto res = appControlManager->DeleteAllDisposedRuleByBundle(bundleInfo, APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_7300
+ * @tc.name: Test DeleteAllDisposedRuleByBundle by AppControlManager
+ * @tc.desc: 1.DeleteAllDisposedRuleByBundle test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7300, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo bundleInfo;
+    ASSERT_NE(bundleInfo.baseApplicationInfo_, nullptr);
+    bundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleCloneInfo cloneInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.cloneInfos.emplace(BUNDLE_NAME, cloneInfo);
+    std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    bundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    auto it = dataMgr->bundleInfos_.find(BUNDLE_NAME);
+    dataMgr->bundleInfos_.erase(it);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    auto res = appControlManager->DeleteAllDisposedRuleByBundle(bundleInfo, Constants::MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_7400
+ * @tc.name: Test DeleteAppRunningRuleCache by AppControlManager
+ * @tc.desc: 1.DeleteAppRunningRuleCache test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7400, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    std::string key = "key";
+    AppRunningControlRuleResult appRunningControlRuleResult;
+    appControlManager->appRunningControlRuleResult_.emplace(key, appRunningControlRuleResult);
+    appControlManager->DeleteAppRunningRuleCache(key);
+    EXPECT_EQ(appControlManager->appRunningControlRuleResult_.find(key),
+              appControlManager->appRunningControlRuleResult_.end());
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_7500
+ * @tc.name: Test DeleteAbilityRunningRuleCache by AppControlManager
+ * @tc.desc: 1.DeleteAbilityRunningRuleCache test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7500, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    std::string key = "key";
+    std::vector<DisposedRule> disposedRule;
+    appControlManager->abilityRunningControlRuleCache_.emplace(key, disposedRule);
+    appControlManager->DeleteAbilityRunningRuleCache(key);
+    EXPECT_EQ(appControlManager->abilityRunningControlRuleCache_.find(key),
+              appControlManager->abilityRunningControlRuleCache_.end());
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_7600
+ * @tc.name: Test GetAbilityRunningControlRule by AppControlManager
+ * @tc.desc: 1.GetAbilityRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7600, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    std::vector<DisposedRule> disposedRules;
+    auto res = appControlManager->GetAbilityRunningControlRule(BUNDLE_NAME, APP_INDEX, USERID, disposedRules);
+    EXPECT_EQ(ERR_OK, res);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_7700
+ * @tc.name: Test GetAbilityRunningControlRule by AppControlManager
+ * @tc.desc: 1.GetAbilityRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7700, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    std::vector<DisposedRule> disposedRules;
+    std::string key = std::string("_") + std::to_string(USERID) + std::string("_") + std::to_string(APP_INDEX);
+    appControlManager->abilityRunningControlRuleCache_.emplace(key, disposedRules);
+    auto res = appControlManager->GetAbilityRunningControlRule(BUNDLE_NAME, APP_INDEX, USERID, disposedRules);
+    EXPECT_EQ(ERR_OK, res);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_7800
+ * @tc.name: Test GetAbilityRunningControlRule by AppControlManager
+ * @tc.desc: 1.GetAbilityRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7800, Function | SmallTest | Level1)
+{
+    AppControlManager appControlManager;
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    ASSERT_NE(rdb->rdbDataManager_, nullptr);
+    rdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
+    appControlManager.appControlManagerDb_ = rdb;
+    std::vector<DisposedRule> disposedRules;
+    auto res = appControlManager.GetAbilityRunningControlRule(BUNDLE_NAME, APP_INDEX, USERID, disposedRules);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_7900
+ * @tc.name: Test DeleteAppInstallControlRule by AppControlManager
+ * @tc.desc: 1.DeleteAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7900, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->isAppInstallControlEnabled_ = true;
+    std::string controlRuleType;
+    auto res = appControlManager->DeleteAppInstallControlRule(CALLER_BUNDLE_NAME, controlRuleType, USERID);
+    EXPECT_EQ(ERR_OK, res);
 }
 } // OHOS

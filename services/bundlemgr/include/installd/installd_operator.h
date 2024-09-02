@@ -32,6 +32,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
+    uint32_t, bool &, const int32_t, const bool &);
+
 class InstalldOperator {
 public:
     /**
@@ -287,7 +290,7 @@ public:
     static bool GenerateKeyIdAndSetPolicy(int32_t uid, const std::string &bundleName,
         const int32_t userId, std::string &keyId);
 
-    static bool DeleteKeyId(const std::string &keyId);
+    static bool DeleteKeyId(const std::string &bundleName, const int32_t userId);
 
     /**
      * @brief Add file Delete dfx
@@ -295,23 +298,18 @@ public:
      * @return
      */
     static void AddDeleteDfx(const std::string &path);
-    
+
    /**
      * @brief Rmv file Delete dfx
      * @param path Indicates the directory path to add dfx.
      * @return
      */
     static void RmvDeleteDfx(const std::string &path);
+
 private:
     static bool OpenHandle(void **handle);
 
     static void CloseHandle(void **handle);
-
-#if defined(CODE_ENCRYPTION_ENABLE)
-    static bool OpenEncryptionHandle(void **handle);
-
-    static void CloseEncryptionHandle(void **handle);
-#endif
 
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
@@ -322,6 +320,12 @@ private:
     static bool ExtractResourceFiles(const ExtractParam &extractParam, const BundleExtractor &extractor);
     static bool CheckPathIsSame(const std::string &path, int32_t mode, const int32_t uid, const int32_t gid,
         bool &isPathExist);
+#if defined(CODE_ENCRYPTION_ENABLE)
+    static std::mutex encryptionMutex_;
+    static void *encryptionHandle_;
+    static EnforceMetadataProcessForApp enforceMetadataProcessForApp_;
+    static bool OpenEncryptionHandle();
+#endif
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

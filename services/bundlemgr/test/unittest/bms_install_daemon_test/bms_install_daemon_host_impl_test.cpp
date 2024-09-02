@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#define private public
 #include "ipc/file_stat.h"
 #include "installd/installd_host_impl.h"
 #include "installd/installd_operator.h"
@@ -616,6 +617,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3300, Function | Sma
     EXPECT_NE(ret, ERR_OK);
     ret = hostImpl->RemoveBundleDataDir("", -1);
     EXPECT_NE(ret, ERR_OK);
+    ret = hostImpl->RemoveBundleDataDir(TEST_STRING, 0, true);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -919,7 +922,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5200, Function | Sma
 {
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
-    auto ret = hostImpl->DeleteEncryptionKeyId("");
+    auto ret = hostImpl->DeleteEncryptionKeyId("", 100);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -962,7 +965,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5400, Function | Sma
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
-    
+
     std::string userId = "";
     std::string hnpRootPath = "";
     std::string hapPath = "";
@@ -982,7 +985,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5500, Function | Sma
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
-    
+
     std::string userId = "";
     std::string packageName = "";
     ErrCode ret = installdProxy->ProcessBundleUnInstallNative(userId, packageName);
@@ -998,8 +1001,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5500, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5600, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-    
+    ASSERT_NE(installdProxy, nullptr);
+
     std::string anFileName = "";
     std::vector<uint8_t> signData ;
     ErrCode ret = installdProxy->PendSignAOT(anFileName, signData);
@@ -1015,8 +1018,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5600, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5700, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
- 
+    ASSERT_NE(installdProxy, nullptr);
+
     ErrCode ret = installdProxy->StopAOT();
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
@@ -1030,7 +1033,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5700, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5800, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
+    ASSERT_NE(installdProxy, nullptr);
 
     std::string dir = "";
     bool isReadPath = false;
@@ -1047,7 +1050,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5800, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5900, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
+    ASSERT_NE(installdProxy, nullptr);
 
     std::string dir = "com.acts.example";
     bool isReadPath = false;
@@ -1064,8 +1067,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5900, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6000, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-  
+    ASSERT_NE(installdProxy, nullptr);
+
     std::string bundleName = "com.acts.example";
     int32_t  profileBlockLength = 0;
     const unsigned char * profileBlock = new unsigned char[0];
@@ -1082,8 +1085,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6000, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6100, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-  
+    ASSERT_NE(installdProxy, nullptr);
+
     int32_t  userid = 0;
     std::vector<std::string> extensionBundleDirs;
     ErrCode ret = installdProxy->RemoveExtensionDir(userid, extensionBundleDirs);
@@ -1099,8 +1102,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6100, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6200, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-  
+    ASSERT_NE(installdProxy, nullptr);
+
     int32_t  userid = 0;
     std::vector<std::string> extensionBundleDirs;
     extensionBundleDirs.push_back("");
@@ -1117,8 +1120,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6200, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6300, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-  
+    ASSERT_NE(installdProxy, nullptr);
+
     int32_t  userid = 0;
     std::vector<std::string> extensionBundleDirs;
     extensionBundleDirs.push_back("com.acts.extension");
@@ -1135,7 +1138,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6300, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6400, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
+    ASSERT_NE(installdProxy, nullptr);
 
     int32_t  userid = 0;
     std::string extensionBundleDir = "com.acts.extension";
@@ -1153,8 +1156,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6400, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6500, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-  
+    ASSERT_NE(installdProxy, nullptr);
+
     CreateDirParam createDirParam;
     createDirParam.bundleName = "";
     createDirParam.userId = -1;
@@ -1171,8 +1174,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6500, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6600, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-  
+    ASSERT_NE(installdProxy, nullptr);
+
     CreateDirParam createDirParam;
     createDirParam.bundleName = TEST_STRING;
     createDirParam.userId = 0;
@@ -1194,9 +1197,109 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6600, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6700, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
     CodeSignatureParam codeSignatureParam;
     Security::CodeSign::EntryMap entryMap;
     ErrCode res = hostImpl->PrepareEntryMap(codeSignatureParam, entryMap);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_6800
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling AddUserDirDeleteDfx of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6800, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode res = hostImpl->AddUserDirDeleteDfx(100);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_6900
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetAppDataPath of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6900, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::string bundleName = "";
+    std::string el = "";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+    std::string innerDataDir = std::string("+") + "clone" + "-" + std::to_string(appIndex) + "+" + bundleName;
+    auto res = hostImpl->GetAppDataPath(bundleName, el, userId, appIndex);
+    EXPECT_EQ(res, "/data/app/" + el + "/" + std::to_string(userId) + "/base/" + innerDataDir);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7000
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling IsExistFile of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7000, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    bool isExist = false;
+    ErrCode res = hostImpl->IsExistFile("", isExist);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling VerifyCodeSignatureForHap of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    CodeSignatureParam codeSignatureParam;
+    ErrCode res = hostImpl->VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7200
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling DeliverySignProfile of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7200, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode res = hostImpl->DeliverySignProfile("", 0, nullptr);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7300
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling RemoveSignProfile of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7300, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode res = hostImpl->RemoveSignProfile("");
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7400
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetExtensionSandboxTypeList of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7400, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> typeList;
+    ErrCode res = hostImpl->GetExtensionSandboxTypeList(typeList);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

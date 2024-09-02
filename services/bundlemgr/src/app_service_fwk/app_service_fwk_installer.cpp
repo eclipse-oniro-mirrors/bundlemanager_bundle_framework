@@ -28,6 +28,8 @@ constexpr const char* HSP_PATH = ", path: ";
 constexpr const char* SHARED_MODULE_TYPE = "shared";
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
+const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 
 std::string ObtainTempSoPath(
     const std::string &moduleName, const std::string &nativeLibPath)
@@ -83,7 +85,12 @@ ErrCode AppServiceFwkInstaller::Install(
     ErrCode result = BeforeInstall(hspPaths, installParam);
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
     result = ProcessInstall(hspPaths, installParam);
-    APP_LOGI("%{public}s %{public}s result %{public}d", hspPaths[0].c_str(), bundleName_.c_str(), result);
+    APP_LOGI("%{public}s %{public}s result %{public}d first time", hspPaths[0].c_str(), bundleName_.c_str(), result);
+    if (result != ERR_OK && installParam.isOTA) {
+        auto uninstallRes = UnInstall(bundleName_, true);
+        result = ProcessInstall(hspPaths, installParam);
+        APP_LOGI("uninstallRes %{public}d installRes second time %{public}d", uninstallRes, result);
+    }
     SendBundleSystemEvent(
         hspPaths,
         BundleEventType::INSTALL,
@@ -93,7 +100,7 @@ ErrCode AppServiceFwkInstaller::Install(
     return result;
 }
 
-ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName)
+ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName, bool isKeepData)
 {
     APP_LOGI("Uninstall bundle %{public}s", bundleName.c_str());
     if (BeforeUninstall(bundleName) != ERR_OK) {
@@ -111,6 +118,9 @@ ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName)
     if (InstalldClient::GetInstance()->RemoveDir(bundleDir) != ERR_OK) {
         APP_LOGW("remove bundle dir %{public}s failed", bundleDir.c_str());
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    if (!isKeepData) {
+        InstalldClient::GetInstance()->RemoveBundleDataDir(bundleName, 0, false);
     }
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
         APP_LOGE("delete inner info failed for bundle %{public}s", bundleName.c_str());
@@ -705,8 +715,8 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
 void AppServiceFwkInstaller::RollBack()
 {
     APP_LOGI("RollBack: %{public}s", bundleName_.c_str());
-    if (newInnerBundleInfo_.IsPreInstallApp()) {
-        APP_LOGW("pre bundle: %{public}s no rollback", bundleName_.c_str());
+    if (newInnerBundleInfo_.IsPreInstallApp() && !BundleUtil::CheckSystemFreeSize(APP_INSTALL_PATH, FIVE_MB)) {
+        APP_LOGW("pre bundle: %{public}s no rollback due to no space", bundleName_.c_str());
         return;
     }
     // 1.RemoveBundleDir

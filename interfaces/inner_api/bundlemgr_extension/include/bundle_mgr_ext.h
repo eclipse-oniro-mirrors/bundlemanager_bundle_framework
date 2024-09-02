@@ -20,6 +20,7 @@
 #include "ability_info.h"
 #include "bundle_info.h"
 #include "bundle_resource_info.h"
+#include "code_protect_bundle_info.h"
 #include "launcher_ability_resource_info.h"
 #include "interfaces/hap_verify.h"
 #include "want.h"
@@ -112,9 +113,13 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
-    virtual bool IsAppInBlocklist(const std::string &bundleName)
+    virtual bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId)
     {
         return false;
+    }
+    virtual ErrCode KeyOperation(const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type)
+    {
+        return ERR_OK;
     }
     virtual bool CheckWhetherCanBeUninstalled(const std::string &bundleName)
     {
@@ -138,6 +143,15 @@ public:
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier)
+    {
+        return;
+    }
+    
+    virtual bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum)
+    {
+        return false;
     }
 };
 

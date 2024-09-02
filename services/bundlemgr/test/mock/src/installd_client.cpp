@@ -457,13 +457,13 @@ ErrCode InstalldClient::CreateExtensionDataDir(const CreateDirParam &createDirPa
     return CallService(&IInstalld::CreateExtensionDataDir, createDirParam);
 }
 
-ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
+ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId)
 {
-    if (keyId.empty()) {
-        APP_LOGE("keyId is empty");
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::DeleteEncryptionKeyId, keyId);
+    return CallService(&IInstalld::DeleteEncryptionKeyId, bundleName, userId);
 }
 
 bool InstalldClient::StartInstalldService()
@@ -484,6 +484,34 @@ ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
 int64_t InstalldClient::GetDiskUsage(const std::string& dir, bool isRealPath)
 {
     return 0;
+}
+
+void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject)
+{
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        installdProxy_ = iface_cast<IInstalld>(remoteObject);
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(loadSaMutex_);
+        loadSaFinished_ = true;
+        loadSaCondition_.notify_one();
+    }
+}
+
+void InstalldClient::OnLoadSystemAbilityFail()
+{
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        installdProxy_ = nullptr;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(loadSaMutex_);
+        loadSaFinished_ = true;
+        loadSaCondition_.notify_one();
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

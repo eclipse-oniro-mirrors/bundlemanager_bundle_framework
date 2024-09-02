@@ -16,6 +16,8 @@
 #include "bundle_multiuser_installer.h"
 
 #include "ability_manager_helper.h"
+#include "bms_extension_data_mgr.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
@@ -46,6 +48,12 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("-n %{public}s -u %{public}d begin", bundleName.c_str(), userId);
 
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    if (bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId)) {
+        APP_LOGE("app %{public}s is in blocklist", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
+    }
+
     if (GetDataMgr() != ERR_OK) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -53,12 +61,12 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     ErrCode result = ProcessBundleInstall(bundleName, userId);
     NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = result,
         .type = NotifyType::INSTALL,
-        .uid = uid_,
+        .resultCode = result,
         .accessTokenId = accessTokenId_,
+        .uid = uid_,
         .appIndex = 0,
+        .bundleName = bundleName
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
@@ -105,6 +113,14 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     if (info.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGE("the origin application had installed at current user");
         return ERR_OK;
+    }
+ 
+    std::string appDistributionType = info.GetAppDistributionType();
+    if (appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE
+        || appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL
+        || appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM) {
+        APP_LOGE("the origin application is enterprise, not allow to install here");
+        return ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED;
     }
 
     // uid

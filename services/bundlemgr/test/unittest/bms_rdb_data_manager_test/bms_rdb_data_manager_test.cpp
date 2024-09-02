@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -226,6 +226,7 @@ HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0200, Function | SmallTest 
 HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0300, Function | SmallTest | Level1)
 {
     std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
     dataStorage->rdbDataManager_ = nullptr;
 
     std::map<std::string, std::string> datas;
@@ -238,7 +239,7 @@ HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0300, Function | SmallTest 
     EXPECT_FALSE(ret);
 
     dataStorage = std::make_shared<BundleDataStorageRdb>();
-
+    ASSERT_NE(dataStorage, nullptr);
     dataStorage->UpdateDataBase(infos);
 
     ret = dataStorage->LoadAllData(infos);
@@ -254,7 +255,7 @@ HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0300, Function | SmallTest 
 HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0400, Function | SmallTest | Level1)
 {
     std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
-
+    ASSERT_NE(dataStorage, nullptr);
     InnerBundleInfo innerBundleInfo;
     bool ret = dataStorage->SaveStorageBundleInfo(innerBundleInfo);
     EXPECT_TRUE(ret);
@@ -269,7 +270,7 @@ HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0400, Function | SmallTest 
 HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0500, Function | SmallTest | Level1)
 {
     std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
-
+    ASSERT_NE(dataStorage, nullptr);
     InnerBundleInfo innerBundleInfo;
     bool ret = dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
     EXPECT_TRUE(ret);
@@ -284,9 +285,53 @@ HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0500, Function | SmallTest 
 HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0600, Function | SmallTest | Level1)
 {
     std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
-
+    ASSERT_NE(dataStorage, nullptr);
     bool ret = dataStorage->ResetKvStore();
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleDataStorageRdb_0700
+ * @tc.name: SaveStorageBundleInfo
+ * @tc.desc: 1.SaveStorageBundleInfo
+ */
+HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0700, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+    dataStorage->rdbDataManager_ = nullptr;
+    InnerBundleInfo innerBundleInfo;
+    bool ret = dataStorage->SaveStorageBundleInfo(innerBundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleDataStorageRdb_0800
+ * @tc.name: DeleteStorageBundleInfo
+ * @tc.desc: 1.DeleteStorageBundleInfo
+ */
+HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0800, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+    dataStorage->rdbDataManager_ = nullptr;
+    InnerBundleInfo innerBundleInfo;
+    bool ret = dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleDataStorageRdb_0900
+ * @tc.name: BackupRdb
+ * @tc.desc: 1.BackupRdb
+ */
+HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0900, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+    dataStorage->isBackingUp_ = false;
+    dataStorage->BackupRdb();
+    EXPECT_TRUE(dataStorage->isBackingUp_);
 }
 
 /**
@@ -366,7 +411,7 @@ HWTEST_F(BmsRdbDataManagerTest, PreInstallDataStorageRdb_0300, Function | SmallT
 HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0300, Function | SmallTest | Level1)
 {
     auto rdbDataManager = OpenDbAndTable();
-    EXPECT_TRUE(rdbDataManager != nullptr);
+    ASSERT_NE(rdbDataManager, nullptr);
 
     int64_t outInsertNum = 0;
     std::vector<NativeRdb::ValuesBucket> valuesBuckets;
@@ -382,7 +427,7 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0300, Function | SmallTest | Leve
 HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0400, Function | SmallTest | Level1)
 {
     auto rdbDataManager = OpenDbAndTable();
-    EXPECT_TRUE(rdbDataManager != nullptr);
+    ASSERT_NE(rdbDataManager, nullptr);
 
     NativeRdb::ValuesBucket valuesBucket;
     NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
@@ -398,7 +443,7 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0400, Function | SmallTest | Leve
 HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0500, Function | SmallTest | Level1)
 {
     auto rdbDataManager = OpenDbAndTable();
-    EXPECT_TRUE(rdbDataManager != nullptr);
+    ASSERT_NE(rdbDataManager, nullptr);
 
     NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
     bool ret = rdbDataManager->DeleteData(absRdbPredicates);
@@ -413,7 +458,7 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0500, Function | SmallTest | Leve
 HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0600, Function | SmallTest | Level1)
 {
     auto rdbDataManager = OpenDbAndTable();
-    EXPECT_TRUE(rdbDataManager != nullptr);
+    ASSERT_NE(rdbDataManager, nullptr);
 
     bool ret = rdbDataManager->CreateTable();
     EXPECT_EQ(ret, true);
@@ -427,7 +472,7 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0600, Function | SmallTest | Leve
 HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0700, Function | SmallTest | Level1)
 {
     auto rdbDataManager = OpenDbAndTable();
-    EXPECT_TRUE(rdbDataManager != nullptr);
+    ASSERT_NE(rdbDataManager, nullptr);
 
     NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
     auto ret = rdbDataManager->QueryByStep(absRdbPredicates);
@@ -442,7 +487,7 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0700, Function | SmallTest | Leve
 HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0800, Function | SmallTest | Level1)
 {
     auto rdbDataManager = OpenDbAndTable();
-    EXPECT_TRUE(rdbDataManager != nullptr);
+    ASSERT_NE(rdbDataManager, nullptr);
 
     NativeRdb::ValuesBucket valuesBucket;
     NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
@@ -458,7 +503,7 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0800, Function | SmallTest | Leve
 HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0900, Function | SmallTest | Level1)
 {
     auto rdbDataManager = OpenDbAndTable();
-    EXPECT_TRUE(rdbDataManager != nullptr);
+    ASSERT_NE(rdbDataManager, nullptr);
 
     auto ret = rdbDataManager->GetRdbStore();
     EXPECT_NE(ret, nullptr);
@@ -472,7 +517,7 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0900, Function | SmallTest | Leve
 HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1000, Function | SmallTest | Level1)
 {
     auto rdbDataManager = OpenDbAndTable();
-    EXPECT_TRUE(rdbDataManager != nullptr);
+    ASSERT_NE(rdbDataManager, nullptr);
 
     NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
     auto ret = rdbDataManager->QueryData(absRdbPredicates);

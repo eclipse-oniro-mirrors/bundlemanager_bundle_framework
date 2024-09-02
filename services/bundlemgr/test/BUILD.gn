@@ -16,6 +16,7 @@ import("../../../appexecfwk.gni")
 config("bundlemgr_test_config") {
   include_dirs = [
     "${inner_api_path}/appexecfwk_base/include",
+    "${inner_api_path}/appexecfwk_base/include/bundle_resource",
     "${inner_api_path}/appexecfwk_base/include/distributed_manager",
     "${inner_api_path}/appexecfwk_base/include/free_install",
     "${inner_api_path}/appexecfwk_base/include/quick_fix",
@@ -64,6 +65,7 @@ group("unittest") {
       "unittest/bms_bundle_hap_verify_test:unittest",
       "unittest/bms_bundle_hsp_test:unittest",
       "unittest/bms_bundle_installer_manager_test:unittest",
+      "unittest/bms_bundle_installer_proxy_test:unittest",
       "unittest/bms_bundle_installer_test:unittest",
       "unittest/bms_bundle_installers_test:unittest",
       "unittest/bms_bundle_kit_service_test:unittest",

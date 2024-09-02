@@ -184,17 +184,17 @@ struct Ability {
     bool unclearableMission = false;
     bool excludeFromDock = false;
     bool isolationProcess = false;
-    int32_t descriptionId = 0;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
+    uint32_t descriptionId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
     int32_t priority = 0;
-    int32_t startWindowIconId = 0;
-    int32_t startWindowBackgroundId = 0;
+    uint32_t startWindowIconId = 0;
+    uint32_t startWindowBackgroundId = 0;
     uint32_t maxWindowWidth = 0;
     uint32_t minWindowWidth = 0;
     uint32_t maxWindowHeight = 0;
     uint32_t minWindowHeight = 0;
-    int32_t orientationId = 0;
+    uint32_t orientationId = 0;
     double maxWindowRatio = 0;
     double minWindowRatio = 0;
     std::string name;
@@ -213,13 +213,14 @@ struct Ability {
     std::vector<std::string> windowModes;
     std::string preferMultiWindowOrientation = "default";
     std::vector<std::string> continueType;
+    std::vector<std::string> continueBundleNames;
 };
 
 struct Extension {
     bool visible = false;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
     int32_t priority = 0;
     std::string name;
     std::string srcEntrance;
@@ -255,9 +256,9 @@ struct App {
     bool tsanEnabled = false;
     bool ubsanEnabled = false;
     bool cloudFileSyncEnabled = false;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
     int32_t versionCode = 0;
     int32_t minCompatibleVersionCode = -1;
     uint32_t minAPIVersion = 0;
@@ -288,7 +289,7 @@ struct Module {
     bool installationFree = false;
     bool isLibIsolated = false;
     bool compressNativeLibs = true;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     int32_t targetPriority = 0;
     std::string name;
     std::string type;
@@ -425,7 +426,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         ability.descriptionId,
@@ -441,7 +442,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ICON_ID,
         ability.iconId,
@@ -457,7 +458,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         LABEL_ID,
         ability.labelId,
@@ -538,7 +539,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ABILITY_START_WINDOW_ICON_ID,
         ability.startWindowIconId,
@@ -554,7 +555,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ABILITY_START_WINDOW_BACKGROUND_ID,
         ability.startWindowBackgroundId,
@@ -690,7 +691,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ABILITY_ORIENTATION_ID,
         ability.orientationId,
@@ -698,6 +699,14 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_CONTINUE_BUNDLE_NAME,
+        ability.continueBundleNames,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, Extension &extension)
@@ -740,7 +749,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ICON_ID,
         extension.iconId,
@@ -756,7 +765,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         LABEL_ID,
         extension.labelId,
@@ -772,7 +781,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         extension.descriptionId,
@@ -1040,7 +1049,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ICON_ID,
         app.iconId,
@@ -1048,7 +1057,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         LABEL_ID,
         app.labelId,
@@ -1064,7 +1073,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         app.descriptionId,
@@ -1457,7 +1466,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         module.descriptionId,
@@ -2311,6 +2320,11 @@ bool ToAbilityInfo(
 
     auto modesSet = ConvertToAbilityWindowMode(ability.windowModes, Profile::WINDOW_MODE_MAP);
     abilityInfo.windowModes.assign(modesSet.begin(), modesSet.end());
+
+    if (!ability.continueBundleNames.empty()) {
+        abilityInfo.continueBundleNames.insert(ability.continueBundleNames.begin(), ability.continueBundleNames.end());
+    }
+    
     abilityInfo.maxWindowRatio = ability.maxWindowRatio;
     abilityInfo.minWindowRatio = ability.minWindowRatio;
     abilityInfo.maxWindowWidth = ability.maxWindowWidth;
@@ -2551,7 +2565,10 @@ bool ToInnerBundleInfo(
     }
     innerModuleInfo.asanEnabled = applicationInfo.asanEnabled;
     innerModuleInfo.gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
-    innerModuleInfo.hwasanEnabled = applicationInfo.hwasanEnabled;
+    innerModuleInfo.innerModuleInfoFlag = applicationInfo.hwasanEnabled ? innerModuleInfo.innerModuleInfoFlag |
+        static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED) :
+        innerModuleInfo.innerModuleInfoFlag &
+        (~static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
     innerModuleInfo.ubsanEnabled = applicationInfo.ubsanEnabled;
     SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 

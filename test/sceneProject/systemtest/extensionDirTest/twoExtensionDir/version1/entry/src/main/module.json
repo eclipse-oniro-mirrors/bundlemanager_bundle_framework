@@ -41,7 +41,7 @@
         "srcEntry": "./ets/entryability/EntryAbility.ts",
         "label": "$string:EntryAbility_label",
         "description": "$string:EntryAbility_desc",
-        "type": "inputMethod",
+        "type": "form",
         "dataGroupIds": [
           "test1",
           "test2"
@@ -52,7 +52,7 @@
         "srcEntry": "./ets/entryability/EntryAbility.ts",
         "label": "$string:EntryAbility_label",
         "description": "$string:EntryAbility_desc",
-        "type": "inputMethod",
+        "type": "form",
         "dataGroupIds": [
           "test1",
           "test2"

@@ -46,6 +46,8 @@ static napi_value WrapVoidToJS(napi_env env);
 
 static bool ParseInt(napi_env env, napi_value args, int32_t &param);
 
+static bool ParseUint(napi_env env, napi_value args, uint32_t &param);
+
 static std::string GetStringFromNAPI(napi_env env, napi_value value);
 
 static sptr<IBundleMgr> GetBundleMgr();
@@ -213,7 +215,7 @@ static napi_value AsyncCallNativeMethod(napi_env env,
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource, execFunc, completeFunc,
         reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCallbackInfo->asyncWork, napi_qos_user_initiated));
     return promise;
 }
 

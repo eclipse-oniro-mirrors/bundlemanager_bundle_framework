@@ -444,7 +444,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_GWP_ASAN_ENABLED, info.gwpAsanEnabled},
         {MODULE_PACKAGE_NAME, info.packageName},
         {MODULE_APP_STARTUP, info.appStartup},
-        {MODULE_HWASAN_ENABLED, info.hwasanEnabled},
+        {MODULE_HWASAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
+            static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED))},
         {MODULE_UBSAN_ENABLED, info.ubsanEnabled},
     };
 }
@@ -499,6 +500,8 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
     // these are not required fields.
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
+    bool hwasanEnabled = static_cast<bool>(info.innerModuleInfoFlag &
+            static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         NAME,
@@ -1046,7 +1049,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         MODULE_HWASAN_ENABLED,
-        info.hwasanEnabled,
+        hwasanEnabled,
         JsonType::BOOLEAN,
         false,
         parseResult,
@@ -1803,10 +1806,7 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
     baseBundleInfo_->versionCode = bundleInfo.versionCode;
     baseBundleInfo_->versionName = bundleInfo.versionName;
     baseBundleInfo_->minCompatibleVersionCode = bundleInfo.minCompatibleVersionCode;
-
-    if (bundleInfo.compatibleVersion > baseBundleInfo_->compatibleVersion) {
-        baseBundleInfo_->compatibleVersion = bundleInfo.compatibleVersion;
-    }
+    baseBundleInfo_->compatibleVersion = bundleInfo.compatibleVersion;
     baseBundleInfo_->targetVersion = bundleInfo.targetVersion;
 
     baseBundleInfo_->isKeepAlive = bundleInfo.isKeepAlive;
@@ -1835,10 +1835,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->versionCode = applicationInfo.versionCode;
     baseApplicationInfo_->versionName = applicationInfo.versionName;
     baseApplicationInfo_->minCompatibleVersionCode = applicationInfo.minCompatibleVersionCode;
-
-    if (applicationInfo.apiCompatibleVersion > baseApplicationInfo_->apiCompatibleVersion) {
-        baseApplicationInfo_->apiCompatibleVersion = applicationInfo.apiCompatibleVersion;
-    }
+    baseApplicationInfo_->apiCompatibleVersion = applicationInfo.apiCompatibleVersion;
     baseApplicationInfo_->apiTargetVersion = applicationInfo.apiTargetVersion;
 
     baseApplicationInfo_->iconPath = applicationInfo.iconPath;
@@ -4192,6 +4189,16 @@ void InnerBundleInfo::SetAppIdentifier(const std::string &appIdentifier)
     baseBundleInfo_->signatureInfo.appIdentifier = appIdentifier;
 }
 
+void InnerBundleInfo::SetCertificate(const std::string &certificate)
+{
+    baseBundleInfo_->signatureInfo.certificate = certificate;
+}
+
+std::string InnerBundleInfo::GetCertificate() const
+{
+    return baseBundleInfo_->signatureInfo.certificate;
+}
+
 void InnerBundleInfo::UpdateDebug(bool debug, bool isEntry)
 {
     if (isEntry) {
@@ -4299,14 +4306,19 @@ bool InnerBundleInfo::IsGwpAsanEnabled() const
 
 bool InnerBundleInfo::IsHwasanEnabled() const
 {
+    bool hwasanEnabled = false;
     for (const auto &item : innerModuleInfos_) {
-        if (item.second.hwasanEnabled) {
+        hwasanEnabled = static_cast<bool>(item.second.innerModuleInfoFlag &
+            static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
+        if (hwasanEnabled) {
             return true;
         }
     }
     for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
         for (const auto &module : modules) {
-            if (module.hwasanEnabled) {
+            hwasanEnabled = static_cast<bool>(module.innerModuleInfoFlag &
+                static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
+            if (hwasanEnabled) {
                 return true;
             }
         }

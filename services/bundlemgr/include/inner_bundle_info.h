@@ -55,8 +55,8 @@ struct Distro {
 struct DefinePermission {
     bool provisionEnable = true;
     bool distributedSceneEnable = false;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
     std::string name;
     std::string grantMode = Profile::DEFINEPERMISSION_GRANT_MODE_SYSTEM_GRANT;
     std::string availableLevel = Profile::DEFINEPERMISSION_AVAILABLE_LEVEL_DEFAULT_VALUE;
@@ -76,11 +76,11 @@ struct InnerModuleInfo {
     bool asanEnabled = false;
     bool gwpAsanEnabled = false;
     bool needDelete = false;
-    bool hwasanEnabled = false;
+    uint32_t innerModuleInfoFlag = 0;
     bool ubsanEnabled = false;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
-    int32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
+    uint32_t iconId = 0;
     int32_t upgradeFlag = 0;
     int32_t targetPriority;
     uint32_t versionCode = 0;
@@ -145,7 +145,7 @@ struct InnerModuleInfo {
 };
 
 struct ExtendResourceInfo {
-    int32_t iconId = 0;
+    uint32_t iconId = 0;
     std::string moduleName;
     std::string filePath;
 };
@@ -159,6 +159,10 @@ enum InstallExceptionStatus : uint8_t {
     UNINSTALL_BUNDLE_START,
     UNINSTALL_PACKAGE_START,
     UNKNOWN_STATUS,
+};
+
+enum class GetInnerModuleInfoFlag {
+    GET_INNER_MODULE_INFO_WITH_HWASANENABLED = 0x00000001,
 };
 
 struct InstallMark {
@@ -1215,12 +1219,12 @@ public:
         curDynamicIconModule_ = curDynamicIconModule;
     }
 
-    int32_t GetIconId() const
+    uint32_t GetIconId() const
     {
         return baseApplicationInfo_->iconId;
     }
 
-    void SetIconId(int32_t iconId)
+    void SetIconId(uint32_t iconId)
     {
         baseApplicationInfo_->iconId = iconId;
     }
@@ -1607,6 +1611,11 @@ public:
     void SetAllowAppRunWhenDeviceFirstLocked(bool allowAppRunWhenDeviceFirstLocked)
     {
         baseApplicationInfo_->allowAppRunWhenDeviceFirstLocked = allowAppRunWhenDeviceFirstLocked;
+    }
+
+    void SetAllowEnableNotification(bool allowEnableNotification)
+    {
+        baseApplicationInfo_->allowEnableNotification = allowEnableNotification;
     }
 
     const std::string &GetCpuAbi() const
@@ -2168,6 +2177,8 @@ public:
     void SetResourcesApply(const std::vector<int32_t> &resourcesApply);
     void SetAppIdentifier(const std::string &appIdentifier);
     std::string GetAppIdentifier() const;
+    void SetCertificate(const std::string &certificate);
+    std::string GetCertificate() const;
     void AddOldAppId(const std::string &appId);
     std::vector<std::string> GetOldAppIds() const;
     void SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted);

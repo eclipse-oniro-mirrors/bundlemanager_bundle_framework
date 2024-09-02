@@ -174,6 +174,7 @@ void BmsBundleCloneInstallerTest::SetUserIdToDataMgr(const std::int32_t userId)
  */
 HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_001, TestSize.Level1)
 {
+    ASSERT_NE(bundleCloneInstall_, nullptr);
     EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleInstall("", userId_, appIdx_),
         ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR);
     SetBundleDataMgr();
@@ -230,6 +231,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_002, TestSize.
 HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_003, TestSize.Level1)
 {
     std::string bundleName = "bundleName";
+    ASSERT_NE(bundleCloneInstall_, nullptr);
     EXPECT_EQ(bundleCloneInstall_->UninstallCloneApp("", userId_, appIdx_),
         ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
     EXPECT_EQ(bundleCloneInstall_->UninstallCloneApp(bundleName, userId_, appIdx_),
@@ -251,6 +253,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_004, TestSize.
     info.bundleUserInfo.userId = 100;
     innerBundleUserInfos["_100"] = info;
     innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    ASSERT_NE(bundleCloneInstall_, nullptr);
     EXPECT_EQ(bundleCloneInstall_->CreateCloneDataDir(innerBundleInfo, userId_, uid_, appIdx_),
         ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
@@ -262,6 +265,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_004, TestSize.
  */
 HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_005, TestSize.Level1)
 {
+    ASSERT_NE(bundleCloneInstall_, nullptr);
     EXPECT_EQ(
         bundleCloneInstall_->RemoveCloneDataDir("", userId_, appIdx_), ERR_APPEXECFWK_CLONE_INSTALL_INTERNAL_ERROR);
 }
@@ -274,6 +278,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_005, TestSize.
 HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_006, TestSize.Level1)
 {
     std::string bundleName = "";
+    ASSERT_NE(bundleCloneInstall_, nullptr);
     EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, userId_),
         ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
     bundleName = "bundleName006";
@@ -298,6 +303,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_006, TestSize.
  */
 HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_007, TestSize.Level1)
 {
+    ASSERT_NE(bundleCloneInstall_, nullptr);
     EXPECT_EQ(bundleCloneInstall_->GetDataMgr(), ERR_OK);
 }
 
@@ -308,6 +314,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_007, TestSize.
  */
 HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_008, TestSize.Level1)
 {
+    ASSERT_NE(bundleCloneInstall_, nullptr);
     bundleCloneInstall_->ResetInstallProperties();
     EXPECT_EQ(bundleCloneInstall_->uid_, 0);
     EXPECT_EQ(bundleCloneInstall_->accessTokenId_, 0);

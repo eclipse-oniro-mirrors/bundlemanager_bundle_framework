@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -321,6 +321,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0150, Function | Smal
 HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0160, Function | SmallTest | Level1)
 {
     AppControlManagerRdb rdb;
+    ASSERT_NE(rdb.rdbDataManager_, nullptr);
     rdb.rdbDataManager_->bmsRdbConfig_.tableName = TARGET_BUNDLE_NAME;
     std::vector<DisposedRule> disposedRules;
     auto res = rdb.GetAbilityRunningControlRule(APPID, APP_INDEX, USERID, disposedRules);
@@ -335,6 +336,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0160, Function | Smal
 HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0170, Function | SmallTest | Level1)
 {
     AppControlManagerRdb rdb;
+    ASSERT_NE(rdb.rdbDataManager_, nullptr);
     rdb.rdbDataManager_->bmsRdbConfig_.tableName = TARGET_BUNDLE_NAME;
     std::vector<DisposedRule> disposedRules;
     auto res = rdb.DeleteAllDisposedRuleByBundle(APPID, APP_INDEX, USERID);
@@ -364,6 +366,98 @@ HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0020, Functio
     AppJumpControlRule controlRule;
     auto res = rdb.GetAppJumpControlRule("", "", USERID, controlRule);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_JUMP_INTERCEPTOR_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppJumpInterceptorManagerRdb_0030
+ * @tc.name: Test SubscribeCommonEvent by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.SubscribeCommonEvent test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0030, Function | SmallTest | Level1)
+{
+    AppJumpInterceptorManagerRdb rdb;
+    std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb;
+    rdb.eventSubscriber_ = new (std::nothrow) AppJumpInterceptorEventSubscriber(appJumpInterceptorManagerDb);
+    auto res = rdb.SubscribeCommonEvent();
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: AppJumpInterceptorManagerRdb_0040
+ * @tc.name: Test SubscribeCommonEvent by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.SubscribeCommonEvent test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0040, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    rdb->eventSubscriber_ = nullptr;
+    auto res = rdb->SubscribeCommonEvent();
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: AppJumpInterceptorManagerRdb_0050
+ * @tc.name: Test SubscribeCommonEvent by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.SubscribeCommonEvent test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0050, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    rdb->eventSubscriber_ = nullptr;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    for (int index = 0; index < 101;index++) {
+        dataMgr->eventCallbackList_.push_back(nullptr);
+    }
+    auto res = rdb->SubscribeCommonEvent();
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: AppJumpInterceptorManagerRdb_0060
+ * @tc.name: Test DeleteAppJumpControlRule by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.DeleteAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0060, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    std::vector<AppJumpControlRule> controlRules;
+    AppJumpControlRule controlRule;
+    controlRules.push_back(controlRule);
+    auto res = rdb->DeleteAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppJumpInterceptorManagerRdb_0070
+ * @tc.name: Test AddAppJumpControlRule by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.AddAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0070, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    BmsRdbConfig bmsRdbConfig;
+    std::vector<AppJumpControlRule> controlRules;
+    AppJumpControlRule controlRule;
+    controlRules.push_back(controlRule);
+    auto res = rdb->AddAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppJumpInterceptorManagerRdb_0080
+ * @tc.name: Test DeleteRuleByCallerBundleName by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.DeleteRuleByCallerBundleName test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0080, Function | SmallTest | Level1)
+{
+    AppJumpInterceptorManagerRdb rdb;
+    auto res = rdb.DeleteRuleByCallerBundleName(CALLER_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
 }
 
 /**

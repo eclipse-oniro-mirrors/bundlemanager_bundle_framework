@@ -13,29 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_BUNDLE_MANAGER_LOG_H
-#define OHOS_BUNDLE_MANAGER_LOG_H
+#ifndef TEST_FUZZTEST_HMPBUNDLEINSTALLER_FUZZER_H
+#define TEST_FUZZTEST_HMPBUNDLEINSTALLER_FUZZER_H
 
-#include "hilog/log.h"
-
-#ifdef LOG_DOMAIN
-#undef LOG_DOMAIN
-#endif
-#ifdef LOG_TAG
-#undef LOG_TAG
-#endif
-
-#define LOG_DOMAIN 0xD001100
-#define LOG_TAG "BundleManager"
-
-#define LOGI(...)                                           \
-if (HiLogIsLoggable(LOG_DOMAIN, LOG_TAG, LOG_INFO)) {       \
-    HILOG_INFO(LOG_CORE, ##__VA_ARGS__);                    \
-}
-
-#define LOGE(...)                                           \
-if (HiLogIsLoggable(LOG_DOMAIN, LOG_TAG, LOG_ERROR)) {      \
-    HILOG_ERROR(LOG_CORE, __VA_ARGS__);                     \
-}
+#define FUZZ_PROJECT_NAME "hmpbundleinstaller_fuzzer"
 
 #endif

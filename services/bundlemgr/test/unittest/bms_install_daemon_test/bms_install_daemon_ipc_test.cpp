@@ -840,7 +840,9 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4200, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->DeleteEncryptionKeyId(TEST_STRING);
+    std::string bundleName = TEST_STRING;
+    int32_t userId = 100;
+    auto ret = proxy->DeleteEncryptionKeyId(bundleName, userId);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -852,7 +854,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4200, Function | SmallTest |
 HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4300, Function | SmallTest | Level0)
 {
     auto proxy = GetInstallProxy();
-    EXPECT_NE(proxy, nullptr);
+    ASSERT_NE(proxy, nullptr);
 
     std::string bundleName = TEST_STRING;
     int userId = 100;
@@ -1145,7 +1147,9 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6100, Function | SmallTest |
     sptr<InstalldProxy> proxy = new (std::nothrow) InstalldProxy(nullptr);
     ASSERT_NE(proxy, nullptr);
 
-    auto ret = proxy->DeleteEncryptionKeyId(TEST_STRING);
+    std::string bundleName = TEST_STRING;
+    int32_t userId = 100;
+    auto ret = proxy->DeleteEncryptionKeyId(bundleName, userId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 

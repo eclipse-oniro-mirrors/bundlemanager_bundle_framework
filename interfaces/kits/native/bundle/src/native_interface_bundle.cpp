@@ -43,6 +43,59 @@ void ReleaseStrings(Args... args)
     (ReleaseMemory(args), ...);
 }
 
+bool CopyStringToChar(char* &name, const std::string &value)
+{
+    size_t length = value.size();
+    if ((length == 0) || (length + 1) > CHAR_MAX_LENGTH) {
+        APP_LOGE("failed due to the length of value is empty or too long");
+        return false;
+    }
+    name = static_cast<char*>(malloc(length + 1));
+    if (name == nullptr) {
+        APP_LOGE("failed due to malloc error");
+        return false;
+    }
+    if (strcpy_s(name, length + 1, value.c_str()) != EOK) {
+        APP_LOGE("failed due to strcpy_s error");
+        ReleaseStrings(name);
+        return false;
+    }
+    return true;
+}
+
+bool GetElementNameByAbilityInfo(
+    const OHOS::AppExecFwk::AbilityInfo &abilityInfo, OH_NativeBundle_ElementName &elementName)
+{
+    if (!CopyStringToChar(elementName.bundleName, abilityInfo.bundleName)) {
+        APP_LOGE("failed to obtains bundleName");
+        return false;
+    }
+
+    if (!CopyStringToChar(elementName.moduleName, abilityInfo.moduleName)) {
+        APP_LOGE("failed to obtains moduleName");
+        ReleaseStrings(elementName.bundleName);
+        return false;
+    }
+
+    if (!CopyStringToChar(elementName.abilityName, abilityInfo.name)) {
+        APP_LOGE("failed to obtains abilityName");
+        ReleaseStrings(elementName.bundleName, elementName.moduleName);
+        return false;
+    }
+    return true;
+}
+
+bool GetElementNameByModuleInfo(
+    const OHOS::AppExecFwk::HapModuleInfo &hapModuleInfo, OH_NativeBundle_ElementName &elementName)
+{
+    for (const auto &abilityInfo : hapModuleInfo.abilityInfos) {
+        if (abilityInfo.name.compare(hapModuleInfo.mainElementName) == 0) {
+            return GetElementNameByAbilityInfo(abilityInfo, elementName);
+        }
+    }
+    return false;
+}
+
 OH_NativeBundle_ApplicationInfo OH_NativeBundle_GetCurrentApplicationInfo()
 {
     OH_NativeBundle_ApplicationInfo nativeApplicationInfo;
@@ -154,4 +207,44 @@ char* OH_NativeBundle_GetAppIdentifier()
     }
     APP_LOGI("OH_NativeBundle_GetAppIdentifier success");
     return appIdentifier;
+}
+
+OH_NativeBundle_ElementName OH_NativeBundle_GetMainElementName()
+{
+    OH_NativeBundle_ElementName elementName;
+    OHOS::AppExecFwk::BundleMgrProxyNative bundleMgrProxyNative;
+    OHOS::AppExecFwk::BundleInfo bundleInfo;
+    auto bundleInfoFlag = static_cast<int32_t>(OHOS::AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+                          static_cast<int32_t>(OHOS::AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
+
+    if (!bundleMgrProxyNative.GetBundleInfoForSelf(bundleInfoFlag, bundleInfo)) {
+        APP_LOGE("can not get bundleInfo for self");
+        return elementName;
+    };
+
+    for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        if (hapModuleInfo.moduleType != OHOS::AppExecFwk::ModuleType::ENTRY) {
+            continue;
+        }
+        if (GetElementNameByModuleInfo(hapModuleInfo, elementName)) {
+            return elementName;
+        }
+    }
+
+    for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        if (hapModuleInfo.moduleType != OHOS::AppExecFwk::ModuleType::FEATURE) {
+            continue;
+        }
+        if (GetElementNameByModuleInfo(hapModuleInfo, elementName)) {
+            return elementName;
+        }
+    }
+
+    for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        for (const auto &abilityInfo : hapModuleInfo.abilityInfos) {
+            GetElementNameByAbilityInfo(abilityInfo, elementName);
+            return elementName;
+        }
+    }
+    return elementName;
 }

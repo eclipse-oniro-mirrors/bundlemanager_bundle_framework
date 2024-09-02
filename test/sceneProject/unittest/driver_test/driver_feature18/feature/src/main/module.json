@@ -31,7 +31,7 @@
                 {
                   "name": "saneBackend",
                   "value": "/print_service/cups/datadir/model",
-                  "resource": "/resources/rawfile/main_pages.json"
+                  "resource": "/libs/arm64/libpng.z.so"
                 }
               ]
             }

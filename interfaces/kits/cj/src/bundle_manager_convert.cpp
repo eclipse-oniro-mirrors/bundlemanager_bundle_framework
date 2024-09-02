@@ -22,12 +22,16 @@
 #include "bundle_mgr_proxy.h"
 #include "common_func.h"
 #include "bundle_manager_convert.h"
-#include "bundle_manager_log.h"
+#include "app_log_wrapper.h"
 
 namespace OHOS {
 namespace CJSystemapi {
 namespace BundleManager {
 namespace Convert {
+
+const std::string PATH_PREFIX = "/data/app/el1/bundle/public";
+const std::string CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
+const std::string CONTEXT_DATA_STORAGE_BUNDLE("/data/storage/el1/bundle/");
 
 char *MallocCString(const std::string &origin)
 {
@@ -37,7 +41,7 @@ char *MallocCString(const std::string &origin)
     auto len = origin.length() + 1;
     char* res = static_cast<char *>(malloc(sizeof(char) * len));
     if (res == nullptr) {
-        LOGE("MallocCString malloc failed");
+        APP_LOGE("MallocCString malloc failed");
         return nullptr;
     }
     return std::char_traits<char>::copy(res, origin.c_str(), len);
@@ -109,7 +113,7 @@ CArrMetadata ConvertArrMetadata(std::vector<AppExecFwk::Metadata> cdata)
             }
             data.head = retValue;
         } else {
-            LOGE("ConvertArrMetadata malloc failed");
+            APP_LOGE("ConvertArrMetadata malloc failed");
             return data;
         }
     }
@@ -130,7 +134,7 @@ CArrMoMeta ConvertArrMoMeta(std::map<std::string, std::vector<AppExecFwk::Metada
                 retValue[i++].metadata = ConvertArrMetadata(item.second);
             }
         } else {
-            LOGE("ConvertArrMoMeta malloc failed");
+            APP_LOGE("ConvertArrMoMeta malloc failed");
             return arrMdata;
         }
         arrMdata.head = retValue;
@@ -138,6 +142,69 @@ CArrMoMeta ConvertArrMoMeta(std::map<std::string, std::vector<AppExecFwk::Metada
     return arrMdata;
 }
 
+
+RetSkillUri ConvertSkillUri(AppExecFwk::SkillUri cUri)
+{
+    RetSkillUri skillUri;
+    skillUri.scheme = MallocCString(cUri.scheme);
+    skillUri.host = MallocCString(cUri.host);
+    skillUri.port = MallocCString(cUri.port);
+    skillUri.path = MallocCString(cUri.path);
+    skillUri.pathStartWith = MallocCString(cUri.pathStartWith);
+    skillUri.pathRegex = MallocCString(cUri.pathRegex);
+    skillUri.type = MallocCString(cUri.type);
+    skillUri.utd = MallocCString(cUri.utd);
+    skillUri.maxFileSupported = cUri.maxFileSupported;
+    skillUri.linkFeature = MallocCString(cUri.linkFeature);
+    return skillUri;
+}
+
+RetCArrSkillUri ConvertArrSkillUris(std::vector<AppExecFwk::SkillUri> cUris)
+{
+    RetCArrSkillUri skillUris;
+    skillUris.size = cUris.size();
+    skillUris.head = nullptr;
+
+    RetSkillUri *retValue = reinterpret_cast<RetSkillUri *>(malloc(sizeof(RetSkillUri) * skillUris.size));
+    if (retValue != nullptr) {
+        for (int32_t i = 0; i < skillUris.size; i++) {
+            retValue[i] = ConvertSkillUri(cUris[i]);
+        }
+        skillUris.head = retValue;
+    } else {
+        APP_LOGE("ConvertArrSkillUris malloc failed");
+        return skillUris;
+    }
+    return skillUris;
+}
+
+RetSkill ConvertSkill(AppExecFwk::Skill cSkill)
+{
+    RetSkill skill;
+    skill.actions = ConvertArrString(cSkill.actions);
+    skill.entities = ConvertArrString(cSkill.entities);
+    skill.uris = ConvertArrSkillUris(cSkill.uris);
+    skill.domainVerify = cSkill.domainVerify;
+    return skill;
+}
+
+RetCArrSkill ConvertSkills(std::vector<AppExecFwk::Skill> cSkills)
+{
+    RetCArrSkill skills;
+    skills.size = cSkills.size();
+    skills.head = nullptr;
+    RetSkill *retValue = reinterpret_cast<RetSkill *>(malloc(sizeof(RetSkill) * skills.size));
+    if (retValue != nullptr) {
+        for (int32_t i = 0; i < skills.size; i++) {
+            retValue[i] = ConvertSkill(cSkills[i]);
+        }
+        skills.head = retValue;
+    } else {
+        APP_LOGE("ConvertSkills malloc failed");
+        return skills;
+    }
+    return skills;
+}
 
 RetReqPermissionDetail ConvertRequestPermission(AppExecFwk::RequestPermission requestPermission)
 {
@@ -184,6 +251,16 @@ RetApplicationInfo ConvertApplicationInfo(AppExecFwk::ApplicationInfo cAppInfo)
     appInfo.debug = cAppInfo.debug;
     appInfo.dataUnclearable = !cAppInfo.userDataClearable;
     appInfo.cloudFileSyncEnabled = cAppInfo.cloudFileSyncEnabled;
+    std::string externalNativeLibraryPath = "";
+    if (!cAppInfo.nativeLibraryPath.empty()) {
+        externalNativeLibraryPath = CONTEXT_DATA_STORAGE_BUNDLE + cAppInfo.nativeLibraryPath;
+    }
+    appInfo.nativeLibraryPath = MallocCString(externalNativeLibraryPath);
+    appInfo.multiAppMode.multiAppModeType = static_cast<int32_t>(cAppInfo.multiAppMode.multiAppModeType);
+    appInfo.multiAppMode.count = cAppInfo.multiAppMode.maxCount;
+    appInfo.appIndex = cAppInfo.appIndex;
+    appInfo.installSource =  MallocCString(cAppInfo.installSource);
+    appInfo.releaseType = MallocCString(cAppInfo.apiReleaseType);
     return appInfo;
 }
 
@@ -205,6 +282,8 @@ RetExtensionAbilityInfo ConvertExtensionAbilityInfo(AppExecFwk::ExtensionAbility
     exInfo.readPermission = MallocCString(extensionInfos.readPermission);
     exInfo.writePermission = MallocCString(extensionInfos.writePermission);
     exInfo.extensionAbilityTypeName = MallocCString(extensionInfos.extensionTypeName);
+    exInfo.skills = ConvertSkills(extensionInfos.skills);
+    exInfo.appIndex = extensionInfos.appIndex;
     return exInfo;
 }
 
@@ -223,7 +302,7 @@ CArrRetExtensionAbilityInfo ConvertArrExtensionAbilityInfo(
             }
             exAbInfo.head = retValue;
         } else {
-            LOGE("ConvertArrExtensionAbilityInfo malloc failed");
+            APP_LOGE("ConvertArrExtensionAbilityInfo malloc failed");
             return exAbInfo;
         }
     }
@@ -271,7 +350,7 @@ RetAbilityInfo ConvertAbilityInfo(AppExecFwk::AbilityInfo cAbilityInfos)
             }
             abInfo.supportWindowModes.head = retValue;
         } else {
-            LOGE("ConvertAbilityInfo malloc failed");
+            APP_LOGE("ConvertAbilityInfo malloc failed");
             return abInfo;
         }
     }
@@ -282,6 +361,9 @@ RetAbilityInfo ConvertAbilityInfo(AppExecFwk::AbilityInfo cAbilityInfos)
     abInfo.windowSize.minWindowWidth = cAbilityInfos.minWindowWidth;
     abInfo.windowSize.maxWindowHeight = cAbilityInfos.maxWindowHeight;
     abInfo.windowSize.minWindowHeight = cAbilityInfos.minWindowHeight;
+
+    abInfo.excludeFromDock = cAbilityInfos.excludeFromDock;
+    abInfo.skills = ConvertSkills(cAbilityInfos.skills);
     return abInfo;
 }
 
@@ -298,7 +380,7 @@ CArrRetAbilityInfo ConvertArrAbilityInfo(std::vector<AppExecFwk::AbilityInfo> ab
             }
             abInfo.head = retValue;
         } else {
-            LOGE("ConvertArrAbilityInfo malloc failed");
+            APP_LOGE("ConvertArrAbilityInfo malloc failed");
             return abInfo;
         }
     }
@@ -318,7 +400,7 @@ CArrRetPreloadItem ConvertPreloadItem(std::vector<AppExecFwk::PreloadItem> prelo
             }
             pLoad.head = retValue;
         } else {
-            LOGE("ConvertPreloadItem malloc failed");
+            APP_LOGE("ConvertPreloadItem malloc failed");
             return pLoad;
         }
     }
@@ -340,13 +422,66 @@ CArrRetDependency ConvertDependency(std::vector<AppExecFwk::Dependency> dependen
             }
             dep.head = retValue;
         } else {
-            LOGE("ConvertDependency malloc failed");
+            APP_LOGE("ConvertDependency malloc failed");
             return dep;
         }
     }
     return dep;
 }
 
+CArrDataItem ConvertArrDataItem(std::map<std::string, std::string> data)
+{
+    CArrDataItem dataItems;
+    dataItems.size = static_cast<int64_t>(data.size());
+    dataItems.head = nullptr;
+
+    CDataItem *retValue = reinterpret_cast<CDataItem *>
+                                        (malloc(sizeof(CDataItem) * dataItems.size));
+    if (retValue != nullptr) {
+        int i = 0;
+        for (auto it = data.begin(); it != data.end(); ++it) {
+            retValue[i].key = MallocCString(it->first);
+            retValue[i].value = MallocCString(it->second);
+            i = i + 1;
+        }
+        dataItems.head = retValue;
+    } else {
+        APP_LOGE("ConvertArrDataItem malloc failed");
+        return dataItems;
+    }
+    return dataItems;
+}
+
+CRouterItem ConvertRouterItem(AppExecFwk::RouterItem router)
+{
+    CRouterItem routerItem;
+    routerItem.name = MallocCString(router.name);
+    routerItem.pageSourceFile = MallocCString(router.pageSourceFile);
+    routerItem.buildFunction = MallocCString(router.buildFunction);
+    routerItem.data = ConvertArrDataItem(router.data);
+    routerItem.customData = MallocCString(router.customData);
+    return routerItem;
+}
+
+CArrRouterItem ConvertRouterMap(std::vector<AppExecFwk::RouterItem> routerArray)
+{
+    CArrRouterItem routerMap;
+    routerMap.size = static_cast<int64_t>(routerArray.size());
+    routerMap.head = nullptr;
+
+    CRouterItem *retValue = reinterpret_cast<CRouterItem *>
+                                        (malloc(sizeof(CRouterItem) * routerMap.size));
+    if (retValue != nullptr) {
+        for (int32_t i = 0; i < routerMap.size; i++) {
+            retValue[i] = ConvertRouterItem(routerArray[i]);
+        }
+        routerMap.head = retValue;
+    } else {
+        APP_LOGE("ConvertRouterMap malloc failed");
+        return routerMap;
+    }
+    return routerMap;
+}
 
 RetHapModuleInfo ConvertHapModuleInfo(AppExecFwk::HapModuleInfo hapModuleInfo)
 {
@@ -381,6 +516,25 @@ RetHapModuleInfo ConvertHapModuleInfo(AppExecFwk::HapModuleInfo hapModuleInfo)
     } else {
         hapInfo.fileContextMenuConfig = MallocCString("");
     }
+    hapInfo.routerMap = ConvertRouterMap(hapModuleInfo.routerArray);
+
+    size_t result = hapModuleInfo.hapPath.find(PATH_PREFIX);
+    if (result != std::string::npos) {
+        size_t pos = hapModuleInfo.hapPath.find_last_of('/');
+        std::string codePath = CODE_PATH_PREFIX;
+        if (pos != std::string::npos && pos != hapModuleInfo.hapPath.size() - 1) {
+            codePath += hapModuleInfo.hapPath.substr(pos + 1);
+        }
+        hapInfo.codePath = MallocCString(codePath);
+    } else {
+        hapInfo.codePath = MallocCString(hapModuleInfo.hapPath);
+    }
+
+    std::string externalNativeLibraryPath = "";
+    if (!hapModuleInfo.nativeLibraryPath.empty() && !hapModuleInfo.moduleName.empty()) {
+        externalNativeLibraryPath = CONTEXT_DATA_STORAGE_BUNDLE + hapModuleInfo.nativeLibraryPath;
+    }
+    hapInfo.nativeLibraryPath = MallocCString(externalNativeLibraryPath);
     return hapInfo;
 }
 
@@ -390,7 +544,7 @@ CArrHapInfo ConvertArrHapInfo(std::vector<AppExecFwk::HapModuleInfo> hapModuleIn
     hapInfos.size = static_cast<int64_t>(hapModuleInfos.size());
     RetHapModuleInfo *retValue = reinterpret_cast<RetHapModuleInfo *>(malloc(sizeof(RetHapModuleInfo) * hapInfos.size));
     if (retValue == nullptr) {
-        LOGE("ConvertArrHapInfo malloc failed");
+        APP_LOGE("ConvertArrHapInfo malloc failed");
         hapInfos.head = nullptr;
         return hapInfos;
     }
@@ -415,7 +569,7 @@ CArrReqPerDetail ConvertArrReqPerDetail(std::vector<AppExecFwk::RequestPermissio
             }
             perDetail.head = retValue;
         } else {
-            LOGE("ConvertArrReqPerDetail malloc failed");
+            APP_LOGE("ConvertArrReqPerDetail malloc failed");
             return perDetail;
         }
     }
@@ -487,7 +641,7 @@ RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flag
             }
             bundleInfo.state.head = retValue;
         } else {
-            LOGE("ConvertBundleInfo malloc failed");
+            APP_LOGE("ConvertBundleInfo malloc failed");
             bundleInfo.state.head = nullptr;
             return bundleInfo;
         }
@@ -503,6 +657,8 @@ RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flag
     bundleInfo.installTime = cBundleInfo.installTime;
     bundleInfo.updateTime = cBundleInfo.updateTime;
     bundleInfo.uid = cBundleInfo.uid;
+    bundleInfo.routerMap = ConvertRouterMap(cBundleInfo.routerArray);
+    bundleInfo.appIndex = cBundleInfo.appIndex;
     return bundleInfo;
 }
 

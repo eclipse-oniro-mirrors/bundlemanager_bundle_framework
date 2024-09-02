@@ -1607,7 +1607,7 @@ ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Wa
 
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to GetLaunchWantForBundle due to write userId fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     return GetParcelableInfoWithErrCode<Want>(
@@ -1693,7 +1693,7 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
     }
     if (!data.WriteInt32(appIndex)) {
         APP_LOGE("fail to CleanBundleDataFiles due to write appIndex fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
@@ -1942,7 +1942,7 @@ ErrCode BundleMgrProxy::IsModuleRemovable(const std::string &bundleName, const s
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::IS_MODULE_REMOVABLE, data, reply)) {
         APP_LOGE("fail to IsModuleRemovable from server");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = reply.ReadInt32();
     if (ret == ERR_OK) {
@@ -3767,7 +3767,7 @@ ErrCode BundleMgrProxy::GetSharedDependencies(const std::string &bundleName, con
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("bundleName or moduleName is empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     MessageParcel data;
@@ -4599,7 +4599,7 @@ ErrCode BundleMgrProxy::InnerGetVectorFromParcelIntelligent(
         std::unique_ptr<T> info(tempParcel.ReadParcelable<T>());
         if (info == nullptr) {
             APP_LOGE("Read Parcelable infos failed");
-            return false;
+            return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         parcelableInfos.emplace_back(*info);
     }
@@ -5210,6 +5210,41 @@ bool BundleMgrProxy::GetBundleInfosForContinuation(
         return false;
     }
     return true;
+}
+
+ErrCode BundleMgrProxy::GetContinueBundleNames(
+    const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(continueBundleName)) {
+        APP_LOGE("Write bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write user id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_CONTINUE_BUNDLE_NAMES, data, reply)) {
+        APP_LOGE("Fail to GetContinueBundleNames from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("Reply err : %{public}d", ret);
+        return ret;
+    }
+    if (!reply.ReadStringVector(&bundleNames)) {
+        APP_LOGE("Fail to GetContinueBundleNames from reply");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

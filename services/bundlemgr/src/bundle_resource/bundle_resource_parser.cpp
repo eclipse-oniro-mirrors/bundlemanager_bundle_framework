@@ -216,7 +216,7 @@ bool BundleResourceParser::ParseResourceInfoWithSameHap(const int32_t userId, Re
 }
 
 bool BundleResourceParser::ParseLabelResourceByPath(
-    const std::string &hapPath, const int32_t labelId, std::string &label)
+    const std::string &hapPath, const uint32_t labelId, std::string &label)
 {
     if (hapPath.empty()) {
         APP_LOGE("hapPath is empty");
@@ -243,7 +243,7 @@ bool BundleResourceParser::ParseLabelResourceByPath(
     return true;
 }
 
-bool BundleResourceParser::ParseIconResourceByPath(const std::string &hapPath, const int32_t iconId,
+bool BundleResourceParser::ParseIconResourceByPath(const std::string &hapPath, const uint32_t iconId,
     ResourceInfo &resourceInfo)
 {
     if (hapPath.empty()) {
@@ -292,7 +292,7 @@ bool BundleResourceParser::ParseResourceInfoByResourceManager(
 
 bool BundleResourceParser::ParseLabelResourceByResourceManager(
     const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
-    const int32_t labelId, std::string &label)
+    const uint32_t labelId, std::string &label)
 {
     if (resourceManager == nullptr) {
         APP_LOGE("resourceManager is nullptr");
@@ -302,7 +302,7 @@ bool BundleResourceParser::ParseLabelResourceByResourceManager(
         APP_LOGW_NOFUNC("ParseLabelResource labelId invalid label is bundleName");
         return false;
     }
-    auto ret = resourceManager->GetStringById(static_cast<uint32_t>(labelId), label);
+    auto ret = resourceManager->GetStringById(labelId, label);
     if (ret != OHOS::Global::Resource::RState::SUCCESS) {
         APP_LOGE("GetStringById failed %{public}d, labelId %{public}d",
             static_cast<int32_t>(ret), labelId);

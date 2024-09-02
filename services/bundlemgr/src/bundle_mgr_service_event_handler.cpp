@@ -649,6 +649,10 @@ bool BMSEventHandler::HasPreInstallProfile()
 
 void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
 {
+    if (!BundleUtil::IsExistDirNoLog(dir)) {
+        LOG_W(BMS_TAG_DEFAULT, "parse dir %{public}s not exist", dir.c_str());
+        return;
+    }
     BundleParser bundleParser;
     bundleParser.ParsePreInstallConfig(
         dir + INSTALL_LIST_CONFIG, installList_);
@@ -2022,6 +2026,7 @@ ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &fil
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.removable = false;
+    installParam.isOTA = true;
     AppServiceFwkInstaller installer;
 
     return installer.Install(filePaths, installParam);
@@ -3117,6 +3122,7 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     appInfo.allowCommonEvent = preBundleConfigInfo.allowCommonEvent;
     appInfo.resourcesApply = preBundleConfigInfo.resourcesApply;
     appInfo.allowAppRunWhenDeviceFirstLocked = preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked;
+    appInfo.allowEnableNotification = preBundleConfigInfo.allowEnableNotification;
     dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
 }
 #endif
