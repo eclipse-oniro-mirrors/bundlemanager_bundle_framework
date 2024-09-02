@@ -18,6 +18,7 @@
 #include <string>
 
 #include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "bundle_errors.h"
 #include "bundle_manager_sync.h"
 #include "bundle_mgr_client.h"
@@ -3847,7 +3848,7 @@ void GetBundleInfoForSelfExec(napi_env env, void *data)
 
 napi_value GetBundleInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("NAPI_GetBundleInfo called");
+    LOG_NOFUNC_I(BMS_TAG_COMMON, "NAPI GetBundleInfo call");
     NapiArg args(env, info);
     BundleInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) BundleInfoCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -3903,7 +3904,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
         env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete);
     callbackPtr.release();
-    APP_LOGD("call NAPI_GetBundleInfo done");
+    LOG_NOFUNC_I(BMS_TAG_COMMON, "NAPI GetBundleInfo done");
     return promise;
 }
 
