@@ -485,5 +485,33 @@ int64_t InstalldClient::GetDiskUsage(const std::string& dir, bool isRealPath)
 {
     return 0;
 }
+
+void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject)
+{
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        installdProxy_ = iface_cast<IInstalld>(remoteObject);
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(loadSaMutex_);
+        loadSaFinished_ = true;
+        loadSaCondition_.notify_one();
+    }
+}
+
+void InstalldClient::OnLoadSystemAbilityFail()
+{
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        installdProxy_ = nullptr;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(loadSaMutex_);
+        loadSaFinished_ = true;
+        loadSaCondition_.notify_one();
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

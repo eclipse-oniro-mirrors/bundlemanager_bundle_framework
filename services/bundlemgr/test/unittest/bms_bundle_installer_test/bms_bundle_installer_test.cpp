@@ -40,6 +40,7 @@
 #include "directory_ex.h"
 #include "hmp_bundle_installer.h"
 #include "install_param.h"
+#include "installd/installd_load_callback.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
@@ -6957,5 +6958,49 @@ HWTEST_F(BmsBundleInstallerTest, PreInstallBundleInfo_0100, Function | MediumTes
     nlohmann::json jsonObject;
     preInstallBundleInfo.ToJson(jsonObject);
     EXPECT_EQ(jsonObject["bundleName"], "com.acts.example");
+}
+
+/**
+ * @tc.number: InstalldLoadCallback_0100
+ * @tc.name: test InstalldLoadCallback
+ * @tc.desc: test OnLoadSystemAbilitySuccess of InstalldLoadCallback
+*/
+HWTEST_F(BmsBundleInstallerTest, InstalldLoadCallback_0100, Function | SmallTest | Level1)
+{
+    InstalldLoadCallback installdLoadCallback;
+
+    int32_t systemAbilityId = INSTALLD_SERVICE_ID + 1;
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        systemAbilityManager = nullptr;
+    }
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (!remoteObject) {
+        remoteObject = nullptr;
+    }
+    installdLoadCallback.OnLoadSystemAbilitySuccess(systemAbilityId, remoteObject);
+
+    systemAbilityId = INSTALLD_SERVICE_ID;
+    installdLoadCallback.OnLoadSystemAbilitySuccess(systemAbilityId, remoteObject);
+
+    remoteObject = nullptr;
+    installdLoadCallback.OnLoadSystemAbilitySuccess(systemAbilityId, remoteObject);
+}
+
+/**
+ * @tc.number: InstalldLoadCallback_0200
+ * @tc.name: test InstalldLoadCallback
+ * @tc.desc: test OnLoadSystemAbilityFail of InstalldLoadCallback
+*/
+HWTEST_F(BmsBundleInstallerTest, InstalldLoadCallback_0200, Function | SmallTest | Level1)
+{
+    InstalldLoadCallback installdLoadCallback;
+
+    int32_t systemAbilityId = INSTALLD_SERVICE_ID + 1;
+    installdLoadCallback.OnLoadSystemAbilityFail(systemAbilityId);
+
+    systemAbilityId = INSTALLD_SERVICE_ID;
+    installdLoadCallback.OnLoadSystemAbilityFail(systemAbilityId);
 }
 } // OHOS
