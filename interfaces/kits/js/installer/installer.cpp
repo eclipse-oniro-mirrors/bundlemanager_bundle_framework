@@ -1609,7 +1609,6 @@ void CreateAppCloneExec(napi_env env, void *data)
     CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("CreateAppCloneExec param: bundleName = %{public}s, userId = %{public}d, appIndex = %{public}d",
@@ -1724,7 +1723,6 @@ void DestroyAppCloneExec(napi_env env, void *data)
     CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("DestroyAppCloneExec param: bundleName = %{public}s, userId = %{public}d, appIndex = %{public}d",
@@ -1829,7 +1827,6 @@ void InstallPreexistingAppExec(napi_env env, void *data)
     InstallPreexistingAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallPreexistingAppCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("param: bundleName = %{public}s, userId = %{public}d",
