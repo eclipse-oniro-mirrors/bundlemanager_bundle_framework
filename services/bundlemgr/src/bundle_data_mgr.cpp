@@ -7735,6 +7735,7 @@ ErrCode BundleDataMgr::AddCloneBundle(const std::string &bundleName, const Inner
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         innerBundleInfo.SetBundleStatus(nowBundleStatus);
+        innerBundleInfo.RemoveCloneBundle(attr.userId, attr.appIndex);
         APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
