@@ -89,8 +89,6 @@ static int32_t INVALID_FILE_DESCRIPTOR = -1;
 std::recursive_mutex mMountsLock;
 static std::map<std::string, std::string> mQuotaReverseMounts;
 using ApplyPatch = int32_t (*)(const std::string, const std::string, const std::string);
-using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
-    uint32_t, bool &, const int32_t, const bool &);
 
 static std::string HandleScanResult(
     const std::string &dir, const std::string &subName, ResultMode resultMode)
@@ -1194,41 +1192,6 @@ void InstalldOperator::CloseHandle(void **handle)
     LOG_I(BMS_TAG_INSTALLD, "InstalldOperator::CloseHandle end");
 }
 
-#if defined(CODE_ENCRYPTION_ENABLE)
-bool InstalldOperator::OpenEncryptionHandle(void **handle)
-{
-    LOG_I(BMS_TAG_INSTALLD, "start");
-    if (handle == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "OpenEncryptionHandle error handle is nullptr");
-        return false;
-    }
-    *handle = dlopen(LIB64_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
-    if (*handle == nullptr) {
-        LOG_W(BMS_TAG_INSTALLD, "failed to open lib64 libcode_crypto_metadata_process_utils.z.so, err:%{public}s",
-            dlerror());
-        *handle = dlopen(LIB_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
-    }
-    if (*handle == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to open lib libcode_crypto_metadata_process_utils.z.so, err:%{public}s",
-            dlerror());
-        return false;
-    }
-    LOG_I(BMS_TAG_INSTALLD, "end");
-    return true;
-}
-
-void InstalldOperator::CloseEncryptionHandle(void **handle)
-{
-    LOG_I(BMS_TAG_INSTALLD, "start");
-    if ((handle != nullptr) && (*handle != nullptr)) {
-        dlclose(*handle);
-        *handle = nullptr;
-        LOG_D(BMS_TAG_INSTALLD, "CloseEncryptionHandle, err:%{public}s", dlerror());
-    }
-    LOG_I(BMS_TAG_INSTALLD, "end");
-}
-#endif
-
 bool InstalldOperator::ProcessApplyDiffPatchPath(
     const std::string &oldSoPath, const std::string &diffFilePath,
     const std::string &newSoPath, std::vector<std::string> &oldSoFileNames, std::vector<std::string> &diffFileNames)
@@ -1524,32 +1487,6 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
 #endif
     return true;
 }
-
-#if defined(CODE_ENCRYPTION_ENABLE)
-bool InstalldOperator::EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap, int32_t bundleId,
-    bool &isEncryption, InstallBundleType installBundleType, bool isCompressNativeLibrary)
-{
-    void *handle = nullptr;
-    if (!OpenEncryptionHandle(&handle)) {
-        return false;
-    }
-    auto enforceMetadataProcessForApp =
-        reinterpret_cast<EnforceMetadataProcessForApp>(dlsym(handle, CODE_CRYPTO_FUNCTION_NAME));
-    if (enforceMetadataProcessForApp == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to get enforceMetadataProcessForApp err:%{public}s", dlerror());
-        CloseEncryptionHandle(&handle);
-        return false;
-    }
-    ErrCode ret = enforceMetadataProcessForApp(entryMap, bundleId,
-        isEncryption, static_cast<int32_t>(installBundleType), isCompressNativeLibrary);
-    CloseEncryptionHandle(&handle);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "CheckEncryption failed due to %{public}d", ret);
-        return false;
-    }
-    return true;
-}
-#endif
 
 bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
 {
@@ -2217,5 +2154,54 @@ bool InstalldOperator::GetAtomicServiceBundleDataDir(const std::string &bundleNa
     closedir(dir);
     return !allPathNames.empty();
 }
+
+#if defined(CODE_ENCRYPTION_ENABLE)
+std::mutex InstalldOperator::encryptionMutex_;
+void *InstalldOperator::encryptionHandle_ = nullptr;
+EnforceMetadataProcessForApp InstalldOperator::enforceMetadataProcessForApp_ = nullptr;
+
+bool InstalldOperator::OpenEncryptionHandle()
+{
+    std::lock_guard<std::mutex> lock(encryptionMutex_);
+    if (encryptionHandle_ != nullptr && enforceMetadataProcessForApp_ != nullptr) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "encrypt handle opened");
+        return true;
+    }
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "OpenEncryption start");
+    encryptionHandle_ = dlopen(LIB64_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
+    if (encryptionHandle_ == nullptr) {
+        LOG_W(BMS_TAG_INSTALLD, "open encrypt lib64 failed %{public}s", dlerror());
+        encryptionHandle_ = dlopen(LIB_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
+    }
+    if (encryptionHandle_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "open encrypt lib failed %{public}s", dlerror());
+        return false;
+    }
+    enforceMetadataProcessForApp_ =
+        reinterpret_cast<EnforceMetadataProcessForApp>(dlsym(encryptionHandle_, CODE_CRYPTO_FUNCTION_NAME));
+    if (enforceMetadataProcessForApp_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "dlsym encrypt err:%{public}s", dlerror());
+        dlclose(encryptionHandle_);
+        encryptionHandle_ = nullptr;
+        return false;
+    }
+    return true;
+}
+
+bool InstalldOperator::EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap, int32_t bundleId,
+    bool &isEncryption, InstallBundleType installBundleType, bool isCompressNativeLibrary)
+{
+    if (!OpenEncryptionHandle()) {
+        return false;
+    }
+    ErrCode ret = enforceMetadataProcessForApp_(entryMap, bundleId,
+        isEncryption, static_cast<int32_t>(installBundleType), isCompressNativeLibrary);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "CheckEncryption failed due to %{public}d", ret);
+        return false;
+    }
+    return true;
+}
+#endif
 }  // namespace AppExecFwk
 }  // namespace OHOS
