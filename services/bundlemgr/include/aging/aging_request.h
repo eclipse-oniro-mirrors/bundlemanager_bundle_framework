@@ -16,8 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_AGING_REQUEST_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_AGING_REQUEST_H
 
+#include <mutex>
 #include <vector>
-#include <set>
 
 #include "aging_bundle_info.h"
 #include "aging_util.h"
