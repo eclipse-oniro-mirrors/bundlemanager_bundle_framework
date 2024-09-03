@@ -27,9 +27,8 @@ namespace AppExecFwk {
 namespace LIBZIP {
 
 extern "C" {
-    int32_t FfiCompressFile(CArrUI8 inFile, CArrUI8 outFile, RetOptions options)
+    int32_t FfiBundleManagerCompressFile(CArrUI8 inFile, CArrUI8 outFile, RetOptions options)
     {
-        APP_LOGI("begin to FfiCompressFile");
         std::vector<uint8_t> inBytesVec;
         for (int i = 0; i < inFile.len; i++) {
             inBytesVec.push_back(inFile.data[i]);
@@ -53,9 +52,8 @@ extern "C" {
     }
     
 
-    int32_t FfiDeCompressFileOptions(CArrUI8 inFile, CArrUI8 outFile, RetOptions options)
+    int32_t FfiBundleManagerDeCompressFileOptions(CArrUI8 inFile, CArrUI8 outFile, RetOptions options)
     {
-        APP_LOGI("begin to FfiDeCompressFileOptions");
         std::vector<uint8_t> inBytesVec;
         for (int i = 0; i < inFile.len; i++) {
             inBytesVec.push_back(inFile.data[i]);
@@ -78,9 +76,8 @@ extern "C" {
         return err;
     }
 
-    int32_t FfiDeCompressFile(CArrUI8 inFile, CArrUI8 outFile)
+    int32_t FfiBundleManagerDeCompressFile(CArrUI8 inFile, CArrUI8 outFile)
     {
-        APP_LOGI("begin to FfiDeCompressFileOptions");
         std::vector<uint8_t> inBytesVec;
         for (int i = 0; i < inFile.len; i++) {
             inBytesVec.push_back(inFile.data[i]);
