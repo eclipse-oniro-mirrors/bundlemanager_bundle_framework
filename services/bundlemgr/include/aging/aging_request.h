@@ -39,8 +39,9 @@ public:
     void Dump();
     void AddAgingBundle(AgingBundleInfo &bundleInfo);
 
-    const std::vector<AgingBundleInfo> &GetAgingBundles() const
+    const std::vector<AgingBundleInfo> GetAgingBundles() const
     {
+        std::lock_guard<std::mutex> lock(mutex_);
         return agingBundles_;
     };
 
@@ -84,6 +85,7 @@ private:
     void InitAgingDatasizeThreshold();
     void InitAgingOneDayTimeMs();
 
+    mutable std::mutex mutex_;
     std::vector<AgingBundleInfo> agingBundles_;
     int64_t totalDataBytes_ = 0;
     AgingCleanType agingCleanType_ = AgingCleanType::CLEAN_CACHE;

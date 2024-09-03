@@ -37,6 +37,7 @@ AgingRequest::AgingRequest()
 
 size_t AgingRequest::SortAgingBundles()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     AgingUtil::SortAgingBundles(agingBundles_);
     return agingBundles_.size();
 }
@@ -97,11 +98,13 @@ bool AgingRequest::IsReachEndAgingThreshold() const
 
 void AgingRequest::AddAgingBundle(AgingBundleInfo &bundleInfo)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     agingBundles_.emplace_back(bundleInfo);
 }
 
 void AgingRequest::ResetRequest()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     agingBundles_.clear();
     agingCleanType_ = AgingCleanType::CLEAN_CACHE;
     totalDataBytes_ = 0;
@@ -109,6 +112,7 @@ void AgingRequest::ResetRequest()
 
 void AgingRequest::Dump()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     for (const auto &agingBundle : agingBundles_) {
         APP_LOGD("bundle: %{public}s, lastTimeUsed: %{public}" PRId64 ", startCount: %{public}d",
             agingBundle.GetBundleName().c_str(), agingBundle.GetRecentlyUsedTime(), agingBundle.GetStartCount());

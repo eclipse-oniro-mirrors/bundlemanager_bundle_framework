@@ -27,9 +27,9 @@ public:
     AgingBundleInfo(const std::string &name, int64_t time, int32_t startCount)
         : bundleName_(name), recentlyUsedTime_(time), startCount_(startCount)
     {};
-    virtual ~AgingBundleInfo() = default;
+    ~AgingBundleInfo() = default;
 
-    const std::string &GetBundleName() const
+    const std::string GetBundleName() const
     {
         return bundleName_;
     };
