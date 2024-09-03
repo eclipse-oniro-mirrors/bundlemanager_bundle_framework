@@ -16,6 +16,7 @@
 #include "installd/installd_service.h"
 
 #include <chrono>
+#include <csignal>
 #include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -28,16 +29,13 @@
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 
-#ifdef DFX_SIGDUMP_HANDLER_ENABLE
-#include "dfx_sigdump_handler.h"
-#endif
-
 using namespace std::chrono_literals;
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr unsigned int INSTALLD_UMASK = 0000;
+constexpr int32_t DFX_SIGNAL = 35;
 }
 InstalldService::InstalldService() : SystemAbility(INSTALLD_SERVICE_ID, true)
 {
@@ -56,17 +54,11 @@ void InstalldService::OnStart()
     if (!Publish(hostImpl_)) {
         APP_LOGE("Publish failed");
     }
-#ifdef DFX_SIGDUMP_HANDLER_ENABLE
-    InitSigDumpHandler();
-#endif
 }
 
 void InstalldService::OnStop()
 {
     Stop();
-#ifdef DFX_SIGDUMP_HANDLER_ENABLE
-    DeinitSigDumpHandler();
-#endif
     APP_LOGI("installd OnStop");
 }
 
@@ -129,6 +121,14 @@ void InstalldService::Stop()
     SystemAbilityHelper::RemoveSystemAbility(INSTALLD_SERVICE_ID);
     isReady_ = false;
     APP_LOGI("installd service stop successfully");
+}
+
+__attribute__((constructor)) void InstalldService::DisableDfx()
+{
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, DFX_SIGNAL);
+    sigprocmask(SIG_BLOCK, &set, NULL);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
