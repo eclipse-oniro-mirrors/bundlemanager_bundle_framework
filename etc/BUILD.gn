@@ -13,20 +13,6 @@
 
 import("//build/ohos.gni")
 
-group("bms_para") {
-  deps = [
-    ":bms.para",
-    ":bms.para.dac",
-  ]
-}
-
-ohos_prebuilt_etc("bms.para") {
-  source = "bms.para"
-  part_name = "bundle_framework"
-  subsystem_name = "bundlemanager"
-  module_install_dir = "etc/param"
-}
-
 ohos_prebuilt_etc("bms.para.dac") {
   source = "bms.para.dac"
   part_name = "bundle_framework"

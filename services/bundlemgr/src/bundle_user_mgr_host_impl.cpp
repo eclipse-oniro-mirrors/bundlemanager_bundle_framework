@@ -16,7 +16,6 @@
 #include "bundle_user_mgr_host_impl.h"
 
 #include "bms_extension_data_mgr.h"
-#include "bms_key_event_mgr.h"
 #include "bundle_mgr_service.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
@@ -79,7 +78,6 @@ public:
         if (resultCode != ERR_OK && resultCode !=
             ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON && needReInstall_) {
             APP_LOGI("needReInstall bundleName: %{public}s", bundleName_.c_str());
-            BmsKeyEventMgr::ProcessMainBundleInstallFailed(bundleName_, resultCode);
             SavePreInstallException(bundleName_);
         }
     }
@@ -208,8 +206,6 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 {
     if (userId == Constants::START_USERID) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
-        // need process main bundle status
-        BmsKeyEventMgr::ProcessMainBundleStatusFinally();
     }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
