@@ -255,7 +255,7 @@ bool Resource::ReadFromParcel(Parcel &parcel)
 {
     bundleName = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
-    id = parcel.ReadInt32();
+    id = parcel.ReadUint32();
     return true;
 }
 
@@ -263,7 +263,7 @@ bool Resource::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, id);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, id);
     return true;
 }
 
@@ -370,7 +370,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     crowdtestDeadline = parcel.ReadInt64();
 
     iconPath = Str16ToStr8(parcel.ReadString16());
-    iconId = parcel.ReadInt32();
+    iconId = parcel.ReadUint32();
     std::unique_ptr<Resource> iconResourcePtr(parcel.ReadParcelable<Resource>());
     if (!iconResourcePtr) {
         APP_LOGE("icon ReadParcelable<Resource> failed");
@@ -379,7 +379,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     iconResource = *iconResourcePtr;
 
     label = Str16ToStr8(parcel.ReadString16());
-    labelId = parcel.ReadInt32();
+    labelId = parcel.ReadUint32();
     std::unique_ptr<Resource> labelResourcePtr(parcel.ReadParcelable<Resource>());
     if (!labelResourcePtr) {
         APP_LOGE("label ReadParcelable<Resource> failed");
@@ -388,7 +388,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     labelResource = *labelResourcePtr;
 
     description = Str16ToStr8(parcel.ReadString16());
-    descriptionId = parcel.ReadInt32();
+    descriptionId = parcel.ReadUint32();
     std::unique_ptr<Resource> descriptionResourcePtr(parcel.ReadParcelable<Resource>());
     if (!descriptionResourcePtr) {
         APP_LOGE("description ReadParcelable<Resource> failed");
@@ -615,15 +615,15 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, crowdtestDeadline);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(iconPath));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, iconId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &iconResource);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &labelResource);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &descriptionResource);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, keepAlive);
@@ -849,7 +849,7 @@ void from_json(const nlohmann::json &jsonObject, Resource &resource)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         RESOURCE_ID,
         resource.id,
@@ -1036,15 +1036,15 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.apiTargetVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ICON_PATH,
         applicationInfo.iconPath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_ICON_ID,
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_ICON_ID,
         applicationInfo.iconId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_LABEL,
         applicationInfo.label, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_LABEL_ID,
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_LABEL_ID,
         applicationInfo.labelId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_DESCRIPTION,
         applicationInfo.description, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_DESCRIPTION_ID,
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_DESCRIPTION_ID,
         applicationInfo.descriptionId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_KEEP_ALIVE,
         applicationInfo.keepAlive, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);

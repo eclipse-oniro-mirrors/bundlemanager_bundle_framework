@@ -33,9 +33,9 @@ struct ShortcutWant {
 struct Shortcut {
     std::string shortcutId;
     std::string icon;
-    int32_t iconId = 0;
+    uint32_t iconId = 0;
     std::string label;
-    int32_t labelId = 0;
+    uint32_t labelId = 0;
     std::vector<ShortcutWant> wants;
 };
 
@@ -55,8 +55,8 @@ struct ShortcutInfo : public Parcelable {
     std::string bundleName;
     std::string moduleName;
     std::string hostAbility;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
     std::string icon;
     std::string label;
     std::string disableMessage;

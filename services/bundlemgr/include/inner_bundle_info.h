@@ -59,9 +59,9 @@ struct DefinePermission {
     bool provisionEnable = true;
     bool distributedSceneEnable = false;
     std::string label;
-    int32_t labelId = 0;
+    uint32_t labelId = 0;
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     std::string availableType;
 };
 
@@ -75,11 +75,11 @@ struct InnerModuleInfo {
     std::string moduleHnpsPath;
     std::string label;
     std::string hapPath;
-    int32_t labelId = 0;
+    uint32_t labelId = 0;
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     std::string icon;
-    int32_t iconId = 0;
+    uint32_t iconId = 0;
     std::string mainAbility; // config.json : mainAbility; module.json : mainElement
     std::string entryAbilityKey; // skills contains "action.system.home" and "entity.system.home"
     std::string srcPath;
@@ -144,7 +144,7 @@ struct InnerModuleInfo {
 
 struct ExtendResourceInfo {
     std::string moduleName;
-    int32_t iconId;
+    uint32_t iconId;
     std::string filePath;
 };
 
@@ -1213,12 +1213,12 @@ public:
         curDynamicIconModule_ = curDynamicIconModule;
     }
 
-    int32_t GetIconId() const
+    uint32_t GetIconId() const
     {
         return baseApplicationInfo_->iconId;
     }
 
-    void SetIconId(int32_t iconId)
+    void SetIconId(uint32_t iconId)
     {
         baseApplicationInfo_->iconId = iconId;
     }

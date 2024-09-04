@@ -43,11 +43,11 @@ public:
     std::string moduleName_;
     std::string abilityName_;
     // label resource
-    int32_t labelId_ = 0;
+    uint32_t labelId_ = 0;
     std::string label_;
     bool labelNeedParse_ = true;
     // icon resource
-    int32_t iconId_ = 0;
+    uint32_t iconId_ = 0;
     std::string icon_;
     bool iconNeedParse_ = true;
     // used for parse label and icon

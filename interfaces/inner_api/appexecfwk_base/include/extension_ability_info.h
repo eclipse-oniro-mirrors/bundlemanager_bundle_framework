@@ -139,11 +139,11 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::string name;
     std::string srcEntrance;
     std::string icon;
-    int32_t iconId = 0;
+    uint32_t iconId = 0;
     std::string label;
-    int32_t labelId = 0;
+    uint32_t labelId = 0;
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     int32_t priority = 0;
     std::vector<std::string> permissions;
     std::string readPermission;

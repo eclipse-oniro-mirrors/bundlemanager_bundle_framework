@@ -215,7 +215,7 @@ public:
      * @brief Get label id.
      * @return Return label id.
      */
-    int32_t GetLabelId() const
+    uint32_t GetLabelId() const
     {
         return labelId_;
     }
@@ -223,7 +223,7 @@ public:
      * @brief Set label id.
      * @param labelId label id.
      */
-    void SetLabelId(const int32_t labelId)
+    void SetLabelId(const uint32_t labelId)
     {
         labelId_ = labelId;
     }
@@ -231,7 +231,7 @@ public:
      * @brief Get icon id.
      * @return Return icon id.
      */
-    int32_t GetIconId() const
+    uint32_t GetIconId() const
     {
         return iconId_;
     }
@@ -239,7 +239,7 @@ public:
      * @brief Set icon id.
      * @param iconId icon id.
      */
-    void SetIconId(const int32_t iconId)
+    void SetIconId(const uint32_t iconId)
     {
         iconId_ = iconId;
     }
@@ -269,8 +269,8 @@ private:
     std::string moduleName_;
     int64_t hapTotalSize_ = 0;
     uint32_t versionCode_;
-    int32_t labelId_ = 0;
-    int32_t iconId_ = 0;
+    uint32_t labelId_ = 0;
+    uint32_t iconId_ = 0;
     std::vector<std::string> bundlePaths_;
     bool removable_ = true;
     bool isUninstalled_ = false;
