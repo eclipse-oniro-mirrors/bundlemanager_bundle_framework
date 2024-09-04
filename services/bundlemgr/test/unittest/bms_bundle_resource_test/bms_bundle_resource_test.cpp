@@ -3618,9 +3618,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0159, Function | SmallTest
         ResourceInfo info;
         info.iconNeedParse_ = true;
         resourceInfosMap[BUNDLE_NAME].emplace_back(info);
-        bool needDelete = true;
-        manager->InnerProcessResourceInfoBySystemLanguageChanged(resourceInfosMap, needDelete);
-        EXPECT_FALSE(needDelete);
+        manager->InnerProcessResourceInfoBySystemLanguageChanged(resourceInfosMap);
         EXPECT_FALSE(resourceInfosMap[BUNDLE_NAME][0].iconNeedParse_);
     }
 }
@@ -3642,9 +3640,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0160, Function | SmallTest
         info.bundleName_ = BUNDLE_NAME;
         info.iconNeedParse_ = true;
         resourceInfosMap[BUNDLE_NAME].emplace_back(info);
-        bool needDelete = true;
-        manager->InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, USERID, needDelete);
-        EXPECT_FALSE(needDelete);
+        manager->InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, USERID);
         EXPECT_TRUE(resourceInfosMap.empty()); // theme not exist
     }
 }
