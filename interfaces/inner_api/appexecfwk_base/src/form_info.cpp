@@ -91,11 +91,13 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     window.autoDesignWidth = formInfo.window.autoDesignWidth;
     std::size_t pos = formInfo.displayName.find(":");
     if (pos != std::string::npos) {
-        displayNameId = atoi(formInfo.displayName.substr(pos + 1, formInfo.displayName.length() - pos - 1).c_str());
+        displayNameId = static_cast<unsigned int>(
+            atoi(formInfo.displayName.substr(pos + 1, formInfo.displayName.length() - pos - 1).c_str()));
     }
     pos = formInfo.description.find(":");
     if (pos != std::string::npos) {
-        descriptionId = atoi(formInfo.description.substr(pos + 1, formInfo.description.length() - pos - 1).c_str());
+        descriptionId = static_cast<unsigned int>(
+            atoi(formInfo.description.substr(pos + 1, formInfo.description.length() - pos - 1).c_str()));
     }
     updateDuration = formInfo.updateDuration;
     defaultDimension = formInfo.defaultDimension;

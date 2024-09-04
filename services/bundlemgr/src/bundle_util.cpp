@@ -194,7 +194,7 @@ bool BundleUtil::CheckSystemSize(const std::string &bundlePath, const std::strin
         APP_LOGE("call statfs error:%{public}d", errno);
         return false;
     }
-    int64_t freeSize = diskInfo.f_bavail * diskInfo.f_bsize;
+    uint64_t freeSize = diskInfo.f_bavail * diskInfo.f_bsize;
     APP_LOGD("left free size in the disk path is %{public}" PRId64, freeSize);
     struct stat fileInfo = { 0 };
     if (stat(bundlePath.c_str(), &fileInfo) != 0) {
@@ -722,7 +722,7 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
     return true;
 }
 
-Resource BundleUtil::GetResource(const std::string &bundleName, const std::string &moduleName, int32_t resId)
+Resource BundleUtil::GetResource(const std::string &bundleName, const std::string &moduleName, uint32_t resId)
 {
     Resource resource;
     resource.bundleName = bundleName;
