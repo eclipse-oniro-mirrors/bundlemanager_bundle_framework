@@ -22,6 +22,11 @@ config("private_config") {
 module_output_path = "bundle_framework/bundlemgrservice"
 
 ohos_unittest("BmsBundleDataGroupTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]

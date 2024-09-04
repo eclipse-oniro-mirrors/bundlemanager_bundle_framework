@@ -17,6 +17,11 @@ import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 module_output_path = "bundle_framework/bundlemgrservice"
 
 ohos_unittest("BmsBundleHspTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -174,6 +179,11 @@ ohos_unittest("BmsBundleHspTest") {
 }
 
 ohos_unittest("BmsBundleSharedLibraryInstallTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -336,6 +346,11 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
 }
 
 ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
