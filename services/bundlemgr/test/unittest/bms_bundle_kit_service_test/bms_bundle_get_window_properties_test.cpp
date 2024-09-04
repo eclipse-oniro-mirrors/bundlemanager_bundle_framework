@@ -158,7 +158,6 @@ ErrCode BmsBundleGetWindowPropertiesTest::InstallBundle(const std::vector<std::s
     InstallParam installParam;
     installParam.userId = DEFAULT_USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
-    installParam.withCopyHaps = true;
     bool result = installer->Install(filePaths, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();

@@ -403,12 +403,14 @@ ErrCode InstalldProxy::MoveFile(const std::string &oldPath, const std::string &n
     return TransactInstalldCmd(InstalldInterfaceCode::MOVE_FILE, data, reply, option);
 }
 
-ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &newPath,
+    const std::string &signatureFilePath)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(oldPath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(newPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(signatureFilePath));
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -922,20 +924,6 @@ ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessagePa
         return ERR_APPEXECFWK_INSTALLD_SERVICE_DIED;
     }
     return reply.ReadInt32();
-}
-
-ErrCode InstalldProxy::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath,
-    const std::string &signatureFilePath)
-{
-    MessageParcel data;
-    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(originPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(signatureFilePath));
-
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(InstalldInterfaceCode::MOVE_HAP_TO_CODE_DIR, data, reply, option);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -312,7 +312,6 @@ ErrCode BmsBundleUninstallerTest::InstallMultipleBundles(const std::vector<std::
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = flag ? InstallFlag::NORMAL : InstallFlag::REPLACE_EXISTING;
-    installParam.withCopyHaps = true;
     bool result = installer->Install(filePaths, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();

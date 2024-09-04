@@ -127,7 +127,6 @@ ErrCode BmsBundleCrowdtestingTest::InstallBundle(const std::vector<std::string> 
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
     installParam.crowdtestDeadline = crowdtestDeadline;
-    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -154,7 +153,6 @@ ErrCode BmsBundleCrowdtestingTest::InstallBundle(const std::string &bundlePath,
     installParam.userId = USERID;
     installParam.crowdtestDeadline = crowdtestDeadline;
     installParam.specifiedDistributionType = specifiedDistributeType;
-    installParam.withCopyHaps = true;
     std::vector<std::string> path;
     path.emplace_back(bundlePath);
     bool result = installer->Install(path, installParam, receiver);
@@ -182,7 +180,6 @@ ErrCode BmsBundleCrowdtestingTest::UpdateBundle(const std::string &bundlePath,
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
     installParam.crowdtestDeadline = crowdtestDeadline;
-    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -209,7 +206,6 @@ ErrCode BmsBundleCrowdtestingTest::UpdateBundle(const std::string  &bundlePath,
     installParam.userId = USERID;
     installParam.crowdtestDeadline = crowdtestDeadline;
     installParam.specifiedDistributionType = specifiedDistributeType;
-    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();

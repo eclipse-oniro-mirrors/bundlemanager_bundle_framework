@@ -165,7 +165,8 @@ public:
 
     virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath) override;
 
-    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath) override;
+    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath,
+        const std::string &signatureFilePath = "") override;
 
     virtual ErrCode Mkdir(
         const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid) override;
@@ -230,9 +231,6 @@ public:
     virtual ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList) override;
 
     virtual ErrCode AddUserDirDeleteDfx(int32_t userId) override;
-
-    virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath,
-        const std::string &signatureFilePath = "") override;
 
 private:
     std::string GetAppDataPath(const std::string &bundleName, const std::string &el,

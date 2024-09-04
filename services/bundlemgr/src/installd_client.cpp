@@ -320,14 +320,15 @@ ErrCode InstalldClient::MoveFile(const std::string &oldPath, const std::string &
     return CallService(&IInstalld::MoveFile, oldPath, newPath);
 }
 
-ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath,
+    const std::string &signatureFilePath)
 {
     if (oldPath.empty() || newPath.empty()) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::CopyFile, oldPath, newPath);
+    return CallService(&IInstalld::CopyFile, oldPath, newPath, signatureFilePath);
 }
 
 ErrCode InstalldClient::Mkdir(
@@ -572,17 +573,6 @@ ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &ty
 ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
 {
     return CallService(&IInstalld::AddUserDirDeleteDfx, userId);
-}
-
-ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath,
-    const std::string &signatureFilePath)
-{
-    if (originPath.empty() || targetPath.empty()) {
-        APP_LOGE("params are invalid");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    return CallService(&IInstalld::MoveHapToCodeDir, originPath, targetPath, signatureFilePath);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
