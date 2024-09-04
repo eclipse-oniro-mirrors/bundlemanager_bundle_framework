@@ -210,10 +210,7 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
 
     // check syscap
     result = bundleInstallChecker_->CheckSysCap(checkedHspPaths);
-    bool isSysCapValid = (result == ERR_OK) ? true : false;
-    if (!isSysCapValid) {
-        APP_LOGI("Hsp syscap check failed %{public}d", result);
-    }
+    CHECK_RESULT(result, "Hsp syscap check failed %{public}d");
 
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
@@ -234,13 +231,8 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     CHECK_RESULT(result, "Check hsp install condition failed %{public}d");
 
     // check device type
-    if (!isSysCapValid) {
-        result = bundleInstallChecker_->CheckDeviceType(newInfos);
-        if (result != ERR_OK) {
-            APP_LOGE("Check device type failed : %{public}d", result);
-            return ERR_BUNDLE_MANAGER_INSTALL_SYSCAP_OR_DEVICE_TYPE_ERROR;
-        }
-    }
+    result = bundleInstallChecker_->CheckDeviceType(newInfos);
+    CHECK_RESULT(result, "Check device type failed %{public}d");
 
     result = CheckAppLabelInfo(newInfos);
     CHECK_RESULT(result, "Check app label failed %{public}d");

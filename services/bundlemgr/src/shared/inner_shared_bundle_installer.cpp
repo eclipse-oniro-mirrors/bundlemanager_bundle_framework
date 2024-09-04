@@ -64,10 +64,8 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
 
     // check syscap
     result = bundleInstallChecker_->CheckSysCap(bundlePaths);
-    bool isSysCapValid = (result == ERR_OK) ? true : false;
-    if (!isSysCapValid) {
-        APP_LOGI("hap syscap check failed %{public}d", result);
-    }
+    CHECK_RESULT(result, "hap syscap check failed %{public}d");
+
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
     result = bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyResults);
@@ -89,13 +87,8 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     sendStartSharedBundleInstallNotify(checkParam, parsedBundles_);
 
     // check device type
-    if (!isSysCapValid) {
-        result = bundleInstallChecker_->CheckDeviceType(parsedBundles_);
-        if (result != ERR_OK) {
-            APP_LOGE("check device type failed %{public}d", result);
-            return ERR_BUNDLE_MANAGER_INSTALL_SYSCAP_OR_DEVICE_TYPE_ERROR;
-        }
-    }
+    result = bundleInstallChecker_->CheckDeviceType(parsedBundles_);
+    CHECK_RESULT(result, "check device type failed %{public}d");
 
     // check label info
     result = CheckAppLabelInfo();
