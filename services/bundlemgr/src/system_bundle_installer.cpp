@@ -16,7 +16,6 @@
 #include "system_bundle_installer.h"
 
 #include "app_log_wrapper.h"
-#include "bms_key_event_mgr.h"
 #include "bundle_mgr_service.h"
 
 namespace OHOS {
@@ -40,9 +39,6 @@ ErrCode SystemBundleInstaller::InstallSystemBundle(
     ErrCode result = InstallBundle(filePath, installParam, appType);
     if (result != ERR_OK) {
         APP_LOGE("install system bundle fail, error: %{public}d", result);
-        if (result != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
-            BmsKeyEventMgr::ProcessMainBundleInstallFailed(filePath, result);
-        }
     }
     return result;
 }
@@ -82,9 +78,6 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundle(
         if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
             APP_LOGE("install system bundle fail, error: %{public}d", errCode);
             result = errCode;
-            if (!filePaths.empty()) {
-                BmsKeyEventMgr::ProcessMainBundleInstallFailed(filePaths[0], result);
-            }
         }
         ResetInstallProperties();
     }
@@ -126,7 +119,6 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
         if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
             APP_LOGE("install system bundle %{public}s fail err %{public}d", bundleName.c_str(), errCode);
             result = errCode;
-            BmsKeyEventMgr::ProcessMainBundleInstallFailed(bundleName, result);
         }
         ResetInstallProperties();
     }
