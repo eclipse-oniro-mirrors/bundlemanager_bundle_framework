@@ -61,6 +61,8 @@ public:
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
     bool IsAppInBlocklist(const std::string &bundleName);
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName);
+    
+    bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum);
 private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;
