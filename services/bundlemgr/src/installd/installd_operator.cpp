@@ -1751,7 +1751,7 @@ bool InstalldOperator::ExtractDriverSoFiles(const std::string &srcPath,
             fileName = fileName.substr(1);
         }
         int fileNamePos = 0;
-        fileNamePos = fileName.find(ServiceConstants::PATH_SEPARATOR[0], STR_LIBS_LEN + 1);
+        fileNamePos = static_cast<int32_t>(fileName.find(ServiceConstants::PATH_SEPARATOR[0], STR_LIBS_LEN + 1));
         fileName.erase(0, fileNamePos);
         LOG_D(BMS_TAG_INSTALLD, "ExtractDriverSoFiles fileName is %{public}s", fileName.c_str());
         std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;

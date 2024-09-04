@@ -4121,14 +4121,14 @@ void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, Shortcut
     if (shortcutInfo.iconId == 0) {
         auto iter = oldShortcut.icon.find(PORT_SEPARATOR);
         if (iter != std::string::npos) {
-            shortcutInfo.iconId = atoi(oldShortcut.icon.substr(iter + 1).c_str());
+            shortcutInfo.iconId = static_cast<unsigned int>(atoi(oldShortcut.icon.substr(iter + 1).c_str()));
         }
     }
     shortcutInfo.labelId = oldShortcut.labelId;
     if (shortcutInfo.labelId == 0) {
         auto iter = oldShortcut.label.find(PORT_SEPARATOR);
         if (iter != std::string::npos) {
-            shortcutInfo.labelId = atoi(oldShortcut.label.substr(iter + 1).c_str());
+            shortcutInfo.labelId = static_cast<unsigned int>(atoi(oldShortcut.label.substr(iter + 1).c_str()));
         }
     }
     for (const ShortcutWant &shortcutWant : oldShortcut.wants) {
