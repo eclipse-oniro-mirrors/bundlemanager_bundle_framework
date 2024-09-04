@@ -151,8 +151,7 @@ public:
 
     ErrCode MoveFile(const std::string &oldPath, const std::string &newPath);
 
-    ErrCode CopyFile(const std::string &oldPath, const std::string &newPath,
-        const std::string &signatureFilePath = "");
+    ErrCode CopyFile(const std::string &oldPath, const std::string &newPath);
 
     ErrCode Mkdir(
         const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid);
@@ -234,6 +233,9 @@ public:
     ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList);
 
     ErrCode AddUserDirDeleteDfx(int32_t userId);
+
+    ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath,
+        const std::string &signatureFilePath = "");
 
 private:
     /**

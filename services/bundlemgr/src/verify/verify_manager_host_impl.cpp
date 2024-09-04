@@ -226,7 +226,7 @@ bool VerifyManagerHostImpl::CopyFilesToTempDir(
             return false;
         }
 
-        result = InstalldClient::GetInstance()->CopyFile(realPath, tempCopyPath, "");
+        result = InstalldClient::GetInstance()->CopyFile(realPath, tempCopyPath);
         if (result != ERR_OK) {
             APP_LOGE("CopyFile tempDir %{public}s faild %{public}d", realPath.c_str(), result);
             return false;

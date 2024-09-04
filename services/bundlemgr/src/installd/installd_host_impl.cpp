@@ -41,6 +41,7 @@
 #include "directory_ex.h"
 #ifdef WITH_SELINUX
 #include "hap_restorecon.h"
+#include "selinux/selinux.h"
 #ifndef SELINUX_HAP_DEBUGGABLE
 #define SELINUX_HAP_DEBUGGABLE 2
 #endif
@@ -78,6 +79,7 @@ constexpr const char* EXTENSION_CONFIG_FILE_PATH = "/etc/ams_extension_config.js
 constexpr const char* EXTENSION_CONFIG_NAME = "ams_extension_config";
 constexpr const char* EXTENSION_TYPE_NAME = "extension_type_name";
 constexpr const char* EXTENSION_SERVICE_NEED_CREATE_SANDBOX = "need_create_sandbox";
+constexpr int16_t INSTALLS_UID = 3060;
 enum class DirType : uint8_t {
     DIR_EL1,
     DIR_EL2,
@@ -1102,8 +1104,7 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath,
-    const std::string &signatureFilePath)
+ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
@@ -1119,20 +1120,6 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
         LOG_E(BMS_TAG_INSTALLD, "change mode failed");
         return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
     }
-
-    if (signatureFilePath.empty()) {
-        LOG_D(BMS_TAG_INSTALLD, "signature file path is empty and no need to process code signature");
-        return ERR_OK;
-    }
-
-#if defined(CODE_SIGNATURE_ENABLE)
-    Security::CodeSign::EntryMap entryMap = {{ ServiceConstants::CODE_SIGNATURE_HAP, newPath }};
-    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFilePath);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "hap or hsp code signature failed due to %{public}d", ret);
-        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
-    }
-#endif
     return ERR_OK;
 }
 
@@ -1905,6 +1892,52 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(const std::string &bundleName
         LOG_E(BMS_TAG_INSTALLD, "failed to remove distributed file dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath,
+    const std::string &signatureFilePath)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::MoveFile(originPath, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "move file %{public}s to %{public}s failed errno:%{public}d",
+            originPath.c_str(), targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(targetPath, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    if (!InstalldOperator::ChangeFileAttr(targetPath, INSTALLS_UID, INSTALLS_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "ChangeAttr %{public}s failed errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+
+#ifdef WITH_SELINUX
+    const char *context = "u:object_r:data_app_el1_file:s0";
+    if (lsetfilecon(targetPath.c_str(), context) < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "setcon %{public}s failed errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+#endif
+
+    if (signatureFilePath.empty()) {
+        LOG_D(BMS_TAG_INSTALLD, "signature file path is empty and no need to process code signature");
+        return ERR_OK;
+    }
+
+#if defined(CODE_SIGNATURE_ENABLE)
+    Security::CodeSign::EntryMap entryMap = {{ ServiceConstants::CODE_SIGNATURE_HAP, targetPath }};
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFilePath);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "hap or hsp code signature failed due to %{public}d", ret);
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+#endif
     return ERR_OK;
 }
 }  // namespace AppExecFwk

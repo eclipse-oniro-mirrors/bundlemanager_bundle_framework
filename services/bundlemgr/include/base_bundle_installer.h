@@ -778,7 +778,6 @@ private:
     bool isInternaltestingBundle_ = false;
     std::string appIdentifier_ = "";
     Security::Verify::HapVerifyResult verifyRes_;
-    std::map<std::string, std::string> targetSoPathMap_;
     bool copyHapToInstallPath_ = false;
     std::string appDistributionType_;
     // indicates sandboxd dirs need to create by extension

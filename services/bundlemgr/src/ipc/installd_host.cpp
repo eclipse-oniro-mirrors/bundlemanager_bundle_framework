@@ -106,6 +106,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE):
             result = this->HandleCopyFile(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_HAP_TO_CODE_DIR):
+            result = this->HandleMoveHapToCodeDir(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::MKDIR):
             result = this->HandleMkdir(data, reply);
             break;
@@ -540,9 +543,8 @@ bool InstalldHost::HandleCopyFile(MessageParcel &data, MessageParcel &reply)
 {
     std::string oldPath = Str16ToStr8(data.ReadString16());
     std::string newPath = Str16ToStr8(data.ReadString16());
-    std::string signatureFilePath = Str16ToStr8(data.ReadString16());
 
-    ErrCode result = CopyFile(oldPath, newPath, signatureFilePath);
+    ErrCode result = CopyFile(oldPath, newPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -897,6 +899,17 @@ bool InstalldHost::HandleCreateExtensionDataDir(MessageParcel &data, MessageParc
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
     ErrCode result = CreateExtensionDataDir(*info);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleMoveHapToCodeDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string originPath = Str16ToStr8(data.ReadString16());
+    std::string targetPath = Str16ToStr8(data.ReadString16());
+    std::string signatureFilePath = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = MoveHapToCodeDir(originPath, targetPath, signatureFilePath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
