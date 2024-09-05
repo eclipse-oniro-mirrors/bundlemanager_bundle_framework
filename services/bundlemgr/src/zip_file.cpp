@@ -15,11 +15,15 @@
 
 #include "zip_file.h"
 
+#include <cassert>
+#include <cstring>
 #include <ostream>
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "bundle_service_constants.h"
 #include "securec.h"
+#include "zlib.h"
 
 namespace OHOS {
 namespace AppExecFwk {

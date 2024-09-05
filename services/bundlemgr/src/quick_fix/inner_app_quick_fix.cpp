@@ -15,7 +15,14 @@
 
 #include "inner_app_quick_fix.h"
 
+#include <algorithm>
+
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
+#include "bundle_constants.h"
+#include "common_profile.h"
+#include "json_serializer.h"
 #include "json_util.h"
 
 namespace OHOS {

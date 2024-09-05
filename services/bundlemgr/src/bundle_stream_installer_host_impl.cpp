@@ -17,7 +17,9 @@
 
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_util.h"
 #include "ipc_skeleton.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 namespace {

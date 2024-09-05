@@ -15,8 +15,13 @@
 
 #include "bundle_verify_mgr.h"
 
+#include <map>
+
 #include "app_log_wrapper.h"
 #include "bms_extension_data_mgr.h"
+#include "bundle_constants.h"
+#include "interfaces/hap_verify.h"
+#include "ipc_skeleton.h"
 
 using namespace OHOS::Security::Verify;
 

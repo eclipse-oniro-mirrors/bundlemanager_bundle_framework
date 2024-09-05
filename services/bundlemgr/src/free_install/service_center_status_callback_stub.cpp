@@ -16,8 +16,11 @@
 #include "service_center_status_callback_stub.h"
 
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
 #include "free_install_params.h"
+#include "message_parcel.h"
+#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {

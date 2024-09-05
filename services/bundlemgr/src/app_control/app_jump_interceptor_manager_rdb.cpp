@@ -15,7 +15,10 @@
 
 #include "app_jump_interceptor_manager_rdb.h"
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
+#include "bundle_util.h"
+#include "common_event_manager.h"
 #include "scope_guard.h"
 
 namespace OHOS {

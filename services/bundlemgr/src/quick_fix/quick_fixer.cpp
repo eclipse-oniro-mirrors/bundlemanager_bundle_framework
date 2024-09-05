@@ -15,7 +15,10 @@
 
 #include "quick_fixer.h"
 
+#include <cinttypes>
+
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
 #include "quick_fix_deleter.h"
 #include "quick_fix_deployer.h"
 #include "quick_fix_switcher.h"

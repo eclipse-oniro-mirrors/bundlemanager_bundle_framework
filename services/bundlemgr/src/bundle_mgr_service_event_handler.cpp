@@ -15,29 +15,46 @@
 
 #include "bundle_mgr_service_event_handler.h"
 
+#include <future>
 #include <sstream>
 #include <sys/stat.h>
 
+#include "accesstoken_kit.h"
+#include "access_token.h"
 #include "account_helper.h"
 #include "aot/aot_handler.h"
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
+#include "app_provision_info.h"
 #include "app_provision_info_manager.h"
+#include "app_privilege_capability.h"
 #include "app_service_fwk_installer.h"
+#include "bundle_install_checker.h"
+#include "bundle_mgr_host_impl.h"
+#include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
+#include "running_process_info.h"
 #include "bundle_scanner.h"
+#include "bundle_util.h"
+#include "common_event_data.h"
+#include "common_event_manager.h"
+#include "common_event_support.h"
+#include "common_event_subscriber.h"
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
 #endif
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
 #include "dlp_permission_kit.h"
 #endif
+#include "event_report.h"
 #include "hmp_bundle_installer.h"
 #include "installd_client.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "perf_profile.h"
+#include "preinstalled_application_info.h"
 #ifdef WINDOW_ENABLE
 #include "scene_board_judgement.h"
 #endif
@@ -46,7 +63,9 @@
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_boot_scanner.h"
 #endif
+#include "want.h"
 #include "user_unlocked_event_subscriber.h"
+#include "json_util.h"
 #ifdef STORAGE_SERVICE_ENABLE
 #include "storage_manager_proxy.h"
 #include "iservice_registry.h"

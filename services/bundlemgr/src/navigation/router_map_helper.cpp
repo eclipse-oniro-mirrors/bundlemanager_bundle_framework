@@ -15,7 +15,12 @@
 #include "router_map_helper.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_info.h"
 #include "router_item_compare.h"
+
+#include <map>
+#include <regex>
+#include <set>
 
 namespace OHOS {
 namespace AppExecFwk {

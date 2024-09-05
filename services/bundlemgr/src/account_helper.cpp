@@ -15,6 +15,8 @@
 
 #include "account_helper.h"
 
+#include <vector>
+
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 

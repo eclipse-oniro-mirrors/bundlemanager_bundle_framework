@@ -14,7 +14,9 @@
  */
 
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
 #include "bms_ecological_rule_mgr_service_client.h"
+#include "iremote_broker.h"
 #include "iservice_registry.h"
 
 namespace OHOS {

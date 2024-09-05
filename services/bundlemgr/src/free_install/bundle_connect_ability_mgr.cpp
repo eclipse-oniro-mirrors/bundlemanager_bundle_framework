@@ -15,14 +15,23 @@
 
 #include "bundle_connect_ability_mgr.h"
 
+#include <thread>
+
 #include "ability_manager_client.h"
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "ffrt_inner.h"
+#include "free_install_params.h"
 #include "hitrace_meter.h"
+#include "json_util.h"
+#include "parcel.h"
+#include "scope_guard.h"
 #include "service_center_connection.h"
 #include "service_center_status_callback.h"
+#include "string_ex.h"
 #include "system_ability_load_callback_stub.h"
 
 namespace OHOS {

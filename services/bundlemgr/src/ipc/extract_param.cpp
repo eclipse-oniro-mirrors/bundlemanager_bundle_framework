@@ -15,6 +15,8 @@
 
 #include "ipc/extract_param.h"
 
+#include <unordered_map>
+
 #include "parcel_macro.h"
 #include "string_ex.h"
 

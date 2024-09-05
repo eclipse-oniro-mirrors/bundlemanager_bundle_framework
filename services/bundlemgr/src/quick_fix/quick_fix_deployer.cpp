@@ -16,8 +16,14 @@
 #include "quick_fix_deployer.h"
 
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
+#include "bundle_util.h"
 #include "installd_client.h"
+#include "event_report.h"
+#include "patch_extractor.h"
 #include "patch_parser.h"
 #include "scope_guard.h"
 

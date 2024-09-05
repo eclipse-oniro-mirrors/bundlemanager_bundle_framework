@@ -15,6 +15,8 @@
 
 #include "event_report.h"
 
+#include <unordered_map>
+
 #include "app_log_wrapper.h"
 #include "bundle_util.h"
 #ifdef HISYSEVENT_ENABLE

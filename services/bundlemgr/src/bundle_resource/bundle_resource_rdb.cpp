@@ -16,7 +16,9 @@
 #include "bundle_resource_rdb.h"
 
 #include "app_log_wrapper.h"
+#include "bms_rdb_config.h"
 #include "bundle_resource_constants.h"
+#include "bundle_system_state.h"
 #include "bundle_util.h"
 #include "scope_guard.h"
 

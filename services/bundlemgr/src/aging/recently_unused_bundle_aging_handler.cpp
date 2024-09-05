@@ -13,8 +13,18 @@
  * limitations under the License.
  */
 
+#include <cinttypes>
+#include <mutex>
+
 #include "ability_manager_helper.h"
+#include "account_helper.h"
+#include "aging/aging_handler.h"
+#include "app_log_wrapper.h"
+#include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
+#include "bundle_promise.h"
+#include "event_report.h"
+#include "install_param.h"
 #include "installd_client.h"
 
 namespace OHOS {
