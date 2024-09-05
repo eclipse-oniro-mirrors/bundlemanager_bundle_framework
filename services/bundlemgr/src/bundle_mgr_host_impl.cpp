@@ -407,7 +407,8 @@ bool BundleMgrHostImpl::GetBundleInfos(const BundleFlag flag, std::vector<Bundle
 
 bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    LOG_D(BMS_TAG_QUERY, "start GetBundleInfos, flags : %{public}d, userId : %{public}d", flags, userId);
+    LOG_I(BMS_TAG_QUERY, "start GetBundleInfos, flags : %{public}d, userId : %{public}d uid:%{public}d", flags,
+        userId, IPCSkeleton::GetCallingUid());
     // API9 need to be system app
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
@@ -440,7 +441,8 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
 
 ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    LOG_D(BMS_TAG_QUERY, "start GetBundleInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
+    LOG_I(BMS_TAG_QUERY, "start GetBundleInfosV9, flags : %{public}d, userId : %{public}d uid:%{public}d", flags,
+        userId, IPCSkeleton::GetCallingUid());
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
