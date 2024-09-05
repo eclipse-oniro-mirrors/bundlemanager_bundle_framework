@@ -21,6 +21,7 @@ config("bundle_napi_common_config") {
   ]
 }
 ohos_shared_library("bundle_napi_common") {
+  branch_protector_ret = "pac_ret"
   defines = [
     "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
