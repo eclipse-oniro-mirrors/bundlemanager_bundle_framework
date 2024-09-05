@@ -7501,9 +7501,14 @@ void BundleDataMgr::CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32
         return;
     }
 
+    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+        + std::to_string(userId);
+    if (!BundleUtil::IsExistDir(parentDir)) {
+        APP_LOGE("parent dir(%{public}s) missing: group", parentDir.c_str());
+        return;
+    }
     for (const DataGroupInfo &dataGroupInfo : infos) {
-        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-            + std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         APP_LOGD("create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
             DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);

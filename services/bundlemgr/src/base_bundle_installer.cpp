@@ -2925,6 +2925,11 @@ bool BaseBundleInstaller::SetEncryptionDirPolicy(InnerBundleInfo &info)
 void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleInfo &info,
     const std::string &dir)
 {
+    auto pos = dir.rfind(ServiceConstants::PATH_SEPARATOR);
+    if (pos == std::string::npos || !BundleUtil::IsExistDir(dir.substr(0, pos))) {
+        LOG_E(BMS_TAG_INSTALLER, "parent dir(%{public}s) missing: el5", dir.substr(0, pos).c_str());
+        return;
+    }
     InnerBundleUserInfo newInnerBundleUserInfo;
     if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
@@ -3024,9 +3029,14 @@ void BaseBundleInstaller::DeleteScreenLockProtectionDir(const std::string bundle
 
 ErrCode BaseBundleInstaller::CreateGroupDirs() const
 {
+    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+        + std::to_string(userId_);
+    if (!BundleUtil::IsExistDir(parentDir)) {
+        LOG_E(BMS_TAG_INSTALLER, "parent dir(%{public}s) missing: group", parentDir.c_str());
+        return ERR_OK;
+    }
     for (const DataGroupInfo &dataGroupInfo : createGroupDirs_) {
-        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-            + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         LOG_D(BMS_TAG_INSTALLER, "create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
             DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
@@ -3633,9 +3643,14 @@ void BaseBundleInstaller::CreateDataGroupDir(InnerBundleInfo &info) const
         return;
     }
 
+    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+        + std::to_string(userId_);
+    if (!BundleUtil::IsExistDir(parentDir)) {
+        LOG_E(BMS_TAG_INSTALLER, "parent dir(%{public}s) missing: group", parentDir.c_str());
+        return;
+    }
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
-        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-            + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         LOG_D(BMS_TAG_INSTALLER, "create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
             DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
