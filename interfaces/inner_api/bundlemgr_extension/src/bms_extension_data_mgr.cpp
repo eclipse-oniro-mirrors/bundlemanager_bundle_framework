@@ -314,7 +314,7 @@ ErrCode BmsExtensionDataMgr::ClearBackupUninstallFile(int32_t userId)
     return bundleMgrExtPtr->ClearBackupUninstallFile(userId);
 }
 
-bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName)
+bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName, const int32_t userId)
 {
     if ((Init() != ERR_OK) || handler_ == nullptr) {
         APP_LOGW("link failed");
@@ -326,7 +326,7 @@ bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName)
         APP_LOGW("GetBundleMgrExt failed");
         return false;
     }
-    return bundleMgrExtPtr->IsAppInBlocklist(bundleName);
+    return bundleMgrExtPtr->IsAppInBlocklist(bundleName, userId);
 }
 
 bool BmsExtensionDataMgr::CheckWhetherCanBeUninstalled(const std::string &bundleName)
