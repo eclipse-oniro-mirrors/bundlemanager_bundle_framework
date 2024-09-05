@@ -51,7 +51,7 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
     BmsExtensionDataMgr bmsExtensionDataMgr;
     if (bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId)) {
         APP_LOGE("app %{public}s is in blocklist", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        return ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
     }
 
     if (GetDataMgr() != ERR_OK) {
