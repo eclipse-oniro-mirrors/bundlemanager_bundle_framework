@@ -2140,4 +2140,237 @@ HWTEST_F(BmsBundleDefaultAppTest, IsSpecificMimeType_0100, Function | SmallTest 
     ret = DefaultAppMgr::IsSpecificMimeType(notSpecificMimeType);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: GetDefaultApplicationInternal_0100
+ * @tc.name: GetDefaultApplicationInternal
+ * @tc.desc: Test GetDefaultApplicationInternal the DefaultAppMgr
+ */
+HWTEST_F(BmsBundleDefaultAppTest, GetDefaultApplicationInternal_0100, Function | SmallTest | Level1)
+{
+    DefaultAppMgr defaultAppMgr;
+    
+    int32_t userId = 100;
+    std::string normalizedType = "AUDIO";
+    BundleInfo bundleInfo;
+    bool backup = true;
+    ErrCode ret = defaultAppMgr.GetDefaultApplicationInternal(userId, normalizedType, bundleInfo, backup);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
+
+    normalizedType = "";
+    ret = defaultAppMgr.GetDefaultApplicationInternal(userId, normalizedType, bundleInfo, backup);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetDefaultApplicationInternal_0100
+ * @tc.name: SetDefaultApplicationInternal
+ * @tc.desc: Test SetDefaultApplicationInternal the DefaultAppMgr
+ */
+HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplicationInternal_0100, Function | SmallTest | Level1)
+{
+    DefaultAppMgr defaultAppMgr;
+    
+    int32_t userId = 100;
+    std::string normalizedType;
+    Element element;
+    ErrCode ret = defaultAppMgr.SetDefaultApplicationInternal(userId, normalizedType, element);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ResetDefaultApplicationInternal_0100
+ * @tc.name: ResetDefaultApplicationInternal
+ * @tc.desc: Test ResetDefaultApplicationInternal the DefaultAppMgr
+ */
+HWTEST_F(BmsBundleDefaultAppTest, ResetDefaultApplicationInternal_0100, Function | SmallTest | Level1)
+{
+    DefaultAppMgr defaultAppMgr;
+    
+    int32_t userId = 100;
+    std::string normalizedType;
+    ErrCode ret = defaultAppMgr.ResetDefaultApplicationInternal(userId, normalizedType);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IsEmailWant_0100
+ * @tc.name: IsEmailWant
+ * @tc.desc: Test IsEmailWant the DefaultAppMgr
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsEmailWant_0100, Function | SmallTest | Level1)
+{
+    DefaultAppMgr defaultAppMgr;
+    
+    Want want;
+    want.SetAction("ohos.want.action.sendToData1");
+    bool ret = defaultAppMgr.IsEmailWant(want);
+    EXPECT_FALSE(ret);
+
+    want.SetAction("ohos.want.action.sendToData");
+    want.SetUri("1mailto");
+    ret = defaultAppMgr.IsEmailWant(want);
+    EXPECT_FALSE(ret);
+
+    want.SetAction("ohos.want.action.sendToData");
+    want.SetUri("mailto");
+    ret = defaultAppMgr.IsEmailWant(want);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetTypeFromWant_0100
+ * @tc.name: GetTypeFromWant
+ * @tc.desc: Test GetTypeFromWant the DefaultAppMgr
+ */
+HWTEST_F(BmsBundleDefaultAppTest, GetTypeFromWant_0100, Function | SmallTest | Level1)
+{
+    DefaultAppMgr defaultAppMgr;
+    
+    Want want;
+    want.SetAction("ohos.want.action.viewData");
+    want.SetUri("http://");
+    std::string ret = defaultAppMgr.GetTypeFromWant(want);
+    EXPECT_EQ(ret, "BROWSER");
+
+    want.SetAction("ohos.want.action.sendToData");
+    want.SetUri("mailto");
+    ret = defaultAppMgr.GetTypeFromWant(want);
+    EXPECT_EQ(ret, "EMAIL");
+
+    want.SetAction("ohos.want.action.viewData");
+    want.SetUri("");
+    ret = defaultAppMgr.GetTypeFromWant(want);
+    EXPECT_EQ(ret, "");
+
+    want.SetAction("ohos.want.action.viewData");
+    want.SetUri("aabbcc.zip");
+    want.SetType("");
+    ret = defaultAppMgr.GetTypeFromWant(want);
+    EXPECT_EQ(ret, ".zip");
+}
+
+/**
+ * @tc.number: GetDefaultApplication_0100
+ * @tc.name: GetDefaultApplication
+ * @tc.desc: Test GetDefaultApplication the DefaultAppMgr
+ */
+HWTEST_F(BmsBundleDefaultAppTest, GetDefaultApplication_0100, Function | SmallTest | Level1)
+{
+    DefaultAppMgr defaultAppMgr;
+
+    Want want;
+    want.SetAction("ohos.want.action.viewData1");
+    int32_t userId = 100;
+    std::vector<AbilityInfo> abilityInfos;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool backup = true;
+    ErrCode ret = defaultAppMgr.GetDefaultApplication(want, userId, abilityInfos, extensionInfos, backup);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetBundleInfoByUtd_0100
+ * @tc.name: GetBundleInfoByUtd
+ * @tc.desc: Test GetBundleInfoByUtd the DefaultAppMgr
+ */
+HWTEST_F(BmsBundleDefaultAppTest, GetBundleInfoByUtd_0100, Function | SmallTest | Level1)
+{
+    DefaultAppMgr defaultAppMgr;
+
+    int32_t userId = 100;
+    const std::string utd;
+    BundleInfo bundleInfo;
+    bool backup = true;
+    ErrCode ret = defaultAppMgr.GetBundleInfoByUtd(userId, utd, bundleInfo, backup);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
+}
+
+/**
+ * @tc.number: MatchAppType_0100
+ * @tc.name: MatchAppType
+ * @tc.desc: Test MatchAppType the DefaultAppMgr
+ */
+HWTEST_F(BmsBundleDefaultAppTest, MatchAppType_0100, Function | SmallTest | Level1)
+{
+    DefaultAppMgr defaultAppMgr;
+
+    std::string type = "BROWSER";
+    std::vector<Skill> skills;
+    bool ret = defaultAppMgr.MatchAppType(type, skills);
+    EXPECT_FALSE(ret);
+
+    type = "EMAIL";
+    ret = defaultAppMgr.MatchAppType(type, skills);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsBrowserSkillsValid_0100
+ * @tc.name: IsBrowserSkillsValid
+ * @tc.desc: Test IsBrowserSkillsValid the DefaultAppMgr
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsBrowserSkillsValid_0100, Function | SmallTest | Level1)
+{
+    DefaultAppMgr defaultAppMgr;
+
+    std::vector<Skill> skills;
+    bool ret = defaultAppMgr.IsBrowserSkillsValid(skills);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: MatchUtd_0100
+ * @tc.name: MatchUtd
+ * @tc.desc: Test MatchUtd the DefaultAppMgr
+ */
+HWTEST_F(BmsBundleDefaultAppTest, MatchUtd_0100, Function | SmallTest | Level1)
+{
+    DefaultAppMgr defaultAppMgr;
+
+    std::string utd = "type";
+    std::vector<Skill> skills;
+    Skill skill;
+    skill.actions.push_back("ohos.want.action.viewData");
+    SkillUri skillUri;
+    skillUri.type = "type";
+    skill.uris.push_back(skillUri);
+    skills.push_back(skill);
+    bool ret = defaultAppMgr.MatchUtd(utd, skills);
+    EXPECT_TRUE(ret);
+
+    utd = "";
+    skills.clear();
+    ret = defaultAppMgr.MatchUtd(utd, skills);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsElementEmpty_0100
+ * @tc.name: IsElementEmpty
+ * @tc.desc: Test IsElementEmpty the DefaultAppMgr
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsElementEmpty_0100, Function | SmallTest | Level1)
+{
+    DefaultAppMgr defaultAppMgr;
+
+    Element element;
+    bool ret = defaultAppMgr.IsElementEmpty(element);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetBrokerBundleInfo_0200
+ * @tc.name: GetBrokerBundleInfo
+ * @tc.desc: Test GetBrokerBundleInfo the DefaultAppMgr
+ */
+HWTEST_F(BmsBundleDefaultAppTest, GetBrokerBundleInfo_0200, Function | SmallTest | Level1)
+{
+    DefaultAppMgr defaultAppMgr;
+
+    Element element;
+    BundleInfo bundleInfo;
+    bool ret = defaultAppMgr.GetBrokerBundleInfo(element, bundleInfo);
+    EXPECT_FALSE(ret);
+}
 } // OHOS

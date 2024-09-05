@@ -15,6 +15,7 @@
 
 #define private public
 
+#include <dlfcn.h>
 #include <fstream>
 #include <gtest/gtest.h>
 
@@ -66,6 +67,7 @@ constexpr const char* UPDATE_TYPE = "persist.dupdate_engine.update_type";
 constexpr const char* INSTALL_COMPILE_MODE = "persist.bm.install.arkopt";
 constexpr const char* COMPILE_NONE = "none";
 constexpr const char* COMPILE_FULL = "full";
+constexpr const char* USER_STATUS_SO_NAME = "libuser_status_client.z.so";
 }  // namespace
 
 class BmsAOTMgrTest : public testing::Test {
@@ -1468,7 +1470,13 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3900, Function | SmallTest | Level0)
 {
     std::vector<std::string> bundleNames;
     bool result = AOTHandler::GetInstance().GetUserBehaviourAppList(bundleNames, 0);
-    EXPECT_FALSE(result);
+    void* handle = dlopen(USER_STATUS_SO_NAME, RTLD_NOW);
+    if (handle == nullptr) {
+        EXPECT_FALSE(result);
+    } else {
+        dlclose(handle);
+        EXPECT_TRUE(result);
+    }
 }
 
 /**

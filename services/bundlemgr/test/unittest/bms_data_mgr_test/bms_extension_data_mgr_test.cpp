@@ -955,11 +955,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionKeyOperation_0002, Function | Smal
     BundleMgrExtTest bundleMgrExtTest;
     std::vector<CodeProtectBundleInfo> codeProtectBundleInfos;
     auto res = bundleMgrExtTest.KeyOperation(codeProtectBundleInfos, 1);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_NE(res, ERR_OK);
-    #else
     EXPECT_EQ(res, ERR_OK);
-    #endif
 }
 
 /**
