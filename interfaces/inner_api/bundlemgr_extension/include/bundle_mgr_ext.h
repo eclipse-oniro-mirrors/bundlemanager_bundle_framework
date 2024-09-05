@@ -110,7 +110,7 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
-    virtual bool IsAppInBlocklist(const std::string &bundleName)
+    virtual bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId)
     {
         return false;
     }

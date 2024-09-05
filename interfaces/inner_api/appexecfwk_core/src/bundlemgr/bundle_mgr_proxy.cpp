@@ -1660,11 +1660,10 @@ ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
 }
 
 ErrCode BundleMgrProxy::CleanBundleCacheFiles(
-    const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback, int32_t userId, int32_t appIndex)
+    const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to CleanBundleCacheFiles of %{public}s, userId:%{public}d, appIndex:%{public}d",
-        bundleName.c_str(), userId, appIndex);
+    APP_LOGD("begin to CleanBundleCacheFiles of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to CleanBundleCacheFiles due to bundleName empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -1691,10 +1690,6 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
         APP_LOGE("fail to CleanBundleCacheFiles due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteInt32(appIndex)) {
-        APP_LOGE("fail to CleanBundleDataFiles due to write appIndex fail");
-        return false;
-    }
 
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES, data, reply)) {
@@ -1704,11 +1699,10 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
     return reply.ReadInt32();
 }
 
-bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName, const int userId, const int appIndex)
+bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName, const int userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to CleanBundleDataFiles of %{public}s, userId:%{public}d, appIndex:%{public}d",
-        bundleName.c_str(), userId, appIndex);
+    APP_LOGD("begin to CleanBundleDataFiles of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to CleanBundleDataFiles due to params empty");
         return false;
@@ -1725,10 +1719,6 @@ bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName, const i
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to CleanBundleDataFiles due to write userId fail");
-        return false;
-    }
-    if (!data.WriteInt32(appIndex)) {
-        APP_LOGE("fail to CleanBundleDataFiles due to write appIndex fail");
         return false;
     }
 

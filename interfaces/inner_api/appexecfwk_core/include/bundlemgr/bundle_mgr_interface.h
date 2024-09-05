@@ -693,12 +693,11 @@ public:
      * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.
      * @param cleanCacheCallback Indicates the callback to be invoked for returning the operation result.
      * @param userId description the user id.
-     * @param appIndex Indicates the app index.
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
     virtual ErrCode CleanBundleCacheFiles(
         const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
-        int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0)
+        int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -715,10 +714,9 @@ public:
      * @brief Clears application running data of a specified application.
      * @param bundleName Indicates the bundle name of the application whose data is to be cleared.
      * @param userId Indicates the user id.
-     * @param appIndex Indicates the app index.
      * @return Returns true if the data cleared successfully; returns false otherwise.
      */
-    virtual bool CleanBundleDataFiles(const std::string &bundleName, const int userId = 0, const int appIndex = 0)
+    virtual bool CleanBundleDataFiles(const std::string &bundleName, const int userId = 0)
     {
         return false;
     }

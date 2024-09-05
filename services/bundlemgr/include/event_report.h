@@ -224,16 +224,6 @@ public:
     static void SendCleanCacheSysEvent(
         const std::string &bundleName, int32_t userId, bool isCleanCache, bool exception);
     /**
-     * @brief Send clean cache system events.
-     * @param bundleName Indicates the bundleName.
-     * @param userId Indicates the userId.
-     * @param appIndex Indicates the appIndex.
-     * @param isCleanCache Indicates the isCleanCache.
-     * @param exception Indicates the exception.
-     */
-    static void SendCleanCacheSysEventWithIndex(
-        const std::string &bundleName, int32_t userId, int32_t appIndex, bool isCleanCache, bool exception);
-    /**
      * @brief Send system events.
      * @param eventType Indicates the bms eventInfo.
      * @param eventInfo Indicates the eventInfo.
