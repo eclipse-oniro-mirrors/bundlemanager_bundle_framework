@@ -282,7 +282,7 @@ ErrCode BaseBundleInstaller::Recover(
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     int32_t userId = GetUserId(installParam.userId);
     if (IsAppInBlocklist(bundleName, userId)) {
-        return ERR_APPEXECFWK_USER_NOT_EXIST;
+        return ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
     }
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessRecover(bundleName, installParam, uid);
