@@ -500,7 +500,7 @@ HWTEST_F(BmsBundleInstallerTest, ThirdPartyInstall_0100, Function | SmallTest | 
     StopInstalldService();
     std::string bundleFile = RESOURCE_ROOT_PATH + TYPE_BUNDLE;
     auto result = InstallThirdPartyBundle(bundleFile);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED);
 }
 
 /**
