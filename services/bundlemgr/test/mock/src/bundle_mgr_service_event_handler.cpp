@@ -440,10 +440,6 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir() {}
 
 void BMSEventHandler::ProcessNewBackupDir() {}
 
-void BMSEventHandler::ProcessCheckRecoverableApplicationInfo() {}
-
-void BMSEventHandler::InnerProcessCheckRecoverableApplicationInfo() {}
-
 bool BMSEventHandler::LoadAllPreInstallBundleInfos()
 {
     if (hasLoadAllPreInstallBundleInfosFromDb_) {
