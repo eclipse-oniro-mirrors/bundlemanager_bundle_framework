@@ -207,7 +207,6 @@ ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &fileP
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    installParam.withCopyHaps = true;
     bool result = installer->Install(filePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -229,7 +228,6 @@ ErrCode BmsBundleInstallerTest::UpdateThirdPartyBundle(const std::string &filePa
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
-    installParam.withCopyHaps = true;
     bool result = installer->Install(filePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -612,7 +610,6 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0100, Function | SmallTest | 
     EXPECT_NE(receiver, nullptr);
     InstallParam installParam;
     installParam.userId = USERID;
-    installParam.withCopyHaps = true;
     std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
     GetBundleInstallerManager()->CreateInstallTask(bundleFile, installParam, receiver);
     ErrCode result = receiver->GetResultCode();
@@ -633,7 +630,6 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0200, Function | SmallTest | 
     EXPECT_NE(receiver, nullptr);
     InstallParam installParam;
     installParam.userId = USERID;
-    installParam.withCopyHaps = true;
     std::string bundleFile = RESOURCE_ROOT_PATH + INVALID_BUNDLE;
     GetBundleInstallerManager()->CreateInstallTask(bundleFile, installParam, receiver);
     ErrCode result = receiver->GetResultCode();
@@ -4013,7 +4009,6 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5000, Function | SmallTest 
     inBundlePaths.emplace_back(bundleFile);
     InstallParam installParam;
     installParam.isPreInstallApp = false;
-    installParam.withCopyHaps = true;
     auto appType = Constants::AppType::THIRD_PARTY_APP;
     int32_t uid = 0;
     ErrCode ret = installer.ProcessBundleInstall(

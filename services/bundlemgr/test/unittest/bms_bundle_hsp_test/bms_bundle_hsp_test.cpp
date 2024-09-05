@@ -122,7 +122,6 @@ ErrCode BmsBundleHspTest::InstallBundle(const std::string &bundlePath) const
     InstallParam installParam;
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
-    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -166,7 +165,6 @@ ErrCode BmsBundleHspTest::UpdateBundle(const std::string &bundlePath) const
     InstallParam installParam;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
-    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -332,7 +330,6 @@ HWTEST_F(BmsBundleHspTest, BmsBundleHspTest_0800, Function | SmallTest | Level0)
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.specifiedDistributionType = "specifiedDistributionType";
     installParam.additionalInfo = "additionalInfo";
-    installParam.withCopyHaps = true;
     ErrCode installResult = InstallBundle(MODULE_FILE_PATH + HSP_NAME_C, installParam);
     EXPECT_EQ(installResult, ERR_OK);
 

@@ -723,6 +723,7 @@ private:
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName) const;
     void CheckSystemFreeSizeAndClean() const;
     void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier) const;
+    void MarkInstallFinish();
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -778,6 +779,7 @@ private:
     bool isInternaltestingBundle_ = false;
     std::string appIdentifier_ = "";
     Security::Verify::HapVerifyResult verifyRes_;
+    std::map<std::string, std::string> targetSoPathMap_;
     bool copyHapToInstallPath_ = false;
     std::string appDistributionType_;
     // indicates sandboxd dirs need to create by extension

@@ -1204,6 +1204,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
 
+    // copy hap or hsp to real install dir
+    SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
+    if (installParam.copyHapToInstallPath) {
+        LOG_D(BMS_TAG_INSTALLER, "begin to copy hap to install path");
+        result = SaveHapToInstallPath(newInfos);
+        CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
+    }
     // delete old native library path
     if (NeedDeleteOldNativeLib(newInfos, oldInfo)) {
         LOG_I(BMS_TAG_INSTALLER, "Delete old library");
@@ -1213,14 +1220,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // move so file to real installation dir
     result = MoveSoFileToRealInstallationDir(newInfos);
     CHECK_RESULT_WITH_ROLLBACK(result, "move so file to install path failed %{public}d", newInfos, oldInfo);
-
-    // copy hap or hsp to real install dir
-    SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
-    if (installParam.copyHapToInstallPath) {
-        LOG_D(BMS_TAG_INSTALLER, "begin to copy hap to install path");
-        result = SaveHapToInstallPath(newInfos);
-        CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
-    }
 
     // attention pls, rename operation shoule be almost the last operation to guarantee the rollback operation
     // when someone failure occurs in the installation flow
@@ -1287,6 +1286,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
     VerifyDomain();
+    MarkInstallFinish();
     return result;
 }
 
@@ -2002,7 +2002,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
         return result;
     }
 
-    info.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_FINISH);
     uid = info.GetUid(userId_);
     info.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, info)) {
@@ -2156,7 +2155,6 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
-    oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_FINISH);
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
     if ((result = ProcessAsanDirectory(newInfo)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "process asan log directory failed");
@@ -4591,11 +4589,11 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
         if ((signatureFileMap_.find(hapPathRecord.first) != signatureFileMap_.end()) &&
             (!signatureFileMap_.at(hapPathRecord.first).empty())) {
-            result = InstalldClient::GetInstance()->MoveHapToCodeDir(hapPathRecord.first, hapPathRecord.second,
+            result = InstalldClient::GetInstance()->CopyFile(hapPathRecord.first, hapPathRecord.second,
                 signatureFileMap_.at(hapPathRecord.first));
             CHECK_RESULT(result, "Copy hap to install path failed or code signature hap failed %{public}d");
         } else {
-            if (InstalldClient::GetInstance()->MoveHapToCodeDir(
+            if (InstalldClient::GetInstance()->CopyFile(
                 hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "Copy hap to install path failed");
                 return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
@@ -4649,6 +4647,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     isEnterpriseBundle_ = false;
     isInternaltestingBundle_ = false;
     appIdentifier_.clear();
+    targetSoPathMap_.clear();
     isAppService_ = false;
 }
 
@@ -4977,6 +4976,7 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
             targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
                 .append(info.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath)
                 .append(ServiceConstants::PATH_SEPARATOR);
+            targetSoPathMap_.emplace(info.GetCurModuleName(), targetSoPath);
         }
     }
 
@@ -5047,10 +5047,10 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     if (ret != ERR_OK) {
         return ret;
     }
+    auto targetSoPath = targetSoPathMap_.find(moduleName);
     CodeSignatureParam codeSignatureParam;
-    if (!nativeLibraryPath.empty()) {
-        codeSignatureParam.targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
-            .append(bundleName_).append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath);
+    if (targetSoPath != targetSoPathMap_.end()) {
+        codeSignatureParam.targetSoPath = targetSoPath->second;
     }
     codeSignatureParam.cpuAbi = cpuAbi;
     codeSignatureParam.modulePath = realHapPath;
@@ -5164,11 +5164,6 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
             BundleUtil::DeleteDir(bundlePaths[index]);
         }
         bundlePaths[index] = destination;
-        int32_t hapFd = open(destination.c_str(), O_RDONLY);
-        if (fsync(hapFd) != 0) {
-            LOG_E(BMS_TAG_INSTALLER, "fsync %{public}s failed", destination.c_str());
-        }
-        close(hapFd);
     }
     bundlePaths_ = bundlePaths;
     return ERR_OK;
@@ -5317,6 +5312,11 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
             LOG_E(BMS_TAG_INSTALLER, "move file to real path failed %{public}d", result);
             return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
         }
+        int32_t hapFd = open(realInstallationPath.c_str(), O_RDONLY);
+        if (fsync(hapFd) != 0) {
+            LOG_E(BMS_TAG_INSTALLER, "fsync %{public}s failed", realInstallationPath.c_str());
+        }
+        close(hapFd);
     }
     return ERR_OK;
 }
@@ -5897,6 +5897,23 @@ void BaseBundleInstaller::CheckBundleNameAndStratAbility(const std::string &bund
     LOG_I(BMS_TAG_INSTALLER, "CheckBundleNameAndStratAbility %{public}s", bundleName.c_str());
     BmsExtensionDataMgr bmsExtensionDataMgr;
     bmsExtensionDataMgr.CheckBundleNameAndStratAbility(bundleName, appIdentifier);
+}
+
+void BaseBundleInstaller::MarkInstallFinish()
+{
+    InnerBundleInfo info;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+        LOG_W(BMS_TAG_INSTALLER, "mark finish failed");
+        return;
+    }
+    info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
+    if (!InitDataMgr()) {
+        return;
+    }
+    if (!dataMgr_->UpdateInnerBundleInfo(info)) {
+        LOG_W(BMS_TAG_INSTALLER, "save mark failed");
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

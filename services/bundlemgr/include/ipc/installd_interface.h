@@ -264,7 +264,8 @@ public:
      * @param newPath Indicates newPath.
      * @return Returns ERR_OK if copy file successfully; returns error code otherwise.
      */
-    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath)
+    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath,
+        const std::string &signatureFilePath)
     {
         return ERR_OK;
     }
@@ -417,12 +418,6 @@ public:
     }
 
     virtual ErrCode AddUserDirDeleteDfx(int32_t userId)
-    {
-        return ERR_OK;
-    }
-
-    virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath,
-        const std::string &signatureFilePath)
     {
         return ERR_OK;
     }

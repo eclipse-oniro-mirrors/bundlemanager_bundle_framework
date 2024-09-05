@@ -213,7 +213,6 @@ ErrCode BmsBundleQuickFixBootScannerTest::InstallBundle(const std::string &bundl
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();

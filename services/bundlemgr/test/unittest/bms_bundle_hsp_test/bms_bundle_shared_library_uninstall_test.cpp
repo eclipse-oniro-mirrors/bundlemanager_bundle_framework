@@ -134,7 +134,6 @@ ErrCode BmsBundleSharedLibraryUninstallTest::InstallBundle(const std::vector<std
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
     installParam.sharedBundleDirPaths = sharedBundlePaths;
-    installParam.withCopyHaps = true;
     bool result = installer->Install(bundleFilePaths, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();

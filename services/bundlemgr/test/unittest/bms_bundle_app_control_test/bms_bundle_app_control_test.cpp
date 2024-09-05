@@ -157,7 +157,6 @@ ErrCode BmsBundleAppControlTest::InstallBundle(const std::string &bundlePath) co
     InstallParam installParam;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
-    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();

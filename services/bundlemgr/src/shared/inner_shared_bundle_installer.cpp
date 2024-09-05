@@ -579,9 +579,9 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
     std::string tempHspPath = tempHspDir + ServiceConstants::PATH_SEPARATOR + moduleName +
         ServiceConstants::HSP_FILE_SUFFIX;
     if (!signatureFileDir_.empty()) {
-        result = InstalldClient::GetInstance()->MoveHapToCodeDir(bundlePath, tempHspPath, signatureFileDir_);
+        result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, signatureFileDir_);
     } else {
-        result = InstalldClient::GetInstance()->MoveHapToCodeDir(bundlePath, tempHspPath);
+        result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath);
         CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
         bool isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
         result = VerifyCodeSignatureForHsp(tempHspPath, appIdentifier_, isEnterpriseBundle_,
