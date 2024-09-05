@@ -117,10 +117,7 @@ public:
 
     virtual ErrCode UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex) override;
 
-    virtual ErrCode InstallHmpBundle(const std::string &filePath, bool isNeedRollback) override;
-
     virtual ErrCode InstallExisted(const std::string &bundleName, int32_t userId) override;
-
 private:
     bool SendInstallRequest(BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply,
         MessageOption& option);
@@ -128,13 +125,13 @@ private:
     ErrCode WriteFile(const std::string &path, int32_t outputFd);
 
     ErrCode WriteHapFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path);
-    
+
     ErrCode WriteSignatureFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path,
         const std::string &moduleName);
 
     ErrCode WriteSharedFileToStream(sptr<IBundleStreamInstaller> &streamInstaller,
         const std::string &path, uint32_t index);
-    
+
     ErrCode WritePgoFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path,
         const std::string &moduleName);
 

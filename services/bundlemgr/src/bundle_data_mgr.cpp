@@ -6043,30 +6043,6 @@ bool BundleDataMgr::FetchInnerBundleInfo(
     return true;
 }
 
-bool BundleDataMgr::GetInnerBundleInfoUsers(const std::string &bundleName, std::set<int32_t> &userIds)
-{
-    InnerBundleInfo info;
-    if (!FetchInnerBundleInfo(bundleName, info)) {
-        APP_LOGW("FetchInnerBundleInfo failed");
-        return false;
-    }
-    std::map<std::string, InnerBundleUserInfo> userInfos = info.GetInnerBundleUserInfos();
-    for (const auto &userInfo : userInfos) {
-        userIds.insert(userInfo.second.bundleUserInfo.userId);
-    }
-    return true;
-}
-
-bool BundleDataMgr::IsSystemHsp(const std::string &bundleName)
-{
-    InnerBundleInfo info;
-    if (!FetchInnerBundleInfo(bundleName, info)) {
-        APP_LOGW("FetchInnerBundleInfo %{public}s failed", bundleName.c_str());
-        return false;
-    }
-    return info.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK;
-}
-
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& element,
     AbilityInfo& abilityInfo, ExtensionAbilityInfo& extensionInfo, std::vector<Skill>& skills) const
@@ -7443,8 +7419,13 @@ void BundleDataMgr::CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32
     for (const DataGroupInfo &dataGroupInfo : infos) {
         std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
             + std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        bool dirExist = false;
+        auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
+        if (result == ERR_OK && dirExist) {
+            continue;
+        }
         APP_LOGD("create group dir: %{public}s", dir.c_str());
-        auto result = InstalldClient::GetInstance()->Mkdir(dir,
+        result = InstalldClient::GetInstance()->Mkdir(dir,
             DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
             APP_LOGW("%{public}s group dir %{public}s userId %{public}d failed",

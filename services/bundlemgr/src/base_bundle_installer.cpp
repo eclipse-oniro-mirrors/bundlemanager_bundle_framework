@@ -1011,10 +1011,6 @@ ErrCode BaseBundleInstaller::CheckAppService(
             LOG_W(BMS_TAG_INSTALLER, "Bundle(%{public}s) type is not same", newInfo.GetBundleName().c_str());
             return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
         }
-        if (isAppService_ && (oldInfo.GetVersionCode() < newInfo.GetVersionCode())) {
-            APP_LOGW("upgrade must first upgrade the hsp, cannot upgrade hap first");
-            return ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED;
-        }
     }
     return ERR_OK;
 }
@@ -2653,7 +2649,7 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
         LOG_W(BMS_TAG_INSTALLER, "SendToStorageQuotactl, proxy get error");
         return;
     }
-    
+
     int err = proxy->SetBundleQuota(bundleName, uid, bundleDataDirPath, limitSizeMb);
     if (err != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "SendToStorageQuota, SetBundleQuota error, err=%{public}d, uid=%{public}d", err, uid);
@@ -2990,7 +2986,15 @@ ErrCode BaseBundleInstaller::GetDataGroupCreateInfos(const InnerBundleInfo &newI
             LOG_E(BMS_TAG_INSTALLER, "dataGroupInfos in bundle: %{public}s is empty", newInfo.GetBundleName().c_str());
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
-        createGroupDirs_.emplace_back(item.second[0]);
+        std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
+            + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + item.second[0].uuid;
+        bool dirExist = false;
+        auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
+        CHECK_RESULT(result, "check IsExistDir failed %{public}d");
+        if (!dirExist) {
+            LOG_D(BMS_TAG_INSTALLER, "dir: %{public}s need to be created", dir.c_str());
+            createGroupDirs_.emplace_back(item.second[0]);
+        }
     }
     return ERR_OK;
 }
@@ -3580,8 +3584,13 @@ void BaseBundleInstaller::CreateDataGroupDir(InnerBundleInfo &info) const
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
         std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
             + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        bool dirExist = false;
+        auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
+        if (result == ERR_OK && dirExist) {
+            continue;
+        }
         LOG_D(BMS_TAG_INSTALLER, "create group dir: %{public}s", dir.c_str());
-        auto result = InstalldClient::GetInstance()->Mkdir(dir,
+        result = InstalldClient::GetInstance()->Mkdir(dir,
             DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "create data group dir %{public}s userId %{public}d failed",
@@ -4512,7 +4521,6 @@ void BaseBundleInstaller::ResetInstallProperties()
     isEnterpriseBundle_ = false;
     appIdentifier_.clear();
     targetSoPathMap_.clear();
-    isAppService_ = false;
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
@@ -4745,7 +4753,7 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
     }
     bool asanEnabled = info.GetAsanEnabled();
     // create asan log directory if asanEnabled is true
-    if (asanEnabled) {
+    if (!dirExist && asanEnabled) {
         InnerBundleUserInfo newInnerBundleUserInfo;
         if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
             LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
@@ -5566,7 +5574,17 @@ ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, in
 {
     std::string shaderCachePath;
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
-    LOG_D(BMS_TAG_INSTALLER, "CreateShaderCache %{public}s", shaderCachePath.c_str());
+    bool isExist = true;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(shaderCachePath, isExist);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "IsExistDir failed, error is %{public}d", result);
+        return result;
+    }
+    if (isExist) {
+        LOG_D(BMS_TAG_INSTALLER, "shaderCachePath is exist");
+        return ERR_OK;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "CreateShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, uid, gid);
 }
 
@@ -5626,87 +5644,6 @@ bool BaseBundleInstaller::VerifyActivationLock() const
     LOG_D(BMS_TAG_INSTALLER, "activation lock pass");
     // otherwise, pass
     return true;
-}
-
-ErrCode BaseBundleInstaller::RollbackHmpUserInfo(const std::string &bundleName)
-{
-    LOG_I(BMS_TAG_INSTALLER, "RollbackHmpInstall %{public}s start", bundleName.c_str());
-    if (bundleName.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "rollback hmp bundle name empty");
-        return ERR_APPEXECFWK_UNINSTALL_INVALID_NAME;
-    }
-    if (!InitDataMgr()) {
-        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
-    auto &mtx = dataMgr_->GetBundleMutex(bundleName);
-    std::lock_guard lock {mtx};
-    InnerBundleInfo oldInfo;
-    if (!dataMgr_->FetchInnerBundleInfo(bundleName, oldInfo)) {
-        LOG_W(BMS_TAG_INSTALLER, "rollback hmp bundle info missing");
-        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
-    }
-    std::set<int32_t> userIds;
-    if (!dataMgr_->GetInnerBundleInfoUsers(bundleName, userIds)) {
-        LOG_W(BMS_TAG_INSTALLER, "rollback hmp bundle users missing");
-        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
-    }
-    for (auto userId : userIds) {
-        if (oldInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE &&
-            oldInfo.GetUid(userId) != Constants::INVALID_UID) {
-            std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1]
-                + ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE +
-                oldInfo.GetBundleName();
-            PrepareBundleDirQuota(oldInfo.GetBundleName(), oldInfo.GetUid(userId), bundleDataDir, 0);
-        }
-    }
-    return ERR_OK;
-}
-
-ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName)
-{
-    if (bundleName.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "rollback hmp bundle name empty");
-        return ERR_APPEXECFWK_UNINSTALL_INVALID_NAME;
-    }
-    if (!InitDataMgr()) {
-        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
-    auto &mtx = dataMgr_->GetBundleMutex(bundleName);
-    std::lock_guard lock {mtx};
-    InnerBundleInfo oldInfo;
-    if (!dataMgr_->FetchInnerBundleInfo(bundleName, oldInfo)) {
-        LOG_W(BMS_TAG_INSTALLER, "rollback hmp bundle info missing");
-        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
-    }
-    if (!dataMgr_->UpdateBundleInstallState(oldInfo.GetBundleName(), InstallState::UNINSTALL_START)) {
-        APP_LOGE("rollback hmp start uninstall failed");
-        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
-    if (!dataMgr_->UpdateBundleInstallState(oldInfo.GetBundleName(), InstallState::UNINSTALL_SUCCESS)) {
-        LOG_E(BMS_TAG_INSTALLER, "rollback hmp delete inner info failed");
-        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
-    PreInstallBundleInfo preInfo;
-    preInfo.SetBundleName(bundleName);
-    if (!dataMgr_->DeletePreInstallBundleInfo(bundleName, preInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "rollback hmp delete pre install info failed");
-    }
-#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
-    if (quickFixDataMgr != nullptr) {
-        LOG_D(BMS_TAG_INSTALLER, "DeleteInnerAppQuickFix when bundleName :%{public}s uninstall",
-            oldInfo.GetBundleName().c_str());
-        quickFixDataMgr->DeleteInnerAppQuickFix(oldInfo.GetBundleName());
-    }
-#endif
-    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(oldInfo.GetBundleName())) {
-        LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed",
-            oldInfo.GetBundleName().c_str());
-    }
-    BundleResourceHelper::DeleteResourceInfo(oldInfo.GetBundleName());
-    RemoveProfileFromCodeSign(oldInfo.GetBundleName());
-    ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), oldInfo.GetBundleName());
-    return ERR_OK;
 }
 
 bool BaseBundleInstaller::IsAppInBlocklist(const std::string &bundleName, const int32_t userId) const
