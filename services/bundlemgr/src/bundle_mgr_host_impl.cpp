@@ -4209,6 +4209,25 @@ ErrCode BundleMgrHostImpl::GetCloneAppIndexes(const std::string &bundleName, std
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::GetLaunchWant(Want &want)
+{
+    APP_LOGD("start GetLaunchWant");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto uid = IPCSkeleton::GetCallingUid();
+    std::string bundleName;
+    auto ret = dataMgr->GetBundleNameForUid(uid, bundleName);
+    if (!ret) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleNameForUid failed uid:%{public}d", uid);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    int32_t userId = AccountHelper::GetOsAccountLocalIdFromUid(uid);
+    return dataMgr->GetLaunchWantForBundle(bundleName, want, userId);
+}
+
 ErrCode BundleMgrHostImpl::QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &element, int32_t flags,
     int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo, int32_t userId)
 {
