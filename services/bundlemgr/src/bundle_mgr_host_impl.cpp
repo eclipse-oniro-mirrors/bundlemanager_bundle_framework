@@ -15,27 +15,47 @@
 
 #include "bundle_mgr_host_impl.h"
 
+#include <dirent.h>
+#include <future>
+#include <mutex>
+#include <set>
+#include <string>
+
 #include "account_helper.h"
+#include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
-#include "app_mgr_interface.h"
+#include "app_privilege_capability.h"
 #include "aot/aot_handler.h"
 #include "bms_extension_client.h"
+#include "bundle_constants.h"
+#include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_resource_helper.h"
+#include "bundle_sandbox_app_helper.h"
+#include "bundle_util.h"
+#include "bundle_verify_mgr.h"
+#include "directory_ex.h"
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_proxy.h"
 #endif
+#include "element_name.h"
+#include "ffrt.h"
 #include "hitrace_meter.h"
+#include "if_system_ability_manager.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
+#include "json_serializer.h"
+#include "scope_guard.h"
+#include "system_ability_definition.h"
+#include "app_mgr_interface.h"
 #include "system_ability_helper.h"
 #include "inner_bundle_clone_common.h"
 #ifdef DEVICE_USAGE_STATISTICS_ENABLED
 #include "bundle_active_client.h"
 #include "bundle_active_period_stats.h"
 #endif
-#include "system_ability_definition.h"
 #include "scope_guard.h"
 #include "xcollie_helper.h"
 

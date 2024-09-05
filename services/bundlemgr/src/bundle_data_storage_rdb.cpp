@@ -15,6 +15,7 @@
 
 #include "bundle_data_storage_rdb.h"
 
+#include "app_log_wrapper.h"
 #include "bundle_exception_handler.h"
 
 namespace OHOS {

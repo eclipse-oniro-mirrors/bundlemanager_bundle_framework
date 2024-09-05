@@ -15,6 +15,7 @@
 
 #include "inner_event_report.h"
 
+#include "app_log_wrapper.h"
 #include "hisysevent.h"
 
 namespace OHOS {

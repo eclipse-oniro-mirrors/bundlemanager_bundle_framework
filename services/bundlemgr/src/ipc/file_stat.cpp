@@ -16,6 +16,7 @@
 #include "ipc/file_stat.h"
 
 #include "parcel_macro.h"
+#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {

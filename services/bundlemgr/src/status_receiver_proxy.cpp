@@ -15,7 +15,15 @@
 
 #include "status_receiver_proxy.h"
 
+#include <map>
+
+#include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_mgr_service.h"
+#include "ipc_types.h"
+#include "parcel.h"
+#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {

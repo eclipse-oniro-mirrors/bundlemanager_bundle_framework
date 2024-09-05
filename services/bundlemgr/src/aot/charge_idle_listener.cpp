@@ -13,6 +13,10 @@
  * limitations under the License.
  */
 
+#include "aot/charge_idle_listener.h"
+
+#include <thread>
+
 #include "aot/aot_handler.h"
 
 namespace OHOS {

@@ -15,6 +15,7 @@
 
 #include "bundle_resource_helper.h"
 
+#include "app_log_wrapper.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "account_helper.h"
 #include "bundle_resource_callback.h"

@@ -15,7 +15,14 @@
 
 #include "extend_resource_manager_host_impl.h"
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "account_helper.h"
+#include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
+#include "bundle_data_mgr.h"
+#include "bundle_install_checker.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
@@ -24,7 +31,9 @@
 #include "bundle_resource/bundle_resource_parser.h"
 #include "bundle_resource/resource_info.h"
 #endif
+#include "bundle_util.h"
 #include "installd_client.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {

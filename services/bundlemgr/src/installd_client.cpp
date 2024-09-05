@@ -15,6 +15,8 @@
 
 #include "installd_client.h"
 
+#include "bundle_constants.h"
+#include "if_system_ability_manager.h"
 #include "installd/installd_load_callback.h"
 #include "installd_death_recipient.h"
 #include "iservice_registry.h"

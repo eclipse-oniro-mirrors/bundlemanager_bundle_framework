@@ -14,6 +14,16 @@
  */
 #include "inner_bundle_clone_info.h"
 
+#include <cerrno>
+#include <cstring>
+#include <fcntl.h>
+#include <unistd.h>
+
+#include "json_util.h"
+#include "nlohmann/json.hpp"
+#include "parcel_macro.h"
+#include "string_ex.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 namespace {

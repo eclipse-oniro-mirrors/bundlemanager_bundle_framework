@@ -15,6 +15,7 @@
 
 #include "quick_fix_switch_state.h"
 
+#include "app_log_wrapper.h"
 #include "quick_fix_boot_scanner.h"
 #include "quick_fix_delete_state.h"
 #include "quick_fix_switcher.h"

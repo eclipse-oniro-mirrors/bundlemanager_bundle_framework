@@ -18,6 +18,7 @@
 #include <cinttypes>
 
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 
 namespace OHOS {

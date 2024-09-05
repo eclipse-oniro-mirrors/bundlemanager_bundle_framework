@@ -16,7 +16,10 @@
 #include "base_bundle_installer.h"
 
 #include <sys/stat.h>
+#include <unordered_set>
+#include "nlohmann/json.hpp"
 #include <sstream>
+#include <unistd.h>
 
 #include "account_helper.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
@@ -37,11 +40,18 @@
 #endif
 #include "ability_manager_helper.h"
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_data_mgr.h"
 #include "bundle_clone_installer.h"
+#include "bundle_constants.h"
+#include "bundle_extractor.h"
+#include "bundle_mgr_service.h"
+#include "bundle_sandbox_app_helper.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
+#include "bundle_util.h"
+#include "data_group_info.h"
 #include "datetime_ex.h"
 #include "driver_installer.h"
 #include "hitrace_meter.h"
@@ -49,7 +59,9 @@
 #include "parameter.h"
 #include "parameters.h"
 #include "perf_profile.h"
+#include "preinstalled_application_info.h"
 #include "scope_guard.h"
+#include "string_ex.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_data_manager.h"
 #include "bundle_overlay_install_checker.h"
@@ -59,6 +71,7 @@
 #include "storage_manager_proxy.h"
 #endif
 #include "iservice_registry.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {

@@ -15,6 +15,7 @@
 
 #include "quick_fix_delete_state.h"
 
+#include "app_log_wrapper.h"
 #include "quick_fix_deleter.h"
 
 namespace OHOS {

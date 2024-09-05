@@ -15,7 +15,9 @@
 
 #include "bundle_resource_host_impl.h"
 
+#include "app_log_wrapper.h"
 #include "bms_extension_client.h"
+#include "bundle_constants.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_manager.h"
 #include "bundle_mgr_service.h"

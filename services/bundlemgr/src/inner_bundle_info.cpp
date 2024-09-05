@@ -15,7 +15,11 @@
 
 #include "inner_bundle_info.h"
 
+#include <algorithm>
+#include <deque>
 #include <regex>
+#include <unistd.h>
+#include "string_ex.h"
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_constants.h"
@@ -25,7 +29,12 @@
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
+#include "common_profile.h"
+#include "distributed_module_info.h"
+#include "distributed_ability_info.h"
 #include "free_install_params.h"
+#include "mime_type_mgr.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {

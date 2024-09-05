@@ -16,8 +16,11 @@
 #include "quick_fix_manager_host_impl.h"
 
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
+#include "quick_fix_data_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {

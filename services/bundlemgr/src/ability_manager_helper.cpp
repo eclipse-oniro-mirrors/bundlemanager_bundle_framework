@@ -15,8 +15,11 @@
 
 #include "ability_manager_helper.h"
 
+#include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
+#include "element.h"
 #include "system_ability_helper.h"
+#include "system_ability_definition.h"
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "ability_manager_client.h"

@@ -15,9 +15,13 @@
 
 #include "base_extractor.h"
 
+#include <cerrno>
+#include <dirent.h>
 #include <fstream>
+#include <limits>
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "bundle_service_constants.h"
 #include "string_ex.h"
 

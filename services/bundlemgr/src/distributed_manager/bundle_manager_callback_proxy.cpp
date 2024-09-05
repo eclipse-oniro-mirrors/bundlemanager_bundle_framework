@@ -15,6 +15,8 @@
 
 #include "bundle_manager_callback_proxy.h"
 
+#include "message_parcel.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 using OHOS::AppExecFwk::IBundleManagerCallback;

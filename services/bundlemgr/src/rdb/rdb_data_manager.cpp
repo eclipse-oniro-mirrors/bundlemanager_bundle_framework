@@ -16,7 +16,12 @@
 #include "rdb_data_manager.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_memory_guard.h"
+#include "bundle_util.h"
 #include "scope_guard.h"
+
+#include <thread>
+#include <unistd.h>
 
 namespace OHOS {
 namespace AppExecFwk {

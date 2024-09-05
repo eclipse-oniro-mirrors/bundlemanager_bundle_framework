@@ -15,15 +15,23 @@
 
 #include "bundle_data_mgr.h"
 
+#include <algorithm>
+#include <chrono>
+#include <cinttypes>
+#include <sstream>
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
 #endif
 #endif
 #include "account_helper.h"
+#include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_client.h"
+#include "bms_extension_data_mgr.h"
+#include "bundle_constants.h"
 #include "bundle_data_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
 #include "bundle_event_callback_death_recipient.h"
@@ -31,6 +39,7 @@
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_status_callback_death_recipient.h"
+#include "bundle_util.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
@@ -38,13 +47,17 @@
 #include "inner_bundle_clone_common.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
+#include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
 #include "locale_info.h"
 #endif
 #include "mime_type_mgr.h"
+#include "nlohmann/json.hpp"
+#include "free_install_params.h"
 #include "parameters.h"
 #include "router_map_helper.h"
+#include "singleton.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_data_manager.h"
 #endif

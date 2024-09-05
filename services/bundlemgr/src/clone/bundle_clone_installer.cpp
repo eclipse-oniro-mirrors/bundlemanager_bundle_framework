@@ -16,15 +16,25 @@
 #include "bundle_clone_installer.h"
 
 #include "ability_manager_helper.h"
+#include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
+#include "bundle_common_event_mgr.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
+#include "bundle_sandbox_data_mgr.h"
+#include "bundle_util.h"
+#include "common_event_manager.h"
+#include "common_event_support.h"
 #include "datetime_ex.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "inner_bundle_clone_common.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
+#include "string_ex.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {

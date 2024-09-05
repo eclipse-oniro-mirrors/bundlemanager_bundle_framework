@@ -15,7 +15,20 @@
 
 #include "aot/aot_sign_data_cache_mgr.h"
 
+#include <sys/stat.h>
+#include <thread>
+#include <vector>
+
+#include "account_helper.h"
+#include "appexecfwk_errors.h"
+#include "app_log_wrapper.h"
+#include "bundle_constants.h"
+#include "bundle_util.h"
+#include "scope_guard.h"
 #include "installd_client.h"
+#include "parameter.h"
+#include "parameters.h"
+#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {

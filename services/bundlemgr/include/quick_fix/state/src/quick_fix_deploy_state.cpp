@@ -15,6 +15,7 @@
 
 #include "quick_fix_deploy_state.h"
 
+#include "app_log_wrapper.h"
 #include "quick_fix_boot_scanner.h"
 #include "quick_fix_deployer.h"
 #include "quick_fix_switch_state.h"
