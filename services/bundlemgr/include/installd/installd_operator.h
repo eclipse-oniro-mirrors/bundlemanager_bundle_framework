@@ -307,10 +307,6 @@ public:
     static void RmvDeleteDfx(const std::string &path);
 
 private:
-    static bool OpenHandle(void **handle);
-
-    static void CloseHandle(void **handle);
-
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
 
