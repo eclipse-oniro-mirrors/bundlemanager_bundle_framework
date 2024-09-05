@@ -250,7 +250,7 @@ private:
      * @return Returns ERR_OK if the bundle updating successfully; returns error code otherwise.
      */
     ErrCode ProcessBundleUpdateStatus(InnerBundleInfo &oldInfo,
-        InnerBundleInfo &newInfo, bool isReplace, bool noSkipsKill = true);
+        InnerBundleInfo &newInfo, bool isReplace, bool killProcess = true);
     /**
      * @brief Remove a whole bundle.
      * @param info Indicates the InnerBundleInfo object of a bundle.
@@ -324,7 +324,7 @@ private:
      * @return Returns ERR_OK if the module updating successfully; returns error code otherwise.
      */
     ErrCode ProcessModuleUpdate(InnerBundleInfo &newInfo,
-        InnerBundleInfo &oldInfo, bool isReplace, bool noSkipsKill = true);
+        InnerBundleInfo &oldInfo, bool isReplace, bool killProcess = true);
     /**
      * @brief The real procedure for bundle install by bundleName.
      * @param bundleName Indicates the bundleName the application to install.
@@ -491,7 +491,7 @@ private:
      * @param packageVec Indicates the array of package names of the high version entry or feature hap.
      * @return Returns ERR_OK if uninstall successfully; returns error code otherwise.
      */
-    ErrCode UninstallLowerVersionFeature(const std::vector<std::string> &packageVec, bool noSkipsKill = false);
+    ErrCode UninstallLowerVersionFeature(const std::vector<std::string> &packageVec, bool killProcess = false);
     /**
      * @brief To get userId.
      * @param installParam Indicates the installParam of the bundle.
@@ -554,7 +554,7 @@ private:
      */
     void SaveHapPathToRecords(
         bool isPreInstallApp, const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    void OnSingletonChange(bool noSkipsKill);
+    void OnSingletonChange(bool killProcess);
     bool AllowSingletonChange(const std::string &bundleName);
     void MarkPreInstallState(const std::string &bundleName, bool isUninstalled);
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);

@@ -220,7 +220,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
     }
 
     if (result == ERR_OK) {
-        OnSingletonChange(installParam.noSkipsKill);
+        OnSingletonChange(installParam.GetKillProcess());
     }
 
     if (!bundlePaths.empty()) {
@@ -920,7 +920,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             installParam.installFlag == InstallFlag::FREE_INSTALL);
         // app exist, but module may not
         if ((result = ProcessBundleUpdateStatus(
-            bundleInfo, newInfo, isReplace, installParam.noSkipsKill)) != ERR_OK) {
+            bundleInfo, newInfo, isReplace, installParam.GetKillProcess())) != ERR_OK) {
             break;
         }
     }
@@ -1230,7 +1230,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     // delete low-version hap or hsp when higher-version hap or hsp installed
     if (!uninstallModuleVec_.empty()) {
-        UninstallLowerVersionFeature(uninstallModuleVec_, installParam.noSkipsKill);
+        UninstallLowerVersionFeature(uninstallModuleVec_, installParam.GetKillProcess());
     }
 
     // create data group dir
@@ -1438,7 +1438,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_W(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
-    if (installParam.isUninstallAndRecover && !oldInfo.IsPreInstallApp()) {
+    if (installParam.GetIsUninstallAndRecover() && !oldInfo.IsPreInstallApp()) {
         LOG_E(BMS_TAG_INSTALLER, "UninstallAndRecover bundle is not pre-install app");
         return ERR_APPEXECFWK_UNINSTALL_AND_RECOVER_NOT_PREINSTALLED_BUNDLE;
     }
@@ -1460,14 +1460,14 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     uid = curInnerBundleUserInfo.uid;
-    if (!installParam.forceExecuted &&
-        !oldInfo.IsRemovable() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
+    if (!installParam.GetForceExecuted() &&
+        !oldInfo.IsRemovable() && installParam.GetKillProcess() && !installParam.GetIsUninstallAndRecover()) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
-    if (!installParam.forceExecuted &&
-        !oldInfo.GetUninstallState() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
+    if (!installParam.GetForceExecuted() &&
+        !oldInfo.GetUninstallState() && installParam.GetKillProcess() && !installParam.GetIsUninstallAndRecover()) {
         LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
             bundleName.c_str(), oldInfo.GetUninstallState());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
@@ -1479,7 +1479,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     // reboot scan case will not kill the bundle
-    if (installParam.noSkipsKill) {
+    if (installParam.GetKillProcess()) {
         // kill the bundle process during uninstall.
         if (!AbilityManagerHelper::UninstallApplicationProcesses(oldInfo.GetApplicationName(), uid)) {
             LOG_E(BMS_TAG_INSTALLER, "can not kill process, uid : %{public}d", uid);
@@ -1627,14 +1627,14 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     uid = curInnerBundleUserInfo.uid;
-    if (!installParam.forceExecuted
-        && !oldInfo.IsRemovable() && installParam.noSkipsKill) {
+    if (!installParam.GetForceExecuted()
+        && !oldInfo.IsRemovable() && installParam.GetKillProcess()) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
-    if (!installParam.forceExecuted &&
-        !oldInfo.GetUninstallState() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
+    if (!installParam.GetForceExecuted() &&
+        !oldInfo.GetUninstallState() && installParam.GetKillProcess() && !installParam.GetIsUninstallAndRecover()) {
         LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
             bundleName.c_str(), oldInfo.GetUninstallState());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
@@ -1659,7 +1659,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     ScopeGuard stateGuard([&] { dataMgr_->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS); });
 
     // reboot scan case will not kill the bundle
-    if (installParam.noSkipsKill) {
+    if (installParam.GetKillProcess()) {
         // kill the bundle process during uninstall.
         if (!AbilityManagerHelper::UninstallApplicationProcesses(oldInfo.GetApplicationName(), uid)) {
             LOG_E(BMS_TAG_INSTALLER, "can not kill process, uid : %{public}d", uid);
@@ -2025,7 +2025,7 @@ bool BaseBundleInstaller::AllowSingletonChange(const std::string &bundleName)
 }
 
 ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
-    InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo, bool isReplace, bool noSkipsKill)
+    InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo, bool isReplace, bool killProcess)
 {
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
@@ -2069,7 +2069,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     if (!CheckAppIdentifier(oldInfo, newInfo)) {
         return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
     }
-    LOG_D(BMS_TAG_INSTALLER, "ProcessBundleUpdateStatus noSkipsKill = %{public}d", noSkipsKill);
+    LOG_D(BMS_TAG_INSTALLER, "ProcessBundleUpdateStatus killProcess = %{public}d", killProcess);
     // now there are two cases for updating:
     // 1. bundle exist, hap exist, update hap
     // 2. bundle exist, install new hap
@@ -2079,7 +2079,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     }
     newInfo.RestoreFromOldInfo(oldInfo);
     result = isModuleExist ? ProcessModuleUpdate(newInfo, oldInfo,
-        isReplace, noSkipsKill) : ProcessNewModuleInstall(newInfo, oldInfo);
+        isReplace, killProcess) : ProcessNewModuleInstall(newInfo, oldInfo);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "install module failed %{public}d", result);
         return result;
@@ -2173,7 +2173,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
 }
 
 ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
-    InnerBundleInfo &oldInfo, bool isReplace, bool noSkipsKill)
+    InnerBundleInfo &oldInfo, bool isReplace, bool killProcess)
 {
     LOG_D(BMS_TAG_INSTALLER, "bundleName :%{public}s, moduleName: %{public}s, userId: %{public}d",
         newInfo.GetBundleName().c_str(), newInfo.GetCurrentModulePackage().c_str(), userId_);
@@ -2222,9 +2222,9 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     CHECK_RESULT(result, "UpdateOverlayModule failed %{public}d");
 #endif
 
-    LOG_D(BMS_TAG_INSTALLER, "ProcessModuleUpdate noSkipsKill = %{public}d", noSkipsKill);
+    LOG_D(BMS_TAG_INSTALLER, "ProcessModuleUpdate killProcess = %{public}d", killProcess);
     // reboot scan case will not kill the bundle
-    if (noSkipsKill) {
+    if (killProcess) {
         // kill the bundle process during updating
         if (!AbilityManagerHelper::UninstallApplicationProcesses(
             oldInfo.GetApplicationName(), oldInfo.GetUid(userId_), true)) {
@@ -4058,7 +4058,7 @@ ErrCode BaseBundleInstaller::CheckVersionCompatibilityForHmService(const InnerBu
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std::string> &packageVec, bool noSkipsKill)
+ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std::string> &packageVec, bool killProcess)
 {
     LOG_D(BMS_TAG_INSTALLER, "start to uninstall lower version feature hap");
     if (!InitDataMgr()) {
@@ -4076,7 +4076,7 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
     }
 
     // kill the bundle process during uninstall.
-    if (noSkipsKill) {
+    if (killProcess) {
         if (!AbilityManagerHelper::UninstallApplicationProcesses(
             info.GetApplicationName(), info.GetUid(userId_), true)) {
             LOG_W(BMS_TAG_INSTALLER, "can not kill process");
@@ -4652,7 +4652,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     isAppService_ = false;
 }
 
-void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
+void BaseBundleInstaller::OnSingletonChange(bool killProcess)
 {
     if (singletonState_ == SingletonState::DEFAULT) {
         return;
@@ -4667,8 +4667,8 @@ void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
 
     InstallParam installParam;
     installParam.needSendEvent = false;
-    installParam.forceExecuted = true;
-    installParam.noSkipsKill = noSkipsKill;
+    installParam.SetForceExecuted(true);
+    installParam.SetKillProcess(killProcess);
     if (singletonState_ == SingletonState::SINGLETON_TO_NON) {
         LOG_I(BMS_TAG_INSTALLER, "Bundle changes from singleton app to non singleton app");
         installParam.userId = Constants::DEFAULT_USERID;
@@ -5499,7 +5499,7 @@ ErrCode BaseBundleInstaller::InstallEntryMoudleFirst(std::unordered_map<std::str
             bool isReplace = (installParam.installFlag == InstallFlag::REPLACE_EXISTING ||
                 installParam.installFlag == InstallFlag::FREE_INSTALL);
             // app exist, but module may not
-            result = ProcessBundleUpdateStatus(bundleInfo, newInfo, isReplace, installParam.noSkipsKill);
+            result = ProcessBundleUpdateStatus(bundleInfo, newInfo, isReplace, installParam.GetKillProcess());
             if (result == ERR_OK) {
                 entryModuleName_ = info.second.GetCurrentModulePackage();
                 LOG_D(BMS_TAG_INSTALLER, "entry packageName is %{public}s", entryModuleName_.c_str());
