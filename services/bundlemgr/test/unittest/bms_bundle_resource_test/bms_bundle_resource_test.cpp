@@ -3733,5 +3733,24 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0164, Function | SmallTest
     bool ret = BundleResourceHelper::DeleteCloneBundleResourceInfo(BUNDLE_NAME, false, USERID);
     EXPECT_TRUE(ret);
 }
+
+
+/**
+ * @tc.number: BmsBundleResourceTest_0173
+ * Function: SetThemeIdForThemeChanged
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test SetThemeIdForThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0173, Function | SmallTest | Level0)
+{
+    int32_t themeId = 0;
+    BundleResourceCallback bundleResourceCallback;
+    bool ret = bundleResourceCallback.SetThemeIdForThemeChanged(themeId);
+    EXPECT_FALSE(ret);
+    themeId = 1000;
+    ret = bundleResourceCallback.SetThemeIdForThemeChanged(themeId);
+    EXPECT_TRUE(ret);
+}
 #endif
 } // OHOS
