@@ -121,7 +121,7 @@ bool RequestPermission::ReadFromParcel(Parcel &parcel)
 {
     name = Str16ToStr8(parcel.ReadString16());
     reason = Str16ToStr8(parcel.ReadString16());
-    reasonId = parcel.ReadInt32();
+    reasonId = parcel.ReadUint32();
     std::unique_ptr<RequestPermissionUsedScene> scene(parcel.ReadParcelable<RequestPermissionUsedScene>());
     if (!scene) {
         APP_LOGE("ReadParcelable<RequestPermissionUsedScene> failed");
