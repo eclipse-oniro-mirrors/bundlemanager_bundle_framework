@@ -3803,7 +3803,7 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
     // remove external overlay bundle info and connection
     RemoveOverlayInfoAndConnection(infoItem->second, bundleName);
 #endif
-    APP_LOGI("del bundle name:%{public}s", bundleName.c_str());
+    APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
     RecycleUidAndGid(innerBundleInfo);
     bool ret = dataStorage_->DeleteStorageBundleInfo(innerBundleInfo);
