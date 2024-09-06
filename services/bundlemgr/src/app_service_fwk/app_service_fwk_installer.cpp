@@ -79,20 +79,6 @@ AppServiceFwkInstaller::~AppServiceFwkInstaller()
     APP_LOGI_NOFUNC("AppServiceFwk installer instance destroyed");
 }
 
-void AppServiceFwkInstaller::ResetProperties()
-{
-    bundleMsg_.clear();
-    uninstallModuleVec_.clear();
-    versionUpgrade_ = false;
-    moduleUpdate_ = false;
-    deleteBundlePath_.clear();
-    versionCode_ = 0;
-    newInnerBundleInfo_ = InnerBundleInfo();
-    isEnterpriseBundle_ = false;
-    appIdentifier_.clear();
-    compileSdkType_.clear();
-}
-
 ErrCode AppServiceFwkInstaller::Install(
     const std::vector<std::string> &hspPaths, InstallParam &installParam)
 {
@@ -101,9 +87,7 @@ ErrCode AppServiceFwkInstaller::Install(
     result = ProcessInstall(hspPaths, installParam);
     APP_LOGI("%{public}s %{public}s result %{public}d first time", hspPaths[0].c_str(), bundleName_.c_str(), result);
     if (result != ERR_OK && installParam.isOTA) {
-        ResetProperties();
         auto uninstallRes = UnInstall(bundleName_, true);
-        ResetProperties();
         result = ProcessInstall(hspPaths, installParam);
         APP_LOGI("uninstallRes %{public}d installRes second time %{public}d", uninstallRes, result);
     }
@@ -980,9 +964,11 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
     }
 
     for (const auto &item : infos) {
-        CheckNeedUpdate(item.second, oldInfo);
+        if (CheckNeedUpdate(item.second, oldInfo)) {
+            return true;
+        }
     }
-    return true;
+    return false;
 }
 
 bool AppServiceFwkInstaller::CheckNeedUpdate(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo)

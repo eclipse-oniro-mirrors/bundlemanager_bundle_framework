@@ -1962,18 +1962,13 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
             LOG_D(BMS_TAG_DEFAULT, "the installed version is up-to-date");
             continue;
         }
-        bool needOTA = false;
         if (oldBundleInfo.GetVersionCode() == versionCode) {
             for (const auto &item : infos) {
-                if (IsNeedToUpdateSharedHspByHash(oldBundleInfo, item.second)) {
-                    LOG_I(BMS_TAG_DEFAULT, "the installed version is up-to-date");
-                    needOTA = true;
-                    break;
+                if (!IsNeedToUpdateSharedHspByHash(oldBundleInfo, item.second)) {
+                    LOG_D(BMS_TAG_DEFAULT, "the installed version is up-to-date");
+                    continue;
                 }
             }
-        }
-        if (!needOTA) {
-            continue;
         }
         SavePreInstallExceptionAppService(scanPath);
         auto ret = OTAInstallSystemHsp({scanPath});

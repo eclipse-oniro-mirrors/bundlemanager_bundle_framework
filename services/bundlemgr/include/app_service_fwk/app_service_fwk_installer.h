@@ -39,7 +39,6 @@ public:
     ErrCode UnInstall(const std::string &bundleName, bool isKeepData = false);
     ErrCode UnInstall(const std::string &bundleName, const std::string &moduleName);
 private:
-    void ResetProperties();
     ErrCode BeforeInstall(
         const std::vector<std::string> &hspPaths, InstallParam &installParam);
     ErrCode BeforeUninstall(const std::string &bundleName);
