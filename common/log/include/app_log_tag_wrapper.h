@@ -36,6 +36,10 @@
 #define BMS_TAG_INSTALLD std::make_pair(0xD001122, "BMSInstalld")
 #endif
 
+#ifndef BMS_TAG_COMMON
+#define BMS_TAG_COMMON std::make_pair(0xD001123, "BMSCommon")
+#endif
+
 #ifndef APPEXECFWK_FUNC_FMT
 #define APPEXECFWK_FUNC_FMT "%{public}s:%{public}s:%{public}d "
 #endif
