@@ -79,6 +79,7 @@ bool BundleResourceProcess::GetAllResourceInfo(
             resourceInfosMap[bundleName] = resourceInfos;
         }
     }
+    APP_LOGI("resourceInfosMap size: %{public}zu", resourceInfosMap.size());
     return true;
 }
 
