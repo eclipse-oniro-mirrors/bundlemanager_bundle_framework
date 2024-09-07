@@ -5979,4 +5979,35 @@ HWTEST_F(BmsBundleManagerTest, GetAllDriverBundleName_0200, Function | SmallTest
     EXPECT_EQ(ret.size(), 1);
     dataMgr->bundleInfos_.clear();
 }
+
+/**
+* @tc.number: PreInstallDataStorageRdb_0100
+* @tc.name: test LoadAllPreInstallBundleInfos
+* @tc.desc: 1.test LoadAllPreInstallBundleInfos the PreInstallDataStorageRdb
+*/
+HWTEST_F(BmsBundleManagerTest, PreInstallDataStorageRdb_0100, Function | SmallTest | Level1)
+{
+    std::unique_ptr<PreInstallDataStorageRdb> preInstallDataStorage =
+        std::make_unique<PreInstallDataStorageRdb>();
+    ASSERT_NE(preInstallDataStorage, nullptr);
+
+    preInstallDataStorage->rdbDataManager_ = nullptr;
+    std::string bundleName = "com.acts.example";
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos;
+    std::map<std::string, PreInstallBundleInfo> infos;
+    PreInstallBundleInfo preInstallBundleInfo;
+
+    bool ret = preInstallDataStorage->LoadAllPreInstallBundleInfos(preInstallBundleInfos);
+    EXPECT_FALSE(ret);
+
+    preInstallDataStorage->UpdateDataBase(infos);
+    ret = preInstallDataStorage->SavePreInstallStorageBundleInfo(preInstallBundleInfo);
+    EXPECT_FALSE(ret);
+
+    ret = preInstallDataStorage->DeletePreInstallStorageBundleInfo(preInstallBundleInfo);
+    EXPECT_FALSE(ret);
+
+    ret = preInstallDataStorage->LoadPreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    EXPECT_FALSE(ret);
+}
 } // OHOS

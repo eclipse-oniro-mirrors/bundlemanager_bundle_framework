@@ -7280,4 +7280,111 @@ HWTEST_F(BmsBundleDataMgrTest, GetContinueBundleNames_0500, Function | SmallTest
     auto ret = bundleMgrHostImpl_->GetContinueBundleNames(continueBundleName, bundleNames, userId);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: GetContinueBundleNames_0600
+ * @tc.name: test GetContinueBundleNames
+ * @tc.desc: 1.system run normally
+ *           2.check GetContinueBundleNames success
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetContinueBundleNames_0600, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::vector<std::string> bundleNames;
+    std::string continueBundleName;
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy->GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: GetContinueBundleNames_0700
+ * @tc.name: test GetContinueBundleNames
+ * @tc.desc: 1.system run normally
+ *           2.check GetContinueBundleNames success
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetContinueBundleNames_0700, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::vector<std::string> bundleNames;
+    std::string continueBundleName{ "com.example.test" };
+    int32_t userId = -4;
+    auto ret = bundleMgrProxy->GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleDataMgr_0100
+ * @tc.name: BatchQueryAbilityInfos
+ * @tc.desc: test BatchQueryAbilityInfos the BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleDataMgr_0100, Function | SmallTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::vector<Want> wants;
+    Want want;
+    std::vector<AbilityInfo> abilityInfos;
+    bundleDataMgr->ImplicitQueryCloneAbilityInfos(want, 0, 100, abilityInfos);
+
+    want.SetAction("test");
+    bundleDataMgr->bundleInfos_.clear();
+    bundleDataMgr->ImplicitQueryCloneAbilityInfos(want, 0, 100, abilityInfos);
+
+    ErrCode ret = bundleDataMgr->BatchQueryAbilityInfos(wants, 0, -1, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BundleDataMgr_0200
+ * @tc.name: GetCloneAppIndexesNoLock
+ * @tc.desc: test GetCloneAppIndexesNoLock the BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleDataMgr_0200, Function | SmallTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string bundleName;
+    std::vector<int32_t> ret = bundleDataMgr->GetCloneAppIndexesNoLock(bundleName, -2);
+    EXPECT_EQ(ret.size(), 0);
+}
+
+/**
+ * @tc.number: BundleDataMgr_0300
+ * @tc.name: GetApplicationInfoWithResponseId
+ * @tc.desc: test GetApplicationInfoWithResponseId the BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleDataMgr_0300, Function | SmallTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string appName;
+    ApplicationInfo appInfo;
+    int32_t userId = -1;
+    ErrCode ret = bundleDataMgr->GetApplicationInfoWithResponseId(appName, 0, userId, appInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BundleDataMgr_0400
+ * @tc.name: CheckInnerBundleInfoWithFlagsV9
+ * @tc.desc: test CheckInnerBundleInfoWithFlagsV9 the BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleDataMgr_0400, Function | SmallTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.bundleStatus_ = AppExecFwk::InnerBundleInfo::BundleStatus::DISABLED;
+    ErrCode ret = bundleDataMgr->CheckInnerBundleInfoWithFlagsV9(innerBundleInfo, 0, 100, 1);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
 } // OHOS
