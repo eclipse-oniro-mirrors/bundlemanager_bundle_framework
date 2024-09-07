@@ -71,7 +71,7 @@ bool Skill::Match(const OHOS::AAFwk::Want &want) const
     }
     std::vector<std::string> vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_URITYPES);
     std::string uriString = want.GetUriString();
-    if (vecTypes.size() > 0) {
+    if (!vecTypes.empty()) {
         for (std::string strType : vecTypes) {
             if (MatchUriAndType(uriString, strType)) {
                 APP_LOGD("type %{public}s, Is Matched", strType.c_str());

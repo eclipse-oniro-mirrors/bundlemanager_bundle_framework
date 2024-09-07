@@ -32,8 +32,8 @@ enum OverlayType : int8_t {
 struct OverlayBundleInfo : public Parcelable {
     std::string bundleName;
     std::string bundleDir;
-    int32_t state; // 0 is for disable and 1 is for enable
-    int32_t priority;
+    int32_t state = 0; // 0 is for disable and 1 is for enable
+    int32_t priority = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

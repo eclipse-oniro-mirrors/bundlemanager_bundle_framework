@@ -107,7 +107,7 @@ private:
         const int32_t userId);
 
 private:
-    void init();
+    void Init();
     void OnDeath();
     static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr();
 

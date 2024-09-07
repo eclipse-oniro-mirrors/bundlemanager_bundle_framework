@@ -32,7 +32,7 @@ std::string AppLogWrapper::GetBriefFileName(const char *str)
         return std::string();
     }
     std::string fullPath(str);
-    size_t pos = fullPath.find_last_of("/");
+    size_t pos = fullPath.find_last_of('/');
     if (pos == std::string::npos) {
         return std::string();
     }

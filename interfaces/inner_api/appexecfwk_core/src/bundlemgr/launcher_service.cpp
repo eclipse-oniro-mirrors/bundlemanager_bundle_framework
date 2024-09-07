@@ -40,10 +40,10 @@ void LauncherService::LauncherServiceDeathRecipient::OnRemoteDied([[maybe_unused
 
 LauncherService::LauncherService()
 {
-    init();
+    Init();
 }
 
-void LauncherService::init()
+void LauncherService::Init()
 {
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
@@ -266,7 +266,7 @@ ErrCode LauncherService::GetShortcutInfos(
         APP_LOGE("GetShortcutInfos is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    if (infos.size() == 0) {
+    if (infos.empty()) {
         APP_LOGE("infos size is empty");
         return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
     }

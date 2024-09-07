@@ -18,7 +18,7 @@
 #include <cstdint>
 #include <errno.h>
 #include <fcntl.h>
-#include <string.h>
+#include <string>
 #include <unistd.h>
 
 #include "bundle_constants.h"
@@ -505,7 +505,7 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
 
 void AbilityInfo::Dump(std::string prefix, int fd)
 {
-    APP_LOGI("called dump Abilityinfo");
+    APP_LOGI("call Dump");
     if (fd < 0) {
         APP_LOGE("dump Abilityinfo fd error");
         return;

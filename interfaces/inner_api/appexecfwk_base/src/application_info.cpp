@@ -15,6 +15,7 @@
 
 #include "application_info.h"
 
+#include <cstdint>
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
@@ -290,7 +291,7 @@ bool ApplicationInfo::ReadMetaDataFromParcel(Parcel &parcel)
         std::vector<CustomizeData> customizeDatas;
         metaData[moduleName] = customizeDatas;
         CONTAINER_SECURITY_VERIFY(parcel, customizeDataSize, &customizeDatas);
-        for (int j = 0; j < customizeDataSize; j++) {
+        for (int32_t j = 0; j < customizeDataSize; j++) {
             std::unique_ptr<CustomizeData> customizeData(parcel.ReadParcelable<CustomizeData>());
             if (!customizeData) {
                 APP_LOGE("ReadParcelable<CustomizeData> failed");
@@ -793,7 +794,6 @@ void ApplicationInfo::Dump(std::string prefix, int fd)
             APP_LOGE("dump write error : %{public}d", errno);
         }
     }
-    return;
 }
 
 bool ApplicationInfo::CheckNeedPreload(const std::string &moduleName) const
