@@ -1273,6 +1273,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateEncryptedStatus();
     GetInstallEventInfo(sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
+    UpdateRouterInfo();
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     ProcessAOT(installParam.isOTA, newInfos);
     RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
@@ -1576,10 +1577,24 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
     DeleteEncryptedStatus(bundleName, uid);
     BundleResourceHelper::DeleteResourceInfo(bundleName, userId_);
+    DeleteRouterInfo(bundleName);
     // remove profile from code signature
     RemoveProfileFromCodeSign(bundleName);
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
     return ERR_OK;
+}
+
+void BaseBundleInstaller::DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed");
+        return;
+    }
+    if (moduleName.empty()) {
+        dataMgr_->DeleteRouterInfo(bundleName);
+    } else {
+        dataMgr_->DeleteRouterInfo(bundleName, moduleName);
+    }
 }
 
 ErrCode BaseBundleInstaller::ProcessBundleUninstall(
@@ -1717,7 +1732,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 LOG_I(BMS_TAG_INSTALLER, "%{public}s detected, Marking as uninstalled", bundleName.c_str());
                 MarkPreInstallState(bundleName, true);
             }
-
+            DeleteRouterInfo(bundleName);
             return ERR_OK;
         }
         return RemoveBundleUserData(oldInfo, installParam.isKeepData);
@@ -1726,6 +1741,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (onlyInstallInUser) {
         LOG_I(BMS_TAG_INSTALLER, "%{public}s is only install at the userId %{public}d", bundleName.c_str(), userId_);
         result = RemoveModuleAndDataDir(oldInfo, modulePackage, userId_, installParam.isKeepData);
+        DeleteRouterInfo(bundleName, modulePackage);
     }
 
     if (result != ERR_OK) {
@@ -1762,6 +1778,15 @@ void BaseBundleInstaller::MarkPreInstallState(const std::string &bundleName, boo
 
     preInstallBundleInfo.SetIsUninstalled(isUninstalled);
     dataMgr_->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+}
+
+void BaseBundleInstaller::UpdateRouterInfo()
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed");
+        return;
+    }
+    dataMgr_->UpdateRouterInfo(bundleName_);
 }
 
 ErrCode BaseBundleInstaller::ProcessInstallBundleByBundleName(
@@ -5853,6 +5878,7 @@ ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed",
             oldInfo.GetBundleName().c_str());
     }
+    DeleteRouterInfo(oldInfo.GetBundleName());
     BundleResourceHelper::DeleteResourceInfo(oldInfo.GetBundleName());
     RemoveProfileFromCodeSign(oldInfo.GetBundleName());
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), oldInfo.GetBundleName());

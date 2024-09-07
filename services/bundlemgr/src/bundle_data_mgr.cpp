@@ -58,6 +58,7 @@
 #include "app_domain_verify_mgr_client.h"
 #endif
 
+#include "router_data_storage_rdb.h"
 #include "shortcut_data_storage_rdb.h"
 
 namespace OHOS {
@@ -119,6 +120,7 @@ BundleDataMgr::BundleDataMgr()
     sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     bundleStateStorage_ = std::make_shared<BundleStateStorage>();
     shortcutStorage_ = std::make_shared<ShortcutDataStorageRdb>();
+    routerStorage_ = std::make_shared<RouterDataStorageRdb>();
     baseAppUid_ = system::GetIntParameter<int32_t>("const.product.baseappid", Constants::BASE_APP_UID);
     if (baseAppUid_ < Constants::BASE_APP_UID || baseAppUid_ >= MAX_APP_UID) {
         baseAppUid_ = Constants::BASE_APP_UID;
@@ -439,6 +441,7 @@ bool BundleDataMgr::RemoveModuleInfo(
             bundleInfos_.at(bundleName) = oldInfo;
             return true;
         }
+        DeleteRouterInfo(bundleName, modulePackage);
         APP_LOGD("after delete modulePackage:%{public}s info", modulePackage.c_str());
     }
     return true;
@@ -2707,6 +2710,10 @@ ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, 
 void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (routerStorage_ == nullptr) {
+        APP_LOGE("routerStorage_ is null");
+        return;
+    }
     APP_LOGD("ProcessBundleRouterMap with flags: %{public}d", flag);
     if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
         != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
@@ -2723,21 +2730,78 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag)
             APP_LOGD("invalid router profile");
             continue;
         }
-        std::string routerJsonName = routerPath.substr(pos + PROFILE_PREFIX_LENGTH);
-        std::string routerJsonPath = PROFILE_PATH + routerJsonName + JSON_SUFFIX;
-
-        std::string routerMapString;
-        if (GetJsonProfileByExtractor(hapModuleInfo.hapPath, routerJsonPath, routerMapString) != ERR_OK) {
-            APP_LOGW("get json string from %{public}s failed", routerJsonPath.c_str());
+        if (!routerStorage_->GetRouterInfo(bundleInfo.name, hapModuleInfo.moduleName, hapModuleInfo.routerArray)) {
+            APP_LOGE("get failed for %{public}s", hapModuleInfo.moduleName.c_str());
             continue;
-        }
-
-        BundleParser bundleParser;
-        if (bundleParser.ParseRouterArray(routerMapString, hapModuleInfo.routerArray) != ERR_OK) {
-            APP_LOGE("parse router array from json file %{public}s failed", routerJsonPath.c_str());
         }
     }
     RouterMapHelper::MergeRouter(bundleInfo);
+}
+
+bool BundleDataMgr::DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName)
+{
+    if (routerStorage_ == nullptr) {
+        APP_LOGE("routerStorage_ is null");
+        return false;
+    }
+    return routerStorage_->DeleteRouterInfo(bundleName, moduleName);
+}
+
+bool BundleDataMgr::DeleteRouterInfo(const std::string &bundleName)
+{
+    if (routerStorage_ == nullptr) {
+        APP_LOGE("routerStorage_ is null");
+        return false;
+    }
+    return routerStorage_->DeleteRouterInfo(bundleName);
+}
+
+void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
+{
+    if (routerStorage_ == nullptr) {
+        APP_LOGE("routerStorage_ is null");
+        return;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
+        return;
+    }
+    auto moduleMap = infoItem->second.GetInnerModuleInfos();
+    std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
+    for (auto it = moduleMap.begin(); it != moduleMap.end(); it++) {
+        std::string routerPath = it->second.routerMap;
+        auto pos = routerPath.find(PROFILE_PREFIX);
+        if (pos == std::string::npos) {
+            continue;
+        }
+        std::string routerJsonName = routerPath.substr(pos + PROFILE_PREFIX_LENGTH);
+        std::string routerJsonPath = PROFILE_PATH + routerJsonName + JSON_SUFFIX;
+        hapPathMap[it->second.moduleName] = std::make_pair(it->second.hapPath, routerJsonPath);
+    }
+    lock.unlock();
+    std::map<std::string, std::string> routerInfoMap;
+    for (auto hapIter = hapPathMap.begin(); hapIter != hapPathMap.end(); hapIter++) {
+        std::string routerMapString;
+        if (GetJsonProfileByExtractor(hapIter->second.first, hapIter->second.second, routerMapString) != ERR_OK) {
+            APP_LOGW("get json string from %{public}s failed", hapIter->second.second.c_str());
+            continue;
+        }
+        routerInfoMap[hapIter->first] = routerMapString;
+    }
+    if (!routerStorage_->UpdateRouterInfo(bundleName, routerInfoMap)) {
+        APP_LOGW("add router for %{public}s failed", bundleName.c_str());
+    }
+}
+
+void BundleDataMgr::GetAllBundleNames(std::set<std::string> &bundleNames)
+{
+    if (routerStorage_ == nullptr) {
+        APP_LOGE("routerStorage_ is null");
+        return;
+    }
+    return routerStorage_->GetAllBundleNames(bundleNames);
 }
 
 void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const

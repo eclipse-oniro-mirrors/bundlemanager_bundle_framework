@@ -44,6 +44,7 @@
 #include "inner_bundle_user_info.h"
 #include "module_info.h"
 #include "preinstall_data_storage_interface.h"
+#include "router_data_storage_interface.h"
 #include "shortcut_data_storage_interface.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
@@ -909,6 +910,10 @@ public:
     void GenerateOdid(const std::string &developerId, std::string &odid) const;
     ErrCode GetOdid(std::string &odid) const;
     ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
+    void UpdateRouterInfo(const std::string &bundleName);
+    bool DeleteRouterInfo(const std::string &bundleName);
+    bool DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName);
+    void GetAllBundleNames(std::set<std::string> &bundleNames);
 
     /**
      * @brief Check whether the link can be opened.
@@ -1201,6 +1206,7 @@ private:
     mutable std::mutex hspBundleNameMutex_;
     std::set<std::string> appServiceHspBundleName_;
     std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
+    std::shared_ptr<IRouterDataStorage> routerStorage_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
