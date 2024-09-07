@@ -154,7 +154,6 @@ public:
     static sptr<IBundleInstaller> GetInstallerProxy();
     void ClearJsonFile() const;
     bool UpdateBundleForSelf(const std::vector<std::string> &bundleFilePaths) const;
-    ErrCode InstallHmpBundle(const std::string &filePath, bool isNeedRollback);
 };
 
 sptr<IBundleMgr> BmsInstallSystemTest::GetBundleMgrProxy()
@@ -305,16 +304,6 @@ bool BmsInstallSystemTest::UpdateBundleForSelf(const std::vector<std::string> &b
 
     bool result = installerProxy->UpdateBundleForSelf(bundleFilePaths, installParam, statusReceiver);
     return result;
-}
-
-ErrCode BmsInstallSystemTest::InstallHmpBundle(const std::string &filePath, bool isNeedRollback)
-{
-    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return false;
-    }
-    return installerProxy->InstallHmpBundle(filePath, isNeedRollback);
 }
 
 int32_t BmsInstallSystemTest::ExcuteMaintainCmd(const std::string &cmd, std::vector<std::string> &cmdRes)
@@ -1899,19 +1888,6 @@ HWTEST_F(BmsInstallSystemTest, BMS_UpdateBundleForSelf_0100, Function | MediumTe
     std::vector<std::string> bundleFilePaths;
     bool res = UpdateBundleForSelf(bundleFilePaths);
     EXPECT_EQ(res, true);
-}
-
-/**
- * @tc.number: BMS_InstallHmpBundle_0100
- * @tc.name:  test the InstallHmpBundle
- * @tc.desc: 1.test the InstallHmpBundle
- */
-HWTEST_F(BmsInstallSystemTest, BMS_InstallHmpBundle_0100, Function | MediumTest | Level1)
-{
-    std::string filePath = "";
-    bool isNeedRollback = true;
-    ErrCode res = InstallHmpBundle(filePath, isNeedRollback);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
 
 /**

@@ -589,7 +589,7 @@ ErrCode BundleInstallerProxy::WritePgoFileToStream(sptr<IBundleStreamInstaller> 
         return ret;
     }
     LOG_D(BMS_TAG_INSTALLER, "write file stream of pgo path %{public}s", path.c_str());
-    
+
     int32_t outputFd = streamInstaller->CreatePgoFileStream(moduleName, fileName);
     if (outputFd < 0) {
         LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file descriptor");
@@ -756,26 +756,6 @@ ErrCode BundleInstallerProxy::UninstallCloneApp(const std::string &bundleName, i
     if (!ret) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall clone app failed due to send request fail");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_SEND_REQUEST_ERROR;
-    }
-    return reply.ReadInt32();
-}
-
-ErrCode BundleInstallerProxy::InstallHmpBundle(const std::string &filePath, bool isNeedRollback)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    MessageParcel reply;
-    MessageParcel data;
-    MessageOption option(MessageOption::TF_SYNC);
-
-    PARCEL_WRITE_INTERFACE_TOKEN(data, GetDescriptor());
-    PARCEL_WRITE(data, String16, Str8ToStr16(filePath));
-    PARCEL_WRITE(data, Bool, isNeedRollback);
-
-    auto ret =
-        SendInstallRequest(BundleInstallerInterfaceCode::INSTALL_HMP_BUNDLE, data, reply, option);
-    if (!ret) {
-        LOG_E(BMS_TAG_INSTALLER, "install hmp bundle failed due to send request fail");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     return reply.ReadInt32();
 }

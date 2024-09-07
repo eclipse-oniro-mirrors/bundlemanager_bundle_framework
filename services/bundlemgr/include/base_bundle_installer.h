@@ -177,10 +177,6 @@ protected:
 
     void SetCheckResultMsg(const std::string checkResultMsg) const;
 
-    ErrCode RollbackHmpUserInfo(const std::string &bundleName);
-
-    ErrCode RollbackHmpCommonInfo(const std::string &bundleName);
-
 private:
     /**
      * @brief The real procedure for system and normal bundle install.

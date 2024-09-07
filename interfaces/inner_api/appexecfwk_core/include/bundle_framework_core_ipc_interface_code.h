@@ -234,7 +234,6 @@ enum class BundleInstallerInterfaceCode : uint8_t {
     UNINSTALL_AND_RECOVER,
     INSTALL_CLONE_APP,
     UNINSTALL_CLONE_APP,
-    INSTALL_HMP_BUNDLE,
     INSTALL_EXISTED,
 };
 

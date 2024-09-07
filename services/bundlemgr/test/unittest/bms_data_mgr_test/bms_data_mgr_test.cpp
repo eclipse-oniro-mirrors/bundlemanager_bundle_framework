@@ -2210,27 +2210,6 @@ HWTEST_F(BmsDataMgrTest, UpateCurDynamicIconModule_0100, Function | SmallTest | 
 }
 
 /**
- * @tc.number: GetInnerBundleInfoUsers_0100
- * @tc.name: test GetInnerBundleInfoUsers
- * @tc.desc: 1.test obtain internal bundle information for users
- */
-HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoUsers_0100, Function | SmallTest | Level1)
-{
-    auto dataMgr = GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    std::string bundleName = "";
-    std::set<int32_t> userIds;
-    bool ret = dataMgr->GetInnerBundleInfoUsers(bundleName, userIds);
-    EXPECT_EQ(ret, false);
-    std::map<std::string, InnerBundleInfo> infos;
-    InnerBundleInfo innerBundleInfo;
-    infos.emplace(BUNDLE_NAME, innerBundleInfo);
-    dataMgr->bundleInfos_.swap(infos);
-    ret = dataMgr->GetInnerBundleInfoUsers(BUNDLE_NAME, userIds);
-    EXPECT_EQ(ret, true);
-}
-
-/**
  * @tc.number: ResetAOTCompileStatus_0100
  * @tc.name: test ResetAOTCompileStatus
  * @tc.desc: 1.test reset AOT compilation status

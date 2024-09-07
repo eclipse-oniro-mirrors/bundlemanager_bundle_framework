@@ -6205,5 +6205,4 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharedBundleTempDir_0100, Function | Smal
     auto ret = bundleUtil.CreateSharedBundleTempDir(INSTALLER_ID, INDEX);
     EXPECT_FALSE(ret.empty());
 }
-
 } // OHOS
