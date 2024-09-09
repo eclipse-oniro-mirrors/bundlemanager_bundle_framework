@@ -961,4 +961,23 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionKeyOperation_0002, Function | Smal
     EXPECT_EQ(res, ERR_OK);
     #endif
 }
+
+/**
+ * @tc.number: BmsExtensionDetermineCloneNum_0001
+ * @tc.name: DetermineCloneNum
+ * @tc.desc: DetermineCloneNum
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDetermineCloneNum_0001, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName = "com.tencent.qq";
+    std::string appIdentifier = "appIdentifier";
+    int32_t cloneNum = 0;
+    auto res = bundleMgrExtTest.DetermineCloneNum(bundleName, appIdentifier, cloneNum);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_NE(res, false);
+    #else
+    EXPECT_EQ(res, false);
+    #endif
+}
 } // OHOS
