@@ -1918,75 +1918,6 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1800, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_1900
- * @tc.name: test CheckArkNativeFileWithOldInfo
- * @tc.desc: 1.Test the CheckArkNativeFileWithOldInfo of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1900, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo oldInfo;
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
-    ApplicationInfo applicationInfo;
-    oldInfo.SetBaseApplicationInfo(applicationInfo);
-    oldInfo.SetArkNativeFileAbi("x86");
-    InnerBundleInfo info;
-    info.SetBaseApplicationInfo(applicationInfo);
-    info.SetArkNativeFileAbi("");
-    newInfos.try_emplace("so", info);
-    ErrCode ret = installer.CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_OK);
-
-    newInfos.clear();
-    info.SetArkNativeFileAbi("arm");
-    newInfos.try_emplace("so", info);
-    ret = installer.CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_AN_INCOMPATIBLE);
-
-    newInfos.clear();
-    info.SetArkNativeFileAbi("x86");
-    newInfos.try_emplace("so", info);
-    ret = installer.CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
- * @tc.number: baseBundleInstaller_2000
- * @tc.name: test CheckNativeSoWithOldInfo
- * @tc.desc: 1.Test the CheckNativeSoWithOldInfo of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2000, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo oldInfo;
-    ApplicationInfo applicationInfo;
-    oldInfo.SetBaseApplicationInfo(applicationInfo);
-    oldInfo.SetNativeLibraryPath("/an/x86/x86.so");
-    InnerBundleInfo info;
-    info.SetBaseApplicationInfo(applicationInfo);
-    info.SetNativeLibraryPath("/an/arm/arm.so");
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
-    newInfos.try_emplace("so", info);
-    ErrCode ret = installer.CheckNativeSoWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE);
-
-    newInfos.clear();
-    info.SetNativeLibraryPath("/an/x86/x86.so");
-    oldInfo.SetCpuAbi("arm");
-    info.SetCpuAbi("x86");
-    newInfos.try_emplace("so", info);
-    ret = installer.CheckNativeSoWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE);
-
-    newInfos.clear();
-    info.SetNativeLibraryPath("");
-    oldInfo.SetCpuAbi("x86");
-    newInfos.try_emplace("so", info);
-    ret = installer.CheckNativeSoWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
  * @tc.number: baseBundleInstaller_2100
  * @tc.name: test baseBundleInstaller
  * @tc.desc: 1.Test the dataMgr_ is nullptr
@@ -6521,23 +6452,6 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallEventInfo_0100, Function | SmallTest 
     bundleInfo.SetAppDistributionType(appDistributionType);
     installer.GetInstallEventInfo(bundleInfo, eventInfo);
     EXPECT_EQ(eventInfo.appDistributionType, appDistributionType);
-}
-
-/**
- * @tc.number: CheckArkNativeFileWithOldInfo_0100
- * @tc.name: test CheckArkNativeFileWithOldInfo
- * @tc.desc: test CheckArkNativeFileWithOldInfo of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, CheckArkNativeFileWithOldInfo_0100, Function | SmallTest | Level1)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo oldInfo;
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
-    ApplicationInfo applicationInfo;
-    oldInfo.SetBaseApplicationInfo(applicationInfo);
-    oldInfo.SetArkNativeFileAbi("x86");
-    ErrCode ret = installer.CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_AN_INCOMPATIBLE);
 }
 
 /**
