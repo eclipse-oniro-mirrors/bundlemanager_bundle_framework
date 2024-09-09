@@ -2566,10 +2566,13 @@ bool ToInnerBundleInfo(
     innerModuleInfo.asanEnabled = applicationInfo.asanEnabled;
     innerModuleInfo.gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
     innerModuleInfo.innerModuleInfoFlag = applicationInfo.hwasanEnabled ? innerModuleInfo.innerModuleInfoFlag |
-        static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED) :
+        innerBundleInfo.GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED) :
         innerModuleInfo.innerModuleInfoFlag &
-        (~static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
-    innerModuleInfo.ubsanEnabled = applicationInfo.ubsanEnabled;
+        (~innerBundleInfo.GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
+    innerModuleInfo.innerModuleInfoFlag = applicationInfo.ubsanEnabled ? innerModuleInfo.innerModuleInfoFlag |
+        innerBundleInfo.GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED) :
+        innerModuleInfo.innerModuleInfoFlag &
+        (~innerBundleInfo.GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED));
     SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 
     BundleInfo bundleInfo;

@@ -77,7 +77,6 @@ struct InnerModuleInfo {
     bool gwpAsanEnabled = false;
     bool needDelete = false;
     uint32_t innerModuleInfoFlag = 0;
-    bool ubsanEnabled = false;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
     uint32_t iconId = 0;
@@ -161,8 +160,9 @@ enum InstallExceptionStatus : uint8_t {
     UNKNOWN_STATUS,
 };
 
-enum class GetInnerModuleInfoFlag {
-    GET_INNER_MODULE_INFO_WITH_HWASANENABLED = 0x00000001,
+enum class GetInnerModuleInfoFlag : uint8_t {
+    GET_INNER_MODULE_INFO_WITH_HWASANENABLED = 1,
+    GET_INNER_MODULE_INFO_WITH_UBSANENABLED = 2,
 };
 
 struct InstallMark {
@@ -2211,6 +2211,7 @@ public:
     bool IsHwasanEnabled() const;
     bool IsUbsanEnabled() const;
     std::set<int32_t> GetCloneBundleAppIndexes() const;
+    static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
 
 private:
     bool IsExistLauncherAbility() const;
