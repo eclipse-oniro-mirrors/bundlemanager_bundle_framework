@@ -4243,12 +4243,6 @@ ErrCode BaseBundleInstaller::CheckArkNativeFileWithOldInfo(
             item.second.SetArkNativeFileAbi(oldInfo.GetArkNativeFileAbi());
             item.second.SetArkNativeFilePath(oldInfo.GetArkNativeFilePath());
         }
-        return ERR_OK;
-    } else {
-        if (arkNativeFileAbi != oldArkNativeFileAbi) {
-            LOG_E(BMS_TAG_INSTALLER, "An incompatible in oldInfo and newInfo");
-            return ERR_APPEXECFWK_INSTALL_AN_INCOMPATIBLE;
-        }
     }
 
     LOG_D(BMS_TAG_INSTALLER, "CheckArkNativeFileWithOldInfo end");
@@ -4266,12 +4260,7 @@ ErrCode BaseBundleInstaller::CheckNativeSoWithOldInfo(
 
     const auto &newInfo = newInfos.begin()->second;
     bool newInfoHasSo = !newInfo.GetNativeLibraryPath().empty();
-    if (newInfoHasSo && (oldInfo.GetNativeLibraryPath() != newInfo.GetNativeLibraryPath()
-        || oldInfo.GetCpuAbi() != newInfo.GetCpuAbi())) {
-        LOG_E(BMS_TAG_INSTALLER, "Install failed due to so incompatible in oldInfo and newInfo");
-        return ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE;
-    }
-
+    //newInfo should be consistent with oldInfo
     if (!newInfoHasSo) {
         for (auto& item : newInfos) {
             item.second.SetNativeLibraryPath(oldInfo.GetNativeLibraryPath());
