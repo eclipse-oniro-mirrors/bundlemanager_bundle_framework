@@ -5159,7 +5159,6 @@ void GetAppCloneBundleInfoExec(napi_env env, void *data)
     CloneAppBundleInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<CloneAppBundleInfoCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("param: name=%{public}s,index=%{public}d,bundleFlags=%{public}d,userId=%{public}d",
@@ -5278,7 +5277,6 @@ void GetAllAppCloneBundleInfoExec(napi_env env, void *data)
     CloneAppBundleInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<CloneAppBundleInfosCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("param: name=%{public}s,bundleFlags=%{public}d,userId=%{public}d",
