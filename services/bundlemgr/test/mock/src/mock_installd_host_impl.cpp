@@ -96,8 +96,7 @@ ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid,
-    const int appIndex)
+ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid)
 {
     return ERR_OK;
 }

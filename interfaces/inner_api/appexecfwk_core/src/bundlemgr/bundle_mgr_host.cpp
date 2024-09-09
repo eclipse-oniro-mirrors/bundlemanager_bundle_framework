@@ -1604,9 +1604,8 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFiles(MessageParcel &data, MessageP
     }
     sptr<ICleanCacheCallback> cleanCacheCallback = iface_cast<ICleanCacheCallback>(object);
     int32_t userId = data.ReadInt32();
-    int32_t appIndex = data.ReadInt32();
 
-    ErrCode ret = CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId, appIndex);
+    ErrCode ret = CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1619,9 +1618,8 @@ ErrCode BundleMgrHost::HandleCleanBundleDataFiles(MessageParcel &data, MessagePa
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     int userId = data.ReadInt32();
-    int appIndex = data.ReadInt32();
 
-    bool ret = CleanBundleDataFiles(bundleName, userId, appIndex);
+    bool ret = CleanBundleDataFiles(bundleName, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

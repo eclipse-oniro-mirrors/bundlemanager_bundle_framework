@@ -110,7 +110,7 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
     return 0;
 }
 
-ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex)
+ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, const int userid)
 {
     if (bundleName.empty()) {
         return -1;
