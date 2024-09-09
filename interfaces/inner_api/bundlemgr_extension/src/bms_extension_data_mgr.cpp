@@ -437,5 +437,25 @@ bool BmsExtensionDataMgr::DetermineCloneNum(
     }
     return bundleMgrExtPtr->DetermineCloneNum(bundleName, appIdentifier, cloneNum);
 }
+
+void BmsExtensionDataMgr::CheckBundleNameAndStratAbility(const std::string &bundleName,
+    const std::string &appIdentifier)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return;
+    }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName empty");
+        return;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return;
+    }
+    bundleMgrExtPtr->CheckBundleNameAndStratAbility(bundleName, appIdentifier);
+}
 } // AppExecFwk
 } // OHOS

@@ -122,6 +122,10 @@ public:
     {
         return false;
     }
+    virtual void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier)
+    {
+        return;
+    }
 };
 
 } // AppExecFwk
