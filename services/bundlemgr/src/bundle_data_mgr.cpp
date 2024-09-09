@@ -1839,6 +1839,9 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         APP_LOGD("bundleName %{public}s exist mainAbility", info.GetBundleName().c_str());
         info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
             responseUserId, mainAbilityInfo.applicationInfo);
+        if (mainAbilityInfo.applicationInfo.removable) {
+            mainAbilityInfo.applicationInfo.removable = info.GetUninstallState();
+        }
         mainAbilityInfo.installTime = installTime;
         // fix labelId or iconId is equal 0
         ModifyLauncherAbilityInfo(info.GetIsNewVersion(), mainAbilityInfo);
@@ -7767,7 +7770,8 @@ ErrCode BundleDataMgr::GetDeveloperIds(const std::string &appDistributionType,
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const bool &state)
+ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const bool &state,
+    InnerBundleInfo &innerBundleInfo)
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
@@ -7775,7 +7779,7 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
         APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    InnerBundleInfo &innerBundleInfo = infoItem->second;
+    innerBundleInfo = infoItem->second;
     if (!innerBundleInfo.IsRemovable() && state) {
         APP_LOGW("the bundle : %{public}s is not removable", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED;
@@ -7788,6 +7792,7 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
         APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+    bundleInfos_.at(bundleName) = innerBundleInfo;
     return ERR_OK;
 }
 

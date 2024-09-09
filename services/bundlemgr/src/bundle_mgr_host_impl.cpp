@@ -4055,7 +4055,29 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->SwitchUninstallState(bundleName, state);
+    InnerBundleInfo innerBundleInfo;
+    auto resCode = dataMgr->SwitchUninstallState(bundleName, state, innerBundleInfo);
+    if (resCode != ERR_OK) {
+        APP_LOGE("set status fail");
+        return resCode;
+    }
+    AbilityInfo mainAbilityInfo;
+    innerBundleInfo.GetMainAbilityInfo(mainAbilityInfo);
+    NotifyBundleEvents installRes = {
+        .isModuleUpdate = true,
+        .type = NotifyType::UPDATE,
+        .resultCode = ERR_OK,
+        .accessTokenId = innerBundleInfo.GetAccessTokenId(innerBundleInfo.GetUserId()),
+        .uid = innerBundleInfo.GetUid(innerBundleInfo.GetUserId()),
+        .bundleType = static_cast<int32_t>(innerBundleInfo.GetApplicationBundleType()),
+        .bundleName = innerBundleInfo.GetBundleName(),
+        .modulePackage = innerBundleInfo.GetModuleNameVec()[0],
+        .abilityName = mainAbilityInfo.name,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
+    };
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
+    return resCode;
 }
 
 void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info)
