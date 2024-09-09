@@ -36,18 +36,25 @@ const char* FILE_7Z_SUFFIX = ".7z";
 bool MimeTypeMgr::GetMimeTypeByUri(const std::string &uri, std::vector<std::string> &mimeTypes)
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
-    std::string utd;
-    if (!GetUtdByUri(uri, utd)) {
-        APP_LOGD("Get utd by uri %{private}s failed", uri.c_str());
+    std::vector<std::string> utdVector;
+    if (!GetUtdVectorByUri(uri, utdVector)) {
+        APP_LOGD("Get utd vector by uri %{private}s failed", uri.c_str());
         return false;
     }
-    std::shared_ptr<UDMF::TypeDescriptor> typeDescriptor;
-    auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(utd, typeDescriptor);
-    if (ret != ERR_OK || typeDescriptor == nullptr) {
-        APP_LOGE("GetTypeDescriptor failed");
-        return false;
+    for (const std::string &utd : utdVector) {
+        std::shared_ptr<UDMF::TypeDescriptor> typeDescriptor;
+        auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(utd, typeDescriptor);
+        if (ret != ERR_OK || typeDescriptor == nullptr) {
+            APP_LOGE("GetTypeDescriptor failed");
+            continue;
+        }
+        std::vector<std::string> tmpMimeTypes = typeDescriptor->GetMimeTypes();
+        if (tmpMimeTypes.empty()) {
+            APP_LOGD("tmpMimeTypes empty");
+            continue;
+        }
+        mimeTypes.insert(mimeTypes.end(), tmpMimeTypes.begin(), tmpMimeTypes.end());
     }
-    mimeTypes = typeDescriptor->GetMimeTypes();
     return !mimeTypes.empty();
 #else
     return false;
@@ -86,7 +93,7 @@ bool MimeTypeMgr::GetUriSuffix(const std::string &uri, std::string &suffix)
     return true;
 }
 
-bool MimeTypeMgr::GetUtdByUri(const std::string &uri, std::string &utd)
+bool MimeTypeMgr::GetUtdVectorByUri(const std::string &uri, std::vector<std::string> &utdVector)
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
     std::string suffix;
@@ -94,9 +101,9 @@ bool MimeTypeMgr::GetUtdByUri(const std::string &uri, std::string &utd)
         APP_LOGD("Get suffix failed %{private}s", uri.c_str());
         return false;
     }
-    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByFilenameExtension(suffix, utd);
-    if (ret != ERR_OK) {
-        APP_LOGD("Get utd by suffix %{public}s failed. err %{public}d", suffix.c_str(), ret);
+    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypesByFilenameExtension(suffix, utdVector);
+    if (ret != ERR_OK || utdVector.empty()) {
+        APP_LOGD("Get utd vector by suffix %{public}s failed. err %{public}d", suffix.c_str(), ret);
         return false;
     }
     return true;

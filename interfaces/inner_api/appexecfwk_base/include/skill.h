@@ -62,8 +62,8 @@ private:
     bool MatchAction(const std::string &action) const;
     bool MatchEntities(const std::vector<std::string> &paramEntities) const;
     bool MatchActionAndEntities(const OHOS::AAFwk::Want &want) const;
-    bool MatchUriAndType(const std::string &uriString, const std::string &type) const;
-    bool MatchUriAndType(const std::string &uriString, const std::string &type, size_t &matchUriIndex) const;
+    bool MatchUriAndType(const std::string &rawUriString, const std::string &type) const;
+    bool MatchUriAndType(const std::string &rawUriString, const std::string &type, size_t &matchUriIndex) const;
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
     bool MatchMimeType(const std::string &uriString) const;

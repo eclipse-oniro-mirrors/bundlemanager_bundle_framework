@@ -106,7 +106,7 @@ void DefaultAppMgr::Init()
 
 ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type, bool& isDefaultApp) const
 {
-    LOG_I(BMS_TAG_DEFAULT, "IsDefaultApplication begin, userId : %{public}d, type : %{public}s", userId, type.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "IsDefault,userId:%{public}d,type:%{public}s", userId, type.c_str());
     if (type.size() > TYPE_MAX_SIZE) {
         LOG_W(BMS_TAG_DEFAULT, "type size too large");
         isDefaultApp = false;
@@ -119,14 +119,26 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
         return ERR_OK;
     }
 
-    std::string normalizedType = Normalize(type);
-    LOG_I(BMS_TAG_DEFAULT, "normalizedType : %{public}s", normalizedType.c_str());
-    if (normalizedType.empty()) {
-        LOG_W(BMS_TAG_DEFAULT, "normalizedType empty");
+    std::vector<std::string> normalizedTypeVector = Normalize(type);
+    LOG_I(BMS_TAG_DEFAULT, "normalized:%{public}s", BundleUtil::ToString(normalizedTypeVector).c_str());
+    if (normalizedTypeVector.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "normalizedTypeVector empty");
         isDefaultApp = false;
         return ERR_OK;
     }
 
+    for (const std::string& normalizedType : normalizedTypeVector) {
+        (void)IsDefaultApplicationInternal(userId, normalizedType, isDefaultApp);
+        if (isDefaultApp) {
+            return ERR_OK;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode DefaultAppMgr::IsDefaultApplicationInternal(
+    int32_t userId, const std::string& normalizedType, bool& isDefaultApp) const
+{
     std::lock_guard<std::mutex> lock(mutex_);
     Element element;
     bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, normalizedType, element);
@@ -155,7 +167,7 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
         isDefaultApp = false;
         return ERR_OK;
     }
-    LOG_I(BMS_TAG_DEFAULT, "callingBundleName : %{public}s", callingBundleName.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "callingBundleName:%{public}s", callingBundleName.c_str());
     isDefaultApp = element.bundleName == callingBundleName;
     return ERR_OK;
 }
@@ -163,8 +175,8 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
 ErrCode DefaultAppMgr::GetDefaultApplication(
     int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup) const
 {
-    LOG_I(BMS_TAG_DEFAULT, "GetDefaultApplication begin, userId : %{public}d, \
-        type : %{public}s, backup(bool) : %{public}d", userId, type.c_str(), backup);
+    LOG_I(BMS_TAG_DEFAULT, "GetDefault,userId:%{public}d,type:%{public}s,backup(bool):%{public}d",
+        userId, type.c_str(), backup);
 
     ErrCode ret = VerifyPermission(Constants::PERMISSION_GET_DEFAULT_APPLICATION);
     if (ret != ERR_OK) {
@@ -176,13 +188,25 @@ ErrCode DefaultAppMgr::GetDefaultApplication(
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    std::string normalizedType = Normalize(type);
-    LOG_I(BMS_TAG_DEFAULT, "normalizedType : %{public}s", normalizedType.c_str());
-    if (normalizedType.empty()) {
-        LOG_W(BMS_TAG_DEFAULT, "normalizedType empty");
+    std::vector<std::string> normalizedTypeVector = Normalize(type);
+    LOG_I(BMS_TAG_DEFAULT, "normalized:%{public}s", BundleUtil::ToString(normalizedTypeVector).c_str());
+    if (normalizedTypeVector.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "normalizedTypeVector empty");
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 
+    for (const std::string& normalizedType : normalizedTypeVector) {
+        ret = GetDefaultApplicationInternal(userId, normalizedType, bundleInfo, backup);
+        if (ret == ERR_OK) {
+            return ret;
+        }
+    }
+    return ret;
+}
+
+ErrCode DefaultAppMgr::GetDefaultApplicationInternal(
+    int32_t userId, const std::string& normalizedType, BundleInfo& bundleInfo, bool backup) const
+{
     std::lock_guard<std::mutex> lock(mutex_);
     if (IsAppType(normalizedType)) {
         return GetBundleInfoByAppType(userId, normalizedType, bundleInfo, backup);
@@ -193,12 +217,11 @@ ErrCode DefaultAppMgr::GetDefaultApplication(
 ErrCode DefaultAppMgr::SetDefaultApplication(
     int32_t userId, const std::string& type, const Element& element) const
 {
-    LOG_I(BMS_TAG_DEFAULT,
-        "SetDefaultApplication begin, userId : %{public}d, type : %{public}s", userId, type.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "SetDefault,userId:%{public}d,type:%{public}s", userId, type.c_str());
 
-    ErrCode permissionRet = VerifyPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION);
-    if (permissionRet != ERR_OK) {
-        return permissionRet;
+    ErrCode ret = VerifyPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION);
+    if (ret != ERR_OK) {
+        return ret;
     }
 
     if (!IsUserIdExist(userId)) {
@@ -206,13 +229,39 @@ ErrCode DefaultAppMgr::SetDefaultApplication(
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    std::string normalizedType = Normalize(type);
-    LOG_I(BMS_TAG_DEFAULT, "normalizedType : %{public}s", normalizedType.c_str());
-    if (normalizedType.empty()) {
-        LOG_W(BMS_TAG_DEFAULT, "normalizedType empty");
+    std::vector<std::string> normalizedTypeVector = Normalize(type);
+    LOG_I(BMS_TAG_DEFAULT, "normalized:%{public}s", BundleUtil::ToString(normalizedTypeVector).c_str());
+    if (normalizedTypeVector.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "normalizedTypeVector empty");
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 
+    bool isAnySet = false;
+    std::unordered_map<std::string, ErrCode> setResultMap;
+    for (const std::string& normalizedType : normalizedTypeVector) {
+        ret = SetDefaultApplicationInternal(userId, normalizedType, element);
+        setResultMap.try_emplace(normalizedType, ret);
+        if (ret == ERR_OK) {
+            isAnySet = true;
+        }
+    }
+    if (!isAnySet) {
+        return ret;
+    }
+    // set any success, clear failed records
+    for (const auto& item : setResultMap) {
+        if (item.second != ERR_OK) {
+            LOG_I(BMS_TAG_DEFAULT, "clear record,normalizedType:%{public}s", item.first.c_str());
+            Element element;
+            (void)SetDefaultApplicationInternal(userId, item.first, element);
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode DefaultAppMgr::SetDefaultApplicationInternal(
+    int32_t userId, const std::string& normalizedType, const Element& element) const
+{
     std::lock_guard<std::mutex> lock(mutex_);
     // clear default app
     bool ret = IsElementEmpty(element);
@@ -243,12 +292,11 @@ ErrCode DefaultAppMgr::SetDefaultApplication(
 
 ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& type) const
 {
-    LOG_I(BMS_TAG_DEFAULT,
-        "ResetDefaultApplication begin, userId : %{public}d, type : %{public}s", userId, type.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "ResetDefault,userId:%{public}d,type:%{public}s", userId, type.c_str());
 
-    ErrCode permissionRet = VerifyPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION);
-    if (permissionRet != ERR_OK) {
-        return permissionRet;
+    ErrCode ret = VerifyPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION);
+    if (ret != ERR_OK) {
+        return ret;
     }
 
     if (!IsUserIdExist(userId)) {
@@ -256,13 +304,25 @@ ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    std::string normalizedType = Normalize(type);
-    LOG_I(BMS_TAG_DEFAULT, "normalizedType : %{public}s", normalizedType.c_str());
-    if (normalizedType.empty()) {
-        LOG_W(BMS_TAG_DEFAULT, "normalizedType empty");
+    std::vector<std::string> normalizedTypeVector = Normalize(type);
+    LOG_I(BMS_TAG_DEFAULT, "normalized:%{public}s", BundleUtil::ToString(normalizedTypeVector).c_str());
+    if (normalizedTypeVector.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "normalizedTypeVector empty");
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 
+    bool isAnySet = false;
+    for (const std::string& normalizedType : normalizedTypeVector) {
+        ret = ResetDefaultApplicationInternal(userId, normalizedType);
+        if (ret == ERR_OK) {
+            isAnySet = true;
+        }
+    }
+    return isAnySet ? ERR_OK : ret;
+}
+
+ErrCode DefaultAppMgr::ResetDefaultApplicationInternal(int32_t userId, const std::string& normalizedType) const
+{
     std::lock_guard<std::mutex> lock(mutex_);
     Element element;
     bool ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, normalizedType, element);
@@ -283,7 +343,7 @@ ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string
         LOG_W(BMS_TAG_DEFAULT, "SetDefaultApplicationInfo failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    LOG_I(BMS_TAG_DEFAULT, "ResetDefaultApplication success");
+    LOG_D(BMS_TAG_DEFAULT, "ResetDefaultApplication success");
     return ERR_OK;
 }
 
@@ -369,7 +429,7 @@ bool DefaultAppMgr::IsEmailWant(const Want& want) const
     return true;
 }
 
-std::string DefaultAppMgr::GetType(const Want& want) const
+std::string DefaultAppMgr::GetTypeFromWant(const Want& want) const
 {
     if (IsBrowserWant(want)) {
         return BROWSER;
@@ -380,21 +440,29 @@ std::string DefaultAppMgr::GetType(const Want& want) const
     if (want.GetAction() != ACTION_VIEW_DATA) {
         return Constants::EMPTY_STRING;
     }
-    return GetUtdByWant(want);
+    // get from type
+    std::string type = want.GetType();
+    if (!type.empty()) {
+        return type;
+    }
+    // get from uri
+    std::string uri = Skill::GetOptParamUri(want.GetUriString());
+    std::string suffix;
+    (void)MimeTypeMgr::GetUriSuffix(uri, suffix);
+    return suffix;
 }
 
 bool DefaultAppMgr::GetDefaultApplication(const Want& want, const int32_t userId,
     std::vector<AbilityInfo>& abilityInfos, std::vector<ExtensionAbilityInfo>& extensionInfos, bool backup) const
 {
-    LOG_D(BMS_TAG_DEFAULT, "begin, backup(bool) : %{public}d", backup);
-    std::string normalizedType = GetType(want);
-    LOG_I(BMS_TAG_DEFAULT, "normalizedType from want : %{public}s", normalizedType.c_str());
-    if (normalizedType.empty()) {
-        LOG_W(BMS_TAG_DEFAULT, "normalizedType empty");
+    std::string type = GetTypeFromWant(want);
+    LOG_I(BMS_TAG_DEFAULT, "backup(bool):%{public}d, type(want):%{public}s", backup, type.c_str());
+    if (type.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "type empty");
         return false;
     }
     BundleInfo bundleInfo;
-    ErrCode ret = GetDefaultApplication(userId, normalizedType, bundleInfo, backup);
+    ErrCode ret = GetDefaultApplication(userId, type, bundleInfo, backup);
     if (ret != ERR_OK) {
         LOG_I(BMS_TAG_DEFAULT, "GetDefaultApplication failed");
         return false;
@@ -739,56 +807,26 @@ ErrCode DefaultAppMgr::VerifyPermission(const std::string& permissionName) const
     return ERR_OK;
 }
 
-std::string DefaultAppMgr::GetUtdByWant(const AAFwk::Want& want) const
-{
-    std::string uri = Skill::GetOptParamUri(want.GetUriString());
-    bool containsScheme = uri.find(SCHEME_SIGN) != std::string::npos;
-    bool isLocalScheme = uri.rfind(FILE_SCHEME, 0) == 0 || uri.rfind(CONTENT_SCHEME, 0) == 0;
-    if (containsScheme && !isLocalScheme) {
-        LOG_D(BMS_TAG_DEFAULT, "not local scheme");
-        return Constants::EMPTY_STRING;
-    }
-    // get from type
-    std::string type = want.GetType();
-    if (!type.empty()) {
-        if (BundleUtil::IsUtd(type)) {
-            return type;
-        }
-        return BundleUtil::GetUtdByMimeType(type);
-    }
-    // get from uri
-    if (uri.empty()) {
-        LOG_W(BMS_TAG_DEFAULT, "uri is empty");
-        return Constants::EMPTY_STRING;
-    }
-    std::string utd;
-    if (!MimeTypeMgr::GetUtdByUri(uri, utd)) {
-        LOG_W(BMS_TAG_DEFAULT, "get utd by uri failed");
-        return Constants::EMPTY_STRING;
-    }
-    return utd;
-}
-
-std::string DefaultAppMgr::Normalize(const std::string& param)
+std::vector<std::string> DefaultAppMgr::Normalize(const std::string& param)
 {
     if (IsAppType(param)) {
-        return param;
+        return {param};
     }
     if (BundleUtil::IsUtd(param)) {
         if (BundleUtil::IsSpecificUtd(param)) {
-            return param;
+            return {param};
         }
-        return Constants::EMPTY_STRING;
+        return {};
     }
     if (IsSpecificMimeType(param)) {
-        return BundleUtil::GetUtdByMimeType(param);
+        return BundleUtil::GetUtdVectorByMimeType(param);
     }
-    std::string utd;
-    if (!MimeTypeMgr::GetUtdByUri(param, utd)) {
-        LOG_W(BMS_TAG_DEFAULT, "get utd by uri failed");
-        return Constants::EMPTY_STRING;
+    std::vector<std::string> utdVector;
+    if (!MimeTypeMgr::GetUtdVectorByUri(param, utdVector)) {
+        LOG_W(BMS_TAG_DEFAULT, "GetUtdVectorByUri failed");
+        return {};
     }
-    return utd;
+    return utdVector;
 }
 
 bool DefaultAppMgr::IsAppType(const std::string& param)
