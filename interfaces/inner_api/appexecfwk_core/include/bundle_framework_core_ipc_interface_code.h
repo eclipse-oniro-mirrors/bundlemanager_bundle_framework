@@ -187,7 +187,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
-enum class AppControlManagerInterfaceCode : uint8_t {
+enum class AppControlManagerInterfaceCode : uint32_t {
     ADD_APP_INSTALL_CONTROL_RULE = 0,
     DELETE_APP_INSTALL_CONTROL_RULE,
     CLEAN_APP_INSTALL_CONTROL_RULE,
@@ -215,12 +215,12 @@ enum class AppControlManagerInterfaceCode : uint8_t {
 };
 
 /* SAID: 401-96 Interface No.96 subservice also provides the following interfaces */
-enum class BundleEventCallbackInterfaceCode : uint8_t {
+enum class BundleEventCallbackInterfaceCode : uint32_t {
     ON_RECEIVE_EVENT,
 };
 
 /* SAID: 401-43 Interface No.43 subservice also provides the following interfaces */
-enum class BundleInstallerInterfaceCode : uint8_t {
+enum class BundleInstallerInterfaceCode : uint32_t {
     INSTALL = 0,
     INSTALL_MULTIPLE_HAPS,
     UNINSTALL,
@@ -238,12 +238,12 @@ enum class BundleInstallerInterfaceCode : uint8_t {
 };
 
 /* SAID: 401-28 Interface No.28 subservice also provides the following interfaces */
-enum class BundleStatusCallbackInterfaceCode : uint8_t {
+enum class BundleStatusCallbackInterfaceCode : uint32_t {
     ON_BUNDLE_STATE_CHANGED,
 };
 
 /* SAID: 401-43 Interface No.43 subservice also provides the following interfaces */
-enum class BundleStreamInstallerInterfaceCode : uint8_t {
+enum class BundleStreamInstallerInterfaceCode : uint32_t {
     CREATE_STREAM = 0,
     STREAM_INSTALL = 1,
     CREATE_SHARED_BUNDLE_STREAM = 2,
@@ -252,18 +252,18 @@ enum class BundleStreamInstallerInterfaceCode : uint8_t {
 };
 
 /* SAID: 401-26 Interface No.26 subservice also provides the following interfaces */
-enum class CleanCacheCallbackInterfaceCode : uint8_t {
+enum class CleanCacheCallbackInterfaceCode : uint32_t {
     ON_CLEAN_CACHE_CALLBACK,
 };
 
 /* SAID: 401-43 Interface No.43 subservice also provides the following interfaces */
-enum class StatusReceiverInterfaceCode : uint8_t {
+enum class StatusReceiverInterfaceCode : uint32_t {
     ON_STATUS_NOTIFY,
     ON_FINISHED,
 };
 
 /* SAID: 401-74 Interface No.74 subservice also provides the following interfaces */
-enum class DefaultAppInterfaceCode : uint8_t {
+enum class DefaultAppInterfaceCode : uint32_t {
     IS_DEFAULT_APPLICATION = 0,
     GET_DEFAULT_APPLICATION = 1,
     SET_DEFAULT_APPLICATION = 2,
@@ -271,7 +271,7 @@ enum class DefaultAppInterfaceCode : uint8_t {
 };
 
 /* SAID: 401-100 Interface No.100 subservice also provides the following interfaces */
-enum class OverlayManagerInterfaceCode : uint8_t {
+enum class OverlayManagerInterfaceCode : uint32_t {
     GET_ALL_OVERLAY_MODULE_INFO = 0,
     GET_OVERLAY_MODULE_INFO_BY_NAME = 1,
     GET_OVERLAY_MODULE_INFO = 2,
@@ -284,7 +284,7 @@ enum class OverlayManagerInterfaceCode : uint8_t {
 };
 
 /* SAID: 401-81 Interface No.81 subservice also provides the following interfaces */
-enum class QuickFixManagerInterfaceCode : uint8_t {
+enum class QuickFixManagerInterfaceCode : uint32_t {
     DEPLOY_QUICK_FIX = 0,
     SWITCH_QUICK_FIX = 1,
     DELETE_QUICK_FIX = 2,
@@ -292,20 +292,20 @@ enum class QuickFixManagerInterfaceCode : uint8_t {
 };
 
 /* SAID: 401-81 Interface No.81 subservice also provides the following interfaces */
-enum class QuickFixStatusCallbackInterfaceCode : uint8_t {
+enum class QuickFixStatusCallbackInterfaceCode : uint32_t {
     ON_PATCH_DEPLOYED = 1,
     ON_PATCH_SWITCHED = 2,
     ON_PATCH_DELETED = 3
 };
 
 /* SAID: 401-53 Interface No.53 subservice also provides the following interfaces */
-enum class BundleUserMgrInterfaceCode : uint8_t {
+enum class BundleUserMgrInterfaceCode : uint32_t {
     CREATE_USER = 0,
     REMOVE_USER = 1,
 };
 
 /* SAID: 401-125 Interface No.125 subservice also provides the following interfaces */
-enum class BundleResourceInterfaceCode : uint8_t {
+enum class BundleResourceInterfaceCode : uint32_t {
     GET_BUNDLE_RESOURCE_INFO = 0,
     GET_LAUNCHER_ABILITY_RESOURCE_INFO = 1,
     GET_ALL_BUNDLE_RESOURCE_INFO = 2,
@@ -316,14 +316,14 @@ enum class BundleResourceInterfaceCode : uint8_t {
 };
 
 /* SAID: 401-126 Interface No.126 subservice also provides the following interfaces */
-enum class VerifyManagerInterfaceCode : uint8_t {
+enum class VerifyManagerInterfaceCode : uint32_t {
     VERIFY = 0,
     CREATE_FD = 1,
     DELETE_ABC = 2,
 };
 
 /* SAID: 401-127 Interface No.127 subservice also provides the following interfaces */
-enum class ExtendResourceManagerInterfaceCode : uint8_t {
+enum class ExtendResourceManagerInterfaceCode : uint32_t {
     ADD_EXT_RESOURCE = 0,
     REMOVE_EXT_RESOURCE = 1,
     GET_EXT_RESOURCE = 2,

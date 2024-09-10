@@ -1501,7 +1501,7 @@ void BundleDataMgr::ImplicitQueryAllCloneAbilityInfosV9(const Want &want, int32_
 
 bool BundleDataMgr::CheckAbilityInfoFlagExist(int32_t flags, AbilityInfoFlag abilityInfoFlag) const
 {
-    return (static_cast<uint32_t>(flags) & static_cast<uint32_t>(abilityInfoFlag)) == abilityInfoFlag;
+    return (static_cast<uint32_t>(flags) & abilityInfoFlag) == abilityInfoFlag;
 }
 
 void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const InnerBundleInfo &info,

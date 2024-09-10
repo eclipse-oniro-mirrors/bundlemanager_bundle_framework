@@ -28,37 +28,37 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-const char* JSON_KEY_SKILLS = "skills";
+const std::string JSON_KEY_SKILLS = "skills";
 namespace {
-const char* NAME = "name";
-const char* SRC_ENTRANCE = "srcEntrance";
-const char* ICON = "icon";
-const char* ICON_ID = "iconId";
-const char* LABEL = "label";
-const char* LABEL_ID = "labelId";
-const char* DESCRIPTION = "description";
-const char* DESCRIPTION_ID = "descriptionId";
-const char* PRIORITY = "priority";
-const char* TYPE = "type";
-const char* EXTENSION_TYPE_NAME = "extensionTypeName";
-const char* PERMISSIONS = "permissions";
-const char* READ_PERMISSION = "readPermission";
-const char* WRITE_PERMISSION = "writePermission";
-const char* URI = "uri";
-const char* VISIBLE = "visible";
-const char* META_DATA = "metadata";
-const char* RESOURCE_PATH = "resourcePath";
-const char* ENABLED = "enabled";
-const char* PROCESS = "process";
-const char* COMPILE_MODE = "compileMode";
-const char* UID = "uid";
-const char* APP_INDEX = "appIndex";
-const uint16_t ABILITY_CAPACITY = 10240; // 10K
-const char* EXTENSION_PROCESS_MODE = "extensionProcessMode";
-const char* SKILLS = "skills";
-const char* NEED_CREATE_SANDBOX = "needCreateSandbox";
-const char* DATA_GROUP_IDS = "dataGroupIds";
-const char* JSON_KEY_VALID_DATA_GROUP_IDS = "validDataGroupIds";
+const std::string NAME = "name";
+const std::string SRC_ENTRANCE = "srcEntrance";
+const std::string ICON = "icon";
+const std::string ICON_ID = "iconId";
+const std::string LABEL = "label";
+const std::string LABEL_ID = "labelId";
+const std::string DESCRIPTION = "description";
+const std::string DESCRIPTION_ID = "descriptionId";
+const std::string PRIORITY = "priority";
+const std::string TYPE = "type";
+const std::string EXTENSION_TYPE_NAME = "extensionTypeName";
+const std::string PERMISSIONS = "permissions";
+const std::string READ_PERMISSION = "readPermission";
+const std::string WRITE_PERMISSION = "writePermission";
+const std::string URI = "uri";
+const std::string VISIBLE = "visible";
+const std::string META_DATA = "metadata";
+const std::string RESOURCE_PATH = "resourcePath";
+const std::string ENABLED = "enabled";
+const std::string PROCESS = "process";
+const std::string COMPILE_MODE = "compileMode";
+const std::string UID = "uid";
+const std::string APP_INDEX = "appIndex";
+const size_t ABILITY_CAPACITY = 10240; // 10K
+const std::string EXTENSION_PROCESS_MODE = "extensionProcessMode";
+const std::string SKILLS = "skills";
+const std::string NEED_CREATE_SANDBOX = "needCreateSandbox";
+const std::string DATA_GROUP_IDS = "dataGroupIds";
+const std::string JSON_KEY_VALID_DATA_GROUP_IDS = "validDataGroupIds";
 
 const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP = {
     { "form", ExtensionAbilityType::FORM },

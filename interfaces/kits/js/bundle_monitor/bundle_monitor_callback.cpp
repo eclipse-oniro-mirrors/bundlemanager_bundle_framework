@@ -25,9 +25,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const char* ADD = "add";
-    const char* UPDATE = "update";
-    const char* REMOVE = "remove";
+    const std::string ADD = "add";
+    const std::string UPDATE = "update";
+    const std::string REMOVE = "remove";
     static std::shared_mutex g_addListenersMutex;
     static std::shared_mutex g_updateListenersMutex;
     static std::shared_mutex g_removeListenersMutex;

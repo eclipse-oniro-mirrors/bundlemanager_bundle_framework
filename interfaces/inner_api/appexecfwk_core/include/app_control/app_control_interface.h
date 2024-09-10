@@ -30,14 +30,14 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class AppInstallControlRuleType : int8_t {
+enum class AppInstallControlRuleType {
     UNSPECIFIED = 0,
     DISALLOWED_UNINSTALL,
     ALLOWED_INSTALL,
     DISALLOWED_INSTALL,
 };
 
-enum class AppRunControlRuleType : int8_t {
+enum class AppRunControlRuleType {
     DISALLOWED_RUN = 10,
 };
 

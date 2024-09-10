@@ -25,11 +25,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* HQF_INFO_HAP_SHA256 = "hapSha256";
-const char* HQF_INFO_HQF_FILE_PATH = "hqfFilePath";
-const char* HQF_INFO_TYPE = "type";
-const char* HQF_INFO_CPU_ABI = "cpuAbi";
-const char* HQF_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
+const std::string HQF_INFO_HAP_SHA256 = "hapSha256";
+const std::string HQF_INFO_HQF_FILE_PATH = "hqfFilePath";
+const std::string HQF_INFO_TYPE = "type";
+const std::string HQF_INFO_CPU_ABI = "cpuAbi";
+const std::string HQF_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 }
 
 void to_json(nlohmann::json &jsonObject, const HqfInfo &hqfInfo)

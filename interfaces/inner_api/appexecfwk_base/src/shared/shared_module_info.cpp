@@ -24,16 +24,16 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* SHARED_MODULE_INFO_NAME = "name";
-const char* SHARED_MODULE_INFO_VERSION_CODE = "versionCode";
-const char* SHARED_MODULE_INFO_VERSION_NAME = "versionName";
-const char* SHARED_MODULE_INFO_DESCRIPTION = "description";
-const char* SHARED_MODULE_INFO_DESCRIPTION_ID = "descriptionId";
-const char* SHARED_MODULE_INFO_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
-const char* SHARED_MODULE_INFO_HAP_PATH = "hapPath";
-const char* SHARED_MODULE_INFO_CPU_ABI = "cpuAbi";
-const char* SHARED_MODULE_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
-const char* SHARED_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
+const std::string SHARED_MODULE_INFO_NAME = "name";
+const std::string SHARED_MODULE_INFO_VERSION_CODE = "versionCode";
+const std::string SHARED_MODULE_INFO_VERSION_NAME = "versionName";
+const std::string SHARED_MODULE_INFO_DESCRIPTION = "description";
+const std::string SHARED_MODULE_INFO_DESCRIPTION_ID = "descriptionId";
+const std::string SHARED_MODULE_INFO_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
+const std::string SHARED_MODULE_INFO_HAP_PATH = "hapPath";
+const std::string SHARED_MODULE_INFO_CPU_ABI = "cpuAbi";
+const std::string SHARED_MODULE_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
+const std::string SHARED_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 }
 
 bool SharedModuleInfo::ReadFromParcel(Parcel &parcel)

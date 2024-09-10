@@ -70,9 +70,9 @@ constexpr int32_t PARAM_TYPE_ERROR = 1;
 constexpr int32_t UNDEFINED_ERROR = -1;
 #ifndef BUNDLE_FRAMEWORK_GRAPHICS
 constexpr int32_t UNSUPPORTED_FEATURE_ERRCODE = 801;
-const char* UNSUPPORTED_FEATURE_MESSAGE = "unsupported BundleManagerService feature";
+const std::string UNSUPPORTED_FEATURE_MESSAGE = "unsupported BundleManagerService feature";
 #endif
-enum class InstallErrorCode : uint8_t {
+enum class InstallErrorCode {
     SUCCESS = 0,
     STATUS_INSTALL_FAILURE = 1,
     STATUS_INSTALL_FAILURE_ABORTED = 2,
@@ -99,17 +99,21 @@ enum class InstallErrorCode : uint8_t {
     STATUS_USER_REMOVE_FAILED = 0X53,
 };
 
-const char* IS_SET_APPLICATION_ENABLED = "IsSetApplicationEnabled";
-const char* IS_ABILITY_ENABLED = "IsAbilityEnabled";
-const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
-const char* GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
-const char* GET_ABILITY_ICON = "GetAbilityIcon";
+const std::string PERMISSION_CHANGE = "permissionChange";
+const std::string ANY_PERMISSION_CHANGE = "anyPermissionChange";
+
+const std::string IS_SET_APPLICATION_ENABLED = "IsSetApplicationEnabled";
+const std::string IS_ABILITY_ENABLED = "IsAbilityEnabled";
+const std::string GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
+const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
+const std::string GET_ABILITY_ICON = "GetAbilityIcon";
+const std::string GET_APPLICATION_INFO = "getApplicationInfo";
 constexpr const char* NAPI_GET_APPLICATION_INFO = "GetApplicationInfo";
-const char* GET_BUNDLE_INFO = "getBundleInfo";
-const char* GET_ALL_BUNDLE_INFO = "GetAllBundleInfo";
-const char* GET_PERMISSION_DEF = "GetPermissionDef";
-const char* QUERY_ABILITY_BY_WANT = "queryAbilityByWant";
-const char* TYPE_MISMATCH = "type misMatch";
+const std::string GET_BUNDLE_INFO = "getBundleInfo";
+const std::string GET_ALL_BUNDLE_INFO = "GetAllBundleInfo";
+const std::string GET_PERMISSION_DEF = "GetPermissionDef";
+const std::string QUERY_ABILITY_BY_WANT = "queryAbilityByWant";
+const std::string TYPE_MISMATCH = "type misMatch";
 
 const std::vector<int32_t> PACKINFO_FLAGS = {
     BundlePackFlag::GET_PACK_INFO_ALL,

@@ -36,18 +36,19 @@ using namespace OHOS::AAFwk;
 
 namespace {
 constexpr int32_t NAPI_RETURN_ZERO = 0;
-const char* IS_DEFAULT_APPLICATION = "IsDefaultApplication";
-const char* IS_DEFAULT_APPLICATION_SYNC = "IsDefaultApplicationSync";
-const char* GET_DEFAULT_APPLICATION = "GetDefaultApplication";
-const char* GET_DEFAULT_APPLICATION_SYNC = "GetDefaultApplicationSync";
-const char* SET_DEFAULT_APPLICATION = "SetDefaultApplication";
-const char* SET_DEFAULT_APPLICATION_SYNC = "SetDefaultApplicationSync";
-const char* RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
-const char* RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
-const char* PARAM_TYPE_CHECK_ERROR = "param type check error";
-const char* PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
-const char* TYPE_CHECK = "type";
-const char* WANT_CHECK = "want";
+const std::string IS_DEFAULT_APPLICATION = "IsDefaultApplication";
+const std::string IS_DEFAULT_APPLICATION_SYNC = "IsDefaultApplicationSync";
+const std::string GET_DEFAULT_APPLICATION = "GetDefaultApplication";
+const std::string GET_DEFAULT_APPLICATION_SYNC = "GetDefaultApplicationSync";
+const std::string SET_DEFAULT_APPLICATION = "SetDefaultApplication";
+const std::string SET_DEFAULT_APPLICATION_SYNC = "SetDefaultApplicationSync";
+const std::string RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
+const std::string RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
+const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
+const std::string TYPE_CHECK = "type";
+const std::string USERID_CHECK = "userId";
+const std::string WANT_CHECK = "want";
 }
 
 static const std::unordered_map<std::string, std::string> TYPE_MAPPING = {

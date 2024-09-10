@@ -43,27 +43,27 @@ constexpr const char* EXTENSIONABILITY_TYPE = "extensionAbilityType";
 constexpr const char* FLAGS = "flags";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 constexpr const char* EXTENSION_TYPE_NAME = "extensionTypeName";
-const char* SET_APPLICATION_ENABLED_SYNC = "SetApplicationEnabledSync";
-const char* SET_ABILITY_ENABLED_SYNC = "SetAbilityEnabledSync";
-const char* IS_APPLICATION_ENABLED_SYNC = "IsApplicationEnabledSync";
-const char* IS_ABILITY_ENABLED_SYNC = "IsAbilityEnabledSync";
-const char* GET_ABILITY_LABEL_SYNC = "GetAbilityLabelSync";
-const char* GET_LAUNCH_WANT_FOR_BUNDLE_SYNC = "GetLaunchWantForBundleSync";
-const char* GET_BUNDLE_ARCHIVE_INFO_SYNC = "GetBundleArchiveInfoSync";
-const char* GET_BUNDLE_NAME_BY_UID_SYNC = "GetBundleNameByUidSync";
-const char* GET_PROFILE_BY_EXTENSION_ABILITY_SYNC = "GetProfileByExtensionAbilitySync";
-const char* GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";
-const char* QUERY_EXTENSION_INFOS_SYNC = "QueryExtensionInfosSync";
-const char* GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
-const char* GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
-const char* BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
-const char* PERMISSION_NAME = "permissionName";
-const char* INVALID_WANT_ERROR =
+const std::string SET_APPLICATION_ENABLED_SYNC = "SetApplicationEnabledSync";
+const std::string SET_ABILITY_ENABLED_SYNC = "SetAbilityEnabledSync";
+const std::string IS_APPLICATION_ENABLED_SYNC = "IsApplicationEnabledSync";
+const std::string IS_ABILITY_ENABLED_SYNC = "IsAbilityEnabledSync";
+const std::string GET_ABILITY_LABEL_SYNC = "GetAbilityLabelSync";
+const std::string GET_LAUNCH_WANT_FOR_BUNDLE_SYNC = "GetLaunchWantForBundleSync";
+const std::string GET_BUNDLE_ARCHIVE_INFO_SYNC = "GetBundleArchiveInfoSync";
+const std::string GET_BUNDLE_NAME_BY_UID_SYNC = "GetBundleNameByUidSync";
+const std::string GET_PROFILE_BY_EXTENSION_ABILITY_SYNC = "GetProfileByExtensionAbilitySync";
+const std::string GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";
+const std::string QUERY_EXTENSION_INFOS_SYNC = "QueryExtensionInfosSync";
+const std::string GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
+const std::string GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
+const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+const std::string PERMISSION_NAME = "permissionName";
+const std::string INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action entities uri type or linkFeature) non-empty.";
-const char* PARAM_TYPE_CHECK_ERROR = "param type check error";
-const char* PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
+const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+const std::string PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
     "BusinessError 401: Parameter error.Parameter extensionAbilityType is empty.";
-const char* LINK_FEATURE = "linkFeature";
+const std::string LINK_FEATURE = "linkFeature";
 bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
 {
     napi_valuetype valueType;

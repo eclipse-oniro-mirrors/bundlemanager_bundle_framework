@@ -120,12 +120,12 @@ bool VerifyManagerProxy::SendRequest(
     MessageOption option(MessageOption::TF_SYNC);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("send request %{public}hhd failed due to remote object null", code);
+        APP_LOGE("send request %{public}d failed due to remote object null", code);
         return false;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        APP_LOGE("receive error code %{public}d in transact %{public}hhd", result, code);
+        APP_LOGE("receive error code %{public}d in transact %{public}d", result, code);
         return false;
     }
     return true;

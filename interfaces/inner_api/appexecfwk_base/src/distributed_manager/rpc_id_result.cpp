@@ -25,15 +25,15 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* JSON_KEY_RESULT_VERSION = "version";
-const char* JSON_KEY_RESULT_TRANSACT_ID = "transactId";
-const char* JSON_KEY_RESULT_RETCODE = "retCode";
-const char* JSON_KEY_RESULT_RESULT_MSG = "resultMsg";
-const char* JSON_KEY_SUMMARY_ABILITY_INFO = "abilityInfo";
-const char* JSON_KEY_SUMMARY_ABILITY_INFO_LOGO_URL = "logoUrl";
-const char* JSON_KEY_SUMMARY_ABILITY_INFO_LABEL = "label";
-const char* JSON_KEY_SUMMARY_ABILITY_INFO_DEVICE_TYPE = "deviceType";
-const char* JSON_KEY_SUMMARY_ABILITY_INFO_RPC_ID = "rpcId";
+const std::string JSON_KEY_RESULT_VERSION = "version";
+const std::string JSON_KEY_RESULT_TRANSACT_ID = "transactId";
+const std::string JSON_KEY_RESULT_RETCODE = "retCode";
+const std::string JSON_KEY_RESULT_RESULT_MSG = "resultMsg";
+const std::string JSON_KEY_SUMMARY_ABILITY_INFO = "abilityInfo";
+const std::string JSON_KEY_SUMMARY_ABILITY_INFO_LOGO_URL = "logoUrl";
+const std::string JSON_KEY_SUMMARY_ABILITY_INFO_LABEL = "label";
+const std::string JSON_KEY_SUMMARY_ABILITY_INFO_DEVICE_TYPE = "deviceType";
+const std::string JSON_KEY_SUMMARY_ABILITY_INFO_RPC_ID = "rpcId";
 }  //  namespace
 
 void to_json(nlohmann::json &jsonObject, const SummaryAbilityInfo &summaryAbilityInfo)

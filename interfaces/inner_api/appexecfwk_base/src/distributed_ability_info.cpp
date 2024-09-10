@@ -27,9 +27,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* JSON_KEY_PERMISSIONS = "permissions";
-const char* JSON_KEY_TYPE = "type";
-const char* JSON_KEY_ENABLED = "enabled";
+const std::string JSON_KEY_PERMISSIONS = "permissions";
+const std::string JSON_KEY_TYPE = "type";
+const std::string JSON_KEY_ENABLED = "enabled";
 }
 bool DistributedAbilityInfo::ReadFromParcel(Parcel &parcel)
 {

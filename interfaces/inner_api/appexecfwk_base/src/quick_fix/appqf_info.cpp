@@ -25,12 +25,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* APP_QF_INFO_VERSION_CODE = "versionCode";
-const char* APP_QF_INFO_VERSION_NAME = "versionName";
-const char* APP_QF_INFO_CPU_ABI = "cpuAbi";
-const char* APP_QF_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
-const char* APP_QF_INFO_HQF_INFOS = "hqfInfos";
-const char* APP_QF_INFO_TYPE = "type";
+const std::string APP_QF_INFO_VERSION_CODE = "versionCode";
+const std::string APP_QF_INFO_VERSION_NAME = "versionName";
+const std::string APP_QF_INFO_CPU_ABI = "cpuAbi";
+const std::string APP_QF_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
+const std::string APP_QF_INFO_HQF_INFOS = "hqfInfos";
+const std::string APP_QF_INFO_TYPE = "type";
 }
 
 void to_json(nlohmann::json &jsonObject, const AppqfInfo &appqfInfo)

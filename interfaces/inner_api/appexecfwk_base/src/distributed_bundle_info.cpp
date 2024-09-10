@@ -26,17 +26,17 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* JSON_KEY_VERSION = "version";
-const char* JSON_KEY_VERSION_CODE = "versionCode";
-const char* JSON_KEY_COMPATIBLE_VERSION_CODE = "compatibleVersionCode";
-const char* JSON_KEY_VERSION_NAME = "versionName";
-const char* JSON_KEY_MIN_COMPATIBLE_VERSION = "minCompatibleVersion";
-const char* JSON_KEY_TARGET_VERSION_CODE = "targetVersionCode";
-const char* JSON_KEY_APP_ID = "appId";
-const char* JSON_KEY_MODULE_INFOS = "moduleInfos";
-const char* JSON_KEY_ENABLED = "enabled";
-const char* JSON_KEY_ACCESS_TOKEN_ID = "accessTokenId";
-const char* JSON_KEY_UPDATE_TIME = "updateTime";
+const std::string JSON_KEY_VERSION = "version";
+const std::string JSON_KEY_VERSION_CODE = "versionCode";
+const std::string JSON_KEY_COMPATIBLE_VERSION_CODE = "compatibleVersionCode";
+const std::string JSON_KEY_VERSION_NAME = "versionName";
+const std::string JSON_KEY_MIN_COMPATIBLE_VERSION = "minCompatibleVersion";
+const std::string JSON_KEY_TARGET_VERSION_CODE = "targetVersionCode";
+const std::string JSON_KEY_APP_ID = "appId";
+const std::string JSON_KEY_MODULE_INFOS = "moduleInfos";
+const std::string JSON_KEY_ENABLED = "enabled";
+const std::string JSON_KEY_ACCESS_TOKEN_ID = "accessTokenId";
+const std::string JSON_KEY_UPDATE_TIME = "updateTime";
 }
 bool DistributedBundleInfo::ReadFromParcel(Parcel &parcel)
 {
