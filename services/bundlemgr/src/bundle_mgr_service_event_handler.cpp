@@ -1134,6 +1134,8 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessNewBackupDir();
     RefreshQuotaForAllUid();
     ProcessCheckRecoverableApplicationInfo();
+    // Driver update may cause shader cache invalidity and need to be cleared
+    CleanAllBundleShaderCache();
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
@@ -1349,11 +1351,16 @@ void BMSEventHandler::InnerProcessCheckShaderCacheDir()
         return;
     }
     std::vector<BundleInfo> bundleInfos;
-    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, Constants::ALL_USERID)) {
+    ErrCode res = dataMgr->GetBundleInfosV9(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfos, Constants::ALL_USERID);
+    if (res != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GetAllBundleInfos failed");
         return;
     }
     for (const auto &bundleInfo : bundleInfos) {
+        if (bundleInfo.name.empty()) {
+            continue;
+        }
         std::string shaderCachePath;
         shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleInfo.name);
         ErrCode res = InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, bundleInfo.uid, bundleInfo.gid);
@@ -3759,6 +3766,33 @@ void BMSEventHandler::ProcessCheckAppEl1Dir()
         UpdateAppDataMgr::ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL1);
     }
     LOG_I(BMS_TAG_DEFAULT, "ProcessCheckAppEl1Dir end");
+}
+
+void BMSEventHandler::CleanAllBundleShaderCache() const
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode res = dataMgr->GetBundleInfosV9(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfos, Constants::ALL_USERID);
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetAllBundleInfos failed");
+        return;
+    }
+    for (const auto &bundleInfo : bundleInfos) {
+        if (bundleInfo.name.empty()) {
+            continue;
+        }
+        std::string shaderCachePath;
+        shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleInfo.name);
+        ErrCode res = InstalldClient::GetInstance()->CleanBundleDataDir(shaderCachePath);
+        if (res != ERR_OK) {
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s clean shader fail %{public}d", bundleInfo.name.c_str(), res);
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
