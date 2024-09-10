@@ -1128,8 +1128,7 @@ static bool InnerGetApplicationInfos(napi_env env, int32_t flags, const int user
 static void ProcessApplicationInfos(
     napi_env env, napi_value result, const std::vector<OHOS::AppExecFwk::ApplicationInfo> &appInfos)
 {
-    if (appInfos.size() > 0) {
-        APP_LOGI("-----appInfos is not null-----");
+    if (!appInfos.empty()) {
         size_t index = 0;
         for (const auto &item : appInfos) {
             APP_LOGI("name: %{public}s, bundleName: %{public}s ", item.name.c_str(), item.bundleName.c_str());
@@ -5028,7 +5027,7 @@ static void InnerInstall(napi_env env, const std::vector<std::string> &bundleFil
         installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     }
 
-    OHOS::sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
+    sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
     if (callback == nullptr) {
         APP_LOGE("callback nullptr");
         return;
@@ -5051,9 +5050,9 @@ static void InnerInstall(napi_env env, const std::vector<std::string> &bundleFil
         installResult.resultMsg = "STATUS_FAILED_NO_SPACE_LEFT";
     } else {
         installResult.resultCode = callback->GetResultCode();
-        APP_LOGD("InnerInstall resultCode %{public}d", installResult.resultCode);
         installResult.resultMsg = callback->GetResultMsg();
-        APP_LOGD("InnerInstall resultMsg %{public}s", installResult.resultMsg.c_str());
+        APP_LOGD("InnerInstall code:%{public}d msg:%{public}s", installResult.resultCode,
+            installResult.resultMsg.c_str());
     }
 }
 

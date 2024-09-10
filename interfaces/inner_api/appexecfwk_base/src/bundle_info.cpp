@@ -81,7 +81,7 @@ const char* APP_IDENTIFIER = "appIdentifier";
 const char* BUNDLE_INFO_OLD_APPIDS = "oldAppIds";
 const char* BUNDLE_INFO_ROUTER_ARRAY = "routerArray";
 const char* BUNDLE_INFO_IS_NEW_VERSION = "isNewVersion";
-const uint16_t BUNDLE_CAPACITY = 20480; // 20K
+const uint32_t BUNDLE_CAPACITY = 204800; // 200K
 }
 
 bool RequestPermissionUsedScene::ReadFromParcel(Parcel &parcel)

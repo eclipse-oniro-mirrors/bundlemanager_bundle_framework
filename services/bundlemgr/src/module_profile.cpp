@@ -2153,16 +2153,16 @@ bool ToAbilityInfo(
     return true;
 }
 
-void ToAbilitySkills(std::vector<Skill> skills, AbilityInfo &abilityInfo)
+void ToAbilitySkills(const std::vector<Skill> &skills, AbilityInfo &abilityInfo)
 {
-    for (Skill &skill : skills) {
+    for (const Skill &skill : skills) {
         abilityInfo.skills.push_back(skill);
     }
 }
 
-void ToExtensionAbilitySkills(std::vector<Skill> skills, ExtensionAbilityInfo &extensionInfo)
+void ToExtensionAbilitySkills(const std::vector<Skill> &skills, ExtensionAbilityInfo &extensionInfo)
 {
-    for (Skill &skill : skills) {
+    for (const Skill &skill : skills) {
         extensionInfo.skills.push_back(skill);
     }
 }

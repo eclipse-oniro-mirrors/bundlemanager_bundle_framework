@@ -110,7 +110,7 @@ const char* JSON_KEY_APP_INDEX = "appIndex";
 const char* JSON_KEY_SKILLS = "skills";
 const char* JSON_KEY_ORIENTATION_ID = "orientationId";
 const char* JSON_KEY_CONTINUE_BUNDLE_NAME = "continueBundleName";
-const uint16_t ABILITY_CAPACITY = 10240; // 10K
+const uint32_t ABILITY_CAPACITY = 204800; // 200K
 }  // namespace
 
 bool AbilityInfo::ReadFromParcel(Parcel &parcel)

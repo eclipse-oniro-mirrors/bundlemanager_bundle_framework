@@ -31,10 +31,10 @@ struct TargetInfo : public Parcelable {
     std::string action;
     std::string uri;
     std::string type;
-    int32_t flags;
-    int32_t reasonFlag;
-    int32_t callingUid;
-    int32_t callingAppType;
+    int32_t flags = 0;
+    int32_t reasonFlag = 0;
+    int32_t callingUid = 0;
+    int32_t callingAppType = 0;
     std::vector<std::string> callingBundleNames;
     std::vector<std::string> callingAppIds;
     std::vector<std::string> preloadModuleNames;
