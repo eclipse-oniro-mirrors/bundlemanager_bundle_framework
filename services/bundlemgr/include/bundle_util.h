@@ -184,7 +184,7 @@ public:
     static int32_t CreateFileDescriptor(const std::string &bundlePath, long long offset);
     static int32_t CreateFileDescriptorForReadOnly(const std::string &bundlePath, long long offset);
     static void CloseFileDescriptor(std::vector<int32_t> &fdVec);
-    static Resource GetResource(const std::string &bundleName, const std::string &moduleName, int32_t resId);
+    static Resource GetResource(const std::string &bundleName, const std::string &moduleName, uint32_t resId);
     static bool CreateDir(const std::string &dir);
     static bool RevertToRealPath(const std::string &sandBoxPath, const std::string &bundleName, std::string &realPath);
     static bool StartWith(const std::string &source, const std::string &suffix);
