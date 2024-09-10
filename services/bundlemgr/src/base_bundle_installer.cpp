@@ -4360,26 +4360,68 @@ bool BaseBundleInstaller::UpdateEncryptedStatus()
     info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
     info.uid = innerBundleInfo.GetUid(userId_);
     std::vector<CodeProtectBundleInfo> infos { info };
+    bool oldAppEncrypted = oldApplicationReservedFlag_ &
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
+    bool newAppEncrypted = innerBundleInfo.GetApplicationReservedFlag() &
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    if (!isAppExist_ && (innerBundleInfo.GetApplicationReservedFlag() ==
-        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION))) {
+    if (!isAppExist_ && newAppEncrypted) {
         // add a new encrypted app, need to add operation
-        return bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::ADD) == ERR_OK;
+        auto res = bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::ADD);
+        ProcessEncryptedKeyExisted(res, CodeOperation::ADD, infos);
+        return res == ERR_OK;
     }
-    if (isAppExist_ && (oldApplicationReservedFlag_ ==
-        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION))
-        && (innerBundleInfo.GetApplicationReservedFlag() !=
-        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION))) {
+    if (isAppExist_ && oldAppEncrypted && !newAppEncrypted) {
         // new app is not a encrypted app, need to delete operation on main app & all clone app
-        return bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::DELETE) == ERR_OK;
+        auto res = bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::DELETE);
+        ProcessEncryptedKeyExisted(res, CodeOperation::DELETE, infos);
+        return res == ERR_OK;
     }
-    if (isAppExist_ && (innerBundleInfo.GetApplicationReservedFlag() ==
-        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION))) {
+    if (isAppExist_ && newAppEncrypted) {
         // update a new encrypted app, need to update operation
         GetAllConeCodeProtectBundleInfos(infos, innerBundleInfo);
-        return bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::UPDATE) == ERR_OK;
+        auto res = bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::UPDATE);
+        ProcessEncryptedKeyExisted(res, CodeOperation::UPDATE, infos);
+        return res == ERR_OK;
     }
     return true;
+}
+
+void BaseBundleInstaller::ProcessEncryptedKeyExisted(int32_t res, uint32_t type,
+    const std::vector<CodeProtectBundleInfo> &infos)
+{
+    if (!InitDataMgr() || infos.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed or infos is empty");
+        return;
+    }
+    std::string bundleName = infos.begin()->bundleName;
+    if (type == CodeOperation::ADD) {
+        if (res == ERR_OK) {
+            dataMgr_->UpdateAppEncryptedStatus(bundleName, true, 0);
+        } else {
+            dataMgr_->UpdateAppEncryptedStatus(bundleName, false, 0);
+        }
+        return;
+    } else if (type == CodeOperation::DELETE) {
+        if (res == ERR_OK) {
+            dataMgr_->UpdateAppEncryptedStatus(bundleName, false, 0);
+        } else {
+            dataMgr_->UpdateAppEncryptedStatus(bundleName, true, 0);
+        }
+        return;
+    }
+    // UPDATE
+    if (res == ERR_OK) {
+        dataMgr_->UpdateAppEncryptedStatus(bundleName, true, 0);
+        for (const auto &codeProtectBundleInfo : infos) {
+            dataMgr_->UpdateAppEncryptedStatus(bundleName, true, codeProtectBundleInfo.appIndex);
+        }
+    } else {
+        dataMgr_->UpdateAppEncryptedStatus(bundleName, false, 0);
+        for (const auto &codeProtectBundleInfo : infos) {
+            dataMgr_->UpdateAppEncryptedStatus(bundleName, false, codeProtectBundleInfo.appIndex);
+        }
+    }
 }
 
 void BaseBundleInstaller::GetAllConeCodeProtectBundleInfos(std::vector<CodeProtectBundleInfo> &infos,
@@ -4410,7 +4452,9 @@ void BaseBundleInstaller::GetAllConeCodeProtectBundleInfos(std::vector<CodeProte
 
 bool BaseBundleInstaller::DeleteEncryptedStatus(const std::string &bundleName, int32_t uid)
 {
-    if (oldApplicationReservedFlag_ != static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION)) {
+    bool oldAppEncrypted = oldApplicationReservedFlag_ &
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
+    if (!oldAppEncrypted) {
         return true;
     }
     CodeProtectBundleInfo info;
@@ -4646,6 +4690,10 @@ void BaseBundleInstaller::ResetInstallProperties()
     appIdentifier_.clear();
     targetSoPathMap_.clear();
     isAppService_ = false;
+    oldApplicationReservedFlag_ = 0;
+    newExtensionDirs_.clear();
+    createExtensionDirs_.clear();
+    removeExtensionDirs_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool killProcess)

@@ -324,8 +324,9 @@ bool BundleCloneInstaller::AddKeyOperation(
         APP_LOGE("get failed");
         return false;
     }
-    if (innerBundleInfo.GetApplicationReservedFlag() !=
-        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION)) {
+    bool appEncrypted = innerBundleInfo.GetApplicationReservedFlag() &
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
+    if (!appEncrypted) {
         return true;
     }
     CodeProtectBundleInfo info;
@@ -336,7 +337,13 @@ bool BundleCloneInstaller::AddKeyOperation(
     info.appIndex = appIndex;
 
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    return bmsExtensionDataMgr.KeyOperation(std::vector<CodeProtectBundleInfo> { info }, CodeOperation::ADD) == ERR_OK;
+    auto res = bmsExtensionDataMgr.KeyOperation(std::vector<CodeProtectBundleInfo> { info }, CodeOperation::ADD);
+    if (res == ERR_OK) {
+        dataMgr_->UpdateAppEncryptedStatus(bundleName, true, appIndex);
+    } else {
+        dataMgr_->UpdateAppEncryptedStatus(bundleName, false, appIndex);
+    }
+    return res == ERR_OK;
 }
 
 ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,

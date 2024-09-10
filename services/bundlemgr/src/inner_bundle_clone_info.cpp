@@ -27,6 +27,7 @@ const std::string BUNDLE_CLONE_INFO_DISABLE_ABILITIES = "disabledAbilities";
 const std::string BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID = "accessTokenId";
 const std::string BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID_EX = "accessTokenIdEx";
 const std::string BUNDLE_CLONE_INFO_INSTALL_TIME = "installTime";
+const std::string BUNDLE_CLONE_INFO_ENCRYPTED_KEY_EXISTED = "encryptedKeyExisted";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const InnerBundleCloneInfo& bundleCloneInfo)
@@ -41,6 +42,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleCloneInfo& bundleClone
         {BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID, bundleCloneInfo.accessTokenId},
         {BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID_EX, bundleCloneInfo.accessTokenIdEx},
         {BUNDLE_CLONE_INFO_INSTALL_TIME, bundleCloneInfo.installTime},
+        {BUNDLE_CLONE_INFO_ENCRYPTED_KEY_EXISTED, bundleCloneInfo.encryptedKeyExisted}
     };
 }
 
@@ -66,6 +68,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleClo
         bundleCloneInfo.accessTokenIdEx, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int64_t>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_INSTALL_TIME,
         bundleCloneInfo.installTime, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_ENCRYPTED_KEY_EXISTED,
+        bundleCloneInfo.encryptedKeyExisted, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read module bundleCloneInfo from jsonObject error, error code : %{public}d", parseResult);
     }

@@ -5107,6 +5107,34 @@ ErrCode BundleMgrProxy::GetSignatureInfoByBundleName(const std::string &bundleNa
     return GetParcelInfoIntelligent<SignatureInfo>(BundleMgrInterfaceCode::GET_SIGNATURE_INFO, data, signatureInfo);
 }
 
+ErrCode BundleMgrProxy::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("UpdateAppEncryptedStatus write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isExisted)) {
+        APP_LOGE("write isExisted failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::UPDATE_APP_ENCRYPTED_KEY_STATUS, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

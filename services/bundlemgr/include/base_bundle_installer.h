@@ -670,6 +670,8 @@ private:
         const InnerBundleInfo &innerBundleInfo);
     bool UpdateEncryptedStatus();
     bool DeleteEncryptedStatus(const std::string &bundleName, int32_t uid);
+    void ProcessEncryptedKeyExisted(int32_t res, uint32_t type,
+        const std::vector<CodeProtectBundleInfo> &infos);
     ErrCode VerifyCodeSignatureForNativeFiles(InnerBundleInfo &info, const std::string &cpuAbi,
         const std::string &targetSoPath, const std::string &signatureFileDir) const;
     ErrCode VerifyCodeSignatureForHap(const std::unordered_map<std::string, InnerBundleInfo> &infos,

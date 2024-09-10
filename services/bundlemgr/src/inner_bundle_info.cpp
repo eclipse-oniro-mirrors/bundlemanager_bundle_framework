@@ -2504,6 +2504,7 @@ void InnerBundleInfo::ProcessBundleFlags(
             GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId,
                 bundleInfo.applicationInfo, appIndex);
         }
+        GetApplicationReservedFlagAdaptClone(bundleInfo.applicationInfo, appIndex);
     }
     bundleInfo.applicationInfo.appIndex = appIndex;
     GetBundleWithReqPermissionsV9(flags, userId, bundleInfo, appIndex);
@@ -2513,6 +2514,35 @@ void InnerBundleInfo::ProcessBundleFlags(
         bundleInfo.signatureInfo.appId = baseBundleInfo_->appId;
         bundleInfo.signatureInfo.fingerprint = baseApplicationInfo_->fingerprint;
         bundleInfo.signatureInfo.certificate = baseBundleInfo_->signatureInfo.certificate;
+    }
+}
+
+void InnerBundleInfo::GetApplicationReservedFlagAdaptClone(ApplicationInfo &appInfo, int32_t appIndex) const
+{
+    if (appIndex == 0) {
+        return;
+    }
+    bool encryptedKeyExisted = false;
+    bool hasFoundAppIndex = false;
+    for (auto &innerUserInfo : innerBundleUserInfos_) {
+        auto cloneIter = innerUserInfo.second.cloneInfos.find(std::to_string(appIndex));
+        if (cloneIter == innerUserInfo.second.cloneInfos.end()) {
+            continue;
+        }
+        hasFoundAppIndex = true;
+        encryptedKeyExisted = cloneIter->second.encryptedKeyExisted;
+        break;
+    }
+    if (!hasFoundAppIndex) {
+        APP_LOGE("index %{public}d not found", appIndex);
+        return;
+    }
+    if (encryptedKeyExisted) {
+        // Set the second bit to 1
+        appInfo.applicationReservedFlag |= static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED);
+    } else {
+        // Set the second bit to 0
+        appInfo.applicationReservedFlag &= ~(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED));
     }
 }
 
@@ -3556,6 +3586,31 @@ bool InnerBundleInfo::SetModuleRemovable(const std::string &moduleName, bool isE
     }
 
     return false;
+}
+
+ErrCode InnerBundleInfo::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)
+{
+    APP_LOGI("update encrypted key %{public}s %{public}d %{public}d", bundleName.c_str(), isExisted, appIndex);
+    if (appIndex == 0) {
+        if (isExisted) {
+            // Set the second bit to 1
+            SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED));
+        } else {
+            // Set the second bit to 0
+            ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED));
+        }
+        return ERR_OK;
+    }
+    bool hasFoundAppIndex = false;
+    for (auto &innerUserInfo : innerBundleUserInfos_) {
+        auto cloneIter = innerUserInfo.second.cloneInfos.find(std::to_string(appIndex));
+        if (cloneIter == innerUserInfo.second.cloneInfos.end()) {
+            continue;
+        }
+        hasFoundAppIndex = true;
+        cloneIter->second.encryptedKeyExisted = isExisted;
+    }
+    return hasFoundAppIndex ? ERR_OK : ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP;
 }
 
 void InnerBundleInfo::DeleteModuleRemovableInfo(InnerModuleInfo &info, const std::string &stringUserId)

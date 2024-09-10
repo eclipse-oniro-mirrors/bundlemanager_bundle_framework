@@ -66,8 +66,10 @@ enum class CompatiblePolicy {
     BACKWARD_COMPATIBILITY = 1,
 };
 
+// Each bit of this ApplicationReservedFlag value identifies relevant information
 enum class ApplicationReservedFlag {
     ENCRYPTED_APPLICATION = 0x00000001,
+    ENCRYPTED_KEY_EXISTED = 0x00000002,
 };
 
 enum class MultiAppModeType : uint8_t {
@@ -221,7 +223,7 @@ struct ApplicationInfo : public Parcelable {
     bool distributedNotificationEnabled = true;
     std::vector<int32_t> resourcesApply;
     std::vector<std::string> allowCommonEvent;
-    
+
     bool allowEnableNotification = false;
     bool gwpAsanEnabled = false;
     int32_t supportedModes = 0;  // returns 0 if the application does not support the driving mode
