@@ -2637,6 +2637,14 @@ void BMSEventHandler::ListeningUserUnlocked() const
     subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
+    if (AccountHelper::IsOsAccountVerified(Constants::START_USERID)) {
+        LOG_I(BMS_TAG_DEFAULT, "user 100 is unlocked");
+        OHOS::AAFwk::Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+        EventFwk::CommonEventData data { want };
+        data.SetCode(Constants::START_USERID);
+        subscriberPtr->OnReceiveEvent(data);
+    }
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
         LOG_W(BMS_TAG_DEFAULT, "BMSEventHandler subscribe common event %{public}s failed",
             EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED.c_str());
