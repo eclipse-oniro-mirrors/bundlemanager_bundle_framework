@@ -138,9 +138,15 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
     if (dataGroupInfos.empty()) {
         return;
     }
+
+    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+        + std::to_string(userId);
+    if (!BundleUtil::IsExistDir(parentDir)) {
+        APP_LOGE("parent dir(%{public}s) missing: group", parentDir.c_str());
+        return;
+    }
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
-        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-            + std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         APP_LOGD("create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
             DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
@@ -253,12 +259,18 @@ void UpdateAppDataMgr::ProcessNewBackupDir(const std::vector<BundleInfo> &bundle
 
 void UpdateAppDataMgr::CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t userId)
 {
-    std::string backupDirEl1 = BUNDLE_BACKUP_HOME_PATH_EL1_NEW + bundleInfo.name + BUNDLE_BACKUP_INNER_DIR;
-    backupDirEl1 = backupDirEl1.replace(backupDirEl1.find("%"), 1, std::to_string(userId));
+    std::string parentEl1Dir = BUNDLE_BACKUP_HOME_PATH_EL1_NEW;
+    parentEl1Dir = parentEl1Dir.replace(parentEl1Dir.find("%"), 1, std::to_string(userId));
+    std::string parentEl2Dir = BUNDLE_BACKUP_HOME_PATH_EL2_NEW;
+    parentEl2Dir = parentEl2Dir.replace(parentEl2Dir.find("%"), 1, std::to_string(userId));
+    if (!BundleUtil::IsExistDir(parentEl1Dir) || !BundleUtil::IsExistDir(parentEl2Dir)) {
+        APP_LOGE("parent dir(%{public}s or %{public}s) missing: backup", parentEl1Dir.c_str(), parentEl2Dir.c_str());
+        return;
+    }
+    std::string backupDirEl1 = parentEl1Dir + bundleInfo.name + BUNDLE_BACKUP_INNER_DIR;
+    std::string backupDirEl2 = parentEl2Dir + bundleInfo.name + BUNDLE_BACKUP_INNER_DIR;
     std::vector<std::string> backupDirList;
     backupDirList.emplace_back(backupDirEl1);
-    std::string backupDirEl2 = BUNDLE_BACKUP_HOME_PATH_EL2_NEW + bundleInfo.name + BUNDLE_BACKUP_INNER_DIR;
-    backupDirEl2 = backupDirEl2.replace(backupDirEl2.find("%"), 1, std::to_string(userId));
     backupDirList.emplace_back(backupDirEl2);
 
     for (const std::string &dir : backupDirList) {
@@ -279,8 +291,13 @@ void UpdateAppDataMgr::CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t 
 
 bool UpdateAppDataMgr::CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t userId)
 {
-    std::string bundleLogDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::LOG + bundleInfo.name;
+    std::string parentDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::LOG;
+    if (!BundleUtil::IsExistDir(parentDir)) {
+        APP_LOGE("parent dir(%{public}s) missing: log", parentDir.c_str());
+        return false;
+    }
+    std::string bundleLogDir = parentDir + bundleInfo.name;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(bundleLogDir, isExist) != ERR_OK) {
         APP_LOGE("path: %{public}s IsExistDir failed", bundleLogDir.c_str());
@@ -310,9 +327,13 @@ void UpdateAppDataMgr::ProcessFileManagerDir(const std::vector<BundleInfo> &bund
 
 bool UpdateAppDataMgr::CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_t userId)
 {
-    const std::string CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
-    std::string bundleCloudDir = CLOUD_FILE_PATH + bundleInfo.name;
-    bundleCloudDir = bundleCloudDir.replace(bundleCloudDir.find("%"), 1, std::to_string(userId));
+    std::string parentDir = "/data/service/el2/%/hmdfs/cloud/data/";
+    parentDir = parentDir.replace(parentDir.find("%"), 1, std::to_string(userId));
+    if (!BundleUtil::IsExistDir(parentDir)) {
+        APP_LOGE("parent dir(%{public}s) missing: cloud", parentDir.c_str());
+        return false;
+    }
+    std::string bundleCloudDir = parentDir + bundleInfo.name;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(bundleCloudDir, isExist) != ERR_OK) {
         APP_LOGE("path: %{private}s IsExistDir failed", bundleCloudDir.c_str());
