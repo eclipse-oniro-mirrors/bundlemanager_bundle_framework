@@ -43,7 +43,7 @@ PreinstalledApplicationInfo *PreinstalledApplicationInfo::Unmarshalling(Parcel &
         APP_LOGE("Info is null");
         return nullptr;
     }
-    if (info && !info->ReadFromParcel(parcel)) {
+    if (!info->ReadFromParcel(parcel)) {
         APP_LOGW("Read from parcel failed");
         delete info;
         info = nullptr;

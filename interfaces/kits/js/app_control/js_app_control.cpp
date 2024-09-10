@@ -152,7 +152,7 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
-            asyncCallbackInfo->err = asyncCallbackInfo->appId.size() == 0 ? ERROR_INVALID_APPID : NO_ERROR;
+            asyncCallbackInfo->err = asyncCallbackInfo->appId.empty() ? ERROR_INVALID_APPID : NO_ERROR;
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseWantWithoutVerification(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("disposed want invalid");
@@ -195,7 +195,7 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nRet;
     }
-    if (appId.size() == 0) {
+    if (appId.empty()) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ERROR_INVALID_APPID, SET_DISPOSED_STATUS_SYNC);
         napi_throw(env, businessError);
@@ -282,7 +282,7 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
-            if (asyncCallbackInfo->appId.size() == 0) {
+            if (asyncCallbackInfo->appId.empty()) {
                 asyncCallbackInfo->err = ERROR_INVALID_APPID;
             }
         } else if (i == ARGS_POS_ONE) {
@@ -308,7 +308,7 @@ static napi_value InnerDeleteDisposedStatusSync(napi_env env, std::string &appId
 {
     napi_value nRet;
     napi_get_undefined(env, &nRet);
-    if (appId.size() == 0) {
+    if (appId.empty()) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ERROR_INVALID_APPID, DELETE_DISPOSED_STATUS_SYNC);
         napi_throw(env, businessError);
@@ -429,7 +429,7 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
-            if (asyncCallbackInfo->appId.size() == 0) {
+            if (asyncCallbackInfo->appId.empty()) {
                 asyncCallbackInfo->err = ERROR_INVALID_APPID;
             }
         } else if (i == ARGS_POS_ONE) {
@@ -466,7 +466,7 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nullptr;
     }
-    if (appId.size() == 0) {
+    if (appId.empty()) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ERROR_INVALID_APPID, GET_DISPOSED_STATUS_SYNC);
         napi_throw(env, businessError);
@@ -613,7 +613,7 @@ bool ParseDiposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
 
 static napi_value InnerGetDisposedRule(napi_env env, std::string &appId, int32_t appIndex)
 {
-    if (appId.size() == 0) {
+    if (appId.empty()) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ERROR_INVALID_APPID, GET_DISPOSED_STATUS_SYNC);
         napi_throw(env, businessError);
@@ -723,7 +723,7 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nRet;
     }
-    if (appId.size() == 0) {
+    if (appId.empty()) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ERROR_INVALID_APPID, SET_DISPOSED_STATUS_SYNC);
         napi_throw(env, businessError);

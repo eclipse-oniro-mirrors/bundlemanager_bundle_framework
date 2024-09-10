@@ -89,7 +89,7 @@ bool BundleFileUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, 
 
     if (bundlePaths.size() == 1) {
         APP_LOGD("bundlePaths only has one element");
-        std::string bundlePath = bundlePaths.front();
+        const std::string& bundlePath = bundlePaths.front();
         std::string realPath = "";
         // it is a file
         if (CheckFilePath(bundlePaths.front(), realPath)) {

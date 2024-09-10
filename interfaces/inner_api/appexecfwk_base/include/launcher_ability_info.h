@@ -24,7 +24,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct LauncherAbilityInfo {
-public:
     ApplicationInfo applicationInfo;
     ElementName elementName; // bundle name , ability name, deviceid
     uint32_t labelId = 0;
