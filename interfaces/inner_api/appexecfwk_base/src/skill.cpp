@@ -65,7 +65,7 @@ bool Skill::Match(const OHOS::AAFwk::Want &want) const
         return MatchLinkFeature(linkFeature, want, matchUriIndex);
     }
 
-    if (!MatchActionAndEntities(want)) {
+    if (!MatchLauncher(want)) {
         APP_LOGD("Action or entities does not match");
         return false;
     }
@@ -95,7 +95,7 @@ bool Skill::Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const
         return MatchLinkFeature(linkFeature, want, matchUriIndex);
     }
 
-    if (!MatchActionAndEntities(want)) {
+    if (!MatchLauncher(want)) {
         APP_LOGD("Action or entities does not match");
         return false;
     }
@@ -117,6 +117,7 @@ bool Skill::Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const
     }
     return true;
 }
+
 
 bool Skill::MatchLauncher(const OHOS::AAFwk::Want &want) const
 {
@@ -176,21 +177,6 @@ bool Skill::MatchEntities(const std::vector<std::string> &paramEntities) const
         if (ret) {
             return false;
         }
-    }
-    return true;
-}
-
-bool Skill::MatchActionAndEntities(const OHOS::AAFwk::Want &want) const
-{
-    bool matchAction = MatchAction(want.GetAction());
-    if (!matchAction) {
-        APP_LOGD("Action does not match");
-        return false;
-    }
-    bool matchEntities = MatchEntities(want.GetEntities());
-    if (!matchEntities) {
-        APP_LOGD("Entities does not match");
-        return false;
     }
     return true;
 }

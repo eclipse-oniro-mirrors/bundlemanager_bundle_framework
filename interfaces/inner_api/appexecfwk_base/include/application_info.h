@@ -317,7 +317,7 @@ struct ApplicationInfo : public Parcelable {
     bool ReadMetaDataFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static ApplicationInfo *Unmarshalling(Parcel &parcel);
-    void Dump(std::string prefix, int fd);
+    void Dump(const std::string &prefix, int fd);
     void ConvertToCompatibleApplicationInfo(CompatibleApplicationInfo& compatibleApplicationInfo) const;
     bool CheckNeedPreload(const std::string &moduleName) const;
 };

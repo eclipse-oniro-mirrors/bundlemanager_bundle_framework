@@ -62,6 +62,10 @@ ErrCode AppControlManagerHostImpl::AddAppInstallControlRule(const std::vector<st
         LOG_E(BMS_TAG_DEFAULT, "controlRuleType is invalid");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID;
     }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     auto ret = appControlManager_->AddAppInstallControlRule(callingName, appIds, ruleType, userId);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "AddAppInstallControlRule failed due to error %{public}d", ret);
@@ -86,6 +90,10 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
     if (callingName.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "callingName is invalid");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     auto ret = appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, appIds, userId);
     if (ret != ERR_OK) {
@@ -112,6 +120,10 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
         LOG_E(BMS_TAG_DEFAULT, "controlRuleType is invalid");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID;
     }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     auto ret = appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, userId);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "CleanAppInstallControlRule failed due to error %{public}d", ret);
@@ -137,7 +149,10 @@ ErrCode AppControlManagerHostImpl::GetAppInstallControlRule(
         LOG_E(BMS_TAG_DEFAULT, "controlRuleType is invalid");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID;
     }
-
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     return appControlManager_->GetAppInstallControlRule(callingName, ruleType, userId, appIds);
 }
 
@@ -148,6 +163,10 @@ ErrCode AppControlManagerHostImpl::AddAppRunningControlRule(
     if (callingName.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "callingName is invalid");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return appControlManager_->AddAppRunningControlRule(callingName, controlRules, userId);
 }
@@ -169,6 +188,10 @@ ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(int32_t userId)
     if (callingName.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "callingName is invalid");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return appControlManager_->DeleteAppRunningControlRule(callingName, userId);
 }
@@ -192,6 +215,10 @@ ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(
             uid, OHOS::IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     return appControlManager_->GetAppRunningControlRule(bundleName, userId, controlRuleResult);
 }
 
@@ -214,6 +241,10 @@ ErrCode AppControlManagerHostImpl::AddAppJumpControlRule(const std::vector<AppJu
         LOG_E(BMS_TAG_DEFAULT, "callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     return appControlManager_->AddAppJumpControlRule(controlRules, userId);
 }
 
@@ -225,6 +256,10 @@ ErrCode AppControlManagerHostImpl::DeleteAppJumpControlRule(const std::vector<Ap
         LOG_E(BMS_TAG_DEFAULT, "callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     return appControlManager_->DeleteAppJumpControlRule(controlRules, userId);
 }
 
@@ -234,6 +269,10 @@ ErrCode AppControlManagerHostImpl::DeleteRuleByCallerBundleName(const std::strin
     if (uid != AppControlConstants::FOUNDATION_UID) {
         LOG_E(BMS_TAG_DEFAULT, "callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return appControlManager_->DeleteRuleByCallerBundleName(callerBundleName, userId);
 }
@@ -255,6 +294,10 @@ ErrCode AppControlManagerHostImpl::GetAppJumpControlRule(const std::string &call
     if (uid != AppControlConstants::FOUNDATION_UID) {
         LOG_W(BMS_TAG_DEFAULT, "calling permission denied, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return appControlManager_->GetAppJumpControlRule(callerBundleName, targetBundleName, userId, controlRule);
 }
@@ -299,6 +342,10 @@ ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, c
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
     }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     ErrCode ret = appControlManager_->SetDisposedStatus(appId, want, userId);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "host SetDisposedStatus error:%{public}d", ret);
@@ -319,6 +366,10 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     ErrCode ret = appControlManager_->DeleteDisposedStatus(appId, userId);
     if (ret != ERR_OK) {
@@ -350,6 +401,10 @@ ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, W
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
     }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     ErrCode ret = appControlManager_->GetDisposedStatus(appId, want, userId);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "host GetDisposedStatus error:%{public}d", ret);
@@ -361,6 +416,10 @@ void AppControlManagerHostImpl::UpdateAppControlledInfo(int32_t userId) const
 {
     LOG_D(BMS_TAG_DEFAULT, "start to UpdateAppControlledInfo under userId %{public}d", userId);
     std::vector<std::string> appIds;
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return;
+    }
     ErrCode ret = appControlManager_->GetAppInstallControlRule(AppControlConstants::EDM_CALLING,
         AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
     if (ret != ERR_OK) {
@@ -414,6 +473,10 @@ ErrCode AppControlManagerHostImpl::GetDisposedRule(const std::string &appId, Dis
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
     }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     auto ret = appControlManager_->GetDisposedRule(callerName, appId, rule, Constants::MAIN_APP_INDEX, userId);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "host GetDisposedStatus error:%{public}d", ret);
@@ -442,6 +505,10 @@ ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, Dis
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
     }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     auto ret = appControlManager_->SetDisposedRule(callerName, appId, rule, Constants::MAIN_APP_INDEX, userId);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "host GetDisposedStatus error:%{public}d", ret);
@@ -456,6 +523,10 @@ ErrCode AppControlManagerHostImpl::GetAbilityRunningControlRule(const std::strin
     if (uid != AppControlConstants::FOUNDATION_UID) {
         LOG_E(BMS_TAG_DEFAULT, "callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return appControlManager_->GetAbilityRunningControlRule(bundleName, appIndex, userId,
         disposedRules);
@@ -483,6 +554,10 @@ ErrCode AppControlManagerHostImpl::GetDisposedRuleForCloneApp(const std::string 
     GetCallerByUid(uid, callerName);
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     auto ret = appControlManager_->GetDisposedRule(callerName, appId, rule, appIndex, userId);
     if (ret != ERR_OK) {
@@ -516,6 +591,10 @@ ErrCode AppControlManagerHostImpl::SetDisposedRuleForCloneApp(const std::string 
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
     }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     auto ret = appControlManager_->SetDisposedRule(callerName, appId, rule, appIndex, userId);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "SetDisposedRuleForCloneApp error:%{public}d, appIndex:%{public}d", ret, appIndex);
@@ -540,6 +619,10 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedRuleForCloneApp(const std::stri
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     ErrCode ret = ERR_OK;
     if (appIndex == Constants::MAIN_APP_INDEX) {
