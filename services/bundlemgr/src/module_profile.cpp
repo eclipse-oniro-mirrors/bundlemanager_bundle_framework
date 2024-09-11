@@ -2027,7 +2027,7 @@ MultiAppModeType ToMultiAppModeType(const std::string &type)
     return MultiAppModeType::UNSPECIFIED;
 }
 
-bool ToInnerProfileConfiguration(
+void ToInnerProfileConfiguration(
     const BundleExtractor &bundleExtractor,
     const std::string &configuration,
     std::string &result)
@@ -2037,23 +2037,22 @@ bool ToInnerProfileConfiguration(
     constexpr const char* JSON_SUFFIX = ".json";
     auto pos = configuration.find(PROFILE_PREFIX);
     if (pos == std::string::npos) {
-        APP_LOGD("invalid profile configuration");
-        return false;
+        APP_LOGE("invalid profile configuration");
+        return;
     }
     std::string profileConfiguration = configuration.substr(pos + strlen(PROFILE_PREFIX));
     std::string profilePath = PROFILE_PATH + profileConfiguration + JSON_SUFFIX;
 
     if (!bundleExtractor.HasEntry(profilePath)) {
-        APP_LOGE("profile not exist");
-        return false;
+        APP_LOGI("profile not exist");
+        return;
     }
     std::stringstream profileStream;
     if (!bundleExtractor.ExtractByName(profilePath, profileStream)) {
         APP_LOGE("extract profile failed");
-        return false;
+        return;
     }
     result = profileStream.str();
-    return true;
 }
 
 bool ToApplicationInfo(
@@ -2176,10 +2175,7 @@ bool ToApplicationInfo(
     }
     applicationInfo.maxChildProcess = app.maxChildProcess;
     if (app.configuration != "") {
-        if (!ToInnerProfileConfiguration(bundleExtractor, app.configuration, applicationInfo.configuration)) {
-            APP_LOGE("parse profile configuration fail %{public}s", app.configuration.c_str());
-            return false;
-        }
+        ToInnerProfileConfiguration(bundleExtractor, app.configuration, applicationInfo.configuration);
     }
     applicationInfo.cloudFileSyncEnabled = app.cloudFileSyncEnabled;
     return true;
