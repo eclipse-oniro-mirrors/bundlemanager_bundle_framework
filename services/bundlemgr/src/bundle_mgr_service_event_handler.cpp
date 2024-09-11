@@ -1649,6 +1649,7 @@ void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
     InnerProcessRebootSharedBundleInstall(sharedBundleDirs, Constants::AppType::SYSTEM_APP);
     InnerProcessRebootBundleInstall(bundleDirs, Constants::AppType::SYSTEM_APP);
     InnerProcessStockBundleProvisionInfo();
+    InnerProcessStockBundleRouterInfo();
 }
 
 void BMSEventHandler::ProcessRebootBundleInstallFromScan()
@@ -1658,6 +1659,7 @@ void BMSEventHandler::ProcessRebootBundleInstallFromScan()
     GetBundleDirFromScan(bundleDirs);
     InnerProcessRebootBundleInstall(bundleDirs, Constants::AppType::SYSTEM_APP);
     InnerProcessStockBundleProvisionInfo();
+    InnerProcessStockBundleRouterInfo();
 }
 
 void BMSEventHandler::InnerProcessRebootBundleInstall(
@@ -3493,6 +3495,35 @@ void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<
                 + sharedBundleInfo.sharedModuleInfos[0].name + ServiceConstants::PATH_SEPARATOR
                 + sharedBundleInfo.sharedModuleInfos[0].name + ServiceConstants::HSP_FILE_SUFFIX;
             AddStockAppProvisionInfoByOTA(sharedBundleInfo.name, hspPath);
+        }
+    }
+}
+
+void BMSEventHandler::InnerProcessStockBundleRouterInfo()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::set<std::string> bundleNames;
+    dataMgr->GetAllBundleNames(bundleNames);
+    std::vector<BundleInfo> bundleInfos;
+    if (dataMgr->GetBundleInfosV9(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE),
+        bundleInfos, Constants::ALL_USERID) != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetBundleInfos failed");
+        return;
+    }
+    for (const auto &bundleInfo : bundleInfos) {
+        bool hasRouter = false;
+        for (const HapModuleInfo &hapModuleInfo : bundleInfo.hapModuleInfos) {
+            if (!hapModuleInfo.routerMap.empty()) {
+                hasRouter = true;
+                break;
+            }
+        }
+        if (hasRouter && (bundleNames.find(bundleInfo.name) == bundleNames.end())) {
+            dataMgr->UpdateRouterInfo(bundleInfo.name);
         }
     }
 }

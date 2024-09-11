@@ -530,6 +530,7 @@ private:
     void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
     void RefreshQuotaForAllUid();
+    void InnerProcessStockBundleRouterInfo();
 
     bool InnerProcessUninstallModule(const BundleInfo &bundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos, bool &isDownGrade);
