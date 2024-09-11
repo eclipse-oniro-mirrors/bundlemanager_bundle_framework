@@ -5964,8 +5964,8 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
         FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
         if (!abilityInfos.empty() || !extensionInfos.empty()) {
             APP_LOGI("find target default application");
+            findDefaultApp = true;
             if (want.GetUriString().rfind(SCHEME_HTTPS, 0) != 0) {
-                findDefaultApp = true;
                 return true;
             }
             for (auto &info : abilityInfos) {
@@ -5979,8 +5979,8 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
         FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
         if (!abilityInfos.empty() || !extensionInfos.empty()) {
             APP_LOGI("find target backup default application");
+            findDefaultApp = true;
             if (want.GetUriString().rfind(SCHEME_HTTPS, 0) != 0) {
-                findDefaultApp = true;
                 return true;
             }
             for (auto &info : abilityInfos) {
