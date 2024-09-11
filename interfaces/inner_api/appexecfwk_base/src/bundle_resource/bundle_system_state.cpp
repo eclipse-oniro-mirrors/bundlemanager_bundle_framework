@@ -81,22 +81,18 @@ bool BundleSystemState::FromString(const std::string &systemState)
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
     std::unique_lock<std::shared_mutex> stateLock(stateMutex_);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_COLOR_MODE,
         colorMode_,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_LANGUAGE,
         language_,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read systemState jsonObject error : %{public}d", parseResult);
         return false;

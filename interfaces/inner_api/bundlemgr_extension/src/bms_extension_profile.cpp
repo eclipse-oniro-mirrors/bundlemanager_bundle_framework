@@ -108,12 +108,12 @@ ErrCode BmsExtensionProfile::TransformTo(const nlohmann::json &jsonObject,
     }
     const auto &jsonObjectEnd = bundleMgrJson.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(bundleMgrJson, jsonObjectEnd, BUNDLE_MGR_KEY_EXTENSION_NAME,
-        bmsExtension.bmsExtensionBundleMgr.extensionName, JsonType::STRING, true, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(bundleMgrJson, jsonObjectEnd, BUNDLE_MGR_KEY_LIB_PATH,
-        bmsExtension.bmsExtensionBundleMgr.libPath, JsonType::STRING, true, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(bundleMgrJson, jsonObjectEnd, BUNDLE_MGR_KEY_LIB64_PATH,
-        bmsExtension.bmsExtensionBundleMgr.lib64Path, JsonType::STRING, true, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(bundleMgrJson, jsonObjectEnd, BUNDLE_MGR_KEY_EXTENSION_NAME,
+        bmsExtension.bmsExtensionBundleMgr.extensionName, true, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(bundleMgrJson, jsonObjectEnd, BUNDLE_MGR_KEY_LIB_PATH,
+        bmsExtension.bmsExtensionBundleMgr.libPath, true, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(bundleMgrJson, jsonObjectEnd, BUNDLE_MGR_KEY_LIB64_PATH,
+        bmsExtension.bmsExtensionBundleMgr.lib64Path, true, parseResult);
     return parseResult;
 }
 }  // namespace AppExecFwk

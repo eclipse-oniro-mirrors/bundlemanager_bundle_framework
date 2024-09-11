@@ -73,22 +73,18 @@ void from_json(const nlohmann::json &jsonObject, OverlayBundleInfo &overlayBundl
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_OVERLAY_BUNDLE_NAME,
         overlayBundleInfo.bundleName,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_OVERLAY_BUNDLE_DIR,
         overlayBundleInfo.bundleDir,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         BUNDLE_OVERLAY_BUNDLE_STATE,

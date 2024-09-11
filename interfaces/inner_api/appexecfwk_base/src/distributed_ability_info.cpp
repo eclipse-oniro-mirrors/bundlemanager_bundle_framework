@@ -111,14 +111,12 @@ void from_json(const nlohmann::json& jsonObject, DistributedAbilityInfo& distrib
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::ABILITY_NAME,
         distributedAbilityInfo.abilityName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_PERMISSIONS,
@@ -135,14 +133,12 @@ void from_json(const nlohmann::json& jsonObject, DistributedAbilityInfo& distrib
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_ENABLED,
         distributedAbilityInfo.enabled,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read distributedAbilityInfo jsonObject error : %{public}d", parseResult);
     }

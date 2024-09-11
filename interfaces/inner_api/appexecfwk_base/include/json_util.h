@@ -40,6 +40,16 @@ enum class ArrayType : int8_t {
     NOT_ARRAY,
 };
 
+class BMSJsonUtil {
+public:
+    static void GetStrValueIfFindKey(const nlohmann::json &jsonObject,
+        const nlohmann::detail::iter_impl<const nlohmann::json> &end,
+        const std::string &key, std::string &data, bool isNecessary, int32_t &parseResult);
+    static void GetBoolValueIfFindKey(const nlohmann::json &jsonObject,
+        const nlohmann::detail::iter_impl<const nlohmann::json> &end,
+        const std::string &key, bool &data, bool isNecessary, int32_t &parseResult);
+};
+
 template<typename T, typename dataType>
 void CheckArrayType(
     const nlohmann::json &jsonObject, const std::string &key, dataType &data, ArrayType arrayType, int32_t &parseResult)
@@ -106,14 +116,6 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
     }
     if (jsonObject.find(key) != end) {
         switch (jsonType) {
-            case JsonType::BOOLEAN:
-                if (!jsonObject.at(key).is_boolean()) {
-                    APP_LOGE("type error %{public}s not boolean", key.c_str());
-                    parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
-                    break;
-                }
-                data = jsonObject.at(key).get<T>();
-                break;
             case JsonType::NUMBER:
                 if (!jsonObject.at(key).is_number()) {
                     APP_LOGE("type error %{public}s not number", key.c_str());
@@ -137,17 +139,6 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
                     break;
                 }
                 CheckArrayType<T>(jsonObject, key, data, arrayType, parseResult);
-                break;
-            case JsonType::STRING:
-                if (!jsonObject.at(key).is_string()) {
-                    APP_LOGE("type error %{public}s not string", key.c_str());
-                    parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
-                    break;
-                }
-                data = jsonObject.at(key).get<T>();
-                if (jsonObject.at(key).get<std::string>().length() > Constants::MAX_JSON_STRING_LENGTH) {
-                    parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
-                }
                 break;
             case JsonType::NULLABLE:
                 APP_LOGE("type error %{public}s nullable", key.c_str());

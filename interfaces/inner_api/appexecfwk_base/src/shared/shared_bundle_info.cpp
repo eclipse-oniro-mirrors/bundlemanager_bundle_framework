@@ -85,14 +85,12 @@ void from_json(const nlohmann::json &jsonObject, SharedBundleInfo &sharedBundleI
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         SHARED_BUNDLE_INFO_NAME,
         sharedBundleInfo.name,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<CompatiblePolicy>(jsonObject,
         jsonObjectEnd,
         SHARED_BUNDLE_INFO_COMPATIBLE_POLICY,

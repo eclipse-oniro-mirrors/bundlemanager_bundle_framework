@@ -703,28 +703,28 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_SCHEME,
-    uri.scheme, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_HOST,
-        uri.host, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_PORT,
-        uri.port, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_PATH,
-        uri.path, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_PATHSTARTWITH,
-        uri.pathStartWith, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, BUNDLE_MODULE_PROFILE_KEY_PATHREGX,
-        uri.pathRegex, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_PATHREGEX,
-        uri.pathRegex, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_TYPE,
-        uri.type, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_UTD,
-        uri.utd, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, JSON_KEY_SCHEME,
+    uri.scheme, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, JSON_KEY_HOST,
+        uri.host, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, JSON_KEY_PORT,
+        uri.port, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, JSON_KEY_PATH,
+        uri.path, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, JSON_KEY_PATHSTARTWITH,
+        uri.pathStartWith, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, BUNDLE_MODULE_PROFILE_KEY_PATHREGX,
+        uri.pathRegex, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, JSON_KEY_PATHREGEX,
+        uri.pathRegex, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, JSON_KEY_TYPE,
+        uri.type, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, JSON_KEY_UTD,
+        uri.utd, false, parseResult);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, JSON_KEY_MAXFILESUPPORTED,
         uri.maxFileSupported, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_LINKFEATURE,
-        uri.linkFeature, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, JSON_KEY_LINKFEATURE,
+        uri.linkFeature, false, parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, Skill &skill)
@@ -763,14 +763,12 @@ void from_json(const nlohmann::json &jsonObject, Skill &skill)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_DOMAINVERIFY,
         skill.domainVerify,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
 }
 
 void to_json(nlohmann::json &jsonObject, const SkillUri &uri)

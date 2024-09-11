@@ -48,11 +48,11 @@ void from_json(const nlohmann::json &jsonObject, LayeredImage &layeredImage)
 {
     int32_t parseResult = 0;
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, FOREGROUND, layeredImage.foreground,
-        JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, FOREGROUND, layeredImage.foreground,
+        false, parseResult);
 
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, BACKGROUND, layeredImage.background,
-        JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, BACKGROUND, layeredImage.background,
+        false, parseResult);
 }
 
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS

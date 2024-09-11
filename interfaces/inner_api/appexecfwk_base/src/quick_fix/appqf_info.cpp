@@ -54,20 +54,17 @@ void from_json(const nlohmann::json &jsonObject, AppqfInfo &appqfInfo)
         JsonType::NUMBER, false, parseResult,
         ArrayType::NOT_ARRAY);
 
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         APP_QF_INFO_VERSION_NAME, appqfInfo.versionName,
-        JsonType::STRING, false, parseResult,
-        ArrayType::NOT_ARRAY);
+        false, parseResult);
 
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         APP_QF_INFO_CPU_ABI, appqfInfo.cpuAbi,
-        JsonType::STRING, false, parseResult,
-        ArrayType::NOT_ARRAY);
+        false, parseResult);
 
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         APP_QF_INFO_NATIVE_LIBRARY_PATH, appqfInfo.nativeLibraryPath,
-        JsonType::STRING, false, parseResult,
-        ArrayType::NOT_ARRAY);
+        false, parseResult);
 
     GetValueIfFindKey<QuickFixType>(jsonObject, jsonObjectEnd,
         APP_QF_INFO_TYPE, appqfInfo.type,

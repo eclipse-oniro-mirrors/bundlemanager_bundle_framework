@@ -93,16 +93,16 @@ void from_json(const nlohmann::json &jsonObject, RecoverableApplicationInfo &rec
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_BUNDLE_NAME,
-        recoverableApplicationInfo.bundleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_MODULE_NAME,
-        recoverableApplicationInfo.moduleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, JSON_KEY_BUNDLE_NAME,
+        recoverableApplicationInfo.bundleName, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, JSON_KEY_MODULE_NAME,
+        recoverableApplicationInfo.moduleName, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, JSON_KEY_LABEL_ID,
         recoverableApplicationInfo.labelId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, JSON_KEY_ICON_ID,
         recoverableApplicationInfo.iconId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, JSON_KEY_SYSTEM_APP,
-        recoverableApplicationInfo.systemApp, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, JSON_KEY_SYSTEM_APP,
+        recoverableApplicationInfo.systemApp, false, parseResult);
     GetValueIfFindKey<BundleType>(jsonObject, jsonObjectEnd, JSON_KEY_BUNDLE_TYPE,
         recoverableApplicationInfo.bundleType, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, JSON_KEY_CODE_PATHS,

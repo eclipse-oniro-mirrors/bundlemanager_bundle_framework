@@ -48,22 +48,18 @@ void from_json(const nlohmann::json &jsonObject, Result &result)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_RESULT_TRANSACTID,
         result.transactId,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_RESULT_RESULTMSG,
         result.resultMsg,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_RESULT_RETCODE,
@@ -123,14 +119,12 @@ void from_json(const nlohmann::json &jsonObject, InstallResult &installResult)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_INSTALLRESULT_VERSION,
         installResult.version,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<Result>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_INSTALLRESULT_RESULT,

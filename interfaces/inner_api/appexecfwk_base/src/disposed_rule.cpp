@@ -100,44 +100,36 @@ void from_json(const nlohmann::json &jsonObject, ElementName &elementName)
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
     std::string bundleName;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     elementName.SetBundleName(bundleName);
     std::string moduleName;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::MODULE_NAME,
         moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     elementName.SetModuleName(moduleName);
     std::string abilityName;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::ABILITY_NAME,
         abilityName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     elementName.SetAbilityName(abilityName);
     std::string deviceId;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         DEVICE_ID,
         deviceId,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     elementName.SetDeviceID(deviceId);
     if (parseResult != ERR_OK) {
         APP_LOGE("read elementName error : %{public}d", parseResult);
@@ -163,14 +155,12 @@ void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule)
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
     std::string wantString;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         WANT,
         wantString,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     disposedRule.want.reset(AAFwk::Want::FromString(wantString));
     GetValueIfFindKey<ComponentType>(jsonObject,
         jsonObjectEnd,
@@ -212,14 +202,12 @@ void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         IS_EDM,
         disposedRule.isEdm,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read disposedRule error : %{public}d", parseResult);
     }

@@ -126,22 +126,18 @@ struct ExtensionFormProfileInfoStruct {
 void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
 {
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::METADATA_NAME,
         metadata.name,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::METADATA_VALUE,
         metadata.value,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, Window &window)
@@ -155,51 +151,41 @@ void from_json(const nlohmann::json &jsonObject, Window &window)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::WINDOW_AUTO_DESIGN_WIDTH,
         window.autoDesignWidth,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &extensionFormProfileInfo)
 {
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::NAME,
         extensionFormProfileInfo.name,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::DISPLAY_NAME,
         extensionFormProfileInfo.displayName,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::DESCRIPTION,
         extensionFormProfileInfo.description,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::SRC,
         extensionFormProfileInfo.src,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<Window>(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::WINDOW,
@@ -208,70 +194,54 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::COLOR_MODE,
         extensionFormProfileInfo.colorMode,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::FORM_CONFIG_ABILITY,
         extensionFormProfileInfo.formConfigAbility,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::TYPE,
         extensionFormProfileInfo.type,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::UI_SYNTAX,
         extensionFormProfileInfo.uiSyntax,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::FORM_VISIBLE_NOTIFY,
         extensionFormProfileInfo.formVisibleNotify,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::IS_DEFAULT,
         extensionFormProfileInfo.isDefault,
-        JsonType::BOOLEAN,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::UPDATE_ENABLED,
         extensionFormProfileInfo.updateEnabled,
-        JsonType::BOOLEAN,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::SCHEDULED_UPDATE_TIME,
         extensionFormProfileInfo.scheduledUpdateTime,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::UPDATE_DURATION,
@@ -280,14 +250,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::DEFAULT_DIMENSION,
         extensionFormProfileInfo.defaultDimension,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::SUPPORT_DIMENSIONS,
@@ -304,38 +272,30 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         false,
         g_parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::DATA_PROXY_ENABLED,
         extensionFormProfileInfo.dataProxyEnabled,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::IS_DYNAMIC,
         extensionFormProfileInfo.isDynamic,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::TRANSPARENCY_ENABLED,
         extensionFormProfileInfo.transparencyEnabled,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::FONT_SCALE_FOLLOW_SYSTEM,
         extensionFormProfileInfo.fontScaleFollowSystem,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::SUPPORT_SHAPES,
