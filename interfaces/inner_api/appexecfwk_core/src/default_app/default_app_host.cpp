@@ -57,7 +57,7 @@ int DefaultAppHost::OnRemoteRequest(
         case static_cast<uint32_t>(DefaultAppInterfaceCode::RESET_DEFAULT_APPLICATION):
             return HandleResetDefaultApplication(data, reply);
         default:
-            LOG_W(BMS_TAG_DEFAULT, "DefaultAppHost receive unknown code, code = %{public}zu", code);
+            LOG_W(BMS_TAG_DEFAULT, "DefaultAppHost receive unknown code, code =  %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
 }
