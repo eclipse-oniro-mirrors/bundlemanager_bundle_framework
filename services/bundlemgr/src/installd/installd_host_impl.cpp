@@ -45,6 +45,7 @@
 #define SELINUX_HAP_DEBUGGABLE 2
 #endif
 #endif // WITH_SELINUX
+#include "hitrace_meter.h"
 #include "installd/installd_operator.h"
 #include "installd/installd_permission_mgr.h"
 #include "parameters.h"
@@ -372,6 +373,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<Create
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+    LOG_I(BMS_TAG_INSTALLD, "begin");
     ErrCode res = ERR_OK;
     for (const auto &item : createDirParams) {
         auto result = CreateBundleDataDir(item);
@@ -381,6 +383,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<Create
             res = result;
         }
     }
+    LOG_I(BMS_TAG_INSTALLD, "end");
     return res;
 }
 
@@ -413,6 +416,7 @@ ErrCode InstalldHostImpl::AddUserDirDeleteDfx(int32_t userId)
 
 ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
