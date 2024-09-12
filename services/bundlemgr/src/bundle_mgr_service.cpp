@@ -169,10 +169,11 @@ bool BundleMgrService::InitBundleInstaller()
 {
     if (installer_ == nullptr) {
         installer_ = new (std::nothrow) BundleInstallerHost();
-        if (installer_ == nullptr || !installer_->Init()) {
+        if (installer_ == nullptr) {
             APP_LOGE("init installer fail");
             return false;
         }
+        installer_->Init();
     }
 
     return true;
