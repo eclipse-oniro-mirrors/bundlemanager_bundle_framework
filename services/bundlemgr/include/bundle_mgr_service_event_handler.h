@@ -625,6 +625,7 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos);
     void InnerProcessRebootUninstallWrongBundle();
     void ProcessCheckAppEl1Dir();
+    void CleanAllBundleShaderCache() const;
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.
