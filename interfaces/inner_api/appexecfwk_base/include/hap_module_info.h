@@ -55,6 +55,8 @@ enum class AOTCompileStatus {
     NOT_COMPILED = 0,
     COMPILE_SUCCESS = 1,
     COMPILE_FAILED = 2,
+    COMPILE_CRASH = 3,
+    COMPILE_CANCELLED = 4,
 };
 
 struct PreloadItem : public Parcelable {

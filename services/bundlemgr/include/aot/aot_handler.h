@@ -54,6 +54,7 @@ private:
     std::optional<AOTArgs> BuildAOTArgs(const InnerBundleInfo &info, const std::string &moduleName,
         const std::string &compileMode, bool isEnableBaselinePgo = false) const;
     void HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const;
+    bool NeedCompile(const InnerBundleInfo &info, const std::string &moduleName) const;
     ErrCode HandleCompileWithSingleHap(const InnerBundleInfo &info, const std::string &moduleName,
         const std::string &compileMode, bool isEnableBaselinePgo = false) const;
     EventInfo HandleCompileWithBundle(const std::string &bundleName, const std::string &compileMode,
@@ -68,6 +69,7 @@ private:
         const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
     bool CheckDeviceState() const;
     ErrCode AOTInternal(const std::optional<AOTArgs> &aotArgs, uint32_t versionCode) const;
+    AOTCompileStatus ConvertToAOTCompileStatus(const ErrCode ret) const;
     void HandleOTACompile();
     void BeforeOTACompile();
     void OTACompile() const;

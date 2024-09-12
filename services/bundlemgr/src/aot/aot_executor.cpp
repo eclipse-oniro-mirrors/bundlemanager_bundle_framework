@@ -60,6 +60,8 @@ constexpr const char* IS_SCREEN_OFF = "isScreenOff";
 constexpr const char* PGO_DIR = "pgoDir";
 #if defined(CODE_SIGNATURE_ENABLE)
 constexpr int16_t ERR_AOT_COMPILER_SIGN_FAILED = 10004;
+constexpr int16_t ERR_AOT_COMPILER_CALL_CRASH = 10008;
+constexpr int16_t ERR_AOT_COMPILER_CALL_CANCELLED = 10009;
 #endif
 }
 
@@ -232,8 +234,13 @@ ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<uint8_
     if (ret == ERR_AOT_COMPILER_SIGN_FAILED) {
         APP_LOGE("aot compiler local signature fail");
         return ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
-    }
-    if (ret != ERR_OK) {
+    } else if (ret == ERR_AOT_COMPILER_CALL_CRASH) {
+        APP_LOGE("aot compiler crash");
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CRASH;
+    } else if (ret == ERR_AOT_COMPILER_CALL_CANCELLED) {
+        APP_LOGE("aot compiler cancel");
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CANCELLED;
+    } else if (ret != ERR_OK) {
         APP_LOGE("aot compiler fail");
         return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
     }
