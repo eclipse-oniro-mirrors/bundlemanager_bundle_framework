@@ -452,7 +452,7 @@ bool BMSEventHandler::LoadAllPreInstallBundleInfos()
     }
 
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
-    for (auto& iter : preInstallBundleInfos) {
+    for (auto const & iter : preInstallBundleInfos) {
     }
 
     hasLoadAllPreInstallBundleInfosFromDb_ = true;

@@ -47,7 +47,6 @@ namespace OHOS {
         std::string hspPath = ", path: ";
         appServiceFwk.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH);
         bool isReplace = true;
-        bool killProcess = false;
         appServiceFwk.ProcessModuleUpdate(innerBundleInfo, oldInfo, hspPath);
         appServiceFwk.RemoveLowerVersionSoDir(VERSION_LOW);
         std::string bundlePath(data, size);

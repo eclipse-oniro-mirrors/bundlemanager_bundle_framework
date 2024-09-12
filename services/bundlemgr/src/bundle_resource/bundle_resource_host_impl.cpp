@@ -122,7 +122,7 @@ ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
             APP_LOGD("need sort by label");
             std::sort(bundleResourceInfos.begin(), bundleResourceInfos.end(),
-                [](BundleResourceInfo &resourceA, BundleResourceInfo &resourceB) {
+                [](const BundleResourceInfo &resourceA, const BundleResourceInfo &resourceB) {
                     return resourceA.label < resourceB.label;
                 });
         }
@@ -168,7 +168,7 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
             APP_LOGD("need sort by label");
             std::sort(launcherAbilityResourceInfos.begin(), launcherAbilityResourceInfos.end(),
-                [](LauncherAbilityResourceInfo &resourceA, LauncherAbilityResourceInfo &resourceB) {
+                [](const LauncherAbilityResourceInfo &resourceA, const LauncherAbilityResourceInfo &resourceB) {
                     return resourceA.label < resourceB.label;
                 });
         }
