@@ -600,6 +600,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CONTINUE_BUNDLE_NAMES):
             errCode = HandleGetContinueBundleNames(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::UPDATE_APP_ENCRYPTED_KEY_STATUS):
+            errCode = HandleUpdateAppEncryptedStatus(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -3965,6 +3968,19 @@ ErrCode BundleMgrHost::HandleGetSignatureInfoByBundleName(MessageParcel &data, M
     return ret;
 }
 
+ErrCode BundleMgrHost::HandleUpdateAppEncryptedStatus(MessageParcel &data, MessageParcel &reply)
+{
+    std::string name = data.ReadString();
+    bool isExisted = data.ReadBool();
+    int32_t appIndex = data.ReadInt32();
+    ErrCode ret = UpdateAppEncryptedStatus(name, isExisted, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -4041,7 +4057,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosForContinuation(MessageParcel &data, 
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int flags = data.ReadInt32();
     int userId = data.ReadInt32();
- 
+
     std::vector<BundleInfo> infos;
     reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
     bool ret = GetBundleInfosForContinuation(flags, infos, userId);

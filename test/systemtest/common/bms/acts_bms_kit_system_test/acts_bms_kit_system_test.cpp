@@ -6472,6 +6472,58 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0400, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: UpdateAppEncryptedStatus_0001
+ * @tc.name: test UpdateAppEncryptedStatus interface
+ * @tc.desc: 1.ret is no permission
+ */
+HWTEST_F(ActsBmsKitSystemTest, UpdateAppEncryptedStatus_0001, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string bundleName = "com.example.test";
+    ErrCode ret = bundleMgrProxy->UpdateAppEncryptedStatus(bundleName, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: UpdateAppEncryptedStatus_0002
+ * @tc.name: test UpdateAppEncryptedStatus interface
+ * @tc.desc: 1.ret is no permission
+ */
+HWTEST_F(ActsBmsKitSystemTest, UpdateAppEncryptedStatus_0002, Function | MediumTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    setuid(7666);
+    ErrCode ret = bundleMgrProxy->UpdateAppEncryptedStatus(appName, true);
+    EXPECT_EQ(ret, ERR_OK);
+    setuid(0);
+
+    BundleInfo bundleInfo;
+    auto getInfoResult = bundleMgrProxy->GetBundleInfoV9(appName,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION), bundleInfo, USERID);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    uint32_t applicationReservedFlag = bundleInfo.applicationInfo.applicationReservedFlag;
+    bool appEncryptedKey = applicationReservedFlag &
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED);
+    EXPECT_TRUE(appEncryptedKey);
+    EXPECT_EQ(bundleInfo.applicationInfo.name, appName);
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
  * @tc.number: CheckCloneAbilityEnabled_0100
  * @tc.name: test SetCloneAbilityEnabled and IsCloneAbilityEnabled proxy
  * @tc.desc: 1.system run normally
@@ -9517,7 +9569,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetSignatureInfoByBundleName_0100, Function | Med
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
-    
+
     setuid(5523);
 
     SignatureInfo info;

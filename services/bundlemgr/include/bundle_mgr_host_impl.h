@@ -1009,6 +1009,9 @@ public:
 
     virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) override;
 
+    virtual ErrCode UpdateAppEncryptedStatus(const std::string &bundleName,
+        bool isExisted, int32_t appIndex = 0) override;
+
     /**
      * @brief Obtains continuable BundleInfo of all bundles available in the system.
      * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.

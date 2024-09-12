@@ -2210,6 +2210,7 @@ public:
     void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
     bool IsHwasanEnabled() const;
     bool IsUbsanEnabled() const;
+    ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex);
     std::set<int32_t> GetCloneBundleAppIndexes() const;
     static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
 
@@ -2236,6 +2237,7 @@ private:
     void InnerProcessRequestPermissions(
         const std::unordered_map<std::string, std::string> &moduleNameMap,
         std::vector<RequestPermission> &requestPermissions) const;
+    void GetApplicationReservedFlagAdaptClone(ApplicationInfo &appInfo, int32_t appIndex) const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;

@@ -8390,6 +8390,31 @@ ErrCode BundleDataMgr::GetSignatureInfoByBundleName(const std::string &bundleNam
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::UpdateAppEncryptedStatus(
+    const std::string &bundleName, bool isExisted, int32_t appIndex)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        LOG_E(BMS_TAG_DEFAULT, "%{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    auto res = item->second.UpdateAppEncryptedStatus(bundleName, isExisted, appIndex);
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "UpdateAppEncryptedStatus failed %{public}s %{public}d", bundleName.c_str(), res);
+        return res;
+    }
+    if (dataStorage_ == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataStorage_ nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
+        APP_LOGE("SaveStorageBundleInfo failed for bundle %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
 {
     int32_t requestUserId = GetUserId(userId);

@@ -819,6 +819,8 @@ private:
 
     ErrCode HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleUpdateAppEncryptedStatus(MessageParcel &data, MessageParcel &reply);
+
     /**
      * @brief Handles the GetBundleInfosForContinuation function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
