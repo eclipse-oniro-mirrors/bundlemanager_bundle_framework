@@ -84,6 +84,7 @@ constexpr const char* LOG = "log";
 constexpr const char* HSP_VERSION_PREFIX = "v";
 constexpr const char* PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
+const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
 constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
@@ -1262,12 +1263,13 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
     InnerBundleInfo &oldInfo)
 {
     LOG_D(BMS_TAG_INSTALLER, "start rollback due to install failed");
-    if (!newInfos.empty() && newInfos.begin()->second.IsPreInstallApp()) {
-        LOG_I(BMS_TAG_INSTALLER, "pre bundleName:%{public}s no need rollback",
-            newInfos.begin()->second.GetBundleName().c_str());
-        return;
-    }
     if (!isAppExist_) {
+        if (!newInfos.empty() && newInfos.begin()->second.IsPreInstallApp() &&
+            !BundleUtil::CheckSystemFreeSize(APP_INSTALL_PATH, FIVE_MB)) {
+            LOG_I(BMS_TAG_INSTALLER, "pre bundleName:%{public}s no need rollback due to no space",
+                newInfos.begin()->second.GetBundleName().c_str());
+            return;
+        }
         if (newInfos.begin()->second.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
             int32_t uid = newInfos.begin()->second.GetUid(userId_);
             if (uid != Constants::INVALID_UID) {
