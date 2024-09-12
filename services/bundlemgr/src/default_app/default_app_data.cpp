@@ -96,13 +96,15 @@ void DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObj
             LOG_W(BMS_TAG_DEFAULT, "bad element format");
             continue;
         }
-        std::string normalizedType = DefaultAppMgr::Normalize(element.type);
-        if (normalizedType.empty()) {
-            LOG_W(BMS_TAG_DEFAULT, "normalizedType empty");
+        std::vector<std::string> normalizedTypeVector = DefaultAppMgr::Normalize(element.type);
+        if (normalizedTypeVector.empty()) {
+            LOG_W(BMS_TAG_DEFAULT, "normalizedTypeVector empty");
             continue;
         }
-        element.type = normalizedType;
-        infos.try_emplace(normalizedType, element);
+        for (const std::string& normalizedType : normalizedTypeVector) {
+            element.type = normalizedType;
+            infos.try_emplace(normalizedType, element);
+        }
     }
 }
 

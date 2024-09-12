@@ -44,7 +44,7 @@ namespace OHOS {
         DefaultAppMgr::GetInstance().HandleCreateUser(reinterpret_cast<uintptr_t>(data));
         DefaultAppMgr::GetInstance().HandleRemoveUser(reinterpret_cast<uintptr_t>(data));
         DefaultAppMgr::GetInstance().HandleUninstallBundle(reinterpret_cast<uintptr_t>(data), type);
-        auto utd = DefaultAppMgr::GetInstance().Normalize(type);
+        auto normalizedTypeVector = DefaultAppMgr::GetInstance().Normalize(type);
         errorCode = DefaultAppMgr::GetInstance().GetDefaultApplication(
             reinterpret_cast<uintptr_t>(data), type, bundleInfo);
         AAFwk::Want want;
@@ -62,8 +62,7 @@ namespace OHOS {
         ret = DefaultAppMgr::GetInstance().IsElementEmpty(element);
         ret = DefaultAppMgr::GetInstance().IsElementValid(reinterpret_cast<uintptr_t>(data), type, element);
         ret = DefaultAppMgr::GetInstance().IsEmailWant(want);
-        auto str = DefaultAppMgr::GetInstance().GetUtdByWant(want);
-        str = DefaultAppMgr::GetInstance().GetType(want);
+        auto str = DefaultAppMgr::GetInstance().GetTypeFromWant(want);
         ret = DefaultAppMgr::GetInstance().IsEmailSkillsValid(skills);
         ret = DefaultAppMgr::GetInstance().IsBrowserSkillsValid(skills);
         ret = DefaultAppMgr::GetInstance().MatchAppType(type, skills);

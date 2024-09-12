@@ -28,7 +28,7 @@ class DefaultAppMgr {
 public:
     static DefaultAppMgr& GetInstance();
     static bool VerifyElementFormat(const Element& element);
-    static std::string Normalize(const std::string& param);
+    static std::vector<std::string> Normalize(const std::string& param);
 
     ErrCode IsDefaultApplication(int32_t userId, const std::string& type, bool& isDefaultApp) const;
     ErrCode GetDefaultApplication(
@@ -66,11 +66,17 @@ private:
     bool IsEmailSkillsValid(const std::vector<Skill>& skills) const;
     bool IsBrowserWant(const AAFwk::Want& want) const;
     bool IsEmailWant(const AAFwk::Want& want) const;
-    std::string GetType(const AAFwk::Want& want) const;
-    std::string GetUtdByWant(const AAFwk::Want& want) const;
+    std::string GetTypeFromWant(const AAFwk::Want& want) const;
     bool MatchActionAndType(const std::string& action, const std::string& type, const std::vector<Skill>& skills) const;
     bool GetBrokerBundleInfo(const Element& element, BundleInfo& bundleInfo) const;
     ErrCode VerifyPermission(const std::string& permissionName) const;
+
+    ErrCode IsDefaultApplicationInternal(int32_t userId, const std::string& normalizedType, bool& isDefaultApp) const;
+    ErrCode GetDefaultApplicationInternal(
+        int32_t userId, const std::string& normalizedType, BundleInfo& bundleInfo, bool backup = false) const;
+    ErrCode SetDefaultApplicationInternal(
+        int32_t userId, const std::string& normalizedType, const Element& element) const;
+    ErrCode ResetDefaultApplicationInternal(int32_t userId, const std::string& normalizedType) const;
 
     std::shared_ptr<IDefaultAppDb> defaultAppDb_;
     mutable std::mutex mutex_;

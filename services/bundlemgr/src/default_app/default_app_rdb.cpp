@@ -175,13 +175,15 @@ void DefaultAppRdb::ConvertMimeTypeToUtd()
         }
         std::map<std::string, Element> newInfos;
         for (auto& item : infos) {
-            std::string normalizedType = DefaultAppMgr::Normalize(item.first);
-            if (normalizedType.empty()) {
+            std::vector<std::string> normalizedTypeVector = DefaultAppMgr::Normalize(item.first);
+            if (normalizedTypeVector.empty()) {
                 LOG_W(BMS_TAG_DEFAULT, "normalize %{public}s failed", item.first.c_str());
                 continue;
             }
-            item.second.type = normalizedType;
-            newInfos.emplace(normalizedType, item.second);
+            for (const std::string& normalizedType : normalizedTypeVector) {
+                item.second.type = normalizedType;
+                newInfos.emplace(normalizedType, item.second);
+            }
         }
         (void)SetDefaultApplicationInfos(userId, newInfos);
     }

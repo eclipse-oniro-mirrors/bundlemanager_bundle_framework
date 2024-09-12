@@ -1767,13 +1767,13 @@ bool BundleDataMgr::MatchTypeWithUtd(const std::string &mimeType, const std::str
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
     LOG_W(BMS_TAG_QUERY, "mimeType %{public}s, wantUtd %{public}s", mimeType.c_str(), wantUtd.c_str());
-    std::string typeUtd;
-    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(mimeType, typeUtd);
-    if (ret != ERR_OK) {
-        LOG_W(BMS_TAG_QUERY, "GetUniformDataTypeByMIMEType failed");
-        return false;
+    std::vector<std::string> typeUtdVector = BundleUtil::GetUtdVectorByMimeType(mimeType);
+    for (const std::string &typeUtd : typeUtdVector) {
+        if (MatchUtd(typeUtd, wantUtd)) {
+            return true;
+        }
     }
-    return MatchUtd(typeUtd, wantUtd);
+    return false;
 #endif
     return false;
 }
