@@ -3870,7 +3870,7 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
     // remove external overlay bundle info and connection
     RemoveOverlayInfoAndConnection(infoItem->second, bundleName);
 #endif
-    APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
+    APP_LOGI("del bundle name:%{public}s", bundleName.c_str());
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
     RecycleUidAndGid(innerBundleInfo);
     bool ret = dataStorage_->DeleteStorageBundleInfo(innerBundleInfo);
@@ -7588,7 +7588,7 @@ void BundleDataMgr::CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32
 
 ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
 {
-    APP_LOGI("CreateBundleDataDir with userId %{public}d begin", userId);
+    APP_LOGI("with -u %{public}d begin", userId);
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     std::vector<CreateDirParam> createDirParams;
     for (const auto &item : bundleInfos_) {
@@ -7614,8 +7614,9 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
         CreateGroupDir(info, responseUserId);
     }
     lock.unlock();
+    APP_LOGI("begin create dirs");
     auto res = InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams);
-    APP_LOGI("CreateBundleDataDir result: %{public}d", res);
+    APP_LOGI("end, res %{public}d", res);
     return res;
 }
 
