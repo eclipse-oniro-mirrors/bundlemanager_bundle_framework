@@ -96,7 +96,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     // 1. check whether original application installed or not
     ScopeGuard bundleEnabledGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleInfo info;
-    bool isExist = dataMgr_->GetInnerBundleInfo(bundleName, info);
+    bool isExist = dataMgr_->GetInnerBundleInfoWithDisable(bundleName, info);
     if (!isExist) {
         APP_LOGE("the bundle is not installed");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;

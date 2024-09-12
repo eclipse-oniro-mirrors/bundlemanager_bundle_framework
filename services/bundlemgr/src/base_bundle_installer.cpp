@@ -409,7 +409,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
     auto &mtx = dataMgr_->GetBundleMutex(bundleName);
     std::lock_guard lock {mtx};
     InnerBundleInfo info;
-    if (!dataMgr_->GetInnerBundleInfo(bundleName, info)) {
+    if (!dataMgr_->GetInnerBundleInfoWithDisable(bundleName, info)) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
@@ -750,7 +750,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     // try to get the bundle info to decide use install or update. Always keep other exceptions below this line.
-    if (!GetInnerBundleInfo(oldInfo, isAppExist_)) {
+    if (!GetInnerBundleInfoWithDisable(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     LOG_I(BMS_TAG_INSTALLER, "isAppExist:%{public}d", isAppExist_);
@@ -885,7 +885,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
     InnerBundleInfo bundleInfo;
     bool isBundleExist = false;
-    if (!GetInnerBundleInfo(bundleInfo, isBundleExist) || !isBundleExist) {
+    if (!GetInnerBundleInfoWithDisable(bundleInfo, isBundleExist) || !isBundleExist) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     bool isOldSystemApp = bundleInfo.IsSystemApp();
@@ -946,7 +946,7 @@ ErrCode BaseBundleInstaller::InnerProcessUpdateHapToken(const bool isOldSystemAp
 {
     InnerBundleInfo newBundleInfo;
     bool isBundleExist = false;
-    if (!GetInnerBundleInfo(newBundleInfo, isBundleExist) || !isBundleExist) {
+    if (!GetInnerBundleInfoWithDisable(newBundleInfo, isBundleExist) || !isBundleExist) {
         APP_LOGE("bundleName:%{public}s not exist", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
@@ -1337,7 +1337,7 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
     }
     InnerBundleInfo preInfo;
     bool isExist = false;
-    if (!GetInnerBundleInfo(preInfo, isExist) || !isExist) {
+    if (!GetInnerBundleInfoWithDisable(preInfo, isExist) || !isExist) {
         LOG_I(BMS_TAG_INSTALLER, "finish rollback due to install failed");
         return;
     }
@@ -1382,7 +1382,7 @@ void BaseBundleInstaller::RemoveInfo(const std::string &bundleName, const std::s
     } else {
         InnerBundleInfo innerBundleInfo;
         bool isExist = false;
-        if (!GetInnerBundleInfo(innerBundleInfo, isExist) || !isExist) {
+        if (!GetInnerBundleInfoWithDisable(innerBundleInfo, isExist) || !isExist) {
             LOG_I(BMS_TAG_INSTALLER, "finish rollback due to install failed");
             return;
         }
@@ -1400,7 +1400,7 @@ void BaseBundleInstaller::RollBackModuleInfo(const std::string &bundleName, Inne
     }
     InnerBundleInfo innerBundleInfo;
     bool isExist = false;
-    if (!GetInnerBundleInfo(innerBundleInfo, isExist) || !isExist) {
+    if (!GetInnerBundleInfoWithDisable(innerBundleInfo, isExist) || !isExist) {
         return;
     }
     dataMgr_->UpdateBundleInstallState(bundleName, InstallState::ROLL_BACK);
@@ -1626,7 +1626,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     auto &mtx = dataMgr_->GetBundleMutex(bundleName);
     std::lock_guard lock {mtx};
     InnerBundleInfo oldInfo;
-    if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
+    if (!dataMgr_->GetInnerBundleInfoWithDisable(bundleName, oldInfo)) {
         LOG_W(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
@@ -1829,9 +1829,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
         auto &mtx = dataMgr_->GetBundleMutex(bundleName);
         std::lock_guard lock {mtx};
         InnerBundleInfo oldInfo;
-        bool isAppExist = dataMgr_->GetInnerBundleInfo(bundleName, oldInfo);
+        bool isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName, oldInfo);
         if (isAppExist) {
-            dataMgr_->EnableBundle(bundleName);
             if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
                 LOG_D(BMS_TAG_INSTALLER, "shared bundle (%{public}s) is irrelevant to user", bundleName.c_str());
                 return ERR_OK;
@@ -2333,7 +2332,7 @@ void BaseBundleInstaller::ProcessQuickFixWhenInstallNewModule(const InstallParam
     // hqf extract diff file or apply diff patch failed does not affect the hap installation
     InnerBundleInfo bundleInfo;
     bool isBundleExist = false;
-    if (!GetInnerBundleInfo(bundleInfo, isBundleExist) || !isBundleExist) {
+    if (!GetInnerBundleInfoWithDisable(bundleInfo, isBundleExist) || !isBundleExist) {
         return;
     }
     for (auto &info : newInfos) {
@@ -2987,7 +2986,7 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
     InnerBundleInfo info;
     bool isExist = false;
-    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
         LOG_E(BMS_TAG_INSTALLER, "GetInnerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return ;
     }
@@ -4016,12 +4015,12 @@ ErrCode BaseBundleInstaller::CheckMDMUpdateBundleForSelf(const InstallParam &ins
     return ERR_OK;
 }
 
-bool BaseBundleInstaller::GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist)
+bool BaseBundleInstaller::GetInnerBundleInfoWithDisable(InnerBundleInfo &info, bool &isAppExist)
 {
     if (!InitDataMgr()) {
         return false;
     }
-    isAppExist = dataMgr_->GetInnerBundleInfo(bundleName_, info);
+    isAppExist = dataMgr_->GetInnerBundleInfoWithDisable(bundleName_, info);
     return true;
 }
 
@@ -4108,7 +4107,7 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
     }
     InnerBundleInfo info;
     bool isExist = false;
-    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
@@ -4689,7 +4688,7 @@ void BaseBundleInstaller::OnSingletonChange(bool killProcess)
 
     InnerBundleInfo info;
     bool isExist = false;
-    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed when singleton changed");
         return;
     }
@@ -4759,7 +4758,7 @@ void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
     LOG_D(BMS_TAG_INSTALLER, "GetInstallEventInfo start, bundleName:%{public}s", bundleName_.c_str());
     InnerBundleInfo info;
     bool isExist = false;
-    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return;
     }
@@ -5286,7 +5285,7 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
     LOG_D(BMS_TAG_INSTALLER, "begin to check hap encryption");
     InnerBundleInfo oldInfo;
     bool isExist = false;
-    if (!GetInnerBundleInfo(oldInfo, isExist) || !isExist) {
+    if (!GetInnerBundleInfoWithDisable(oldInfo, isExist) || !isExist) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -5693,7 +5692,7 @@ void BaseBundleInstaller::VerifyDomain()
     LOG_D(BMS_TAG_INSTALLER, "start to verify domain");
     InnerBundleInfo bundleInfo;
     bool isExist = false;
-    if (!GetInnerBundleInfo(bundleInfo, isExist) || !isExist) {
+    if (!GetInnerBundleInfoWithDisable(bundleInfo, isExist) || !isExist) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return;
     }
@@ -5942,7 +5941,7 @@ void BaseBundleInstaller::MarkInstallFinish()
 {
     InnerBundleInfo info;
     bool isExist = false;
-    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
         LOG_W(BMS_TAG_INSTALLER, "mark finish failed");
         return;
     }

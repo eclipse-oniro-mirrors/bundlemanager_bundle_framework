@@ -59,7 +59,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     // 1. check whether original application installed or not
     InnerBundleInfo info;
     bool isExist = false;
-    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
         APP_LOGE("the bundle is not installed");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_APP_NOT_EXISTED;
     }
@@ -338,13 +338,13 @@ ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundl
     return ERR_OK;
 }
 
-bool BundleSandboxInstaller::GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist)
+bool BundleSandboxInstaller::GetInnerBundleInfoWithDisable(InnerBundleInfo &info, bool &isAppExist)
 {
     if (GetDataMgr() != ERR_OK) {
         APP_LOGE("Get dataMgr shared_ptr failed");
         return false;
     }
-    isAppExist = dataMgr_->GetInnerBundleInfo(bundleName_, info);
+    isAppExist = dataMgr_->GetInnerBundleInfoWithDisable(bundleName_, info);
     return true;
 }
 

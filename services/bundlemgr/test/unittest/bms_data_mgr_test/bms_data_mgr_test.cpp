@@ -541,7 +541,7 @@ HWTEST_F(BmsDataMgrTest, AddBundleInfo_0100, Function | SmallTest | Level0)
     InnerBundleInfo info1;
     bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
     bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
-    bool ret3 = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, info1);
+    bool ret3 = dataMgr->GetInnerBundleInfoWithDisable(BUNDLE_NAME, info1);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
     EXPECT_TRUE(ret3);
@@ -625,7 +625,7 @@ HWTEST_F(BmsDataMgrTest, AddBundleInfo_0300, Function | SmallTest | Level0)
     InnerBundleInfo info;
     InnerBundleInfo info1;
     bool ret = dataMgr->AddInnerBundleInfo("", info);
-    bool ret1 = dataMgr->GetInnerBundleInfo("", info1);
+    bool ret1 = dataMgr->GetInnerBundleInfoWithDisable("", info1);
     EXPECT_FALSE(ret);
     EXPECT_FALSE(ret1);
 }
@@ -706,11 +706,11 @@ HWTEST_F(BmsDataMgrTest, AddBundleInfo_0500, Function | SmallTest | Level0)
     bool ret3 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_START);
     bool ret4 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_SUCCESS);
     bool ret5 = dataMgr->AddNewModuleInfo(BUNDLE_NAME, info2, info1);
-    bool ret6 = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, info3);
+    bool ret6 = dataMgr->GetInnerBundleInfoWithDisable(BUNDLE_NAME, info3);
     bool ret7 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_SUCCESS);
     bool ret8 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_START);
     bool ret9 = dataMgr->RemoveModuleInfo(BUNDLE_NAME, PACKAGE_NAME, info1);
-    bool ret10 = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, info4);
+    bool ret10 = dataMgr->GetInnerBundleInfoWithDisable(BUNDLE_NAME, info4);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
     EXPECT_TRUE(ret3);

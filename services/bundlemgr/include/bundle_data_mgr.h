@@ -130,7 +130,7 @@ public:
      * @param info Indicates the obtained InnerBundleInfo object.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool GetInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
+    bool GetInnerBundleInfoWithDisable(const std::string &bundleName, InnerBundleInfo &info);
     /**
      * @brief Generate UID and GID for a bundle.
      * @param innerBundleUserInfo Indicates the InnerBundleUserInfo object.

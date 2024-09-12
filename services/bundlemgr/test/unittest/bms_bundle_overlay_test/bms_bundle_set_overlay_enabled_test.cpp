@@ -161,7 +161,7 @@ void BmsBundleSetOverlayEnabledTest::CheckEnabledState(int32_t state)
     EXPECT_NE(dataMgr, nullptr);
 
     InnerBundleInfo innerBundleInfo;
-    auto ret = dataMgr->GetInnerBundleInfo(TEST_BUNDLE_NAME, innerBundleInfo);
+    auto ret = dataMgr->GetInnerBundleInfoWithDisable(TEST_BUNDLE_NAME, innerBundleInfo);
     EXPECT_TRUE(ret);
 
     InnerBundleUserInfo userInfo;
