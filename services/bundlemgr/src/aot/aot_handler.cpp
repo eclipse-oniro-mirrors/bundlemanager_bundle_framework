@@ -224,9 +224,23 @@ ErrCode AOTHandler::AOTInternal(const std::optional<AOTArgs> &aotArgs, uint32_t 
         APP_LOGE("dataMgr is null");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    AOTCompileStatus status = ret == ERR_OK ? AOTCompileStatus::COMPILE_SUCCESS : AOTCompileStatus::COMPILE_FAILED;
+    AOTCompileStatus status = ConvertToAOTCompileStatus(ret);
     dataMgr->SetAOTCompileStatus(aotArgs->bundleName, aotArgs->moduleName, status, versionCode);
     return ret;
+}
+
+AOTCompileStatus AOTHandler::ConvertToAOTCompileStatus(const ErrCode ret) const
+{
+    switch (ret) {
+        case ERR_OK:
+            return AOTCompileStatus::COMPILE_SUCCESS;
+        case ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CRASH:
+            return AOTCompileStatus::COMPILE_CRASH;
+        case ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CANCELLED:
+            return AOTCompileStatus::COMPILE_CANCELLED;
+        default:
+            return AOTCompileStatus::COMPILE_FAILED;
+    }
 }
 
 void AOTHandler::HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const
@@ -694,12 +708,21 @@ void AOTHandler::HandleIdleWithSingleHap(
     const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const
 {
     APP_LOGD("HandleIdleWithSingleHap, moduleName : %{public}s", moduleName.c_str());
-    if (info.GetAOTCompileStatus(moduleName) == AOTCompileStatus::COMPILE_SUCCESS) {
-        APP_LOGD("AOT history success, no need to AOT");
+    if (!NeedCompile(info, moduleName)) {
         return;
     }
     std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode);
     (void)AOTInternal(aotArgs, info.GetVersionCode());
+}
+
+bool AOTHandler::NeedCompile(const InnerBundleInfo &info, const std::string &moduleName) const
+{
+    AOTCompileStatus status = info.GetAOTCompileStatus(moduleName);
+    if (status == AOTCompileStatus::NOT_COMPILED || status == AOTCompileStatus::COMPILE_CANCELLED) {
+        return true;
+    }
+    APP_LOGI("%{public}s:%{public}d, skip compile", moduleName.c_str(), static_cast<int32_t>(status));
+    return false;
 }
 
 ErrCode AOTHandler::HandleCompileWithSingleHap(const InnerBundleInfo &info, const std::string &moduleName,
@@ -870,6 +893,12 @@ ErrCode AOTHandler::HandleCompileModules(const std::vector<std::string> &moduleN
                 break;
             case ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED:
                 compileResult += "  " + moduleName + ":compile-fail";
+                break;
+            case ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CRASH:
+                compileResult += "  " + moduleName + ":compile-crash";
+                break;
+            case ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_CANCELLED:
+                compileResult += "  " + moduleName + ":compile-cancelled";
                 break;
             case ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED:
                 compileResult += "  " + moduleName + ":signature-fail";
