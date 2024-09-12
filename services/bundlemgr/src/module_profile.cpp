@@ -35,10 +35,7 @@ bool IsSupportCompressNativeLibs()
         APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS);
         return false;
     }
-    if (std::strcmp(compressNativeLibs, "true") == 0) {
-        return true;
-    }
-    return false;
+    return std::strcmp(compressNativeLibs, "true") == 0;
 }
 }
 
@@ -2336,22 +2333,21 @@ bool ToAbilityInfo(
     return true;
 }
 
-bool ToAbilitySkills(std::vector<Skill> skills, AbilityInfo &abilityInfo)
+void ToAbilitySkills(std::vector<Skill> skills, AbilityInfo &abilityInfo)
 {
     for (Skill &skill : skills) {
         abilityInfo.skills.push_back(skill);
     }
-    return true;
 }
 
-bool ToExtensionAbilitySkills(std::vector<Skill> skills, ExtensionAbilityInfo &extensionInfo)
+void ToExtensionAbilitySkills(std::vector<Skill> skills, ExtensionAbilityInfo &extensionInfo)
 {
     for (Skill &skill : skills) {
         extensionInfo.skills.push_back(skill);
     }
-    return true;
 }
-bool ToExtensionInfo(
+
+void ToExtensionInfo(
     const Profile::ModuleJson &moduleJson,
     const Profile::Extension &extension,
     const TransformParam &transformParam,
@@ -2392,8 +2388,6 @@ bool ToExtensionInfo(
     for (const std::string &dataGroup : extension.dataGroupIds) {
         extensionInfo.dataGroupIds.emplace_back(dataGroup);
     }
-
-    return true;
 }
 
 bool GetPermissions(
@@ -2627,10 +2621,7 @@ bool ToInnerBundleInfo(
     // handle extensionAbilities
     for (const Profile::Extension &extension : moduleJson.module.extensionAbilities) {
         ExtensionAbilityInfo extensionInfo;
-        if (!ToExtensionInfo(moduleJson, extension, transformParam, extensionInfo)) {
-            APP_LOGE("To extensionInfo failed");
-            return false;
-        }
+        ToExtensionInfo(moduleJson, extension, transformParam, extensionInfo);
 
         if (innerModuleInfo.mainAbility == extensionInfo.name) {
             innerModuleInfo.icon = extensionInfo.icon;

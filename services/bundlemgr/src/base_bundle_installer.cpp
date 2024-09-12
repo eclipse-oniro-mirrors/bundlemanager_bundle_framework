@@ -3150,16 +3150,15 @@ ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int
 ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::string &modulePath)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    // need remove modulePath, make sure the directory is empty
+    if (InstalldClient::GetInstance()->RemoveDir(modulePath) != ERR_OK) {
+        APP_LOGW("remove dir %{public}s failed", modulePath.c_str());
+    }
     auto result = InnerProcessNativeLibs(info, modulePath);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "fail to InnerProcessNativeLibs, error is %{public}d", result);
-        return result;
-    }
+    CHECK_RESULT(result, "fail to InnerProcessNativeLibs, error is %{public}d");
+
     result = ExtractArkNativeFile(info, modulePath);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "fail to extractArkNativeFile, error is %{public}d", result);
-        return result;
-    }
+    CHECK_RESULT(result, "fail to extractArkNativeFile, error is %{public}d");
     if (info.GetIsNewVersion()) {
         result = CopyPgoFileToArkProfileDir(modulePackage_, modulePath_, info.GetBundleName(), userId_);
         if (result != ERR_OK) {
