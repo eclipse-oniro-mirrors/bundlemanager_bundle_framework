@@ -68,9 +68,14 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         isInitial_ = true;
     }
     // for check db exist or not
+    bool isNeedRebuildDb = false;
+    std::string rdbFilePath = bmsRdbConfig_.dbPath + std::string("/") + std::string(BMS_BACK_UP_RDB_NAME);
     if (access(rdbStoreConfig.GetPath().c_str(), F_OK) != 0) {
         APP_LOGW("bms db :%{public}s is not exist, need to create. errno:%{public}d",
             rdbStoreConfig.GetPath().c_str(), errno);
+        if (access(rdbFilePath.c_str(), F_OK) == 0) {
+            isNeedRebuildDb = true;
+        }
     }
     int32_t errCode = NativeRdb::E_OK;
     BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
@@ -86,11 +91,10 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
 
     NativeRdb::RebuiltType rebuildType = NativeRdb::RebuiltType::NONE;
     int32_t rebuildCode = rdbStore_->GetRebuilt(rebuildType);
-    if (rebuildType == NativeRdb::RebuiltType::REBUILT) {
+    if (rebuildType == NativeRdb::RebuiltType::REBUILT || isNeedRebuildDb) {
         APP_LOGI("start %{public}s restore ret %{public}d, type:%{public}d", bmsRdbConfig_.dbName.c_str(),
             rebuildCode, static_cast<int32_t>(rebuildType));
-        int32_t restoreRet = rdbStore_->Restore(bmsRdbConfig_.dbPath + std::string("/") +
-            std::string(BMS_BACK_UP_RDB_NAME));
+        int32_t restoreRet = rdbStore_->Restore(rdbFilePath);
         if (restoreRet != NativeRdb::E_OK) {
             APP_LOGE("rdb restore failed ret:%{public}d", restoreRet);
         }
