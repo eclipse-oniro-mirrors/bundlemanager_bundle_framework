@@ -140,14 +140,12 @@ void from_json(const nlohmann::json& jsonObject, BundleUserInfo& bundleUserInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_USER_INFO_ENABLE,
         bundleUserInfo.enabled,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         BUNDLE_USER_INFO_DISABLE_ABILITIES,

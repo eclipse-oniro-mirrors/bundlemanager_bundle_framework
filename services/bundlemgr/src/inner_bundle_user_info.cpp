@@ -60,21 +60,21 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
         innerBundleUserInfo.accessTokenId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint64_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID_EX,
         innerBundleUserInfo.accessTokenIdEx, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_BUNDLE_NAME,
-        innerBundleUserInfo.bundleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_BUNDLE_NAME,
+        innerBundleUserInfo.bundleName, false, parseResult);
     GetValueIfFindKey<int64_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_INSTALL_TIME,
         innerBundleUserInfo.installTime, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int64_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_UPDATE_TIME,
         innerBundleUserInfo.updateTime, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<BundleUserInfo>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO,
         innerBundleUserInfo.bundleUserInfo, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_IS_REMOVABLE,
-        innerBundleUserInfo.isRemovable, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_IS_REMOVABLE,
+        innerBundleUserInfo.isRemovable, false, parseResult);
     GetValueIfFindKey<std::map<std::string, InnerBundleCloneInfo>>(jsonObject, jsonObjectEnd,
         INNER_BUNDLE_USER_INFO_CLONE_INFOS,
         innerBundleUserInfo.cloneInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_KEYID,
-        innerBundleUserInfo.keyId, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_KEYID,
+        innerBundleUserInfo.keyId, false, parseResult);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

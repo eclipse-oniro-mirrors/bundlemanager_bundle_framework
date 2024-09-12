@@ -340,22 +340,18 @@ void from_json(const nlohmann::json &jsonObject, ApplicationEnvironment &applica
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_ENVIRONMENTS_NAME,
         applicationEnvironment.name,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_ENVIRONMENTS_VALUE,
         applicationEnvironment.value,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read database error : %{public}d", parseResult);
     }
@@ -839,22 +835,18 @@ void from_json(const nlohmann::json &jsonObject, Resource &resource)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         resource.bundleName,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::MODULE_NAME,
         resource.moduleName,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         RESOURCE_ID,
@@ -901,22 +893,18 @@ void from_json(const nlohmann::json &jsonObject, HnpPackage &hnpPackage)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APPLICATION_HNP_PACKAGES_PACKAGE,
         hnpPackage.package,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APPLICATION_HNP_PACKAGES_TYPE,
         hnpPackage.type,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read Resource error %{public}d", parseResult);
     }
@@ -1028,96 +1016,96 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_NAME,
-        applicationInfo.name, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, Constants::BUNDLE_NAME,
-        applicationInfo.bundleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_NAME,
+        applicationInfo.name, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, Constants::BUNDLE_NAME,
+        applicationInfo.bundleName, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_VERSION_CODE,
         applicationInfo.versionCode, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_VERSION_NAME,
-        applicationInfo.versionName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_VERSION_NAME,
+        applicationInfo.versionName, false, parseResult);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_MIN_COMPATIBLE_VERSION_CODE,
         applicationInfo.minCompatibleVersionCode, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_API_COMPATIBLE_VERSION,
         applicationInfo.apiCompatibleVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_API_TARGET_VERSION,
         applicationInfo.apiTargetVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ICON_PATH,
-        applicationInfo.iconPath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ICON_PATH,
+        applicationInfo.iconPath, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_ICON_ID,
         applicationInfo.iconId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_LABEL,
-        applicationInfo.label, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_LABEL,
+        applicationInfo.label, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_LABEL_ID,
         applicationInfo.labelId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_DESCRIPTION,
-        applicationInfo.description, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_DESCRIPTION,
+        applicationInfo.description, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_DESCRIPTION_ID,
         applicationInfo.descriptionId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_KEEP_ALIVE,
-        applicationInfo.keepAlive, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_REMOVABLE,
-        applicationInfo.removable, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_SINGLETON,
-        applicationInfo.singleton, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_USER_DATA_CLEARABLE,
-        applicationInfo.userDataClearable, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED,
-        applicationInfo.allowAppRunWhenDeviceFirstLocked, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_ACCESSIBLE,
-        applicationInfo.accessible, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_IS_SYSTEM_APP,
-        applicationInfo.isSystemApp, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_IS_LAUNCHER_APP,
-        applicationInfo.isLauncherApp, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_IS_FREEINSTALL_APP,
-        applicationInfo.isFreeInstallApp, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_RUNNING_RESOURCES_APPLY,
-        applicationInfo.runningResourcesApply, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_ASSOCIATED_WAKE_UP,
-        applicationInfo.associatedWakeUp, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_HIDE_DESKTOP_ICON,
-        applicationInfo.hideDesktopIcon, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_FORM_VISIBLE_NOTIFY,
-        applicationInfo.formVisibleNotify, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_KEEP_ALIVE,
+        applicationInfo.keepAlive, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_REMOVABLE,
+        applicationInfo.removable, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_SINGLETON,
+        applicationInfo.singleton, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_USER_DATA_CLEARABLE,
+        applicationInfo.userDataClearable, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED,
+        applicationInfo.allowAppRunWhenDeviceFirstLocked, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ACCESSIBLE,
+        applicationInfo.accessible, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_IS_SYSTEM_APP,
+        applicationInfo.isSystemApp, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_IS_LAUNCHER_APP,
+        applicationInfo.isLauncherApp, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_IS_FREEINSTALL_APP,
+        applicationInfo.isFreeInstallApp, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_RUNNING_RESOURCES_APPLY,
+        applicationInfo.runningResourcesApply, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ASSOCIATED_WAKE_UP,
+        applicationInfo.associatedWakeUp, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_HIDE_DESKTOP_ICON,
+        applicationInfo.hideDesktopIcon, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_FORM_VISIBLE_NOTIFY,
+        applicationInfo.formVisibleNotify, false, parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_COMMON_EVENT,
         applicationInfo.allowCommonEvent, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_CODE_PATH,
-        applicationInfo.codePath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_DATA_DIR,
-        applicationInfo.dataDir, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_DATA_BASE_DIR,
-        applicationInfo.dataBaseDir, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_CACHE_DIR,
-        applicationInfo.cacheDir, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ENTRY_DIR,
-        applicationInfo.entryDir, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_API_RELEASETYPE,
-        applicationInfo.apiReleaseType, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_DEBUG,
-        applicationInfo.debug, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_DEVICE_ID,
-        applicationInfo.deviceId, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED,
-        applicationInfo.distributedNotificationEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ENABLE_NOTIFICATION,
-        applicationInfo.allowEnableNotification, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ENTITY_TYPE,
-        applicationInfo.entityType, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_PROCESS,
-        applicationInfo.process, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CODE_PATH,
+        applicationInfo.codePath, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_DATA_DIR,
+        applicationInfo.dataDir, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_DATA_BASE_DIR,
+        applicationInfo.dataBaseDir, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CACHE_DIR,
+        applicationInfo.cacheDir, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ENTRY_DIR,
+        applicationInfo.entryDir, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_API_RELEASETYPE,
+        applicationInfo.apiReleaseType, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_DEBUG,
+        applicationInfo.debug, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_DEVICE_ID,
+        applicationInfo.deviceId, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED,
+        applicationInfo.distributedNotificationEnabled, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ENABLE_NOTIFICATION,
+        applicationInfo.allowEnableNotification, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ENTITY_TYPE,
+        applicationInfo.entityType, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_PROCESS,
+        applicationInfo.process, false, parseResult);
     GetValueIfFindKey<int>(jsonObject, jsonObjectEnd, APPLICATION_SUPPORTED_MODES,
         applicationInfo.supportedModes, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_VENDOR,
-        applicationInfo.vendor, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_PRIVILEGE_LEVEL,
-        applicationInfo.appPrivilegeLevel, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_VENDOR,
+        applicationInfo.vendor, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_PRIVILEGE_LEVEL,
+        applicationInfo.appPrivilegeLevel, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_ACCESSTOKEN_ID,
         applicationInfo.accessTokenId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint64_t>(jsonObject, jsonObjectEnd, APPLICATION_ACCESSTOKEN_ID_EX,
         applicationInfo.accessTokenIdEx, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_ENABLED,
-        applicationInfo.enabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ENABLED,
+        applicationInfo.enabled, false, parseResult);
     GetValueIfFindKey<int>(jsonObject, jsonObjectEnd, APPLICATION_UID,
         applicationInfo.uid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, APPLICATION_PERMISSIONS,
@@ -1135,74 +1123,74 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
     GetValueIfFindKey<std::map<std::string, std::vector<Metadata>>>(jsonObject, jsonObjectEnd,
         APPLICATION_META_DATA_MODULE_JSON,
         applicationInfo.metadata, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_FINGERPRINT,
-        applicationInfo.fingerprint, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ICON,
-        applicationInfo.icon, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_FINGERPRINT,
+        applicationInfo.fingerprint, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ICON,
+        applicationInfo.icon, false, parseResult);
     GetValueIfFindKey<int>(jsonObject, jsonObjectEnd, APPLICATION_FLAGS,
         applicationInfo.flags, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ENTRY_MODULE_NAME,
-        applicationInfo.entryModuleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_NATIVE_LIBRARY_PATH,
-        applicationInfo.nativeLibraryPath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_CPU_ABI,
-        applicationInfo.cpuAbi, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ARK_NATIVE_FILE_PATH,
-        applicationInfo.arkNativeFilePath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ARK_NATIVE_FILE_ABI,
-        applicationInfo.arkNativeFileAbi, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_IS_COMPRESS_NATIVE_LIBS,
-        applicationInfo.isCompressNativeLibs, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_SIGNATURE_KEY,
-        applicationInfo.signatureKey, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ENTRY_MODULE_NAME,
+        applicationInfo.entryModuleName, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_NATIVE_LIBRARY_PATH,
+        applicationInfo.nativeLibraryPath, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CPU_ABI,
+        applicationInfo.cpuAbi, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ARK_NATIVE_FILE_PATH,
+        applicationInfo.arkNativeFilePath, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ARK_NATIVE_FILE_ABI,
+        applicationInfo.arkNativeFileAbi, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_IS_COMPRESS_NATIVE_LIBS,
+        applicationInfo.isCompressNativeLibs, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_SIGNATURE_KEY,
+        applicationInfo.signatureKey, false, parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, APPLICATION_TARGETBUNDLELIST,
         applicationInfo.targetBundleList, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_APP_DISTRIBUTION_TYPE,
-        applicationInfo.appDistributionType, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_APP_PROVISION_TYPE,
-        applicationInfo.appProvisionType, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_APP_DISTRIBUTION_TYPE,
+        applicationInfo.appDistributionType, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_APP_PROVISION_TYPE,
+        applicationInfo.appProvisionType, false, parseResult);
     GetValueIfFindKey<Resource>(jsonObject, jsonObjectEnd, APPLICATION_ICON_RESOURCE,
         applicationInfo.iconResource, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<Resource>(jsonObject, jsonObjectEnd, APPLICATION_LABEL_RESOURCE,
         applicationInfo.labelResource, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<Resource>(jsonObject, jsonObjectEnd, APPLICATION_DESCRIPTION_RESOURCE,
         applicationInfo.descriptionResource, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_MULTI_PROJECTS,
-        applicationInfo.multiProjects, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_MULTI_PROJECTS,
+        applicationInfo.multiProjects, false, parseResult);
     GetValueIfFindKey<int64_t>(jsonObject, jsonObjectEnd, APPLICATION_CROWDTEST_DEADLINE,
         applicationInfo.crowdtestDeadline, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<AppQuickFix>(jsonObject, jsonObjectEnd, APPLICATION_APP_QUICK_FIX,
         applicationInfo.appQuickFix, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_NEED_APP_DETAIL,
-        applicationInfo.needAppDetail, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_APP_DETAIL_ABILITY_LIBRARY_PATH,
-        applicationInfo.appDetailAbilityLibraryPath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_APP_TARGET_BUNDLE_NAME,
-        applicationInfo.targetBundleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_NEED_APP_DETAIL,
+        applicationInfo.needAppDetail, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_APP_DETAIL_ABILITY_LIBRARY_PATH,
+        applicationInfo.appDetailAbilityLibraryPath, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_APP_TARGET_BUNDLE_NAME,
+        applicationInfo.targetBundleName, false, parseResult);
     GetValueIfFindKey<int>(jsonObject, jsonObjectEnd, APPLICATION_APP_TARGET_PRIORITY,
         applicationInfo.targetPriority, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int>(jsonObject, jsonObjectEnd, APPLICATION_APP_OVERLAY_STATE,
         applicationInfo.overlayState, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_ASAN_ENABLED,
-        applicationInfo.asanEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ASAN_LOG_PATH,
-        applicationInfo.asanLogPath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ASAN_ENABLED,
+        applicationInfo.asanEnabled, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ASAN_LOG_PATH,
+        applicationInfo.asanLogPath, false, parseResult);
     GetValueIfFindKey<BundleType>(jsonObject, jsonObjectEnd, APPLICATION_APP_TYPE,
         applicationInfo.bundleType, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_COMPILE_SDK_VERSION,
-        applicationInfo.compileSdkVersion, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_COMPILE_SDK_TYPE,
-        applicationInfo.compileSdkType, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_COMPILE_SDK_VERSION,
+        applicationInfo.compileSdkVersion, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_COMPILE_SDK_TYPE,
+        applicationInfo.compileSdkType, false, parseResult);
     GetValueIfFindKey<std::vector<int32_t>>(jsonObject, jsonObjectEnd, APPLICATION_RESOURCES_APPLY,
         applicationInfo.resourcesApply, JsonType::ARRAY, false, parseResult, ArrayType::NUMBER);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_GWP_ASAN_ENABLED,
-        applicationInfo.gwpAsanEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_GWP_ASAN_ENABLED,
+        applicationInfo.gwpAsanEnabled, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_RESERVED_FLAG,
         applicationInfo.applicationReservedFlag, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_TSAN_ENABLED,
-        applicationInfo.tsanEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ORGANIZATION,
-        applicationInfo.organization, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_TSAN_ENABLED,
+        applicationInfo.tsanEnabled, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ORGANIZATION,
+        applicationInfo.organization, false, parseResult);
     GetValueIfFindKey<std::vector<ApplicationEnvironment>>(jsonObject, jsonObjectEnd,
         APPLICATION_APP_ENVIRONMENTS,
         applicationInfo.appEnvironments, JsonType::ARRAY, false, parseResult, ArrayType::OBJECT);
@@ -1212,18 +1200,18 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.appIndex, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_MAX_CHILD_PROCESS,
         applicationInfo.maxChildProcess, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_INSTALL_SOURCE,
-        applicationInfo.installSource, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_HWASAN_ENABLED,
-        applicationInfo.hwasanEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_CONFIGURATION,
-        applicationInfo.configuration, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_FILE_SYNC_ENABLED,
-        applicationInfo.cloudFileSyncEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_INSTALL_SOURCE,
+        applicationInfo.installSource, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_HWASAN_ENABLED,
+        applicationInfo.hwasanEnabled, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CONFIGURATION,
+        applicationInfo.configuration, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_FILE_SYNC_ENABLED,
+        applicationInfo.cloudFileSyncEnabled, false, parseResult);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_APPLICATION_FLAGS,
         applicationInfo.applicationFlags, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_UBSAN_ENABLED,
-        applicationInfo.ubsanEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_UBSAN_ENABLED,
+        applicationInfo.ubsanEnabled, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error : %{public}d", parseResult);
     }

@@ -30,22 +30,18 @@ static constexpr const char* PERMISSIONS_PROFILE_KEY_APP_SIGNATURE = "app_signat
 void from_json(const nlohmann::json &jsonObject, PermissionInfo &permissionInfo)
 {
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         PERMISSIONS_PROFILE_KEY_NAME,
         permissionInfo.name,
-        JsonType::STRING,
         true,
-        g_permJson,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_permJson);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         PERMISSIONS_PROFILE_KEY_USER_CANCELLABLE,
         permissionInfo.userCancellable,
-        JsonType::BOOLEAN,
         true,
-        g_permJson,
-        ArrayType::NOT_ARRAY);
+        g_permJson);
 }
 
 ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
@@ -61,11 +57,10 @@ ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
             }
             DefaultPermission defaultPermission;
             const auto &objectEnd = object.end();
-            GetValueIfFindKey<std::string>(object, objectEnd,
+            BMSJsonUtil::GetStrValueIfFindKey(object, objectEnd,
                 PERMISSIONS_PROFILE_KEY_BUNDLENAME,
                 defaultPermission.bundleName,
-                JsonType::STRING,
-                true, g_permJson, ArrayType::NOT_ARRAY);
+                true, g_permJson);
 
             GetValueIfFindKey<std::vector<std::string>>(object, objectEnd,
                 PERMISSIONS_PROFILE_KEY_APP_SIGNATURE,

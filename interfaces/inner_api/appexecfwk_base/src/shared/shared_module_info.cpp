@@ -105,42 +105,35 @@ void from_json(const nlohmann::json &jsonObject, SharedModuleInfo &sharedModuleI
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_NAME,
-        sharedModuleInfo.name, JsonType::STRING, false, parseResult,
-        ArrayType::NOT_ARRAY);
+        sharedModuleInfo.name, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_VERSION_CODE,
         sharedModuleInfo.versionCode, JsonType::NUMBER, false, parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_VERSION_NAME,
-        sharedModuleInfo.versionName, JsonType::STRING, false, parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+        sharedModuleInfo.versionName, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_DESCRIPTION,
-        sharedModuleInfo.description, JsonType::STRING, false, parseResult,
-        ArrayType::NOT_ARRAY);
+        sharedModuleInfo.description, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_DESCRIPTION_ID,
         sharedModuleInfo.descriptionId, JsonType::NUMBER, false, parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_COMPRESS_NATIVE_LIBS,
-        sharedModuleInfo.compressNativeLibs, JsonType::BOOLEAN,
-        false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+        sharedModuleInfo.compressNativeLibs, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_HAP_PATH,
-        sharedModuleInfo.hapPath, JsonType::STRING, false, parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+        sharedModuleInfo.hapPath, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_CPU_ABI,
-        sharedModuleInfo.cpuAbi, JsonType::STRING, false, parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+        sharedModuleInfo.cpuAbi, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_NATIVE_LIBRARY_PATH,
-        sharedModuleInfo.nativeLibraryPath, JsonType::STRING, false, parseResult,
-        ArrayType::NOT_ARRAY);
+        sharedModuleInfo.nativeLibraryPath, false, parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES,
         sharedModuleInfo.nativeLibraryFileNames, JsonType::ARRAY, false, parseResult,

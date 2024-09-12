@@ -52,26 +52,26 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, BUNDLE_NAME,
-        bundleName_, JsonType::STRING, true, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, BUNDLE_NAME,
+        bundleName_, true, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, VERSION_CODE,
         versionCode_, JsonType::NUMBER, true, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, BUNDLE_PATHS,
         bundlePaths_, JsonType::ARRAY, true, parseResult, ArrayType::STRING);
     GetValueIfFindKey<Constants::AppType>(jsonObject, jsonObjectEnd, APP_TYPE,
         appType_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, REMOVABLE,
-        removable_, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, IS_UNINSTALLED,
-        isUninstalled_, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, MODULE_NAME,
-        moduleName_, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, REMOVABLE,
+        removable_, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, IS_UNINSTALLED,
+        isUninstalled_, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, MODULE_NAME,
+        moduleName_, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, LABEL_ID,
         labelId_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, ICON_ID,
         iconId_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, SYSTEM_APP,
-        systemApp_, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, SYSTEM_APP,
+        systemApp_, false, parseResult);
     GetValueIfFindKey<BundleType>(jsonObject, jsonObjectEnd, BUNDLE_TYPE,
         bundleType_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     return parseResult;

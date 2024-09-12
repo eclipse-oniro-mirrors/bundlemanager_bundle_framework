@@ -56,8 +56,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleClo
         bundleCloneInfo.uid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<int32_t>>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_GIDS,
         bundleCloneInfo.gids, JsonType::ARRAY, false, parseResult, ArrayType::NUMBER);
-    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_ENABLE,
-        bundleCloneInfo.enabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_ENABLE,
+        bundleCloneInfo.enabled, false, parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_DISABLE_ABILITIES,
         bundleCloneInfo.disabledAbilities, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID,
