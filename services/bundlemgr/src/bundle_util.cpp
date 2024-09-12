@@ -215,6 +215,17 @@ bool BundleUtil::CheckSystemSize(const std::string &bundlePath, const std::strin
     return true;
 }
 
+bool BundleUtil::CheckSystemFreeSize(const std::string &path, int64_t size)
+{
+    struct statfs diskInfo = { 0 };
+    if (statfs(path.c_str(), &diskInfo) != 0) {
+        APP_LOGE("call statfs error:%{public}d", errno);
+        return false;
+    }
+    int64_t freeSize = diskInfo.f_bavail * diskInfo.f_bsize;
+    return freeSize >= size;
+}
+
 bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath, std::vector<std::string>& hapFileList)
 {
     APP_LOGD("GetHapFilesFromBundlePath with path is %{public}s", currentBundlePath.c_str());
