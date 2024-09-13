@@ -91,12 +91,12 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     window.autoDesignWidth = formInfo.window.autoDesignWidth;
     std::size_t pos = formInfo.displayName.find(':');
     if (pos != std::string::npos) {
-        displayNameId = static_cast<unsigned int>(
+        displayNameId = static_cast<uint32_t>(
             atoi(formInfo.displayName.substr(pos + 1, formInfo.displayName.length() - pos - 1).c_str()));
     }
     pos = formInfo.description.find(':');
     if (pos != std::string::npos) {
-        descriptionId = static_cast<unsigned int>(
+        descriptionId = static_cast<uint32_t>(
             atoi(formInfo.description.substr(pos + 1, formInfo.description.length() - pos - 1).c_str()));
     }
     updateDuration = formInfo.updateDuration;
@@ -503,7 +503,7 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         formInfo.originalBundleName,
         false,
         parseResult);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_DISPLAY_NAME_ID,
         formInfo.displayNameId,
@@ -511,7 +511,7 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_DESCRIPTION_ID,
         formInfo.descriptionId,

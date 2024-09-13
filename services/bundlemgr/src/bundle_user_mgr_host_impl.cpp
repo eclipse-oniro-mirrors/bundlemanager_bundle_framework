@@ -227,17 +227,16 @@ void BundleUserMgrHostImpl::GetAllDriverBundleInfos(std::set<PreInstallBundleInf
 
 void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 {
-    if (userId == Constants::START_USERID) {
-        DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
-        // need process main bundle status
-        BmsKeyEventMgr::ProcessMainBundleStatusFinally();
-    }
-
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleCreateUser(userId);
 #endif
     HandleSceneBoard(userId);
     RdbDataManager::ClearCache();
+    if (userId == Constants::START_USERID) {
+        DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+        // need process main bundle status
+        BmsKeyEventMgr::ProcessMainBundleStatusFinally();
+    }
 }
 
 ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)

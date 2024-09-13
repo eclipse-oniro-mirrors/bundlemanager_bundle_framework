@@ -270,7 +270,9 @@ void BMSEventHandler::AfterBmsStart()
 {
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart start");
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    DelayedSingleton<QuickFixBootScanner>::GetInstance()->ProcessQuickFixBootUp();
+    if (OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
+        DelayedSingleton<QuickFixBootScanner>::GetInstance()->ProcessQuickFixBootUp();
+    }
 #endif
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
     SetAllInstallFlag();
