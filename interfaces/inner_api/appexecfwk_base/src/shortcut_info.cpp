@@ -28,30 +28,30 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* JSON_KEY_BUNDLE_ID = "id";
-const char* JSON_KEY_BUNDLE_HOST_ABILITY = "hostAbility";
-const char* JSON_KEY_BUNDLE_ICON = "icon";
-const char* JSON_KEY_BUNDLE_LABEL = "label";
-const char* JSON_KEY_BUNDLE_DISABLE_MESSAGE = "disableMessage";
-const char* JSON_KEY_BUNDLE_IS_STATIC = "isStatic";
-const char* JSON_KEY_BUNDLE_IS_HOME_SHORTCUT = "isHomeShortcut";
-const char* JSON_KEY_BUNDLE_IS_ENABLES = "isEnables";
-const char* JSON_KEY_BUNDLE_INTENTS = "intents";
-const char* JSON_KEY_BUNDLE_TARGET_BUNDLE = "targetBundle";
-const char* JSON_KEY_BUNDLE_TARGET_MODULE = "targetModule";
-const char* JSON_KEY_BUNDLE_TARGET_CLASS = "targetClass";
-const char* JSON_KEY_BUNDLE_PARAMETERS = "parameters";
-const char* JSON_KEY_ICON_ID = "iconId";
-const char* JSON_KEY_LABEL_ID = "labelId";
-const char* JSON_KEY_APP_INDEX = "appIndex";
-const char* JSON_KEY_SOURCE_TYPE = "sourceType";
-const char* SHORTCUTS = "shortcuts";
-const char* SHORTCUT_ID = "shortcutId";
-const char* SHORTCUT_WANTS = "wants";
-const char* ICON = "icon";
-const char* ICON_ID = "iconId";
-const char* LABEL = "label";
-const char* LABEL_ID = "labelId";
+const std::string JSON_KEY_BUNDLE_ID = "id";
+const std::string JSON_KEY_BUNDLE_HOST_ABILITY = "hostAbility";
+const std::string JSON_KEY_BUNDLE_ICON = "icon";
+const std::string JSON_KEY_BUNDLE_LABEL = "label";
+const std::string JSON_KEY_BUNDLE_DISABLE_MESSAGE = "disableMessage";
+const std::string JSON_KEY_BUNDLE_IS_STATIC = "isStatic";
+const std::string JSON_KEY_BUNDLE_IS_HOME_SHORTCUT = "isHomeShortcut";
+const std::string JSON_KEY_BUNDLE_IS_ENABLES = "isEnables";
+const std::string JSON_KEY_BUNDLE_INTENTS = "intents";
+const std::string JSON_KEY_BUNDLE_TARGET_BUNDLE = "targetBundle";
+const std::string JSON_KEY_BUNDLE_TARGET_MODULE = "targetModule";
+const std::string JSON_KEY_BUNDLE_TARGET_CLASS = "targetClass";
+const std::string JSON_KEY_BUNDLE_PARAMETERS = "parameters";
+const std::string JSON_KEY_ICON_ID = "iconId";
+const std::string JSON_KEY_LABEL_ID = "labelId";
+const std::string JSON_KEY_APP_INDEX = "appIndex";
+const std::string JSON_KEY_SOURCE_TYPE = "sourceType";
+const std::string SHORTCUTS = "shortcuts";
+const std::string SHORTCUT_ID = "shortcutId";
+const std::string SHORTCUT_WANTS = "wants";
+const std::string ICON = "icon";
+const std::string ICON_ID = "iconId";
+const std::string LABEL = "label";
+const std::string LABEL_ID = "labelId";
 }  // namespace
 
 bool ShortcutInfo::ReadFromParcel(Parcel &parcel)

@@ -25,27 +25,27 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct ExtensionFormInfo {
-    bool formVisibleNotify = false;
-    bool isDefault = false;
-    bool updateEnabled = false;
-    bool dataProxyEnabled = false;
-    bool isDynamic = true;
-    bool transparencyEnabled = true;
-    bool fontScaleFollowSystem = true;
-    FormsColorMode colorMode = FormsColorMode::AUTO_MODE;
-    FormType type = FormType::JS;
-    FormType uiSyntax = FormType::JS;
-    std::string scheduledUpdateTime = "";
     std::string name;
     std::string displayName;
     std::string description;
     std::string src;
     FormWindow window;
+    FormsColorMode colorMode = FormsColorMode::AUTO_MODE;
     std::string formConfigAbility;
+    FormType type = FormType::JS;
+    FormType uiSyntax = FormType::JS;
+    bool formVisibleNotify = false;
+    bool isDefault = false;
+    bool updateEnabled = false;
+    std::string scheduledUpdateTime = "";
     int32_t updateDuration = 0;
     int32_t defaultDimension = 0;
     std::vector<int32_t> supportDimensions {};
     std::vector<FormCustomizeData> metadata {};
+    bool dataProxyEnabled = false;
+    bool isDynamic = true;
+    bool transparencyEnabled = true;
+    bool fontScaleFollowSystem = true;
     std::vector<int32_t> supportShapes {};
 };
 }  // namespace AppExecFwk

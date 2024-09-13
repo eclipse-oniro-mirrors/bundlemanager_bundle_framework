@@ -27,7 +27,7 @@ namespace OHOS {
 namespace CJSystemapi {
 namespace BundleManager {
 
-constexpr int8_t UNSPECIFIED_USERID = -2;
+constexpr int UNSPECIFIED_USERID = -2;
 constexpr int32_t BASE_USER_RANGE = 200000;
 const std::string GET_BUNDLE_INFO = "GetBundleInfo";
 

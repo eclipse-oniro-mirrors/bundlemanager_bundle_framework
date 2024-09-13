@@ -26,7 +26,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int8_t MAX_DEVICETYPE_SIZE = 50;
+constexpr int MAX_DEVICETYPE_SIZE = 50;
 }
 using namespace Constants;
 bool CompatibleAbilityInfo::ReadFromParcel(Parcel& parcel)

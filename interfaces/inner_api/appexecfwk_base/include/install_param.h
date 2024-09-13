@@ -24,7 +24,7 @@
 #include "parcel.h"
 namespace OHOS {
 namespace AppExecFwk {
-enum class InstallFlag : int8_t {
+enum class InstallFlag {
     NORMAL = 0,
     // Allow to replace the existing bundle when the new version isn't lower than the old one.
     // If the bundle does not exist, just like normal flag.
@@ -32,12 +32,12 @@ enum class InstallFlag : int8_t {
     FREE_INSTALL = 0x10,
 };
 
-enum class InstallLocation : int8_t {
+enum class InstallLocation {
     INTERNAL_ONLY = 1,
     PREFER_EXTERNAL = 2,
 };
 
-enum class PermissionStatus : int8_t {
+enum class PermissionStatus {
     NOT_VERIFIED_PERMISSION_STATUS = 0,
     HAVE_PERMISSION_STATUS,
     NON_HAVE_PERMISSION_STATUS

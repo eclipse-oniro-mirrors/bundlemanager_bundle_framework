@@ -24,11 +24,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* DATA_GROUP_ID = "dataGroupId";
-const char* UUID = "uuid";
-const char* UID = "uid";
-const char* GID = "gid";
-const char* USER_ID = "userId";
+const std::string DATA_GROUP_ID = "dataGroupId";
+const std::string UUID = "uuid";
+const std::string UID = "uid";
+const std::string GID = "gid";
+const std::string USER_ID = "userId";
 }  // namespace
 
 bool DataGroupInfo::ReadFromParcel(Parcel &parcel)

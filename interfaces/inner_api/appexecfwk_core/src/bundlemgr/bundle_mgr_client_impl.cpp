@@ -35,12 +35,12 @@ using namespace OHOS::Global::Resource;
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* BUNDLE_MAP_CODE_PATH = "/data/storage/el1/bundle";
-const char* DATA_APP_PATH = "/data/app";
+const std::string BUNDLE_MAP_CODE_PATH = "/data/storage/el1/bundle";
+const std::string DATA_APP_PATH = "/data/app";
 #ifdef GLOBAL_RESMGR_ENABLE
 constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 #endif
-const char* PATH_SEPARATOR = "/";
+const std::string PATH_SEPARATOR = "/";
 } // namespace
 
 BundleMgrClientImpl::BundleMgrClientImpl()
@@ -243,7 +243,7 @@ bool BundleMgrClientImpl::ConvertResourcePath(
         APP_LOGD("no need to convert to sandbox path");
         return true;
     }
-    std::string innerStr = std::string(Constants::BUNDLE_CODE_DIR) + std::string(PATH_SEPARATOR) + bundleName;
+    std::string innerStr = Constants::BUNDLE_CODE_DIR + PATH_SEPARATOR + bundleName;
     if (resPath.find(innerStr) == std::string::npos) {
         APP_LOGE("res path is incorrect");
         return false;

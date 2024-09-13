@@ -32,6 +32,7 @@ namespace AppExecFwk {
 using namespace Constants;
 
 namespace {
+    const std::string DEBUG = "debug";
 } // namespace
 
 bool CompatibleApplicationInfo::ReadFromParcel(Parcel& parcel)

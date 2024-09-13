@@ -23,7 +23,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 // overlay installation type definition
-enum OverlayType : int8_t {
+enum OverlayType : int32_t {
     OVERLAY_INTERNAL_BUNDLE = 1,
     OVERLAY_EXTERNAL_BUNDLE,
     NON_OVERLAY_TYPE,

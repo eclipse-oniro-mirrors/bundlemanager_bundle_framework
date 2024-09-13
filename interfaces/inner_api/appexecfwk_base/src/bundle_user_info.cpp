@@ -28,10 +28,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* BUNDLE_USER_INFO_USER_ID = "userId";
-const char* BUNDLE_USER_INFO_ENABLE = "enabled";
-const char* BUNDLE_USER_INFO_DISABLE_ABILITIES = "disabledAbilities";
-const char* BUNDLE_USER_INFO_OVERLAY_STATE = "overlayState";
+const std::string BUNDLE_USER_INFO_USER_ID = "userId";
+const std::string BUNDLE_USER_INFO_ENABLE = "enabled";
+const std::string BUNDLE_USER_INFO_DISABLE_ABILITIES = "disabledAbilities";
+const std::string BUNDLE_USER_INFO_OVERLAY_STATE = "overlayState";
 } // namespace
 
 bool BundleUserInfo::ReadFromParcel(Parcel &parcel)

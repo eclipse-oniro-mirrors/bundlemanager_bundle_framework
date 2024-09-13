@@ -182,12 +182,12 @@ bool DefaultAppProxy::SendRequest(DefaultAppInterfaceCode code, MessageParcel& d
     MessageOption option(MessageOption::TF_SYNC);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "failed to send request %{public}hhu due to remote object null", code);
+        LOG_E(BMS_TAG_DEFAULT, "failed to send request %{public}d due to remote object null", code);
         return false;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        LOG_E(BMS_TAG_DEFAULT, "receive error code %{public}d in transact %{public}hhu", result, code);
+        LOG_E(BMS_TAG_DEFAULT, "receive error code %{public}d in transact %{public}d", result, code);
         return false;
     }
     return true;

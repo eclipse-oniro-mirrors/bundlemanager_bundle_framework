@@ -748,7 +748,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     if (!GetInnerBundleInfo(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    LOG_I(BMS_TAG_INSTALLER, "flag:%{public}hhd, userId:%{public}d, isAppExist:%{public}d",
+    LOG_I(BMS_TAG_INSTALLER, "flag:%{public}d, userId:%{public}d, isAppExist:%{public}d",
         installParam.installFlag, userId_, isAppExist_);
 
     KillRelatedProcessIfArkWeb(bundleName_, isAppExist_, installParam.isOTA);

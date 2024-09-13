@@ -25,7 +25,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* JSON_KEY_VERSION = "version";
+const std::string JSON_KEY_VERSION = "version";
 }  //  namespace
 
 void to_json(nlohmann::json &jsonObject, const DispatcherInfo &dispatcherInfo)

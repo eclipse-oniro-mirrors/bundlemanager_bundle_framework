@@ -109,12 +109,12 @@ bool BundleUserMgrProxy::SendTransactCmd(BundleUserMgrInterfaceCode code, Messag
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("fail send transact cmd %{public}hhd due to remote object", code);
+        APP_LOGE("fail send transact cmd %{public}d due to remote object", code);
         return false;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}hhd", result, code);
+        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
         return false;
     }
     return true;

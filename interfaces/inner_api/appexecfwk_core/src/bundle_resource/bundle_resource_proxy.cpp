@@ -411,12 +411,12 @@ bool BundleResourceProxy::SendRequest(BundleResourceInterfaceCode code,
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("fail send transact cmd %{public}hhu due to remote object", code);
+        APP_LOGE("fail send transact cmd %{public}d due to remote object", code);
         return false;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        APP_LOGE("receive error %{public}d in transact cmd %{public}hhu", result, code);
+        APP_LOGE("receive error %{public}d in transact cmd %{public}d", result, code);
         return false;
     }
     return true;

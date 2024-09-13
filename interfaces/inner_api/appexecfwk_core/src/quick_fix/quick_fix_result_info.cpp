@@ -23,13 +23,13 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* QUICK_FIX_RESULT_CODE = "resultCode";
-const char* QUICK_FIX_BUNDLE_NAME = "bundleName";
-const char* QUICK_FIX_BUNDLE_VERSION_CODE = "bundleVersionCode";
-const char* QUICK_FIX_PATCH_VERSION_CODE = "patchVersionCode";
-const char* QUICK_FIX_IS_SO_CONTAINED = "isSoContained";
-const char* QUICK_FIX_TYPE = "type";
-const char* QUICK_FIX_MODULE_NAME = "moduleNames";
+const std::string QUICK_FIX_RESULT_CODE = "resultCode";
+const std::string QUICK_FIX_BUNDLE_NAME = "bundleName";
+const std::string QUICK_FIX_BUNDLE_VERSION_CODE = "bundleVersionCode";
+const std::string QUICK_FIX_PATCH_VERSION_CODE = "patchVersionCode";
+const std::string QUICK_FIX_IS_SO_CONTAINED = "isSoContained";
+const std::string QUICK_FIX_TYPE = "type";
+const std::string QUICK_FIX_MODULE_NAME = "moduleNames";
 } // namespace
 
 bool DeployQuickFixResult::ReadFromParcel(Parcel &parcel)

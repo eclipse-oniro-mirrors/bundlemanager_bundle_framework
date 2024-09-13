@@ -35,11 +35,11 @@ namespace AppExecFwk {
 namespace LIBZIP {
 using namespace std;
 
-static constexpr uint8_t MIN_NUMBER = 1;
-static constexpr uint8_t MIN_ASCII = 0;
-static constexpr uint8_t MAX_ASCII = 255;
-static constexpr uint8_t MIN_WINDOWBITS = 8;
-static constexpr uint8_t MAX_WINDOWBITS = 15;
+static constexpr int MIN_NUMBER = 1;
+static constexpr int MIN_ASCII = 0;
+static constexpr int MAX_ASCII = 255;
+static constexpr int MIN_WINDOWBITS = 8;
+static constexpr int MAX_WINDOWBITS = 15;
 
 tuple<bool, int64_t, void *, size_t> CommonFunc::GetAdler32Arg(napi_env env, const NapiFuncArg &funcArg)
 {

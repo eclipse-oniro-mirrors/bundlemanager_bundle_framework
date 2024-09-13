@@ -15,7 +15,6 @@
 
 #include "ability_info.h"
 
-#include <cstdint>
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>

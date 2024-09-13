@@ -24,63 +24,63 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 // version
-const char* PACK_SUMMARY_APP_VERSION_CODE = "code";
-const char* PACK_SUMMARY_APP_VERSION_NAME = "name";
-const char* PACK_SUMMARY_APP_VERSION_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
+const std::string PACK_SUMMARY_APP_VERSION_CODE = "code";
+const std::string PACK_SUMMARY_APP_VERSION_NAME = "name";
+const std::string PACK_SUMMARY_APP_VERSION_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
 
 // app
-const char* PACK_SUMMARY_APP_BUNDLE_VERSION = "version";
+const std::string PACK_SUMMARY_APP_BUNDLE_VERSION = "version";
 
 // module ablities
-const char* PACK_SUMMARY_MODULE_ABILITY_NAME = "name";
-const char* PACK_SUMMARY_MODULE_ABILITY_LABEL = "label";
-const char* PACK_SUMMARY_MODULE_ABILITY_VISIBLE = "visible";
-const char* PACK_SUMMARY_MODULE_ABILITY_FORMS = "forms";
+const std::string PACK_SUMMARY_MODULE_ABILITY_NAME = "name";
+const std::string PACK_SUMMARY_MODULE_ABILITY_LABEL = "label";
+const std::string PACK_SUMMARY_MODULE_ABILITY_VISIBLE = "visible";
+const std::string PACK_SUMMARY_MODULE_ABILITY_FORMS = "forms";
 
 // module extensionAbilities
-const char* PACK_SUMMARY_MODULE_EXTENSION_ABILITIES_NAME = "name";
-const char* PACK_SUMMARY_MODULE_EXTENSION_ABILITIES_FORMS = "forms";
+const std::string PACK_SUMMARY_MODULE_EXTENSION_ABILITIES_NAME = "name";
+const std::string PACK_SUMMARY_MODULE_EXTENSION_ABILITIES_FORMS = "forms";
 
 // module ablities forms
-const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_NAME = "name";
-const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_TYPE = "type";
-const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_UPDATE_ENABLED = "updateEnabled";
-const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_SCHEDULE_DUPDATETIME = "scheduledUpdateTime";
-const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_UPDATE_DURATION = "updateDuration";
-const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_SUPPORT_DIMENSIONS = "supportDimensions";
-const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_DEFAULT_DIMENSION = "defaultDimension";
+const std::string PACK_SUMMARY_MODULE_ABILITY_FORMS_NAME = "name";
+const std::string PACK_SUMMARY_MODULE_ABILITY_FORMS_TYPE = "type";
+const std::string PACK_SUMMARY_MODULE_ABILITY_FORMS_UPDATE_ENABLED = "updateEnabled";
+const std::string PACK_SUMMARY_MODULE_ABILITY_FORMS_SCHEDULE_DUPDATETIME = "scheduledUpdateTime";
+const std::string PACK_SUMMARY_MODULE_ABILITY_FORMS_UPDATE_DURATION = "updateDuration";
+const std::string PACK_SUMMARY_MODULE_ABILITY_FORMS_SUPPORT_DIMENSIONS = "supportDimensions";
+const std::string PACK_SUMMARY_MODULE_ABILITY_FORMS_DEFAULT_DIMENSION = "defaultDimension";
 
 // module distro
-const char* PACK_SUMMARY_MODULE_DISTRO_MODULE_TYPE = "moduleType";
-const char* PACK_SUMMARY_MODULE_DISTRO_INSTALLATION_FREE = "installationFree";
-const char* PACK_SUMMARY_MODULE_DISTRO_DELIVERY_WITH_INSTALL = "deliveryWithInstall";
+const std::string PACK_SUMMARY_MODULE_DISTRO_MODULE_TYPE = "moduleType";
+const std::string PACK_SUMMARY_MODULE_DISTRO_INSTALLATION_FREE = "installationFree";
+const std::string PACK_SUMMARY_MODULE_DISTRO_DELIVERY_WITH_INSTALL = "deliveryWithInstall";
 
 // module apiversion
-const char* PACK_SUMMARY_MODULE_API_VERSION_COMPATIBLE = "compatible";
-const char* PACK_SUMMARY_MODULE_API_VERSION_RELEASE_TYPE = "releaseType";
-const char* PACK_SUMMARY_MODULE_API_VERSION_TARGET = "target";
+const std::string PACK_SUMMARY_MODULE_API_VERSION_COMPATIBLE = "compatible";
+const std::string PACK_SUMMARY_MODULE_API_VERSION_RELEASE_TYPE = "releaseType";
+const std::string PACK_SUMMARY_MODULE_API_VERSION_TARGET = "target";
 
 // package module
-const char* PACK_SUMMARY_MODULE_MAIN_ABILITY = "mainAbility";
-const char* PACK_SUMMARY_MODULE_DEVICE_TYPE = "deviceType";
-const char* PACK_SUMMARY_MODULE_ABILITIES = "abilities";
-const char* PACK_SUMMARY_MODULE_DISTRO = "distro";
-const char* PACK_SUMMARY_MODULE_API_VERSION = "apiVersion";
-const char* PACK_SUMMARY_MODULE_EXTENSION_ABILITIES = "extensionAbilities";
+const std::string PACK_SUMMARY_MODULE_MAIN_ABILITY = "mainAbility";
+const std::string PACK_SUMMARY_MODULE_DEVICE_TYPE = "deviceType";
+const std::string PACK_SUMMARY_MODULE_ABILITIES = "abilities";
+const std::string PACK_SUMMARY_MODULE_DISTRO = "distro";
+const std::string PACK_SUMMARY_MODULE_API_VERSION = "apiVersion";
+const std::string PACK_SUMMARY_MODULE_EXTENSION_ABILITIES = "extensionAbilities";
 
 // summary
-const char* PACK_SUMMARY_APP = "app";
-const char* PACK_SUMMARY_MODULE = "modules";
+const std::string PACK_SUMMARY_APP = "app";
+const std::string PACK_SUMMARY_MODULE = "modules";
 
 // packages
-const char* PACK_PACKAGES_DEVICE_TYPE = "deviceType";
-const char* PACK_PACKAGES_MODULE_TYPE = "moduleType";
-const char* PACK_PACKAGES_DELIVERY_WITH_INSTALL = "deliveryWithInstall";
-const char* PACK_PACKAGES_NAME = "name";
+const std::string PACK_PACKAGES_DEVICE_TYPE = "deviceType";
+const std::string PACK_PACKAGES_MODULE_TYPE = "moduleType";
+const std::string PACK_PACKAGES_DELIVERY_WITH_INSTALL = "deliveryWithInstall";
+const std::string PACK_PACKAGES_NAME = "name";
 
 // bundle pack info
-const char* BUNDLE_PACK_INFO_SUMMARY = "summary";
-const char* BUNDLE_PACK_INFO_PACKAGES = "packages";
+const std::string BUNDLE_PACK_INFO_SUMMARY = "summary";
+const std::string BUNDLE_PACK_INFO_PACKAGES = "packages";
 
 
 } // namespace

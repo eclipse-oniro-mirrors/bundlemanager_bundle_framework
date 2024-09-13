@@ -25,11 +25,11 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const int32_t BUFFER_SIZE = 256;
-static const char* BMS_EXTENSION_PROFILE = "bms-extensions";
-static const char* BMS_EXTENSION_PROFILE_BUNDLE_MGR = "bundle-mgr";
-static const char* BUNDLE_MGR_KEY_EXTENSION_NAME = "extension-name";
-static const char* BUNDLE_MGR_KEY_LIB_PATH = "libpath";
-static const char* BUNDLE_MGR_KEY_LIB64_PATH = "lib64path";
+static const std::string BMS_EXTENSION_PROFILE = "bms-extensions";
+static const std::string BMS_EXTENSION_PROFILE_BUNDLE_MGR = "bundle-mgr";
+static const std::string BUNDLE_MGR_KEY_EXTENSION_NAME = "extension-name";
+static const std::string BUNDLE_MGR_KEY_LIB_PATH = "libpath";
+static const std::string BUNDLE_MGR_KEY_LIB64_PATH = "lib64path";
 }
 
 ErrCode BmsExtensionProfile::ParseBmsExtension(

@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class FormsColorMode : int8_t {
+enum class FormsColorMode {
     AUTO_MODE = -1,
     DARK_MODE = 0,
     LIGHT_MODE = 1,
