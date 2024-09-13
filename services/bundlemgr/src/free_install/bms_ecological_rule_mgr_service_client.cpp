@@ -67,7 +67,7 @@ sptr<IBmsEcologicalRuleMgrService> BmsEcologicalRuleMgrServiceClient::ConnectSer
         return nullptr;
     }
 
-    deathRecipient_ = (new (std::nothrow)   BmsEcologicalRuleMgrServiceDeathRecipient());
+    deathRecipient_ = (new (std::nothrow) BmsEcologicalRuleMgrServiceDeathRecipient());
     systemAbility->AddDeathRecipient(deathRecipient_);
 
     sptr<IBmsEcologicalRuleMgrService> iBmsErms = iface_cast<IBmsEcologicalRuleMgrService>(systemAbility);

@@ -53,7 +53,7 @@ bool IsHiddenFile(const FilePath &filePath)
 {
     FilePath localFilePath = filePath;
     if (!localFilePath.Value().empty()) {
-        return localFilePath.Value().c_str()[0] == HIDDEN_SEPARATOR;
+        return localFilePath.Value()[0] == HIDDEN_SEPARATOR;
     } else {
         return false;
     }
@@ -75,7 +75,7 @@ std::vector<FileAccessor::DirectoryContentEntry> ListDirectoryContent(const File
     std::vector<std::string> filelist;
     isSuccess = FilePath::GetZipAllDirFiles(curPath.Value(), filelist);
     if (isSuccess) {
-        APP_LOGD("ListDirectoryContent filelist =====filelist.size=%{public}zu====", filelist.size());
+        APP_LOGD("f.size=%{public}zu", filelist.size());
         for (size_t i = 0; i < filelist.size(); i++) {
             std::string str(filelist[i]);
             if (!str.empty()) {

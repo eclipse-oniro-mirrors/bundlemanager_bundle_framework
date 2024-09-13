@@ -35,9 +35,9 @@ namespace {
 std::string DefaultAppData::ToString() const
 {
     LOG_D(BMS_TAG_DEFAULT, "DefaultAppData ToString begin");
-    nlohmann::json j;
-    j[INFOS] = infos;
-    return j.dump();
+    nlohmann::json jsonObject;
+    jsonObject[INFOS] = infos;
+    return jsonObject.dump();
 }
 
 void DefaultAppData::ToJson(nlohmann::json& jsonObject) const

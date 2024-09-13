@@ -24,7 +24,7 @@ namespace AppExecFwk {
 struct CommonEventInfo : public Parcelable {
     std::string name;
     std::string bundleName;
-    int uid = -1;
+    int32_t uid = -1;
     std::string permission;
     std::vector<std::string> data;
     std::vector<std::string> type;

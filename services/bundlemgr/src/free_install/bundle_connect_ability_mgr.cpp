@@ -793,10 +793,8 @@ void BundleConnectAbilityMgr::GetCallingInfo(int32_t userId, int32_t callingUid,
 
 bool ExistBundleNameInCallingBundles(const std::string &bundleName, const std::vector<std::string> &callingBundleNames)
 {
-    for (const auto &bundleNameItem : callingBundleNames) {
-        if (bundleNameItem == bundleName) {
-            return true;
-        }
+    if (std::find(callingBundleNames.begin(), callingBundleNames.end(), bundleName) != callingBundleNames.end()) {
+        return true;
     }
     return false;
 }

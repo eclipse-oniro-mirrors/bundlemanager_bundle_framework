@@ -96,7 +96,7 @@ const char* APP_ENVIRONMENTS_NAME = "name";
 const char* APP_ENVIRONMENTS_VALUE = "value";
 const char* HAP_MODULE_INFO_PACKAGE_NAME = "packageName";
 const char* HAP_MODULE_INFO_APP_STARTUP = "appStartup";
-const uint16_t MODULE_CAPACITY = 10240; // 10K
+const uint32_t MODULE_CAPACITY = 204800; // 200K
 }
 
 bool PreloadItem::ReadFromParcel(Parcel &parcel)

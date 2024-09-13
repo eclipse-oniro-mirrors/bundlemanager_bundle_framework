@@ -25,7 +25,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const size_t APP_PROVISION_INFO_CAPACITY = 10240; // 10K
+const size_t APP_PROVISION_INFO_CAPACITY = 102400; // 100K
 }
 
 bool AppProvisionInfo::ReadFromParcel(Parcel &parcel)
