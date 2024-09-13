@@ -166,6 +166,8 @@ void BmsBundleKitServiceBaseTest::MockInstallBundle(
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
+    std::string packageName;
+    innerBundleInfo.SetInstallMark(bundleName, packageName, InstallExceptionStatus::INSTALL_FINISH);
     Skill skill;
     skill.actions = {ACTION};
     skill.entities = {ENTITY};
