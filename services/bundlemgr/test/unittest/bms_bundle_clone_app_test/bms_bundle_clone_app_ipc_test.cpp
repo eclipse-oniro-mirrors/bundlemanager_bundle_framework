@@ -113,6 +113,7 @@ sptr<IBundleInstaller> BmsBundleCloneAppIPCTest::GetInstallerProxy()
 HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_AppIndexNotValid, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    EXPECT_NE(installerProxy, nullptr);
     if (!installerProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
@@ -127,6 +128,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_AppIndexNotValid, Func
 HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_BundleNameEmpty, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    EXPECT_NE(installerProxy, nullptr);
     if (!installerProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
@@ -141,6 +143,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_BundleNameEmpty, Funct
 HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest001_UserNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
     if (!bundleMgrProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
@@ -158,17 +161,12 @@ HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest001_UserNotFound, Fun
     auto result = bundleMgrProxy->QueryCloneAbilityInfo(element,
         GET_ABILITY_INFO_DEFAULT, appIndex, abilityInfo, userId);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-    if (result == ERR_OK) {
-        nlohmann::json userInfoJson;
-        to_json(userInfoJson, abilityInfo);
-        std::string res = userInfoJson.dump();
-        std::cout << "ability: " << res << std::endl;
-    }
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest002_AppNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
     if (!bundleMgrProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
@@ -187,17 +185,12 @@ HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest002_AppNotFound, Func
         GET_ABILITY_INFO_DEFAULT, appIndex, abilityInfo, userId);
     EXPECT_NE(result, ERR_OK);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    if (result == ERR_OK) {
-        nlohmann::json userInfoJson;
-        to_json(userInfoJson, abilityInfo);
-        std::string res = userInfoJson.dump();
-        std::cout << "ability: " << res << std::endl;
-    }
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest003_AppIndexNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
     if (!bundleMgrProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
@@ -216,17 +209,12 @@ HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest003_AppIndexNotFound,
         GET_ABILITY_INFO_DEFAULT, appIndex, abilityInfo, userId);
     EXPECT_NE(result, ERR_OK);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    if (result == ERR_OK) {
-        nlohmann::json userInfoJson;
-        to_json(userInfoJson, abilityInfo);
-        std::string res = userInfoJson.dump();
-        std::cout << "ability: " << res << std::endl;
-    }
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest001_AppNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
     if (!bundleMgrProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
@@ -237,17 +225,12 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest001_AppNotFound, Functi
     BundleInfo bundleInfo;
     auto result = bundleMgrProxy->GetCloneBundleInfo(bundleName, 0, appIndex, bundleInfo, userId);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    if (result == ERR_OK) {
-        nlohmann::json userInfoJson;
-        to_json(userInfoJson, bundleInfo);
-        std::string res = userInfoJson.dump();
-        std::cout << "ability: " << res << std::endl;
-    }
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest002_UserNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
     if (!bundleMgrProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
@@ -258,17 +241,12 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest002_UserNotFound, Funct
     BundleInfo bundleInfo;
     auto result = bundleMgrProxy->GetCloneBundleInfo(bundleName, 0, appIndex, bundleInfo, userId);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-    if (result == ERR_OK) {
-        nlohmann::json userInfoJson;
-        to_json(userInfoJson, bundleInfo);
-        std::string res = userInfoJson.dump();
-        std::cout << "ability: " << res << std::endl;
-    }
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest003_AppIndexNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
     if (!bundleMgrProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
@@ -279,17 +257,12 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest003_AppIndexNotFound, F
     BundleInfo bundleInfo;
     auto result = bundleMgrProxy->GetCloneBundleInfo(bundleName, 0, appIndex, bundleInfo, userId);
     EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP);
-    if (result == ERR_OK) {
-        nlohmann::json userInfoJson;
-        to_json(userInfoJson, bundleInfo);
-        std::string res = userInfoJson.dump();
-        std::cout << "ability: " << res << std::endl;
-    }
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, UninstallCloneAppTest001_AppNotExist, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    EXPECT_NE(installerProxy, nullptr);
     if (!installerProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
@@ -304,6 +277,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, UninstallCloneAppTest001_AppNotExist, Functio
 HWTEST_F(BmsBundleCloneAppIPCTest, QueryExtensionAbility_001, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
     if (!bundleMgrProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
@@ -322,12 +296,6 @@ HWTEST_F(BmsBundleCloneAppIPCTest, QueryExtensionAbility_001, Function | SmallTe
             name, 0, appIndex, extensionAbilityInfo, userId);
         EXPECT_TRUE(result == ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST
          || result == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-        if (result == ERR_OK) {
-            nlohmann::json abilityInfoJson;
-            to_json(abilityInfoJson, extensionAbilityInfo);
-            std::string res = abilityInfoJson.dump();
-            std::cout << "ability: " << res << std::endl;
-        }
     }
     {
         const int32_t userId = 100;
@@ -341,12 +309,6 @@ HWTEST_F(BmsBundleCloneAppIPCTest, QueryExtensionAbility_001, Function | SmallTe
             name, 0, appIndex, extensionAbilityInfo, userId);
         EXPECT_TRUE(result == ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST
             || result == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-        if (result == ERR_OK) {
-            nlohmann::json abilityInfoJson;
-            to_json(abilityInfoJson, extensionAbilityInfo);
-            std::string res = abilityInfoJson.dump();
-            std::cout << "ability: " << res << std::endl;
-        }
     }
 }
 } // OHOS
