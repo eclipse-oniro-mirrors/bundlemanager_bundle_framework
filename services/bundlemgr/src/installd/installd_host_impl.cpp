@@ -906,7 +906,7 @@ std::string InstalldHostImpl::GetAppDataPath(const std::string &bundleName, cons
 }
 
 int64_t InstalldHostImpl::HandleAppDataSizeStats(const std::string &bundleName,
-    const int32_t userId, const int32_t appIndex, std::vector<std::string> &cachePath)
+    const int32_t userId, const int32_t appIndex)
 {
     std::vector<std::string> bundlePath;
     bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) +
@@ -921,7 +921,6 @@ int64_t InstalldHostImpl::HandleAppDataSizeStats(const std::string &bundleName,
         std::string filePath = GetAppDataPath(bundleName, el, userId, appIndex);
         LOG_D(BMS_TAG_INSTALLD, "filePath = %{public}s", filePath.c_str());
         if (appIndex > 0) {
-            InstalldOperator::TraverseCacheDirectory(filePath, cachePath);
             continue;
         }
         allBundleLocalSize += InstalldOperator::GetDiskUsage(filePath);
@@ -932,7 +931,6 @@ int64_t InstalldHostImpl::HandleAppDataSizeStats(const std::string &bundleName,
         } else {
             bundlePath.push_back(filePath);
         }
-        InstalldOperator::TraverseCacheDirectory(filePath, cachePath);
     }
     int64_t bundleLocalSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
     LOG_D(BMS_TAG_INSTALLD,
@@ -959,9 +957,7 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    std::vector<std::string> cachePath;
-    int64_t appDataSize = HandleAppDataSizeStats(bundleName, userId, appIndex, cachePath);
-    LOG_D(BMS_TAG_INSTALLD, "cachePath.size() = %{public}zu", cachePath.size());
+    int64_t appDataSize = HandleAppDataSizeStats(bundleName, userId, appIndex);
     // index 0 : bundle data size
     bundleStats.push_back(appDataSize);
     // index 1 : local bundle data size
@@ -969,9 +965,8 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     bundleStats.push_back(bundleDataSize);
     bundleStats.push_back(0);
     bundleStats.push_back(0);
-    int64_t cacheSize = InstalldOperator::GetDiskUsageFromPath(cachePath);
     // index 4 : cache size
-    bundleStats.push_back(cacheSize);
+    bundleStats.push_back(0);
     return ERR_OK;
 }
 
@@ -993,9 +988,6 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const std::vector<std::string> &bund
         std::vector<std::string> bundlePath;
         bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) +
             ServiceConstants::PATH_SEPARATOR + bundleName); // bundle code
-        bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
-        // ark profile
-        bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR + bundleName);
         int64_t fileSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
         // index 0 : bundle data size
         totalFileSize += fileSize;
