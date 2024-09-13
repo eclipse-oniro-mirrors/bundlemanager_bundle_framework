@@ -1256,6 +1256,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
     VerifyDomain();
+    MarkInstallFinish();
     return result;
 }
 
@@ -1957,7 +1958,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
         return result;
     }
 
-    info.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_FINISH);
     uid = info.GetUid(userId_);
     info.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, info)) {
@@ -2108,7 +2108,6 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
-    oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_FINISH);
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
     if ((result = ProcessAsanDirectory(newInfo)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "process asan log directory failed");
@@ -5681,6 +5680,23 @@ void BaseBundleInstaller::CheckBundleNameAndStratAbility(const std::string &bund
     LOG_I(BMS_TAG_INSTALLER, "CheckBundleNameAndStratAbility %{public}s", bundleName.c_str());
     BmsExtensionDataMgr bmsExtensionDataMgr;
     bmsExtensionDataMgr.CheckBundleNameAndStratAbility(bundleName, appIdentifier);
+}
+
+void BaseBundleInstaller::MarkInstallFinish()
+{
+    InnerBundleInfo info;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+        LOG_W(BMS_TAG_INSTALLER, "mark finish failed");
+        return;
+    }
+    info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
+    if (!InitDataMgr()) {
+        return;
+    }
+    if (!dataMgr_->UpdateInnerBundleInfo(info)) {
+        LOG_W(BMS_TAG_INSTALLER, "save mark failed");
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
