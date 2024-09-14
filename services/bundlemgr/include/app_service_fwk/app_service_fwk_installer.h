@@ -39,6 +39,7 @@ public:
     ErrCode UnInstall(const std::string &bundleName, bool isKeepData = false);
     ErrCode UnInstall(const std::string &bundleName, const std::string &moduleName);
 private:
+    void ResetProperties();
     ErrCode BeforeInstall(
         const std::vector<std::string> &hspPaths, InstallParam &installParam);
     ErrCode BeforeUninstall(const std::string &bundleName);
@@ -61,7 +62,7 @@ private:
         const std::vector<std::string> &hspPaths, BundleEventType bundleEventType,
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
     ErrCode ExtractModule(
-        InnerBundleInfo &newInfo, const std::string &bundlePath);
+        InnerBundleInfo &newInfo, const std::string &bundlePath, bool copyHapToInstallPath = false);
     ErrCode ExtractModule(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo, const std::string &bundlePath);
     ErrCode MkdirIfNotExist(const std::string &dir);
     ErrCode ProcessNativeLibrary(
@@ -69,7 +70,8 @@ private:
         const std::string &moduleDir,
         const std::string &moduleName,
         const std::string &versionDir,
-        InnerBundleInfo &newInfo);
+        InnerBundleInfo &newInfo,
+        bool copyHapToInstallPath = false);
     ErrCode MoveSoToRealPath(
         const std::string &moduleName, const std::string &versionDir,
         const std::string &nativeLibraryPath);
@@ -83,8 +85,8 @@ private:
     void RollBack();
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
     void RemoveInfo(const std::string &bundleName);
-    void SavePreInstallBundleInfo(
-        ErrCode installResult, const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    void SavePreInstallBundleInfo(ErrCode installResult,
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InstallParam &installParam);
     ErrCode UpdateAppService(InnerBundleInfo &oldInfo,
         std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         InstallParam &installParam);
@@ -93,15 +95,19 @@ private:
     bool CheckNeedInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos, InnerBundleInfo &oldInfo,
         bool &isDowngrade);
     bool CheckNeedUpdate(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo);
-    ErrCode ProcessBundleUpdateStatus(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo, const std::string &hspPath);
-    ErrCode ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, const std::string &hspPath);
-    ErrCode ProcessModuleUpdate(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, const std::string &hspPath);
+    ErrCode ProcessBundleUpdateStatus(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo,
+        const std::string &hspPath, const InstallParam &installParam);
+    ErrCode ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo,
+        const std::string &hspPath, const InstallParam &installParam);
+    ErrCode ProcessModuleUpdate(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo,
+        const std::string &hspPath, const InstallParam &installParam);
     ErrCode RemoveLowerVersionSoDir(uint32_t versionCode);
     ErrCode VerifyCodeSignatureForNativeFiles(const std::string &bundlePath, const std::string &cpuAbi,
         const std::string &targetSoPath) const;
     ErrCode DeliveryProfileToCodeSign(std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const;
     void GenerateOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
+    ErrCode VerifyCodeSignatureForHsp(const std::string &realHspPath, const std::string &realSoPath) const;
 
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
@@ -116,6 +122,8 @@ private:
     bool isEnterpriseBundle_ = false;
     std::string appIdentifier_;
     std::string compileSdkType_;
+    std::string cpuAbi_;
+    std::string nativeLibraryPath_;
     DISALLOW_COPY_AND_MOVE(AppServiceFwkInstaller);
 
 #define CHECK_RESULT(errcode, errmsg)                                              \

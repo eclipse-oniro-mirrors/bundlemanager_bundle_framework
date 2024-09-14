@@ -823,12 +823,13 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessInstall_0010, Function | Sm
     installParam.isPreInstallApp = false;
     installParam.specifiedDistributionType = BUNDLE_NAME;
     installParam.additionalInfo = BUNDLE_NAME;
+    installParam.needSavePreInstallInfo = true;
 
     std::unordered_map<std::string, InnerBundleInfo> infos;
-    appServiceFwkInstaller.SavePreInstallBundleInfo(ERR_APPEXECFWK_INSTALL_PARAM_ERROR, infos);
+    appServiceFwkInstaller.SavePreInstallBundleInfo(ERR_APPEXECFWK_INSTALL_PARAM_ERROR, infos, installParam);
 
     auto res = appServiceFwkInstaller.ProcessInstall(hspPaths, installParam);
-    appServiceFwkInstaller.SavePreInstallBundleInfo(res, infos);
+    appServiceFwkInstaller.SavePreInstallBundleInfo(res, infos, installParam);
     EXPECT_EQ(res, ERR_OK);
 
     Security::Verify::ProvisionInfo provisionInfo;
@@ -945,15 +946,20 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessBundleUpdateStatus_0010, Fu
 
     InnerBundleInfo oldInfo;
     InnerBundleInfo newInfo;
-    auto res = appServiceFwkInstaller.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH);
+    InstallParam installParam;
+    installParam.copyHapToInstallPath = false;
+    auto res = appServiceFwkInstaller.ProcessBundleUpdateStatus(
+        oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH, installParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 
     newInfo.currentPackage_ = MODULE_NAME_TEST;
-    res = appServiceFwkInstaller.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH);
+    res = appServiceFwkInstaller.ProcessBundleUpdateStatus(
+        oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH, installParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
 
     appServiceFwkInstaller.versionUpgrade_ = true;
-    res = appServiceFwkInstaller.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH);
+    res = appServiceFwkInstaller.ProcessBundleUpdateStatus(
+        oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH, installParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
 }
 
@@ -1220,7 +1226,9 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessModuleUpdate_0010, Function
     InnerBundleInfo newInfo;
     InnerBundleInfo oldInfo;
     std::string hspPath;
-    auto res = appServiceFwkInstaller.ProcessModuleUpdate(newInfo, oldInfo, hspPath);
+    InstallParam installParam;
+    installParam.copyHapToInstallPath = false;
+    auto res = appServiceFwkInstaller.ProcessModuleUpdate(newInfo, oldInfo, hspPath, installParam);
     EXPECT_NE(res, ERR_OK);
 
     DeleteBundleInfo(BUNDLE_NAME);

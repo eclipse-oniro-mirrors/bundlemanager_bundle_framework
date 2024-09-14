@@ -73,6 +73,8 @@ ErrCode HmpBundleInstaller::InstallSystemHspInHmp(const std::string &bundleDir) 
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.removable = false;
+    installParam.copyHapToInstallPath = false;
+    installParam.needSavePreInstallInfo = true;
     ErrCode ret = installer.Install({ bundleDir }, installParam);
     if (ret != ERR_OK) {
         APP_LOGE("install hmp system hsp %{public}s error with code: %{public}d", bundleDir.c_str(), ret);
