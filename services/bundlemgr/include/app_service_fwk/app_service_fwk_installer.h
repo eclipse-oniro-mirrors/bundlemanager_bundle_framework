@@ -39,6 +39,7 @@ public:
     ErrCode UnInstall(const std::string &bundleName, bool isKeepData = false);
     ErrCode UnInstall(const std::string &bundleName, const std::string &moduleName);
 private:
+    void ResetProperties();
     ErrCode BeforeInstall(
         const std::vector<std::string> &hspPaths, InstallParam &installParam);
     ErrCode BeforeUninstall(const std::string &bundleName);
@@ -84,8 +85,8 @@ private:
     void RollBack();
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
     void RemoveInfo(const std::string &bundleName);
-    void SavePreInstallBundleInfo(
-        ErrCode installResult, const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    void SavePreInstallBundleInfo(ErrCode installResult,
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InstallParam &installParam);
     ErrCode UpdateAppService(InnerBundleInfo &oldInfo,
         std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         InstallParam &installParam);

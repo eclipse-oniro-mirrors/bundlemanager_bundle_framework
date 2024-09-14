@@ -87,8 +87,28 @@ ErrCode AppServiceFwkInstaller::Install(
     result = ProcessInstall(hspPaths, installParam);
     APP_LOGI("%{public}s %{public}s result %{public}d first time", hspPaths[0].c_str(), bundleName_.c_str(), result);
     if (result != ERR_OK && installParam.isOTA) {
+        ResetProperties();
         auto uninstallRes = UnInstall(bundleName_, true);
+        ResetProperties();
         result = ProcessInstall(hspPaths, installParam);
+        APP_LOGI("uninstallRes %{public}d installRes second time %{public}d", uninstallRes, result);
+    }
+    if (result != ERR_OK && installParam.copyHapToInstallPath) {
+        PreInstallBundleInfo preInstallBundleInfo;
+        if (!dataMgr_->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo) ||
+            preInstallBundleInfo.GetBundlePaths().empty()) {
+            APP_LOGE("get preInstallBundleInfo failed");
+            return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        }
+        ResetProperties();
+        auto uninstallRes = UnInstall(bundleName_, true);
+        ResetProperties();
+        InstallParam reinstallParam;
+        reinstallParam.isPreInstallApp = true;
+        reinstallParam.removable = false;
+        reinstallParam.copyHapToInstallPath = false;
+        reinstallParam.needSavePreInstallInfo = true;
+        result = ProcessInstall(preInstallBundleInfo.GetBundlePaths(), reinstallParam);
         APP_LOGI("uninstallRes %{public}d installRes second time %{public}d", uninstallRes, result);
     }
     SendBundleSystemEvent(
@@ -177,6 +197,22 @@ ErrCode AppServiceFwkInstaller::UnInstall(
         return result;
     }
     return ERR_OK;
+}
+
+void AppServiceFwkInstaller::ResetProperties()
+{
+    bundleMsg_ = "";
+    uninstallModuleVec_.clear();
+    versionUpgrade_ = false;
+    moduleUpdate_ = false;
+    deleteBundlePath_.clear();
+    versionCode_ = 0;
+    newInnerBundleInfo_ = InnerBundleInfo();
+    isEnterpriseBundle_ = false;
+    appIdentifier_ = "";
+    compileSdkType_ = "";
+    cpuAbi_ = "";
+    nativeLibraryPath_ = "";
 }
 
 bool AppServiceFwkInstaller::CheckNeedUninstallBundle(const std::string &moduleName, const InnerBundleInfo &info)
@@ -287,15 +323,19 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
             RollBack();
         }
     }
-    SavePreInstallBundleInfo(result, newInfos);
+    SavePreInstallBundleInfo(result, newInfos, installParam);
     return result;
 }
 
-void AppServiceFwkInstaller::SavePreInstallBundleInfo(
-    ErrCode installResult, const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+void AppServiceFwkInstaller::SavePreInstallBundleInfo(ErrCode installResult,
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InstallParam &installParam)
 {
     if (installResult != ERR_OK) {
         APP_LOGW("install bundle %{public}s failed for %{public}d", bundleName_.c_str(), installResult);
+        return;
+    }
+    if (!installParam.needSavePreInstallInfo) {
+        APP_LOGI("no need to save pre info");
         return;
     }
     PreInstallBundleInfo preInstallBundleInfo;

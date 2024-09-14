@@ -929,6 +929,7 @@ void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
     installParam.isPreInstallApp = true;
     installParam.removable = false;
     installParam.copyHapToInstallPath = false;
+    installParam.needSavePreInstallInfo = true;
     AppServiceFwkInstaller installer;
     SavePreInstallExceptionAppService(preScanInfo.bundleDir);
     ErrCode ret = installer.Install({preScanInfo.bundleDir}, installParam);
@@ -945,6 +946,7 @@ bool BMSEventHandler::ProcessSystemHspInstall(const std::string &systemHspDir)
     installParam.isPreInstallApp = true;
     installParam.removable = false;
     installParam.copyHapToInstallPath = false;
+    installParam.needSavePreInstallInfo = true;
     AppServiceFwkInstaller installer;
     ErrCode ret = installer.Install({systemHspDir}, installParam);
     if (ret != ERR_OK) {
@@ -2099,6 +2101,7 @@ ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &fil
     installParam.removable = false;
     installParam.isOTA = true;
     installParam.copyHapToInstallPath = false;
+    installParam.needSavePreInstallInfo = true;
     AppServiceFwkInstaller installer;
 
     return installer.Install(filePaths, installParam);
@@ -3591,6 +3594,7 @@ void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
         installParam.removable = false;
         installParam.needSendEvent = false;
         installParam.copyHapToInstallPath = true;
+        installParam.needSavePreInstallInfo = false;
         installParam.isOTA = isOta;
         AppServiceFwkInstaller installer;
         std::vector<std::string> filePaths { scanPathIter };
