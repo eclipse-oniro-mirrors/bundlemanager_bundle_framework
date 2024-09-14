@@ -501,4 +501,292 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0100, Function | Smal
     bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo);
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: ProcessAddExtResource_0100
+ * @tc.name: Test ProcessAddExtResource
+ * @tc.desc: 1.ProcessAddExtResource
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ProcessAddExtResource_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::vector<std::string> filePaths;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    auto ret = impl.ProcessAddExtResource(BUNDLE_NAME, filePaths);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_PARSE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: CheckModuleExist_0100
+ * @tc.name: Test CheckModuleExist
+ * @tc.desc: 1.CheckModuleExist
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CheckModuleExist_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    std::string bundleName;
+    std::vector<std::string> moduleNames;
+    moduleNames.push_back(BUNDLE_PATH);
+    std::vector<ExtendResourceInfo> collectorExtResourceInfos;
+    auto ret = impl.CheckModuleExist(BUNDLE_NAME, moduleNames, collectorExtResourceInfos);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED);
+}
+
+/**
+ * @tc.number: CheckModuleExist_0200
+ * @tc.name: Test CheckModuleExist
+ * @tc.desc: 1.CheckModuleExist
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CheckModuleExist_0200, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    ExtendResourceInfo extendResourceInfo;
+    info.extendResourceInfos_.emplace(BUNDLE_NAME, extendResourceInfo);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    std::string bundleName;
+    std::vector<std::string> moduleNames;
+    moduleNames.push_back(BUNDLE_NAME);
+    std::vector<ExtendResourceInfo> collectorExtResourceInfos;
+    auto ret = impl.CheckModuleExist(BUNDLE_NAME, moduleNames, collectorExtResourceInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetExtResource_0100
+ * @tc.name: Test CheckModuleExist
+ * @tc.desc: 1.CheckModuleExist
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetExtResource_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::vector<std::string> moduleNames;
+    auto ret = impl.GetExtResource(BUNDLE_NAME, moduleNames);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetExtResource_0200
+ * @tc.name: Test CheckModuleExist
+ * @tc.desc: 1.CheckModuleExist
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetExtResource_0200, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    std::vector<std::string> moduleNames;
+    moduleNames.push_back(BUNDLE_NAME);
+    auto ret = impl.GetExtResource(BUNDLE_NAME, moduleNames);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_GET_EXT_RESOURCE_FAILED);
+}
+
+/**
+ * @tc.number: GetExtResource_0300
+ * @tc.name: Test CheckModuleExist
+ * @tc.desc: 1.CheckModuleExist
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetExtResource_0300, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    ExtendResourceInfo extendResourceInfo;
+    info.extendResourceInfos_.emplace(BUNDLE_NAME, extendResourceInfo);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    std::vector<std::string> moduleNames;
+    moduleNames.push_back(BUNDLE_NAME);
+    auto ret = impl.GetExtResource(BUNDLE_NAME, moduleNames);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SaveCurDynamicIcon_0100
+ * @tc.name: Test SaveCurDynamicIcon
+ * @tc.desc: 1.SaveCurDynamicIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, SaveCurDynamicIcon_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    std::vector<std::string> moduleNames;
+    moduleNames.push_back(BUNDLE_NAME);
+    impl.SaveCurDynamicIcon(BUNDLE_NAME, TEST_MODULE);
+    EXPECT_EQ(dataMgr->bundleInfos_.at(BUNDLE_NAME).curDynamicIconModule_, TEST_MODULE);
+}
+
+/**
+ * @tc.number: SaveCurDynamicIcon_0200
+ * @tc.name: Test SaveCurDynamicIcon
+ * @tc.desc: 1.SaveCurDynamicIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, SaveCurDynamicIcon_0200, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    std::vector<std::string> moduleNames;
+    moduleNames.push_back(BUNDLE_NAME);
+    impl.SaveCurDynamicIcon(BUNDLE_NAME, TEST_MODULE);
+    EXPECT_EQ(dataMgr->bundleInfos_.at(BUNDLE_NAME).curDynamicIconModule_, TEST_MODULE);
+}
+
+/**
+ * @tc.number: GetExtendResourceInfo_0100
+ * @tc.name: Test GetExtendResourceInfo
+ * @tc.desc: 1.GetExtendResourceInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetExtendResourceInfo_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string bundleName;
+    ExtendResourceInfo extendResourceInfo;
+    auto res = impl.GetExtendResourceInfo(bundleName, TEST_MODULE, extendResourceInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetExtendResourceInfo_0200
+ * @tc.name: Test GetExtendResourceInfo
+ * @tc.desc: 1.GetExtendResourceInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetExtendResourceInfo_0200, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    ExtendResourceInfo extendResourceInfo;
+    auto res = impl.GetExtendResourceInfo(BUNDLE_NAME, TEST_MODULE, extendResourceInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetExtendResourceInfo_0300
+ * @tc.name: Test GetExtendResourceInfo
+ * @tc.desc: 1.GetExtendResourceInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetExtendResourceInfo_0300, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    ExtendResourceInfo extendResourceInfo;
+    info.extendResourceInfos_.emplace(BUNDLE_NAME, extendResourceInfo);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    auto res = impl.GetExtendResourceInfo(BUNDLE_NAME, TEST_MODULE, extendResourceInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetExtendResourceInfo_0400
+ * @tc.name: Test GetExtendResourceInfo
+ * @tc.desc: 1.GetExtendResourceInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetExtendResourceInfo_0400, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    ExtendResourceInfo extendResourceInfo;
+    info.extendResourceInfos_.emplace(TEST_MODULE, extendResourceInfo);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    auto res = impl.GetExtendResourceInfo(BUNDLE_NAME, TEST_MODULE, extendResourceInfo);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: DisableDynamicIcon_0100
+ * @tc.name: Test DisableDynamicIcon
+ * @tc.desc: 1.DisableDynamicIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, DisableDynamicIcon_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.curDynamicIconModule_ = TEST_BUNDLE;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    auto res = impl.DisableDynamicIcon(BUNDLE_NAME);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDynamicIcon_0100
+ * @tc.name: Test GetDynamicIcon
+ * @tc.desc: 1.GetDynamicIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetDynamicIcon_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.curDynamicIconModule_ = TEST_BUNDLE;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+    std::string moudleName;
+    auto res = impl.GetDynamicIcon(BUNDLE_NAME, moudleName);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateFd_0100
+ * @tc.name: Test CreateFd
+ * @tc.desc: 1.CreateFd
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GCreateFd_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string fileName = "%.hsp";
+    int32_t fd = 1;
+    std::string path;
+    auto res = impl.CreateFd(fileName, fd, path);
+    EXPECT_EQ(res, ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED);
+}
+
+/**
+ * @tc.number: CreateFd_0200
+ * @tc.name: Test CreateFd
+ * @tc.desc: 1.CreateFd
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GCreateFd_0200, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string fileName = ".hsp";
+    int32_t fd = 1;
+    std::string path;
+    auto res = impl.CreateFd(fileName, fd, path);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // OHOS
