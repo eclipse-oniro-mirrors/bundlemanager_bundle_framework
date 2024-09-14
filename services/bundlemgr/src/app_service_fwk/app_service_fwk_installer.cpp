@@ -86,13 +86,6 @@ ErrCode AppServiceFwkInstaller::Install(
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
     result = ProcessInstall(hspPaths, installParam);
     APP_LOGI("%{public}s %{public}s result %{public}d first time", hspPaths[0].c_str(), bundleName_.c_str(), result);
-    if (result != ERR_OK && installParam.isOTA) {
-        ResetProperties();
-        auto uninstallRes = UnInstall(bundleName_, true);
-        ResetProperties();
-        result = ProcessInstall(hspPaths, installParam);
-        APP_LOGI("uninstallRes %{public}d installRes second time %{public}d", uninstallRes, result);
-    }
     if (result != ERR_OK && installParam.copyHapToInstallPath) {
         PreInstallBundleInfo preInstallBundleInfo;
         if (!dataMgr_->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo) ||
@@ -109,6 +102,12 @@ ErrCode AppServiceFwkInstaller::Install(
         reinstallParam.copyHapToInstallPath = false;
         reinstallParam.needSavePreInstallInfo = true;
         result = ProcessInstall(preInstallBundleInfo.GetBundlePaths(), reinstallParam);
+        APP_LOGI("uninstallRes %{public}d installRes second time %{public}d", uninstallRes, result);
+    } else if (result != ERR_OK && installParam.isOTA) {
+        ResetProperties();
+        auto uninstallRes = UnInstall(bundleName_, true);
+        ResetProperties();
+        result = ProcessInstall(hspPaths, installParam);
         APP_LOGI("uninstallRes %{public}d installRes second time %{public}d", uninstallRes, result);
     }
     SendBundleSystemEvent(

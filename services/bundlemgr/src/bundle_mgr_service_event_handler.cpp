@@ -98,7 +98,6 @@ constexpr const char* EXTENSION_TYPE_LIST_CONFIG = "/extension_type_config.json"
 constexpr const char* SHARED_BUNDLES_INSTALL_LIST_CONFIG = "/shared_bundles_install_list.json";
 constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold";
-constexpr const char* SYSTEM_HSP_PATH = "/appServiceFwk";
 constexpr const char* SYSTEM_BUNDLE_PATH = "/internal";
 constexpr const char* RESTOR_BUNDLE_NAME_LIST = "list";
 constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/temp/quickfix_app_recover.json";
@@ -3547,17 +3546,17 @@ void BMSEventHandler::InnerProcessStockBundleRouterInfo()
 
 void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path, bool isOta)
 {
-    LOG_I(BMS_TAG_DEFAULT, "ProcessRebootQuickFixBundleInstall start, isOta:%{public}d", isOta);
-    std::string systemHspPath = path + SYSTEM_HSP_PATH;
+    LOG_I(BMS_TAG_DEFAULT, "start, isOta:%{public}d", isOta);
+    std::string systemHspPath = path + ServiceConstants::PATH_SEPARATOR + MODULE_UPDATE_APP_SERVICE_DIR;
     std::string systemBundlePath = path + SYSTEM_BUNDLE_PATH;
     PatchSystemHspInstall(systemHspPath, isOta);
     PatchSystemBundleInstall(systemBundlePath, isOta);
-    LOG_I(BMS_TAG_DEFAULT, "ProcessRebootQuickFixBundleInstall end");
+    LOG_I(BMS_TAG_DEFAULT, "end");
 }
 
 void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
 {
-    LOG_I(BMS_TAG_DEFAULT, "PatchSystemHspInstall start");
+    LOG_I(BMS_TAG_DEFAULT, "start");
     std::list<std::string> bundleDirs;
     ProcessScanDir(path, bundleDirs);
     if (bundleDirs.empty()) {
@@ -3577,15 +3576,14 @@ void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
         }
         auto bundleName = infos.begin()->second.GetBundleName();
         auto versionCode = infos.begin()->second.GetVersionCode();
-        BundleInfo hasInstalledInfo;
-        auto hasBundleInstalled = dataMgr->GetBundleInfo(
-            bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
+        InnerBundleInfo hasInstalledInfo;
+        auto hasBundleInstalled = dataMgr->FetchInnerBundleInfo(bundleName, hasInstalledInfo);
         if (!hasBundleInstalled) {
-            LOG_W(BMS_TAG_DEFAULT, "obtain bundleInfo failed, bundleName :%{public}s not exist", bundleName.c_str());
+            LOG_W(BMS_TAG_DEFAULT, "bundleName %{public}s not exist", bundleName.c_str());
             continue;
         }
-        if (versionCode <= hasInstalledInfo.versionCode) {
-            LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: hapVersionCode is less than old hap versionCode",
+        if (versionCode <= hasInstalledInfo.GetVersionCode()) {
+            LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s downgrade",
                 bundleName.c_str());
             continue;
         }
@@ -3602,12 +3600,12 @@ void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: install failed", bundleName.c_str());
         }
     }
-    LOG_I(BMS_TAG_DEFAULT, "PatchSystemBundleInstall end");
+    LOG_I(BMS_TAG_DEFAULT, "end");
 }
 
 void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isOta)
 {
-    LOG_I(BMS_TAG_DEFAULT, "PatchSystemBundleInstall start");
+    LOG_I(BMS_TAG_DEFAULT, "start");
     std::list<std::string> bundleDirs;
     ProcessScanDir(path, bundleDirs);
     if (bundleDirs.empty()) {
@@ -3651,7 +3649,7 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: install failed", bundleName.c_str());
         }
     }
-    LOG_I(BMS_TAG_DEFAULT, "PatchSystemBundleInstall end");
+    LOG_I(BMS_TAG_DEFAULT, "end");
 }
 
 void BMSEventHandler::CheckALLResourceInfo()
