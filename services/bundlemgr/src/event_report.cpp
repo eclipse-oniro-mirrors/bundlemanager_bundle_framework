@@ -48,7 +48,6 @@ const BMSEventType BUNDLE_SYS_EVENT_MAP_VALUE[] = {
 void EventReport::SendBundleSystemEvent(BundleEventType bundleEventType, const EventInfo& eventInfo)
 {
     BMSEventType bmsEventType = BMSEventType::UNKNOW;
-    std::unordered_map<BundleEventType, BMSEventType>::const_iterator iter;
     if (eventInfo.errCode != ERR_OK) {
         size_t len = sizeof(BUNDLE_EXCEPTION_SYS_EVENT_MAP_KEY) / sizeof(BundleEventType);
         for (size_t i = 0; i < len; i++) {

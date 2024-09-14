@@ -900,10 +900,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     ErrCode ret = ERR_OK;
     std::string bundleName = (infos.begin()->second).GetBundleName();
     uint32_t versionCode = (infos.begin()->second).GetVersionCode();
-    uint32_t minCompatibleVersionCode = (infos.begin()->second).GetMinCompatibleVersionCode();
-    uint32_t target = (infos.begin()->second).GetTargetVersion();
     auto [isHsp, moduleName, releaseType] = GetValidReleaseType(infos);
-    uint32_t compatible = (infos.begin()->second).GetCompatibleVersion();
     bool singleton = (infos.begin()->second).IsSingleton();
     Constants::AppType appType = (infos.begin()->second).GetAppType();
     bool isStage = (infos.begin()->second).GetIsNewVersion();
