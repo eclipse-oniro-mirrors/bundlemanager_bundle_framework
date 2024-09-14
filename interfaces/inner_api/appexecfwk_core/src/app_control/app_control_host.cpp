@@ -111,6 +111,7 @@ ErrCode AppControlHost::HandleAddAppInstallControlRule(MessageParcel& data, Mess
         LOG_E(BMS_TAG_DEFAULT, "HandleAddAppInstallControlRule parameter is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
+    appIds.reserve(appIdSize);
     for (int32_t i = 0; i < appIdSize; i++) {
         appIds.emplace_back(data.ReadString());
     }
@@ -132,6 +133,7 @@ ErrCode AppControlHost::HandleDeleteAppInstallControlRule(MessageParcel& data, M
         LOG_E(BMS_TAG_DEFAULT, "HandleDeleteAppInstallControlRule parameter is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
+    appIds.reserve(appIdSize);
     for (int32_t i = 0; i < appIdSize; i++) {
         appIds.emplace_back(data.ReadString());
     }

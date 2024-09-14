@@ -3119,27 +3119,6 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0003, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: TestMgrByUserId_0004
- * @tc.name: test IsAppOrAbilityInstalled
- * @tc.desc: 1.system run normally
-*/
-HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0004, Function | SmallTest | Level1)
-{
-    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
-    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    bool testRet = GetBundleDataMgr()->IsAppOrAbilityInstalled("");
-    EXPECT_EQ(testRet, false);
-    testRet = GetBundleDataMgr()->IsAppOrAbilityInstalled(BUNDLE_BACKUP_NAME);
-    EXPECT_EQ(testRet, true);
-    testRet = GetBundleDataMgr()->IsAppOrAbilityInstalled("bundlename");
-    EXPECT_EQ(testRet, false);
-
-    UnInstallBundle(BUNDLE_BACKUP_NAME);
-}
-
-/**
  * @tc.number: TestMgrByUserId_0007
  * @tc.name: test GetPreInstallBundleInfo
  * @tc.desc: 1.system run normally

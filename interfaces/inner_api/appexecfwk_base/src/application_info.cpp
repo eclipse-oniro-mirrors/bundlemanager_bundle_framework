@@ -766,7 +766,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     return true;
 }
 
-void ApplicationInfo::Dump(std::string prefix, int fd)
+void ApplicationInfo::Dump(const std::string &prefix, int fd)
 {
     APP_LOGI("called dump ApplicationInfo");
     if (fd < 0) {

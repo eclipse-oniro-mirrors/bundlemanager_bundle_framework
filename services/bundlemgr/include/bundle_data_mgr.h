@@ -1000,12 +1000,6 @@ private:
      */
     void DeleteBundleInfo(const std::string &bundleName, const InstallState state);
     /**
-     * @brief Determine whether app is installed.
-     * @param bundleName Indicates the bundle Names.
-     * @return Returns true if install state is INSTALL_SUCCESS; returns false otherwise.
-     */
-    bool IsAppOrAbilityInstalled(const std::string &bundleName) const;
-    /**
      * @brief Implicit query abilityInfos by the given Want.
      * @param want Indicates the information of the ability.
      * @param flags Indicates the information contained in the AbilityInfo object to be returned.
