@@ -175,7 +175,8 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
     RegisterClearCacheListener();
-    napi_add_env_cleanup_hook(env, ClearCacheListener::HandleCleanEnv, nullptr);
+    void* key = reinterpret_cast<void*>(&ClearCacheListener::HandleCleanEnv);
+    napi_add_env_cleanup_hook(env, ClearCacheListener::HandleCleanEnv, key);
     APP_LOGD("init js bundle manager success");
     return exports;
 }
