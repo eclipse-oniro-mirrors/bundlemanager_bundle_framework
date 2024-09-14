@@ -3890,28 +3890,6 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
     DeleteDesktopShortcutInfo(bundleName);
 }
 
-bool BundleDataMgr::IsAppOrAbilityInstalled(const std::string &bundleName) const
-{
-    if (bundleName.empty()) {
-        APP_LOGW("IsAppOrAbilityInstalled bundleName empty");
-        return false;
-    }
-
-    std::lock_guard<std::mutex> lock(stateMutex_);
-    auto statusItem = installStates_.find(bundleName);
-    if (statusItem == installStates_.end()) {
-        APP_LOGW("name:%{public}s not find", bundleName.c_str());
-        return false;
-    }
-
-    if (statusItem->second == InstallState::INSTALL_SUCCESS) {
-        return true;
-    }
-
-    APP_LOGW("name:%{public}s not install success", bundleName.c_str());
-    return false;
-}
-
 bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     const int32_t flags, InnerBundleInfo &info, int32_t userId, int32_t appIndex) const
 {

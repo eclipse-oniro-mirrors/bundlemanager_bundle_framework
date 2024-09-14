@@ -2412,20 +2412,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetHapModuleInfo_0200, Function | MediumTest | Le
 }
 
 /**
- * @tc.number: IsAppOrAbilityInstalled_0100
- * @tc.name: test IsAppOrAbilityInstalled
- * @tc.desc: 1.system run normally
- *           2.check IsAppOrAbilityInstalled failed
- */
-HWTEST_F(BmsBundleDataMgrTest, IsAppOrAbilityInstalled_0100, Function | SmallTest | Level1)
-{
-    GetBundleDataMgr()->installStates_.clear();
-    GetBundleDataMgr()->installStates_.emplace(BUNDLE_TEST2, InstallState::USER_CHANGE);
-    bool res = GetBundleDataMgr()->IsAppOrAbilityInstalled(BUNDLE_TEST2);
-    EXPECT_EQ(res, false);
-}
-
-/**
  * @tc.number: GetInnerBundleInfoWithFlags_0100
  * @tc.name: test GetInnerBundleInfoWithFlags
  * @tc.desc: 1.system run normally

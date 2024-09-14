@@ -76,12 +76,11 @@ OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::GetBundleMgr()
                 APP_LOGE("GetBundleMgr GetSystemAbility is null");
                 return nullptr;
             }
-            auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
-            if (bundleMgr == nullptr) {
+            bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
+            if (bundleMgr_ == nullptr) {
                 APP_LOGE("GetBundleMgr iface_cast get null");
                 return nullptr;
             }
-            bundleMgr_ = bundleMgr;
             bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
         }
     }

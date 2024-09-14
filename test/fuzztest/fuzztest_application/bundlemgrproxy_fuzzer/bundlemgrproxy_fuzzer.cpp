@@ -321,7 +321,6 @@ namespace OHOS {
         ElementName element;
         bundleMgrProxy.QueryCloneAbilityInfo(element, 0, 0, abilityInfo, reinterpret_cast<uintptr_t>(data));
         bundleMgrProxy.GetCloneBundleInfo(bundleName, 0, 0, bundleInfo);
-        std::vector<int32_t> appIndexes;
         element.SetAbilityName(abilityName);
         element.SetBundleName(bundleName);
         SignatureInfo sinfo;
