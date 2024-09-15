@@ -360,6 +360,24 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
     return ERR_OK;
 }
 
+void InnerSharedBundleInstaller::UpdateInnerModuleInfo(const std::string packageName,
+    const InnerModuleInfo &innerModuleInfo)
+{
+    newBundleInfo_.ReplaceInnerModuleInfo(packageName, innerModuleInfo);
+    std::string moduleDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_ +
+        ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(innerModuleInfo.versionCode) +
+        ServiceConstants::PATH_SEPARATOR + innerModuleInfo.moduleName;
+    bool isDirExist = false;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(moduleDir, isDirExist);
+    if (isDirExist) {
+        newBundleInfo_.SetCurrentModulePackage(packageName);
+        newBundleInfo_.AddModuleSrcDir(moduleDir);
+        newBundleInfo_.AddModuleResPath(moduleDir);
+    } else {
+        APP_LOGW("update path failed %{public}s %{public}d", moduleDir.c_str(), result);
+    }
+}
+
 void InnerSharedBundleInstaller::MergeBundleInfos()
 {
     auto iter = parsedBundles_.begin();
@@ -381,6 +399,7 @@ void InnerSharedBundleInstaller::MergeBundleInfos()
         if (!innerModuleInfos.empty()) {
             const auto& innerModuleInfo = innerModuleInfos.front();
             newBundleInfo_.InsertInnerSharedModuleInfo(innerModuleInfo.modulePackage, innerModuleInfo);
+            UpdateInnerModuleInfo(innerModuleInfo.modulePackage, innerModuleInfo);
         }
         // update version
         if (newBundleInfo_.GetBaseBundleInfo().versionCode < currentBundle.GetBaseBundleInfo().versionCode) {
