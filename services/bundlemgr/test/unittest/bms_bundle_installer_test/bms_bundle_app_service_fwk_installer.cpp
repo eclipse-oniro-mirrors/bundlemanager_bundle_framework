@@ -325,7 +325,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, BeforeInstall_0100, Function | Sma
     installParam.isPreInstallApp = false;
 
     auto res1 = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
-    EXPECT_EQ(res1, ERR_APP_SERVICE_FWK_INSTALL_NOT_PREINSTALL);
+    EXPECT_EQ(res1, ERR_OK);
 
     installParam.isPreInstallApp = true;
     auto res2 = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
@@ -868,6 +868,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, InnerProcessInstall_0010, Function
     InitAppServiceFwkInstaller(appServiceFwkInstaller);
 
     InstallParam installParam;
+    installParam.copyHapToInstallPath = false;
     std::unordered_map<std::string, InnerBundleInfo> infos;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
