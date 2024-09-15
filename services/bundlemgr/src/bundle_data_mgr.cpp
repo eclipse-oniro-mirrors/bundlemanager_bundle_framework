@@ -7823,8 +7823,7 @@ ErrCode BundleDataMgr::GetDeveloperIds(const std::string &appDistributionType,
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const bool &state,
-    InnerBundleInfo &innerBundleInfo)
+ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const bool &state)
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
@@ -7832,7 +7831,7 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
         APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    innerBundleInfo = infoItem->second;
+    InnerBundleInfo &innerBundleInfo = infoItem->second;
     if (!innerBundleInfo.IsRemovable() && state) {
         APP_LOGW("the bundle : %{public}s is not removable", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED;
@@ -7845,7 +7844,6 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
         APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    bundleInfos_.at(bundleName) = innerBundleInfo;
     return ERR_OK;
 }
 

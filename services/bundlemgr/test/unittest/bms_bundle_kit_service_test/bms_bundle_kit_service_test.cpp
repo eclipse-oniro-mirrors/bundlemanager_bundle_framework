@@ -13152,8 +13152,7 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0001, Function | SmallTes
 {
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    InnerBundleInfo innerBundleInfo;
-    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, false, innerBundleInfo);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, false);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -13170,8 +13169,7 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0002, Function | SmallTes
     InnerBundleInfo info;
     info.SetRemovable(false);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_UNINSTALL_STATE, info);
-    InnerBundleInfo innerBundleInfo;
-    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true, innerBundleInfo);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED);
     dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
 }
@@ -13189,8 +13187,7 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0003, Function | SmallTes
     InnerBundleInfo info;
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_UNINSTALL_STATE, info);
     EXPECT_TRUE(info.uninstallState_);
-    InnerBundleInfo innerBundleInfo;
-    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true, innerBundleInfo);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true);
     EXPECT_EQ(res, ERR_OK);
     EXPECT_TRUE(info.uninstallState_);
     dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
