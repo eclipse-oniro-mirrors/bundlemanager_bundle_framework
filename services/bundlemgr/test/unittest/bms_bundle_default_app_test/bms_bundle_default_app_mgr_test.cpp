@@ -127,6 +127,7 @@ void BmsBundleDefaultAppMgrTest::AddInnerBundleInfo(const std::string bundleName
     innerBundleInfo.AddInnerModuleInfo(innerModuleInfoMap);
     innerBundleInfo.AddModuleAbilityInfo(innerAbilityMap);
     innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetInstallMark(bundleName, MODULE_NAME, InstallExceptionStatus::INSTALL_FINISH);
 
     Skill skill;
     SkillUri uri;

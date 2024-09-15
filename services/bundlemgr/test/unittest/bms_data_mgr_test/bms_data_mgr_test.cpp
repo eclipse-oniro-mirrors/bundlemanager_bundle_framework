@@ -574,19 +574,20 @@ HWTEST_F(BmsDataMgrTest, AddBundleInfo_0200, Function | SmallTest | Level0)
     info1.SetBaseBundleInfo(bundleInfo1);
     info1.SetBaseApplicationInfo(applicationInfo1);
     info1.AddInnerBundleUserInfo(innerBundleUserInfo);
+    info1.SetInstallMark(BUNDLE_NAME, "", InstallExceptionStatus::INSTALL_FINISH);
 
     InnerBundleInfo info2;
     BundleInfo bundleInfo2;
     bundleInfo2.name = BUNDLE_NAME;
     bundleInfo2.applicationInfo.name = APP_NAME;
     bundleInfo2.applicationInfo.bundleName = BUNDLE_NAME;
-    ApplicationInfo applicationInfo2;
-    applicationInfo2.name = BUNDLE_NAME;
-    applicationInfo2.bundleName = BUNDLE_NAME;
-    applicationInfo2.deviceId = DEVICE_ID;
+    applicationInfo1.name = BUNDLE_NAME;
+    applicationInfo1.bundleName = BUNDLE_NAME;
+    applicationInfo1.deviceId = DEVICE_ID;
     info2.SetBaseBundleInfo(bundleInfo2);
-    info2.SetBaseApplicationInfo(applicationInfo2);
+    info2.SetBaseApplicationInfo(applicationInfo1);
     info2.AddInnerBundleUserInfo(innerBundleUserInfo);
+    info2.SetInstallMark(BUNDLE_NAME, "", InstallExceptionStatus::INSTALL_FINISH);
 
     auto dataMgr = GetDataMgr();
     EXPECT_NE(dataMgr, nullptr);
@@ -879,6 +880,8 @@ HWTEST_F(BmsDataMgrTest, QueryAbilityInfo_0100, Function | SmallTest | Level0)
     info1.InsertAbilitiesInfo(BUNDLE_NAME + PACKAGE_NAME + ABILITY_NAME, abilityInfo);
     info1.AddInnerBundleUserInfo(innerBundleUserInfo);
     info1.SetAbilityEnabled(Constants::EMPTY_STRING, ABILITY_NAME, true, USERID);
+    std::string packageName;
+    info1.SetInstallMark(BUNDLE_NAME, packageName, InstallExceptionStatus::INSTALL_FINISH);
     auto dataMgr = GetDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     dataMgr->AddUserId(USERID);
@@ -1005,6 +1008,8 @@ HWTEST_F(BmsDataMgrTest, GetApplicationInfo_0100, Function | SmallTest | Level0)
     info1.SetBaseBundleInfo(bundleInfo1);
     info1.SetBaseApplicationInfo(applicationInfo1);
     info1.AddInnerBundleUserInfo(innerBundleUserInfo);
+    std::string packageName;
+    info1.SetInstallMark(BUNDLE_NAME, packageName, InstallExceptionStatus::INSTALL_FINISH);
 
     auto dataMgr = GetDataMgr();
     EXPECT_NE(dataMgr, nullptr);
@@ -2434,6 +2439,8 @@ HWTEST_F(BmsDataMgrTest, QueryAbilityInfoByContinueType_0200, Function | SmallTe
     applicationInfo.bundleName = BUNDLE_NAME;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    std::string packageName;
+    innerBundleInfo.SetInstallMark(BUNDLE_NAME, packageName, InstallExceptionStatus::INSTALL_FINISH);
     int32_t userId = Constants::ALL_USERID;
     BundleUserInfo userInfo;
     userInfo.userId = userId;
@@ -2531,6 +2538,8 @@ HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithFlags_0100, Function | SmallTest 
     InnerBundleUserInfo innerBundleUserInfo;
     innerBundleUserInfo.bundleUserInfo = userInfo;
     innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    std::string packageName;
+    innerBundleInfo.SetInstallMark(BUNDLE_NAME, packageName, InstallExceptionStatus::INSTALL_FINISH);
     dataMgr->multiUserIdsSet_.insert(userId);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
     ErrCode res =
