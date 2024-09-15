@@ -2280,6 +2280,32 @@ HWTEST_F(BmsDataMgrTest, GetAllExtensionInfos_0100, Function | SmallTest | Level
 }
 
 /**
+ * @tc.number: GetAllExtensionInfosByExtensionTypeName_0100
+ * @tc.name: test GetAllExtensionInfosForAms
+ * @tc.desc: 1.test get all extended information
+ */
+HWTEST_F(BmsDataMgrTest, GetAllExtensionInfosByExtensionTypeName_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    uint32_t flags = 0;
+    int32_t userId = 0;
+    InnerBundleInfo info;
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t appIndex = 0;
+    std::string typeName = "";
+    dataMgr->GetAllExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.empty(), true);
+    ExtensionAbilityInfo extensionAbilityInfo;
+    info.InsertExtensionInfo("", extensionAbilityInfo);
+    dataMgr->GetAllExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.empty(), false);
+    flags = 1;
+    dataMgr->GetAllExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.empty(), false);
+}
+
+/**
  * @tc.number: GetAppServiceHspBundleInfo_0100
  * @tc.name: test GetAppServiceHspBundleInfo
  * @tc.desc: 1.obtain information on the Hsp bundle for application service
