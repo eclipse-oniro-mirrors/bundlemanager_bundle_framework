@@ -3405,6 +3405,23 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0147, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleResourceTest_0175
+ * Function: DeleteResourceInfo
+ * @tc.name: test DeleteResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0175, Function | SmallTest | Level0)
+{
+    bool ret = BundleResourceHelper::DeleteAllResourceInfo();
+    EXPECT_TRUE(ret);
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        ret = manager->AddAllResourceInfo(USERID, 0, 0);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
  * @tc.number: BmsBundleResourceTest_0148
  * Function: BundleResourceProcess
  * @tc.name: test BundleResourceProcess
@@ -3941,17 +3958,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0174, Function | SmallTest
     std::string key;
     bool ret = BundleResourceHelper::DeleteResourceInfo(key);
     EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0175
- * Function: DeleteResourceInfo
- * @tc.name: test DeleteResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0175, Function | SmallTest | Level0)
-{
-    bool ret = BundleResourceHelper::DeleteAllResourceInfo();
-    EXPECT_TRUE(ret);
 }
 
 /**

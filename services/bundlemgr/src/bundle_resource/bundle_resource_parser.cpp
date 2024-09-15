@@ -518,6 +518,7 @@ bool BundleResourceParser::ParserCloneResourceInfo(
 void BundleResourceParser::ProcessSpecialBundleResource(const int32_t userId, std::vector<ResourceInfo> &resourceInfos)
 {
     if (resourceInfos.empty()) {
+        APP_LOGW("resourceInfos empty");
         return;
     }
     if ((resourceInfos[0].GetKey() == COM_OHOS_CONTACTS)) {
