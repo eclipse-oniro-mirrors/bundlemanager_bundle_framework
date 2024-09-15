@@ -165,7 +165,7 @@ ohos_fuzztest("DefaultAppHostFuzzTest") {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [
       "udmf:udmf_client",
-      "udmf:utd_client",
+      "udmf:utd_client"
     ]
   }
 }
