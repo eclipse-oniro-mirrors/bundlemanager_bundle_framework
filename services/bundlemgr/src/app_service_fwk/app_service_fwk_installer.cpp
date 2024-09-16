@@ -549,7 +549,7 @@ ErrCode AppServiceFwkInstaller::InnerProcessInstall(
         if (result != ERR_OK) {
             return result;
         }
-
+        newInfo.SetApplicationFlags(installParam.preinstallSourceFlag);
         MergeBundleInfos(newInfo);
     }
 

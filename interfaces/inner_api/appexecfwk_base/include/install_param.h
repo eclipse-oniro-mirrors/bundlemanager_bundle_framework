@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "application_info.h"
 #include "bundle_constants.h"
 #include "parcel.h"
 namespace OHOS {
@@ -92,6 +93,7 @@ struct InstallParam : public Parcelable {
     std::string additionalInfo = "";
     // utilizing for code-signature
     std::map<std::string, std::string> verifyCodeParams;
+    ApplicationInfoFlag preinstallSourceFlag = ApplicationInfoFlag::FLAG_INSTALLED;
     // the parcel object function is not const.
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

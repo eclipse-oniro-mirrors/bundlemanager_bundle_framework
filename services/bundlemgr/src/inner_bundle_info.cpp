@@ -145,6 +145,7 @@ constexpr const char* MODULE_PACKAGE_NAME = "packageName";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
 constexpr const char* MODULE_HWASAN_ENABLED = "hwasanEnabled";
 constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
+constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -4322,6 +4323,14 @@ std::vector<std::string> InnerBundleInfo::GetAllExtensionDirs() const
         dirVec.emplace_back(dir);
     }
     return dirVec;
+}
+
+void InnerBundleInfo::SetApplicationFlags(ApplicationInfoFlag flag)
+{
+    uint32_t applicationFlags = static_cast<uint32_t>(baseApplicationInfo_->applicationFlags);
+    uint32_t installSourceFlag = static_cast<uint32_t>(flag);
+    baseApplicationInfo_->applicationFlags =
+        static_cast<int32_t>((applicationFlags & PREINSTALL_SOURCE_CLEAN_MASK) | installSourceFlag);
 }
 
 void InnerBundleInfo::UpdateExtensionSandboxInfo(const std::vector<std::string> &typeList)

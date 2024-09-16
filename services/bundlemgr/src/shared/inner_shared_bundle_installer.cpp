@@ -168,6 +168,7 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
     ErrCode result = ERR_OK;
     for (auto &item : parsedBundles_) {
         result = ExtractSharedBundles(item.first, item.second);
+        item.second.SetApplicationFlags(installParam.preinstallSourceFlag);
         CHECK_RESULT(result, "extract shared bundles failed %{public}d");
     }
 
