@@ -335,13 +335,13 @@ bool Unzip(const std::string &srcFile, const std::string &destFile, OPTIONS opti
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
         return false;
     }
-    if (!FilePath::PathIsValid(srcFileDir)) {
+    if (!FilePath::PathIsValid(srcFileDir) || srcFile.find("../") != std::string::npos) {
         APP_LOGI("srcFile invalid");
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
         return false;
     }
     if (FilePath::DirectoryExists(destDir)) {
-        if (!FilePath::PathIsWriteable(destDir)) {
+        if (!FilePath::PathIsWriteable(destDir) || destFile.find("../") != std::string::npos) {
             APP_LOGI("FilePath::PathIsWriteable(destDir) fail");
             zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
             return false;
