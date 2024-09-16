@@ -19,6 +19,7 @@
 #include "bundle_resource_image_info.h"
 #include "bundle_resource_drawable.h"
 #include "bundle_service_constants.h"
+#include "bundle_util.h"
 #include "json_util.h"
 
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
@@ -38,6 +39,16 @@ constexpr char CHAR_COLON = ':';
 constexpr const char* OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
 constexpr int8_t BADGE_SIZE = 62;
 #endif
+constexpr const char* COM_OHOS_CONTACTS_ENTRY_ABILITY = "com.ohos.contacts.EntryAbility";
+constexpr const char* COM_OHOS_CONTACTS_ENTRY = "entry";
+constexpr const char* SYSTEM_THEME_PATH = "/data/service/el1/public/themes/";
+constexpr const char* ENTRY_ABILITY_THEME_ICONS_A =
+    "/a/app/icons/com.ohos.contacts/entry/com.ohos.contacts.EntryAbility";
+constexpr const char* ENTRY_ABILITY_THEME_ICONS_B =
+    "/b/app/icons/com.ohos.contacts/entry/com.ohos.contacts.EntryAbility";
+constexpr const char* THEME_ICONS_A_FLAG = "/a/app/flag";
+constexpr const char* THEME_ICONS_B_FLAG = "/b/app/flag";
+constexpr const char* COM_OHOS_CONTACTS = "com.ohos.contacts";
 
 struct LayeredImage {
     std::string foreground;
@@ -159,6 +170,7 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
             resourceInfos[0].bundleName_.c_str(), resourceInfos[0].moduleName_.c_str());
         return false;
     }
+    ProcessSpecialBundleResource(userId, resourceInfos);
     APP_LOGD("end");
     return true;
 }
@@ -323,6 +335,12 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         APP_LOGE_NOFUNC("iconId is 0 or less than 0");
         return false;
     }
+    // Firstly, check if the bundle theme resource exists, density 0
+    BundleResourceDrawable drawable;
+    if (drawable.GetIconResourceByTheme(resourceInfo.iconId_, 0, resourceManager, resourceInfo)) {
+        return true;
+    }
+    APP_LOGI_NOFUNC("%{public}s not exist theme", resourceInfo.GetKey().c_str());
     // parse json
     std::string type;
     size_t len;
@@ -344,16 +362,11 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         return bundleResourceImageInfo.ConvertToBase64(std::move(jsonBuf), len, resourceInfo.icon_);
     }
     APP_LOGI_NOFUNC("%{public}s icon is not png, parse by drawable descriptor", resourceInfo.GetKey().c_str());
-    // density 0
-    BundleResourceDrawable drawable;
-    if (!drawable.GetIconResourceByDrawable(resourceInfo.iconId_, 0, resourceManager, resourceInfo)) {
-        APP_LOGE("key:%{public}s parse failed iconId:%{public}d", resourceInfo.GetKey().c_str(), resourceInfo.iconId_);
+    if (!drawable.GetIconResourceByHap(resourceInfo.iconId_, 0, resourceManager, resourceInfo)) {
+        APP_LOGE("key:%{public}s parse failed with hap iconId:%{public}d",
+            resourceInfo.GetKey().c_str(), resourceInfo.iconId_);
         return false;
     }
-    if (!resourceInfo.foreground_.empty()) {
-        return true;
-    }
-
     if (type == TYPE_JSON) {
         return ParseForegroundAndBackgroundResource(resourceManager,
             std::string(reinterpret_cast<char*>(jsonBuf.get()), len), 0, resourceInfo);
@@ -500,6 +513,41 @@ bool BundleResourceParser::ParserCloneResourceInfo(
     APP_LOGI("not support pixel map");
     return false;
 #endif
+}
+
+void BundleResourceParser::ProcessSpecialBundleResource(const int32_t userId, std::vector<ResourceInfo> &resourceInfos)
+{
+    if (resourceInfos.empty()) {
+        APP_LOGW("resourceInfos empty");
+        return;
+    }
+    if ((resourceInfos[0].GetKey() == COM_OHOS_CONTACTS)) {
+        bool isContactsEntryAbilityExistTheme = false;
+        if (BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A_FLAG) &&
+            BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + ENTRY_ABILITY_THEME_ICONS_A)) {
+            isContactsEntryAbilityExistTheme = true;
+        }
+        if (!isContactsEntryAbilityExistTheme &&
+            BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B_FLAG) &&
+            BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + ENTRY_ABILITY_THEME_ICONS_B)) {
+            isContactsEntryAbilityExistTheme = true;
+        }
+        if (!isContactsEntryAbilityExistTheme) {
+            APP_LOGI("%{public}s not exist entry ability theme", resourceInfos[0].GetKey().c_str());
+            return;
+        }
+        for (const auto &resourceInfo : resourceInfos) {
+            if ((resourceInfo.moduleName_ == COM_OHOS_CONTACTS_ENTRY) &&
+                (resourceInfo.abilityName_ == COM_OHOS_CONTACTS_ENTRY_ABILITY) &&
+                !resourceInfo.icon_.empty()) {
+                APP_LOGI("%{public}s exist entry ability theme", resourceInfos[0].GetKey().c_str());
+                resourceInfos[0].icon_ = resourceInfo.icon_;
+                resourceInfos[0].foreground_ = resourceInfo.foreground_;
+                resourceInfos[0].background_ = resourceInfo.background_;
+                return;
+            }
+        }
+    }
 }
 } // AppExecFwk
 } // OHOS
