@@ -272,7 +272,6 @@ struct AbilityInfo : public Parcelable {
     CompileMode compileMode = CompileMode::JS_BUNDLE;
     int32_t appIndex = 0;
 
-    // unused
     std::string originalBundleName;
     std::string appName;
     std::string privacyUrl;

@@ -148,7 +148,6 @@ struct BundleInfo : public Parcelable {
     std::vector<RequestPermission> reqPermissionDetails;
     std::vector<OverlayBundleInfo> overlayBundleInfos;
 
-    // unused
     std::string cpuAbi;
     std::string seInfo;
     std::string label;
