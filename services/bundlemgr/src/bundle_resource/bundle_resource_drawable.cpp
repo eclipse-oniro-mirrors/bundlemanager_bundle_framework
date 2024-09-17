@@ -46,7 +46,7 @@ bool IsSupportTelephonyVoice()
 }
 }
 
-bool BundleResourceDrawable::GetIconResourceByDrawable(
+bool BundleResourceDrawable::GetIconResourceByTheme(
     const uint32_t iconId,
     const int32_t density,
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
@@ -60,7 +60,7 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
     if ((resourceInfo.GetKey() == COM_OHOS_CONTACTS) && IsSupportTelephonyVoice()) {
         // contacts app.json use hap resource
         LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s parse no theme icon", resourceInfo.bundleName_.c_str());
-        return GetIconResourceByDrawableNoTheme(iconId, density, resourceManager, resourceInfo);
+        return GetIconResourceByHap(iconId, density, resourceManager, resourceInfo);
     }
     BundleResourceImageInfo info;
     OHOS::Ace::Napi::DrawableDescriptor::DrawableType drawableType;
@@ -88,20 +88,13 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
         LOG_W(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor or pixelMap is nullptr, need create again",
             resourceInfo.bundleName_.c_str());
     }
-    auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(
-        iconId, resourceManager, state, drawableType, 0);
-    if ((drawableDescriptor == nullptr) || (state != Global::Resource::SUCCESS)) {
-        LOG_E(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor is nullptr, errCode:%{public}d",
-            resourceInfo.bundleName_.c_str(), static_cast<int32_t>(state));
-        return false;
-    }
-    return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
+    return false;
 #else
     return false;
 #endif
 }
 
-bool BundleResourceDrawable::GetIconResourceByDrawableNoTheme(
+bool BundleResourceDrawable::GetIconResourceByHap(
     const uint32_t iconId,
     const int32_t density,
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager,

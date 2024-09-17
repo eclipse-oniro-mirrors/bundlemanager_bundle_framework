@@ -69,6 +69,8 @@ private:
         const uint32_t iconId, const int32_t density, std::vector<uint8_t> &data);
 
     bool IsNeedToParseResourceInfo(const ResourceInfo &newResourceInfo, const ResourceInfo &oldResourceInfo);
+
+    void ProcessSpecialBundleResource(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
 };
 } // AppExecFwk
 } // OHOS
