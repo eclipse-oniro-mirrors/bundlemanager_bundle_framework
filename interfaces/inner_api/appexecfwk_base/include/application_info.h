@@ -276,7 +276,6 @@ struct ApplicationInfo : public Parcelable {
     // switch
     bool multiProjects = false;
 
-    // unused
     bool isCompressNativeLibs = true;
     int32_t flags = 0;
     std::string icon;
