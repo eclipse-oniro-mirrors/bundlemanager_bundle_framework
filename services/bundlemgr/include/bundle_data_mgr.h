@@ -42,6 +42,7 @@
 #include "inner_bundle_clone_info.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
+#include "uninstall_data_mgr_storage_rdb.h"
 #include "module_info.h"
 #include "preinstall_data_storage_interface.h"
 #include "router_data_storage_interface.h"
@@ -815,6 +816,10 @@ public:
     bool GetInnerBundleInfoUsers(const std::string &bundleName, std::set<int32_t> &userIds);
     bool IsSystemHsp(const std::string &bundleName);
 
+    bool UpdateUninstallBundleInfo(const std::string &bundleName, const UninstallBundleInfo &uninstallBundleInfo);
+    bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo);
+    bool DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
+
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
 
     void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
@@ -1203,6 +1208,7 @@ private:
     std::set<std::string> appServiceHspBundleName_;
     std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
     std::shared_ptr<IRouterDataStorage> routerStorage_;
+    std::shared_ptr<UninstallDataMgrStorageRdb> uninstallDataMgr_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
