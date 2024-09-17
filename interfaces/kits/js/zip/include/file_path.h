@@ -75,6 +75,9 @@ public:
     bool IsAbsolute();
     std::string Value();
     std::string CheckDestDirTail();
+    static bool IsNeedCheckFilePathBaseOnAPIVersion();
+    static bool HasRelativePathBaseOnAPIVersion(const std::string &path);
+    static bool HasRelativePathBaseOnAPIVersion(const std::vector<std::string> &paths);
 private:
     std::string path_;
 
