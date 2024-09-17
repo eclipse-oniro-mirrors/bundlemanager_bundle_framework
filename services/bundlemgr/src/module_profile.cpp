@@ -1717,8 +1717,8 @@ bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo 
     nlohmann::json moduleJson = jsonObject.at(Profile::MODULE);
     std::vector<std::string> preloads;
     std::string moduleName = moduleJson.at(Profile::MODULE_NAME);
-    if (moduleJson.contains(Profile::MODULE_ATOMIC_SERVICE)) {
-        nlohmann::json moduleAtomicObj = moduleJson.at(Profile::MODULE_ATOMIC_SERVICE);
+    if (moduleJson.contains(Profile::ATOMIC_SERVICE)) {
+        nlohmann::json moduleAtomicObj = moduleJson.at(Profile::ATOMIC_SERVICE);
         if (moduleAtomicObj.contains(Profile::MODULE_ATOMIC_SERVICE_PRELOADS)) {
             nlohmann::json preloadObj = moduleAtomicObj.at(Profile::MODULE_ATOMIC_SERVICE_PRELOADS);
             if (preloadObj.empty()) {
