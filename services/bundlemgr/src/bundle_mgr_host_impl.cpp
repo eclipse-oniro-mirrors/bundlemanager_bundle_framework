@@ -3878,10 +3878,10 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
         APP_LOGE("userId %{public}d is invalid", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
     std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos();
     for (auto recoverableBundleInfo: recoverableBundleInfos) {
         std::string bundleName = recoverableBundleInfo.GetBundleName();
-        BmsExtensionDataMgr bmsExtensionDataMgr;
         if (bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId)) {
             APP_LOGI("recover app %{public}s is in blocklist", bundleName.c_str());
             continue;
