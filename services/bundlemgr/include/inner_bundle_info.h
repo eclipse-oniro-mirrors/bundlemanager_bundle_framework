@@ -137,6 +137,7 @@ struct InnerModuleInfo {
     std::vector<AppEnvironment> appEnvironments;
     bool asanEnabled = false;
     bool gwpAsanEnabled = false;
+    bool tsanEnabled = false;
     std::string packageName;
     std::string appStartup;
     bool needDelete = false;
@@ -2190,6 +2191,7 @@ public:
     void GetOdid(std::string &odid) const;
     bool IsAsanEnabled() const;
     bool IsGwpAsanEnabled() const;
+    bool IsTsanEnabled() const;
     bool GetUninstallState() const;
     void SetUninstallState(const bool &uninstallState);
     void UpdateMultiAppMode(const InnerBundleInfo &newInfo);
