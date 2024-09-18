@@ -2193,6 +2193,8 @@ HWTEST_F(BmsSandboxAppTest, GetBundleInfoForSelf_0100, Function | SmallTest | Le
     InnerBundleInfo info;
     info.SetBaseApplicationInfo(appInfo);
     info.AddInnerBundleUserInfo(innerUserInfo);
+    std::string packageName;
+    info.SetInstallMark(BUNDLE_NAME_TEST, packageName, InstallExceptionStatus::INSTALL_FINISH);
 
     SaveSandboxAppInfo(info, APP_INDEX_1);
 
