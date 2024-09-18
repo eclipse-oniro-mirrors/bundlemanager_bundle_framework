@@ -32,7 +32,7 @@ namespace OHOS {
         AppServiceFwkInstaller appServiceFwk;
         InnerBundleInfo info;
         bool isAppExist;
-        appServiceFwk.GetInnerBundleInfo(info, isAppExist);
+        appServiceFwk.GetInnerBundleInfoWithDisable(info, isAppExist);
         return true;
     }
 }

@@ -632,7 +632,7 @@ bool BundleInstallChecker::FindModuleInInstalledPackage(
 
     ScopeGuard enableGuard([&dataMgr, &bundleName] { dataMgr->EnableBundle(bundleName); });
     InnerBundleInfo bundleInfo;
-    bool isBundleExist = dataMgr->GetInnerBundleInfo(bundleName, bundleInfo);
+    bool isBundleExist = dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo);
     if (!isBundleExist) {
         LOG_E(BMS_TAG_INSTALLER, "the bundle: %{public}s is not install", bundleName.c_str());
         return false;

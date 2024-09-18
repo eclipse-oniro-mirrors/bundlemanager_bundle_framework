@@ -143,7 +143,7 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
     }
     InnerBundleInfo innerBundleInfo;
     // 4. obtain innerBundleInfo and enableGuard used to enable bundle which is under disable status
-    if (!dataMgr_->GetInnerBundleInfo(bundleName, innerBundleInfo)) {
+    if (!dataMgr_->GetInnerBundleInfoWithDisable(bundleName, innerBundleInfo)) {
         LOG_E(BMS_TAG_DEFAULT, "cannot obtain the innerbundleInfo from data mgr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
     }

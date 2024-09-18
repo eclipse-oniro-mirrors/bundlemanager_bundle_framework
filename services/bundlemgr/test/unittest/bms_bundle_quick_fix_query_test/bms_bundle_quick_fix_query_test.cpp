@@ -186,7 +186,7 @@ void BmsBundleQuickFixQueryTest::MockEnableQuickFix() const
     InnerBundleInfo innerBundleInfo;
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    auto result = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    auto result = dataMgr->GetInnerBundleInfoWithDisable(BUNDLE_NAME, innerBundleInfo);
     EXPECT_TRUE(result);
 
     AppQuickFix appQuickFix = innerBundleInfo.GetAppQuickFix();
@@ -214,7 +214,7 @@ void BmsBundleQuickFixQueryTest::MockDisableQuickFix() const
     InnerBundleInfo innerBundleInfo;
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    auto result = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    auto result = dataMgr->GetInnerBundleInfoWithDisable(BUNDLE_NAME, innerBundleInfo);
     EXPECT_TRUE(result);
 
     AppQuickFix appQuickFix_1 = innerAppQuickFix.GetAppQuickFix();
@@ -248,7 +248,7 @@ void BmsBundleQuickFixQueryTest::MockDeployQuickFix() const
     InnerBundleInfo innerBundleInfo;
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    auto result = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    auto result = dataMgr->GetInnerBundleInfoWithDisable(BUNDLE_NAME, innerBundleInfo);
     EXPECT_TRUE(result);
     innerBundleInfo.SetAppQuickFix(appQuickFix);
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);

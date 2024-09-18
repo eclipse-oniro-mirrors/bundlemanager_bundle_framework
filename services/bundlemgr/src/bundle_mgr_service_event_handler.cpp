@@ -812,10 +812,7 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
     {
         auto &mtx = dataMgr->GetBundleMutex(bundleName);
         std::lock_guard lock { mtx };
-        bundleExist = dataMgr->GetInnerBundleInfo(bundleName, dbInfo);
-        if (bundleExist) {
-            dataMgr->EnableBundle(bundleName);
-        }
+        bundleExist = dataMgr->FetchInnerBundleInfo(bundleName, dbInfo);
     }
 
     if (!bundleExist) {

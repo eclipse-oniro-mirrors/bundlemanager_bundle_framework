@@ -4108,9 +4108,9 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bu
     return ERR_OK;
 }
 
-bool BundleDataMgr::GetInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
+bool BundleDataMgr::GetInnerBundleInfoWithDisable(const std::string &bundleName, InnerBundleInfo &info)
 {
-    APP_LOGD("GetInnerBundleInfo %{public}s", bundleName.c_str());
+    APP_LOGD("GetInnerBundleInfoWithDisable %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGW("bundleName is empty");
         return false;

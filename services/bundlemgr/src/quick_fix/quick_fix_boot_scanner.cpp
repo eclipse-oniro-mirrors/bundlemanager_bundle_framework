@@ -253,14 +253,12 @@ bool QuickFixBootScanner::ProcessWithBundleHasQuickFixInfo(const std::string &bu
         invalidQuickFixDir_.emplace_back(hqfPath);
         // remove the quick fix info from memory cache and db
         InnerBundleInfo innerBundleInfo;
-        if ((dataMgr_ == nullptr) || (!dataMgr_->GetInnerBundleInfo(bundleName, innerBundleInfo))) {
+        if ((dataMgr_ == nullptr) || (!dataMgr_->FetchInnerBundleInfo(bundleName, innerBundleInfo))) {
             LOG_E(BMS_TAG_DEFAULT, "cannot obtain the innerbundleInfo from data mgr");
             return false;
         }
         AppQuickFix appQuickFix;
         innerBundleInfo.SetAppQuickFix(appQuickFix);
-        innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-        dataMgr_->EnableBundle(bundleName);
         if (!dataMgr_->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo)) {
             LOG_E(BMS_TAG_DEFAULT, "update quickfix innerbundleInfo failed");
             return false;

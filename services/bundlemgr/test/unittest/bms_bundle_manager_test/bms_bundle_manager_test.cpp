@@ -3568,14 +3568,14 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0006, Function | SmallTest 
 
 /**
  * @tc.number: GetMgrFalseByNoBundle_0007
- * @tc.name: test GetInnerBundleInfo
+ * @tc.name: test GetInnerBundleInfoWithDisable
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
 */
 HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0007, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    bool testRet = GetBundleDataMgr()->GetInnerBundleInfo(
+    bool testRet = GetBundleDataMgr()->GetInnerBundleInfoWithDisable(
         TEST_BUNDLE_NAME, info);
     EXPECT_EQ(testRet, false);
 }

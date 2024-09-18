@@ -91,7 +91,7 @@ private:
         std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         InstallParam &installParam);
     ErrCode UninstallLowerVersion(const std::vector<std::string> &moduleNameList);
-    bool GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist);
+    bool GetInnerBundleInfoWithDisable(InnerBundleInfo &info, bool &isAppExist);
     bool CheckNeedInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos, InnerBundleInfo &oldInfo,
         bool &isDowngrade);
     bool CheckNeedUpdate(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo);

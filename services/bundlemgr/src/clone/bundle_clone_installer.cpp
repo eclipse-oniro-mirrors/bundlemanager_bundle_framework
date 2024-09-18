@@ -114,7 +114,7 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
     }
     ScopeGuard bundleEnabledGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleInfo info;
-    bool isExist = dataMgr_->GetInnerBundleInfo(bundleName, info);
+    bool isExist = dataMgr_->GetInnerBundleInfoWithDisable(bundleName, info);
     if (!isExist) {
         APP_LOGE("the bundle is not installed");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED;
