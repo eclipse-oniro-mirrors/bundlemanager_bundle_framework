@@ -1545,6 +1545,10 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             std::copy(cache.begin(), cache.end(), std::back_inserter(caches));
         }
 
+        std::string shaderCachePath;
+        shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
+        caches.push_back(shaderCachePath);
+
         bool succeed = true;
         if (!caches.empty()) {
             for (const auto& cache : caches) {
