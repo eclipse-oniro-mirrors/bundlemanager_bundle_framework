@@ -4074,10 +4074,15 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    InnerBundleInfo innerBundleInfo;
-    auto resCode = dataMgr->SwitchUninstallState(bundleName, state, innerBundleInfo);
+    auto resCode = dataMgr->SwitchUninstallState(bundleName, state);
     if (resCode != ERR_OK) {
         APP_LOGE("set status fail");
+        return resCode;
+    }
+    InnerBundleInfo innerBundleInfo;
+    bool isSuccess = dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo);
+    if (!isSuccess) {
+        APP_LOGE("get innerBundleInfo fail");
         return resCode;
     }
     AbilityInfo mainAbilityInfo;
