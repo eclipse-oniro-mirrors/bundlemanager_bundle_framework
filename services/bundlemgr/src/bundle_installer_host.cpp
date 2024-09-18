@@ -51,12 +51,11 @@ BundleInstallerHost::~BundleInstallerHost()
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "destroy bundle installer host instance");
 }
 
-bool BundleInstallerHost::Init()
+void BundleInstallerHost::Init()
 {
     LOG_D(BMS_TAG_INSTALLER, "begin to init");
     manager_ = std::make_shared<BundleInstallerManager>();
     LOG_D(BMS_TAG_INSTALLER, "init successfully");
-    return true;
 }
 
 int BundleInstallerHost::OnRemoteRequest(

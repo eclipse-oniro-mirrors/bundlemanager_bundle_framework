@@ -34,7 +34,7 @@ public:
     BundleInstallerHost();
     virtual ~BundleInstallerHost() override;
 
-    bool Init();
+    void Init();
     virtual int OnRemoteRequest(
         uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     /**
