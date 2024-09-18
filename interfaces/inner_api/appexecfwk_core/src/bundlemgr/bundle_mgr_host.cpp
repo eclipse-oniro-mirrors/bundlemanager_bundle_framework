@@ -901,7 +901,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfos(MessageParcel &data, MessageParcel &
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    APP_LOGI("bundles %{public}zu, size %{public}d", infos.size(), reply.GetRawDataSize());
+    APP_LOGI("bundles %{public}zu, size %{public}zu", infos.size(), reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -924,7 +924,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlags(MessageParcel &data, Mes
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    APP_LOGI("bundles %{public}zu, size %{public}d", infos.size(), reply.GetRawDataSize());
+    APP_LOGI("bundles %{public}zu, size %{public}zu", infos.size(), reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -946,7 +946,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, M
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    APP_LOGI("bundles %{public}zu, size %{public}d", infos.size(), reply.GetRawDataSize());
+    APP_LOGI("bundles %{public}zu, size %{public}zu", infos.size(), reply.GetRawDataSize());
     return ERR_OK;
 }
 
