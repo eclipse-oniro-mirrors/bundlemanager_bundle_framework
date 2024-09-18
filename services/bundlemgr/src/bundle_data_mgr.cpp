@@ -339,7 +339,6 @@ bool BundleDataMgr::AddNewModuleInfo(
     }
     if (statusItem->second == InstallState::UPDATING_SUCCESS) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
-        updateTsanEnabled(newInfo, oldInfo);
         ProcessAllowedAcls(newInfo, oldInfo);
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
@@ -370,6 +369,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.UpdateOdidByBundleInfo(newInfo);
         oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
+        oldInfo.SetTsanEnabled(oldInfo.IsTsanEnabled());
         oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
         oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
@@ -435,6 +435,7 @@ bool BundleDataMgr::RemoveModuleInfo(
         }
         oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
+        oldInfo.SetTsanEnabled(oldInfo.IsTsanEnabled());
         oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
         oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
         if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
@@ -614,9 +615,9 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.UpdateModuleInfo(newInfo);
         oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
+        oldInfo.SetTsanEnabled(oldInfo.IsTsanEnabled());
         oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
         oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
-        updateTsanEnabled(newInfo, oldInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
@@ -7771,16 +7772,6 @@ ErrCode BundleDataMgr::GetOdidByBundleName(const std::string &bundleName, std::s
     const InnerBundleInfo &bundleInfo = item->second;
     bundleInfo.GetOdid(odid);
     return ERR_OK;
-}
-
-void BundleDataMgr::updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
-{
-    if (newInfo.GetTsanEnabled()) {
-        oldInfo.SetTsanEnabled(true);
-    }
-    if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
-        oldInfo.SetTsanEnabled(newInfo.GetTsanEnabled());
-    }
 }
 
 void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
