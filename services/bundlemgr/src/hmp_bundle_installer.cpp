@@ -99,6 +99,7 @@ ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir, 
     installParam.copyHapToInstallPath = false;
     installParam.userId = Constants::DEFAULT_USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.isOTA = true;
     installParam.removable = removable;
     ErrCode ret = InstallBundle(bundleDir, installParam, Constants::AppType::SYSTEM_APP);
     ResetInstallProperties();

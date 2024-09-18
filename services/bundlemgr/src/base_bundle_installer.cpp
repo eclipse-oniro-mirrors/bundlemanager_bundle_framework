@@ -336,6 +336,11 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         isUninstalledFromBmsExtension = true;
         result = ERR_OK;
     }
+    if ((result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE ||
+        result == ERR_APPEXECFWK_USER_NOT_INSTALL_HAP) &&
+        DeleteUninstallBundleInfoFromDb(bundleName)) {
+        result = ERR_OK;
+    }
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .isAgingUninstall = installParam.isAgingUninstall,
@@ -867,6 +872,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     auto it = newInfos.begin();
     if (!isAppExist_) {
         LOG_I(BMS_TAG_INSTALLER, "app is not exist");
+        if (!CheckInstallOnKeepData(bundleName_, installParam.isOTA, newInfos)) {
+            LOG_E(BMS_TAG_INSTALLER, "check failed");
+            return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
+        }
         InnerBundleInfo &newInfo = it->second;
         modulePath_ = it->first;
         InnerBundleUserInfo newInnerBundleUserInfo;
@@ -1274,6 +1283,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         quickFixDeleter->Execute();
     }
 #endif
+    DeleteUninstallBundleInfo(bundleName_);
     UpdateEncryptedStatus();
     GetInstallEventInfo(sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
@@ -1456,6 +1466,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
+    UninstallBundleInfo uninstallBundleInfo;
+    GetUninstallBundleInfo(installParam.isKeepData, userId_, oldInfo, uninstallBundleInfo);
 
     InnerBundleUserInfo curInnerBundleUserInfo;
     if (!oldInfo.GetInnerBundleUserInfo(userId_, curInnerBundleUserInfo)) {
@@ -1501,7 +1513,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
-        return RemoveBundleUserData(oldInfo, installParam.isKeepData);
+        auto res = RemoveBundleUserData(oldInfo, installParam.isKeepData);
+        if (res != ERR_OK) {
+            return res;
+        }
+        SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+        return ERR_OK;
     }
     dataMgr_->DisableBundle(bundleName);
 
@@ -1585,6 +1602,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // remove profile from code signature
     RemoveProfileFromCodeSign(bundleName);
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
+    SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
     return ERR_OK;
 }
 
@@ -1691,6 +1709,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "save install mark failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
+    UninstallBundleInfo uninstallBundleInfo;
+    GetUninstallBundleInfo(installParam.isKeepData, userId_, oldInfo, uninstallBundleInfo);
 
     bool onlyInstallInUser = oldInfo.GetInnerBundleUserInfos().size() == 1;
     ErrCode result = ERR_OK;
@@ -1737,9 +1757,15 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 MarkPreInstallState(bundleName, true);
             }
             DeleteRouterInfo(bundleName);
+            SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
             return ERR_OK;
         }
-        return RemoveBundleUserData(oldInfo, installParam.isKeepData);
+        auto removeRes = RemoveBundleUserData(oldInfo, installParam.isKeepData);
+        if (removeRes != ERR_OK) {
+            return removeRes;
+        }
+        SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+        return ERR_OK;
     }
 
     if (onlyInstallInUser) {
@@ -3017,6 +3043,100 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
     if (!SetEncryptionDirPolicy(info)) {
         LOG_E(BMS_TAG_INSTALLER, "Encryption failed dir");
     }
+}
+
+void BaseBundleInstaller::GetUninstallBundleInfo(bool isKeepData, int32_t userId,
+    const InnerBundleInfo &oldInfo, UninstallBundleInfo &uninstallBundleInfo)
+{
+    if (!isKeepData) {
+        return;
+    }
+    uninstallBundleInfo.userInfos[std::to_string(userId)].uid = oldInfo.GetUid(userId);
+    uninstallBundleInfo.userInfos[std::to_string(userId)].gids.emplace_back(oldInfo.GetGid(userId));
+    uninstallBundleInfo.userInfos[std::to_string(userId)].accessTokenId = oldInfo.GetAccessTokenId(userId);
+    uninstallBundleInfo.userInfos[std::to_string(userId)].accessTokenIdEx = oldInfo.GetAccessTokenIdEx(userId);
+    uninstallBundleInfo.appId = oldInfo.GetAppId();
+    uninstallBundleInfo.appIdentifier = oldInfo.GetAppIdentifier();
+    uninstallBundleInfo.appProvisionType = oldInfo.GetAppProvisionType();
+    uninstallBundleInfo.bundleType = oldInfo.GetApplicationBundleType();
+}
+
+void BaseBundleInstaller::SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,
+    const UninstallBundleInfo &uninstallBundleInfo)
+{
+    LOG_E(BMS_TAG_INSTALLER, "save userId %{public}s", uninstallBundleInfo.userInfos.begin()->first.c_str());
+    if (!isKeepData) {
+        return;
+    }
+    if (!dataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "update failed");
+    }
+}
+
+void BaseBundleInstaller::DeleteUninstallBundleInfo(const std::string &bundleName)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed");
+        return;
+    }
+    if (!existBeforeKeepDataApp_) {
+        return;
+    }
+    if (!dataMgr_->DeleteUninstallBundleInfo(bundleName, userId_)) {
+        LOG_E(BMS_TAG_INSTALLER, "delete failed");
+    }
+}
+
+bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bundleName)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed");
+        return false;
+    }
+    UninstallBundleInfo uninstallBundleInfo;
+    if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        return false;
+    }
+    if (uninstallBundleInfo.userInfos.find(std::to_string(userId_)) == uninstallBundleInfo.userInfos.end()) {
+        LOG_I(BMS_TAG_INSTALLER, "%{public}s has been uninstalled on user %{public}d without keepData",
+            bundleName.c_str(), userId_);
+        return false;
+    }
+    ErrCode result =
+        InstalldClient::GetInstance()->RemoveBundleDataDir(bundleName, userId_,
+            uninstallBundleInfo.bundleType == BundleType::ATOMIC_SERVICE);
+    LOG_I(BMS_TAG_INSTALLER, "remove dirs res %{public}d", result);
+    if (!uninstallBundleInfo.extensionDirs.empty()) {
+        result = InstalldClient::GetInstance()->RemoveExtensionDir(userId_, uninstallBundleInfo.extensionDirs);
+        LOG_I(BMS_TAG_INSTALLER, "remove extension dirs res %{public}d", result);
+    }
+    return dataMgr_->DeleteUninstallBundleInfo(bundleName, userId_);
+}
+
+bool BaseBundleInstaller::CheckInstallOnKeepData(const std::string &bundleName, bool isOTA,
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if (isOTA) {
+        return true;
+    }
+    if (!InitDataMgr() || infos.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed or empty infos");
+        return true;
+    }
+    UninstallBundleInfo uninstallBundleInfo;
+    if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        return true;
+    }
+    existBeforeKeepDataApp_ = true;
+    LOG_I(BMS_TAG_INSTALLER, "this app was uninstalled with keep data before");
+    if (infos.begin()->second.GetAppIdentifier() != uninstallBundleInfo.appIdentifier &&
+        infos.begin()->second.GetAppId() != uninstallBundleInfo.appId) {
+        LOG_E(BMS_TAG_INSTALLER,
+            "%{public}s has been uninstalled with keep data, and the appIdentifier or appId is not the same",
+            bundleName.c_str());
+        return false;
+    }
+    return true;
 }
 
 void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, bool isKeepData) const
@@ -4542,7 +4662,7 @@ bool BaseBundleInstaller::CheckReleaseTypeIsCompatible(
     return true;
 }
 
-ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleInfo, bool needRemoveData)
+ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleInfo, bool isKeepData)
 {
     auto bundleName = innerBundleInfo.GetBundleName();
     LOG_D(BMS_TAG_INSTALLER, "remove user(%{public}d) in bundle(%{public}s)", userId_, bundleName.c_str());
@@ -4579,7 +4699,7 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     }
 
     ErrCode result = ERR_OK;
-    if (!needRemoveData) {
+    if (!isKeepData) {
         result = RemoveBundleDataDir(innerBundleInfo);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "remove user data directory failed");
@@ -4725,6 +4845,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     newExtensionDirs_.clear();
     createExtensionDirs_.clear();
     removeExtensionDirs_.clear();
+    existBeforeKeepDataApp_ = false;
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool killProcess)
