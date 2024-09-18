@@ -41,6 +41,8 @@ enum class GetExtensionAbilityInfoFlag {
     GET_EXTENSION_ABILITY_INFO_WITH_METADATA = 0x00000004,
     GET_EXTENSION_ABILITY_INFO_WITH_SKILL_URI = 0x00000008,
     GET_EXTENSION_ABILITY_INFO_WITH_SKILL = 0x00000010,
+    // using this tag will only return one, only for c++
+    GET_EXTENSION_ABILITY_INFO_BY_TYPE_NAME = 0x00000020,
 };
 
 enum class ExtensionAbilityType {
