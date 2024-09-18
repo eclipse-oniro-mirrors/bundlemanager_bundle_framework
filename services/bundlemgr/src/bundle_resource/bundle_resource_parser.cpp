@@ -337,7 +337,8 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
     }
     // Firstly, check if the bundle theme resource exists, density 0
     BundleResourceDrawable drawable;
-    if (drawable.GetIconResourceByTheme(resourceInfo.iconId_, 0, resourceManager, resourceInfo)) {
+    if (drawable.GetIconResourceByTheme(resourceInfo.iconId_, 0, resourceManager, resourceInfo) &&
+        !resourceInfo.foreground_.empty()) {
         return true;
     }
     APP_LOGI_NOFUNC("%{public}s not exist theme", resourceInfo.GetKey().c_str());
