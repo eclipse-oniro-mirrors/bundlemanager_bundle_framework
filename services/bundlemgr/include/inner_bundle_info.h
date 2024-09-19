@@ -160,8 +160,8 @@ enum InstallExceptionStatus : int32_t {
     UNKNOWN_STATUS,
 };
 
-enum class GetInnerModuleInfoFlag {
-    GET_INNER_MODULE_INFO_WITH_HWASANENABLED = 0x00000001,
+enum class GetInnerModuleInfoFlag : uint8_t {
+    GET_INNER_MODULE_INFO_WITH_HWASANENABLED = 1,
 };
 
 struct InstallMark {
@@ -2197,6 +2197,7 @@ public:
     void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
     bool IsHwasanEnabled() const;
     std::set<int32_t> GetCloneBundleAppIndexes() const;
+    static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
 
 private:
     bool IsExistLauncherAbility() const;
