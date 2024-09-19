@@ -1771,39 +1771,40 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
     }
     auto shareSummary = pickerSummary.GetWantParams(WANT_PARAM_SUMMARY);
     auto utds = shareSummary.KeySet();
-    for (const auto &utd : utds) {
-        int32_t count = shareSummary.GetIntParam(utd, DEFAULT_SUMMARY_COUNT);
-        if (count <= DEFAULT_SUMMARY_COUNT) {
-            LOG_W(BMS_TAG_QUERY, "invalid utd count");
-            return false;
-        }
-        bool match = false;
-        for (const auto &skill : shareActionSkills) {
-            if (MatchUtd(skill, utd, count)) {
-                match = true;
+    for (auto &skill : shareActionSkills) {
+        bool match = true;
+        for (const auto &utd : utds) {
+            int32_t count = shareSummary.GetIntParam(utd, DEFAULT_SUMMARY_COUNT);
+            if (count <= DEFAULT_SUMMARY_COUNT) {
+                LOG_W(BMS_TAG_QUERY, "invalid utd count");
+                return false;
+            }
+            if (!MatchUtd(skill, utd, count)) {
+                match = false;
                 break;
             }
         }
-        if (!match) {
-            LOG_D(BMS_TAG_QUERY, "match failed");
-            return false;
+        if (match) {
+            return true;
         }
     }
-    return true;
+    return false;
 }
 
-bool BundleDataMgr::MatchUtd(const Skill &skill, const std::string &utd, int32_t count) const
+bool BundleDataMgr::MatchUtd(Skill &skill, const std::string &utd, int32_t count) const
 {
-    for (const SkillUri &skillUri : skill.uris) {
+    for (SkillUri &skillUri : skill.uris) {
         if (skillUri.maxFileSupported < count) {
             continue;
         }
         if (!skillUri.utd.empty()) {
             if (MatchUtd(skillUri.utd, utd)) {
+                skillUri.maxFileSupported -= count;
                 return true;
             }
         } else {
             if (MatchTypeWithUtd(skillUri.type, utd)) {
+                skillUri.maxFileSupported -= count;
                 return true;
             }
         }
