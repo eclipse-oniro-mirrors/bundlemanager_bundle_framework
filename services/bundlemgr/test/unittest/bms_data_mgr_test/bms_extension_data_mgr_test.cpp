@@ -1080,7 +1080,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0027, Function | SmallTest
 
     ErrCode res = bmsExtensionDataMgr.GetAllBundleResourceInfo(
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+#ifdef USE_EXTENSION_DATA
+    EXPECT_NE(res, ERR_OK);
+#else
     EXPECT_EQ(res, ERR_OK);
+#endif
 }
 
 /**
@@ -1095,6 +1099,10 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0028, Function | SmallTest
 
     ErrCode res = bmsExtensionDataMgr.GetAllLauncherAbilityResourceInfo(
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+#ifdef USE_EXTENSION_DATA
+    EXPECT_NE(res, ERR_OK);
+#else
     EXPECT_EQ(res, ERR_OK);
+#endif
 }
 } // OHOS

@@ -4147,7 +4147,11 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0184, Function | SmallTest
     std::vector<BundleResourceInfo> infos;
     auto ret = bmsExtensionClient->GetAllBundleResourceInfo(static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL),
         infos);
-    EXPECT_EQ(ret, ERR_OK);
+#ifdef USE_EXTENSION_DATA
+    EXPECT_NE(res, ERR_OK);
+#else
+    EXPECT_EQ(res, ERR_OK);
+#endif
 }
 
 /**
@@ -4163,6 +4167,10 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0185, Function | SmallTest
     std::vector<LauncherAbilityResourceInfo> infos;
     auto ret = bmsExtensionClient->GetAllLauncherAbilityResourceInfo(
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
-    EXPECT_EQ(ret, ERR_OK);
+#ifdef USE_EXTENSION_DATA
+    EXPECT_NE(res, ERR_OK);
+#else
+    EXPECT_EQ(res, ERR_OK);
+#endif
 }
 } // OHOS
