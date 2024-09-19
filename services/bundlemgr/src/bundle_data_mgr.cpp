@@ -379,6 +379,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.UpdateOdidByBundleInfo(newInfo);
         oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
+        oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
         if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
             oldInfo.SetOverlayType(newInfo.GetOverlayType());
@@ -442,6 +443,7 @@ bool BundleDataMgr::RemoveModuleInfo(
         }
         oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
+        oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
         if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.at(bundleName) = oldInfo;
@@ -554,6 +556,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.UpdateModuleInfo(newInfo);
         oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
+        oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
         updateTsanEnabled(newInfo, oldInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.

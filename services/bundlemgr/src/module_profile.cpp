@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -247,6 +247,7 @@ struct App {
     std::string compileSdkVersion;
     std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
     bool gwpAsanEnabled = false;
+    bool hwasanEnabled = false;
     bool tsanEnabled = false;
     std::vector<ApplicationEnvironment> appEnvironments;
     MultiAppMode multiAppMode;
@@ -1315,6 +1316,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_HWASAN_ENABLED,
+        app.hwasanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         APP_CONFIGURATION,
@@ -2097,6 +2106,7 @@ bool ToApplicationInfo(
     applicationInfo.compileSdkType = app.compileSdkType;
     applicationInfo.gwpAsanEnabled = app.gwpAsanEnabled;
     applicationInfo.tsanEnabled = app.tsanEnabled;
+    applicationInfo.hwasanEnabled = app.hwasanEnabled;
     applicationInfo.appEnvironments = app.appEnvironments;
     // bundleType is app && moduleType is entry or feature
     if (applicationInfo.bundleType == BundleType::APP &&
@@ -2486,6 +2496,10 @@ bool ToInnerBundleInfo(
     }
     innerModuleInfo.asanEnabled = applicationInfo.asanEnabled;
     innerModuleInfo.gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
+    innerModuleInfo.innerModuleInfoFlag = applicationInfo.hwasanEnabled ? innerModuleInfo.innerModuleInfoFlag |
+        static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED) :
+        innerModuleInfo.innerModuleInfoFlag &
+        (~static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
     SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 
     BundleInfo bundleInfo;
