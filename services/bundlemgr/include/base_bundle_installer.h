@@ -735,7 +735,6 @@ private:
     void SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,
         const UninstallBundleInfo &uninstallBundleInfo);
     void DeleteUninstallBundleInfo(const std::string &bundleName);
-    bool DeleteUninstallBundleInfoFromDb(const std::string &bundleName);
     void MarkInstallFinish();
 
     InstallerState state_ = InstallerState::INSTALL_START;
