@@ -83,7 +83,8 @@
                 "json",
                 "zlib",
                 "appspawn",
-                "bounds_checking_function"
+                "bounds_checking_function",
+                "webview"
             ],
             "third_party": [
                 "libuv",

@@ -56,6 +56,9 @@
 #include "bundle_overlay_data_manager.h"
 #include "bundle_overlay_install_checker.h"
 #endif
+#ifdef WEBVIEW_ENABLE
+#include "app_fwk_update_client.h"
+#endif
 
 #ifdef STORAGE_SERVICE_ENABLE
 #include "storage_manager_proxy.h"
@@ -1001,23 +1004,52 @@ void BaseBundleInstaller::SetAtomicServiceModuleUpgrade(const InnerBundleInfo &o
     }
 }
 
-void BaseBundleInstaller::KillRelatedProcessIfArkWeb(const std::string &bundleName, bool isAppExist, bool isOta)
+bool BaseBundleInstaller::IsArkWeb(const std::string &bundleName) const
 {
-    if (!isAppExist || isOta) {
-        return;
-    }
     std::string arkWebName = OHOS::system::GetParameter(ARK_WEB_BUNDLE_NAME_PARAM, "");
     if (!arkWebName.empty()) {
         if (bundleName != arkWebName) {
-            LOG_I(BMS_TAG_INSTALLER, "Bundle(%{public}s) is not arkweb", bundleName.c_str());
-            return;
+            LOG_D(BMS_TAG_INSTALLER, "Bundle(%{public}s) is not arkweb", bundleName.c_str());
+            return false;
         }
     } else {
         if (bundleName != NEW_ARK_WEB_BUNDLE_NAME && bundleName != OLD_ARK_WEB_BUNDLE_NAME) {
             LOG_I(BMS_TAG_INSTALLER, "Failed to get arkweb name and bundle name is %{public}s",
                 bundleName.c_str());
-            return;
+            return false;
         }
+    }
+    LOG_I(BMS_TAG_INSTALLER, "%{public}s is arkweb", bundleName.c_str());
+    return true;
+}
+
+#ifdef WEBVIEW_ENABLE
+ErrCode BaseBundleInstaller::VerifyArkWebInstall(const std::string &bundleName)
+{
+    if (!IsArkWeb(bundleName)) {
+        return ERR_OK;
+    }
+    if (!InitDataMgr()) {
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    InnerBundleInfo info;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName, info)) {
+        LOG_W(BMS_TAG_INSTALLER, "bundle info missing");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    std::string hapPath = info.GetModuleHapPath(info.GetEntryModuleName());
+    LOG_I(BMS_TAG_INSTALLER, "arkweb hapPath is %{public}s", hapPath.c_str());
+    if (NWeb::AppFwkUpdateClient::GetInstance().VerifyPackageInstall(bundleName, hapPath) != ERR_OK) {
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    return ERR_OK;
+}
+#endif
+
+void BaseBundleInstaller::KillRelatedProcessIfArkWeb(const std::string &bundleName, bool isAppExist, bool isOta)
+{
+    if (!isAppExist || isOta || !IsArkWeb(bundleName)) {
+        return;
     }
     auto appMgrClient = DelayedSingleton<AppMgrClient>::GetInstance();
     if (appMgrClient == nullptr) {
@@ -1233,6 +1265,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // move so file to real installation dir
     result = MoveSoFileToRealInstallationDir(newInfos);
     CHECK_RESULT_WITH_ROLLBACK(result, "move so file to install path failed %{public}d", newInfos, oldInfo);
+
+#ifdef WEBVIEW_ENABLE
+    result = VerifyArkWebInstall(bundleName_);
+    CHECK_RESULT_WITH_ROLLBACK(result, "web verify failed %{public}d", newInfos, oldInfo);
+#endif
 
     // attention pls, rename operation shoule be almost the last operation to guarantee the rollback operation
     // when someone failure occurs in the installation flow
