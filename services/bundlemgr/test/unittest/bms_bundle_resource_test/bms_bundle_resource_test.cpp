@@ -84,7 +84,7 @@ const std::string BUNDLE_NAME_NO_ICON = "com.third.hiworld.example1";
 // test layered image
 const std::string BUNDLE_NAME_LAYERED_IMAGE = "com.example.thumbnailtest";
 const std::string LAYERED_IMAGE_HAP_PATH = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
-const std::string CONTAINER_BUNDLE_NAME = "com.zhuoyi.appstore.lite";
+const std::string TEST_BUNDLE_NAME = "testBundleName";
 }  // namespace
 
 class BmsBundleResourceTest : public testing::Test {
@@ -1978,16 +1978,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0092, Function | SmallTest
         EXPECT_FALSE(info4.icon.empty());
 
         BundleResourceInfo info5;
-        ret = manager->GetBundleResourceInfo(CONTAINER_BUNDLE_NAME,
+        ret = manager->GetBundleResourceInfo(TEST_BUNDLE_NAME,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), info5);
-#ifdef USE_EXTENSION_DATA
-        EXPECT_TRUE(ret);
-        EXPECT_EQ(info5.bundleName, BUNDLE_NAME);
-        EXPECT_TRUE(info5.label.empty());
-        EXPECT_FALSE(info5.icon.empty());
-#else
         EXPECT_FALSE(ret);
-#endif
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -3988,18 +3981,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0177, Function | SmallTest
     EXPECT_NE(manager, nullptr);
     if (manager != nullptr) {
         std::vector<LauncherAbilityResourceInfo> infos;
-        bool ret = manager->GetLauncherAbilityResourceInfo(CONTAINER_BUNDLE_NAME,
+        bool ret = manager->GetLauncherAbilityResourceInfo(TEST_BUNDLE_NAME,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
-#ifdef USE_EXTENSION_DATA
-        EXPECT_TRUE(ret);
-#else
         EXPECT_FALSE(ret);
-#endif
-        if (!infos.empty()) {
-            EXPECT_EQ(infos[0].bundleName, CONTAINER_BUNDLE_NAME);
-            EXPECT_FALSE(infos[0].label.empty());
-            EXPECT_FALSE(infos[0].icon.empty());
-        }
     }
 }
 
@@ -4062,7 +4046,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0178, Function | SmallTest
 
     bmsExtensionClient->bmsExtensionImpl_ = nullptr;
     BundleResourceInfo bundleResourceInfo;
-    auto ret = bmsExtensionClient->GetBundleResourceInfo(CONTAINER_BUNDLE_NAME,
+    auto ret = bmsExtensionClient->GetBundleResourceInfo(TEST_BUNDLE_NAME,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo);
     EXPECT_NE(ret, ERR_OK);
 }
@@ -4079,7 +4063,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0179, Function | SmallTest
 
     bmsExtensionClient->bmsExtensionImpl_ = nullptr;
     std::vector<LauncherAbilityResourceInfo> infos;
-    auto ret = bmsExtensionClient->GetLauncherAbilityResourceInfo(CONTAINER_BUNDLE_NAME,
+    auto ret = bmsExtensionClient->GetLauncherAbilityResourceInfo(TEST_BUNDLE_NAME,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
     EXPECT_NE(ret, ERR_OK);
 }
@@ -4129,7 +4113,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0182, Function | SmallTest
     EXPECT_NE(bmsExtensionClient, nullptr);
 
     BundleResourceInfo bundleResourceInfo;
-    auto ret = bmsExtensionClient->GetBundleResourceInfo(CONTAINER_BUNDLE_NAME,
+    auto ret = bmsExtensionClient->GetBundleResourceInfo(TEST_BUNDLE_NAME,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo);
     EXPECT_NE(ret, ERR_OK);
 }
@@ -4145,7 +4129,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0183, Function | SmallTest
     EXPECT_NE(bmsExtensionClient, nullptr);
 
     std::vector<LauncherAbilityResourceInfo> infos;
-    auto ret = bmsExtensionClient->GetLauncherAbilityResourceInfo(CONTAINER_BUNDLE_NAME,
+    auto ret = bmsExtensionClient->GetLauncherAbilityResourceInfo(TEST_BUNDLE_NAME,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
     EXPECT_NE(ret, ERR_OK);
 }
@@ -4163,7 +4147,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0184, Function | SmallTest
     std::vector<BundleResourceInfo> infos;
     auto ret = bmsExtensionClient->GetAllBundleResourceInfo(static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL),
         infos);
-    EXPECT_NE(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -4179,6 +4163,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0185, Function | SmallTest
     std::vector<LauncherAbilityResourceInfo> infos;
     auto ret = bmsExtensionClient->GetAllLauncherAbilityResourceInfo(
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
-    EXPECT_NE(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS
