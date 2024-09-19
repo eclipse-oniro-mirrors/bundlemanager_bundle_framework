@@ -75,6 +75,7 @@ struct InnerModuleInfo {
     bool isEncrypted = false;
     bool asanEnabled = false;
     bool gwpAsanEnabled = false;
+    bool tsanEnabled = false;
     bool needDelete = false;
     uint32_t innerModuleInfoFlag = 0;
     uint32_t labelId = 0;
@@ -2203,6 +2204,7 @@ public:
     void GetOdid(std::string &odid) const;
     bool IsAsanEnabled() const;
     bool IsGwpAsanEnabled() const;
+    bool IsTsanEnabled() const;
     bool GetUninstallState() const;
     void SetUninstallState(const bool &uninstallState);
     void UpdateMultiAppMode(const InnerBundleInfo &newInfo);

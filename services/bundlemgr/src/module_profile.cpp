@@ -2375,6 +2375,7 @@ bool ToInnerBundleInfo(
     }
     innerModuleInfo.asanEnabled = applicationInfo.asanEnabled;
     innerModuleInfo.gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
+    innerModuleInfo.tsanEnabled = applicationInfo.tsanEnabled;
     innerModuleInfo.innerModuleInfoFlag = applicationInfo.hwasanEnabled ? innerModuleInfo.innerModuleInfoFlag |
         innerBundleInfo.GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED) :
         innerModuleInfo.innerModuleInfoFlag &
