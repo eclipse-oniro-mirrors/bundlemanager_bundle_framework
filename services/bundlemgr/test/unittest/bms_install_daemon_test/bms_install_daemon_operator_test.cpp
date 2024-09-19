@@ -73,8 +73,8 @@ public:
     void TearDown();
     void CreateQuickFileDir(const std::string &dir) const;
     void DeleteQuickFileDir(const std::string &dir) const;
-    void CreateFile(const std::string &resource, const std::string &path) const;
-    void DeleteFile(const std::string &path) const;
+    void CreateFile(const std::string &filePath, const std::string &content) const;
+    void DeleteFile(const std::string &filePath) const;
 };
 
 BmsInstallDaemonOperatorTest::BmsInstallDaemonOperatorTest()
