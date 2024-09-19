@@ -95,6 +95,7 @@ const std::string LOG = "log";
 const int32_t EDM_UID = 3057;
 const uint32_t INSTALLER_ID = 1;
 const uint32_t INDEX = 1;
+const uint32_t TARGET_VERSION_FOURTEEN = 14;
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 const std::string EMPTY_STRING = "";
 const std::string APPID_INPUT = "com.third.hiworld.example1";
@@ -4362,6 +4363,36 @@ HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0010, TestSize.Level1)
 }
 
 /**
+ * @tc.number: InnerProcessNativeLibs_0100
+ * @tc.name: InnerProcessNativeLibs
+ * @tc.desc: test InnerProcessNativeLibs of BaseBundleInstaller with api13
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerProcessNativeLibs_0100, TestSize.Level1)
+{
+    InnerBundleInfo info;
+    info.currentPackage_ = MODULE_NAME_TEST;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = MODULE_NAME_TEST;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.modulePackage = MODULE_NAME_TEST;
+    moduleInfo.cpuAbi = "libs/arm";
+    moduleInfo.nativeLibraryPath = "libs/arm";
+    moduleInfo.isLibIsolated = true;
+    moduleInfo.compressNativeLibs = false;
+    info.baseBundleInfo_->targetVersion = TARGET_VERSION_FOURTEEN;
+    info.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
+    info.baseApplicationInfo_->cpuAbi = "";
+    info.baseApplicationInfo_->nativeLibraryPath = "";
+
+    BaseBundleInstaller installer;
+    installer.modulePackage_ = MODULE_NAME_TEST;
+    std::string modulePath = "/data/test/bms_bundle_installer";
+    installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    ErrCode ret = installer.InnerProcessNativeLibs(info, modulePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: BmsBundleInstallerTest_0020
  * @tc.name: InnerProcessNativeLibs
  * @tc.desc: test InnerProcessNativeLibs isLibIsolated true
@@ -5946,6 +5977,25 @@ HWTEST_F(BmsBundleInstallerTest, ExtractEncryptedSoFiles_0100, Function | SmallT
     int32_t uid = -1;
     bool ret = installer.ExtractEncryptedSoFiles(info, tmpSoPath, uid);
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ExtractEncryptedSoFiles_0200
+ * @tc.name: test ExtractEncryptedSoFiles
+ * @tc.desc: test ExtractEncryptedSoFiles of BaseBundleInstaller with api13
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractEncryptedSoFiles_0200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.compressNativeLibs = true;
+    innerBundleInfo.innerModuleInfos_["aaa"] = moduleInfo;
+    innerBundleInfo.baseBundleInfo_->targetVersion = TARGET_VERSION_FOURTEEN;
+    std::string tmpSoPath = "";
+    int32_t uid = -1;
+    bool ret = installer.ExtractEncryptedSoFiles(innerBundleInfo, tmpSoPath, uid);
+    EXPECT_TRUE(ret);
 }
 
 /**
