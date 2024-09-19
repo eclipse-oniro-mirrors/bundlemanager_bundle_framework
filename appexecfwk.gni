@@ -71,6 +71,7 @@ declare_args() {
   app_domain_verify_enabled = true
   device_usage_statistics_enabled = true
   dfx_sigdump_handler_enabled = true
+  webview_enable = true
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.resourceschedule_device_usage_statistics)) {
@@ -187,6 +188,10 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.hiviewdfx_faultloggerd)) {
     dfx_sigdump_handler_enabled = false
+  }
+
+  if (defined(global_parts_info) && !defined(global_parts_info.web_webview)) {
+    webview_enable = false
   }
 }
 
