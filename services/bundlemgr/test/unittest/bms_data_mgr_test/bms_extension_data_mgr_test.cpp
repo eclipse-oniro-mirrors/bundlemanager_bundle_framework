@@ -47,6 +47,7 @@ const uint32_t COMPATIBLE_VERSION = 11;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
 const std::string BMS_DATA_PATH = "data/data";
 const std::string BUNDLE_EXT_NAME = "bundleExtName";
+const std::string CONTAINER_BUNDLE_NAME = "com.zhuoyi.appstore.lite";
 const nlohmann::json EXTENSIONS_JSON_1 = R"(
 {
     "bms-extensions": {
