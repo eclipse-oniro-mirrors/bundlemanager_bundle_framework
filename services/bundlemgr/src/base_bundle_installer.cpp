@@ -2050,9 +2050,6 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
 
     // same version need to check app label
     ErrCode result = ERR_OK;
-    if ((result = CheckMaxCountForClone(oldInfo, newInfo)) != ERR_OK) {
-        return result;
-    }
     if (!otaInstall_ && (oldInfo.GetVersionCode() == newInfo.GetVersionCode())) {
         result = CheckAppLabel(oldInfo, newInfo);
         if (result != ERR_OK) {
@@ -2124,9 +2121,6 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     }
 
     ErrCode result = ERR_OK;
-    if ((result = CheckMaxCountForClone(oldInfo, newInfo)) != ERR_OK) {
-        return result;
-    }
     if (!otaInstall_ && (versionCode_ == oldInfo.GetVersionCode())) {
         if (((result = CheckAppLabel(oldInfo, newInfo)) != ERR_OK)) {
             LOG_E(BMS_TAG_INSTALLER, "CheckAppLabel failed %{public}d", result);
@@ -4315,18 +4309,6 @@ bool BaseBundleInstaller::CheckReleaseTypeIsCompatible(
         }
     }
     return true;
-}
-
-ErrCode BaseBundleInstaller::CheckMaxCountForClone(const InnerBundleInfo &oldInfo,
-    const InnerBundleInfo &newInfo) const
-{
-    if (oldInfo.GetMultiAppModeType() == MultiAppModeType::APP_CLONE &&
-        newInfo.GetMultiAppModeType() == MultiAppModeType::APP_CLONE &&
-        oldInfo.GetMultiAppMaxCount() > newInfo.GetMultiAppMaxCount()) {
-        LOG_E(BMS_TAG_INSTALLER, "the multiAppMaxCount of the new bundle is less than old one");
-        return ERR_APPEXECFWK_INSTALL_MULTI_APP_MAX_COUNT_DECREASE;
-    }
-    return ERR_OK;
 }
 
 ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleInfo, bool needRemoveData)
