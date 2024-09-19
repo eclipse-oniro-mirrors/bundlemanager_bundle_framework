@@ -3063,7 +3063,6 @@ void BaseBundleInstaller::GetUninstallBundleInfo(bool isKeepData, int32_t userId
 void BaseBundleInstaller::SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,
     const UninstallBundleInfo &uninstallBundleInfo)
 {
-    LOG_E(BMS_TAG_INSTALLER, "save userId %{public}s", uninstallBundleInfo.userInfos.begin()->first.c_str());
     if (!isKeepData) {
         return;
     }
