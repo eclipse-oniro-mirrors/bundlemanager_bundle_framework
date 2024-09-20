@@ -735,7 +735,6 @@ private:
     void SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,
         const UninstallBundleInfo &uninstallBundleInfo);
     void DeleteUninstallBundleInfo(const std::string &bundleName);
-    bool DeleteUninstallBundleInfoFromDb(const std::string &bundleName);
     void MarkInstallFinish();
     bool IsArkWeb(const std::string &bundleName) const;
 #ifdef WEBVIEW_ENABLE
