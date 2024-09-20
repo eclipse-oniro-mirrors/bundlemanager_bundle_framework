@@ -673,6 +673,7 @@ private:
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    ErrCode CleanShaderCache(const std::string &bundleName) const;
     void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     bool VerifyActivationLock() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;

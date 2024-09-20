@@ -856,6 +856,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
             userGuard.Dismiss();
         }
+        ErrCode res = CleanShaderCache(bundleName_);
+        if (res != ERR_OK) {
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean shader fail %{public}d", bundleName_.c_str(), res);
+        }
     }
 
     auto it = newInfos.begin();
@@ -5604,6 +5608,14 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
     LOG_D(BMS_TAG_INSTALLER, "DeleteShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
+}
+
+ErrCode BaseBundleInstaller::CleanShaderCache(const std::string &bundleName) const
+{
+    std::string shaderCachePath;
+    shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
+    LOG_D(BMS_TAG_INSTALLER, "CleanShaderCache %{public}s", shaderCachePath.c_str());
+    return InstalldClient::GetInstance()->CleanBundleDataDir(shaderCachePath);
 }
 
 void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const
