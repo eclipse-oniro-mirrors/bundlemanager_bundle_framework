@@ -5688,7 +5688,7 @@ void BundleDataMgr::GetExtensionAbilityInfoByTypeName(uint32_t flags, int32_t us
         if ((flags &
                 static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_BY_TYPE_NAME)) ==
                 static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_BY_TYPE_NAME)) {
-            if (item.second.GetInnerExtensionInfos().empty()) {
+            if (item.second.GetInnerExtensionInfos().empty() || !item.second.IsSystemApp()) {
                 continue;
             }
             bool ret = GetInnerBundleInfoWithFlags(item.first, flags, userId);
