@@ -24,19 +24,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
-constexpr int8_t THRESHOLD_VAL_LEN = 40;
 constexpr uint8_t MAX_MODULE_NAME = 128;
-bool IsSupportCompressNativeLibs()
-{
-    char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS, "", compressNativeLibs, THRESHOLD_VAL_LEN);
-    if (ret <= 0) {
-        APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS);
-        return false;
-    }
-    return std::strcmp(compressNativeLibs, "true") == 0;
-}
 }
 
 namespace Profile {
@@ -1453,14 +1441,12 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.isolationMode,
         false,
         g_parseResult);
-    if (IsSupportCompressNativeLibs()) {
-        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
-            jsonObjectEnd,
-            MODULE_COMPRESS_NATIVE_LIBS,
-            module.compressNativeLibs,
-            false,
-            g_parseResult);
-    }
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_COMPRESS_NATIVE_LIBS,
+        module.compressNativeLibs,
+        false,
+        g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_FILE_CONTEXT_MENU,
@@ -2372,6 +2358,10 @@ bool ToInnerBundleInfo(
     if (!ToInnerModuleInfo(moduleJson, transformParam, overlayMsg, innerModuleInfo)) {
         APP_LOGE("To innerModuleInfo failed");
         return false;
+    }
+    if (moduleJson.app.targetAPIVersion % ServiceConstants::API_VERSION_MOD <= ServiceConstants::API_VERSION_THIRTEEN) {
+        applicationInfo.isCompressNativeLibs = true;
+        innerModuleInfo.compressNativeLibs = true;
     }
     innerModuleInfo.asanEnabled = applicationInfo.asanEnabled;
     innerModuleInfo.gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
