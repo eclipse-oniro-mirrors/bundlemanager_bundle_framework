@@ -148,8 +148,6 @@ void BmsBundleQuickFixQueryTest::MockInstallBundleInfo()
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.AddInnerBundleUserInfo(userInfo);
-    std::string packageName;
-    innerBundleInfo.SetInstallMark(BUNDLE_NAME, packageName, InstallExceptionStatus::INSTALL_FINISH);
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
