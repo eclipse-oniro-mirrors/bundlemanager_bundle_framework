@@ -47,6 +47,7 @@ const uint32_t COMPATIBLE_VERSION = 11;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
 const std::string BMS_DATA_PATH = "data/data";
 const std::string BUNDLE_EXT_NAME = "bundleExtName";
+const std::string TEST_BUNDLE_NAME = "testBundleName";
 const nlohmann::json EXTENSIONS_JSON_1 = R"(
 {
     "bms-extensions": {
@@ -975,5 +976,133 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDetermineCloneNum_0001, Function |
     #else
     EXPECT_EQ(res, false);
     #endif
+}
+
+/**
+ * @tc.number: BundleMgrExt_0021
+ * @tc.name: GetBundleResourceInfo
+ * @tc.desc: GetBundleResourceInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0021, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    BundleResourceInfo bundleResourceInfo;
+
+    ErrCode res = bundleMgrExtTest.GetBundleResourceInfo(TEST_BUNDLE_NAME,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0022
+ * @tc.name: GetLauncherAbilityResourceInfo
+ * @tc.desc: GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0022, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::vector<LauncherAbilityResourceInfo> infos;
+
+    ErrCode res = bundleMgrExtTest.GetLauncherAbilityResourceInfo(TEST_BUNDLE_NAME,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0023
+ * @tc.name: GetAllBundleResourceInfo
+ * @tc.desc: GetAllBundleResourceInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0023, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::vector<BundleResourceInfo> infos;
+
+    ErrCode res = bundleMgrExtTest.GetAllBundleResourceInfo(
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0024
+ * @tc.name: GetAllLauncherAbilityResourceInfo
+ * @tc.desc: GetAllLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0024, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::vector<LauncherAbilityResourceInfo> infos;
+
+    ErrCode res = bundleMgrExtTest.GetAllLauncherAbilityResourceInfo(
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0025
+ * @tc.name: GetBundleResourceInfo
+ * @tc.desc: GetBundleResourceInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0025, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    BundleResourceInfo bundleResourceInfo;
+
+    ErrCode res = bmsExtensionDataMgr.GetBundleResourceInfo(TEST_BUNDLE_NAME,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0026
+ * @tc.name: GetLauncherAbilityResourceInfo
+ * @tc.desc: GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0026, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<LauncherAbilityResourceInfo> infos;
+
+    ErrCode res = bmsExtensionDataMgr.GetLauncherAbilityResourceInfo(TEST_BUNDLE_NAME,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0027
+ * @tc.name: GetAllBundleResourceInfo
+ * @tc.desc: GetAllBundleResourceInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0027, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<BundleResourceInfo> infos;
+
+    ErrCode res = bmsExtensionDataMgr.GetAllBundleResourceInfo(
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+#ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, ERR_OK);
+#else
+    EXPECT_NE(res, ERR_OK);
+#endif
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0028
+ * @tc.name: GetAllLauncherAbilityResourceInfo
+ * @tc.desc: GetAllLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0028, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<LauncherAbilityResourceInfo> infos;
+
+    ErrCode res = bmsExtensionDataMgr.GetAllLauncherAbilityResourceInfo(
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+#ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, ERR_OK);
+#else
+    EXPECT_NE(res, ERR_OK);
+#endif
 }
 } // OHOS
