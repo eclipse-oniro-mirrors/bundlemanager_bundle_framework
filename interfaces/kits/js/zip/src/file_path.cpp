@@ -34,8 +34,9 @@ namespace {
 const std::string SEPARATOR = "/";
 const std::string ZIP = ".zip";
 const std::int32_t ZIP_SIZE = 4;
-const uint8_t API_VERSION = 13;
+const uint8_t SINCE_API_VERSION = 13;
 constexpr const char* RELATIVE_PATH_SYMBOL = "../";
+const uint32_t API_VERSION_MOD = 1000;
 }
 const FilePath::CharType FilePath::kSeparators[] = FILE_PATH_LITERAL("/");
 const size_t FilePath::kSeparatorsLength = arraysize(kSeparators);
@@ -443,7 +444,7 @@ bool FilePath::IsNeedCheckFilePathBaseOnAPIVersion()
         APP_LOGE("get failed, ret:%{public}d", ret);
         return false;
     }
-    return bundleInfo.targetVersion >= API_VERSION;
+    return (bundleInfo.targetVersion % API_VERSION_MOD) >= SINCE_API_VERSION;
 }
 
 bool FilePath::HasRelativePathBaseOnAPIVersion(const std::string &path)
