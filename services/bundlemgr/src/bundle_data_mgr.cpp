@@ -1980,7 +1980,7 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundle
 {
     std::vector<int32_t> cloneAppIndexes;
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-    if (userId == Constants::UNSPECIFIED_USERID) {
+    if (userId == Constants::ANY_USERID) {
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
             LOG_W(BMS_TAG_QUERY, "no userInfos for this bundle(%{public}s)", bundleName.c_str());
             return cloneAppIndexes;
@@ -2017,7 +2017,7 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesNoLock(const std::string &
 {
     std::vector<int32_t> cloneAppIndexes;
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-    if (userId == Constants::UNSPECIFIED_USERID) {
+    if (userId == Constants::ANY_USERID) {
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
             LOG_W(BMS_TAG_QUERY, "no userInfos for this bundle(%{public}s)", bundleName.c_str());
             return cloneAppIndexes;
