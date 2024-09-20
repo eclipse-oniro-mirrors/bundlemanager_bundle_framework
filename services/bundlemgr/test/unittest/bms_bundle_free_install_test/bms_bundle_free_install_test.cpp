@@ -209,8 +209,6 @@ void BmsBundleFreeInstallTest::AddInnerBundleInfo(const std::string bundleName, 
     innerBundleInfo.AddInnerBundleUserInfo(userInfo);
     innerBundleInfo.SetBundlePackInfo(CreateBundlePackInfo(bundleName));
     innerBundleInfo.AddInnerModuleInfo(innerModuleInfoMap);
-    std::string packageName;
-    innerBundleInfo.SetInstallMark(bundleName, packageName, InstallExceptionStatus::INSTALL_FINISH);
 
     if (flag) {
         innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
