@@ -353,6 +353,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
+        oldInfo.SetCertificate(newInfo.GetCertificate());
         oldInfo.AddOldAppId(newInfo.GetAppId());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
@@ -638,6 +639,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.AddOldAppId(newInfo.GetAppId());
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
+        oldInfo.SetCertificate(newInfo.GetCertificate());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.UpdateAppDetailAbilityAttrs();
         oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
@@ -5688,7 +5690,7 @@ void BundleDataMgr::GetExtensionAbilityInfoByTypeName(uint32_t flags, int32_t us
         if ((flags &
                 static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_BY_TYPE_NAME)) ==
                 static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_BY_TYPE_NAME)) {
-            if (item.second.GetInnerExtensionInfos().empty()) {
+            if (item.second.GetInnerExtensionInfos().empty() || !item.second.IsSystemApp()) {
                 continue;
             }
             bool ret = GetInnerBundleInfoWithFlags(item.first, flags, userId);
