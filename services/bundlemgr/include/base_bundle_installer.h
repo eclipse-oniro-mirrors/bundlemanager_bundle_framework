@@ -737,6 +737,10 @@ private:
     void DeleteUninstallBundleInfo(const std::string &bundleName);
     bool DeleteUninstallBundleInfoFromDb(const std::string &bundleName);
     void MarkInstallFinish();
+    bool IsArkWeb(const std::string &bundleName) const;
+#ifdef WEBVIEW_ENABLE
+    ErrCode VerifyArkWebInstall(const std::string &bundleName);
+#endif
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
