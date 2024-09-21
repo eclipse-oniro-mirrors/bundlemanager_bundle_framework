@@ -97,7 +97,6 @@ constexpr const char* BUNDLE_EXTEND_RESOURCES = "extendResources";
 constexpr const char* CUR_DYNAMIC_ICON_MODULE = "curDynamicIconModule";
 constexpr const char* BUNDLE_PACK_INFO = "bundlePackInfo";
 constexpr const char* ALLOWED_ACLS = "allowedAcls";
-constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* BUNDLE_IS_SANDBOX_APP = "isSandboxApp";
 constexpr const char* MODULE_COMPILE_MODE = "compileMode";
@@ -2674,39 +2673,6 @@ void InnerBundleInfo::GetFormsInfoByApp(std::vector<FormInfo> &formInfos) const
 
 void InnerBundleInfo::GetShortcutInfos(std::vector<ShortcutInfo> &shortcutInfos) const
 {
-    if (isNewVersion_) {
-        AbilityInfo abilityInfo;
-        GetMainAbilityInfo(abilityInfo);
-        if ((!abilityInfo.resourcePath.empty() || !abilityInfo.hapPath.empty())
-            && abilityInfo.metadata.size() > 0) {
-            std::vector<std::string> rawJson;
-            BundleMgrClient bundleMgrClient;
-            bool ret = bundleMgrClient.GetResConfigFile(abilityInfo, META_DATA_SHORTCUTS_NAME, rawJson);
-            if (!ret) {
-                APP_LOGD("GetResConfigFile return false");
-                return;
-            }
-            if (rawJson.size() == 0) {
-                APP_LOGD("rawJson size 0. skip");
-                return;
-            }
-            nlohmann::json jsonObject = nlohmann::json::parse(rawJson[0], nullptr, false);
-            if (jsonObject.is_discarded()) {
-                APP_LOGE("shortcuts json invalid");
-                return;
-            }
-            ShortcutJson shortcutJson = jsonObject.get<ShortcutJson>();
-            for (const Shortcut &item : shortcutJson.shortcuts) {
-                ShortcutInfo shortcutInfo;
-                shortcutInfo.bundleName = abilityInfo.bundleName;
-                shortcutInfo.moduleName = abilityInfo.moduleName;
-                InnerProcessShortcut(item, shortcutInfo);
-                shortcutInfo.sourceType = 1;
-                shortcutInfos.emplace_back(shortcutInfo);
-            }
-        }
-        return;
-    }
     for (const auto &shortcut : shortcutInfos_) {
         shortcutInfos.emplace_back(shortcut.second);
     }

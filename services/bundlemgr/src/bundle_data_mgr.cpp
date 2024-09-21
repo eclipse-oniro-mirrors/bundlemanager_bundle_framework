@@ -90,9 +90,10 @@ constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
 constexpr const char* SCHEME_HTTPS = "https";
-const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
-const char* ENTRY = "entry";
-const char* CLONE_BUNDLE_PREFIX = "clone_";
+constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
+constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
+constexpr const char* ENTRY = "entry";
+constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -4825,7 +4826,55 @@ bool BundleDataMgr::GetShortcutInfos(
             bundleName.c_str(), requestUserId);
         return false;
     }
-    innerBundleInfo.GetShortcutInfos(shortcutInfos);
+    GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
+    return true;
+}
+bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
+    const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    if (!info.GetIsNewVersion()) {
+        info.GetShortcutInfos(shortcutInfos);
+        return true;
+    }
+    AbilityInfo abilityInfo;
+    info.GetMainAbilityInfo(abilityInfo);
+    if (abilityInfo.hapPath.empty() || abilityInfo.metadata.size() <= 0) {
+        return false;
+    }
+    std::string rawData;
+    for (const auto &meta : abilityInfo.metadata) {
+        if (meta.name.compare(META_DATA_SHORTCUTS_NAME) == 0) {
+            std::string resName = meta.resource;
+            std::string hapPath = abilityInfo.hapPath;
+            size_t pos = resName.rfind(PROFILE_PREFIX);
+            bool posValid = (pos != std::string::npos) && (pos != resName.length() - strlen(PROFILE_PREFIX));
+            if (!posValid) {
+                APP_LOGE("resName invalid %{public}s", resName.c_str());
+                return false;
+            }
+            std::string profileName = PROFILE_PATH + resName.substr(pos + strlen(PROFILE_PREFIX)) + JSON_SUFFIX;
+            GetJsonProfileByExtractor(hapPath, profileName, rawData);
+            break;
+        }
+    }
+    if (rawData.empty()) {
+        APP_LOGE("shortcutinfo is empty");
+        return false;
+    }
+    nlohmann::json jsonObject = nlohmann::json::parse(rawData, nullptr, false);
+    if (jsonObject.is_discarded()) {
+        APP_LOGE("shortcuts json invalid");
+        return false;
+    }
+    ShortcutJson shortcutJson = jsonObject.get<ShortcutJson>();
+    for (const Shortcut &item : shortcutJson.shortcuts) {
+        ShortcutInfo shortcutInfo;
+        shortcutInfo.bundleName = abilityInfo.bundleName;
+        shortcutInfo.moduleName = abilityInfo.moduleName;
+        info.InnerProcessShortcut(item, shortcutInfo);
+        shortcutInfo.sourceType = 1;
+        shortcutInfos.emplace_back(shortcutInfo);
+    }
     return true;
 }
 
@@ -4847,7 +4896,7 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
         return ret;
     }
 
-    innerBundleInfo.GetShortcutInfos(shortcutInfos);
+    GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
     return ERR_OK;
 }
 
