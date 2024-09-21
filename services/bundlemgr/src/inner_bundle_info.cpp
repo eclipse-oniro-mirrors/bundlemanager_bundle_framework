@@ -1495,7 +1495,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     std::string key;
     key.append(".").append(modulePackage).append(".");
     for (const auto &extension : baseExtensionInfos_) {
-        if (extension.first.find(key) != std::string::npos) {
+        if ((extension.first.find(key) != std::string::npos) && (extension.second.moduleName == hapInfo.moduleName)) {
             hapInfo.extensionInfos.emplace_back(extension.second);
         }
     }
@@ -1504,7 +1504,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
             continue;
         }
-        if (ability.first.find(key) != std::string::npos) {
+        if ((ability.first.find(key) != std::string::npos) && (ability.second.moduleName == hapInfo.moduleName)) {
             auto &abilityInfo = hapInfo.abilityInfos.emplace_back(ability.second);
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
