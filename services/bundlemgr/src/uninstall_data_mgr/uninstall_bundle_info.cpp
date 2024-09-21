@@ -74,12 +74,12 @@ void from_json(const nlohmann::json& jsonObject, UninstallBundleInfo& uninstallB
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::map<std::string, UninstallDataUserInfo>>(jsonObject, jsonObjectEnd, KEY_USER_INFOS,
         uninstallBundleInfo.userInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, KEY_APP_ID,
-        uninstallBundleInfo.appId, false, parseResult);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, KEY_APP_IDENTIFIER,
-        uninstallBundleInfo.appIdentifier, false, parseResult);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, KEY_APP_PROVISION_TYPE,
-        uninstallBundleInfo.appProvisionType, false, parseResult);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, KEY_APP_ID, uninstallBundleInfo.appId,
+        JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, KEY_APP_IDENTIFIER, uninstallBundleInfo.appIdentifier,
+        JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, KEY_APP_PROVISION_TYPE,
+        uninstallBundleInfo.appProvisionType, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<BundleType>(jsonObject, jsonObjectEnd, KEY_BUNDLE_TYPE,
         uninstallBundleInfo.bundleType, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, KEY_EXTENSION_DIRS,
@@ -106,4 +106,4 @@ void UninstallBundleInfo::Init()
     extensionDirs.clear();
 }
 } // namespace AppExecFwk
-} // namespace OHOS
+} // namespace OHOS
