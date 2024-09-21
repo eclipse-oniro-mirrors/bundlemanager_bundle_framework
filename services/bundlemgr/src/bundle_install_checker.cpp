@@ -686,6 +686,11 @@ void BundleInstallChecker::CollectProvisionInfo(
 #endif
     newInfo.AddOldAppId(newInfo.GetAppId());
     newInfo.SetAppIdentifier(provisionInfo.bundleInfo.appIdentifier);
+    if (provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+        newInfo.SetCertificate(provisionInfo.bundleInfo.developmentCertificate);
+    } else {
+        newInfo.SetCertificate(provisionInfo.bundleInfo.distributionCertificate);
+    }
 }
 
 void BundleInstallChecker::SetAppProvisionMetadata(const std::vector<Security::Verify::Metadata> &provisionMetadatas,

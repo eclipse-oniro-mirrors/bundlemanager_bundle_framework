@@ -353,6 +353,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
+        oldInfo.SetCertificate(newInfo.GetCertificate());
         oldInfo.AddOldAppId(newInfo.GetAppId());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
@@ -638,6 +639,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.AddOldAppId(newInfo.GetAppId());
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
+        oldInfo.SetCertificate(newInfo.GetCertificate());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.UpdateAppDetailAbilityAttrs();
         oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
