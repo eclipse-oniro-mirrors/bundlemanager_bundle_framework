@@ -436,7 +436,8 @@ public:
      * @param isEnable Indicates the application status is enabled.
      * @return Returns result of the operation.
      */
-    ErrCode IsApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool &isEnable) const;
+    ErrCode IsApplicationEnabled(const std::string &bundleName,
+        int32_t appIndex, bool &isEnable, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Set the application status.
      * @param bundleName Indicates the bundle name.

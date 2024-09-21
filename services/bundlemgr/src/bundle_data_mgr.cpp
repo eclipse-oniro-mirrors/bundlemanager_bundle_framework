@@ -4034,7 +4034,8 @@ bool BundleDataMgr::EnableBundle(const std::string &bundleName)
     return true;
 }
 
-ErrCode BundleDataMgr::IsApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool &isEnabled) const
+ErrCode BundleDataMgr::IsApplicationEnabled(
+    const std::string &bundleName, int32_t appIndex, bool &isEnabled, int32_t userId) const
 {
     APP_LOGD("IsApplicationEnabled %{public}s", bundleName.c_str());
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -4043,7 +4044,7 @@ ErrCode BundleDataMgr::IsApplicationEnabled(const std::string &bundleName, int32
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    int32_t responseUserId = infoItem->second.GetResponseUserId(GetUserId());
+    int32_t responseUserId = infoItem->second.GetResponseUserId(GetUserId(userId));
     if (appIndex == 0) {
         ErrCode ret = infoItem->second.GetApplicationEnabledV9(responseUserId, isEnabled);
         if (ret != ERR_OK) {
@@ -8247,14 +8248,15 @@ ErrCode BundleDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, 
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     bool isEnabled = false;
-    ErrCode ret = IsApplicationEnabled(shortcutInfo.bundleName, shortcutInfo.appIndex, isEnabled);
+    ErrCode ret = IsApplicationEnabled(shortcutInfo.bundleName, shortcutInfo.appIndex, isEnabled, userId);
     if (ret != ERR_OK) {
-        APP_LOGD("IsApplicationEnabled failed, bundleName:%{public}s, appIndex:%{public}d, ret:%{public}d",
-            shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, ret);
+        APP_LOGD("IsApplicationEnabled ret:%{public}d, bundleName:%{public}s, appIndex:%{public}d, userId:%{public}d",
+            ret, shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
         return ret;
     }
     if (!isEnabled) {
-        APP_LOGD("BundleName: %{public}s is disabled", shortcutInfo.bundleName.c_str());
+        APP_LOGD("BundleName: %{public}s is disabled, appIndex:%{public}d, userId:%{public}d",
+            shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
     bool isIdIllegal = false;
@@ -8291,14 +8293,16 @@ ErrCode BundleDataMgr::GetAllDesktopShortcutInfo(int32_t userId, std::vector<Sho
     shortcutStorage_->GetAllDesktopShortcutInfo(userId, datas);
     for (const auto &data : datas) {
         bool isEnabled = false;
-        ErrCode ret = IsApplicationEnabled(data.bundleName, data.appIndex, isEnabled);
+        ErrCode ret = IsApplicationEnabled(data.bundleName, data.appIndex, isEnabled, userId);
         if (ret != ERR_OK) {
-            APP_LOGD("IsApplicationEnabled failed, bundleName:%{public}s, appIndex:%{public}d, ret:%{public}d",
-                data.bundleName.c_str(), data.appIndex, ret);
+            APP_LOGD(
+                "IsApplicationEnabled ret:%{public}d, bundleName:%{public}s, appIndex:%{public}d, userId:%{public}d",
+                ret, data.bundleName.c_str(), data.appIndex, userId);
             continue;
         }
         if (!isEnabled) {
-            APP_LOGD("BundleName: %{public}s is disabled", data.bundleName.c_str());
+            APP_LOGD("BundleName: %{public}s is disabled, appIndex:%{public}d, userId:%{public}d",
+                data.bundleName.c_str(), data.appIndex, userId);
             continue;
         }
         shortcutInfos.emplace_back(data);
