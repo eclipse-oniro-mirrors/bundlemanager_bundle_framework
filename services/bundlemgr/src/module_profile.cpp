@@ -2360,6 +2360,7 @@ bool ToInnerBundleInfo(
         return false;
     }
     if (moduleJson.app.targetAPIVersion % ServiceConstants::API_VERSION_MOD <= ServiceConstants::API_VERSION_THIRTEEN) {
+        APP_LOGD("targetAPIVersion is less than 14, set isCompressNativeLibs flag to true");
         applicationInfo.isCompressNativeLibs = true;
         innerModuleInfo.compressNativeLibs = true;
     }
