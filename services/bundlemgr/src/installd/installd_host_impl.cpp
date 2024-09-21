@@ -394,7 +394,7 @@ ErrCode InstalldHostImpl::AddUserDirDeleteDfx(int32_t userId)
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
-    elPath.push_back("el5");
+    elPath.push_back(ServiceConstants::DIR_EL5);
     for (const auto &el : elPath) {
         std::string bundleDataDir = GetBundleDataDir(el, userId) + ServiceConstants::BASE;
         if (access(bundleDataDir.c_str(), F_OK) != 0) {
@@ -856,7 +856,9 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     std::string suffixName = bundleName;
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
+    elPath.push_back(ServiceConstants::DIR_EL5);
+    for (const auto &el : elPath) {
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             CleanBundleDataForEl2(bundleName, userid, appIndex);
             continue;
