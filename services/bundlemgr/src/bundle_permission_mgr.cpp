@@ -420,7 +420,7 @@ int32_t BundlePermissionMgr::GetHapApiVersion()
     LOG_D(BMS_TAG_DEFAULT, "appApiVersion is %{public}d", appApiVersion);
     auto systemApiVersion = GetSdkApiVersion();
     // api version is the minimum value of {appApiVersion, systemApiVersion}
-    return systemApiVersion < appApiVersion ? systemApiVersion :appApiVersion;
+    return (systemApiVersion < appApiVersion ? systemApiVersion :appApiVersion) % BASE_API_VERSION;
 }
 
 // if the api has been system api since it is published, then beginSystemApiVersion can be omitted

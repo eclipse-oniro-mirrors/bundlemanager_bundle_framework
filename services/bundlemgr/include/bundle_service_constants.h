@@ -17,7 +17,6 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_SERVICE_CONSTANTS_H
 
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
