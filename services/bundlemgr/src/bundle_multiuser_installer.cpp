@@ -122,6 +122,10 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         APP_LOGE("the origin application is enterprise, not allow to install here");
         return ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED;
     }
+    if (appDistributionType == Constants::APP_DISTRIBUTION_TYPE_INTERNALTESTING) {
+        APP_LOGE("the origin application is inrternaltesting, not allow to install here");
+        return ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+    }
 
     // uid
     InnerBundleUserInfo newUserInfo;
