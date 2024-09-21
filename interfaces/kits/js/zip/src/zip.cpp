@@ -53,7 +53,7 @@ bool IsHiddenFile(const FilePath &filePath)
 {
     FilePath localFilePath = filePath;
     if (!localFilePath.Value().empty()) {
-        return localFilePath.Value().c_str()[0] == HIDDEN_SEPARATOR;
+        return localFilePath.Value()[0] == HIDDEN_SEPARATOR;
     } else {
         return false;
     }
@@ -75,7 +75,7 @@ std::vector<FileAccessor::DirectoryContentEntry> ListDirectoryContent(const File
     std::vector<std::string> filelist;
     isSuccess = FilePath::GetZipAllDirFiles(curPath.Value(), filelist);
     if (isSuccess) {
-        APP_LOGD("ListDirectoryContent filelist =====filelist.size=%{public}zu====", filelist.size());
+        APP_LOGD("f.size=%{public}zu", filelist.size());
         for (size_t i = 0; i < filelist.size(); i++) {
             std::string str(filelist[i]);
             if (!str.empty()) {
@@ -251,13 +251,13 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
     while (reader.HasMore()) {
         if (!reader.OpenCurrentEntryInZip()) {
             APP_LOGI("Failed to open the current file in zip");
-            return ERR_ZLIB_SERVICE_DISABLED;
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
         const FilePath &constEntryPath = reader.CurrentEntryInfo()->GetFilePath();
         FilePath entryPath = constEntryPath;
         if (reader.CurrentEntryInfo()->IsUnsafe()) {
             APP_LOGI("Found an unsafe file in zip");
-            return ERR_ZLIB_SERVICE_DISABLED;
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
         // callback
         if (unzipParam.filterCB(entryPath)) {
@@ -270,7 +270,7 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
                 std::unique_ptr<WriterDelegate> writer = writerFactory(destDir, entryPath);
                 if (!reader.ExtractCurrentEntry(writer.get(), std::numeric_limits<uint64_t>::max())) {
                     APP_LOGI("Failed to extract");
-                    return ERR_ZLIB_SERVICE_DISABLED;
+                    return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
                 }
             }
         } else if (unzipParam.logSkippedFiles) {
@@ -279,7 +279,7 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
 
         if (!reader.AdvanceToNextEntry()) {
             APP_LOGI("Failed to advance to the next file");
-            return ERR_ZLIB_SERVICE_DISABLED;
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
     }
     return ERR_OK;
@@ -326,11 +326,11 @@ bool Unzip(const std::string &srcFile, const std::string &destFile, OPTIONS opti
     }
     FilePath srcFileDir(srcFile);
     FilePath destDir(destFile);
-    if (destDir.Value().size() == 0) {
+    if ((destDir.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(destFile)) {
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
         return false;
     }
-    if (srcFileDir.Value().size() == 0) {
+    if ((srcFileDir.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(srcFile)) {
         APP_LOGI("srcFile isn't Exist");
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
         return false;
@@ -395,7 +395,7 @@ ErrCode ZipWithFilterCallback(const FilePath &srcDir, const FilePath &destFile,
     if (result) {
         return ERR_OK;
     } else {
-        return ERR_ZLIB_SERVICE_DISABLED;
+        return ERR_ZLIB_DEST_FILE_DISABLED;
     }
 }
 
@@ -430,7 +430,7 @@ ErrCode ZipsWithFilterCallback(const std::vector<FilePath> &srcFiles, const File
     if (result) {
         return ERR_OK;
     } else {
-        return ERR_ZLIB_SERVICE_DISABLED;
+        return ERR_ZLIB_DEST_FILE_DISABLED;
     }
 }
 
@@ -444,11 +444,11 @@ bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS 
     FilePath destFile(destPath);
     APP_LOGD("srcDir=%{private}s, destFile=%{private}s", srcDir.Value().c_str(), destFile.Value().c_str());
 
-    if (srcDir.Value().size() == 0) {
+    if ((srcDir.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(srcPath)) {
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
         return false;
     }
-    if (destFile.Value().size() == 0) {
+    if ((destFile.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(destPath)) {
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
         return false;
     }
@@ -473,8 +473,8 @@ bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS 
 
 bool ZipFileIsValid(const std::string &srcFile)
 {
-    if (srcFile.size() == 0) {
-        APP_LOGE("srcFile len is 0");
+    if ((srcFile.size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(srcFile)) {
+        APP_LOGE("srcFile len is 0 or ../");
         return false;
     }
     if (!FilePathCheckValid(srcFile)) {
@@ -504,18 +504,18 @@ ErrCode GetOriginalSize(PlatformFile zipFd, int64_t &originalSize)
     while (reader.HasMore()) {
         if (!reader.OpenCurrentEntryInZip()) {
             APP_LOGE("Failed to open the current file in zip");
-            return ERR_ZLIB_SERVICE_DISABLED;
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
         const FilePath &constEntryPath = reader.CurrentEntryInfo()->GetFilePath();
         FilePath entryPath = constEntryPath;
         if (reader.CurrentEntryInfo()->IsUnsafe()) {
             APP_LOGE("Found an unsafe file in zip");
-            return ERR_ZLIB_SERVICE_DISABLED;
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
         totalSize += reader.CurrentEntryInfo()->GetOriginalSize();
         if (!reader.AdvanceToNextEntry()) {
             APP_LOGE("Failed to advance to the next file");
-            return ERR_ZLIB_SERVICE_DISABLED;
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
     }
     originalSize = totalSize;
@@ -543,7 +543,10 @@ bool Zips(const std::vector<std::string> &srcFiles, const std::string &destPath,
     if (zlibCallbackInfo == nullptr) {
         return false;
     }
-
+    if (FilePath::HasRelativePathBaseOnAPIVersion(srcFiles)) {
+        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
+        return false;
+    }
     std::vector<FilePath> srcFilesPath;
     for (auto iter = srcFiles.begin(); iter != srcFiles.end(); ++iter) {
         FilePath srcFile(*iter);
@@ -554,7 +557,7 @@ bool Zips(const std::vector<std::string> &srcFiles, const std::string &destPath,
         srcFilesPath.push_back(srcFile);
     }
     FilePath destFile(destPath);
-    if (destFile.Value().size() == 0) {
+    if ((destFile.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(destPath)) {
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
         return false;
     }
