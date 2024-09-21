@@ -19,6 +19,7 @@ config("bundlemgr_extension_config") {
 }
 
 ohos_shared_library("bundlemgr_extension") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "src/bms_extension_data_mgr.cpp",
     "src/bms_extension_profile.cpp",
