@@ -688,6 +688,13 @@ private:
     void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
     void VerifyDomain();
+    void GetUninstallBundleInfo(bool isKeepData, int32_t userId,
+        const InnerBundleInfo &oldInfo, UninstallBundleInfo &uninstallBundleInfo);
+    bool CheckInstallOnKeepData(const std::string &bundleName, bool isOTA,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,
+        const UninstallBundleInfo &uninstallBundleInfo);
+    void DeleteUninstallBundleInfo(const std::string &bundleName);
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
     void SetAtomicServiceModuleUpgrade(const InnerBundleInfo &oldInfo);
     void UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
@@ -762,6 +769,8 @@ private:
     std::map<std::string, std::string> pgoParams_;
     bool isEnterpriseBundle_ = false;
     std::string appIdentifier_ = "";
+    // When it is true, it means that the same bundleName and same userId was uninstalled with keepData before
+    bool existBeforeKeepDataApp_ = false;
     Security::Verify::HapVerifyResult verifyRes_;
     std::map<std::string, std::string> targetSoPathMap_;
     bool copyHapToInstallPath_ = false;
