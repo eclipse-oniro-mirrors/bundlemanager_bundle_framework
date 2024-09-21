@@ -42,7 +42,9 @@ enum class GetExtensionAbilityInfoFlag {
     GET_EXTENSION_ABILITY_INFO_WITH_SKILL_URI = 0x00000008,
     GET_EXTENSION_ABILITY_INFO_WITH_SKILL = 0x00000010,
     // using this tag will only return the first system app, only for c++
-    GET_EXTENSION_ABILITY_INFO_BY_TYPE_NAME = 0x00000020,
+    // appIndex = 0,invalid input of other flag
+    // appIndex !=0,this flag is invalid
+    GET_EXTENSION_ABILITY_INFO_BY_TYPE_NAME = 0x80000000,
 };
 
 enum class ExtensionAbilityType {
