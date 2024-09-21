@@ -41,7 +41,7 @@
         "srcEntry": "./ets/entryability/EntryAbility.ts",
         "label": "$string:EntryAbility_label",
         "description": "$string:EntryAbility_desc",
-        "type": "inputMethod"
+        "type": "form"
       }
     ]
   }

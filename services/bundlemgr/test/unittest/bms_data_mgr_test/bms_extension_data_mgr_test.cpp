@@ -27,6 +27,7 @@
 #include "bms_extension_profile.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_ext_register.h"
+#include "code_protect_bundle_info.h"
 #include "json_constants.h"
 #include "json_serializer.h"
 #include "parcel.h"
@@ -672,6 +673,40 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0017, Function | SmallTest
     std::set<std::string> uninstallBundles;
     ErrCode res = bmsExtensionDataMgr.GetBackupUninstallList(userId, uninstallBundles);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionKeyOperation_0001
+ * @tc.name: KeyOperation
+ * @tc.desc: KeyOperation
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionKeyOperation_0001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<CodeProtectBundleInfo> codeProtectBundleInfos;
+    auto res = bmsExtensionDataMgr.KeyOperation(codeProtectBundleInfos, 1);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_NE(res, ERR_OK);
+    #else
+    EXPECT_EQ(res, ERR_OK);
+    #endif
+}
+
+/**
+ * @tc.number: BmsExtensionKeyOperation_0002
+ * @tc.name: KeyOperation
+ * @tc.desc: KeyOperation
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionKeyOperation_0002, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::vector<CodeProtectBundleInfo> codeProtectBundleInfos;
+    auto res = bundleMgrExtTest.KeyOperation(codeProtectBundleInfos, 1);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_NE(res, ERR_OK);
+    #else
+    EXPECT_EQ(res, ERR_OK);
+    #endif
 }
 
 /**

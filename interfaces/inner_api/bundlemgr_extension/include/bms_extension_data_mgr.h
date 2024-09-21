@@ -22,6 +22,7 @@
 #include "appexecfwk_errors.h"
 #include "bms_extension.h"
 #include "bundle_info.h"
+#include "code_protect_bundle_info.h"
 #include "interfaces/hap_verify.h"
 #include "want.h"
 #include "abs_rdb_predicates.h"
@@ -34,6 +35,7 @@ public:
 
     BmsExtensionDataMgr();
     ErrCode Init();
+    ErrCode KeyOperation(const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type);
     bool CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sdkVersion);
     bool CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkVersion);
     ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);

@@ -384,6 +384,27 @@ ErrCode BmsExtensionDataMgr::DeleteResourceInfo(const std::string &key)
     return ret;
 }
 
+ErrCode BmsExtensionDataMgr::KeyOperation(
+    const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type)
+{
+    if ((Init() != ERR_OK) || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_OK;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_OK;
+    }
+    auto ret = bundleMgrExtPtr->KeyOperation(codeProtectBundleInfos, type);
+    if (!codeProtectBundleInfos.empty()) {
+        APP_LOGI("KeyOperation %{public}s %{public}d ret %{public}d",
+            codeProtectBundleInfos[0].bundleName.c_str(), type, ret);
+    }
+    return ret;
+}
+
 ErrCode BmsExtensionDataMgr::OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
     int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {

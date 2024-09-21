@@ -25,6 +25,8 @@ namespace {
 const std::string PREINSTALL_EXCEPTION = "PreInstallExceptionMgr";
 const std::string EXCEPTION_PATHS = "ExceptionPaths";
 const std::string EXCEPTION_BUNDLENAMES = "ExceptionBundleNames";
+constexpr const char* EXCEPTION_APP_SERVICE_PATHS = "ExceptionAppServicePaths";
+constexpr const char* EXCEPTION_APP_SERVICE_BUNDLENAMES = "ExceptionAppServiceBundleNames";
 }
 PreInstallExceptionMgr::PreInstallExceptionMgr()
 {}
@@ -35,7 +37,8 @@ PreInstallExceptionMgr::~PreInstallExceptionMgr()
 }
 
 bool PreInstallExceptionMgr::GetAllPreInstallExceptionInfo(
-    std::set<std::string> &exceptionPaths, std::set<std::string> &exceptionBundleNames)
+    std::set<std::string> &exceptionPaths, std::set<std::string> &exceptionBundleNames,
+    std::set<std::string> &exceptionAppServicePaths, std::set<std::string> &exceptionAppServiceBundleNames)
 {
     std::lock_guard<std::mutex> lock(preInstallExceptionMutex_);
     if (!hasInit_) {
@@ -48,7 +51,10 @@ bool PreInstallExceptionMgr::GetAllPreInstallExceptionInfo(
 
     exceptionPaths = exceptionPaths_;
     exceptionBundleNames = exceptionBundleNames_;
-    return !exceptionPaths_.empty() || !exceptionBundleNames_.empty();
+    exceptionAppServicePaths = exceptionAppServicePaths_;
+    exceptionAppServiceBundleNames = exceptionAppServiceBundleNames_;
+    return !exceptionPaths_.empty() || !exceptionBundleNames_.empty() ||
+        !exceptionAppServicePaths_.empty() || !exceptionAppServiceBundleNames_.empty();
 }
 
 bool PreInstallExceptionMgr::LoadPreInstallExceptionInfosFromDb()
@@ -74,30 +80,24 @@ bool PreInstallExceptionMgr::LoadPreInstallExceptionInfosFromDb()
 
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::set<std::string>>(jsonObject,
-        jsonObjectEnd,
-        EXCEPTION_PATHS,
-        exceptionPaths_,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::STRING);
-    GetValueIfFindKey<std::set<std::string>>(jsonObject,
-        jsonObjectEnd,
-        EXCEPTION_BUNDLENAMES,
-        exceptionBundleNames_,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::STRING);
+    GetValueIfFindKey<std::set<std::string>>(jsonObject, jsonObjectEnd, EXCEPTION_PATHS, exceptionPaths_,
+        JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::set<std::string>>(jsonObject, jsonObjectEnd, EXCEPTION_BUNDLENAMES, exceptionBundleNames_,
+        JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::set<std::string>>(jsonObject, jsonObjectEnd, EXCEPTION_APP_SERVICE_PATHS,
+        exceptionAppServicePaths_, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::set<std::string>>(jsonObject, jsonObjectEnd, EXCEPTION_APP_SERVICE_BUNDLENAMES,
+        exceptionAppServiceBundleNames_, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error code : %{public}d", parseResult);
         exceptionPaths_.clear();
         exceptionBundleNames_.clear();
+        exceptionAppServicePaths_.clear();
+        exceptionAppServiceBundleNames_.clear();
         return false;
     }
     APP_LOGI("Successfully loaded pre-install exception information");
-    
+
     hasInit_ = true;
     return true;
 }
@@ -113,6 +113,8 @@ void PreInstallExceptionMgr::SavePreInstallExceptionInfosToDb()
     nlohmann::json jsonObject;
     jsonObject[EXCEPTION_PATHS] = exceptionPaths_;
     jsonObject[EXCEPTION_BUNDLENAMES] = exceptionBundleNames_;
+    jsonObject[EXCEPTION_APP_SERVICE_PATHS] = exceptionAppServicePaths_;
+    jsonObject[EXCEPTION_APP_SERVICE_BUNDLENAMES] = exceptionAppServiceBundleNames_;
     bmsPara->SaveBmsParam(PREINSTALL_EXCEPTION, jsonObject.dump());
 }
 
@@ -131,6 +133,14 @@ void PreInstallExceptionMgr::DeletePreInstallExceptionInfosFromDb()
 
     if (!exceptionBundleNames_.empty()) {
         jsonObject[EXCEPTION_BUNDLENAMES] = exceptionBundleNames_;
+    }
+
+    if (!exceptionAppServiceBundleNames_.empty()) {
+        jsonObject[EXCEPTION_APP_SERVICE_BUNDLENAMES] = exceptionAppServiceBundleNames_;
+    }
+
+    if (!exceptionAppServicePaths_.empty()) {
+        jsonObject[EXCEPTION_APP_SERVICE_PATHS] = exceptionAppServicePaths_;
     }
 
     if (jsonObject.empty()) {
@@ -186,6 +196,85 @@ void PreInstallExceptionMgr::DeletePreInstallExceptionPath(const std::string &bu
              bundleDir.c_str());
 }
 
+void PreInstallExceptionMgr::SavePreInstallExceptionAppServiceBundleName(const std::string &bundleName)
+{
+    std::lock_guard<std::mutex> lock(preInstallExceptionMutex_);
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return;
+    }
+
+    if (exceptionAppServiceBundleNames_.find(bundleName) != exceptionAppServiceBundleNames_.end()) {
+        APP_LOGE("bundleName %{public}s saved", bundleName.c_str());
+        return;
+    }
+
+    exceptionAppServiceBundleNames_.insert(bundleName);
+    SavePreInstallExceptionInfosToDb();
+    APP_LOGI_NOFUNC("Pre-install exception app service save success -n %{public}s", bundleName.c_str());
+}
+
+void PreInstallExceptionMgr::DeletePreInstallExceptionAppServiceBundleName(const std::string &bundleName)
+{
+    std::lock_guard<std::mutex> lock(preInstallExceptionMutex_);
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return;
+    }
+
+    if (exceptionAppServiceBundleNames_.find(bundleName) == exceptionAppServiceBundleNames_.end()) {
+        APP_LOGE("bundleName %{public}s deleted", bundleName.c_str());
+        return;
+    }
+
+    exceptionAppServiceBundleNames_.erase(bundleName);
+    DeletePreInstallExceptionInfosFromDb();
+    APP_LOGI_NOFUNC("Pre-install exception app service delete success -n %{public}s", bundleName.c_str());
+}
+
+void PreInstallExceptionMgr::SavePreInstallExceptionAppServicePath(
+    const std::string &bundleDir)
+{
+    std::lock_guard<std::mutex> lock(preInstallExceptionMutex_);
+    if (bundleDir.empty()) {
+        APP_LOGE("bundleDir is empty");
+        return;
+    }
+
+    if (exceptionAppServicePaths_.find(bundleDir) != exceptionAppServicePaths_.end()) {
+        APP_LOGE("bundleDir %{public}s saved", bundleDir.c_str());
+        return;
+    }
+
+    exceptionAppServicePaths_.insert(bundleDir);
+    SavePreInstallExceptionInfosToDb();
+    APP_LOGI_NOFUNC("Pre-install exception app service save success");
+}
+
+void PreInstallExceptionMgr::DeletePreInstallExceptionAppServicePath(const std::string &bundleDir)
+{
+    std::lock_guard<std::mutex> lock(preInstallExceptionMutex_);
+    if (bundleDir.empty()) {
+        APP_LOGE("bundleDir is empty");
+        return;
+    }
+
+    if (exceptionAppServicePaths_.find(bundleDir) == exceptionAppServicePaths_.end()) {
+        APP_LOGE("bundleDir %{public}s deleted", bundleDir.c_str());
+        return;
+    }
+
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE("bmsPara is nullptr");
+        return;
+    }
+
+    exceptionAppServicePaths_.erase(bundleDir);
+    DeletePreInstallExceptionInfosFromDb();
+    APP_LOGI_NOFUNC("Pre-install exception app service delete success bundleDir:%{public}s", bundleDir.c_str());
+}
+
 void PreInstallExceptionMgr::SavePreInstallExceptionBundleName(const std::string &bundleName)
 {
     std::lock_guard<std::mutex> lock(preInstallExceptionMutex_);
@@ -236,6 +325,8 @@ void PreInstallExceptionMgr::ClearAll()
     bmsPara->DeleteBmsParam(PREINSTALL_EXCEPTION);
     exceptionPaths_.clear();
     exceptionBundleNames_.clear();
+    exceptionAppServicePaths_.clear();
+    exceptionAppServiceBundleNames_.clear();
     hasInit_ = false;
     APP_LOGI("Pre-install exception information cleared successfully");
 }

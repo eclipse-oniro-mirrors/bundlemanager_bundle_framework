@@ -19,6 +19,7 @@
 #include "appexecfwk_errors.h"
 #include "ability_info.h"
 #include "bundle_info.h"
+#include "code_protect_bundle_info.h"
 #include "interfaces/hap_verify.h"
 #include "want.h"
 #include "abs_rdb_predicates.h"
@@ -113,6 +114,10 @@ public:
     virtual bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId)
     {
         return false;
+    }
+    virtual ErrCode KeyOperation(const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type)
+    {
+        return ERR_OK;
     }
     virtual bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum)
     {

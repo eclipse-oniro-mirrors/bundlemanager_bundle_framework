@@ -18,6 +18,7 @@
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
@@ -25,6 +26,7 @@
 #include "bundle_resource_helper.h"
 #include "bundle_sandbox_data_mgr.h"
 #include "bundle_util.h"
+#include "code_protect_bundle_info.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "datetime_ex.h"
@@ -238,7 +240,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
             BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, appIndex, userId);
         }
     }
-
+    AddKeyOperation(bundleName, appIndex, userId, uid);
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
     createCloneDataDirGuard.Dismiss();
@@ -317,6 +319,33 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
 #endif
     APP_LOGI("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
+}
+
+bool BundleCloneInstaller::AddKeyOperation(
+    const std::string &bundleName, int32_t appIndex, int32_t userId, int32_t uid)
+{
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+        APP_LOGE("get failed");
+        return false;
+    }
+    if (innerBundleInfo.GetApplicationReservedFlag() !=
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION)) {
+        return true;
+    }
+    CodeProtectBundleInfo info;
+    info.bundleName = innerBundleInfo.GetBundleName();
+    info.versionCode = innerBundleInfo.GetVersionCode();
+    info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
+    info.uid = uid;
+    info.appIndex = appIndex;
+
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    return bmsExtensionDataMgr.KeyOperation(std::vector<CodeProtectBundleInfo> { info }, CodeOperation::ADD) == ERR_OK;
 }
 
 ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,

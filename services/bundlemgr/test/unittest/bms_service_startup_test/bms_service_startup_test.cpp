@@ -1088,24 +1088,26 @@ HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0001, Function | SmallTes
 
     std::set<std::string> oldExceptionPaths;
     std::set<std::string> oldExceptionBundleNames;
+    std::set<std::string> exceptionAppServicePaths;
+    std::set<std::string> exceptionAppServiceBundleNames;
     preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
-        oldExceptionPaths, oldExceptionBundleNames);
+        oldExceptionPaths, oldExceptionBundleNames, exceptionAppServicePaths, exceptionAppServiceBundleNames);
 
     preInstallExceptionMgr->ClearAll();
     std::set<std::string> exceptionPaths;
     std::set<std::string> exceptionBundleNames;
     ret = preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
-        exceptionPaths, exceptionBundleNames);
+        exceptionPaths, exceptionBundleNames, exceptionAppServicePaths, exceptionAppServiceBundleNames);
     EXPECT_EQ(ret, false);
 
     preInstallExceptionMgr->SavePreInstallExceptionBundleName(BUNDLE_TEMP_NAME);
     preInstallExceptionMgr->SavePreInstallExceptionPath(BUNDLE_PATH);
     preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
-        exceptionPaths, exceptionBundleNames);
+        exceptionPaths, exceptionBundleNames, exceptionAppServicePaths, exceptionAppServiceBundleNames);
     preInstallExceptionMgr->DeletePreInstallExceptionBundleName(BUNDLE_TEMP_NAME);
     preInstallExceptionMgr->DeletePreInstallExceptionPath(BUNDLE_PATH);
     ret = preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
-        exceptionPaths, exceptionBundleNames);
+        exceptionPaths, exceptionBundleNames, exceptionAppServicePaths, exceptionAppServiceBundleNames);
     EXPECT_EQ(ret, false);
 
     if (oldExceptionPaths.size() > 0) {
