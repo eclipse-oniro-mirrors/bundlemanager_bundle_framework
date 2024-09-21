@@ -1372,10 +1372,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
-    if (!CheckWhetherCanBeUninstalled(bundleName)) {
-        return ERR_APPEXECFWK_UNINSTALL_CONTROLLED;
-    }
-
     auto &mtx = dataMgr_->GetBundleMutex(bundleName);
     std::lock_guard lock {mtx};
     InnerBundleInfo oldInfo;
@@ -5634,18 +5630,6 @@ bool BaseBundleInstaller::IsAppInBlocklist(const std::string &bundleName, const 
         return true;
     }
     return false;
-}
-
-bool BaseBundleInstaller::CheckWhetherCanBeUninstalled(const std::string &bundleName) const
-{
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    LOG_I(BMS_TAG_INSTALLER, "CheckUninstall %{public}s", bundleName.c_str());
-    bool res = bmsExtensionDataMgr.CheckWhetherCanBeUninstalled(bundleName);
-    if (!res) {
-        LOG_E(BMS_TAG_INSTALLER, "uninstall %{public}s rejected", bundleName.c_str());
-        return false;
-    }
-    return true;
 }
 
 void BaseBundleInstaller::CheckBundleNameAndStratAbility(const std::string &bundleName,
