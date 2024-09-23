@@ -281,8 +281,6 @@ void BmsBundleQuickFixTest::AddInnerBundleInfo(const std::string bundleName,
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.AddInnerBundleUserInfo(userInfo);
     innerBundleInfo.InsertInnerModuleInfo(bundleName, moduleInfo);
-    std::string packageName;
-    innerBundleInfo.SetInstallMark(bundleName, packageName, InstallExceptionStatus::INSTALL_FINISH);
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);

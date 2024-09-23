@@ -3981,8 +3981,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
         return false;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
-    auto mark = innerBundleInfo.GetInstallMark();
-    if (innerBundleInfo.IsDisabled() || mark.status != InstallExceptionStatus::INSTALL_FINISH) {
+    if (innerBundleInfo.IsDisabled()) {
         APP_LOGD("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
@@ -4063,8 +4062,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
-    auto mark = innerBundleInfo.GetInstallMark();
-    if (innerBundleInfo.IsDisabled() || mark.status != InstallExceptionStatus::INSTALL_FINISH) {
+    if (innerBundleInfo.IsDisabled()) {
         APP_LOGD("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
@@ -4107,8 +4105,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bu
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
-    auto mark = innerBundleInfo.GetInstallMark();
-    if (innerBundleInfo.IsDisabled() || mark.status != InstallExceptionStatus::INSTALL_FINISH) {
+    if (innerBundleInfo.IsDisabled()) {
         APP_LOGW("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
