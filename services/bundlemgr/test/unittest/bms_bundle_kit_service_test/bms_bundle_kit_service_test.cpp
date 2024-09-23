@@ -500,8 +500,6 @@ void BmsBundleKitServiceTest::AddInnerBundleInfoByTest(const std::string &bundle
     std::string commonEventKey = bundleName + moduleName + abilityName;
     CommonEventInfo eventInfo = MockCommonEventInfo(bundleName, innerBundleInfo.GetUid(DEFAULT_USERID));
     innerBundleInfo.InsertCommonEvents(commonEventKey, eventInfo);
-    std::string packageName;
-    innerBundleInfo.SetInstallMark(bundleName, packageName, InstallExceptionStatus::INSTALL_FINISH);
 }
 
 void BmsBundleKitServiceTest::MockInstallBundle(
@@ -515,8 +513,6 @@ void BmsBundleKitServiceTest::MockInstallBundle(
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    std::string packageName;
-    innerBundleInfo.SetInstallMark(bundleName, packageName, InstallExceptionStatus::INSTALL_FINISH);
     Skill skill;
     skill.actions = {ACTION};
     skill.entities = {ENTITY};
@@ -538,8 +534,6 @@ void BmsBundleKitServiceTest::MockInstallExtension(const std::string &bundleName
     innerBundleInfo.InsertExtensionInfo(keyName, extensionInfo);
     innerBundleInfo.InsertExtensionInfo(keyName02, extensionInfo02);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    std::string packageName;
-    innerBundleInfo.SetInstallMark(bundleName, packageName, InstallExceptionStatus::INSTALL_FINISH);
     Skill skill;
     skill.actions = {ACTION};
     skill.entities = {ENTITY};
@@ -562,8 +556,6 @@ void BmsBundleKitServiceTest::MockInstallExtensionWithUri(const std::string &bun
     innerBundleInfo.InsertExtensionInfo(keyName, extensionInfo);
     innerBundleInfo.InsertExtensionInfo(keyName02, extensionInfo02);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    std::string packageName;
-    innerBundleInfo.SetInstallMark(bundleName, packageName, InstallExceptionStatus::INSTALL_FINISH);
     Skill skill = MockExtensionSkillInfo();
     std::vector<Skill> skills;
     skills.emplace_back(skill);
@@ -651,8 +643,6 @@ void BmsBundleKitServiceTest::MockInstallBundle(
         AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
         innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
         innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-        std::string packageName;
-        innerBundleInfo.SetInstallMark(bundleName, packageName, InstallExceptionStatus::INSTALL_FINISH);
         Skill skill;
         skill.actions = {ACTION};
         skill.entities = {ENTITY};
@@ -895,8 +885,6 @@ void BmsBundleKitServiceTest::MockInnerBundleInfo(const std::string &bundleName,
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
-    std::string packageName;
-    innerBundleInfo.SetInstallMark(bundleName, packageName, InstallExceptionStatus::INSTALL_FINISH);
 }
 
 void BmsBundleKitServiceTest::CheckBundleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -9011,7 +8999,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesGetCleanSize_0100, Functi
     uint64_t cacheSize = 1;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.SetInstallMark(BUNDLE_NAME_DEMO, "", InstallExceptionStatus::INSTALL_FINISH);
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
     InnerBundleUserInfo info;
     info.bundleUserInfo.userId = DEFAULT_USERID;
