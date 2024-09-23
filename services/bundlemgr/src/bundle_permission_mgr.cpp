@@ -589,7 +589,11 @@ void BundlePermissionMgr::AddPermissionUsedRecord(
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
-        AccessToken::PrivacyKit::AddPermissionUsedRecord(callerToken, permission, successCount, failCount);
+        int32_t ret = AccessToken::PrivacyKit::AddPermissionUsedRecord(callerToken, permission,
+            successCount, failCount);
+        if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            APP_LOGE("AddPermissionUsedRecord failed, ret = %{public}d", ret);
+        }
     }
 }
 
