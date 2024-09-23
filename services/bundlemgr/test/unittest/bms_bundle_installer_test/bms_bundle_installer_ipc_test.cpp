@@ -1309,19 +1309,10 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleGetAllBundleStats_0100, Function | Sma
     MessageParcel datas;
     std::u16string descriptor = InstalldHost::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(DATA, DATA_SIZE);
-    datas.RewindRead(0);
+    datas.WriteInt32(100);
+    datas.WriteInt32(0);
     MessageParcel reply;
-    reply.WriteInt32(0);
     bool res = host.HandleGetAllBundleStats(datas, reply);
-    EXPECT_EQ(res, true);
-
-    reply.WriteInt32(Constants::MAX_PARCEL_CAPACITY + 1);
-    res = host.HandleGetAllBundleStats(datas, reply);
-    EXPECT_EQ(res, false);
-
-    reply.WriteInt32(DATA_SIZE);
-    res = host.HandleGetAllBundleStats(datas, reply);
     EXPECT_EQ(res, false);
 }
 

@@ -696,13 +696,11 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3300, Function | SmallTest |
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
 
-    std::vector<std::string> bundleNames;
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids;
-    bundleNames.push_back(TEST_STRING);
     bundleStats.push_back(LAST_MODIFY_TIME);
     uids.push_back(UID);
-    auto ret = installdProxy->GetAllBundleStats(bundleNames, UID, bundleStats, uids);
+    auto ret = installdProxy->GetAllBundleStats(UID, bundleStats, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
@@ -1248,13 +1246,11 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6700, Function | SmallTest |
     auto proxy = GetInstallProxy();
     ASSERT_NE(proxy, nullptr);
 
-    std::vector<std::string> bundleNames;
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids;
-    bundleNames.push_back(TEST_STRING);
     bundleStats.push_back(LAST_MODIFY_TIME);
     uids.push_back(UID);
-    auto ret = proxy->GetAllBundleStats(bundleNames, UID, bundleStats, uids);
+    auto ret = proxy->GetAllBundleStats(UID, bundleStats, uids);
     EXPECT_EQ(ret, ERR_OK);
 }
 

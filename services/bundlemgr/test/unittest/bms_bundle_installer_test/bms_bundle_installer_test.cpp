@@ -6149,12 +6149,10 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDirWithVector_0100, Function | 
 HWTEST_F(BmsBundleInstallerTest, GetAllBundleStats_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl hostImpl;
-    std::vector<std::string> bundleNames;
     std::vector<int64_t> bundleStats = { 0 };
     std::vector<int32_t> uids;
-    bundleNames.push_back(TEST_STRING);
     uids.push_back(EDM_UID);
-    auto ret = hostImpl.GetAllBundleStats(bundleNames, EDM_UID, bundleStats, uids);
+    auto ret = hostImpl.GetAllBundleStats(EDM_UID, bundleStats, uids);
     EXPECT_EQ(ret, ERR_OK);
 }
 

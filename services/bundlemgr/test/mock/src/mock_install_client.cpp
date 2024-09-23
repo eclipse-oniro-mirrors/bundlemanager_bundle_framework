@@ -124,7 +124,7 @@ ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int3
     return 0;
 }
 
-ErrCode InstalldClient::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
     return 0;
