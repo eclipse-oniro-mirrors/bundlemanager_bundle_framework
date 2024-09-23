@@ -551,7 +551,6 @@ private:
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
     ErrCode CheckAppLabel(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     bool CheckReleaseTypeIsCompatible(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
-    ErrCode CheckMaxCountForClone(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
     ErrCode CheckNativeFileWithOldInfo(
@@ -673,6 +672,7 @@ private:
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    ErrCode CleanShaderCache(const std::string &bundleName) const;
     void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     bool VerifyActivationLock() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
@@ -687,6 +687,13 @@ private:
     void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
     void VerifyDomain();
+    void GetUninstallBundleInfo(bool isKeepData, int32_t userId,
+        const InnerBundleInfo &oldInfo, UninstallBundleInfo &uninstallBundleInfo);
+    bool CheckInstallOnKeepData(const std::string &bundleName, bool isOTA,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,
+        const UninstallBundleInfo &uninstallBundleInfo);
+    void DeleteUninstallBundleInfo(const std::string &bundleName);
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
     void SetAtomicServiceModuleUpgrade(const InnerBundleInfo &oldInfo);
     void UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
@@ -761,6 +768,8 @@ private:
     std::map<std::string, std::string> pgoParams_;
     bool isEnterpriseBundle_ = false;
     std::string appIdentifier_ = "";
+    // When it is true, it means that the same bundleName and same userId was uninstalled with keepData before
+    bool existBeforeKeepDataApp_ = false;
     Security::Verify::HapVerifyResult verifyRes_;
     std::map<std::string, std::string> targetSoPathMap_;
     bool copyHapToInstallPath_ = false;

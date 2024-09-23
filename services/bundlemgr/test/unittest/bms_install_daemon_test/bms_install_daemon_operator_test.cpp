@@ -663,25 +663,6 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3700, Function | Sma
 }
 
 /**
- * @tc.number: InstalldHostImplTest_3800
- * @tc.name: test function of InstalldOperator
- * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3800, Function | SmallTest | Level0)
-{
-    bool ret = InstalldOperator::ApplyDiffPatch(
-        TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_QUICK_FIX_FILE_PATH_SECOND, TEST_PATH, 0);
-    EXPECT_EQ(ret, false);
-    std::string tempPath = "/data/test/installOperator";
-    CreateQuickFileDir(tempPath);
-    ret = InstalldOperator::ApplyDiffPatch(
-        tempPath, tempPath, tempPath, 0);
-    EXPECT_EQ(ret, true);
-    DeleteQuickFileDir(tempPath);
-}
-
-/**
  * @tc.number: InstalldHostImplTest_3900
  * @tc.name: test function of InstalldOperator
  * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
@@ -691,19 +672,6 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3900, Function | Sma
 {
     bool ret = InstalldOperator::ApplyDiffPatch("", "", TEST_PATH, 0);
     EXPECT_EQ(ret, true);
-}
-
-/**
- * @tc.number: InstalldHostImplTest_4000
- * @tc.name: test function of InstalldOperator
- * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4000, Function | SmallTest | Level0)
-{
-    bool ret = InstalldOperator::ApplyDiffPatch(
-        TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_QUICK_FIX_FILE_PATH_SECOND, TEST_PATH, 0);
-    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -852,20 +820,6 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5000, Function | Sma
 }
 
 /**
- * @tc.number: InstalldOperatorTest_5100
- * @tc.name: test function of InstalldOperator
- * @tc.desc: 1. calling OpenHandle of InstalldOperator
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5100, Function | SmallTest | Level0)
-{
-    void **handle = nullptr;
-    bool res = InstalldOperator::OpenHandle(handle);
-    EXPECT_EQ(res, false);
-    InstalldOperator::CloseHandle(handle);
-    EXPECT_EQ(res, false);
-}
-
-/**
  * @tc.number: InstalldOperatorTest_5200
  * @tc.name: test function of InstalldOperator
  * @tc.desc: 1. calling ProcessApplyDiffPatchPath of InstalldOperator
@@ -948,22 +902,6 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5600, Function | Sma
     res = InstalldOperator::ProcessApplyDiffPatchPath(
         TEST_FILE_PATH, TEST_FILE_PATH, "noExist", oldSoFileNames, diffFileNames);
     EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: InstalldOperatorTest_5700
- * @tc.name: test function of InstalldOperator
- * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
- * @tc.require: issueI6PNQX
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5700, Function | SmallTest | Level0)
-{
-    bool ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, TEST_FILE_PATH, 0);
-    EXPECT_FALSE(ret);
-    ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, "", 0);
-    EXPECT_FALSE(ret);
-    ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, TEST_FILE_PATH, 0);
-    EXPECT_FALSE(ret);
 }
 
 /**

@@ -132,6 +132,7 @@ BundleDataMgr::BundleDataMgr()
     sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     bundleStateStorage_ = std::make_shared<BundleStateStorage>();
     shortcutStorage_ = std::make_shared<ShortcutDataStorageRdb>();
+    uninstallDataMgr_ = std::make_shared<UninstallDataMgrStorageRdb>();
     baseAppUid_ = system::GetIntParameter<int32_t>("const.product.baseappid", Constants::BASE_APP_UID);
     if (baseAppUid_ < Constants::BASE_APP_UID || baseAppUid_ >= MAX_APP_UID) {
         baseAppUid_ = Constants::BASE_APP_UID;
@@ -452,6 +453,70 @@ bool BundleDataMgr::RemoveModuleInfo(
         APP_LOGD("after delete modulePackage:%{public}s info", modulePackage.c_str());
     }
     return true;
+}
+
+bool BundleDataMgr::UpdateUninstallBundleInfo(const std::string &bundleName,
+    const UninstallBundleInfo &uninstallBundleInfo)
+{
+    if (uninstallDataMgr_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    if (bundleName.empty() || uninstallBundleInfo.userInfos.empty()) {
+        APP_LOGE("param error");
+        return false;
+    }
+    UninstallBundleInfo oldUninstallBundleInfo;
+    if (uninstallDataMgr_->GetUninstallBundleInfo(bundleName, oldUninstallBundleInfo)) {
+        std::string newUser = uninstallBundleInfo.userInfos.begin()->first;
+        if (oldUninstallBundleInfo.userInfos.find(newUser) != oldUninstallBundleInfo.userInfos.end()) {
+            APP_LOGE("u %{public}s has been saved", newUser.c_str());
+            return false;
+        }
+        oldUninstallBundleInfo.userInfos[newUser] = uninstallBundleInfo.userInfos.begin()->second;
+        return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, oldUninstallBundleInfo);
+    }
+    return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
+}
+
+bool BundleDataMgr::GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo)
+{
+    if (uninstallDataMgr_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE("param error");
+        return false;
+    }
+    return uninstallDataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo);
+}
+
+bool BundleDataMgr::DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId)
+{
+    if (uninstallDataMgr_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE("param error");
+        return false;
+    }
+    UninstallBundleInfo uninstallBundleInfo;
+    if (!uninstallDataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        APP_LOGE("bundle %{public}s is not found", bundleName.c_str());
+        return false;
+    }
+    auto it = uninstallBundleInfo.userInfos.find(std::to_string(userId));
+    if (it == uninstallBundleInfo.userInfos.end()) {
+        APP_LOGE("user %{public}d is not found", userId);
+        return false;
+    }
+    uninstallBundleInfo.userInfos.erase(std::to_string(userId));
+    if (uninstallBundleInfo.userInfos.empty()) {
+        return uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName);
+    }
+    return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
 }
 
 bool BundleDataMgr::RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundleInfo &info)
@@ -1983,7 +2048,7 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundle
 {
     std::vector<int32_t> cloneAppIndexes;
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-    if (userId == Constants::UNSPECIFIED_USERID) {
+    if (userId == Constants::ANY_USERID) {
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
             LOG_W(BMS_TAG_QUERY, "no userInfos for this bundle(%{public}s)", bundleName.c_str());
             return cloneAppIndexes;
@@ -2020,7 +2085,7 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesNoLock(const std::string &
 {
     std::vector<int32_t> cloneAppIndexes;
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-    if (userId == Constants::UNSPECIFIED_USERID) {
+    if (userId == Constants::ANY_USERID) {
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
             LOG_W(BMS_TAG_QUERY, "no userInfos for this bundle(%{public}s)", bundleName.c_str());
             return cloneAppIndexes;
@@ -3850,8 +3915,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
         return false;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
-    auto mark = innerBundleInfo.GetInstallMark();
-    if (innerBundleInfo.IsDisabled() || mark.status != InstallExceptionStatus::INSTALL_FINISH) {
+    if (innerBundleInfo.IsDisabled()) {
         APP_LOGD("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
@@ -3916,8 +3980,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
-    auto mark = innerBundleInfo.GetInstallMark();
-    if (innerBundleInfo.IsDisabled() || mark.status != InstallExceptionStatus::INSTALL_FINISH) {
+    if (innerBundleInfo.IsDisabled()) {
         APP_LOGD("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
@@ -3960,8 +4023,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bu
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
-    auto mark = innerBundleInfo.GetInstallMark();
-    if (innerBundleInfo.IsDisabled() || mark.status != InstallExceptionStatus::INSTALL_FINISH) {
+    if (innerBundleInfo.IsDisabled()) {
         APP_LOGW("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -7427,16 +7489,16 @@ void BundleDataMgr::CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32
         return;
     }
 
+    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+        + std::to_string(userId);
+    if (!BundleUtil::IsExistDir(parentDir)) {
+        APP_LOGE("parent dir(%{public}s) missing: group", parentDir.c_str());
+        return;
+    }
     for (const DataGroupInfo &dataGroupInfo : infos) {
-        std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
-            + std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        bool dirExist = false;
-        auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
-        if (result == ERR_OK && dirExist) {
-            continue;
-        }
+        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         APP_LOGD("create group dir: %{public}s", dir.c_str());
-        result = InstalldClient::GetInstance()->Mkdir(dir,
+        auto result = InstalldClient::GetInstance()->Mkdir(dir,
             DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
             APP_LOGW("%{public}s group dir %{public}s userId %{public}d failed",
