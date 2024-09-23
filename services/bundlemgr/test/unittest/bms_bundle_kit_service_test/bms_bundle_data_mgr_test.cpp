@@ -1691,6 +1691,27 @@ HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoWithFlags_0100, Function | Smal
 }
 
 /**
+ * @tc.number: GetInnerBundleInfoWithFlagsForAms_0100
+ * @tc.name: test GetInnerBundleInfoWithFlagsForAms
+ * @tc.desc: 1.system run normally
+ *           2.check GetInnerBundleInfoWithFlagsForAms failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoWithFlagsForAms_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME_TEST;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    bool res = GetBundleDataMgr()->GetInnerBundleInfoWithFlags(
+        BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, USERID);
+    EXPECT_EQ(res, false);
+    GetBundleDataMgr()->multiUserIdsSet_.clear();
+}
+
+/**
  * @tc.number: GetInnerBundleInfoWithFlagsV9_0100
  * @tc.name: test GetInnerBundleInfoWithFlagsV9
  * @tc.desc: 1.system run normally
