@@ -215,7 +215,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .abilityName = mainAbility_,
             .appDistributionType = appDistributionType_,
         };
-        if (installParam.allUser) {
+        if (installParam.allUser || HasDriverExtensionAbility(bundleName_)) {
             AddBundleStatus(installRes);
         } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
@@ -6124,6 +6124,29 @@ void BaseBundleInstaller::MarkInstallFinish()
     if (!dataMgr_->UpdateInnerBundleInfo(info)) {
         LOG_W(BMS_TAG_INSTALLER, "save mark failed");
     }
+}
+
+bool BaseBundleInstaller::HasDriverExtensionAbility(const std::string &bundleName)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+
+    InnerBundleInfo info;
+    bool isAppExist = dataMgr->FetchInnerBundleInfo(bundleName, info);
+    if (isAppExist) {
+        const auto extensions = info.GetInnerExtensionInfos();
+        for (const auto &item : extensions) {
+            if (item.second.type == ExtensionAbilityType::DRIVER) {
+                APP_LOGI("find driver extension ability, bundleName: %{public}s, moduleName: %{public}s",
+                    item.second.bundleName.c_str(), item.second.moduleName.c_str());
+                return true;
+            }
+        }
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

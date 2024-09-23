@@ -186,6 +186,8 @@ protected:
 
     ErrCode RollbackHmpCommonInfo(const std::string &bundleName);
 
+    bool HasDriverExtensionAbility(const std::string &bundleName);
+
 private:
     /**
      * @brief The real procedure for system and normal bundle install.

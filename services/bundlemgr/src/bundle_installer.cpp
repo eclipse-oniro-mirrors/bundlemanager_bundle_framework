@@ -276,29 +276,6 @@ void BundleInstaller::RecoverDriverForAllUsers(const std::string &bundleName, co
     }
 }
 
-bool BundleInstaller::HasDriverExtensionAbility(const std::string &bundleName)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return false;
-    }
-
-    InnerBundleInfo info;
-    bool isAppExist = dataMgr->FetchInnerBundleInfo(bundleName, info);
-    if (isAppExist) {
-        const auto extensions = info.GetInnerExtensionInfos();
-        for (const auto &item : extensions) {
-            if (item.second.type == ExtensionAbilityType::DRIVER) {
-                APP_LOGI("find driver extension ability, bundleName: %{public}s, moduleName: %{public}s",
-                    item.second.bundleName.c_str(), item.second.moduleName.c_str());
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam)
 {
     ErrCode resultCode = ERR_OK;
