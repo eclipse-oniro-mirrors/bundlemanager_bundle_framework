@@ -3651,9 +3651,15 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosOnlyWithTypeName(const std:
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     std::vector<ExtensionAbilityInfo> infos;
-    ErrCode ret = dataMgr->QueryExtensionAbilityInfos(flags, userId, infos);
+    ErrCode ret = dataMgr->QueryExtensionAbilityInfosByExtensionTypeName(typeName, flags, userId, infos);
     if (ret != ERR_OK) {
         APP_LOGE("QueryExtensionAbilityInfos is failed");
+        return ret;
+    }
+    if ((flags &
+        static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_BY_TYPE_NAME)) ==
+        static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_BY_TYPE_NAME)) {
+        extensionInfos = infos;
         return ret;
     }
     for_each(infos.begin(), infos.end(), [&typeName, &extensionInfos](const auto &info)->decltype(auto) {
