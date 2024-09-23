@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_SERVICE_CONSTANTS_H
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -83,6 +84,8 @@ constexpr const char* SCREEN_LOCK_FILE_DATA_PATH = "/data/app/el5";
 constexpr int NOT_EXIST_USERID = -5;
 constexpr int PATH_MAX_SIZE = 256;
 constexpr int32_t API_VERSION_NINE = 9;
+constexpr int32_t API_VERSION_TWELVE = 12;
+
 constexpr int32_t BACKUP_DEFAULT_APP_KEY = -2;
 // native so
 constexpr const char* ABI_DEFAULT = "default";
