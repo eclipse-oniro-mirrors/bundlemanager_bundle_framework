@@ -109,8 +109,9 @@ constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold"
 constexpr const char* SYSTEM_BUNDLE_PATH = "/internal";
 constexpr const char* RESTOR_BUNDLE_NAME_LIST = "list";
 constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/temp/quickfix_app_recover.json";
-
 constexpr const char* INNER_UNDER_LINE = "_";
+constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
+constexpr int32_t SCENE_ID_OTA_INSTALL = 3;
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> systemHspList_;
@@ -318,6 +319,7 @@ bool BMSEventHandler::LoadInstallInfosFromDb()
 
 void BMSEventHandler::BundleBootStartEvent()
 {
+    EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
     OnBundleBootStart(Constants::DEFAULT_USERID);
 #ifdef CHECK_ELDIR_ENABLED
     UpdateOtaFlag(OTAFlag::CHECK_ELDIR);
@@ -341,6 +343,7 @@ void BMSEventHandler::BundleRebootStartEvent()
 #endif
 
     if (IsSystemUpgrade()) {
+        EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
         OnBundleRebootStart();
         SaveSystemFingerprint();
         AOTHandler::GetInstance().HandleOTA();
