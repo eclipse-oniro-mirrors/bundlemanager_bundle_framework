@@ -1012,9 +1012,6 @@ ErrCode BundleInstallChecker::CheckMultiArkNativeFile(
             arkNativeFileAbi = info.second.GetArkNativeFileAbi();
             continue;
         }
-        if (arkNativeFileAbi != info.second.GetArkNativeFileAbi()) {
-            return ERR_APPEXECFWK_INSTALL_AN_INCOMPATIBLE;
-        }
     }
 
     // Ensure the an is consistent in multiple haps
@@ -1040,10 +1037,6 @@ ErrCode BundleInstallChecker::CheckMultiNativeSo(
             nativeLibraryPath = info.second.GetNativeLibraryPath();
             cpuAbi = info.second.GetCpuAbi();
             continue;
-        }
-        if (nativeLibraryPath != info.second.GetNativeLibraryPath()
-            || cpuAbi != info.second.GetCpuAbi()) {
-            return ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE;
         }
     }
 

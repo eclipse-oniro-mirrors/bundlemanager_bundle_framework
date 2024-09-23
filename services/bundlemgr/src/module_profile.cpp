@@ -2707,12 +2707,10 @@ ErrCode ModuleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserNativeSo(moduleJson, bundleExtractor, innerBundleInfo)) {
-        APP_LOGE("Parser native so failed");
-        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+        APP_LOGW("Parser native so failed");
     }
     if (!ParserArkNativeFilePath(moduleJson, bundleExtractor, innerBundleInfo)) {
-        APP_LOGE("Parser ark native file failed");
-        return ERR_APPEXECFWK_PARSE_AN_FAILED;
+        APP_LOGW("Parser ark native file failed");
     }
     return ERR_OK;
 }
