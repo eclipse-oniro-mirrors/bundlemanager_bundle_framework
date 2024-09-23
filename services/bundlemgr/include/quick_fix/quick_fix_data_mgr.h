@@ -18,7 +18,6 @@
 
 #include "quick_fix_manager_db_interface.h"
 
-#include <mutex>
 #include <map>
 
 #include "quick_fix_status_callback_interface.h"
@@ -46,7 +45,6 @@ public:
 private:
     void InitStatesMap();
 
-    mutable std::mutex mutex_;
     std::shared_ptr<IQuickFixManagerDb> quickFixManagerDb_ = nullptr;
     std::multimap<QuickFixStatus, QuickFixStatus> statesMap_;
 };
