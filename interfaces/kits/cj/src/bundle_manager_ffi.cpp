@@ -132,6 +132,12 @@ extern "C" {
         APP_LOGI("BundleManager::FfiGetProfileByAbility success");
         return res;
     }
+
+    bool FfiBundleManagerCanOpenLink(char* link, int32_t& code)
+    {
+        std::string cLink(link);
+        return BundleManagerImpl::InnerCanOpenLink(link, code);
+    }
 }
 
 } // BundleManager

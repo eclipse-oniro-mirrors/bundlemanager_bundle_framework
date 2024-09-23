@@ -31,6 +31,7 @@ extern "C" {
     FFI_EXPORT RetCArrString FfiGetProfileByExtensionAbility(
         char* moduleName, char* extensionAbilityName, char* metadataName);
     FFI_EXPORT RetCArrString FfiGetProfileByAbility(char* moduleName, char* extensionAbilityName, char* metadataName);
+    FFI_EXPORT bool FfiBundleManagerCanOpenLink(char* link, int32_t& code);
 }
 
 } // BundleManager

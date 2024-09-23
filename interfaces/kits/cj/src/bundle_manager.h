@@ -39,6 +39,7 @@ public:
         std::string moduleName, std::string extensionAbilityName, char* metadataName);
     static std::tuple<int32_t, std::vector<std::string>> GetProfileByAbility(
         std::string moduleName, std::string abilityName, char* metadataName);
+    static bool InnerCanOpenLink(std::string link, int32_t& code);
 };
 
 } // BundleManager

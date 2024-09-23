@@ -162,7 +162,7 @@ RetSkillUri ConvertSkillUri(AppExecFwk::SkillUri cUri)
 RetCArrSkillUri ConvertArrSkillUris(std::vector<AppExecFwk::SkillUri> cUris)
 {
     RetCArrSkillUri skillUris;
-    skillUris.size = cUris.size();
+    skillUris.size = static_cast<int64_t>(cUris.size());
     skillUris.head = nullptr;
 
     RetSkillUri *retValue = reinterpret_cast<RetSkillUri *>(malloc(sizeof(RetSkillUri) * skillUris.size));
@@ -191,7 +191,7 @@ RetSkill ConvertSkill(AppExecFwk::Skill cSkill)
 RetCArrSkill ConvertSkills(std::vector<AppExecFwk::Skill> cSkills)
 {
     RetCArrSkill skills;
-    skills.size = cSkills.size();
+    skills.size = static_cast<int64_t>(cSkills.size());
     skills.head = nullptr;
     RetSkill *retValue = reinterpret_cast<RetSkill *>(malloc(sizeof(RetSkill) * skills.size));
     if (retValue != nullptr) {
@@ -609,6 +609,13 @@ RetApplicationInfo InitApplicationInfo()
     appInfo.bundleType = 0;
     appInfo.debug = false;
     appInfo.dataUnclearable = false;
+    appInfo.cloudFileSyncEnabled = false;
+    appInfo.nativeLibraryPath = MallocCString("");
+    appInfo.multiAppMode.multiAppModeType = static_cast<uint8_t>(0);
+    appInfo.multiAppMode.count = 0;
+    appInfo.appIndex = 0;
+    appInfo.installSource = MallocCString("");
+    appInfo.releaseType = MallocCString("");
     return appInfo;
 }
 
@@ -633,6 +640,7 @@ RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flag
     bundleInfo.perDetail = ConvertArrReqPerDetail(cBundleInfo.reqPermissionDetails);
 
     bundleInfo.state.size = static_cast<int64_t>(cBundleInfo.reqPermissionStates.size());
+    bundleInfo.state.head = nullptr;
     if (bundleInfo.state.size > 0) {
         int32_t *retValue = static_cast<int32_t *>(malloc(sizeof(int32_t) * bundleInfo.state.size));
         if (retValue != nullptr) {
@@ -642,7 +650,6 @@ RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flag
             bundleInfo.state.head = retValue;
         } else {
             APP_LOGE("ConvertBundleInfo malloc failed");
-            bundleInfo.state.head = nullptr;
             return bundleInfo;
         }
     }
