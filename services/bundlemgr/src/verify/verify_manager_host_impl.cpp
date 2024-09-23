@@ -149,8 +149,13 @@ VerifyManagerHostImpl::~VerifyManagerHostImpl()
 
 ErrCode VerifyManagerHostImpl::Verify(const std::vector<std::string> &abcPaths)
 {
-    if (!BundlePermissionMgr::VerifySystemApp(ServiceConstants::API_VERSION_TWELVE) ||
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_TWELVE)) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
     }
@@ -488,8 +493,13 @@ void VerifyManagerHostImpl::Rollback(const std::vector<std::string> &paths)
 
 ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path)
 {
-    if (!BundlePermissionMgr::VerifySystemApp(ServiceConstants::API_VERSION_TWELVE) ||
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_TWELVE)) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
         APP_LOGE("DeleteAbc failed due to permission denied");
         return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
     }
