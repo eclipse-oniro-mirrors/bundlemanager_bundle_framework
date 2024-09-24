@@ -29,13 +29,13 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleResourceDrawable {
 public:
-    bool GetIconResourceByDrawable(
+    bool GetIconResourceByTheme(
         const uint32_t iconId,
         const int32_t density,
         std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
         ResourceInfo &resourceInfo);
 
-    bool GetIconResourceByDrawableNoTheme(
+    bool GetIconResourceByHap(
         const uint32_t iconId,
         const int32_t density,
         std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
