@@ -16,9 +16,8 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_UTD_UTD_HANDLER
 #define FOUNDATION_BUNDLE_FRAMEWORK_UTD_UTD_HANDLER
 
+#include <cstdint>
 #include <string>
-
-#include "nocopyable.h"
 
 namespace OHOS {
 namespace AppExecFwk {
