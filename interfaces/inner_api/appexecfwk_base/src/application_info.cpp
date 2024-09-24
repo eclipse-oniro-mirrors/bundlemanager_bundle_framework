@@ -133,6 +133,7 @@ const char* APPLICATION_MAX_CHILD_PROCESS = "maxChildProcess";
 const char* APPLICATION_APP_INDEX = "appIndex";
 const char* APPLICATION_INSTALL_SOURCE = "installSource";
 const char* APPLICATION_CONFIGURATION = "configuration";
+const char* APPLICATION_HWASAN_ENABLED = "hwasanEnabled";
 const char* APPLICATION_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
 const char* APPLICATION_APPLICATION_FLAGS = "applicationFlags";
 }
@@ -560,6 +561,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     gwpAsanEnabled = parcel.ReadBool();
     applicationReservedFlag = parcel.ReadUint32();
     tsanEnabled = parcel.ReadBool();
+    hwasanEnabled = parcel.ReadBool();
     int32_t applicationEnvironmentsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, applicationEnvironmentsSize);
     CONTAINER_SECURITY_VERIFY(parcel, applicationEnvironmentsSize, &appEnvironments);
@@ -747,6 +749,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, gwpAsanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, applicationReservedFlag);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, tsanEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hwasanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appEnvironments.size());
     for (auto &item : appEnvironments) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
@@ -1002,6 +1005,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_COMPILE_SDK_TYPE, applicationInfo.compileSdkType},
         {APPLICATION_RESOURCES_APPLY, applicationInfo.resourcesApply},
         {APPLICATION_GWP_ASAN_ENABLED, applicationInfo.gwpAsanEnabled},
+        {APPLICATION_HWASAN_ENABLED, applicationInfo.hwasanEnabled},
         {APPLICATION_RESERVED_FLAG, applicationInfo.applicationReservedFlag},
         {APPLICATION_TSAN_ENABLED, applicationInfo.tsanEnabled},
         {APPLICATION_APP_ENVIRONMENTS, applicationInfo.appEnvironments},
@@ -1206,6 +1210,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.maxChildProcess, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_INSTALL_SOURCE,
         applicationInfo.installSource, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_HWASAN_ENABLED,
+        applicationInfo.hwasanEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_CONFIGURATION,
         applicationInfo.configuration, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_FILE_SYNC_ENABLED,

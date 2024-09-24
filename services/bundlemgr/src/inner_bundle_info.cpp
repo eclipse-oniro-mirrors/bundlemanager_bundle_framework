@@ -162,6 +162,7 @@ const std::string MODULE_ASAN_ENABLED = "asanEnabled";
 const std::string MODULE_GWP_ASAN_ENABLED = "gwpAsanEnabled";
 const std::string MODULE_PACKAGE_NAME = "packageName";
 const std::string MODULE_APP_STARTUP = "appStartup";
+const std::string MODULE_HWASAN_ENABLED = "hwasanEnabled";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -461,6 +462,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_GWP_ASAN_ENABLED, info.gwpAsanEnabled},
         {MODULE_PACKAGE_NAME, info.packageName},
         {MODULE_APP_STARTUP, info.appStartup},
+        {MODULE_HWASAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
+            static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED))},
     };
 }
 
@@ -514,6 +517,8 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
     // these are not required fields.
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
+    bool hwasanEnabled = static_cast<bool>(info.innerModuleInfoFlag &
+        InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         NAME,
@@ -1058,8 +1063,20 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_HWASAN_ENABLED,
+        hwasanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error code : %{public}d", parseResult);
+    } else {
+        info.innerModuleInfoFlag = hwasanEnabled ? info.innerModuleInfoFlag | InnerBundleInfo::GetSanitizerFlag(
+            GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED) : info.innerModuleInfoFlag &
+            (~InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
     }
 }
 
@@ -4294,6 +4311,28 @@ bool InnerBundleInfo::IsGwpAsanEnabled() const
     return false;
 }
 
+bool InnerBundleInfo::IsHwasanEnabled() const
+{
+    bool hwasanEnabled = false;
+    for (const auto &item : innerModuleInfos_) {
+        hwasanEnabled = static_cast<bool>(item.second.innerModuleInfoFlag &
+            GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
+        if (hwasanEnabled) {
+            return true;
+        }
+    }
+    for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
+        for (const auto &module : modules) {
+            hwasanEnabled = static_cast<bool>(module.innerModuleInfoFlag &
+                GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
+            if (hwasanEnabled) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool InnerBundleInfo::GetUninstallState() const
 {
     return uninstallState_;
@@ -4603,6 +4642,11 @@ std::set<int32_t> InnerBundleInfo::GetCloneBundleAppIndexes() const
         }
     }
     return appIndexes;
+}
+
+uint8_t InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag flag)
+{
+    return 1 << (static_cast<uint8_t>(flag) - 1);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

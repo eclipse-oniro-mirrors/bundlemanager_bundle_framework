@@ -140,6 +140,7 @@ struct InnerModuleInfo {
     std::string packageName;
     std::string appStartup;
     bool needDelete = false;
+    uint32_t innerModuleInfoFlag = 0;
 };
 
 struct ExtendResourceInfo {
@@ -157,6 +158,10 @@ enum InstallExceptionStatus : int32_t {
     UNINSTALL_BUNDLE_START,
     UNINSTALL_PACKAGE_START,
     UNKNOWN_STATUS,
+};
+
+enum class GetInnerModuleInfoFlag : uint8_t {
+    GET_INNER_MODULE_INFO_WITH_HWASANENABLED = 1,
 };
 
 struct InstallMark {
@@ -2025,6 +2030,16 @@ public:
         baseApplicationInfo_->tsanEnabled = tsanEnabled;
     }
 
+    bool GetHwasanEnabled() const
+    {
+        return baseApplicationInfo_->hwasanEnabled;
+    }
+
+    void SetHwasanEnabled(bool hwasanEnabled)
+    {
+        baseApplicationInfo_->hwasanEnabled = hwasanEnabled;
+    }
+
     std::vector<ApplicationEnvironment> GetAppEnvironments() const
     {
         return baseApplicationInfo_->appEnvironments;
@@ -2180,7 +2195,9 @@ public:
         BundleInfo &bundleInfo) const;
     ErrCode VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex);
     void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
+    bool IsHwasanEnabled() const;
     std::set<int32_t> GetCloneBundleAppIndexes() const;
+    static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
 
 private:
     bool IsExistLauncherAbility() const;
