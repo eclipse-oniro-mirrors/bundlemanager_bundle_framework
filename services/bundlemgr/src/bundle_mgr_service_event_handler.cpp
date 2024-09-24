@@ -288,6 +288,7 @@ void BMSEventHandler::AfterBmsStart()
     RemoveUnreservedSandbox();
     BundleResourceHelper::RegisterCommonEventSubscriber();
     BundleResourceHelper::RegisterConfigurationObserver();
+    ProcessCheckAppEl1Dir();
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
 }
 
@@ -1129,7 +1130,6 @@ void BMSEventHandler::ProcessRebootBundle()
 #ifdef CHECK_ELDIR_ENABLED
     ProcessCheckAppDataDir();
 #endif
-    ProcessCheckAppEl1Dir();
     ProcessCheckAppLogDir();
     ProcessCheckAppFileManagerDir();
     ProcessCheckPreinstallData();
@@ -3845,7 +3845,14 @@ void BMSEventHandler::InnerProcessRebootUninstallWrongBundle()
 
 void BMSEventHandler::ProcessCheckAppEl1Dir()
 {
-    LOG_I(BMS_TAG_DEFAULT, "ProcessCheckAppEl1Dir begin");
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    std::thread thread(ProcessCheckAppEl1DirTask);
+    thread.detach();
+}
+
+void BMSEventHandler::ProcessCheckAppEl1DirTask()
+{
+    LOG_I(BMS_TAG_DEFAULT, "begin");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
@@ -3856,13 +3863,13 @@ void BMSEventHandler::ProcessCheckAppEl1Dir()
     for (const auto &userId : userIds) {
         std::vector<BundleInfo> bundleInfos;
         if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
-            LOG_W(BMS_TAG_DEFAULT, "ProcessCheckAppEl1Dir GetBundleInfos failed");
+            LOG_W(BMS_TAG_DEFAULT, "GetBundleInfos failed");
             continue;
         }
 
         UpdateAppDataMgr::ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL1);
     }
-    LOG_I(BMS_TAG_DEFAULT, "ProcessCheckAppEl1Dir end");
+    LOG_I(BMS_TAG_DEFAULT, "end");
 }
 
 void BMSEventHandler::CleanAllBundleShaderCache() const
