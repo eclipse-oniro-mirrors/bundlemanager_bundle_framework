@@ -22,6 +22,7 @@
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_host_impl.h"
+#include "pre_install_exception_mgr.h"
 #include "pre_scan_info.h"
 #include "nlohmann/json.hpp"
 
@@ -104,7 +105,7 @@ public:
     static void ProcessRebootQuickFixUnInstallAndRecover(const std::string &path);
 
     static void SavePreInstallException(const std::string &bundleDir);
-    
+
     static void ProcessSystemBundleInstall(
         const PreScanInfo &preScanInfo,
         Constants::AppType appType,
@@ -522,6 +523,16 @@ private:
 
     void InnerProcessBootSystemHspInstall();
     void ProcessSystemHspInstall(const PreScanInfo &preScanInfo);
+    void DeletePreInstallExceptionAppService(const std::string &bundleDir);
+    void SavePreInstallExceptionAppService(const std::string &bundleDir);
+    void HandlePreInstallAppServicePathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+        const std::set<std::string> &exceptionAppServicePaths);
+    void HandlePreInstallAppPathsException(
+        std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr, const std::set<std::string> &exceptionPaths);
+    void HandlePreInstallAppServiceBundleNamesException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+        const std::set<std::string> &exceptionAppServiceBundleNames);
+    void HandlePreInstallBundleNamesException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+        const std::set<std::string> &exceptionBundleNames);
 
     void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,

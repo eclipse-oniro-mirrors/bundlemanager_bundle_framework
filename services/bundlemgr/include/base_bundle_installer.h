@@ -655,6 +655,11 @@ private:
     void ProcessQuickFixWhenInstallNewModule(const InstallParam &installParam,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool ExtractEncryptedSoFiles(const InnerBundleInfo &info, const std::string &tmpSoPath, int32_t uid) const;
+    void SetOldAppIsEncrypted(const InnerBundleInfo &oldInfo);
+    void GetAllConeCodeProtectBundleInfos(std::vector<CodeProtectBundleInfo> &infos,
+        const InnerBundleInfo &innerBundleInfo);
+    bool UpdateEncryptedStatus();
+    bool DeleteEncryptedStatus(const std::string &bundleName, int32_t uid);
     ErrCode VerifyCodeSignatureForNativeFiles(InnerBundleInfo &info, const std::string &cpuAbi,
         const std::string &targetSoPath, const std::string &signatureFileDir) const;
     ErrCode VerifyCodeSignatureForHap(const std::unordered_map<std::string, InnerBundleInfo> &infos,
@@ -728,6 +733,7 @@ private:
     std::vector<std::string> uninstallModuleVec_;
     // for quick fix
     bool needDeleteQuickFixInfo_ = false;
+    uint32_t oldApplicationReservedFlag_ = 0;
 
     int32_t userId_ = Constants::INVALID_USERID;
     bool hasInstalledInUser_ = false;
