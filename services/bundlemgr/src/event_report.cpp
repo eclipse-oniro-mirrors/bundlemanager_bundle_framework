@@ -193,6 +193,11 @@ void EventReport::SendDiskSpaceEvent(const std::string &fileName,
     EventReport::SendSystemEvent(BMSEventType::BMS_DISK_SPACE, eventInfo);
 }
 
+void EventReport::SendAppConitolRuleEvent(const EventInfo& eventInfo)
+{
+    EventReport::SendSystemEvent(BMSEventType::APP_CONTROL_RULE, eventInfo);
+}
+
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
 {
 #ifdef HISYSEVENT_ENABLE
