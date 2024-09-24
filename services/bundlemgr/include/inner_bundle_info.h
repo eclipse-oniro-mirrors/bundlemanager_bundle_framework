@@ -2102,6 +2102,8 @@ public:
         baseApplicationInfo_->installSource = installSource;
     }
 
+    void SetApplicationFlags(ApplicationInfoFlag flag);
+
     void UpdateExtensionSandboxInfo(const std::vector<std::string> &typeList);
     std::vector<std::string> GetAllExtensionDirsInSpecifiedModule(const std::string &moduleName) const;
     std::vector<std::string> GetAllExtensionDirs() const;

@@ -101,6 +101,7 @@ ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir, 
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.isOTA = true;
     installParam.removable = removable;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
     ErrCode ret = InstallBundle(bundleDir, installParam, Constants::AppType::SYSTEM_APP);
     ResetInstallProperties();
     if (ret == ERR_OK) {

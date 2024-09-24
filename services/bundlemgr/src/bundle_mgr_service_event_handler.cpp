@@ -930,6 +930,7 @@ void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
     installParam.removable = false;
     installParam.copyHapToInstallPath = false;
     installParam.needSavePreInstallInfo = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
     AppServiceFwkInstaller installer;
     SavePreInstallExceptionAppService(preScanInfo.bundleDir);
     ErrCode ret = installer.Install({preScanInfo.bundleDir}, installParam);
@@ -947,6 +948,7 @@ bool BMSEventHandler::ProcessSystemHspInstall(const std::string &systemHspDir)
     installParam.removable = false;
     installParam.copyHapToInstallPath = false;
     installParam.needSavePreInstallInfo = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
     AppServiceFwkInstaller installer;
     ErrCode ret = installer.Install({systemHspDir}, installParam);
     if (ret != ERR_OK) {
@@ -1058,6 +1060,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.removable = preScanInfo.removable;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
     SystemBundleInstaller installer;
     ErrCode ret = installer.InstallSystemBundle(preScanInfo.bundleDir, installParam, appType);
     if (ret != ERR_OK && ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
@@ -1078,6 +1081,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.removable = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
     SystemBundleInstaller installer;
     ErrCode ret = installer.InstallSystemBundle(bundleDir, installParam, appType);
     if (ret != ERR_OK && ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
@@ -1096,6 +1100,7 @@ void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &shared
     installParam.removable = false;
     installParam.needSavePreInstallInfo = true;
     installParam.sharedBundleDirPaths = {sharedBundlePath};
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
     SystemBundleInstaller installer;
     if (!installer.InstallSystemSharedBundle(installParam, false, appType)) {
         LOG_W(BMS_TAG_DEFAULT, "install system shared bundle: %{public}s error", sharedBundlePath.c_str());
@@ -2101,6 +2106,7 @@ ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &fil
     installParam.isOTA = true;
     installParam.copyHapToInstallPath = false;
     installParam.needSavePreInstallInfo = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
     AppServiceFwkInstaller installer;
 
     return installer.Install(filePaths, installParam);
@@ -2976,6 +2982,7 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
     installParam.isOTA = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundle(filePaths, installParam, appType);
     if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
@@ -3004,6 +3011,7 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
     installParam.isOTA = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundleNeedCheckUser(filePaths, installParam, bundleName, appType);
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "bundle %{public}s with return code: %{public}d", bundleName.c_str(), ret);
@@ -3035,6 +3043,7 @@ bool BMSEventHandler::OTAInstallSystemSharedBundle(
     installParam.needSavePreInstallInfo = true;
     installParam.sharedBundleDirPaths = filePaths;
     installParam.isOTA = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
     SystemBundleInstaller installer;
     return installer.InstallSystemSharedBundle(installParam, true, appType);
 }

@@ -80,6 +80,16 @@ enum class MultiAppModeType : uint8_t {
 
 enum class ApplicationInfoFlag {
     FLAG_INSTALLED = 0x00000001,
+    /**
+     * Indicates the installation source of pre-installed applications
+     * App upgrades will not change installation source
+     * FLAG_BOOT_INSTALLED App installed during first boot
+     * FLAG_OTA_INSTALLED App installed during OTA
+     * FLAG_RECOVER_INSTALLED App recover
+     */
+    FLAG_BOOT_INSTALLED = 0x00000002,
+    FLAG_OTA_INSTALLED = 0x00000004,
+    FLAG_RECOVER_INSTALLED = 0x00000008,
 };
 
 struct MultiAppModeData : public Parcelable {
