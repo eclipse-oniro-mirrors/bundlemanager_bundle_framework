@@ -416,7 +416,7 @@ int32_t BundlePermissionMgr::GetHapApiVersion()
         LOG_E(BMS_TAG_DEFAULT, "getApplicationInfo failed");
         return Constants::INVALID_API_VERSION;
     }
-    auto appApiVersion = applicationInfo.apiTargetVersion;
+    auto appApiVersion = applicationInfo.apiTargetVersion % BASE_API_VERSION;
     LOG_D(BMS_TAG_DEFAULT, "appApiVersion is %{public}d", appApiVersion);
     auto systemApiVersion = GetSdkApiVersion();
     // api version is the minimum value of {appApiVersion, systemApiVersion}
