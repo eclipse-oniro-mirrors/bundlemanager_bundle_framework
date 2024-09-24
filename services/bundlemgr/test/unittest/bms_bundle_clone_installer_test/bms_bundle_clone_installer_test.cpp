@@ -465,7 +465,12 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_017, TestSize.
     info.baseApplicationInfo_->applicationReservedFlag = static_cast<uint32_t>(
         ApplicationReservedFlag::ENCRYPTED_APPLICATION);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[BUNDLE_NAME] = info;
+    bundleCloneInstall_->GetDataMgr();
     auto res = bundleCloneInstall_->AddKeyOperation(BUNDLE_NAME, installer, userId_, uid_);
+#ifdef USE_BUNDLE_EXTENSION
+    EXPECT_FALSE(res);
+#else
     EXPECT_TRUE(res);
+#endif
 }
 }
