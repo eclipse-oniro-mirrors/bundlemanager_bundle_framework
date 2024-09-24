@@ -527,6 +527,16 @@ public:
     {
         innerModuleInfos_.try_emplace(modulePackage, innerModuleInfo);
     }
+
+      /**
+     * @brief replace innerModuleInfos.
+     * @param modulePackage Indicates the modulePackage object as key.
+     * @param innerModuleInfo Indicates the InnerModuleInfo object as value.
+     */
+    void ReplaceInnerModuleInfo(const std::string &modulePackage, const InnerModuleInfo &innerModuleInfo)
+    {
+        innerModuleInfos_[modulePackage] = innerModuleInfo;
+    }
     /**
      * @brief Insert AbilityInfo.
      * @param key bundleName.moduleName.abilityName
