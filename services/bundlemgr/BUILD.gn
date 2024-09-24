@@ -38,6 +38,7 @@ config("bundlemgr_common_config") {
     "include/navigation",
     "include/shared",
     "include/quick_fix/state/include",
+    "include/utd",
     "include/verify",
     "../../interfaces/inner_api/appexecfwk_base/include",
     "../../interfaces/inner_api/bundlemgr_extension/include",

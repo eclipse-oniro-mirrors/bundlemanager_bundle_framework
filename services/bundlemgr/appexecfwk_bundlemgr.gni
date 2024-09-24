@@ -72,6 +72,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/shared/shared_bundle_installer.cpp",
   "${services_path}/bundlemgr/src/status_receiver_proxy.cpp",
   "${services_path}/bundlemgr/src/system_bundle_installer.cpp",
+  "${services_path}/bundlemgr/src/utd/utd_handler.cpp",
   "${services_path}/bundlemgr/src/xcollie_helper.cpp",
 ]
 
