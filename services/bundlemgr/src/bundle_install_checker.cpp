@@ -49,8 +49,6 @@ constexpr const char* ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeE
 constexpr const char* ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 constexpr const char* ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 constexpr const char* ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
-constexpr const char* APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
-constexpr const char* BUNDLE_NAME_XTS_TEST = "com.acts.";
 constexpr const char* APL_NORMAL = "normal";
 constexpr const char* SLASH = "/";
 constexpr const char* DOUBLE_SLASH = "//";
@@ -1072,13 +1070,6 @@ void BundleInstallChecker::ParseAppPrivilegeCapability(
             iter->second(appPrivilegeCapability);
         }
     }
-    if ((provisionInfo.bundleInfo.bundleName != APP_TEST_BUNDLE_NAME) &&
-        (provisionInfo.bundleInfo.bundleName.find(BUNDLE_NAME_XTS_TEST) != 0)) {
-        appPrivilegeCapability.allowMultiProcess = false;
-        appPrivilegeCapability.allowUsePrivilegeExtension = false;
-        appPrivilegeCapability.formVisibleNotify = false;
-    }
-
     LOG_D(BMS_TAG_INSTALLER, "AppPrivilegeCapability %{public}s",
         appPrivilegeCapability.ToString().c_str());
 #ifndef USE_PRE_BUNDLE_PROFILE
