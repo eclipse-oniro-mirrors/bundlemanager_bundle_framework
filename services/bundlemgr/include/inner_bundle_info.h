@@ -2227,6 +2227,7 @@ public:
     ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex);
     std::set<int32_t> GetCloneBundleAppIndexes() const;
     static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
+    void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
 
 private:
     bool IsExistLauncherAbility() const;
@@ -2247,7 +2248,6 @@ private:
     void GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t appIndex = 0) const;
     IsolationMode GetIsolationMode(const std::string &isolationMode) const;
     void UpdateIsCompressNativeLibs();
-    void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
     void InnerProcessRequestPermissions(
         const std::unordered_map<std::string, std::string> &moduleNameMap,
         std::vector<RequestPermission> &requestPermissions) const;
