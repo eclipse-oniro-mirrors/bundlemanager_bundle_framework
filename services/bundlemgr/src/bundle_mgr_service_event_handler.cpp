@@ -3925,7 +3925,7 @@ bool BMSEventHandler::InnerProcessUninstallForExistPreBundle(const BundleInfo &i
             return moduleInfo.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0;
         });
     if (isUpdated) {
-        LOG_I(BMS_TAG_DEFAULT, "no need to uninstall app(%{public}s) deu to update", installedInfo.name.c_str());
+        LOG_I(BMS_TAG_DEFAULT, "no need to uninstall app(%{public}s) due to update", installedInfo.name.c_str());
         std::string moduleName;
         DeletePreInfoInDb(installedInfo.name, moduleName, true);
     }
