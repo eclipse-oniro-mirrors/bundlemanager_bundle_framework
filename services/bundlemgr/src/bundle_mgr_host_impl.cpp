@@ -4062,7 +4062,8 @@ ErrCode BundleMgrHostImpl::GetDeveloperIds(const std::string &appDistributionTyp
     return dataMgr->GetDeveloperIds(appDistributionType, developerIdList, userId);
 }
 
-ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, const bool &state)
+ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, const bool &state,
+    bool isNeedSendNotify)
 {
     APP_LOGD("start SwitchUninstallState, bundleName : %{public}s, state : %{public}d", bundleName.c_str(), state);
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -4080,9 +4081,13 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    auto resCode = dataMgr->SwitchUninstallState(bundleName, state);
+    auto resCode = dataMgr->SwitchUninstallState(bundleName, state, isNeedSendNotify);
     if (resCode != ERR_OK) {
         APP_LOGE("set status fail");
+        return resCode;
+    }
+    if (!isNeedSendNotify) {
+        APP_LOGI("no need notify %{public}s", bundleName.c_str());
         return resCode;
     }
     InnerBundleInfo innerBundleInfo;

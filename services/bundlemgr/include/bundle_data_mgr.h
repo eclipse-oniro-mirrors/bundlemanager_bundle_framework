@@ -937,7 +937,7 @@ public:
         std::vector<BundleInfo> &bundleInfos, int32_t userId);
     ErrCode GetDeveloperIds(const std::string &appDistributionType,
         std::vector<std::string> &developerIdList, int32_t userId);
-    ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state);
+    ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state, const bool isNeedSendNotify);
 
     ErrCode AddCloneBundle(const std::string &bundleName, const InnerBundleCloneInfo &attr);
     ErrCode RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex);

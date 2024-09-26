@@ -3817,7 +3817,8 @@ ErrCode BundleMgrHost::HandleSwitchUninstallState(MessageParcel &data, MessagePa
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     bool state = data.ReadBool();
-    ErrCode ret = SwitchUninstallState(bundleName, state);
+    bool isNeedSendNotify = data.ReadBool();
+    ErrCode ret = SwitchUninstallState(bundleName, state, isNeedSendNotify);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
