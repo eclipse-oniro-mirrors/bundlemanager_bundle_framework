@@ -27,6 +27,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_resource_drawable.h"
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "bundle_resource_callback.h"
@@ -3390,6 +3391,23 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0147, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleResourceTest_0175
+ * Function: DeleteResourceInfo
+ * @tc.name: test DeleteResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0175, Function | SmallTest | Level0)
+{
+    bool ret = BundleResourceHelper::DeleteAllResourceInfo();
+    EXPECT_TRUE(ret);
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        ret = manager->AddAllResourceInfo(USERID, 0, 0);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
  * @tc.number: BmsBundleResourceTest_0148
  * Function: BundleResourceProcess
  * @tc.name: test BundleResourceProcess
@@ -3747,6 +3765,52 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0173, Function | SmallTest
     themeId = 1000;
     ret = bundleResourceCallback.SetThemeIdForThemeChanged(themeId);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0186
+ * Function: GetIconResourceByTheme
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetIconResourceByTheme
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0186, Function | SmallTest | Level0)
+{
+    BundleResourceDrawable drawable;
+    uint32_t iconId = 1;
+    int32_t density = 1;
+    ResourceInfo resourceInfo;
+    bool ret = drawable.GetIconResourceByTheme(iconId, density, nullptr, resourceInfo);
+    EXPECT_FALSE(ret);
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    ret = drawable.GetIconResourceByTheme(iconId, density, resourceManager, resourceInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0187
+ * Function: GetIconResourceByTheme
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetIconResourceByTheme
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0187, Function | SmallTest | Level0)
+{
+    BundleResourceParser parse;
+    std::vector<ResourceInfo> resourceInfos;
+    parse.ProcessSpecialBundleResource(100, resourceInfos);
+    EXPECT_TRUE(resourceInfos.empty());
+    ResourceInfo resourceInfo;
+    resourceInfo.icon_ = "1";
+    resourceInfos.emplace_back(resourceInfo);
+    parse.ProcessSpecialBundleResource(100, resourceInfos);
+    EXPECT_EQ(resourceInfos[0].icon_, resourceInfo.icon_);
+
+    resourceInfos.clear();
+    resourceInfo.bundleName_ = "com.ohos.contacts";
+    resourceInfos.emplace_back(resourceInfo);
+    parse.ProcessSpecialBundleResource(100, resourceInfos);
+    EXPECT_EQ(resourceInfos[0].icon_, resourceInfo.icon_);
 }
 #endif
 } // OHOS
