@@ -916,7 +916,7 @@ public:
     const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos();
     ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
     ErrCode GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
-    ErrCode CreateBundleDataDir(int32_t userId) const;
+    ErrCode CreateBundleDataDir(int32_t userId);
     void GenerateOdid(const std::string &developerId, std::string &odid) const;
     ErrCode GetOdid(std::string &odid) const;
     ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
@@ -1067,6 +1067,9 @@ private:
 
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;
     void CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32_t userId) const;
+    void CreateEl5Dir(InnerBundleInfo &info, int32_t userId);
+    void InnerCreateEl5Dir(InnerBundleInfo &info, int32_t userId);
+    void SetEl5DirPolicy(InnerBundleInfo &info, int32_t userId);
 
     void FilterExtensionAbilityInfosByModuleName(const std::string &moduleName,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
