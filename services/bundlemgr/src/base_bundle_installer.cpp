@@ -52,6 +52,7 @@
 #include "parameters.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
+#include "utd_handler.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_data_manager.h"
 #include "bundle_overlay_install_checker.h"
@@ -339,6 +340,14 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         isUninstalledFromBmsExtension = true;
         result = ERR_OK;
     }
+
+    if (result == ERR_OK) {
+        UtdHandler::UninstallUtdAsync(bundleName, userId_);
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+        DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
+#endif
+    }
+
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .isAgingUninstall = installParam.isAgingUninstall,
@@ -357,12 +366,6 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
         }
-    }
-
-    if (result == ERR_OK) {
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-        DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
-#endif
     }
 
     SendBundleSystemEvent(
@@ -1335,6 +1338,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
     VerifyDomain();
     MarkInstallFinish();
+    UtdHandler::InstallUtdAsync(bundleName_, userId_);
     return result;
 }
 
@@ -1945,6 +1949,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
             GetInstallEventInfo(oldInfo, sysEventInfo_);
+            UtdHandler::InstallUtdAsync(bundleName, userId_);
             return ERR_OK;
         }
     }
