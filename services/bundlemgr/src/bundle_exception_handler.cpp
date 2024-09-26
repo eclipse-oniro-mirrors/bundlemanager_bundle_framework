@@ -123,8 +123,9 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
     auto moduleDataDir = info.GetBundleName() + ServiceConstants::HAPS + mark.packageName;
 
     // install and update failed before service restart
-    if (mark.status == InstallExceptionStatus::INSTALL_START &&
-        RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId())) {
+    if (mark.status == InstallExceptionStatus::INSTALL_START) {
+        // unable to distinguish which user failed the installation
+        (void)RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId());
         DeleteBundleInfoFromStorage(info);
         isBundleValid = false;
     } else if (mark.status == InstallExceptionStatus::UPDATING_EXISTED_START) {
@@ -153,10 +154,11 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
             info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         }
     } else if (mark.status == InstallExceptionStatus::UPDATING_FINISH) {
-        if (InstalldClient::GetInstance()->RenameModuleDir(
-            moduleDir + ServiceConstants::TMP_SUFFIX, moduleDir) == ERR_OK) {
-            info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
+        if (InstalldClient::GetInstance()->RenameModuleDir(moduleDir + ServiceConstants::TMP_SUFFIX, moduleDir) !=
+            ERR_OK) {
+            APP_LOGI_NOFUNC("%{public}s rename module failed, may not exist", info.GetBundleName().c_str());
         }
+        info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
     }
 }
 }  // namespace AppExecFwkConstants

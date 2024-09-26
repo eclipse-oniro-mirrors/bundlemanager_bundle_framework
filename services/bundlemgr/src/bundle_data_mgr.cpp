@@ -122,6 +122,7 @@ constexpr int32_t INVALID_BUNDLEID = -1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 constexpr int32_t MAX_APP_UID = 65535;
 constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
+constexpr int8_t ONLY_ONE_USER = 1;
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -2594,6 +2595,13 @@ bool BundleDataMgr::GetBundleInfo(
             bundleName.c_str(), requestUserId);
         return false;
     }
+    // for only one user, bundle info can not be obtained during installation
+    if ((innerBundleInfo.GetInnerBundleUserInfos().size() <= ONLY_ONE_USER) &&
+        (innerBundleInfo.GetInstallMark().status == InstallExceptionStatus::INSTALL_START)) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfo failed -n %{public}s -u %{public}d, not ready",
+            bundleName.c_str(), requestUserId);
+        return false;
+    }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfo(flags, bundleInfo, responseUserId);
@@ -2638,6 +2646,13 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
         LOG_D(BMS_TAG_QUERY, "GetBundleInfoV9 failed, error code: %{public}d, bundleName:%{public}s",
             ret, bundleName.c_str());
         return ret;
+    }
+    // for only one user, bundle info can not be obtained during installation
+    if ((innerBundleInfo.GetInnerBundleUserInfos().size() <= ONLY_ONE_USER) &&
+        (innerBundleInfo.GetInstallMark().status == InstallExceptionStatus::INSTALL_START)) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfo failed -n %{public}s -u %{public}d, not ready",
+            bundleName.c_str(), requestUserId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
