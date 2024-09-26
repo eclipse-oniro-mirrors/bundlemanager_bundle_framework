@@ -2106,7 +2106,9 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         }
     }
 
-    oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_NEW_START);
+    if (isAppExist_) {
+        oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_NEW_START);
+    }
     if (!dataMgr_->SaveInnerBundleInfo(oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "save install mark failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
