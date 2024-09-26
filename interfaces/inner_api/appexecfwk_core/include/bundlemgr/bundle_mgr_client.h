@@ -110,7 +110,7 @@ public:
         std::vector<ExtensionAbilityInfo> &extensionInfos);
     ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
         HapModuleInfo &hapModuleInfo);
-    ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, int32_t appIndex, std::string &dataDir);
+    ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex, std::string &dataDir);
 
 private:
     static std::shared_ptr<BundleMgrClientImpl> impl_;

@@ -202,12 +202,12 @@ ErrCode BundleMgrClient::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo,
     return impl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
 }
 
-ErrCode BundleMgrClient::GetDirByBundleNameAndAppIndex(const std::string &bundleName, int32_t appIndex,
-        std::string &dataDir)
+ErrCode BundleMgrClient::GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
+    std::string &dataDir)
 {
     if (impl_ == nullptr) {
         APP_LOGE("Bundle mgr client impl is nullptr");
-        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     return impl_->GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
 }
