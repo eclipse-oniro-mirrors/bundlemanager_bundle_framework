@@ -6928,14 +6928,38 @@ HWTEST_F(BmsBundleInstallerTest, PreInstallBundleInfo_0100, Function | MediumTes
 /**
  * @tc.number: UtdHandler_0100
  * @tc.name: test UtdHandler
- * @tc.desc: 1.call GetEntryHapPath, return empty string
- * 2.call GetUtdProfileFromHap, if exist utd.json5 then return content, otherwise return empty string
+ * @tc.desc: 1.call GetEntryHapPath, if exist entry then return entry path, otherwise return empty string
  */
 HWTEST_F(BmsBundleInstallerTest, UtdHandler_0100, Function | SmallTest | Level0)
 {
-    std::string entryHapPath = UtdHandler::GetEntryHapPath(EMPTY_STRING, USERID);
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string entryHapPath;
+    entryHapPath = UtdHandler::GetEntryHapPath(BUNDLE_BACKUP_NAME, USERID);
+    EXPECT_NE(entryHapPath, EMPTY_STRING);
+
+    entryHapPath = UtdHandler::GetEntryHapPath(EMPTY_STRING, USERID);
     EXPECT_EQ(entryHapPath, EMPTY_STRING);
 
+    int32_t invalidUserId = -200;
+    entryHapPath = UtdHandler::GetEntryHapPath(BUNDLE_BACKUP_NAME, invalidUserId);
+    EXPECT_EQ(entryHapPath, EMPTY_STRING);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: UtdHandler_0200
+ * @tc.name: test UtdHandler
+ * @tc.desc: 1.call GetUtdProfileFromHap, if exist utd.json5 then return content, otherwise return empty string
+ */
+HWTEST_F(BmsBundleInstallerTest, UtdHandler_0200, Function | SmallTest | Level0)
+{
     std::string utdProfile;
     std::string withUtdHapPath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     utdProfile = UtdHandler::GetUtdProfileFromHap(withUtdHapPath);
