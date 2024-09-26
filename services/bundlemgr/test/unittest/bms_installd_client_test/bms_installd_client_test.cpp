@@ -1523,11 +1523,10 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateExtensionDataDir_020
  */
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAllBundleStats_0100, TestSize.Level1)
 {
-    std::vector<std::string> bundleNames;
     int32_t userId = 100;
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids;
-    ErrCode result = installClient_->GetAllBundleStats(bundleNames, userId, bundleStats, uids);
+    ErrCode result = installClient_->GetAllBundleStats(userId, bundleStats, uids);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1538,14 +1537,10 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAllBundleStats_0100, Te
  */
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAllBundleStats_0200, TestSize.Level1)
 {
-    std::vector<std::string> bundleNames;
-    bundleNames.push_back("com.ohos.settings");
-    bundleNames.push_back("com.ohos.photos");
     int32_t userId = 100;
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids;
-    uids.push_back(100);
-    ErrCode result = installClient_->GetAllBundleStats(bundleNames, userId, bundleStats, uids);
+    ErrCode result = installClient_->GetAllBundleStats(userId, bundleStats, uids);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1556,15 +1551,12 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAllBundleStats_0200, Te
  */
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAllBundleStats_0300, TestSize.Level1)
 {
-    std::vector<std::string> bundleNames;
-    bundleNames.push_back("com.ohos.settings");
-    bundleNames.push_back("com.ohos.photos");
     int32_t userId = 100;
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids;
     uids.push_back(100);
     uids.push_back(101);
-    ErrCode result = installClient_->GetAllBundleStats(bundleNames, userId, bundleStats, uids);
+    ErrCode result = installClient_->GetAllBundleStats(userId, bundleStats, uids);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
