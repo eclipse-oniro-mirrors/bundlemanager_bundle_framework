@@ -36,6 +36,7 @@ namespace OHOS {
     {
         AppServiceFwkInstaller appServiceFwk;
         InstallParam installParam;
+        installParam.copyHapToInstallPath = false;
         std::unordered_map<std::string, InnerBundleInfo> infos;
         InnerBundleInfo innerBundleInfo;
         innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
@@ -45,10 +46,10 @@ namespace OHOS {
         InnerBundleInfo newInfo;
         appServiceFwk.CheckNeedUpdate(newInfo, oldInfo);
         std::string hspPath = ", path: ";
-        appServiceFwk.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH);
+        appServiceFwk.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH, installParam);
         bool isReplace = true;
         bool noSkipsKill = false;
-        appServiceFwk.ProcessModuleUpdate(innerBundleInfo, oldInfo, hspPath);
+        appServiceFwk.ProcessModuleUpdate(innerBundleInfo, oldInfo, hspPath, installParam);
         appServiceFwk.RemoveLowerVersionSoDir(VERSION_LOW);
         std::string bundlePath(data, size);
         std::string cpuAbi(data, size);

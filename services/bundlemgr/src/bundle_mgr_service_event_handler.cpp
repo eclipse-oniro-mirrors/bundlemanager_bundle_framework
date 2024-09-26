@@ -77,6 +77,7 @@ const std::string TEMP_PREFIX = "temp_";
 const std::string MODULE_PREFIX = "module_";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 const std::string BMS_TEST_UPGRADE = "persist.bms.test-upgrade";
+constexpr const char* MODULE_UPDATE_APP_SERVICE_DIR = "appServiceFwk";
 const std::string FINGERPRINT = "fingerprint";
 const std::string UNKNOWN = "";
 const std::string VALUE_TRUE = "true";
@@ -103,7 +104,8 @@ constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability
 constexpr const char* EXTENSION_TYPE_LIST_CONFIG = "/extension_type_config.json";
 constexpr const char* SHARED_BUNDLES_INSTALL_LIST_CONFIG = "/shared_bundles_install_list.json";
 constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
-constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepalive";
+constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold";
+constexpr const char* SYSTEM_BUNDLE_PATH = "/internal";
 constexpr const char* RESTOR_BUNDLE_NAME_LIST = "list";
 constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/temp/quickfix_app_recover.json";
 
@@ -919,6 +921,8 @@ void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.removable = false;
+    installParam.copyHapToInstallPath = false;
+    installParam.needSavePreInstallInfo = true;
     AppServiceFwkInstaller installer;
     ErrCode ret = installer.Install({preScanInfo.bundleDir}, installParam);
     if (ret != ERR_OK) {
@@ -1915,6 +1919,9 @@ ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &fil
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.removable = false;
+    installParam.isOTA = true;
+    installParam.copyHapToInstallPath = false;
+    installParam.needSavePreInstallInfo = true;
     AppServiceFwkInstaller installer;
 
     return installer.Install(filePaths, installParam);
@@ -2841,7 +2848,66 @@ void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<
 
 void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path, bool isOta)
 {
-    LOG_I(BMS_TAG_DEFAULT, "ProcessRebootQuickFixBundleInstall start, isOta:%{public}d", isOta);
+    LOG_I(BMS_TAG_DEFAULT, "start, isOta:%{public}d", isOta);
+    std::string systemHspPath = path + ServiceConstants::PATH_SEPARATOR + MODULE_UPDATE_APP_SERVICE_DIR;
+    std::string systemBundlePath = path + SYSTEM_BUNDLE_PATH;
+    PatchSystemHspInstall(systemHspPath, isOta);
+    PatchSystemBundleInstall(systemBundlePath, isOta);
+    LOG_I(BMS_TAG_DEFAULT, "end");
+}
+
+void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    std::list<std::string> bundleDirs;
+    ProcessScanDir(path, bundleDirs);
+    if (bundleDirs.empty()) {
+        LOG_I(BMS_TAG_DEFAULT, "end, bundleDirs is empty");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    for (auto &scanPathIter : bundleDirs) {
+        std::unordered_map<std::string, InnerBundleInfo> infos;
+        if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
+            LOG_E(BMS_TAG_DEFAULT, "ParseHapFiles failed : %{public}s ", scanPathIter.c_str());
+            continue;
+        }
+        auto bundleName = infos.begin()->second.GetBundleName();
+        auto versionCode = infos.begin()->second.GetVersionCode();
+        InnerBundleInfo hasInstalledInfo;
+        auto hasBundleInstalled = dataMgr->FetchInnerBundleInfo(bundleName, hasInstalledInfo);
+        if (!hasBundleInstalled) {
+            LOG_W(BMS_TAG_DEFAULT, "bundleName %{public}s not exist", bundleName.c_str());
+            continue;
+        }
+        if (versionCode <= hasInstalledInfo.GetVersionCode()) {
+            LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s downgrade",
+                bundleName.c_str());
+            continue;
+        }
+        InstallParam installParam;
+        installParam.SetKillProcess(false);
+        installParam.removable = false;
+        installParam.needSendEvent = false;
+        installParam.copyHapToInstallPath = true;
+        installParam.needSavePreInstallInfo = false;
+        installParam.isOTA = isOta;
+        AppServiceFwkInstaller installer;
+        std::vector<std::string> filePaths { scanPathIter };
+        if (installer.Install(filePaths, installParam) != ERR_OK) {
+            LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: install failed", bundleName.c_str());
+        }
+    }
+    LOG_I(BMS_TAG_DEFAULT, "end");
+}
+
+void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isOta)
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
     std::list<std::string> bundleDirs;
     ProcessScanDir(path, bundleDirs);
     if (bundleDirs.empty()) {
@@ -2885,11 +2951,11 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
         installParam.isOTA = isOta;
         SystemBundleInstaller installer;
         std::vector<std::string> filePaths { scanPathIter };
-        if (!installer.OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP)) {
+        if (installer.OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP) != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: install failed", bundleName.c_str());
         }
     }
-    LOG_I(BMS_TAG_DEFAULT, "ProcessRebootQuickFixBundleInstall end");
+    LOG_I(BMS_TAG_DEFAULT, "end");
 }
 
 void BMSEventHandler::CheckALLResourceInfo()
@@ -3061,6 +3127,7 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
             installParam.isUninstallAndRecover = true;
             installParam.noSkipsKill = false;
             installParam.needSendEvent = false;
+            installParam.isKeepData = true;
             installer->UninstallAndRecover(bundleName, installParam, innerReceiverImpl);
         }
     }
