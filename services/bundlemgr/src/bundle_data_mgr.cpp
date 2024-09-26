@@ -2832,6 +2832,19 @@ ErrCode BundleDataMgr::GetBaseSharedBundleInfos(const std::string &bundleName,
     return ERR_OK;
 }
 
+bool BundleDataMgr::GetBundleType(const std::string &bundleName, BundleType &bundleType)const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
+    bundleType = item->second.GetApplicationBundleType();
+    APP_LOGI("bundle %{public}s bundleType is %{public}d", bundleName.c_str(), bundleType);
+    return true;
+}
+
 bool BundleDataMgr::GetBaseSharedBundleInfo(const Dependency &dependency,
     BaseSharedBundleInfo &baseSharedBundleInfo) const
 {

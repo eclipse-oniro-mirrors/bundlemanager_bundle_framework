@@ -31,7 +31,9 @@ namespace OHOS {
     {
         AppServiceFwkInstaller appServiceFwk;
         std::unordered_map<std::string, InnerBundleInfo> infos;
-        appServiceFwk.SavePreInstallBundleInfo(ERR_APPEXECFWK_INSTALL_PARAM_ERROR, infos);
+        InstallParam installParam;
+        installParam.needSavePreInstallInfo = true;
+        appServiceFwk.SavePreInstallBundleInfo(ERR_APPEXECFWK_INSTALL_PARAM_ERROR, infos, installParam);
         return true;
     }
 }
