@@ -2658,10 +2658,6 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
             bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
-        if (!hasBundleInstalled) {
-            LOG_W(BMS_TAG_DEFAULT, "app(%{public}s) maybe has been uninstall", bundleName.c_str());
-            continue;
-        }
         auto listIter = hapParseInfoMap_.find(bundleName);
         if (listIter == hapParseInfoMap_.end()) {
             LOG_I(BMS_TAG_DEFAULT, "ProcessRebootBundleUninstall OTA uninstall app(%{public}s)", bundleName.c_str());
@@ -2680,6 +2676,10 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
             continue;
         }
 
+        if (!hasBundleInstalled) {
+            LOG_W(BMS_TAG_DEFAULT, "app(%{public}s) maybe has been uninstall", bundleName.c_str());
+            continue;
+        }
         // Check the installed module
         bool isDownGrade = false;
         if (InnerProcessUninstallModule(hasInstalledInfo, listIter->second, isDownGrade)) {
