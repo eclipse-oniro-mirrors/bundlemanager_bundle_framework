@@ -530,6 +530,22 @@ ErrCode BundleMgrClientImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityI
     return bundleMgr_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
 }
 
+ErrCode BundleMgrClientImpl::GetDirByBundleNameAndAppIndex(const std::string &bundleName, int32_t appIndex,
+        std::string &dataDir)
+{
+     APP_LOGD("GetDirByBundleNameAndAppIndex begin");
+    if (appIndex < 0) {
+        return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+    }
+    if (appIndex == 0) {
+        dataDir = bundleName;
+    } else {
+        dataDir = "+clone-" + std::to_string(appIndex) + "+" + bundleName;
+
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrClientImpl::Connect()
 {
     APP_LOGD("connect begin");
