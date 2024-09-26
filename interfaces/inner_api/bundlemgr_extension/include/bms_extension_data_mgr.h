@@ -60,7 +60,6 @@ public:
     ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
     bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId);
-    bool CheckWhetherCanBeUninstalled(const std::string &bundleName);
     void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier);
     bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum);
 private:
