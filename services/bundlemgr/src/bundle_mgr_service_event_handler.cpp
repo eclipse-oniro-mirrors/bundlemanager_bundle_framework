@@ -2890,7 +2890,7 @@ void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
             continue;
         }
         InstallParam installParam;
-        installParam.SetKillProcess(false);
+        installParam.noSkipsKill = false;
         installParam.removable = false;
         installParam.needSendEvent = false;
         installParam.copyHapToInstallPath = true;
