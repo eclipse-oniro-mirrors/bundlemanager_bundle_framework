@@ -160,6 +160,7 @@ const std::string MODULE_QUERY_SCHEMES = "querySchemes";
 const std::string MODULE_APP_ENVIRONMENTS = "appEnvironments";
 const std::string MODULE_ASAN_ENABLED = "asanEnabled";
 const std::string MODULE_GWP_ASAN_ENABLED = "gwpAsanEnabled";
+const std::string MODULE_TSAN_ENABLED = "tsanEnabled";
 const std::string MODULE_PACKAGE_NAME = "packageName";
 const std::string MODULE_APP_STARTUP = "appStartup";
 const std::string MODULE_HWASAN_ENABLED = "hwasanEnabled";
@@ -460,6 +461,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_APP_ENVIRONMENTS, info.appEnvironments},
         {MODULE_ASAN_ENABLED, info.asanEnabled},
         {MODULE_GWP_ASAN_ENABLED, info.gwpAsanEnabled},
+        {MODULE_TSAN_ENABLED, info.tsanEnabled},
         {MODULE_PACKAGE_NAME, info.packageName},
         {MODULE_APP_STARTUP, info.appStartup},
         {MODULE_HWASAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
@@ -1043,6 +1045,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_GWP_ASAN_ENABLED,
         info.gwpAsanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_TSAN_ENABLED,
+        info.tsanEnabled,
         JsonType::BOOLEAN,
         false,
         parseResult,
@@ -4304,6 +4314,23 @@ bool InnerBundleInfo::IsGwpAsanEnabled() const
     for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
         for (const auto &module : modules) {
             if (module.gwpAsanEnabled) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool InnerBundleInfo::IsTsanEnabled() const
+{
+    for (const auto &item : innerModuleInfos_) {
+        if (item.second.tsanEnabled) {
+            return true;
+        }
+    }
+    for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
+        for (const auto &module : modules) {
+            if (module.tsanEnabled) {
                 return true;
             }
         }
