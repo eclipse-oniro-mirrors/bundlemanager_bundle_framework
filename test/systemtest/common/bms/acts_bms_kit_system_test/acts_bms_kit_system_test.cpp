@@ -97,6 +97,7 @@ const int32_t PERMS_INDEX_FIVE = 5;
 const int32_t PERMS_INDEX_SIX = 6;
 const int32_t PERMS_INDEX_SEVEN = 7;
 const int32_t PERMS_INDEX_EIGHT = 8;
+const int32_t PERMS_INDEX_NINE = 9;
 const size_t ODID_LENGTH = 36;
 const int32_t TEST_INSTALLER_UID = 100;
 const int32_t TEST_APP_INDEX1 = 1;
@@ -301,7 +302,7 @@ void ActsBmsKitSystemTest::TearDown()
 
 void ActsBmsKitSystemTest::StartProcess()
 {
-    const int32_t permsNum = 9;
+    const int32_t permsNum = 10;
     uint64_t tokenId;
     const char *perms[permsNum];
     perms[PERMS_INDEX_ZERO] = "ohos.permission.GET_DEFAULT_APPLICATION";
@@ -313,6 +314,7 @@ void ActsBmsKitSystemTest::StartProcess()
     perms[PERMS_INDEX_SIX] = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
     perms[PERMS_INDEX_SEVEN] = "ohos.permission.INSTALL_CLONE_BUNDLE";
     perms[PERMS_INDEX_EIGHT] = "ohos.permission.UNINSTALL_CLONE_BUNDLE";
+    perms[PERMS_INDEX_NINE] = "ohos.permission.LISTEN_BUNDLE_CHANGE";
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
         .permsNum = permsNum,
@@ -3257,6 +3259,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetLaunchWantForBundle_0100, Function | MediumTes
  */
 HWTEST_F(ActsBmsKitSystemTest, Callback_0100, Function | MediumTest | Level1)
 {
+    StartProcess();
     std::cout << "START Callback_0100" << std::endl;
     bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
@@ -3311,6 +3314,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0100, Function | MediumTest | Level1)
  */
 HWTEST_F(ActsBmsKitSystemTest, Callback_0300, Function | MediumTest | Level1)
 {
+    StartProcess();
     std::cout << "START Callback_0300" << std::endl;
     bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
@@ -3370,6 +3374,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0300, Function | MediumTest | Level1)
  */
 HWTEST_F(ActsBmsKitSystemTest, Callback_0400, Function | MediumTest | Level1)
 {
+    StartProcess();
     std::cout << "START Callback_0400" << std::endl;
     bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
@@ -3429,6 +3434,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0400, Function | MediumTest | Level1)
  */
 HWTEST_F(ActsBmsKitSystemTest, Callback_0500, Function | MediumTest | Level1)
 {
+    StartProcess();
     std::cout << "START Callback_0500" << std::endl;
     bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
@@ -3486,6 +3492,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0500, Function | MediumTest | Level1)
  */
 HWTEST_F(ActsBmsKitSystemTest, Callback_0600, Function | MediumTest | Level1)
 {
+    StartProcess();
     std::cout << "START Callback_0600" << std::endl;
     bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
@@ -3538,6 +3545,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0600, Function | MediumTest | Level1)
  */
 HWTEST_F(ActsBmsKitSystemTest, Callback_0700, Function | MediumTest | Level1)
 {
+    StartProcess();
     std::cout << "START Callback_0700" << std::endl;
     bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
@@ -3597,6 +3605,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0700, Function | MediumTest | Level1)
  */
 HWTEST_F(ActsBmsKitSystemTest, Callback_0800, Function | MediumTest | Level1)
 {
+    StartProcess();
     std::cout << "START Callback_0800" << std::endl;
     bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
@@ -3659,6 +3668,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0800, Function | MediumTest | Level1)
  */
 HWTEST_F(ActsBmsKitSystemTest, Callback_0900, Function | MediumTest | Level1)
 {
+    StartProcess();
     std::cout << "START Callback_0900" << std::endl;
     bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
@@ -3714,6 +3724,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0900, Function | MediumTest | Level1)
  */
 HWTEST_F(ActsBmsKitSystemTest, Callback_1000, Function | MediumTest | Level1)
 {
+    StartProcess();
     sptr<IBundleStatusCallback> callBack = (new (std::nothrow) BundleStatusCallbackImpl());
     EXPECT_NE(callBack, nullptr);
     callBack->SetBundleName(BASE_BUNDLE_NAME);
@@ -3729,6 +3740,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_1000, Function | MediumTest | Level1)
  */
 HWTEST_F(ActsBmsKitSystemTest, Callback_1100, Function | MediumTest | Level1)
 {
+    StartProcess();
     sptr<BundleStatusCallbackImpl> firstBundleStatusCallback = (new (std::nothrow) BundleStatusCallbackImpl());
     EXPECT_NE(firstBundleStatusCallback, nullptr);
     firstBundleStatusCallback->SetBundleName("");

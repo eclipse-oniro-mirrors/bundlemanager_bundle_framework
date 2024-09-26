@@ -1885,11 +1885,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11800, Function | Sm
     std::string srcDir = "/temp/test";
     std::string desDir = "/temp/test";
     auto ret =InstalldOperator::MoveFiles(srcDir, desDir, true);
-#ifdef USE_ARM64
     EXPECT_FALSE(ret);
-#else
-    EXPECT_TRUE(ret);
-#endif
     DeleteFile("/temp/test");
     DeleteQuickFileDir("/temp");
 }
