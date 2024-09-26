@@ -63,6 +63,7 @@ public:
     ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
         HapModuleInfo &hapModuleInfo);
     ErrCode CreateBundleDataDir(int32_t userId);
+    ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex, std::string &dataDir);
 
 private:
     ErrCode Connect();
