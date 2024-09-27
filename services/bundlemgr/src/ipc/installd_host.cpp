@@ -462,7 +462,7 @@ bool InstalldHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &r
 {
     int32_t userId = data.ReadInt32();
     auto uidSize = data.ReadInt32();
-    if (uidSize == 0) {
+    if (uidSize == 0 || uidSize > Constants::CAPACITY_SIZE) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
