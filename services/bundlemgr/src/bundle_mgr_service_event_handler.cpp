@@ -2655,9 +2655,15 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
 
     for (auto &loadIter : loadExistData_) {
         std::string bundleName = loadIter.first;
+        BundleInfo hasInstalledInfo;
+        auto hasBundleInstalled = dataMgr->GetBundleInfo(
+            bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
         auto listIter = hapParseInfoMap_.find(bundleName);
         if (listIter == hapParseInfoMap_.end()) {
             LOG_I(BMS_TAG_DEFAULT, "ProcessRebootBundleUninstall OTA uninstall app(%{public}s)", bundleName.c_str());
+            if (InnerProcessUninstallForExistPreBundle(hasInstalledInfo)) {
+                continue;
+            }
             SystemBundleInstaller installer;
             if (!installer.UninstallSystemBundle(bundleName)) {
                 LOG_E(BMS_TAG_DEFAULT, "OTA uninstall app(%{public}s) error", bundleName.c_str());
@@ -2670,9 +2676,6 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
             continue;
         }
 
-        BundleInfo hasInstalledInfo;
-        auto hasBundleInstalled = dataMgr->GetBundleInfo(
-            bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
         if (!hasBundleInstalled) {
             LOG_W(BMS_TAG_DEFAULT, "app(%{public}s) maybe has been uninstall", bundleName.c_str());
             continue;
@@ -3909,6 +3912,24 @@ void BMSEventHandler::CleanAllBundleShaderCache() const
             LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s clean shader fail %{public}d", bundleInfo.name.c_str(), res);
         }
     }
+}
+
+bool BMSEventHandler::InnerProcessUninstallForExistPreBundle(const BundleInfo &installedInfo)
+{
+    if (installedInfo.hapModuleInfos.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "app(%{public}s) moduleInfos empty", installedInfo.name.c_str());
+        return false;
+    }
+    bool isUpdated = std::all_of(installedInfo.hapModuleInfos.begin(), installedInfo.hapModuleInfos.end(),
+        [] (const HapModuleInfo &moduleInfo) {
+            return moduleInfo.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0;
+        });
+    if (isUpdated) {
+        LOG_I(BMS_TAG_DEFAULT, "no need to uninstall app(%{public}s) due to update", installedInfo.name.c_str());
+        std::string moduleName;
+        DeletePreInfoInDb(installedInfo.name, moduleName, true);
+    }
+    return isUpdated;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
