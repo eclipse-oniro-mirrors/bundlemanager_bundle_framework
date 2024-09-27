@@ -2599,7 +2599,7 @@ bool BundleMgrProxy::GetShortcutInfos(const std::string &bundleName, std::vector
 }
 
 ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName,
-    std::vector<ShortcutInfo> &shortcutInfos)
+    std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
@@ -2615,6 +2615,10 @@ ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName,
 
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to GetShortcutInfos due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetShortcutInfos due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfosWithErrCode<ShortcutInfo>(

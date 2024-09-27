@@ -971,7 +971,8 @@ public:
         return false;
     }
 
-    virtual ErrCode GetShortcutInfoV9(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
+    virtual ErrCode GetShortcutInfoV9(const std::string &bundleName,
+        std::vector<ShortcutInfo> &shortcutInfos, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

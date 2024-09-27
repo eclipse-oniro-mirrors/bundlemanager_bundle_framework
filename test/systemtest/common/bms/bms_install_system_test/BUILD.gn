@@ -203,6 +203,7 @@ ohos_systemtest("BmsInstallMultiUserTest") {
 
   deps = [
     "${base_path}:appexecfwk_base",
+    "${bundle_framework_path}/test/sceneProject/systemtest/BundleClient/bundleClient1:bundleClient1",
     "${bundle_framework_path}/test/sceneProject/systemtest/multiUser/lower_versionCode_entry:lower_versionCode_entry_hap",
     "${bundle_framework_path}/test/sceneProject/systemtest/multiUser/lower_versionCode_entry/feature:lower_versionCode_entry_hapB",
     "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",

@@ -2410,7 +2410,8 @@ bool BundleMgrHostImpl::GetShortcutInfos(
     return dataMgr->GetShortcutInfos(bundleName, userId, shortcutInfos);
 }
 
-ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
+ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName,
+    std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
@@ -2427,7 +2428,7 @@ ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName, std:
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetShortcutInfoV9(bundleName, Constants::UNSPECIFIED_USERID, shortcutInfos);
+    return dataMgr->GetShortcutInfoV9(bundleName, userId, shortcutInfos);
 }
 
 bool BundleMgrHostImpl::GetAllCommonEventInfo(const std::string &eventKey,
