@@ -2190,8 +2190,9 @@ ErrCode BundleMgrHost::HandleGetShortcutInfoV9(MessageParcel &data, MessageParce
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundlename = data.ReadString();
+    int32_t userId = data.ReadInt32();
     std::vector<ShortcutInfo> infos;
-    ErrCode ret = GetShortcutInfoV9(bundlename, infos);
+    ErrCode ret = GetShortcutInfoV9(bundlename, infos, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

@@ -370,7 +370,7 @@ ErrCode LauncherService::GetAllLauncherAbility(const int32_t userId,
 }
 
 ErrCode LauncherService::GetShortcutInfoV9(
-    const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
+    const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
 {
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -378,7 +378,7 @@ ErrCode LauncherService::GetShortcutInfoV9(
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
     std::vector<ShortcutInfo> infos;
-    ErrCode errCode = iBundleMgr->GetShortcutInfoV9(bundleName, infos);
+    ErrCode errCode = iBundleMgr->GetShortcutInfoV9(bundleName, infos, userId);
     if (errCode != ERR_OK) {
         APP_LOGE("GetShortcutInfoV9 is failed");
         return errCode;
