@@ -5342,7 +5342,7 @@ HWTEST_F(BmsBundleInstallerTest, BeforeInstall_0100, Function | SmallTest | Leve
     installParam.isPreInstallApp = false;
 
     auto res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
-    EXPECT_EQ(res, ERR_APP_SERVICE_FWK_INSTALL_NOT_PREINSTALL);
+    EXPECT_EQ(res, ERR_OK);
 
     installParam.isPreInstallApp = true;
     res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);

@@ -91,6 +91,30 @@ ErrCode AppServiceFwkInstaller::Install(
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
     result = ProcessInstall(hspPaths, installParam);
     APP_LOGI("install result %{public}d", result);
+    if (result != ERR_OK && installParam.copyHapToInstallPath) {
+        PreInstallBundleInfo preInstallBundleInfo;
+        if (!dataMgr_->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo) ||
+            preInstallBundleInfo.GetBundlePaths().empty()) {
+            APP_LOGE("get preInstallBundleInfo failed");
+            return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        }
+        ResetProperties();
+        auto uninstallRes = UnInstall(bundleName_, true);
+        ResetProperties();
+        InstallParam reinstallParam;
+        reinstallParam.isPreInstallApp = true;
+        reinstallParam.removable = false;
+        reinstallParam.copyHapToInstallPath = false;
+        reinstallParam.needSavePreInstallInfo = true;
+        result = ProcessInstall(preInstallBundleInfo.GetBundlePaths(), reinstallParam);
+        APP_LOGI("uninstallRes %{public}d installRes second time %{public}d", uninstallRes, result);
+    } else if (result != ERR_OK && installParam.isOTA) {
+        ResetProperties();
+        auto uninstallRes = UnInstall(bundleName_, true);
+        ResetProperties();
+        result = ProcessInstall(hspPaths, installParam);
+        APP_LOGI("uninstallRes %{public}d installRes second time %{public}d", uninstallRes, result);
+    }
     SendBundleSystemEvent(
         hspPaths,
         BundleEventType::INSTALL,
@@ -98,6 +122,55 @@ ErrCode AppServiceFwkInstaller::Install(
         InstallScene::BOOT,
         result);
     return result;
+}
+
+ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName, bool isKeepData)
+{
+    APP_LOGI("Uninstall bundle %{public}s", bundleName.c_str());
+    if (BeforeUninstall(bundleName) != ERR_OK) {
+        APP_LOGE("check bundleType failed for bundle %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
+    }
+    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
+        APP_LOGE("uninstall already start");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    std::string bundleDir =
+        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName;
+    APP_LOGI("start to remove bundle dir: %{public}s", bundleDir.c_str());
+    if (InstalldClient::GetInstance()->RemoveDir(bundleDir) != ERR_OK) {
+        APP_LOGW("remove bundle dir %{public}s failed", bundleDir.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    if (!isKeepData) {
+        InstalldClient::GetInstance()->RemoveBundleDataDir(bundleName, 0, false);
+    }
+    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
+        APP_LOGE("delete inner info failed for bundle %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    }
+    return ERR_OK;
+}
+
+void AppServiceFwkInstaller::ResetProperties()
+{
+    bundleMsg_ = "";
+    uninstallModuleVec_.clear();
+    versionUpgrade_ = false;
+    moduleUpdate_ = false;
+    deleteBundlePath_.clear();
+    versionCode_ = 0;
+    newInnerBundleInfo_ = InnerBundleInfo();
+    isEnterpriseBundle_ = false;
+    appIdentifier_ = "";
+    compileSdkType_ = "";
+    cpuAbi_ = "";
+    nativeLibraryPath_ = "";
 }
 
 ErrCode AppServiceFwkInstaller::BeforeInstall(
@@ -114,11 +187,28 @@ ErrCode AppServiceFwkInstaller::BeforeInstall(
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
-    if (!installParam.isPreInstallApp) {
-        return ERR_APP_SERVICE_FWK_INSTALL_NOT_PREINSTALL;
+    return ERR_OK;
+}
+
+ErrCode AppServiceFwkInstaller::BeforeUninstall(const std::string &bundleName)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
-    return ERR_OK;
+    dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
+    BundleType type;
+    if (!dataMgr_->GetBundleType(bundleName, type)) {
+        APP_LOGE("get bundle type for %{public}s failed", bundleName.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
+    }
+    return type == BundleType::APP_SERVICE_FWK ? ERR_OK : ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
 }
 
 ErrCode AppServiceFwkInstaller::ProcessInstall(
@@ -148,15 +238,19 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
             RollBack();
         }
     }
-    SavePreInstallBundleInfo(result, newInfos);
+    SavePreInstallBundleInfo(result, newInfos, installParam);
     return result;
 }
 
-void AppServiceFwkInstaller::SavePreInstallBundleInfo(
-    ErrCode installResult, const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+void AppServiceFwkInstaller::SavePreInstallBundleInfo(ErrCode installResult,
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InstallParam &installParam)
 {
     if (installResult != ERR_OK) {
         APP_LOGW("install bundle %{public}s failed for %{public}d", bundleName_.c_str(), installResult);
+        return;
+    }
+    if (!installParam.needSavePreInstallInfo) {
+        APP_LOGI("no need to save pre info");
         return;
     }
     PreInstallBundleInfo preInstallBundleInfo;
@@ -361,7 +455,7 @@ ErrCode AppServiceFwkInstaller::InnerProcessInstall(
         InnerBundleInfo &newInfo = it->second;
         APP_LOGD("InnerProcessInstall module %{public}s",
             newInfo.GetCurrentModulePackage().c_str());
-        result = ExtractModule(newInfo, it->first);
+        result = ExtractModule(newInfo, it->first, installParam.copyHapToInstallPath);
         if (result != ERR_OK) {
             return result;
         }
@@ -373,7 +467,7 @@ ErrCode AppServiceFwkInstaller::InnerProcessInstall(
 }
 
 ErrCode AppServiceFwkInstaller::ExtractModule(
-    InnerBundleInfo &newInfo, const std::string &bundlePath)
+    InnerBundleInfo &newInfo, const std::string &bundlePath, bool copyHapToInstallPath)
 {
     APP_LOGI("begin ExtractModule with %{public}s bundlePath %{public}s",
         newInfo.GetCurrentModulePackage().c_str(), bundlePath.c_str());
@@ -395,14 +489,43 @@ ErrCode AppServiceFwkInstaller::ExtractModule(
     result = MkdirIfNotExist(moduleDir);
     CHECK_RESULT(result, "Check module dir failed %{public}d");
 
-    result = ProcessNativeLibrary(bundlePath, moduleDir, moduleName, versionDir, newInfo);
+    result = ProcessNativeLibrary(bundlePath, moduleDir, moduleName, versionDir, newInfo, copyHapToInstallPath);
     CHECK_RESULT(result, "ProcessNativeLibrary failed %{public}d");
 
     // preInstallHsp does not need to copy
     newInfo.SetModuleHapPath(bundlePath);
     newInfo.AddModuleSrcDir(moduleDir);
     newInfo.AddModuleResPath(moduleDir);
+
+    if (copyHapToInstallPath) {
+        std::string realHspPath = moduleDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
+            moduleName + ServiceConstants::HSP_FILE_SUFFIX;
+        result = InstalldClient::GetInstance()->CopyFile(bundlePath, realHspPath);
+        newInfo.SetModuleHapPath(realHspPath);
+        CHECK_RESULT(result, "move hsp to install dir failed %{public}d");
+
+        std::string realSoPath = versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR +
+            nativeLibraryPath_;
+        result = VerifyCodeSignatureForHsp(realHspPath, realSoPath);
+        CHECK_RESULT(result, "verify code sign failed %{public}d");
+    }
     return ERR_OK;
+}
+
+ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForHsp(
+    const std::string &realHspPath, const std::string &realSoPath) const
+{
+    APP_LOGI("begin to verify code sign for hsp");
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = realHspPath;
+    codeSignatureParam.targetSoPath = realSoPath;
+    codeSignatureParam.cpuAbi = cpuAbi_;
+    codeSignatureParam.appIdentifier = appIdentifier_;
+    codeSignatureParam.signatureFileDir = "";
+    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
+    codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
+    codeSignatureParam.isPreInstalledBundle = false;
+    return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
 ErrCode AppServiceFwkInstaller::ExtractModule(InnerBundleInfo &oldInfo,
@@ -455,19 +578,18 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
     const std::string &moduleDir,
     const std::string &moduleName,
     const std::string &versionDir,
-    InnerBundleInfo &newInfo)
+    InnerBundleInfo &newInfo,
+    bool copyHapToInstallPath)
 {
     APP_LOGI("ProcessNativeLibrary param %{public}s  %{public}s %{public}s %{public}s",
         bundlePath.c_str(), moduleDir.c_str(), moduleName.c_str(), versionDir.c_str());
-    std::string cpuAbi;
-    std::string nativeLibraryPath;
-    if (!newInfo.FetchNativeSoAttrs(moduleName, cpuAbi, nativeLibraryPath)) {
+    if (!newInfo.FetchNativeSoAttrs(moduleName, cpuAbi_, nativeLibraryPath_)) {
         return ERR_OK;
     }
     APP_LOGI("FetchNativeSoAttrs sucess with cpuAbi %{public}s nativeLibraryPath %{public}s",
-        cpuAbi.c_str(), nativeLibraryPath.c_str());
+        cpuAbi_.c_str(), nativeLibraryPath_.c_str());
     if (newInfo.IsCompressNativeLibs(moduleName)) {
-        std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath);
+        std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath_);
         if (tempNativeLibraryPath.empty()) {
             APP_LOGE("tempNativeLibraryPath is empty");
             return ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED;
@@ -476,20 +598,23 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
         std::string tempSoPath =
             versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
         APP_LOGI("TempSoPath %{public}s cpuAbi %{public}s bundlePath %{public}s",
-            tempSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
+            tempSoPath.c_str(), cpuAbi_.c_str(), bundlePath.c_str());
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
-            bundlePath, moduleDir, tempSoPath, cpuAbi);
+            bundlePath, moduleDir, tempSoPath, cpuAbi_);
         CHECK_RESULT(result, "Extract module files failed %{public}d");
         // verify hap or hsp code signature for compressed so files
-        result = VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, tempSoPath);
-        CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
+        if (!copyHapToInstallPath) {
+            // verify hap or hsp code signature for compressed so files
+            result = VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi_, tempSoPath);
+            CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
+        }
         // move so to real path
-        result = MoveSoToRealPath(moduleName, versionDir, nativeLibraryPath);
+        result = MoveSoToRealPath(moduleName, versionDir, nativeLibraryPath_);
         CHECK_RESULT(result, "Move so to real path failed %{public}d");
     } else {
         std::vector<std::string> fileNames;
         auto result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(
-            bundlePath, cpuAbi, fileNames);
+            bundlePath, cpuAbi_, fileNames);
         CHECK_RESULT(result, "Fail to GetNativeLibraryFileNames, error is %{public}d");
         newInfo.SetNativeLibraryFileNames(moduleName, fileNames);
     }
@@ -590,7 +715,7 @@ ErrCode AppServiceFwkInstaller::UpdateAppService(
     // update
     ErrCode result = ERR_OK;
     for (auto &item : newInfos) {
-        if ((result = ProcessBundleUpdateStatus(oldInfo, item.second, item.first)) != ERR_OK) {
+        if ((result = ProcessBundleUpdateStatus(oldInfo, item.second, item.first, installParam)) != ERR_OK) {
             APP_LOGE("ProcessBundleUpdateStatus failed %{public}d", result);
             return result;
         }
@@ -606,7 +731,7 @@ ErrCode AppServiceFwkInstaller::UpdateAppService(
 }
 
 ErrCode AppServiceFwkInstaller::ProcessBundleUpdateStatus(InnerBundleInfo &oldInfo,
-    InnerBundleInfo &newInfo, const std::string &hspPath)
+    InnerBundleInfo &newInfo, const std::string &hspPath, const InstallParam &installParam)
 {
     std::string moduleName = newInfo.GetCurrentModulePackage();
     APP_LOGI("ProcessBundleUpdateStatus for module %{public}s", moduleName.c_str());
@@ -627,8 +752,8 @@ ErrCode AppServiceFwkInstaller::ProcessBundleUpdateStatus(InnerBundleInfo &oldIn
     bool isModuleExist = oldInfo.FindModule(moduleName);
     APP_LOGI("module %{public}s isModuleExist %{public}d", moduleName.c_str(), isModuleExist);
 
-    auto result = isModuleExist ? ProcessModuleUpdate(newInfo, oldInfo,
-        hspPath) : ProcessNewModuleInstall(newInfo, oldInfo, hspPath);
+    auto result = isModuleExist ? ProcessModuleUpdate(newInfo, oldInfo, hspPath, installParam) :
+        ProcessNewModuleInstall(newInfo, oldInfo, hspPath, installParam);
     if (result != ERR_OK) {
         APP_LOGE("install module failed %{public}d", result);
         return result;
@@ -637,7 +762,7 @@ ErrCode AppServiceFwkInstaller::ProcessBundleUpdateStatus(InnerBundleInfo &oldIn
 }
 
 ErrCode AppServiceFwkInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
-    InnerBundleInfo &oldInfo, const std::string &hspPath)
+    InnerBundleInfo &oldInfo, const std::string &hspPath, const InstallParam &installParam)
 {
     std::string moduleName = newInfo.GetCurrentModulePackage();
     APP_LOGD("ProcessModuleUpdate, bundleName : %{public}s, moduleName : %{public}s",
@@ -658,7 +783,7 @@ ErrCode AppServiceFwkInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         deleteBundlePath_.emplace_back(oldHspPath);
     }
 
-    auto result = ExtractModule(newInfo, hspPath);
+    auto result = ExtractModule(newInfo, hspPath, installParam.copyHapToInstallPath);
     CHECK_RESULT(result, "ExtractModule failed %{public}d");
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
@@ -676,7 +801,7 @@ ErrCode AppServiceFwkInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
 }
 
 ErrCode AppServiceFwkInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo,
-    InnerBundleInfo &oldInfo, const std::string &hspPath)
+    InnerBundleInfo &oldInfo, const std::string &hspPath, const InstallParam &installParam)
 {
     std::string moduleName = newInfo.GetCurrentModulePackage();
     APP_LOGD("ProcessNewModuleInstall, bundleName : %{public}s, moduleName : %{public}s",
@@ -692,7 +817,7 @@ ErrCode AppServiceFwkInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
-    auto result = ExtractModule(newInfo, hspPath);
+    auto result = ExtractModule(newInfo, hspPath, installParam.copyHapToInstallPath);
     if (result != ERR_OK) {
         APP_LOGE("extract module and rename failed");
         return result;

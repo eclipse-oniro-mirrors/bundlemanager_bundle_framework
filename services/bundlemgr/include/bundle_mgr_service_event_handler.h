@@ -528,6 +528,8 @@ private:
         bool isPreInstall, bool debug);
     static bool IsQuickfixFlagExsit(const BundleInfo &bundleInfo);
     static bool GetValueFromJson(nlohmann::json &jsonObject);
+    static void PatchSystemHspInstall(const std::string &path, bool isOta);
+    static void PatchSystemBundleInstall(const std::string &path, bool isOta);
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();
