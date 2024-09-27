@@ -325,6 +325,9 @@ ErrCode PatchProfile::TransformTo(
     if ((appQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) &&
         (!ParseNativeSo(patchExtractor, appQuickFix.deployingAppqfInfo))) {
         LOG_W(BMS_TAG_DEFAULT, "ParseNativeSo failed");
+#ifdef X86_EMULATOR_MODE
+        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+#endif
     }
     return ERR_OK;
 }
