@@ -695,6 +695,9 @@ public:
      */
     ErrCode QueryExtensionAbilityInfos(uint32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
+
+    ErrCode QueryExtensionAbilityInfosByExtensionTypeName(const std::string &typeName, uint32_t flags,
+        int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     /**
      * @brief Obtains the PreInstallBundleInfo objects in Cache.
      * @return Returns PreInstallBundleInfos.
@@ -777,6 +780,8 @@ public:
      */
     bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
+    bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
+        int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     bool GetInnerBundleInfoWithBundleFlagsAndLock(const std::string &bundleName, int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, int32_t flags,
@@ -1024,6 +1029,8 @@ private:
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
     void GetAllExtensionInfos(uint32_t flags, int32_t userId, const InnerBundleInfo &info,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
+    void GetAllExtensionInfosByExtensionTypeName(const std::string &typeName, uint32_t flags, int32_t userId,
+        const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
     bool MatchUtd(const Skill &skill, const std::string &utd, int32_t count) const;
     bool MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const;
     bool MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const;
@@ -1066,7 +1073,7 @@ private:
     void ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
     ErrCode ImplicitQueryAllExtensionInfos(uint32_t flags, int32_t userId,
-        std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
+        std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex, const std::string &typeName = "") const;
     void GetMatchLauncherAbilityInfosForCloneInfos(const InnerBundleInfo& info, const AbilityInfo &abilityInfo,
         const InnerBundleUserInfo &bundleUserInfo, std::vector<AbilityInfo>& abilityInfos) const;
     void ModifyApplicationInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo,
@@ -1147,6 +1154,8 @@ private:
     void PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const;
     void PostProcessAnyUserFlags(int32_t flags, int32_t userId,
         int32_t originalUserId, BundleInfo &bundleInfo) const;
+    void GetExtensionAbilityInfoByTypeName(uint32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos, const std::string &typeName) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;

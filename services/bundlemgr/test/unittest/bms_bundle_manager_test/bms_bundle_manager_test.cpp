@@ -1692,6 +1692,34 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0017, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: GetInnerBundleInfoWithFlags2_0001
+ * @tc.name: test GetInnerBundleInfoWithFlags
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetInnerBundleInfoWithFlags2_0001, Function | SmallTest | Level1)
+{
+    bool testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlags(
+        TEST_BUNDLE_NAME, 0, USERID);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetInnerBundleInfoWithFlags2_0002
+ * @tc.name: test GetInnerBundleInfoWithFlagsForAms
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetInnerBundleInfoWithFlags2_0002, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->bundleInfos_.clear();
+    bool testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlags(
+        TEST_BUNDLE_NAME, 0, USERID);
+    EXPECT_EQ(testRet, false);
+    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
+}
+
+/**
  * @tc.number: bundleInfosFalse_0018
  * @tc.name: test GetInnerBundleInfoWithFlagsV9
  * @tc.desc: 1.system run normally

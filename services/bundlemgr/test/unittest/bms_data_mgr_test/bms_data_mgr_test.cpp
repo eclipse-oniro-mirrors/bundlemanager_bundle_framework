@@ -2371,4 +2371,25 @@ HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0002, Function | MediumTest |
 
     shortcutDataStorageRdb = nullptr;
 }
+
+HWTEST_F(BmsDataMgrTest, GetAllExtensionInfosByExtensionTypeName_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    uint32_t flags = 0;
+    int32_t userId = 0;
+    InnerBundleInfo info;
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t appIndex = 0;
+    std::string typeName = "";
+    dataMgr->GetAllExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.empty(), true);
+    ExtensionAbilityInfo extensionAbilityInfo;
+    info.InsertExtensionInfo("", extensionAbilityInfo);
+    dataMgr->GetAllExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.empty(), false);
+    flags = 1;
+    dataMgr->GetAllExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.empty(), false);
+}
 } // OHOS
