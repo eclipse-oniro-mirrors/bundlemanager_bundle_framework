@@ -42,6 +42,7 @@
 #include "inner_bundle_clone_info.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
+#include "ipc/create_dir_param.h"
 #include "uninstall_data_mgr_storage_rdb.h"
 #include "module_info.h"
 #include "preinstall_data_storage_interface.h"
@@ -1067,9 +1068,9 @@ private:
 
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;
     void CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32_t userId) const;
-    void CreateEl5Dir(InnerBundleInfo &info, int32_t userId);
-    void InnerCreateEl5Dir(InnerBundleInfo &info, int32_t userId);
-    void SetEl5DirPolicy(InnerBundleInfo &info, int32_t userId);
+    void CreateEl5Dir(const std::vector<CreateDirParam> &el5Params);
+    void InnerCreateEl5Dir(const CreateDirParam &el5Param);
+    void SetEl5DirPolicy(const CreateDirParam &el5Param);
 
     void FilterExtensionAbilityInfosByModuleName(const std::string &moduleName,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
