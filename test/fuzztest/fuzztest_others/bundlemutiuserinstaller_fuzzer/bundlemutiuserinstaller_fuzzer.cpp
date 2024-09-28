@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,37 +13,33 @@
  * limitations under the License.
  */
 
-#include "bundlemgrhost_fuzzer.h"
+#define private public
+#include "bundlemutiuserinstaller_fuzzer.h"
 
-#include <cstddef>
-#include <cstdint>
-
-#include "bundle_mgr_host.h"
+#include "bundle_multiuser_installer.h"
 #include "securec.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
-constexpr uint32_t CODE_MAX = 164;
-
+const int32_t USERID = 100;
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    for (uint32_t code = 0; code <= CODE_MAX; code++) {
-        MessageParcel datas;
-        std::u16string descriptor = BundleMgrHost::GetDescriptor();
-        datas.WriteInterfaceToken(descriptor);
-        datas.WriteBuffer(data, size);
-        datas.RewindRead(0);
-        MessageParcel reply;
-        MessageOption option;
-        BundleMgrHost bundleMgrHost;
-        bundleMgrHost.OnRemoteRequest(code, datas, reply, option);
-    }
+    std::shared_ptr<BundleMultiUserInstaller> installer = std::make_shared<BundleMultiUserInstaller>();
+    std::string bundleName(data, size);
+    installer->InstallExistedApp(bundleName, USERID);
+    installer->ProcessBundleInstall(bundleName, USERID);
+    installer->ResetInstallProperties();
+    InnerBundleInfo info;
+    int32_t uid = 1;
+    installer->CreateDataDir(info, USERID, uid);
+    installer->RemoveDataDir(bundleName, USERID);
+    installer->GetDataMgr();
     return true;
 }
-}
+} // namespace OHOS
 
 // Fuzzer entry point.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)

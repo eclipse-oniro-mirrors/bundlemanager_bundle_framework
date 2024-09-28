@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,37 +13,28 @@
  * limitations under the License.
  */
 
-#include "bundlemgrhost_fuzzer.h"
+#define private public
+#include "accounthelper_fuzzer.h"
 
-#include <cstddef>
-#include <cstdint>
-
-#include "bundle_mgr_host.h"
+#include "account_helper.h"
 #include "securec.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
-constexpr uint32_t CODE_MAX = 164;
-
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    for (uint32_t code = 0; code <= CODE_MAX; code++) {
-        MessageParcel datas;
-        std::u16string descriptor = BundleMgrHost::GetDescriptor();
-        datas.WriteInterfaceToken(descriptor);
-        datas.WriteBuffer(data, size);
-        datas.RewindRead(0);
-        MessageParcel reply;
-        MessageOption option;
-        BundleMgrHost bundleMgrHost;
-        bundleMgrHost.OnRemoteRequest(code, datas, reply, option);
-    }
+    int32_t id = 100;
+    bool isOsAccountExists = true;
+    AccountHelper::IsOsAccountExists(id, isOsAccountExists);
+    AccountHelper::GetCurrentActiveUserId();
+    AccountHelper::IsOsAccountVerified(id);
+    AccountHelper::GetOsAccountLocalIdFromUid(id);
     return true;
 }
-}
+} // namespace OHOS
 
 // Fuzzer entry point.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
