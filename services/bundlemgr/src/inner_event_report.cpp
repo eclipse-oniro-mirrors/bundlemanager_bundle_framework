@@ -46,6 +46,7 @@ constexpr const char* AOT_COMPILE_SUMMARY = "AOT_COMPILE_SUMMARY";
 constexpr const char* AOT_COMPILE_RECORD = "AOT_COMPILE_RECORD";
 constexpr const char* QUERY_OF_CONTINUE_TYPE = "QUERY_OF_CONTINUE_TYPE";
 constexpr const char* BMS_DISK_SPACE = "BMS_DISK_SPACE";
+constexpr const char* APP_CONTROL_RULE = "APP_CONTROL_RULE";
 
 // event params
 const char* EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -77,6 +78,12 @@ const char* EVENT_PARAM_SCENE_ID = "SCENE_ID";
 const char* EVENT_PARAM_HAPPEN_TIME = "HAPPEN_TIME";
 const char* EVENT_PARAM_MODULE_NAME = "MODULE_NAME";
 const char* EVENT_PARAM_IS_FREE_INSTALL = "IS_FREE_INSTALL";
+const char* EVENT_PARAM_APP_IDS = "APP_IDS";
+const char* EVENT_PARAM_CALLING_NAME = "CALLING_NAME";
+const char* EVENT_PARAM_OPERATION_TYPE = "OPERATION_TYPE";
+const char* EVENT_PARAM_ACTION_TYPE = "ACTION_TYPE";
+const char* EVENT_PARAM_RULE = "ACTION_RULE";
+const char* EVENT_PARAM_APP_INDEX = "APP_INDEX";
 
 const char* FREE_INSTALL_TYPE = "FreeInstall";
 const char* PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -268,6 +275,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::BMS_DISK_SPACE,
             [](const EventInfo& eventInfo) {
                 InnerSendBmsDiskSpaceEvent(eventInfo);
+            } },
+        { BMSEventType::APP_CONTROL_RULE,
+            [](const EventInfo& eventInfo) {
+                InnerSendAppConitolRule(eventInfo);
             } }
     };
 
@@ -589,6 +600,22 @@ void InnerEventReport::InnerSendBmsDiskSpaceEvent(const EventInfo& eventInfo)
         FILE_NAME, eventInfo.fileName,
         FREE_SIZE, eventInfo.freeSize,
         OPERATION_TYPE, eventInfo.operationType);
+}
+
+void InnerEventReport::InnerSendAppConitolRule(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        APP_CONTROL_RULE,
+        HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
+        EVENT_PARAM_APP_IDS, eventInfo.appIds,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_CALLING_NAME, eventInfo.callingName,
+        EVENT_PARAM_OPERATION_TYPE, eventInfo.operationType,
+        EVENT_PARAM_ACTION_TYPE, eventInfo.actionType,
+        EVENT_PARAM_RULE, eventInfo.rule,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
 template<typename... Types>

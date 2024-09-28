@@ -258,3 +258,15 @@ BMS_DISK_SPACE:
   FILE_NAME: {type: STRING, desc: file name}
   FREE_SIZE: {type: INT64, desc: free size}
   OPERATION_TYPE: {type: INT32, desc: operation type}
+
+APP_CONTROL_RULE:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: app contitol rule}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
+  APP_IDS: {type: STRING, arrsize: 100, desc: appIds}
+  USERID: {type: INT32, desc: userId of the bundle}
+  CALLING_NAME: {type: STRING, desc: calling name}
+  OPERATION_TYPE: {type: INT32, desc: operation type}
+  ACTION_TYPE: {type: INT32, desc: action type}
+  RULE: {type: STRING, desc: rule}
+  APP_INDEX: {type: INT32, desc: app index}
