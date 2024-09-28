@@ -272,7 +272,6 @@ struct ApplicationInfo : public Parcelable {
     // quick fix info
     AppQuickFix appQuickFix;
 
-    // unused
     std::string icon;
     int32_t flags = 0;
     std::string entryModuleName;

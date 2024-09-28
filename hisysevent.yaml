@@ -252,3 +252,9 @@ FREE_INSTALL_EVENT:
   ABILITY_NAME: {type: STRING, desc: ability name}
   IS_FREE_INSTALL: {type: BOOL, desc: is free install}
   TIME_STAMP: {type: INT64, desc: time stamp}
+
+BMS_DISK_SPACE:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: description the disk space in insufficient when an applicaiton is begin installed ir uninstall}
+  FILE_NAME: {type: STRING, desc: file name}
+  FREE_SIZE: {type: INT64, desc: free size}
+  OPERATION_TYPE: {type: INT32, desc: operation type}

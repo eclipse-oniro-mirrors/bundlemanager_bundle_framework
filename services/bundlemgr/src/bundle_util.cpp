@@ -67,6 +67,7 @@ constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 constexpr const char* ABC_FILE_PATH = "abc_files";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
 const std::string EMPTY_STRING = "";
+constexpr int64_t DISK_REMAINING_SIZE_LIMIT = 1024 * 1024 * 10; // 10M
 #ifdef CONFIG_POLOCY_ENABLE
     const char* NO_DISABLING_CONFIG_PATH = "/etc/ability_runtime/resident_process_in_extreme_memory.json";
 #endif
@@ -222,8 +223,19 @@ bool BundleUtil::CheckSystemFreeSize(const std::string &path, int64_t size)
         APP_LOGE("call statfs error:%{public}d", errno);
         return false;
     }
-    int64_t freeSize = diskInfo.f_bavail * diskInfo.f_bsize;
+    int64_t freeSize = static_cast<int64_t>(diskInfo.f_bavail * diskInfo.f_bsize);
     return freeSize >= size;
+}
+
+bool BundleUtil::CheckSystemSizeAndHisysEvent(const std::string &path, const std::string &fileName)
+{
+    struct statfs diskInfo = { 0 };
+    if (statfs(path.c_str(), &diskInfo) != 0) {
+        APP_LOGE("call statfs error:%{public}d", errno);
+        return false;
+    }
+    int64_t freeSize = static_cast<int64_t>(diskInfo.f_bavail * diskInfo.f_bsize);
+    return freeSize < DISK_REMAINING_SIZE_LIMIT;
 }
 
 bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath, std::vector<std::string>& hapFileList)
