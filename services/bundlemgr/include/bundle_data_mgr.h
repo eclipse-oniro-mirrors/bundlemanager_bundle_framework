@@ -1052,7 +1052,7 @@ private:
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
     void GetAllExtensionInfosByExtensionTypeName(const std::string &typeName, uint32_t flags, int32_t userId,
         const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
-    bool MatchUtd(Skill &skill, const std::string &utd, int32_t count) const;
+    bool MatchUtd(const Skill &skill, const std::string &utd, int32_t count) const;
     bool MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const;
     bool MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const;
     std::vector<int32_t> GetCloneAppIndexesNoLock(const std::string &bundleName, int32_t userId) const;
@@ -1176,7 +1176,8 @@ private:
         int32_t originalUserId, BundleInfo &bundleInfo) const;
     void GetExtensionAbilityInfoByTypeName(uint32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, const std::string &typeName) const;
-
+    bool GetShortcutInfosByInnerBundleInfo(
+        const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const;
 private:
     mutable std::shared_mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;

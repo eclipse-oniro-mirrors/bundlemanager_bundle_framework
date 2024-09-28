@@ -38,6 +38,7 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
+#include "file_ex.h"
 #include "hmp_bundle_installer.h"
 #include "install_param.h"
 #include "installd/installd_service.h"
@@ -46,8 +47,8 @@
 #include "scope_guard.h"
 #include "shared/shared_bundle_installer.h"
 #include "system_bundle_installer.h"
+#include "utd_handler.h"
 #include "want.h"
-#include "file_ex.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -700,7 +701,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(hapModuleInfo.description, "$string:description_application");
         EXPECT_EQ(hapModuleInfo.mainAbility, "MainAbility");
         EXPECT_EQ(hapModuleInfo.process, "bba");
-        EXPECT_EQ(hapModuleInfo.virtualMachine, "");
+        EXPECT_EQ(hapModuleInfo.virtualMachine, "ark");
         EXPECT_EQ(hapModuleInfo.uiSyntax, "hml");
         EXPECT_EQ(hapModuleInfo.pages, "$profile:page_config");
         EXPECT_EQ(hapModuleInfo.deliveryWithInstall, true);
@@ -6149,12 +6150,10 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDirWithVector_0100, Function | 
 HWTEST_F(BmsBundleInstallerTest, GetAllBundleStats_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl hostImpl;
-    std::vector<std::string> bundleNames;
     std::vector<int64_t> bundleStats = { 0 };
     std::vector<int32_t> uids;
-    bundleNames.push_back(TEST_STRING);
     uids.push_back(EDM_UID);
-    auto ret = hostImpl.GetAllBundleStats(bundleNames, EDM_UID, bundleStats, uids);
+    auto ret = hostImpl.GetAllBundleStats(EDM_UID, bundleStats, uids);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -6924,5 +6923,53 @@ HWTEST_F(BmsBundleInstallerTest, PreInstallBundleInfo_0100, Function | MediumTes
     nlohmann::json jsonObject;
     preInstallBundleInfo.ToJson(jsonObject);
     EXPECT_EQ(jsonObject["bundleName"], "com.acts.example");
+}
+
+/**
+ * @tc.number: UtdHandler_0100
+ * @tc.name: test UtdHandler
+ * @tc.desc: 1.call GetEntryHapPath, if exist entry then return entry path, otherwise return empty string
+ */
+HWTEST_F(BmsBundleInstallerTest, UtdHandler_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string entryHapPath;
+    entryHapPath = UtdHandler::GetEntryHapPath(BUNDLE_BACKUP_NAME, USERID);
+    EXPECT_NE(entryHapPath, EMPTY_STRING);
+
+    entryHapPath = UtdHandler::GetEntryHapPath(EMPTY_STRING, USERID);
+    EXPECT_EQ(entryHapPath, EMPTY_STRING);
+
+    int32_t invalidUserId = -200;
+    entryHapPath = UtdHandler::GetEntryHapPath(BUNDLE_BACKUP_NAME, invalidUserId);
+    EXPECT_EQ(entryHapPath, EMPTY_STRING);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: UtdHandler_0200
+ * @tc.name: test UtdHandler
+ * @tc.desc: 1.call GetUtdProfileFromHap, if exist utd.json5 then return content, otherwise return empty string
+ */
+HWTEST_F(BmsBundleInstallerTest, UtdHandler_0200, Function | SmallTest | Level0)
+{
+    std::string utdProfile;
+    std::string withUtdHapPath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    utdProfile = UtdHandler::GetUtdProfileFromHap(withUtdHapPath);
+    EXPECT_NE(utdProfile, EMPTY_STRING);
+
+    std::string noUtdHapPath = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    utdProfile = UtdHandler::GetUtdProfileFromHap(noUtdHapPath);
+    EXPECT_EQ(utdProfile, EMPTY_STRING);
+
+    utdProfile = UtdHandler::GetUtdProfileFromHap(EMPTY_STRING);
+    EXPECT_EQ(utdProfile, EMPTY_STRING);
 }
 } // OHOS

@@ -186,6 +186,8 @@ protected:
 
     ErrCode RollbackHmpCommonInfo(const std::string &bundleName);
 
+    bool HasDriverExtensionAbility(const std::string &bundleName);
+
 private:
     /**
      * @brief The real procedure for system and normal bundle install.
@@ -723,6 +725,8 @@ private:
     bool InitDataMgr();
     std::string GetInstallSource(const InstallParam &installParam) const;
     void SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const InstallParam &installParam) const;
+    void SetApplicationFlagsForPreinstallSource(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InstallParam &installParam) const;
     bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId) const;
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName) const;

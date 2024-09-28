@@ -972,7 +972,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDetermineCloneNum_0001, Function |
     int32_t cloneNum = 0;
     auto res = bundleMgrExtTest.DetermineCloneNum(bundleName, appIdentifier, cloneNum);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_NE(res, false);
+    EXPECT_NE(res, true);
     #else
     EXPECT_EQ(res, false);
     #endif

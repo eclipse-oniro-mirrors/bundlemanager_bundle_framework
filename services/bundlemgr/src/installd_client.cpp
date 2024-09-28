@@ -190,19 +190,15 @@ ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int3
     return CallService(&IInstalld::GetBundleStats, bundleName, userId, bundleStats, uid, appIndex);
 }
 
-ErrCode InstalldClient::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
-    if (bundleNames.empty()) {
-        APP_LOGE("bundleName is empty");
+    if (uids.empty()) {
+        APP_LOGE("uids is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    if (bundleNames.size() != uids.size()) {
-        APP_LOGE("bundleNames size is not equal to uids size");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    return CallService(&IInstalld::GetAllBundleStats, bundleNames, userId, bundleStats, uids);
+    return CallService(&IInstalld::GetAllBundleStats, userId, bundleStats, uids);
 }
 
 ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,

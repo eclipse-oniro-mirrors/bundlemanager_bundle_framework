@@ -575,10 +575,9 @@ HWTEST_F(BmsBundleInstallerPermissionTest, CleanBundleDataDirByName_0100, Functi
 HWTEST_F(BmsBundleInstallerPermissionTest, GetAllBundleStats_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl hostImpl;
-    std::vector<std::string> bundleNames;
     std::vector<int64_t> bundleStats = { 0 };
     std::vector<int32_t> uids;
-    auto ret = hostImpl.GetAllBundleStats(bundleNames, 0, bundleStats, uids);
+    auto ret = hostImpl.GetAllBundleStats(0, bundleStats, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

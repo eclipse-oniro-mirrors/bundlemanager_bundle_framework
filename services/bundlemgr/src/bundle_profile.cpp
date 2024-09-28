@@ -2467,6 +2467,9 @@ ErrCode BundleProfile::TransformTo(
     }
     if (!ParserNativeSo(configJson, bundleExtractor, innerBundleInfo)) {
         APP_LOGW("Parser native so failed");
+#ifdef X86_EMULATOR_MODE
+        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+#endif
     }
     return ERR_OK;
 }

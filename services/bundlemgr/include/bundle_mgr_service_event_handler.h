@@ -527,6 +527,8 @@ private:
     void ProcessCheckRecoverableApplicationInfo();
     void InnerProcessCheckRecoverableApplicationInfo();
 
+    bool InnerProcessUninstallForExistPreBundle(const BundleInfo &installedInfo);
+
     void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
     void RefreshQuotaForAllUid();
@@ -627,6 +629,7 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos);
     void InnerProcessRebootUninstallWrongBundle();
     void ProcessCheckAppEl1Dir();
+    void static ProcessCheckAppEl1DirTask();
     void CleanAllBundleShaderCache() const;
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;

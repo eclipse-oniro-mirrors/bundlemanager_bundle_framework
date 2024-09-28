@@ -90,9 +90,10 @@ constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
 constexpr const char* SCHEME_HTTPS = "https";
-const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
-const char* ENTRY = "entry";
-const char* CLONE_BUNDLE_PREFIX = "clone_";
+constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
+constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
+constexpr const char* ENTRY = "entry";
+constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -110,6 +111,7 @@ constexpr int8_t INVALID_BUNDLEID = -1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 constexpr int32_t MAX_APP_UID = 65535;
 constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
+constexpr int8_t ONLY_ONE_USER = 1;
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -1773,40 +1775,39 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
     }
     auto shareSummary = pickerSummary.GetWantParams(WANT_PARAM_SUMMARY);
     auto utds = shareSummary.KeySet();
-    for (auto &skill : shareActionSkills) {
-        bool match = true;
-        for (const auto &utd : utds) {
-            int32_t count = shareSummary.GetIntParam(utd, DEFAULT_SUMMARY_COUNT);
-            if (count <= DEFAULT_SUMMARY_COUNT) {
-                LOG_W(BMS_TAG_QUERY, "invalid utd count");
-                return false;
-            }
-            if (!MatchUtd(skill, utd, count)) {
-                match = false;
+    for (const auto &utd : utds) {
+        int32_t count = shareSummary.GetIntParam(utd, DEFAULT_SUMMARY_COUNT);
+        if (count <= DEFAULT_SUMMARY_COUNT) {
+            LOG_W(BMS_TAG_QUERY, "invalid utd count");
+            return false;
+        }
+        bool match = false;
+        for (const auto &skill : shareActionSkills) {
+            if (MatchUtd(skill, utd, count)) {
+                match = true;
                 break;
             }
         }
-        if (match) {
-            return true;
+        if (!match) {
+            LOG_D(BMS_TAG_QUERY, "match failed");
+            return false;
         }
     }
-    return false;
+    return true;
 }
 
-bool BundleDataMgr::MatchUtd(Skill &skill, const std::string &utd, int32_t count) const
+bool BundleDataMgr::MatchUtd(const Skill &skill, const std::string &utd, int32_t count) const
 {
-    for (SkillUri &skillUri : skill.uris) {
+    for (const SkillUri &skillUri : skill.uris) {
         if (skillUri.maxFileSupported < count) {
             continue;
         }
         if (!skillUri.utd.empty()) {
             if (MatchUtd(skillUri.utd, utd)) {
-                skillUri.maxFileSupported -= count;
                 return true;
             }
         } else {
             if (MatchTypeWithUtd(skillUri.type, utd)) {
-                skillUri.maxFileSupported -= count;
                 return true;
             }
         }
@@ -2673,6 +2674,13 @@ bool BundleDataMgr::GetBundleInfo(
             bundleName.c_str(), requestUserId);
         return false;
     }
+    // for only one user, bundle info can not be obtained during installation
+    if ((innerBundleInfo.GetInnerBundleUserInfos().size() <= ONLY_ONE_USER) &&
+        (innerBundleInfo.GetInstallMark().status == InstallExceptionStatus::INSTALL_START)) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfo failed -n %{public}s -u %{public}d, not ready",
+            bundleName.c_str(), requestUserId);
+        return false;
+    }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfo(flags, bundleInfo, responseUserId);
@@ -2719,6 +2727,13 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
         LOG_D(BMS_TAG_QUERY, "GetBundleInfoV9 failed, error code: %{public}d, bundleName:%{public}s",
             ret, bundleName.c_str());
         return ret;
+    }
+    // for only one user, bundle info can not be obtained during installation
+    if ((innerBundleInfo.GetInnerBundleUserInfos().size() <= ONLY_ONE_USER) &&
+        (innerBundleInfo.GetInstallMark().status == InstallExceptionStatus::INSTALL_START)) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfo failed -n %{public}s -u %{public}d, not ready",
+            bundleName.c_str(), requestUserId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
@@ -3569,27 +3584,13 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
             uids.emplace_back(uid);
         }
     }
-    if (InstalldClient::GetInstance()->GetAllBundleStats(bundleNames, responseUserId, bundleStats, uids) != ERR_OK) {
+    if (InstalldClient::GetInstance()->GetAllBundleStats(responseUserId, bundleStats, uids) != ERR_OK) {
         APP_LOGW("GetAllBundleStats failed, userId: %{public}d", responseUserId);
         return false;
     }
     if (bundleStats.empty()) {
         APP_LOGE("bundle stats is empty");
         return true;
-    }
-    {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        for (const auto &bundleName : bundleNames) {
-            auto infoItem = bundleInfos_.find(bundleName);
-            if (infoItem == bundleInfos_.end()) {
-                return false;
-            }
-            if (infoItem->second.IsPreInstallApp()) {
-                for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
-                    bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
-                }
-            }
-        }
     }
     return true;
 }
@@ -4822,7 +4823,55 @@ bool BundleDataMgr::GetShortcutInfos(
             bundleName.c_str(), requestUserId);
         return false;
     }
-    innerBundleInfo.GetShortcutInfos(shortcutInfos);
+    GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
+    return true;
+}
+bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
+    const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    if (!info.GetIsNewVersion()) {
+        info.GetShortcutInfos(shortcutInfos);
+        return true;
+    }
+    AbilityInfo abilityInfo;
+    info.GetMainAbilityInfo(abilityInfo);
+    if (abilityInfo.hapPath.empty() || abilityInfo.metadata.size() <= 0) {
+        return false;
+    }
+    std::string rawData;
+    for (const auto &meta : abilityInfo.metadata) {
+        if (meta.name.compare(META_DATA_SHORTCUTS_NAME) == 0) {
+            std::string resName = meta.resource;
+            std::string hapPath = abilityInfo.hapPath;
+            size_t pos = resName.rfind(PROFILE_PREFIX);
+            bool posValid = (pos != std::string::npos) && (pos != resName.length() - strlen(PROFILE_PREFIX));
+            if (!posValid) {
+                APP_LOGE("resName invalid %{public}s", resName.c_str());
+                return false;
+            }
+            std::string profileName = PROFILE_PATH + resName.substr(pos + strlen(PROFILE_PREFIX)) + JSON_SUFFIX;
+            GetJsonProfileByExtractor(hapPath, profileName, rawData);
+            break;
+        }
+    }
+    if (rawData.empty()) {
+        APP_LOGE("shortcutinfo is empty");
+        return false;
+    }
+    nlohmann::json jsonObject = nlohmann::json::parse(rawData, nullptr, false);
+    if (jsonObject.is_discarded()) {
+        APP_LOGE("shortcuts json invalid");
+        return false;
+    }
+    ShortcutJson shortcutJson = jsonObject.get<ShortcutJson>();
+    for (const Shortcut &item : shortcutJson.shortcuts) {
+        ShortcutInfo shortcutInfo;
+        shortcutInfo.bundleName = abilityInfo.bundleName;
+        shortcutInfo.moduleName = abilityInfo.moduleName;
+        info.InnerProcessShortcut(item, shortcutInfo);
+        shortcutInfo.sourceType = 1;
+        shortcutInfos.emplace_back(shortcutInfo);
+    }
     return true;
 }
 
@@ -4844,7 +4893,7 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
         return ret;
     }
 
-    innerBundleInfo.GetShortcutInfos(shortcutInfos);
+    GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
     return ERR_OK;
 }
 

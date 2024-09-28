@@ -299,6 +299,9 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
+  if (current_cpu == "arm64") {
+    defines += [ "USE_ARM64" ]
+  }
   include_dirs = []
   if (code_signature_enable) {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]

@@ -79,6 +79,7 @@ constexpr const char* EXTENSION_CONFIG_FILE_PATH = "/etc/ams_extension_config.js
 constexpr const char* EXTENSION_CONFIG_NAME = "ams_extension_config";
 constexpr const char* EXTENSION_TYPE_NAME = "extension_type_name";
 constexpr const char* EXTENSION_SERVICE_NEED_CREATE_SANDBOX = "need_create_sandbox";
+constexpr int32_t INSTALLS_UID = 3060;
 enum class DirType : uint8_t {
     DIR_EL1,
     DIR_EL2,
@@ -394,7 +395,7 @@ ErrCode InstalldHostImpl::AddUserDirDeleteDfx(int32_t userId)
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
-    elPath.push_back("el5");
+    elPath.push_back(ServiceConstants::DIR_EL5);
     for (const auto &el : elPath) {
         std::string bundleDataDir = GetBundleDataDir(el, userId) + ServiceConstants::BASE;
         if (access(bundleDataDir.c_str(), F_OK) != 0) {
@@ -856,7 +857,9 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     std::string suffixName = bundleName;
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
+    elPath.push_back(ServiceConstants::DIR_EL5);
+    for (const auto &el : elPath) {
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             CleanBundleDataForEl2(bundleName, userid, appIndex);
             continue;
@@ -970,27 +973,20 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (bundleNames.empty() || bundleNames.size() != uids.size()) {
+    if (uids.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    int64_t totalFileSize = 0;
+    int64_t totalFileSize = InstalldOperator::GetDiskUsageFromQuota(INSTALLS_UID);
     int64_t totalDataSize = 0;
-    for (size_t index = 0; index < bundleNames.size(); ++index) {
-        const auto &bundleName = bundleNames[index];
+    for (size_t index = 0; index < uids.size(); ++index) {
         const auto &uid = uids[index];
-        std::vector<std::string> bundlePath;
-        bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) +
-            ServiceConstants::PATH_SEPARATOR + bundleName); // bundle code
-        int64_t fileSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
-        // index 0 : bundle data size
-        totalFileSize += fileSize;
         int64_t bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
         // index 1 : local bundle data size
         totalDataSize += bundleDataSize;

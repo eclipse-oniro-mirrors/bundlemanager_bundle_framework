@@ -307,17 +307,14 @@ ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32
     return ret;
 }
 
-ErrCode InstalldProxy::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+ErrCode InstalldProxy::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
-    uint32_t bundleNamesSize = bundleNames.size();
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, Uint32, bundleNamesSize);
-    for (const auto &bundleName : bundleNames) {
-        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
-    }
     INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    uint32_t uidSize = uids.size();
+    INSTALLD_PARCEL_WRITE(data, Uint32, uidSize);
     for (const auto &uid : uids) {
         INSTALLD_PARCEL_WRITE(data, Int32, uid);
     }

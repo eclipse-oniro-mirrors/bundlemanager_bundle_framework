@@ -52,6 +52,7 @@
 #include "parameters.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
+#include "utd_handler.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_data_manager.h"
 #include "bundle_overlay_install_checker.h"
@@ -215,7 +216,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .abilityName = mainAbility_,
             .appDistributionType = appDistributionType_,
         };
-        if (installParam.allUser) {
+        if (installParam.allUser || HasDriverExtensionAbility(bundleName_)) {
             AddBundleStatus(installRes);
         } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
@@ -339,6 +340,14 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         isUninstalledFromBmsExtension = true;
         result = ERR_OK;
     }
+
+    if (result == ERR_OK) {
+        UtdHandler::UninstallUtdAsync(bundleName, userId_);
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+        DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
+#endif
+    }
+
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .isAgingUninstall = installParam.isAgingUninstall,
@@ -357,12 +366,6 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
         }
-    }
-
-    if (result == ERR_OK) {
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-        DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
-#endif
     }
 
     SendBundleSystemEvent(
@@ -883,6 +886,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         LOG_I(BMS_TAG_INSTALLER, "SetIsFreeInstallApp(%{public}d)",
             InstallFlag::FREE_INSTALL == installParam.installFlag);
         newInfo.SetIsFreeInstallApp(InstallFlag::FREE_INSTALL == installParam.installFlag);
+        SetApplicationFlagsForPreinstallSource(newInfos, installParam);
         result = ProcessBundleInstallStatus(newInfo, uid);
         CHECK_RESULT(result, "ProcessBundleInstallStatus failed %{public}d");
 
@@ -1334,6 +1338,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
     VerifyDomain();
     MarkInstallFinish();
+    UtdHandler::InstallUtdAsync(bundleName_, userId_);
     return result;
 }
 
@@ -1944,6 +1949,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
             GetInstallEventInfo(oldInfo, sysEventInfo_);
+            UtdHandler::InstallUtdAsync(bundleName, userId_);
             return ERR_OK;
         }
     }
@@ -2215,8 +2221,9 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
             return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
         }
     }
-
-    oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_NEW_START);
+    if (isAppExist_) {
+        oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_NEW_START);
+    }
     if (!dataMgr_->SaveInnerBundleInfo(oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "save install mark failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -3924,6 +3931,15 @@ void BaseBundleInstaller::SetInstallSourceToAppInfo(std::unordered_map<std::stri
     std::string installSource = GetInstallSource(installParam);
     for (auto &info : infos) {
         info.second.SetInstallSource(installSource);
+    }
+}
+
+void BaseBundleInstaller::SetApplicationFlagsForPreinstallSource(
+    std::unordered_map<std::string, InnerBundleInfo> &infos, const InstallParam &installParam) const
+{
+    std::string installSource = GetInstallSource(installParam);
+    for (auto &info : infos) {
+        info.second.SetApplicationFlags(installParam.preinstallSourceFlag);
     }
 }
 
@@ -6124,6 +6140,29 @@ void BaseBundleInstaller::MarkInstallFinish()
     if (!dataMgr_->UpdateInnerBundleInfo(info)) {
         LOG_W(BMS_TAG_INSTALLER, "save mark failed");
     }
+}
+
+bool BaseBundleInstaller::HasDriverExtensionAbility(const std::string &bundleName)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+
+    InnerBundleInfo info;
+    bool isAppExist = dataMgr->FetchInnerBundleInfo(bundleName, info);
+    if (isAppExist) {
+        const auto extensions = info.GetInnerExtensionInfos();
+        for (const auto &item : extensions) {
+            if (item.second.type == ExtensionAbilityType::DRIVER) {
+                APP_LOGI("find driver extension ability, bundleName: %{public}s, moduleName: %{public}s",
+                    item.second.bundleName.c_str(), item.second.moduleName.c_str());
+                return true;
+            }
+        }
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

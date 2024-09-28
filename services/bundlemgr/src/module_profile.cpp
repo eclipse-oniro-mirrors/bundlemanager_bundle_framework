@@ -2597,6 +2597,9 @@ ErrCode ModuleProfile::TransformTo(
     }
     if (!ParserNativeSo(moduleJson, bundleExtractor, innerBundleInfo)) {
         APP_LOGW("Parser native so failed");
+#ifdef X86_EMULATOR_MODE
+        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+#endif
     }
     if (!ParserArkNativeFilePath(moduleJson, bundleExtractor, innerBundleInfo)) {
         APP_LOGW("Parser ark native file failed");

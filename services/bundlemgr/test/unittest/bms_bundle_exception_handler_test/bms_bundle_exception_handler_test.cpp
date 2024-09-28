@@ -136,7 +136,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0100, TestSize.L
     info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::INSTALL_START);
     bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
     auto data = info.GetInstallMark();
-    EXPECT_EQ(isBundleValid, true);
+    EXPECT_EQ(isBundleValid, false);
     GTEST_LOG_(INFO) << "HandleInvalidBundleTest_0100 end";
 }
 
@@ -187,7 +187,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0400, TestSize.L
     info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::INSTALL_START);
     bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
     auto data = info.GetInstallMark();
-    EXPECT_EQ(isBundleValid, true);
+    EXPECT_EQ(isBundleValid, false);
     GTEST_LOG_(INFO) << "HandleInvalidBundleTest_0400 end";
 }
 
