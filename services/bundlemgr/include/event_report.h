@@ -48,7 +48,8 @@ enum class BMSEventType {
     AOT_COMPILE_SUMMARY,
     AOT_COMPILE_RECORD,
     QUERY_OF_CONTINUE_TYPE,
-    FREE_INSTALL_EVENT
+    FREE_INSTALL_EVENT,
+    BMS_DISK_SPACE
 };
 
 enum class BundleEventType {
@@ -140,6 +141,9 @@ struct EventInfo {
     std::string continueType;
     //for free install event
     bool isFreeInstall = false;
+    std::string fileName;
+    int64_t freeSize = 0;
+    int32_t operationType = 0;
 
     void Reset()
     {
@@ -178,6 +182,9 @@ struct EventInfo {
         processName.clear();
         appIndex = 0;
         isFreeInstall = false;
+        fileName.clear();
+        freeSize = 0;
+        operationType = 0;
     }
 };
 
@@ -257,6 +264,15 @@ public:
      */
     static void SendFreeInstallEvent(const std::string &bundleName, const std::string &abilityName,
         const std::string &moduleName, bool isFreeInstall, int64_t timeStamp);
+
+    /**
+     * @brief Send system events the disk space in insufficient when an applicaiton is begin installed ir uninstall .
+     * @param fileName file name.
+     * @param freeSize free size.
+     * @param operationType operation type.
+     */
+    static void SendDiskSpaceEvent(const std::string &fileName,
+        int64_t freeSize, int32_t operationType);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

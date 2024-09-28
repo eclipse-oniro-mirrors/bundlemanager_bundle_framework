@@ -46,6 +46,7 @@ static constexpr char BUNDLE_MANAGER[] = "BUNDLE_MANAGER";
 const std::string AOT_COMPILE_SUMMARY = "AOT_COMPILE_SUMMARY";
 const std::string AOT_COMPILE_RECORD = "AOT_COMPILE_RECORD";
 const std::string QUERY_OF_CONTINUE_TYPE = "QUERY_OF_CONTINUE_TYPE";
+constexpr const char* BMS_DISK_SPACE = "BMS_DISK_SPACE";
 
 // event params
 const std::string EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -106,6 +107,9 @@ const std::string COST_TIME_SECONDS = "costTimeSeconds";
 const std::string COMPILE_MODE = "compileMode";
 const std::string COMPILE_RESULT = "compileResult";
 const std::string FAILURE_REASON = "failureReason";
+const char* FILE_NAME = "fileName";
+const char* FREE_SIZE = "freeSize";
+const char* OPERATION_TYPE = "operationType";
 
 const std::unordered_map<InstallScene, std::string> INSTALL_SCENE_STR_MAP = {
     { InstallScene::NORMAL, NORMAL_SCENE },
@@ -242,6 +246,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::FREE_INSTALL_EVENT,
             [](const EventInfo& eventInfo) {
                 InnerSendFreeInstallEvent(eventInfo);
+            } },
+        { BMSEventType::BMS_DISK_SPACE,
+            [](const EventInfo& eventInfo) {
+                InnerSendBmsDiskSpaceEvent(eventInfo);
             } }
     };
 
@@ -508,14 +516,6 @@ void InnerEventReport::InnerSendCpuSceneEvent(const EventInfo& eventInfo)
 
 void InnerEventReport::InnerSendAOTSummaryEvent(const EventInfo& eventInfo)
 {
-    InnerEventWriteForBundleManager(
-        AOT_COMPILE_SUMMARY,
-        HiSysEventType::BEHAVIOR,
-        TOTAL_BUNDLE_NAMES, eventInfo.totalBundleNames,
-        TOTAL_SIZE, eventInfo.totalBundleNames.size(),
-        SUCCESS_SIZE, eventInfo.successCnt,
-        COST_TIME_SECONDS, eventInfo.costTimeSeconds,
-        EVENT_PARAM_TIME, eventInfo.timeStamp);
     InnerEventWrite(
         AOT_COMPILE_SUMMARY,
         HiSysEventType::BEHAVIOR,
@@ -541,14 +541,6 @@ void InnerEventReport::InnerSendAOTRecordEvent(const EventInfo& eventInfo)
 
 void InnerEventReport::InnerSendQueryOfContinueTypeEvent(const EventInfo& eventInfo)
 {
-    InnerEventWriteForBundleManager(
-        QUERY_OF_CONTINUE_TYPE,
-        HiSysEventType::BEHAVIOR,
-        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
-        EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
-        EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
-        EVENT_PARAM_USERID, eventInfo.userId,
-        EVENT_PARAM_CONTINUE_TYPE, eventInfo.continueType);
     InnerEventWrite(
         QUERY_OF_CONTINUE_TYPE,
         HiSysEventType::BEHAVIOR,
@@ -561,14 +553,6 @@ void InnerEventReport::InnerSendQueryOfContinueTypeEvent(const EventInfo& eventI
 
 void InnerEventReport::InnerSendFreeInstallEvent(const EventInfo& eventInfo)
 {
-    InnerEventWriteForBundleManager(
-        FREE_INSTALL_EVENT,
-        HiSysEventType::BEHAVIOR,
-        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
-        EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
-        EVENT_PARAM_MODULE_NAME, eventInfo.moduleName,
-        EVENT_PARAM_IS_FREE_INSTALL, eventInfo.isFreeInstall,
-        EVENT_PARAM_TIME, eventInfo.timeStamp);
     InnerEventWrite(
         FREE_INSTALL_EVENT,
         HiSysEventType::BEHAVIOR,
@@ -579,6 +563,16 @@ void InnerEventReport::InnerSendFreeInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_TIME, eventInfo.timeStamp);
 }
 
+void InnerEventReport::InnerSendBmsDiskSpaceEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        BMS_DISK_SPACE,
+        HiSysEventType::BEHAVIOR,
+        FILE_NAME, eventInfo.fileName,
+        FREE_SIZE, eventInfo.freeSize,
+        OPERATION_TYPE, eventInfo.operationType);
+}
+
 template<typename... Types>
 void InnerEventReport::InnerEventWrite(
     const std::string &eventName,
@@ -587,19 +581,6 @@ void InnerEventReport::InnerEventWrite(
 {
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::BUNDLEMANAGER_UE,
-        eventName,
-        static_cast<OHOS::HiviewDFX::HiSysEvent::EventType>(type),
-        keyValues...);
-}
-
-template<typename... Types>
-void InnerEventReport::InnerEventWriteForBundleManager(
-    const std::string &eventName,
-    HiSysEventType type,
-    Types... keyValues)
-{
-    HiSysEventWrite(
-        BUNDLE_MANAGER,
         eventName,
         static_cast<OHOS::HiviewDFX::HiSysEvent::EventType>(type),
         keyValues...);
