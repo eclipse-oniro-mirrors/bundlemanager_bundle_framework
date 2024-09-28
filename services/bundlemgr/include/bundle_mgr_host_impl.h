@@ -979,7 +979,8 @@ public:
     virtual ErrCode GetDeveloperIds(const std::string &appDistributionType,
         std::vector<std::string> &developerIdList, int32_t userId) override;
 
-    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state) override;
+    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state,
+        bool isNeedSendNotify) override;
 
     virtual ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;

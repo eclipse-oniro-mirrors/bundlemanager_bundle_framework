@@ -1045,7 +1045,8 @@ public:
      * @param state Indicates whether the specified application can be uninstalled.
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
-    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state) override;
+    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state,
+        bool isNeedSendNotify = true) override;
 
     /**
      * @brief Query the AbilityInfo by continueType.

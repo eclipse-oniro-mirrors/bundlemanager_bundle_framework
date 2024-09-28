@@ -2209,6 +2209,8 @@ public:
     bool IsTsanEnabled() const;
     bool GetUninstallState() const;
     void SetUninstallState(const bool &uninstallState);
+    bool IsNeedSendNotify() const;
+    void SetNeedSendNotify(const bool needStatus);
     void UpdateMultiAppMode(const InnerBundleInfo &newInfo);
     void UpdateReleaseType(const InnerBundleInfo &newInfo);
     ErrCode AddCloneBundle(const InnerBundleCloneInfo &attr);
@@ -2319,6 +2321,9 @@ private:
 
     // use to control uninstalling
     bool uninstallState_ = true;
+
+    // need to send a notification when uninstallState_ change
+    bool isNeedSendNotify_ = false;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

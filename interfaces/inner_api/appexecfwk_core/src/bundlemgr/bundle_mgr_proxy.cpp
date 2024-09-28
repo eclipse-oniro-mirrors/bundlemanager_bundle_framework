@@ -4904,7 +4904,8 @@ ErrCode BundleMgrProxy::GetAllPreinstalledApplicationInfos(
         BundleMgrInterfaceCode::GET_PREINSTALLED_APPLICATION_INFO, data, preinstalledApplicationInfos);
 }
 
-ErrCode BundleMgrProxy::SwitchUninstallState(const std::string &bundleName, const bool &state)
+ErrCode BundleMgrProxy::SwitchUninstallState(const std::string &bundleName, const bool &state,
+    bool isNeedSendNotify)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
@@ -4920,7 +4921,10 @@ ErrCode BundleMgrProxy::SwitchUninstallState(const std::string &bundleName, cons
         APP_LOGE("write state failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
+    if (!data.WriteBool(isNeedSendNotify)) {
+        APP_LOGE("write isNeedSendNotify failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::SWITCH_UNINSTALL_STATE, data, reply)) {
         APP_LOGE("SendTransactCmd failed");
