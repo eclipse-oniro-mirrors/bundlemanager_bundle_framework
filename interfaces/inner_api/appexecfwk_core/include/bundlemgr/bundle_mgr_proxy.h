@@ -1111,6 +1111,10 @@ public:
      */
     ErrCode GetContinueBundleNames(const std::string &continueBundleName, std::vector<std::string> &bundleNames,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, bool &isInstalled) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

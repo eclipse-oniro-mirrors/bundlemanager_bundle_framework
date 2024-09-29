@@ -4462,5 +4462,26 @@ ErrCode BundleMgrHostImpl::GetContinueBundleNames(
     return dataMgr->GetContinueBundleNames(continueBundleName, bundleNames, userId);
 }
 
+ErrCode BundleMgrHostImpl::IsBundleInstalled(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, bool &isInstalled)
+{
+    APP_LOGD("IsBundleInstalled -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
+        Constants::PERMISSION_GET_BUNDLE_INFO})) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
