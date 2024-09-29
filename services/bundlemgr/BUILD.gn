@@ -31,6 +31,7 @@ config("bundlemgr_common_config") {
     "include/distributed_manager",
     "include/driver",
     "include/extend_resource",
+    "include/uninstall_data_mgr",
     "include/overlay",
     "include/quick_fix",
     "include/sandbox_app",

@@ -51,6 +51,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "element.h"
 #endif
+#include "uninstall_data_mgr_storage_rdb.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -818,6 +819,9 @@ public:
         const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
 
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
+    bool UpdateUninstallBundleInfo(const std::string &bundleName, const UninstallBundleInfo &uninstallBundleInfo);
+    bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo);
+    bool DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
 
     void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
 
@@ -1195,6 +1199,7 @@ private:
     mutable std::mutex hspBundleNameMutex_;
     std::set<std::string> appServiceHspBundleName_;
     std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
+    std::shared_ptr<UninstallDataMgrStorageRdb> uninstallDataMgr_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
