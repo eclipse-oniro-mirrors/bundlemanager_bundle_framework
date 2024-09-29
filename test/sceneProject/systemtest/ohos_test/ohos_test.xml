@@ -243,6 +243,7 @@
   </target>
   <target name="BmsInstallMultiUserTest">
     <preparer>
+    <option name="push" value="BundleClient/bundleClient1.hap -> /data/test/bms_bundle/" src="res" />
     <option name="push" value="testOverlay/internal/entry_hap.hap -> /data/test/bms_bundle/" src="res" />
     <option name="push" value="testOverlay/internal/entry_hapB.hap -> /data/test/bms_bundle/" src="res" />
     <option name="push" value="testOverlay/internal/higher_version_entry_hap.hap -> /data/test/bms_bundle/" src="res" />
