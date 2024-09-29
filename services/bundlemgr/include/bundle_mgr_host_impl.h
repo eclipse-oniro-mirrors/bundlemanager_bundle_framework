@@ -499,19 +499,21 @@ public:
      * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.
      * @param cleanCacheCallback Indicates the callback to be invoked for returning the operation result.
      * @param userId description the user id.
+     * @param appIndex Indicates the app index.
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
     virtual ErrCode CleanBundleCacheFiles(
         const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
-        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) override;
     /**
      * @brief Clears application running data of a specified application.
      * @param bundleName Indicates the bundle name of the application whose data is to be cleared.
      * @param userId Indicates the user id.
+     * @param appIndex Indicates the app index.
      * @return Returns true if the data cleared successfully; returns false otherwise.
      */
     virtual bool CleanBundleDataFiles(const std::string &bundleName,
-        const int userId = Constants::UNSPECIFIED_USERID) override;
+        const int userId = Constants::UNSPECIFIED_USERID, const int appIndex = 0) override;
     /**
      * @brief Register the specific bundle status callback.
      * @param bundleStatusCallback Indicates the callback to be invoked for returning the bundle status changed result.
@@ -1025,7 +1027,7 @@ private:
     std::set<int32_t> GetExistsCommonUserIs();
     bool VerifyDependency(const std::string &sharedBundleName);
     void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
-        const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId);
+        const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId, int32_t appIndex = 0);
     ErrCode CleanBundleCacheFilesGetCleanSize(const std::string &bundleName,
         int32_t userId, uint64_t &cleanCacheSize);
     void CleanBundleCacheTaskGetCleanSize(const std::string &bundleName,
@@ -1041,6 +1043,7 @@ private:
         int32_t userId);
     void FilterAbilityInfos(std::vector<AbilityInfo> &abilityInfos);
     void SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info);
+    bool CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex);
     bool CheckCanSetEnable(const std::string &bundleName);
     bool IsAppLinking(int32_t flags) const;
 
