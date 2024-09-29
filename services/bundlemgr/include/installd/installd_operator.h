@@ -322,6 +322,7 @@ private:
     static EnforceMetadataProcessForApp enforceMetadataProcessForApp_;
     static bool OpenEncryptionHandle();
 #endif
+    static void FsyncResFile(const std::string &path, const ExtractFileType &extractFileType);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -539,7 +539,23 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
         LOG_E(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
         return;
     }
+    FsyncResFile(path, extractFileType);
     LOG_D(BMS_TAG_INSTALLD, "extract file success, path : %{public}s", path.c_str());
+}
+
+void InstalldOperator::FsyncResFile(const std::string &path, const ExtractFileType &extractFileType)
+{
+    if (extractFileType == ExtractFileType::RES_FILE) {
+        int32_t fileFd = open(path.c_str(), O_RDONLY);
+        if (fileFd < 0) {
+            LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed", path.c_str());
+            return;
+        }
+        if (fsync(fileFd) != 0) {
+            LOG_E(BMS_TAG_INSTALLER, "fsync %{public}s failed", path.c_str());
+        }
+        close(fileFd);
+    }
 }
 
 bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
