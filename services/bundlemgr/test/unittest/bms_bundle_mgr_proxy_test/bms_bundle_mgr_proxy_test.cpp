@@ -1018,5 +1018,21 @@ HWTEST_F(BmsBundleMgrProxyTest, RegisterBundleEventCallback_0100, Function | Med
     res = bundleMgrProxy.RegisterBundleEventCallback(bundleEventCallback);
     EXPECT_FALSE(res);
 }
+
+/**
+ * @tc.number: IsBundleInstalled_0100
+ * @tc.name: test the IsBundleInstalled
+ * @tc.desc: 1. system running normally
+ *           2. test IsBundleInstalled
+ */
+HWTEST_F(BmsBundleMgrProxyTest, IsBundleInstalled_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    bool isBundleInstalled = false;
+    ErrCode res = bundleMgrProxy.IsBundleInstalled("", 100, 0, isBundleInstalled);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
+    EXPECT_FALSE(isBundleInstalled);
+}
 }
 }

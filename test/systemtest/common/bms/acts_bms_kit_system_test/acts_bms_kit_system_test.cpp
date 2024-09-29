@@ -9619,5 +9619,77 @@ HWTEST_F(ActsBmsKitSystemTest, GetSignatureInfoByBundleName_0200, Function | Med
 
     std::cout << "END GetSignatureInfoByBundleName_0200" << std::endl;
 }
+
+/**
+ * @tc.number: IsBundleInstalled_0001
+ * @tc.name: test IsBundleInstalled interface
+ * @tc.desc: 1.ret is no permission
+ */
+HWTEST_F(ActsBmsKitSystemTest, IsBundleInstalled_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START IsBundleInstalled_0001" << std::endl;
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        bool isBundleInstalled = false;
+        ErrCode ret = bundleMgrProxy->IsBundleInstalled(DEFAULT_APP_BUNDLE_NAME, 0, 0, isBundleInstalled);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        EXPECT_FALSE(isBundleInstalled);
+    }
+
+    std::cout << "END IsBundleInstalled_0001" << std::endl;
+}
+
+/**
+ * @tc.number: IsBundleInstalled_0002
+ * @tc.name: test IsBundleInstalled interface
+ * @tc.desc: 1. has permission
+ */
+HWTEST_F(ActsBmsKitSystemTest, IsBundleInstalled_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START IsBundleInstalled_0002" << std::endl;
+
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle25.hap";
+    std::string appName = BASE_BUNDLE_NAME + "2";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        setuid(5523);
+        bool isBundleInstalled = false;
+        ErrCode ret = bundleMgrProxy->IsBundleInstalled(appName, 200, 0, isBundleInstalled);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+        EXPECT_FALSE(isBundleInstalled);
+
+        ret = bundleMgrProxy->IsBundleInstalled(appName, 100, 0, isBundleInstalled);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_TRUE(isBundleInstalled);
+
+        ret = bundleMgrProxy->IsBundleInstalled(appName, 100, 3000, isBundleInstalled);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+        EXPECT_FALSE(isBundleInstalled);
+
+        ret = bundleMgrProxy->IsBundleInstalled(appName, 100, -3000, isBundleInstalled);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+        EXPECT_FALSE(isBundleInstalled);
+
+        ret = bundleMgrProxy->IsBundleInstalled(appName, 100, 1, isBundleInstalled);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_FALSE(isBundleInstalled);
+
+        setuid(Constants::ROOT_UID);
+    }
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END IsBundleInstalled_0002" << std::endl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
