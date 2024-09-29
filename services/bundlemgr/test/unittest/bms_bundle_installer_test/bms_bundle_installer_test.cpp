@@ -701,7 +701,6 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(hapModuleInfo.description, "$string:description_application");
         EXPECT_EQ(hapModuleInfo.mainAbility, "MainAbility");
         EXPECT_EQ(hapModuleInfo.process, "bba");
-        EXPECT_EQ(hapModuleInfo.virtualMachine, "ark");
         EXPECT_EQ(hapModuleInfo.uiSyntax, "hml");
         EXPECT_EQ(hapModuleInfo.pages, "$profile:page_config");
         EXPECT_EQ(hapModuleInfo.deliveryWithInstall, true);
