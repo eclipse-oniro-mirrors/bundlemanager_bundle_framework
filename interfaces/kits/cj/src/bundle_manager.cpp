@@ -237,6 +237,23 @@ std::tuple<int32_t, std::vector<std::string>> BundleManagerImpl::GetProfileByAbi
     return {SUCCESS_CODE, profileVec};
 }
 
+bool BundleManagerImpl::InnerCanOpenLink(std::string link, int32_t& code)
+{
+    bool canOpen = false;
+    auto iBundleMgr = AppExecFwk::CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        code = ERROR_BUNDLE_SERVICE_EXCEPTION;
+        return canOpen;
+    }
+    code = AppExecFwk::CommonFunc::ConvertErrCode(
+        iBundleMgr->CanOpenLink(link, canOpen));
+    if (code != NO_ERROR) {
+        APP_LOGE("CanOpenLink failed");
+        return canOpen;
+    }
+    return canOpen;
+}
 
 } // BundleManager
 } // CJSystemapi

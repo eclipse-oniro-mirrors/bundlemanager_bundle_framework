@@ -55,7 +55,7 @@ namespace BundleManager {
     };
 
     struct MultiAppMode {
-        int32_t multiAppModeType;
+        uint8_t multiAppModeType;
         int32_t count;
     };
     
