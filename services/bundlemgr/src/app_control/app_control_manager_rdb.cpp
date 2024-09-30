@@ -35,6 +35,7 @@ namespace {
     constexpr int8_t APP_ID_INDEX = 4;
     constexpr int8_t CONTROL_MESSAGE_INDEX = 5;
     constexpr int8_t DISPOSED_STATUS_INDEX = 6;
+    constexpr int8_t TIME_STAMP_INDEX = 8;
     // app control table key
     constexpr const char* CALLING_NAME = "CALLING_NAME";
     constexpr const char* APP_CONTROL_LIST = "APP_CONTROL_LIST";
@@ -711,8 +712,22 @@ ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
             LOG_W(BMS_TAG_DEFAULT, "parse DisposedRule failed");
         }
         disposedRules.push_back(rule);
+        PrintCallerNameAndSetRuleTime(absSharedResultSet);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     return ERR_OK;
+}
+
+void AppControlManagerRdb::PrintCallerNameAndSetRuleTime(
+    const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet)
+{
+    std::string callerName;
+    if (absSharedResultSet->GetString(CALLING_NAME_INDEX, callerName) == NativeRdb::E_OK) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "GetAbilityRunningControlRule caller:%{public}s", callerName.c_str());
+    }
+    int32_t setRuleTime;
+    if (absSharedResultSet->GetInt(TIME_STAMP_INDEX, setRuleTime) == NativeRdb::E_OK) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "GetAbilityRunningControlRule time:%{public}d", setRuleTime);
+    }
 }
 }
 }
