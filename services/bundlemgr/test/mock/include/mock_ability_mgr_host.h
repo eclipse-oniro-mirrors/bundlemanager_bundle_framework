@@ -228,10 +228,6 @@ public:
     {
         return 0;
     }
-    int ClearUpApplicationData(const std::string &bundleName) override
-    {
-        return 0;
-    }
     int StartContinuation(const Want &want, const sptr<IRemoteObject> &abilityToken, int32_t status) override
     {
         return 0;

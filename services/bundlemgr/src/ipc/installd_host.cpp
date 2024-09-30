@@ -434,7 +434,8 @@ bool InstalldHost::HandleCleanBundleDataDirByName(MessageParcel &data, MessagePa
 {
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int userid = data.ReadInt32();
-    ErrCode result = CleanBundleDataDirByName(bundleName, userid);
+    int appIndex = data.ReadInt32();
+    ErrCode result = CleanBundleDataDirByName(bundleName, userid, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

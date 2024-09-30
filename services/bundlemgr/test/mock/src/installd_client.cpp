@@ -154,14 +154,14 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
 }
 
 ErrCode InstalldClient::CleanBundleDataDirByName(
-    const std::string &bundleName, const int userid)
+    const std::string &bundleName, const int userid, const int appIndex)
 {
-    if (bundleName.empty() || userid < 0) {
+    if (bundleName.empty() || userid < 0 || appIndex < 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::CleanBundleDataDirByName, bundleName, userid);
+    return CallService(&IInstalld::CleanBundleDataDirByName, bundleName, userid, appIndex);
 }
 
 ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int32_t userId,

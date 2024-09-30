@@ -520,18 +520,21 @@ public:
      * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.
      * @param cleanCacheCallback Indicates the callback to be invoked for returning the operation result.
      * @param userId description the user id.
+     * @param appIndex Indicates the app index.
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
     virtual ErrCode CleanBundleCacheFiles(
         const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
-        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) override;
     /**
      * @brief Clears application running data of a specified application through the proxy object.
      * @param bundleName Indicates the bundle name of the application whose data is to be cleared.
      * @param userId Indicates the user id.
+     * @param appIndex Indicates the app index.
      * @return Returns true if the data cleared successfully; returns false otherwise.
      */
-    virtual bool CleanBundleDataFiles(const std::string &bundleName, const int userId = 0) override;
+    virtual bool CleanBundleDataFiles(const std::string &bundleName, const int userId = 0,
+        const int appIndex = 0) override;
     /**
      * @brief Register the specific bundle status callback through the proxy object.
      * @param bundleStatusCallback Indicates the callback to be invoked for returning the bundle status changed result.
