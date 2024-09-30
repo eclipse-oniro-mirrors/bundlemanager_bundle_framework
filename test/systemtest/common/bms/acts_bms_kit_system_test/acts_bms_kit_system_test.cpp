@@ -9623,7 +9623,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetSignatureInfoByBundleName_0200, Function | Med
 /**
  * @tc.number: IsBundleInstalled_0001
  * @tc.name: test IsBundleInstalled interface
- * @tc.desc: 1.ret is no permission
+ * @tc.desc: 1. bundle not exist
  */
 HWTEST_F(ActsBmsKitSystemTest, IsBundleInstalled_0001, Function | MediumTest | Level1)
 {
@@ -9634,7 +9634,7 @@ HWTEST_F(ActsBmsKitSystemTest, IsBundleInstalled_0001, Function | MediumTest | L
     if (bundleMgrProxy != nullptr) {
         bool isBundleInstalled = false;
         ErrCode ret = bundleMgrProxy->IsBundleInstalled(DEFAULT_APP_BUNDLE_NAME, 0, 0, isBundleInstalled);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        EXPECT_EQ(ret, ERR_OK);
         EXPECT_FALSE(isBundleInstalled);
     }
 
@@ -9644,7 +9644,7 @@ HWTEST_F(ActsBmsKitSystemTest, IsBundleInstalled_0001, Function | MediumTest | L
 /**
  * @tc.number: IsBundleInstalled_0002
  * @tc.name: test IsBundleInstalled interface
- * @tc.desc: 1. has permission
+ * @tc.desc: 1. bundle exist
  */
 HWTEST_F(ActsBmsKitSystemTest, IsBundleInstalled_0002, Function | MediumTest | Level1)
 {
@@ -9661,7 +9661,6 @@ HWTEST_F(ActsBmsKitSystemTest, IsBundleInstalled_0002, Function | MediumTest | L
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     EXPECT_NE(bundleMgrProxy, nullptr);
     if (bundleMgrProxy != nullptr) {
-        setuid(5523);
         bool isBundleInstalled = false;
         ErrCode ret = bundleMgrProxy->IsBundleInstalled(appName, 200, 0, isBundleInstalled);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
@@ -9671,6 +9670,7 @@ HWTEST_F(ActsBmsKitSystemTest, IsBundleInstalled_0002, Function | MediumTest | L
         EXPECT_EQ(ret, ERR_OK);
         EXPECT_TRUE(isBundleInstalled);
 
+        isBundleInstalled = false;
         ret = bundleMgrProxy->IsBundleInstalled(appName, 100, 3000, isBundleInstalled);
         EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
         EXPECT_FALSE(isBundleInstalled);
@@ -9682,8 +9682,6 @@ HWTEST_F(ActsBmsKitSystemTest, IsBundleInstalled_0002, Function | MediumTest | L
         ret = bundleMgrProxy->IsBundleInstalled(appName, 100, 1, isBundleInstalled);
         EXPECT_EQ(ret, ERR_OK);
         EXPECT_FALSE(isBundleInstalled);
-
-        setuid(Constants::ROOT_UID);
     }
     resvec.clear();
     Uninstall(appName, resvec);

@@ -7406,6 +7406,7 @@ HWTEST_F(BmsBundleDataMgrTest, IsBundleInstalled_0001, Function | SmallTest | Le
     auto bundleDataMgr = GetBundleDataMgr();
     EXPECT_NE(bundleDataMgr, nullptr);
     if (bundleDataMgr != nullptr) {
+        bundleDataMgr->AddUserId(0);
         bool isInstalled = false;
         ErrCode ret = bundleDataMgr->IsBundleInstalled(BUNDLE_NAME_TEST, 200, 0, isInstalled);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
@@ -7423,7 +7424,7 @@ HWTEST_F(BmsBundleDataMgrTest, IsBundleInstalled_0001, Function | SmallTest | Le
         EXPECT_EQ(ret, ERR_OK);
         EXPECT_FALSE(isInstalled);
 
-        ret = bundleDataMgr->IsBundleInstalled(BUNDLE_NAME_TEST, 0, Constants::ANY_USERID, isInstalled);
+        ret = bundleDataMgr->IsBundleInstalled(BUNDLE_NAME_TEST, Constants::ANY_USERID, 0, isInstalled);
         EXPECT_EQ(ret, ERR_OK);
         EXPECT_FALSE(isInstalled);
     }
@@ -7439,15 +7440,16 @@ HWTEST_F(BmsBundleDataMgrTest, IsBundleInstalled_0002, Function | SmallTest | Le
     auto bundleDataMgr = GetBundleDataMgr();
     EXPECT_NE(bundleDataMgr, nullptr);
     if (bundleDataMgr != nullptr) {
+        bundleDataMgr->AddUserId(100);
         InnerBundleInfo innerBundleInfo;
         innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::SHARED;
+        innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
         bundleDataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
         bool isInstalled = false;
         ErrCode ret = bundleDataMgr->IsBundleInstalled(BUNDLE_NAME_TEST, 100, 0, isInstalled);
         EXPECT_EQ(ret, ERR_OK);
         EXPECT_TRUE(isInstalled);
 
-        bundleDataMgr->AddUserId(100);
         bundleDataMgr->bundleInfos_.clear();
         innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
         bundleDataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
@@ -7504,11 +7506,11 @@ HWTEST_F(BmsBundleDataMgrTest, IsBundleInstalled_0004, Function | SmallTest | Le
         bundleDataMgr->AddUserId(100);
         InnerBundleInfo innerBundleInfo;
         innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
-
+        innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
         InnerBundleUserInfo innerBundleUserInfo;
-        innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME_TEST + "_100", innerBundleUserInfo);
         InnerBundleCloneInfo innerBundleCloneInfo;
         innerBundleUserInfo.cloneInfos.emplace("1", innerBundleCloneInfo);
+        innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME_TEST + "_100", innerBundleUserInfo);
         bundleDataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
         bool isInstalled = false;
         auto ret = bundleDataMgr->IsBundleInstalled(BUNDLE_NAME_TEST, 100, 1, isInstalled);

@@ -13655,7 +13655,7 @@ HWTEST_F(BmsBundleKitServiceTest, IsBundleInstalled_0001, Function | SmallTest |
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     bool isInstalled = false;
     auto testRet = hostImpl->IsBundleInstalled(BUNDLE_NAME_TEST, DEFAULT_USERID, 0, isInstalled);
-    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(testRet, ERR_OK);
     EXPECT_FALSE(isInstalled);
 }
 }

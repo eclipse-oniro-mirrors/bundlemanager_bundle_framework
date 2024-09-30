@@ -5321,7 +5321,7 @@ ErrCode BundleMgrProxy::IsBundleInstalled(const std::string &bundleName, int32_t
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::IS_BUNDLE_INSTALLED, data, reply)) {
         APP_LOGE("Fail to IsBundleInstalled from server");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     auto ret = reply.ReadInt32();
     if (ret != ERR_OK) {
