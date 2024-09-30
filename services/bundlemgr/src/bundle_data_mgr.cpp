@@ -235,9 +235,10 @@ void BundleDataMgr::ResetBundleStateData()
 bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, const InstallState state)
 {
     if (bundleName.empty()) {
-        APP_LOGW("update result:fail, reason:bundle name is empty");
+        APP_LOGW("update failed: bundle name is empty");
         return false;
     }
+
     // always keep lock bundleInfoMutex_ before locking stateMutex_ to avoid deadlock
     std::unique_lock<std::shared_mutex> lck(bundleInfoMutex_);
     std::lock_guard<std::mutex> lock(stateMutex_);
@@ -245,17 +246,17 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, cons
     if (item == installStates_.end()) {
         if (state == InstallState::INSTALL_START) {
             installStates_.emplace(bundleName, state);
-            APP_LOGD("update result:success, state:INSTALL_START");
+            APP_LOGD("update succeed");
             return true;
         }
-        APP_LOGW("update result:fail, reason:incorrect state, bundleName: %{public}s", bundleName.c_str());
+        APP_LOGW("update failed: incorrect state, -n: %{public}s", bundleName.c_str());
         return false;
     }
 
     auto stateRange = transferStates_.equal_range(state);
     for (auto previousState = stateRange.first; previousState != stateRange.second; ++previousState) {
         if (item->second == previousState->second) {
-            APP_LOGD("update result:success, current:%{public}d, state:%{public}d",
+            APP_LOGD("update succeed, current:%{public}d, state:%{public}d",
                 static_cast<int32_t>(previousState->second), static_cast<int32_t>(state));
             if (IsDeleteDataState(state)) {
                 installStates_.erase(item);
