@@ -42,7 +42,6 @@
 #include "inner_bundle_clone_info.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
-#include "ipc/create_dir_param.h"
 #include "uninstall_data_mgr_storage_rdb.h"
 #include "module_info.h"
 #include "preinstall_data_storage_interface.h"
@@ -917,7 +916,7 @@ public:
     const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos();
     ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
     ErrCode GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
-    ErrCode CreateBundleDataDir(int32_t userId);
+    ErrCode CreateBundleDataDir(int32_t userId) const;
     void GenerateOdid(const std::string &developerId, std::string &odid) const;
     ErrCode GetOdid(std::string &odid) const;
     ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
@@ -1068,9 +1067,6 @@ private:
 
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;
     void CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32_t userId) const;
-    void CreateEl5Dir(const std::vector<CreateDirParam> &el5Params);
-    void InnerCreateEl5Dir(const CreateDirParam &el5Param);
-    void SetEl5DirPolicy(const CreateDirParam &el5Param);
 
     void FilterExtensionAbilityInfosByModuleName(const std::string &moduleName,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;

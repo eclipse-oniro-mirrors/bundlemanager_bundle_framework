@@ -1940,8 +1940,6 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             createExtensionDirs_.assign(extensionDirs.begin(), extensionDirs.end());
             CreateExtensionDataDir(oldInfo);
             CreateDataGroupDir(oldInfo);
-            bundleName_ = bundleName;
-            CreateScreenLockProtectionDir();
             // extract ap file
             result = ExtractAllArkProfileFile(oldInfo);
             if (result != ERR_OK) {
