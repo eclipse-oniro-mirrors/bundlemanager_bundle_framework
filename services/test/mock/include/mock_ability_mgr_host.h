@@ -203,7 +203,7 @@ public:
     }
 
     virtual sptr<AAFwk::IWantSender> GetWantSender(
-        const WantSenderInfo &wantSenderInfo, const sptr<IRemoteObject> &callerToken) override
+        const WantSenderInfo &wantSenderInfo, const sptr<IRemoteObject> &callerToken, int32_t uid) override
     {
         return nullptr;
     }
