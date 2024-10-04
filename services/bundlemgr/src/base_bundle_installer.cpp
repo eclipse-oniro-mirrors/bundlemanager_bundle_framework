@@ -1884,6 +1884,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             createExtensionDirs_.assign(extensionDirs.begin(), extensionDirs.end());
             CreateExtensionDataDir(oldInfo);
             CreateDataGroupDir(oldInfo);
+            bundleName_ = bundleName;
+            CreateScreenLockProtectionDir();
             // extract ap file
             result = ExtractAllArkProfileFile(oldInfo);
             if (result != ERR_OK) {
@@ -2964,11 +2966,14 @@ void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleI
 void BaseBundleInstaller::CreateScreenLockProtectionDir()
 {
     LOG_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed");
+        return;
+    }
     InnerBundleInfo info;
-    bool isExist = false;
-    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
-        LOG_E(BMS_TAG_INSTALLER, "GetInnerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
-        return ;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, info)) {
+        LOG_E(BMS_TAG_INSTALLER, "get failed");
+        return;
     }
 
     std::vector<std::string> dirs = GenerateScreenLockProtectionDir(bundleName_);
