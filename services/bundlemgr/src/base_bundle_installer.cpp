@@ -3156,6 +3156,14 @@ void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, 
         LOG_W(BMS_TAG_INSTALLER, "bundleName is empty");
         return;
     }
+    std::vector<RequestPermission> reqPermissions = oldInfo.GetAllRequestPermissions();
+    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
+        return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    });
+    if (it == reqPermissions.end()) {
+        LOG_D(BMS_TAG_INSTALLER, "no need to delete el5 -n %{public}s", oldInfo.GetBundleName().c_str());
+        return;
+    }
     if (isKeepData) {
         LOG_I(BMS_TAG_INSTALLER, "keep el5 dir -n %{public}s", oldInfo.GetBundleName().c_str());
         return;
