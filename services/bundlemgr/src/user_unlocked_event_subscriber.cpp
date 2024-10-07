@@ -260,15 +260,15 @@ void UpdateAppDataMgr::ProcessNewBackupDir(const std::vector<BundleInfo> &bundle
 void UpdateAppDataMgr::CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t userId)
 {
     std::string parentEl1Dir = BUNDLE_BACKUP_HOME_PATH_EL1_NEW;
-    parentEl1Dir = parentEl1Dir.replace(parentEl1Dir.find("%"), 1, std::to_string(userId));
+    parentEl1Dir = parentEl1Dir.replace(parentEl1Dir.find("%"), 1, std::to_string(userId)) + bundleInfo.name;
     std::string parentEl2Dir = BUNDLE_BACKUP_HOME_PATH_EL2_NEW;
-    parentEl2Dir = parentEl2Dir.replace(parentEl2Dir.find("%"), 1, std::to_string(userId));
+    parentEl2Dir = parentEl2Dir.replace(parentEl2Dir.find("%"), 1, std::to_string(userId)) + bundleInfo.name;
     if (!BundleUtil::IsExistDir(parentEl1Dir) || !BundleUtil::IsExistDir(parentEl2Dir)) {
         APP_LOGE("parent dir(%{public}s or %{public}s) missing: backup", parentEl1Dir.c_str(), parentEl2Dir.c_str());
         return;
     }
-    std::string backupDirEl1 = parentEl1Dir + bundleInfo.name + BUNDLE_BACKUP_INNER_DIR;
-    std::string backupDirEl2 = parentEl2Dir + bundleInfo.name + BUNDLE_BACKUP_INNER_DIR;
+    std::string backupDirEl1 = parentEl1Dir + BUNDLE_BACKUP_INNER_DIR;
+    std::string backupDirEl2 = parentEl2Dir + BUNDLE_BACKUP_INNER_DIR;
     std::vector<std::string> backupDirList;
     backupDirList.emplace_back(backupDirEl1);
     backupDirList.emplace_back(backupDirEl2);
