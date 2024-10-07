@@ -8819,7 +8819,14 @@ ErrCode BundleDataMgr::IsBundleInstalled(const std::string &bundleName, int32_t 
         isInstalled = false;
         return ERR_OK;
     }
-    if (item->second.GetApplicationBundleType() == BundleType::SHARED) {
+    if (item->second.GetInstallMark().status == InstallExceptionStatus::INSTALL_START) {
+        APP_LOGW("name %{public}s is installing", bundleName.c_str());
+        isInstalled = false;
+        return ERR_OK;
+    }
+    if ((item->second.GetApplicationBundleType() == BundleType::SHARED) ||
+        ((item->second.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) &&
+        item->second.GetInnerBundleUserInfos().empty())) {
         isInstalled = true;
         return ERR_OK;
     }
