@@ -15,6 +15,8 @@
 
 #include "bundle_data_mgr.h"
 
+#include <sys/stat.h>
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
@@ -94,6 +96,7 @@ constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 constexpr const char* ENTRY = "entry";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
+constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -7770,11 +7773,12 @@ void BundleDataMgr::CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32
     }
 }
 
-ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
+ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
 {
     APP_LOGI("with -u %{public}d begin", userId);
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     std::vector<CreateDirParam> createDirParams;
+    std::vector<CreateDirParam> el5Params;
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &info = item.second;
         int32_t responseUserId = info.GetResponseUserId(userId);
@@ -7795,13 +7799,89 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
         createDirParam.extensionDirs = info.GetAllExtensionDirs();
         createDirParams.emplace_back(createDirParam);
 
+        std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
+        auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
+            return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+        });
+        if (it != reqPermissions.end()) {
+            el5Params.emplace_back(createDirParam);
+        }
         CreateGroupDir(info, responseUserId);
     }
     lock.unlock();
     APP_LOGI("begin create dirs");
     auto res = InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams);
     APP_LOGI("end, res %{public}d", res);
+    CreateEl5Dir(el5Params);
     return res;
+}
+
+void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params)
+{
+    for (const auto &el5Param : el5Params) {
+        APP_LOGI("-n %{public}s -u %{public}d", el5Param.bundleName.c_str(), el5Param.userId);
+        InnerCreateEl5Dir(el5Param);
+        SetEl5DirPolicy(el5Param);
+    }
+}
+
+void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
+{
+    std::string parentDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(el5Param.userId);
+    if (!BundleUtil::IsExistDir(parentDir)) {
+        APP_LOGE("parent dir(%{public}s) missing: el5", parentDir.c_str());
+        return;
+    }
+    std::vector<std::string> dirs;
+    dirs.emplace_back(parentDir + ServiceConstants::BASE + el5Param.bundleName);
+    dirs.emplace_back(parentDir + ServiceConstants::DATABASE + el5Param.bundleName);
+    for (const std::string &dir : dirs) {
+        uint32_t mode = S_IRWXU;
+        int32_t gid = el5Param.uid;
+        if (dir.find(ServiceConstants::DATABASE) != std::string::npos) {
+            mode = S_IRWXU | S_IRWXG | S_ISGID;
+            gid = ServiceConstants::DATABASE_DIR_GID;
+        }
+        if (InstalldClient::GetInstance()->Mkdir(dir, mode, el5Param.uid, gid) != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "create el5 dir %{public}s failed", dir.c_str());
+        }
+        ErrCode result = InstalldClient::GetInstance()->SetDirApl(
+            dir, el5Param.bundleName, el5Param.apl, el5Param.isPreInstallApp, el5Param.debug);
+        if (result != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "fail to SetDirApl dir %{public}s, error is %{public}d", dir.c_str(), result);
+        }
+    }
+}
+
+void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param)
+{
+    InnerBundleInfo info;
+    if (!FetchInnerBundleInfo(el5Param.bundleName, info)) {
+        LOG_E(BMS_TAG_INSTALLER, "get bundle %{public}s failed", el5Param.bundleName.c_str());
+        return;
+    }
+    InnerBundleUserInfo userInfo;
+    if (!info.GetInnerBundleUserInfo(el5Param.userId, userInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "%{public}s get user %{public}d failed",
+            info.GetBundleName().c_str(), el5Param.userId);
+        return;
+    }
+    if (!userInfo.keyId.empty()) {
+        LOG_I(BMS_TAG_INSTALLER, "keyId is not empty, bundleName: %{public}s", info.GetBundleName().c_str());
+        return;
+    }
+    int32_t uid = userInfo.uid;
+    std::string keyId = "";
+    auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(uid, info.GetBundleName(), el5Param.userId, keyId);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "SetEncryptionPolicy failed");
+    }
+    LOG_D(BMS_TAG_INSTALLER, "%{public}s, keyId: %{public}s", info.GetBundleName().c_str(), keyId.c_str());
+    info.SetkeyId(el5Param.userId, keyId);
+    if (!UpdateInnerBundleInfo(info)) {
+        LOG_E(BMS_TAG_INSTALLER, "save keyId failed");
+    }
 }
 
 ErrCode BundleDataMgr::CanOpenLink(
