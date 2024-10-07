@@ -815,7 +815,9 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     std::string suffixName = bundleName;
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
+    elPath.push_back(ServiceConstants::DIR_EL5);
+    for (const auto &el : elPath) {
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             CleanBundleDataForEl2(bundleName, userid, appIndex);
             continue;
