@@ -603,6 +603,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::UPDATE_APP_ENCRYPTED_KEY_STATUS):
             errCode = HandleUpdateAppEncryptedStatus(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_BUNDLE_INSTALLED):
+            errCode = HandleIsBundleInstalled(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -4092,6 +4095,25 @@ ErrCode BundleMgrHost::HandleGetContinueBundleNames(MessageParcel &data, Message
     }
     if (ret == ERR_OK && !reply.WriteStringVector(bundleNames)) {
         APP_LOGE("Write bundleNames results failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleIsBundleInstalled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t apppIndex = data.ReadInt32();
+    bool isBundleInstalled = false;
+    auto ret = IsBundleInstalled(bundleName, userId, apppIndex, isBundleInstalled);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("IsBundleInstalled write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteBool(isBundleInstalled)) {
+        APP_LOGE("Write isInstalled result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

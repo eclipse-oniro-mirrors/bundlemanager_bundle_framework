@@ -5295,5 +5295,41 @@ ErrCode BundleMgrProxy::GetContinueBundleNames(
     }
     return ERR_OK;
 }
+
+ErrCode BundleMgrProxy::IsBundleInstalled(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, bool &isInstalled)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("Write bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write user id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("Write appIndex id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IS_BUNDLE_INSTALLED, data, reply)) {
+        APP_LOGE("Fail to IsBundleInstalled from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("IsBundleInstalled err: %{public}d", ret);
+        return ret;
+    }
+    isInstalled = reply.ReadBool();
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -8800,5 +8800,55 @@ ErrCode BundleDataMgr::GetContinueBundleNames(
     APP_LOGD("The number of found continue packs, size:[%{public}d]", static_cast<int32_t>(bundleNames.size()));
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::IsBundleInstalled(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, bool &isInstalled)
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("name %{public}s invalid userid :%{public}d", bundleName.c_str(), userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
+        APP_LOGE("name %{public}s invalid appIndex :%{public}d", bundleName.c_str(), appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        isInstalled = false;
+        return ERR_OK;
+    }
+    if (item->second.GetInstallMark().status == InstallExceptionStatus::INSTALL_START) {
+        APP_LOGW("name %{public}s is installing", bundleName.c_str());
+        isInstalled = false;
+        return ERR_OK;
+    }
+    if ((item->second.GetApplicationBundleType() == BundleType::SHARED) ||
+        ((item->second.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) &&
+        item->second.GetInnerBundleUserInfos().empty())) {
+        isInstalled = true;
+        return ERR_OK;
+    }
+    int32_t responseUserId = item->second.GetResponseUserId(requestUserId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        isInstalled = false;
+        return ERR_OK;
+    }
+    if (appIndex == 0) {
+        isInstalled = true;
+        return ERR_OK;
+    }
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (item->second.GetInnerBundleUserInfo(responseUserId, innerBundleUserInfo)) {
+        if (innerBundleUserInfo.cloneInfos.find(InnerBundleUserInfo::AppIndexToKey(appIndex)) !=
+            innerBundleUserInfo.cloneInfos.end()) {
+            isInstalled = true;
+            return ERR_OK;
+        }
+    }
+    isInstalled = false;
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
