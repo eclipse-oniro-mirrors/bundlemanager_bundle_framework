@@ -4370,5 +4370,25 @@ ErrCode BundleMgrHostImpl::GetOdidByBundleName(const std::string &bundleName, st
     }
     return dataMgr->GetOdidByBundleName(bundleName, odid);
 }
+
+ErrCode BundleMgrHostImpl::GetContinueBundleNames(
+    const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId)
+{
+    if (continueBundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetContinueBundleNames(continueBundleName, bundleNames, userId);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -567,6 +567,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID_BY_BUNDLENAME):
             errCode = this->HandleGetOdidByBundleName(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CONTINUE_BUNDLE_NAMES):
+            errCode = HandleGetContinueBundleNames(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -3957,6 +3960,27 @@ ErrCode BundleMgrHost::HandleGetOdidByBundleName(MessageParcel &data, MessagePar
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     APP_LOGD("odid is %{private}s", odid.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetContinueBundleNames(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string continueBundleName = data.ReadString();
+    int userId = data.ReadInt32();
+
+    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
+    std::vector<std::string> bundleNames;
+
+    auto ret = GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("GetContinueBundleNames write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteStringVector(bundleNames)) {
+        APP_LOGE("Write bundleNames results failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk
