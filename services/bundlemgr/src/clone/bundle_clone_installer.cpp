@@ -112,9 +112,8 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
         APP_LOGE("install clone app user %{public}d not exist", userId);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST;
     }
-    ScopeGuard bundleEnabledGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleInfo info;
-    bool isExist = dataMgr_->GetInnerBundleInfoWithDisable(bundleName, info);
+    bool isExist = dataMgr_->FetchInnerBundleInfo(bundleName, info);
     if (!isExist) {
         APP_LOGE("the bundle is not installed");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED;
@@ -277,12 +276,12 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     }
     uid_ = it->second.uid;
     accessTokenId_ = it->second.accessTokenId;
+    if (!AbilityManagerHelper::UninstallApplicationProcesses(bundleName, uid_, false, appIndex)) {
+        APP_LOGE("fail to kill running application");
+    }
     if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete AT failed clone");
-    }
-    if (!AbilityManagerHelper::UninstallApplicationProcesses(bundleName, uid_, false, appIndex)) {
-        APP_LOGE("fail to kill running application");
     }
     if (dataMgr_->RemoveCloneBundle(bundleName, userId, appIndex)) {
         APP_LOGE("RemoveCloneBundle failed");
