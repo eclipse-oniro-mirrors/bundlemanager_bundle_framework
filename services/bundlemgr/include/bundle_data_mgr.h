@@ -986,6 +986,13 @@ public:
 
     ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled);
 
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo);
 private:
     /**
      * @brief Init transferStates.
