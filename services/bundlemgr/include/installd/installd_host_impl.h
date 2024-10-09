@@ -138,7 +138,7 @@ public:
         std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID,
         const int32_t appIndex = 0) override;
 
-    virtual ErrCode GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    virtual ErrCode GetAllBundleStats(const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids) override;
     /**
      * @brief Set dir apl.

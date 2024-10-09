@@ -1054,11 +1054,10 @@ HWTEST_F(BmsInstallDaemonTest, GetDiskUsage_0100, Function | SmallTest | Level0)
 HWTEST_F(BmsInstallDaemonTest, GetAllBundleStats_0100, Function | SmallTest | Level0)
 {
     InstalldHostImpl hostImpl;
-    std::vector<std::string> bundleNames;
     int32_t userId = 100;
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids;
-    ErrCode ret = hostImpl.GetAllBundleStats(bundleNames, userId, bundleStats, uids);
+    ErrCode ret = hostImpl.GetAllBundleStats(userId, bundleStats, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1070,15 +1069,12 @@ HWTEST_F(BmsInstallDaemonTest, GetAllBundleStats_0100, Function | SmallTest | Le
 HWTEST_F(BmsInstallDaemonTest, GetAllBundleStats_0200, Function | SmallTest | Level0)
 {
     InstalldHostImpl hostImpl;
-    std::vector<std::string> bundleNames;
-    bundleNames.push_back("com.acts.example1");
-    bundleNames.push_back("com.acts.example2");
     int32_t userId = 100;
     std::vector<int64_t> bundleStats;
     std::vector<int32_t> uids;
     uids.push_back(101);
     uids.push_back(102);
-    ErrCode ret = hostImpl.GetAllBundleStats(bundleNames, userId, bundleStats, uids);
+    ErrCode ret = hostImpl.GetAllBundleStats(userId, bundleStats, uids);
     EXPECT_EQ(ret, ERR_OK);
 }
 
