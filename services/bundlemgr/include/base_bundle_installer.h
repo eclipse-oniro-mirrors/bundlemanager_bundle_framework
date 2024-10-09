@@ -745,6 +745,11 @@ private:
     ErrCode VerifyArkWebInstall(const std::string &bundleName);
 #endif
 
+    bool SetDisposedRuleWhenBundleUpdateStart(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const InnerBundleInfo &oldBundleInfo, bool isPreInstallApp);
+
+    bool DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo);
+
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
     std::string bundleName_;
@@ -810,6 +815,7 @@ private:
     std::vector<std::string> createExtensionDirs_;
     // indicates sandboxd dirs need to remove by extension
     std::vector<std::string> removeExtensionDirs_;
+    bool needSetDisposeRule_ = false;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 
