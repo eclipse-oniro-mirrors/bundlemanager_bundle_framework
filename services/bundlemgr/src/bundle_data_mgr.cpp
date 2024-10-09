@@ -7867,10 +7867,6 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param)
             info.GetBundleName().c_str(), el5Param.userId);
         return;
     }
-    if (!userInfo.keyId.empty()) {
-        LOG_I(BMS_TAG_INSTALLER, "keyId is not empty, bundleName: %{public}s", info.GetBundleName().c_str());
-        return;
-    }
     int32_t uid = userInfo.uid;
     std::string keyId = "";
     auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(uid, info.GetBundleName(), el5Param.userId, keyId);

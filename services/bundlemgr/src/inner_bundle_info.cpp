@@ -2863,6 +2863,10 @@ void InnerBundleInfo::SetAccessTokenIdEx(
 
 void InnerBundleInfo::SetkeyId(const int32_t userId, const std::string &keyId)
 {
+    if (keyId.empty()) {
+        APP_LOGE("SetkeyId failed, keyId is empty");
+        return;
+    }
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {

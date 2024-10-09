@@ -32,6 +32,7 @@ static constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
 constexpr const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
+constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 }
 UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)
@@ -114,12 +115,26 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
         if (elDir != ServiceConstants::BUNDLE_EL[0]) {
             createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
         }
+        if (elDir == ServiceConstants::DIR_EL5) {
+            return CreateEl5Dir(createDirParam);
+        }
         ProcessExtensionDir(bundleInfo, createDirParam.extensionDirs);
         if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam) != ERR_OK) {
             APP_LOGW("failed to CreateBundleDataDir");
         }
     }
     CreateDataGroupDir(bundleInfo, userId);
+    return true;
+}
+
+bool UpdateAppDataMgr::CreateEl5Dir(const CreateDirParam &createDirParam)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("CreateDataGroupDir failed for DataMgr is nullptr");
+        return false;
+    }
+    dataMgr->CreateEl5Dir(std::vector<CreateDirParam> {createDirParam});
     return true;
 }
 
@@ -165,7 +180,8 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
         return;
     }
     std::vector<BundleInfo> bundleInfos;
-    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO, bundleInfos, userId)) {
+    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
+        BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION, bundleInfos, userId)) {
         APP_LOGE("UpdateAppDataDirSelinuxLabel GetAllBundleInfos failed");
         return;
     }
@@ -175,6 +191,7 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
     ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL3);
     ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL4);
 #endif
+    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL5);
     ProcessUpdateAppLogDir(bundleInfos, userId);
     ProcessFileManagerDir(bundleInfos, userId);
     ProcessNewBackupDir(bundleInfos, userId);
@@ -191,6 +208,15 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
             APP_LOGI("bundleName:%{public}s appIndex:%{public}d clone app no need to change",
                 bundleInfo.name.c_str(), bundleInfo.appIndex);
             continue;
+        }
+        if (elDir == ServiceConstants::DIR_EL5) {
+            std::vector<std::string> reqPermissions = bundleInfo.reqPermissions;
+            auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const std::string &permission) {
+                return permission == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+            });
+            if (it == reqPermissions.end()) {
+                continue;
+            }
         }
         if ((userId != Constants::DEFAULT_USERID && bundleInfo.singleton) ||
             !CreateBundleDataDir(bundleInfo, userId, elDir)) {
