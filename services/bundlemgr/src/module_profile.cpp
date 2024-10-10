@@ -187,6 +187,7 @@ struct Ability {
     std::string preferMultiWindowOrientation = "default";
     bool isolationProcess = false;
     std::vector<std::string> continueType;
+    std::vector<std::string> continueBundleNames;
 };
 
 struct Extension {
@@ -659,6 +660,14 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         jsonObjectEnd,
         ABILITY_CONTINUE_TYPE,
         ability.continueType,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_CONTINUE_BUNDLE_NAME,
+        ability.continueBundleNames,
         JsonType::ARRAY,
         false,
         g_parseResult,
@@ -2260,6 +2269,11 @@ bool ToAbilityInfo(
 
     auto modesSet = ConvertToAbilityWindowMode(ability.windowModes, Profile::WINDOW_MODE_MAP);
     abilityInfo.windowModes.assign(modesSet.begin(), modesSet.end());
+
+    if (!ability.continueBundleNames.empty()) {
+        abilityInfo.continueBundleNames.insert(ability.continueBundleNames.begin(), ability.continueBundleNames.end());
+    }
+    
     abilityInfo.maxWindowRatio = ability.maxWindowRatio;
     abilityInfo.minWindowRatio = ability.minWindowRatio;
     abilityInfo.maxWindowWidth = ability.maxWindowWidth;

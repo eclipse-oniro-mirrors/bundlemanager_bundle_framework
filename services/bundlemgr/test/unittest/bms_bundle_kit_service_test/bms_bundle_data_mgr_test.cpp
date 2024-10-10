@@ -5635,4 +5635,89 @@ HWTEST_F(BmsBundleDataMgrTest, BundleDataMgrDeleteDesktopShortcutInfo_0002, Func
     ErrCode ret = localBundleDataMgr->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
+
+/**
+ * @tc.number: GetContinueBundleNames_0100
+ * @tc.name: test GetContinueBundleNames
+ * @tc.desc: 1.system run normally
+ *           2.check GetContinueBundleNames success
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetContinueBundleNames_0100, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    std::vector<std::string> bundleNames;
+    std::string continueBundleName;
+    int32_t userId = 10;
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto ret = dataMgr->GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetContinueBundleNames_0200
+ * @tc.name: test GetContinueBundleNames
+ * @tc.desc: 1.system run normally
+ *           2.check GetContinueBundleNames success
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetContinueBundleNames_0200, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleNames;
+    std::string continueBundleName;
+    int32_t userId = -4;
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto ret = dataMgr->GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: GetContinueBundleNames_0300
+ * @tc.name: test GetContinueBundleNames
+ * @tc.desc: 1.system run normally
+ *           2.check GetContinueBundleNames success
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetContinueBundleNames_0300, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleNames;
+    std::string continueBundleName{ "com.example.test" };
+    int32_t userId = -4;
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto ret = dataMgr->GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetContinueBundleNames_0400
+ * @tc.name: test GetContinueBundleNames
+ * @tc.desc: 1.system run normally
+ *           2.check GetContinueBundleNames success
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetContinueBundleNames_0400, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleNames;
+    std::string continueBundleName;
+    int32_t userId = 100;
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    auto ret = bundleMgrHostImpl_->GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: GetContinueBundleNames_0500
+ * @tc.name: test GetContinueBundleNames
+ * @tc.desc: 1.system run normally
+ *           2.check GetContinueBundleNames success
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetContinueBundleNames_0500, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleNames;
+    std::string continueBundleName{ "com.example.test" };
+    int32_t userId = -4;
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    auto ret = bundleMgrHostImpl_->GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
 }

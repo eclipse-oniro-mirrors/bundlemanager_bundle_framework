@@ -861,6 +861,7 @@ protected:
                     "supportMimeTypes": [],
                     "isolationProcess": false,
                     "continueType": [],
+                    "continueBundleName": [],
                     "appIndex": 0
                 },
                 "com.ohos.launcher.com.ohos.launcher.recents.com.ohos.launcher.recents.MainAbility": {
