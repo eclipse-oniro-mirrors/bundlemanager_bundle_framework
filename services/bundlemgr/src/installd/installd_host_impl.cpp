@@ -1418,10 +1418,6 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
         LOG_D(BMS_TAG_INSTALLD, "Verify code signature with: %{public}s", codeSignatureParam.signatureFileDir.c_str());
         ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
     }
-    if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
-        LOG_W(BMS_TAG_INSTALLD, "no code sign file in the bundle");
-        return ERR_OK;
-    }
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "hap or hsp code signature failed due to %{public}d", ret);
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
