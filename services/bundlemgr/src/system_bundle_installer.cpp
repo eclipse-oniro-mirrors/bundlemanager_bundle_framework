@@ -147,7 +147,7 @@ bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName)
         installParam.userId = userId;
         installParam.needSavePreInstallInfo = true;
         installParam.isPreInstallApp = true;
-        installParam.noSkipsKill = false;
+        installParam.SetKillProcess(false);
         installParam.needSendEvent = false;
         MarkPreBundleSyeEventBootTag(false);
         ErrCode result = UninstallBundle(bundleName, installParam);
@@ -173,7 +173,7 @@ bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName,
         installParam.userId = userId;
         installParam.needSavePreInstallInfo = true;
         installParam.isPreInstallApp = true;
-        installParam.noSkipsKill = false;
+        installParam.SetKillProcess(false);
         installParam.needSendEvent = false;
         installParam.isKeepData = isKeepData;
         MarkPreBundleSyeEventBootTag(false);
@@ -200,7 +200,7 @@ bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName,
         installParam.userId = userId;
         installParam.needSavePreInstallInfo = true;
         installParam.isPreInstallApp = true;
-        installParam.noSkipsKill = false;
+        installParam.SetKillProcess(false);
         installParam.needSendEvent = false;
         MarkPreBundleSyeEventBootTag(false);
         ErrCode result = UninstallBundle(bundleName, modulePackage, installParam);
@@ -260,7 +260,7 @@ void SystemBundleInstaller::CheckUninstallSystemHsp(const std::string &bundleNam
         installParam.userId = Constants::DEFAULT_USERID;
         installParam.needSavePreInstallInfo = true;
         installParam.isPreInstallApp = true;
-        installParam.noSkipsKill = false;
+        installParam.SetKillProcess(false);
         installParam.needSendEvent = false;
         installParam.isKeepData = true;
         MarkPreBundleSyeEventBootTag(false);

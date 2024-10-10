@@ -54,10 +54,6 @@ struct InstallParam : public Parcelable {
     bool needSavePreInstallInfo = false;
     bool isPreInstallApp = false;
     bool removable = true;
-    // should force uninstall when delete userinfo.
-    bool forceExecuted  = false;
-    // OTA upgrade skips the killing process
-    bool noSkipsKill  = true;
     bool needSendEvent = true;
     bool withCopyHaps = false;
     std::map<std::string, std::string> hashParams;
@@ -93,11 +89,58 @@ struct InstallParam : public Parcelable {
     bool isSelfUpdate = false;
     // the profile-guided optimization(PGO) file path
     std::map<std::string, std::string> pgoParams;
-    bool isUninstallAndRecover = false;
     // the parcel object function is not const.
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static InstallParam *Unmarshalling(Parcel &parcel);
+
+private:
+    // should force uninstall when delete userinfo.
+    bool forceExecuted = false;
+    // OTA upgrade skips the killing process
+    bool killProcess = true;
+    // system app can be uninstalled when uninstallUpdates
+    bool isUninstallAndRecover = false;
+
+public:
+    bool GetForceExecuted() const
+    {
+        return forceExecuted;
+    }
+
+    void SetForceExecuted(bool value)
+    {
+        if (CheckPermission()) {
+            forceExecuted = value;
+        }
+    }
+
+    bool GetKillProcess() const
+    {
+        return killProcess;
+    }
+
+    void SetKillProcess(bool value)
+    {
+        if (CheckPermission()) {
+            killProcess = value;
+        }
+    }
+
+    bool GetIsUninstallAndRecover() const
+    {
+        return isUninstallAndRecover;
+    }
+
+    void SetIsUninstallAndRecover(bool value)
+    {
+        if (CheckPermission()) {
+            isUninstallAndRecover = value;
+        }
+    }
+
+private:
+    bool CheckPermission() const;
 };
 
 struct UninstallParam : public Parcelable {

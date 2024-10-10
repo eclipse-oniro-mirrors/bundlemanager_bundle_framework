@@ -1031,7 +1031,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     InstallParam installParam;
     installParam.userId = userId;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     installParam.removable = preScanInfo.removable;
     installParam.needSavePreInstallInfo = true;
@@ -1051,7 +1051,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     InstallParam installParam;
     installParam.userId = userId;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     installParam.removable = false;
     installParam.needSavePreInstallInfo = true;
@@ -1069,7 +1069,7 @@ void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &shared
     LOG_I(BMS_TAG_DEFAULT, "Process system shared bundle by sharedBundlePath(%{public}s)", sharedBundlePath.c_str());
     InstallParam installParam;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     installParam.removable = false;
     installParam.needSavePreInstallInfo = true;
@@ -2306,7 +2306,7 @@ bool BMSEventHandler::OTAInstallSystemBundle(
 
     InstallParam installParam;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.removable = removable;
@@ -2334,7 +2334,7 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
 
     InstallParam installParam;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.removable = removable;
@@ -2894,7 +2894,7 @@ void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
             continue;
         }
         InstallParam installParam;
-        installParam.noSkipsKill = false;
+        installParam.SetKillProcess(false);
         installParam.removable = false;
         installParam.needSendEvent = false;
         installParam.copyHapToInstallPath = true;
@@ -2948,7 +2948,7 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
             continue;
         }
         InstallParam installParam;
-        installParam.noSkipsKill = false;
+        installParam.SetKillProcess(false);
         installParam.needSendEvent = false;
         installParam.installFlag = InstallFlag::REPLACE_EXISTING;
         installParam.copyHapToInstallPath = true;
@@ -3128,8 +3128,8 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
         if (IsQuickfixFlagExsit(hasInstalledInfo)) {
             // If metadata name has quickfix flag, it should be uninstall and recover.
             InstallParam installParam;
-            installParam.isUninstallAndRecover = true;
-            installParam.noSkipsKill = false;
+            installParam.SetIsUninstallAndRecover(true);
+            installParam.SetKillProcess(false);
             installParam.needSendEvent = false;
             installParam.isKeepData = true;
             installer->UninstallAndRecover(bundleName, installParam, innerReceiverImpl);
@@ -3142,7 +3142,7 @@ void BMSEventHandler::InnerProcessRebootUninstallWrongBundle()
 {
     InstallParam installParam;
     installParam.userId = Constants::DEFAULT_USERID;
-    installParam.noSkipsKill = false;
+    installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
     std::vector<std::string> wrongBundleNameList;
     wrongBundleNameList.emplace_back(Constants::SCENE_BOARD_BUNDLE_NAME);

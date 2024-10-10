@@ -228,6 +228,7 @@ void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const I
     }
     for (auto userId : userIds) {
         userInstallParam.userId = userId;
+        userInstallParam.SetIsUninstallAndRecover(true);
         resultCode = UninstallBundle(bundleName, userInstallParam);
         errCode.push_back(resultCode);
         ResetInstallProperties();

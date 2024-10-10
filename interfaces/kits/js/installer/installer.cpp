@@ -1391,7 +1391,6 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
-    callbackPtr->installParam.isUninstallAndRecover = true;
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER,
         UninstallAndRecoverExecuter, OperationCompleted);
     callbackPtr.release();

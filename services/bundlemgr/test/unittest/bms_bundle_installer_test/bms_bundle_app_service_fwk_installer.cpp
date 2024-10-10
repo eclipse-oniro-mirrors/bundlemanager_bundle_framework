@@ -127,7 +127,9 @@ ErrCode BmsBundleAppServiceFwkInstallerTest::InstallSystemBundle(const std::stri
     InstallParam installParam;
     installParam.userId = userId;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    setuid(Constants::FOUNDATION_UID);
+    installParam.SetKillProcess(false);
+    setuid(Constants::ROOT_UID);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
