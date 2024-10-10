@@ -6135,4 +6135,117 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharedBundleTempDir_0100, Function | Smal
     auto ret = bundleUtil.CreateSharedBundleTempDir(INSTALLER_ID, INDEX);
     EXPECT_FALSE(ret.empty());
 }
+
+/**
+ * @tc.number: AddNotifyBundleEvents_0100
+ * @tc.name: test AddNotifyBundleEvents
+ * @tc.desc: test AddNotifyBundleEvents of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, AddNotifyBundleEvents_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    NotifyBundleEvents installRes;
+    installer.AddNotifyBundleEvents(installRes);
+    installRes.abilityName = "testAbilityName";
+    installer.AddBundleStatus(installRes);
+    bool ret = installer.NotifyAllBundleStatus();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetInstallEventInfo_0100
+ * @tc.name: test GetInstallEventInfo
+ * @tc.desc: test GetInstallEventInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, GetInstallEventInfo_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo bundleInfo;
+    EventInfo eventInfo;
+    installer.GetInstallEventInfo(bundleInfo, eventInfo);
+    EXPECT_EQ(eventInfo.hideDesktopIcon, bundleInfo.IsHideDesktopIcon());
+
+    std::string appDistributionType = "hos_normal_type";
+    bundleInfo.SetAppDistributionType(appDistributionType);
+    installer.GetInstallEventInfo(bundleInfo, eventInfo);
+    EXPECT_EQ(eventInfo.appDistributionType, appDistributionType);
+}
+
+/**
+ * @tc.number: CheckArkNativeFileWithOldInfo_0100
+ * @tc.name: test CheckArkNativeFileWithOldInfo
+ * @tc.desc: test CheckArkNativeFileWithOldInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkNativeFileWithOldInfo_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    ApplicationInfo applicationInfo;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    oldInfo.SetArkNativeFileAbi("x86");
+    ErrCode ret = installer.CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_AN_INCOMPATIBLE);
+}
+
+/**
+ * @tc.number: SetAppDistributionType_0100
+ * @tc.name: test SetAppDistributionType
+ * @tc.desc: test SetAppDistributionType of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, SetAppDistributionType_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    std::unordered_map<std::string, InnerBundleInfo> innerBundleInfos;
+    installer.SetAppDistributionType(innerBundleInfos);
+
+    ApplicationInfo applicationInfo;
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(applicationInfo);
+    std::string appDistributionType = "hos_normal_type";
+    info.SetAppDistributionType(appDistributionType);
+    innerBundleInfos.try_emplace("so", info);
+    installer.SetAppDistributionType(innerBundleInfos);
+    EXPECT_EQ(installer.appDistributionType_, appDistributionType);
+}
+
+/**
+ * @tc.number: RemoveOldExtensionDirs_0100
+ * @tc.name: test RemoveOldExtensionDirs
+ * @tc.desc: test RemoveOldExtensionDirs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, RemoveOldExtensionDirs_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.removeExtensionDirs_.clear();
+    installer.RemoveOldExtensionDirs();
+    EXPECT_TRUE(installer.removeExtensionDirs_.empty());
+
+    installer.createExtensionDirs_.clear();
+    installer.RemoveCreatedExtensionDirsForException();
+    EXPECT_TRUE(installer.createExtensionDirs_.empty());
+}
+
+/**
+ * @tc.number: GetValidDataGroupIds_0100
+ * @tc.name: test GetValidDataGroupIds
+ * @tc.desc: test GetValidDataGroupIds of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, GetValidDataGroupIds_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::vector<std::string> extensionDataGroupIds;
+    std::vector<std::string> bundleDataGroupIds;
+    std::vector<std::string> validGroupIds;
+    installer.GetValidDataGroupIds(extensionDataGroupIds, bundleDataGroupIds, validGroupIds);
+
+    extensionDataGroupIds.push_back(TEST_STRING);
+    installer.GetValidDataGroupIds(extensionDataGroupIds, bundleDataGroupIds, validGroupIds);
+
+    bundleDataGroupIds.push_back(TEST_STRING);
+    installer.GetValidDataGroupIds(extensionDataGroupIds, bundleDataGroupIds, validGroupIds);
+    std::string dataGroupId = validGroupIds.back();
+    EXPECT_EQ(dataGroupId, TEST_STRING);
+}
 } // OHOS
