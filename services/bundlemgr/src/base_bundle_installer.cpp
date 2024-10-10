@@ -6217,12 +6217,7 @@ bool BaseBundleInstaller::SetDisposedRuleWhenBundleUpdateStart(
                 bundleName_.c_str());
             return false;
         }
-        appControlMgr->SetDisposedRuleOnlyForBms(oldBundleInfo.GetAppId(), 0, userId_);
-        // process clone app
-        auto appIndexes = oldBundleInfo.GetCloneBundleAppIndexes();
-        for (const int32_t &appIndex : appIndexes) {
-            appControlMgr->SetDisposedRuleOnlyForBms(oldBundleInfo.GetAppId(), appIndex, userId_);
-        }
+        appControlMgr->SetDisposedRuleOnlyForBms(oldBundleInfo.GetAppId());
     }
     return needSetDisposeRule_;
 #endif
@@ -6241,12 +6236,7 @@ bool BaseBundleInstaller::DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundl
         return false;
     }
 
-    appControlMgr->DeleteDisposedRuleOnlyForBms(oldBundleInfo.GetAppId(), 0, userId_);
-    // process clone app
-    auto appIndexes = oldBundleInfo.GetCloneBundleAppIndexes();
-    for (const int32_t &appIndex : appIndexes) {
-        appControlMgr->DeleteDisposedRuleOnlyForBms(oldBundleInfo.GetAppId(), appIndex, userId_);
-    }
+    appControlMgr->DeleteDisposedRuleOnlyForBms(oldBundleInfo.GetAppId());
     return true;
 #endif
 }

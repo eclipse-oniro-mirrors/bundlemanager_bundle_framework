@@ -405,6 +405,7 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const InnerBundleInfo &
         LOG_E(BMS_TAG_DEFAULT, "DeleteAllDisposedRuleByBundle to rdb failed");
         return ret;
     }
+    DeleteAbilityRunningRuleBmsCache(appId);
     std::string key = appId + std::string("_") + std::to_string(userId);
     DeleteAppRunningRuleCache(key);
     key = key + std::string("_");
@@ -446,10 +447,6 @@ void AppControlManager::DeleteAbilityRunningRuleCache(std::string &key)
     if (cacheIter != abilityRunningControlRuleCache_.end()) {
         abilityRunningControlRuleCache_.erase(cacheIter);
     }
-    auto iterBms = abilityRunningControlRuleCacheForBms_.find(key);
-    if (iterBms != abilityRunningControlRuleCacheForBms_.end()) {
-        abilityRunningControlRuleCacheForBms_.erase(iterBms);
-    }
 }
 
 ErrCode AppControlManager::GetAbilityRunningControlRule(
@@ -481,7 +478,7 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
         LOG_W(BMS_TAG_DEFAULT, "GetAbilityRunningControlRule from rdb failed");
         return ret;
     }
-    auto iterBms = abilityRunningControlRuleCacheForBms_.find(key);
+    auto iterBms = abilityRunningControlRuleCacheForBms_.find(appId);
     if (iterBms != abilityRunningControlRuleCacheForBms_.end()) {
         LOG_I(BMS_TAG_DEFAULT, "find from bms cache -n %{public}s", bundleName.c_str());
         disposedRules.emplace_back(iterBms->second);
@@ -511,32 +508,46 @@ bool AppControlManager::CheckCanDispose(const std::string &appId, int32_t userId
     return true;
 }
 
-void AppControlManager::SetDisposedRuleOnlyForBms(const std::string &appId, int32_t appIndex, int32_t userId)
+void AppControlManager::SetDisposedRuleOnlyForBms(const std::string &appId)
 {
     std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
-    std::string key = appId + std::string("_") + std::to_string(userId) + std::string("_") + std::to_string(appIndex);
-    auto iter = abilityRunningControlRuleCache_.find(key);
-    if (iter != abilityRunningControlRuleCache_.end()) {
-        abilityRunningControlRuleCache_.erase(iter);
+    for (auto iter = abilityRunningControlRuleCache_.begin(); iter != abilityRunningControlRuleCache_.end();) {
+        if (iter->first.find(appId) == 0) {
+            iter = abilityRunningControlRuleCache_.erase(iter);
+        } else {
+            ++iter;
+        }
     }
 
     DisposedRule disposedRule;
     disposedRule.componentType = ComponentType::UI_ABILITY;
     disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
     disposedRule.controlType = ControlType::DISALLOWED_LIST;
-    abilityRunningControlRuleCacheForBms_[key] = disposedRule;
+    abilityRunningControlRuleCacheForBms_[appId] = disposedRule;
 }
 
-void AppControlManager::DeleteDisposedRuleOnlyForBms(const std::string &appId, int32_t appIndex, int32_t userId)
+void AppControlManager::DeleteDisposedRuleOnlyForBms(const std::string &appId)
 {
     std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
-    std::string key = appId + std::string("_") + std::to_string(userId) + std::string("_") + std::to_string(appIndex);
-    auto iter = abilityRunningControlRuleCache_.find(key);
-    if (iter != abilityRunningControlRuleCache_.end()) {
-        abilityRunningControlRuleCache_.erase(iter);
+    for (auto iter = abilityRunningControlRuleCache_.begin(); iter != abilityRunningControlRuleCache_.end();) {
+        if (iter->first.find(appId) == 0) {
+            iter = abilityRunningControlRuleCache_.erase(iter);
+        } else {
+            ++iter;
+        }
     }
 
-    auto iterBms = abilityRunningControlRuleCacheForBms_.find(key);
+    auto iterBms = abilityRunningControlRuleCacheForBms_.find(appId);
+    if (iterBms != abilityRunningControlRuleCacheForBms_.end()) {
+        abilityRunningControlRuleCacheForBms_.erase(iterBms);
+    }
+}
+
+
+void AppControlManager::DeleteAbilityRunningRuleBmsCache(const std::string &appId)
+{
+    std::lock_guard<std::mutex> cacheLock(abilityRunningControlRuleMutex_);
+    auto iterBms = abilityRunningControlRuleCacheForBms_.find(appId);
     if (iterBms != abilityRunningControlRuleCacheForBms_.end()) {
         abilityRunningControlRuleCacheForBms_.erase(iterBms);
     }
