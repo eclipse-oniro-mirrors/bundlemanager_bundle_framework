@@ -19,6 +19,7 @@ group("bms_target") {
     "common:common_target",
     "interfaces/inner_api/appexecfwk_base:appexecfwk_base",
     "interfaces/inner_api/appexecfwk_core:appexecfwk_core",
+    "interfaces/inner_api/appexecfwk_core:bundlemgr_mini",
     "interfaces/inner_api/bundlemgr_extension:bundlemgr_extension",
     "interfaces/kits/cj:cj_bundle_manager_ffi",
     "interfaces/kits/js:napi_packages",
