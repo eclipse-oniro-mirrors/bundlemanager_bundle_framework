@@ -1413,10 +1413,6 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
     }
 
     ErrCode ret = PerformCodeSignatureCheck(codeSignatureParam, entryMap);
-    if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
-        LOG_W(BMS_TAG_INSTALLD, "no code sign file in the bundle");
-        return true;
-    }
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "VerifyCode failed due to %{public}d", ret);
         return false;
