@@ -727,5 +727,10 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
 void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(
     const std::string& bundleName, const std::unordered_map<std::string, InnerBundleInfo>& innerBundleInfos)
 {}
+
+bool BMSEventHandler::InnerProcessUninstallForExistPreBundle(const BundleInfo &installedInfo)
+{
+    return false;
+}
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -2109,7 +2109,6 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
             return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
         }
     }
-
     if (isAppExist_) {
         oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_NEW_START);
     }

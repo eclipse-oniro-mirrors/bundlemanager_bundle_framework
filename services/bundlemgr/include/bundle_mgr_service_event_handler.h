@@ -500,6 +500,8 @@ private:
     void ProcessCheckRecoverableApplicationInfo();
     void InnerProcessCheckRecoverableApplicationInfo();
 
+    bool InnerProcessUninstallForExistPreBundle(const BundleInfo &installedInfo);
+
     void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
     void RefreshQuotaForAllUid();
