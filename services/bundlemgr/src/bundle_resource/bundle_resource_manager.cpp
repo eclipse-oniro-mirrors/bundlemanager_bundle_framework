@@ -20,6 +20,7 @@
 
 #include "account_helper.h"
 #include "app_log_wrapper.h"
+#include "bms_extension_client.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_promise.h"
 #include "bundle_util.h"
@@ -408,6 +409,12 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo, appIndex);
+    if (ret == ERR_OK) {
+        APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
+        return true;
+    }
     APP_LOGE_NOFUNC("%{public}s not exist in resource rdb", bundleName.c_str());
     return false;
 }
@@ -419,6 +426,13 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
     uint32_t resourceFlags = CheckResourceFlags(flags);
     if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, resourceFlags,
         launcherAbilityResourceInfo, appIndex)) {
+        APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
+        return true;
+    }
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->GetLauncherAbilityResourceInfo(bundleName, resourceFlags,
+        launcherAbilityResourceInfo, appIndex);
+    if (ret == ERR_OK) {
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }

@@ -18,6 +18,8 @@
 
 #include "bms_extension_data_mgr.h"
 #include "bundle_data_mgr.h"
+#include "bundle_resource_info.h"
+#include "launcher_ability_resource_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -63,6 +65,13 @@ public:
     ErrCode DeleteResourceInfo(const std::string &key);
     ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
+    ErrCode GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
+        BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
+    ErrCode GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
+    ErrCode GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
+    ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
 
 private:
     void ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) const;
