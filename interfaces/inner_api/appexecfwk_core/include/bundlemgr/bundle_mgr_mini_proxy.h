@@ -65,6 +65,8 @@ public:
     virtual int32_t GetUidByBundleName(const std::string &bundleName, const int32_t userId, int32_t appIndex) override;
 
 private:
+    static inline BrokerDelegator<BundleMgrMiniProxy> delegator_;
+
     /**
      * @brief Send a command message from the proxy object.
      * @param code Indicates the message code to be sent.
