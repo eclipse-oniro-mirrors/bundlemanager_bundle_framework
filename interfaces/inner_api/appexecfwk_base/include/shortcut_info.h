@@ -34,8 +34,8 @@ struct Shortcut {
     std::string shortcutId;
     std::string icon;
     uint32_t iconId = 0;
-    std::string label;
     uint32_t labelId = 0;
+    std::string label;
     std::vector<ShortcutWant> wants;
 };
 
@@ -51,21 +51,21 @@ struct ShortcutIntent {
 };
 
 struct ShortcutInfo : public Parcelable {
+    bool isStatic = false;
+    bool isHomeShortcut = false;
+    bool isEnables = false;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
+    int32_t appIndex = 0;
+    int32_t sourceType = 0;
     std::string id;
     std::string bundleName;
     std::string moduleName;
     std::string hostAbility;
-    uint32_t iconId = 0;
-    uint32_t labelId = 0;
     std::string icon;
     std::string label;
     std::string disableMessage;
     std::vector<ShortcutIntent> intents;
-    bool isStatic = false;
-    bool isHomeShortcut = false;
-    bool isEnables = false;
-    int32_t appIndex = 0;
-    int32_t sourceType = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
