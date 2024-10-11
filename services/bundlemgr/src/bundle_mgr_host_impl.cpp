@@ -89,7 +89,7 @@ bool BundleMgrHostImpl::GetApplicationInfo(
 }
 
 ErrCode BundleMgrHostImpl::GetApplicationInfoV9(
-    const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo)
+    const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo, const int32_t appIndex)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_QUERY, "GetApplicationInfoV9 bundleName:%{public}s flags:%{public}d userId:%{public}d",
@@ -109,7 +109,7 @@ ErrCode BundleMgrHostImpl::GetApplicationInfoV9(
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetApplicationInfoV9(appName, flags, userId, appInfo);
+    return dataMgr->GetApplicationInfoV9(appName, flags, userId, appInfo, appIndex);
 }
 
 bool BundleMgrHostImpl::GetApplicationInfos(
@@ -1635,7 +1635,7 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     }
     ApplicationInfo applicationInfo;
     if (GetApplicationInfoV9(bundleName, static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE),
-        userId, applicationInfo) != ERR_OK) {
+        userId, applicationInfo, appIndex) != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
