@@ -1995,9 +1995,7 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
         static_cast<uint32_t>(uid), bundleName, keyId);
     if (ret == Security::AccessToken::EFM_ERR_KEYID_EXISTED) {
         LOG_I(BMS_TAG_INSTALLD, "key id is existed");
-        return true;
-    }
-    if (ret != 0) {
+    } else if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "Call GenerateAppKey failed ret = %{public}d", ret);
         return false;
     }
@@ -2032,7 +2030,7 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
         // call ioctl to set e policy
         auto result = ioctl(fd, HMFS_IOC_SET_ASDP_ENCRYPTION_POLICY, &policy);
         if (result != 0) {
-            LOG_E(BMS_TAG_INSTALLD, "ioctl failed result:%{public}d", result);
+            LOG_E(BMS_TAG_INSTALLD, "ioctl failed result:%{public}d %{public}d", result, errno);
             close(fd);
             return false;
         }

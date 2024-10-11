@@ -21,6 +21,7 @@
 #include "bundle_info.h"
 #include "common_event_data.h"
 #include "common_event_subscriber.h"
+#include "ipc/create_dir_param.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -50,6 +51,7 @@ private:
     static bool CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t userId);
     static bool CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_t userId);
     static void CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t userId);
+    static bool CreateEl5Dir(const CreateDirParam &createDirParam);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
