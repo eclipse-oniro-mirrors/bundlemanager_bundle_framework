@@ -129,7 +129,9 @@ bool BmsBundleOtaUpdateTest::InstallSystemBundle(const std::string &filePath) co
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    setuid(Constants::FOUNDATION_UID);
+    installParam.SetKillProcess(false);
+    setuid(Constants::ROOT_UID);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -144,7 +146,9 @@ bool BmsBundleOtaUpdateTest::OTAInstallSystemBundle(const std::vector<std::strin
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    setuid(Constants::FOUNDATION_UID);
+    installParam.SetKillProcess(false);
+    setuid(Constants::ROOT_UID);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -236,7 +240,9 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0001, Function | SmallTest | Level3
     EXPECT_FALSE(applicationInfo.hwasanEnabled);
 
     auto installer = std::make_unique<SystemBundleInstaller>();
+    setuid(Constants::FOUNDATION_UID);
     ret = installer->UninstallSystemBundle(bundleName);
+    setuid(Constants::ROOT_UID);
     EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
 }
 
@@ -281,7 +287,9 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0002, Function | SmallTest | Level3
     EXPECT_EQ(hapModuleInfo.process, PROCESS_MODULEFIELD);
 
     auto installer = std::make_unique<SystemBundleInstaller>();
+    setuid(Constants::FOUNDATION_UID);
     ret = installer->UninstallSystemBundle(bundleName);
+    setuid(Constants::ROOT_UID);
     EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
 }
 
@@ -305,7 +313,9 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0003, Function | SmallTest | Level3
     EXPECT_TRUE(ret) << "the update failed: " << bundleFile;
 
     auto installer = std::make_unique<SystemBundleInstaller>();
+    setuid(Constants::FOUNDATION_UID);
     ret = installer->UninstallSystemBundle(bundleName);
+    setuid(Constants::ROOT_UID);
     EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
 }
 
@@ -330,7 +340,9 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0004, Function | SmallTest | Level3
     EXPECT_FALSE(ret) << "the install succeeded: " << bundleFile;
 
     auto installer = std::make_unique<SystemBundleInstaller>();
+    setuid(Constants::FOUNDATION_UID);
     ret = installer->UninstallSystemBundle(bundleName);
+    setuid(Constants::ROOT_UID);
     EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
 }
 
@@ -386,7 +398,9 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0005, Function | SmallTest | Level3
     EXPECT_NE(applicationInfo.nativeLibraryPath, "");
 
     auto installer = std::make_unique<SystemBundleInstaller>();
+    setuid(Constants::FOUNDATION_UID);
     ret = installer->UninstallSystemBundle(bundleName);
+    setuid(Constants::ROOT_UID);
     EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
 }
 
@@ -422,7 +436,9 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0006, Function | SmallTest | Level3
     EXPECT_EQ(applicationInfo.appPrivilegeLevel, APL_CORE);
 
     auto installer = std::make_unique<SystemBundleInstaller>();
+    setuid(Constants::FOUNDATION_UID);
     ret = installer->UninstallSystemBundle(bundleName);
+    setuid(Constants::ROOT_UID);
     EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
 }
 
@@ -458,7 +474,9 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0007, Function | SmallTest | Level3
     EXPECT_EQ(applicationInfo.appPrivilegeLevel, APL_NORMAL);
 
     auto installer = std::make_unique<SystemBundleInstaller>();
+    setuid(Constants::FOUNDATION_UID);
     ret = installer->UninstallSystemBundle(bundleName);
+    setuid(Constants::ROOT_UID);
     EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
 }
 
@@ -488,7 +506,9 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0008, Function | SmallTest | Level3
     EXPECT_TRUE(ret) << "the update failed";
 
     auto installer = std::make_unique<SystemBundleInstaller>();
+    setuid(Constants::FOUNDATION_UID);
     ret = installer->UninstallSystemBundle(bundleName);
+    setuid(Constants::ROOT_UID);
     EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
 }
 
@@ -509,7 +529,9 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0009, Function | SmallTest | Level3
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    setuid(Constants::FOUNDATION_UID);
+    installParam.SetKillProcess(false);
+    setuid(Constants::ROOT_UID);
     installParam.needSendEvent = false;
     installParam.copyHapToInstallPath = false;
     auto installer = std::make_unique<SystemBundleInstaller>();
@@ -530,7 +552,9 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0009, Function | SmallTest | Level3
     currentBundleUserIds = dataMgr->GetUserIds(BUNDLE_OTAUPDATETEST_NAME);
     EXPECT_EQ(currentBundleUserIds.size(), 1);
 
+    setuid(Constants::FOUNDATION_UID);
     ret = installer->UninstallSystemBundle(BUNDLE_OTAUPDATETEST_NAME);
+    setuid(Constants::ROOT_UID);
     EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
 }
 
@@ -573,7 +597,9 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_00100, Function | SmallTest | Level
     EXPECT_TRUE(applicationInfo.hwasanEnabled);
 
     auto installer = std::make_unique<SystemBundleInstaller>();
+    setuid(Constants::FOUNDATION_UID);
     ret = installer->UninstallSystemBundle(bundleName);
+    setuid(Constants::ROOT_UID);
     EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
 }
 } // OHOS

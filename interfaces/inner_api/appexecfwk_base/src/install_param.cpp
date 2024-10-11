@@ -20,6 +20,7 @@
 
 #include "app_log_wrapper.h"
 #include "parcel_macro.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -74,7 +75,6 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         std::string pgoPath = Str16ToStr8(parcel.ReadString16());
         pgoParams.emplace(moduleName, pgoPath);
     }
-    isUninstallAndRecover = parcel.ReadBool();
     return true;
 }
 
@@ -122,7 +122,6 @@ bool InstallParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pgoParam.first));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pgoParam.second));
     }
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isUninstallAndRecover);
     return true;
 }
 
@@ -152,6 +151,16 @@ bool UninstallParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, versionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, userId);
+    return true;
+}
+
+bool InstallParam::CheckPermission() const
+{
+    const int32_t FOUNDATION_UID = 5523;
+    if (IPCSkeleton::GetCallingUid() != FOUNDATION_UID) {
+        APP_LOGE("set installParam failed");
+        return false;
+    }
     return true;
 }
 }  // namespace AppExecFwk
