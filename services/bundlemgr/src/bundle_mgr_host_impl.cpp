@@ -1635,7 +1635,9 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     }
     ApplicationInfo applicationInfo;
     auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr || dataMgr->GetApplicationInfoV9(appName, flags, userId, appInfo, appIndex) != ERR_OK) {
+    if (dataMgr == nullptr || dataMgr->GetApplicationInfoV9(bundleName,
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE),
+        userId, applicationInfo, appIndex) != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
