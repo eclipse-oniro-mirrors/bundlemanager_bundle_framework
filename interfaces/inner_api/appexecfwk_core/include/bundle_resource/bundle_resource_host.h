@@ -43,17 +43,17 @@ private:
 
     ErrCode HandleGetAllLauncherAbilityResourceInfo(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleAddResourceInfoByBundleName(MessageParcel &data, MessageParcel &reply);
-
-    ErrCode HandleAddResourceInfoByAbility(MessageParcel &data, MessageParcel &reply);
-
-    ErrCode HandleDeleteResourceInfo(MessageParcel &data, MessageParcel &reply);
-
     void ClearAshmem(sptr<Ashmem> &optMem);
 
     int32_t AllocatAshmemNum();
 
     ErrCode WriteParcelableIntoAshmem(MessageParcel &tempParcel, MessageParcel &reply);
+
+    ErrCode HandleAddResourceInfoByBundleName(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleAddResourceInfoByAbility(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleDeleteResourceInfo(MessageParcel &data, MessageParcel &reply);
 
     template<typename T>
     ErrCode WriteParcelInfo(const T &parcelInfo, MessageParcel &reply);
