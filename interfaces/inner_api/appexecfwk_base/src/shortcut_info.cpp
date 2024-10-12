@@ -242,7 +242,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    GetBigStringIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_ICON,
         shortcutInfo.icon,

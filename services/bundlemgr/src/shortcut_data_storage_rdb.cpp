@@ -140,8 +140,6 @@ bool ShortcutDataStorageRdb::DeleteDesktopShortcutInfo(const std::string &bundle
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(SHORTCUT_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
-    int32_t appIndex = 0;
-    absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     APP_LOGD("DeleteDesktopShortcutInfo by bundleName %{public}d", ret);
     return ret;
