@@ -21,6 +21,7 @@
 #include <iostream>
 #include <string>
 
+#include "accesstoken_kit.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_installer_interface.h"
@@ -29,9 +30,11 @@
 #include "iservice_registry.h"
 #include "launcher_ability_info.h"
 #include "launcher_service.h"
+#include "nativetoken_kit.h"
 #include "operation_builder.h"
 #include "status_receiver_host.h"
 #include "system_ability_definition.h"
+#include "token_setproc.h"
 
 namespace {
 const std::string THIRD_BUNDLE_PATH = "/data/test/bms_bundle/";
@@ -52,6 +55,16 @@ constexpr uint32_t USERID = 100;
 const unsigned int LIST_SIZE = 1;
 static const int APP_LABELID = 16777216;
 static const int APP_ICONID = 16777218;
+const int32_t PERMS_INDEX_ZERO = 0;
+const int32_t PERMS_INDEX_ONE = 1;
+const int32_t PERMS_INDEX_TWO = 2;
+const int32_t PERMS_INDEX_THREE = 3;
+const int32_t PERMS_INDEX_FORE = 4;
+const int32_t PERMS_INDEX_FIVE = 5;
+const int32_t PERMS_INDEX_SIX = 6;
+const int32_t PERMS_INDEX_SEVEN = 7;
+const int32_t PERMS_INDEX_EIGHT = 8;
+const int32_t PERMS_INDEX_NINE = 9;
 }  // namespace
 using OHOS::AAFwk::Want;
 using namespace testing::ext;
@@ -77,6 +90,7 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+    void StartProcess();
     static void Install(const std::string &bundleFilePath, const InstallFlag installFlag, std::string &installMessage);
     static void Uninstall(const std::string &bundleName, std::string &uninstallMessage);
     static sptr<IBundleMgr> GetBundleMgrProxy();
@@ -278,9 +292,41 @@ void BmsLauncherServiceSystemTest::SetUpTestCase()
 void BmsLauncherServiceSystemTest::TearDownTestCase()
 {}
 void BmsLauncherServiceSystemTest::SetUp()
-{}
+{
+    StartProcess();
+}
 void BmsLauncherServiceSystemTest::TearDown()
 {}
+
+void BmsLauncherServiceSystemTest::StartProcess()
+{
+    const int32_t permsNum = 10;
+    uint64_t tokenId;
+    const char *perms[permsNum];
+    perms[PERMS_INDEX_ZERO] = "ohos.permission.GET_DEFAULT_APPLICATION";
+    perms[PERMS_INDEX_ONE] = "ohos.permission.INSTALL_BUNDLE";
+    perms[PERMS_INDEX_TWO] = "ohos.permission.SET_DEFAULT_APPLICATION";
+    perms[PERMS_INDEX_THREE] = "ohos.permission.GET_INSTALLED_BUNDLE_LIST";
+    perms[PERMS_INDEX_FORE] = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
+    perms[PERMS_INDEX_FIVE] = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+    perms[PERMS_INDEX_SIX] = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
+    perms[PERMS_INDEX_SEVEN] = "ohos.permission.INSTALL_CLONE_BUNDLE";
+    perms[PERMS_INDEX_EIGHT] = "ohos.permission.UNINSTALL_CLONE_BUNDLE";
+    perms[PERMS_INDEX_NINE] = "ohos.permission.LISTEN_BUNDLE_CHANGE";
+    NativeTokenInfoParams infoInstance = {
+        .dcapsNum = 0,
+        .permsNum = permsNum,
+        .aclsNum = 0,
+        .dcaps = NULL,
+        .perms = perms,
+        .acls = NULL,
+        .processName = "kit_system_test",
+        .aplStr = "system_core",
+    };
+    tokenId = GetAccessTokenId(&infoInstance);
+    SetSelfTokenID(tokenId);
+    OHOS::Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
+}
 
 class TestBundleStatusCallback : public IBundleStatusCallback {
 public:
