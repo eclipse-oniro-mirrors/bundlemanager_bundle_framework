@@ -74,6 +74,7 @@ constexpr ErrCode ERROR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED = 17700050;
 constexpr ErrCode ERROR_INSTALL_SELF_UPDATE_NOT_MDM = 17700051;
 constexpr ErrCode ERROR_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED = 17700052;
 constexpr ErrCode ERROR_NOT_APP_GALLERY_CALL = 17700053;
+constexpr ErrCode ERROR_INSTALL_FAILED_INCONSISTENT_SIGNATURE = 17700073;
 
 // native bundle
 constexpr ErrCode ERROR_INSTALL_NATIVE_FAILED = 17700066;
@@ -81,12 +82,11 @@ constexpr ErrCode ERROR_UNINSTALL_NATIVE_FAILED = 17700067;
 
 // bundle service exception
 constexpr ErrCode ERROR_BUNDLE_SERVICE_EXCEPTION = 17700101;
- 
+
 // verify abc
 constexpr ErrCode ERROR_VERIFY_ABC = 17700201;
 constexpr ErrCode ERROR_DELETE_ABC = 17700202;
 
- 
 // zlib errCode
 constexpr ErrCode ERR_ZLIB_SRC_FILE_INVALID = 900001;
 constexpr ErrCode ERR_ZLIB_DEST_FILE_INVALID = 900002;
@@ -96,7 +96,7 @@ constexpr ErrCode ERR_ZLIB_SRC_FILE_DISABLED = 8521240;
 constexpr ErrCode ERR_ZLIB_DEST_FILE_DISABLED = 8521241;
 constexpr ErrCode ERR_ZLIB_SERVICE_DISABLED = 8521242;
 constexpr ErrCode ERR_ZLIB_SRC_FILE_FORMAT_ERROR = 8521243;
- 
+
 } // BundleManager
 } // CJSystemapi
 } // OHOS
