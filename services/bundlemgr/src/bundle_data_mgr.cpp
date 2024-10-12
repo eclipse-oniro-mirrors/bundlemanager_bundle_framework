@@ -4349,7 +4349,7 @@ ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t 
         APP_LOGE("appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
     }
-    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    InnerBundleInfo innerBundleInfo = infoItem->second;
     auto ability = innerBundleInfo.FindAbilityInfoV9(
         abilityInfo.moduleName, abilityInfo.name);
     if (!ability) {
@@ -8794,41 +8794,6 @@ ErrCode BundleDataMgr::GetContinueBundleNames(
     }
 
     APP_LOGD("The number of found continue packs, size:[%{public}d]", static_cast<int32_t>(bundleNames.size()));
-    return ERR_OK;
-}
-
-ErrCode BundleDataMgr::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    auto uid = IPCSkeleton::GetCallingUid();
-    int32_t userId = GetUserIdByUid(uid);
-    int32_t bundleId = uid - userId * Constants::BASE_USER_RANGE;
-    std::string keyName;
-    {
-        std::shared_lock<std::shared_mutex> bundleIdLock(bundleIdMapMutex_);
-        auto bundleIdIter = bundleIdMap_.find(bundleId);
-        if (bundleIdIter == bundleIdMap_.end()) {
-            LOG_W(BMS_TAG_QUERY, "uid %{public}d not exist", uid);
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-        }
-        keyName = bundleIdIter->second;
-    }
-    std::string bundleName = keyName;
-    int32_t appIndex = 0;
-    GetBundleNameAndIndexByName(keyName, bundleName, appIndex);
-    {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        auto bundleInfoIter = bundleInfos_.find(bundleName);
-        if (bundleInfoIter == bundleInfos_.end()) {
-            LOG_W(BMS_TAG_QUERY, "bundleName %{public}s not existed", bundleName.c_str());
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-        }
-        const InnerBundleInfo &innerBundleInfo = bundleInfoIter->second;
-        innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, userId, appIndex);
-    }
-    ProcessBundleMenu(bundleInfo, flags, true);
-    ProcessBundleRouterMap(bundleInfo, flags);
-    LOG_D(BMS_TAG_QUERY, "getForSelf -n %{public}s, -u (%{public}d)", bundleName.c_str(), userId);
     return ERR_OK;
 }
 
