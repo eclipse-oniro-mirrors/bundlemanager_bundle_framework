@@ -959,6 +959,8 @@ public:
     ErrCode DeleteDesktopShortcutInfo(const std::string &bundleName);
     ErrCode DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
 
+    void GetBundleInfosForContinuation(std::vector<BundleInfo> &bundleInfos) const;
+
     /**
      * @brief Get a list of application package names that continue the specified package name.
      * @param continueBundleName The package name that is being continued.

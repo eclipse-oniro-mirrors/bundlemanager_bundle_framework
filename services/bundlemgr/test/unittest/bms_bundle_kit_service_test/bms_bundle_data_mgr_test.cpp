@@ -5637,6 +5637,27 @@ HWTEST_F(BmsBundleDataMgrTest, BundleDataMgrDeleteDesktopShortcutInfo_0002, Func
 }
 
 /**
+ * @tc.number: GetBundleInfosForContinuation_0100
+ * @tc.name: test GetBundleInfosForContinuation
+ * @tc.desc: 1.system run normally
+ *           2.check GetBundleInfosForContinuation success
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleInfosForContinuation_0100, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    std::vector<BundleInfo> bundleInfos;
+    BundleInfo bundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.continuable = false;
+    bundleInfo.abilityInfos.push_back(abilityInfo);
+    bundleInfos.push_back(bundleInfo);
+ 
+    ResetDataMgr();
+    GetBundleDataMgr()->GetBundleInfosForContinuation(bundleInfos);
+    EXPECT_TRUE(bundleInfos.empty());
+}
+
+/**
  * @tc.number: GetContinueBundleNames_0100
  * @tc.name: test GetContinueBundleNames
  * @tc.desc: 1.system run normally
