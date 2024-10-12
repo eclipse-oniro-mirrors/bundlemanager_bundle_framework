@@ -1714,6 +1714,83 @@ HWTEST_F(BmsBundleFreeInstallTest, IsReachEndAgingThreshold_0100, Function | Sma
     EXPECT_EQ(ret, true);
 }
 
+/*
+ * @tc.number: SortAgingBundles_0100
+ * @tc.name: test SortAgingBundles
+ * @tc.desc: 1.test SortAgingBundles of AgingRequest
+ */
+HWTEST_F(BmsBundleFreeInstallTest, SortAgingBundles_0100, Function | SmallTest | Level0)
+{
+    AgingRequest request;
+
+    size_t ret = request.SortAgingBundles();
+    EXPECT_EQ(ret, request.GetAgingBundles().size());
+}
+
+/*
+ * @tc.number: ResetRequest_0100
+ * @tc.name: test ResetRequest
+ * @tc.desc: 1.test ResetRequest of AgingRequest
+ */
+HWTEST_F(BmsBundleFreeInstallTest, ResetRequest_0100, Function | SmallTest | Level0)
+{
+    AgingRequest request;
+
+    request.Dump();
+    request.ResetRequest();
+    EXPECT_EQ(request.GetAgingBundles().size(), 0);
+}
+
+/*
+ * @tc.number: SetTotalDataBytes_0100
+ * @tc.name: test SetTotalDataBytes
+ * @tc.desc: 1.test SetTotalDataBytes of AgingRequest
+ */
+HWTEST_F(BmsBundleFreeInstallTest, SetTotalDataBytes_0100, Function | SmallTest | Level0)
+{
+    AgingRequest request;
+
+    int64_t dataBytes = 100;
+    request.SetTotalDataBytes(dataBytes);
+    EXPECT_EQ(request.GetTotalDataBytes(), dataBytes);
+
+    request.UpdateTotalDataBytesAfterUninstalled(dataBytes);
+    EXPECT_EQ(request.GetAgingBundles().size(), 0);
+}
+
+/*
+ * @tc.number: SetAgingCleanType_0100
+ * @tc.name: test SetAgingCleanType
+ * @tc.desc: 1.test SetAgingCleanType of AgingRequest
+ */
+HWTEST_F(BmsBundleFreeInstallTest, SetAgingCleanType_0100, Function | SmallTest | Level0)
+{
+    AgingRequest request;
+
+    request.SetAgingCleanType(AgingCleanType::CLEAN_OTHERS);
+    EXPECT_EQ(request.GetAgingCleanType(), AgingCleanType::CLEAN_OTHERS);
+}
+
+/*
+ * @tc.number: GetTotalDataBytesThreshold_0100
+ * @tc.name: test GetTotalDataBytesThreshold
+ * @tc.desc: 1.test GetTotalDataBytesThreshold of AgingRequest
+ */
+HWTEST_F(BmsBundleFreeInstallTest, GetTotalDataBytesThreshold_0100, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(AgingConstants::DEFAULT_AGING_DATA_SIZE_THRESHOLD, AgingRequest::GetTotalDataBytesThreshold());
+}
+
+/*
+ * @tc.number: GetOneDayTimeMs_0100
+ * @tc.name: test GetOneDayTimeMs
+ * @tc.desc: 1.test GetOneDayTimeMs of AgingRequest
+ */
+HWTEST_F(BmsBundleFreeInstallTest, GetOneDayTimeMs_0100, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(AgingConstants::ONE_DAYS_MS, AgingRequest::GetOneDayTimeMs());
+}
+
 /**
  * @tc.number: Process_0100
  * @tc.name: test Process
@@ -1751,6 +1828,22 @@ HWTEST_F(BmsBundleFreeInstallTest, Request_0100, Function | SmallTest | Level0)
     EXPECT_EQ(ret, true);
     ret = bundleAgingMgr.IsReachStartAgingThreshold();
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: QueryBundleStatsInfoByInterval_0100
+ * @tc.name: test QueryBundleStatsInfoByInterval
+ * @tc.desc: 1.test QueryBundleStatsInfoByInterval of AgingRequest
+ */
+HWTEST_F(BmsBundleFreeInstallTest, QueryBundleStatsInfoByInterval_0100, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+
+    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
+    DeviceUsageStats::BundleActivePackageStats stats;
+    results.push_back(stats);
+    bool ret = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
+    EXPECT_EQ(ret, true);
 }
 
 /**
