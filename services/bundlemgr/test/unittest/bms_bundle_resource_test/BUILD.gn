@@ -90,6 +90,9 @@ ohos_unittest("BmsBundleResourceTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_EXTENSION_DATA" ]
+  }
   if (code_signature_enable) {
     sources += [
       "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
