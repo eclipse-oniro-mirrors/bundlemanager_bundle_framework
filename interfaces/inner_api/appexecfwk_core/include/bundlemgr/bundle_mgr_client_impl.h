@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_CLIENT_IMPL_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_CLIENT_IMPL_H
 
+#include <shared_mutex>
+
 #include "appexecfwk_errors.h"
 #include "application_info.h"
 #include "bundle_info.h"
@@ -80,7 +82,7 @@ private:
     bool TransformFileToJsonString(const std::string &resPath, std::string &profile) const;
 
 private:
-    std::mutex mutex_;
+    std::shared_mutex mutex_;
     sptr<IBundleMgr> bundleMgr_;
     sptr<IBundleInstaller> bundleInstaller_;
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
