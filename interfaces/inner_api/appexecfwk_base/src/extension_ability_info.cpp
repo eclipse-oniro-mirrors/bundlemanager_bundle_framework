@@ -66,6 +66,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "inputMethod", ExtensionAbilityType::INPUTMETHOD },
     { "service", ExtensionAbilityType::SERVICE },
     { "accessibility", ExtensionAbilityType::ACCESSIBILITY },
+    { "fence", ExtensionAbilityType::FENCE },
     { "dataShare", ExtensionAbilityType::DATASHARE },
     { "fileShare", ExtensionAbilityType::FILESHARE },
     { "staticSubscriber", ExtensionAbilityType::STATICSUBSCRIBER },
