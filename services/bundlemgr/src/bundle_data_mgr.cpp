@@ -328,7 +328,7 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
 }
 
 bool BundleDataMgr::AddNewModuleInfo(
-    const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+    const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, bool isUpgrade)
 {
     LOG_I(BMS_TAG_DEFAULT, "addInfo:%{public}s", newInfo.GetCurrentModulePackage().c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -346,7 +346,7 @@ bool BundleDataMgr::AddNewModuleInfo(
     if (statusItem->second == InstallState::UPDATING_SUCCESS) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
         ProcessAllowedAcls(newInfo, oldInfo);
-        if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
+        if (isUpgrade || IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
             oldInfo.UpdateRemovable(newInfo.IsPreInstallApp(), newInfo.IsRemovable());
@@ -594,7 +594,7 @@ bool BundleDataMgr::RemoveInnerBundleUserInfo(
 }
 
 bool BundleDataMgr::UpdateInnerBundleInfo(
-    const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+    const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, bool isUpgrade)
 {
     LOG_I(BMS_TAG_DEFAULT, "updateInfo:%{public}s", bundleName.c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -627,7 +627,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
-        if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
+        if (isUpgrade || IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(
                 newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
