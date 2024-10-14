@@ -54,8 +54,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
-constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",
     "/files",
@@ -895,57 +893,6 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
     return dataDir;
 }
 
-std::string InstalldHostImpl::GetAppDataPath(const std::string &bundleName, const std::string &el,
-    const int32_t userId, const int32_t appIndex)
-{
-    if (appIndex == 0) {
-        return ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
-                std::to_string(userId) + ServiceConstants::BASE + bundleName;
-    } else {
-        std::string innerDataDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
-        return ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
-                std::to_string(userId) + ServiceConstants::BASE + innerDataDir;
-    }
-}
-
-int64_t InstalldHostImpl::HandleAppDataSizeStats(const std::string &bundleName,
-    const int32_t userId, const int32_t appIndex)
-{
-    std::vector<std::string> bundlePath;
-    bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) +
-        ServiceConstants::PATH_SEPARATOR + bundleName); // bundle code
-    bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
-    // ark profile
-    bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR + bundleName);
-    int64_t fileSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
-    bundlePath.clear();
-    int64_t allBundleLocalSize = 0;
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        std::string filePath = GetAppDataPath(bundleName, el, userId, appIndex);
-        LOG_D(BMS_TAG_INSTALLD, "filePath = %{public}s", filePath.c_str());
-        if (appIndex > 0) {
-            continue;
-        }
-        allBundleLocalSize += InstalldOperator::GetDiskUsage(filePath);
-        if (el == ServiceConstants::BUNDLE_EL[1]) {
-            for (const auto &dataDir : BUNDLE_DATA_DIR) {
-                bundlePath.push_back(filePath + dataDir);
-            }
-        } else {
-            bundlePath.push_back(filePath);
-        }
-    }
-    int64_t bundleLocalSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
-    LOG_D(BMS_TAG_INSTALLD,
-        "GetBundleStats, allBundleLocalSize = %{public}" PRId64 ", bundleLocalSize = %{public}" PRId64,
-        allBundleLocalSize, bundleLocalSize);
-    int64_t systemFolderSize = allBundleLocalSize - bundleLocalSize;
-    if (appIndex == 0) {
-        return fileSize + systemFolderSize;
-    }
-    return 0;
-}
-
 ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const int32_t userId,
     std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex)
 {
@@ -960,7 +907,9 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    int64_t appDataSize = HandleAppDataSizeStats(bundleName, userId, appIndex);
+    std::vector<std::string> bundlePath;
+    bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
+    int64_t appDataSize = appIndex == 0 ? InstalldOperator::GetDiskUsageFromPath(bundlePath) : 0;
     // index 0 : bundle data size
     bundleStats.push_back(appDataSize);
     // index 1 : local bundle data size

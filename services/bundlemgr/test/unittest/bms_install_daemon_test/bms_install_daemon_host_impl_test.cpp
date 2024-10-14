@@ -1218,24 +1218,6 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6800, Function | Sma
 }
 
 /**
- * @tc.number: InstalldHostImplTest_6900
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling GetAppDataPath of hostImpl
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6900, Function | SmallTest | Level0)
-{
-    auto hostImpl = GetInstalldHostImpl();
-    ASSERT_NE(hostImpl, nullptr);
-    std::string bundleName = "";
-    std::string el = "";
-    int32_t userId = 100;
-    int32_t appIndex = 1;
-    std::string innerDataDir = std::string("+") + "clone" + "-" + std::to_string(appIndex) + "+" + bundleName;
-    auto res = hostImpl->GetAppDataPath(bundleName, el, userId, appIndex);
-    EXPECT_EQ(res, "/data/app/" + el + "/" + std::to_string(userId) + "/base/" + innerDataDir);
-}
-
-/**
  * @tc.number: InstalldHostImplTest_7000
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling IsExistFile of hostImpl
