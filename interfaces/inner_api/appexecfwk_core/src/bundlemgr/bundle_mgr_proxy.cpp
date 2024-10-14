@@ -3108,7 +3108,7 @@ bool BundleMgrProxy::ObtainCallingBundleName(std::string &bundleName)
 bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userId,
     std::vector<int64_t> &bundleStats, int32_t appIndex)
 {
-    APP_LOGD("begin to GetBundleStats");
+    APP_LOGI("begin %{public}s", bundleName.c_str());
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -3141,6 +3141,7 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
         APP_LOGE("fail to GetBundleStats from reply");
         return false;
     }
+    APP_LOGI("end %{public}s", bundleName.c_str());
     return true;
 }
 

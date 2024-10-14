@@ -233,9 +233,6 @@ public:
     virtual ErrCode AddUserDirDeleteDfx(int32_t userId) override;
 
 private:
-    std::string GetAppDataPath(const std::string &bundleName, const std::string &el,
-        const int32_t userId, const int32_t appIndex);
-    int64_t HandleAppDataSizeStats(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     std::string GetExtensionConfigPath() const;
     void LoadNeedCreateSandbox(const nlohmann::json &object, std::vector<std::string> &typeList);
     bool LoadExtensionNeedCreateSandbox(const nlohmann::json &object, std::string extensionTypeName);
