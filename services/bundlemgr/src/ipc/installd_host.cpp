@@ -767,7 +767,7 @@ bool InstalldHost::HandDeliverySignProfile(MessageParcel &data, MessageParcel &r
 {
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t profileBlockLength = data.ReadInt32();
-    if (profileBlockLength == 0 || profileBlockLength > Constants::MAX_PARCEL_CAPACITY) {
+    if (profileBlockLength <= 0 || profileBlockLength > Constants::MAX_PARCEL_CAPACITY) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
