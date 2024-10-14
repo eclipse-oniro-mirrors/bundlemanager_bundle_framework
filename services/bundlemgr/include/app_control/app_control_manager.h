@@ -87,11 +87,16 @@ public:
         std::vector<DisposedRule>& disposedRules);
 
     ErrCode DeleteAllDisposedRuleByBundle(const InnerBundleInfo &bundleInfo, int32_t appIndex, int32_t userId);
-    
+
+    void SetDisposedRuleOnlyForBms(const std::string &appId);
+
+    void DeleteDisposedRuleOnlyForBms(const std::string &appId);
+
 private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
     void DeleteAppRunningRuleCache(std::string &key);
     void DeleteAbilityRunningRuleCache(std::string &key);
+    void DeleteAbilityRunningRuleBmsCache(const std::string &appId);
     bool CheckCanDispose(const std::string &appId, int32_t userId);
 
     bool isAppInstallControlEnabled_ = false;
@@ -102,6 +107,7 @@ private:
     std::mutex appRunningControlMutex_;
     std::unordered_map<std::string, std::vector<DisposedRule>> abilityRunningControlRuleCache_;
     std::mutex abilityRunningControlRuleMutex_;
+    std::unordered_map<std::string, DisposedRule> abilityRunningControlRuleCacheForBms_;
     std::vector<std::string> noControllingList_;
 };
 } // AppExecFwk

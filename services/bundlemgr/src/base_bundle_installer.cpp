@@ -743,10 +743,6 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_I(BMS_TAG_INSTALLER, "bundleName %{public}s, userId is %{public}d", bundleName_.c_str(), userId_);
-    // try to get the bundle info to decide use install or update. Always keep other exceptions below this line.
-    if (!GetInnerBundleInfo(oldInfo, isAppExist_)) {
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
     LOG_I(BMS_TAG_INSTALLER, "flag:%{public}d, userId:%{public}d, isAppExist:%{public}d",
         installParam.installFlag, userId_, isAppExist_);
     SetOldAppIsEncrypted(oldInfo);
@@ -1159,6 +1155,14 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     pgoParams_ = installParam.pgoParams;
     copyHapToInstallPath_ = installParam.copyHapToInstallPath;
     ScopeGuard extensionDirGuard([&] { RemoveCreatedExtensionDirsForException(); });
+    // try to get the bundle info to decide use install or update. Always keep other exceptions below this line.
+    if (!GetInnerBundleInfo(oldInfo, isAppExist_)) {
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    // when bundle update start, bms need set disposed rule to forbidden app running.
+    SetDisposedRuleWhenBundleUpdateStart(newInfos, oldInfo, installParam.isPreInstallApp);
+    // when bundle update end, bms need delete disposed rule.
+    ScopeGuard deleteDisposedRuleGuard([&] { DeleteDisposedRuleWhenBundleUpdateEnd(oldInfo); });
     result = InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
@@ -5825,6 +5829,60 @@ void BaseBundleInstaller::MarkInstallFinish()
     if (!dataMgr_->UpdateInnerBundleInfo(info)) {
         LOG_W(BMS_TAG_INSTALLER, "save mark failed");
     }
+}
+
+bool BaseBundleInstaller::SetDisposedRuleWhenBundleUpdateStart(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const InnerBundleInfo &oldBundleInfo, bool isPreInstallApp)
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    if (isPreInstallApp || !isAppExist_) {
+        return false;
+    }
+    std::vector<std::string> oldModuleNames;
+    oldBundleInfo.GetModuleNames(oldModuleNames);
+    std::vector<std::string> newModuleNames;
+    for (const auto &iter : infos) {
+        iter.second.GetModuleNames(newModuleNames);
+    }
+    needSetDisposeRule_ = false;
+    for (const auto &moduleName : oldModuleNames) {
+        if (std::find(newModuleNames.begin(), newModuleNames.end(), moduleName) != newModuleNames.end()) {
+            needSetDisposeRule_ = true;
+            break;
+        }
+    }
+    if (needSetDisposeRule_) {
+        LOG_I(BMS_TAG_INSTALLER, "set bms disposed rule when -n :%{public}s install start",
+            bundleName_.c_str());
+        std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
+        if (appControlMgr == nullptr) {
+            LOG_E(BMS_TAG_INSTALLER, "appControlMgr is nullptr, when -n :%{public}s install start",
+                bundleName_.c_str());
+            return false;
+        }
+        appControlMgr->SetDisposedRuleOnlyForBms(oldBundleInfo.GetAppId());
+    }
+    return needSetDisposeRule_;
+#endif
+}
+
+bool BaseBundleInstaller::DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo)
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    if (!needSetDisposeRule_) {
+        return false;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "delete bms disposed rule when -n :%{public}s install end", bundleName_.c_str());
+    std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
+    if (appControlMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "appControlMgr is nullptr, when -n :%{public}s install end", bundleName_.c_str());
+        return false;
+    }
+
+    appControlMgr->DeleteDisposedRuleOnlyForBms(oldBundleInfo.GetAppId());
+    return true;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
