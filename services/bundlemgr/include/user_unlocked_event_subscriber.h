@@ -45,6 +45,7 @@ public:
     static void ProcessExtensionDir(const BundleInfo &bundleInfo, std::vector<std::string> &dirs);
     static void ProcessNewBackupDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
 private:
+    static void CheckPathAttribute(const std::string &path, const BundleInfo &bundleInfo, bool &isExist);
     static void CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t userId);
     static bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir);
     static bool CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t userId);
