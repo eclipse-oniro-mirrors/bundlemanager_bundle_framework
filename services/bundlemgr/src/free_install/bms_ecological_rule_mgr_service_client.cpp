@@ -175,6 +175,7 @@ template <typename T>
 bool BmsEcologicalRuleMgrServiceProxy::ReadParcelableVector(std::vector<T> &parcelableVector, MessageParcel &reply)
 {
     int32_t infoSize = reply.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(reply, infoSize, &parcelableVector);
     parcelableVector.clear();
     for (int32_t i = 0; i < infoSize; i++) {
         std::unique_ptr<T> info(reply.ReadParcelable<T>());

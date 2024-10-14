@@ -4458,6 +4458,7 @@ bool BundleMgrProxy::GetParcelableInfos(
     }
 
     int32_t infoSize = reply.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(reply, infoSize, &parcelableInfos);
     for (int32_t i = 0; i < infoSize; i++) {
         std::unique_ptr<T> info(reply.ReadParcelable<T>());
         if (info == nullptr) {
