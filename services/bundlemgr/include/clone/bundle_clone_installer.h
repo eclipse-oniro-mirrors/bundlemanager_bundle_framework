@@ -61,6 +61,7 @@ private:
         InnerBundleInfo &info, const int32_t userId, const int32_t &uid, const int32_t &appIndex) const;
     ErrCode RemoveCloneDataDir(const std::string bundleName, int32_t userId, int32_t appIndex);
     bool AddKeyOperation(const std::string &bundleName, int32_t appIndex, int32_t userId, int32_t uid);
+    void DeleteKeyOperation(const std::string &bundleName, int32_t appIndex, int32_t userId, int32_t uid);
     ErrCode GetDataMgr();
 
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
