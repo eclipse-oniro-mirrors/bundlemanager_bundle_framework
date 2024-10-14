@@ -591,6 +591,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID_BY_BUNDLENAME):
             errCode = this->HandleGetOdidByBundleName(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_FOR_CONTINUATION):
+            errCode = this->HandleGetBundleInfosForContinuation(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CONTINUE_BUNDLE_NAMES):
             errCode = HandleGetContinueBundleNames(data, reply);
             break;
@@ -4009,6 +4012,28 @@ ErrCode BundleMgrHost::HandleGetOdidByBundleName(MessageParcel &data, MessagePar
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     APP_LOGD("odid is %{private}s", odid.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleInfosForContinuation(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int flags = data.ReadInt32();
+    int userId = data.ReadInt32();
+ 
+    std::vector<BundleInfo> infos;
+    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
+    bool ret = GetBundleInfosForContinuation(flags, infos, userId);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
     return ERR_OK;
 }
 

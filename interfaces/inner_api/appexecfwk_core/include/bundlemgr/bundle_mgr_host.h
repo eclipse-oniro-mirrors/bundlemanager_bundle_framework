@@ -818,6 +818,14 @@ private:
     ErrCode HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply);
 
     /**
+     * @brief Handles the GetBundleInfosForContinuation function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetBundleInfosForContinuation(MessageParcel &data, MessageParcel &reply);
+
+    /**
      * @brief Handles the GetContinueBundleNames function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;

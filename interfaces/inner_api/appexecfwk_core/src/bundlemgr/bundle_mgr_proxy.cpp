@@ -5187,6 +5187,32 @@ ErrCode BundleMgrProxy::GetOdidByBundleName(const std::string &bundleName, std::
     return ret;
 }
 
+bool BundleMgrProxy::GetBundleInfosForContinuation(
+    int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    LOG_D(BMS_TAG_QUERY, "begin to get bundle infos");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfosForContinuation due to write InterfaceToken fail");
+        return false;
+    }
+    if (!data.WriteInt32(flags)) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfosForContinuation due to write flag fail");
+        return false;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfo due to write userId fail");
+        return false;
+    }
+    if (!GetVectorFromParcelIntelligent<BundleInfo>(
+            BundleMgrInterfaceCode::GET_BUNDLE_INFOS_FOR_CONTINUATION, data, bundleInfos)) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfosForContinuation from server");
+        return false;
+    }
+    return true;
+}
+
 ErrCode BundleMgrProxy::GetContinueBundleNames(
     const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId)
 {
