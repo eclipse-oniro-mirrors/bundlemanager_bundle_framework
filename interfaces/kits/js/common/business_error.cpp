@@ -148,6 +148,9 @@ constexpr const char* ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE =
     "The app does not support the creation of an appClone instance.";
 constexpr const char* ERR_MSG_SHORTCUT_ID_ILLEGAL =
     "The specified shortcut id is illegal.";
+constexpr const char* ERR_MSG_INSTALL_FAILED_INCONSISTENT_SIGNATURE =
+    "Failed to install the HAP because an application with the same bundle name "
+    "but different signature information exists on the device.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -227,6 +230,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INVALID_APPINDEX, ERR_MSG_INVALID_APPINDEX },
     { ERROR_APP_NOT_SUPPORTED_MULTI_TYPE, ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE },
     { ERROR_SHORTCUT_ID_ILLEGAL_ERROR, ERR_MSG_SHORTCUT_ID_ILLEGAL },
+    { ERROR_INSTALL_FAILED_INCONSISTENT_SIGNATURE, ERR_MSG_INSTALL_FAILED_INCONSISTENT_SIGNATURE }
 };
 } // namespace
 
