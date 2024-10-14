@@ -908,6 +908,7 @@ std::string AOTHandler::GetCurAOTVersion() const
     std::string aotVersion;
     ErrCode ret = aotVersionFunc(aotVersion);
     APP_LOGI("GetCurAOTVersion ret : %{public}d, aotVersion: %{public}s", ret, aotVersion.c_str());
+    dlclose(handle);
     return aotVersion;
 }
 
