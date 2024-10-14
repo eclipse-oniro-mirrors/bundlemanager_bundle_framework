@@ -1669,6 +1669,7 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, M
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
@@ -1681,6 +1682,7 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, M
         APP_LOGE("Get BundleStatusCallback failed");
     } else {
         BundleStatusCallback->SetBundleName(bundleName);
+        BundleStatusCallback->SetUserId(userId);
         ret = RegisterBundleStatusCallback(BundleStatusCallback);
     }
     if (!reply.WriteBool(ret)) {
