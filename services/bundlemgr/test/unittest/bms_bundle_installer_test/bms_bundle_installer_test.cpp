@@ -4636,7 +4636,7 @@ HWTEST_F(BmsBundleInstallerTest, InnerProcessBundleInstall_0020, TestSize.Level1
     installer.isAppExist_ = true;
     oldInfo.SetApplicationBundleType(BundleType::SHARED);
     auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME);
 }
 
 /**
@@ -6251,5 +6251,79 @@ HWTEST_F(BmsBundleInstallerTest, GetValidDataGroupIds_0100, Function | SmallTest
     installer.GetValidDataGroupIds(extensionDataGroupIds, bundleDataGroupIds, validGroupIds);
     std::string dataGroupId = validGroupIds.back();
     EXPECT_EQ(dataGroupId, TEST_STRING);
+}
+
+/**
+ * @tc.number: SetDisposedRuleWhenBundleUpdateStart_0010
+ * @tc.name: test SetDisposedRuleWhenBundleUpdateStart
+ * @tc.desc: 1.SetDisposedRuleWhenBundleUpdateStart
+ */
+HWTEST_F(BmsBundleInstallerTest, SetDisposedRuleWhenBundleUpdateStart_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo oldBundleInfo;
+    bool ret = installer.SetDisposedRuleWhenBundleUpdateStart(infos, oldBundleInfo, true);
+    EXPECT_FALSE(ret);
+    installer.isAppExist_ = false;
+    ret = installer.SetDisposedRuleWhenBundleUpdateStart(infos, oldBundleInfo, false);
+    EXPECT_FALSE(ret);
+    installer.isAppExist_ = true;
+    ret = installer.SetDisposedRuleWhenBundleUpdateStart(infos, oldBundleInfo, false);
+    EXPECT_FALSE(ret);
+    EXPECT_FALSE(installer.needSetDisposeRule_);
+    ret = installer.DeleteDisposedRuleWhenBundleUpdateEnd(oldBundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SetDisposedRuleWhenBundleUpdateStart_0020
+ * @tc.name: test SetDisposedRuleWhenBundleUpdateStart
+ * @tc.desc: 1.SetDisposedRuleWhenBundleUpdateStart
+ */
+HWTEST_F(BmsBundleInstallerTest, SetDisposedRuleWhenBundleUpdateStart_0020, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    oldBundleInfo.innerModuleInfos_[BUNDLE_NAME] = innerModuleInfo;
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos[BUNDLE_NAME] = oldBundleInfo;
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    bool ret = installer.SetDisposedRuleWhenBundleUpdateStart(infos, oldBundleInfo, false);
+    EXPECT_TRUE(ret);
+    EXPECT_TRUE(installer.needSetDisposeRule_);
+    ret = installer.DeleteDisposedRuleWhenBundleUpdateEnd(oldBundleInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: SetDisposedRuleWhenBundleUpdateStart_0030
+ * @tc.name: test SetDisposedRuleWhenBundleUpdateStart
+ * @tc.desc: 1.SetDisposedRuleWhenBundleUpdateStart
+ */
+HWTEST_F(BmsBundleInstallerTest, SetDisposedRuleWhenBundleUpdateStart_0030, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    oldBundleInfo.innerModuleInfos_[BUNDLE_NAME] = innerModuleInfo;
+
+    InnerBundleInfo newBundleInfo;
+    InnerModuleInfo newInnerModuleInfo;
+    newInnerModuleInfo.moduleName = BUNDLE_NAME;
+    newBundleInfo.innerModuleInfos_[BUNDLE_NAME] = newInnerModuleInfo;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos[BUNDLE_NAME] = newBundleInfo;
+
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    bool ret = installer.SetDisposedRuleWhenBundleUpdateStart(infos, oldBundleInfo, false);
+    EXPECT_FALSE(ret);
+    EXPECT_FALSE(installer.needSetDisposeRule_);
+    ret = installer.DeleteDisposedRuleWhenBundleUpdateEnd(oldBundleInfo);
+    EXPECT_FALSE(ret);
 }
 } // OHOS
