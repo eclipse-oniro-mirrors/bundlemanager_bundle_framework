@@ -118,6 +118,12 @@ ErrCode InstalldClient::CreateBundleDataDirWithVector(const std::vector<CreateDi
     return CallService(&IInstalld::CreateBundleDataDirWithVector, createDirParams);
 }
 
+ErrCode InstalldClient::CreateSharefilesDataDirEl2(const CreateDirParam & createDirParam)
+{
+    return CallService(&IInstalld::CreateSharefilesDataDirEl2, createDirParam);
+}
+
+
 ErrCode InstalldClient::RemoveBundleDataDir(
     const std::string &bundleName, const int32_t userId, bool isAtomicService)
 {

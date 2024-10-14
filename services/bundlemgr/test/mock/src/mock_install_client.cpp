@@ -79,6 +79,11 @@ ErrCode InstalldClient::CreateBundleDataDirWithVector(const std::vector<CreateDi
     return ERR_OK;
 }
 
+ErrCode InstalldClient::CreateSharefilesDataDirEl2(const CreateDirParam &createDirParam)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldClient::RemoveBundleDataDir(const std::string &bundleName, const int32_t userId, bool isAtomicService)
 {
     if (bundleName.empty()) {

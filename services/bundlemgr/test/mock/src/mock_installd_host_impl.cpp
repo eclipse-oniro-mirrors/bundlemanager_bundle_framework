@@ -71,6 +71,11 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<Create
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &createDirParam)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userId, bool isAtomicService)
 {
     return ERR_OK;

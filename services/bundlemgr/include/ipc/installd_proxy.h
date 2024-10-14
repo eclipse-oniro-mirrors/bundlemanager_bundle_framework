@@ -85,6 +85,13 @@ public:
      */
     virtual ErrCode CreateBundleDataDir(const CreateDirParam &createDirPara) override;
 
+    /**
+     * @brief Create /data/app/el2/userid/sharefiles/ bundle data directory.
+     * @param createDirParam Indicates param to be set to the directory.
+     * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
+     */
+    virtual ErrCode CreateSharefilesDataDirEl2(const CreateDirParam &createDirParam) override;
+
     virtual ErrCode CreateBundleDataDirWithVector(const std::vector<CreateDirParam> &createDirParams) override;
     /**
      * @brief Remove a bundle data directory through a proxy object.

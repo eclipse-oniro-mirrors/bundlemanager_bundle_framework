@@ -179,6 +179,20 @@ ErrCode InstalldProxy::RenameModuleDir(const std::string &oldPath, const std::st
     return TransactInstalldCmd(InstalldInterfaceCode::RENAME_MODULE_DIR, data, reply, option);
 }
 
+ErrCode InstalldProxy::CreateSharefilesDataDirEl2(const CreateDirParam &createDirParam)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&createDirParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::CREATE_SHARE_FILES_DATA_DIR_EL2, data, reply, option);
+}
+
 ErrCode InstalldProxy::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
     MessageParcel data;

@@ -123,6 +123,16 @@ public:
         return ERR_OK;
     }
 
+    /**
+     * @brief Create /data/app/el2/userid/sharefiles/ bundle data directory.
+     * @param createDirParam Indicates param to be set to the directory.
+     * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
+     */
+    virtual ErrCode CreateSharefilesDataDirEl2(const CreateDirParam &createDirParam)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode CreateBundleDataDirWithVector(const std::vector<CreateDirParam> &createDirParams)
     {
         return ERR_OK;

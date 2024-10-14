@@ -112,6 +112,17 @@ ErrCode InstalldClient::CreateBundleDataDirWithVector(const std::vector<CreateDi
     return ERR_OK;
 }
 
+ErrCode InstalldClient::CreateSharefilesDataDirEl2(const CreateDirParam &createDirParam)
+{
+    if (createDirParam.bundleName.empty() || createDirParam.userId < 0
+        || createDirParam.uid < 0 || createDirParam.gid < 0) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::CreateSharefilesDataDirEl2, createDirParam);
+}
+
 ErrCode InstalldClient::RemoveBundleDataDir(
     const std::string &bundleName, const int userId, bool isAtomicService)
 {

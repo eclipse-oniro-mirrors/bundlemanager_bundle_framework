@@ -87,6 +87,8 @@ private:
      */
     bool HandleCreateBundleDataDir(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleCreateSharefilesDataDirEl2(MessageParcel &data, MessageParcel &reply);
+
     bool HandleCreateBundleDataDirWithVector(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the RemoveBundleDataDir function called from a IInstalld proxy object.

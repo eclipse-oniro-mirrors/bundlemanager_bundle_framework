@@ -630,6 +630,8 @@ private:
     void InnerProcessRebootUninstallWrongBundle();
     void ProcessCheckAppEl1Dir();
     void static ProcessCheckAppEl1DirTask();
+    // check el2 data dir for all userids's bundleinfos
+    void static CheckAndCreateShareFilesSubDataDirs();
     void CleanAllBundleShaderCache() const;
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;

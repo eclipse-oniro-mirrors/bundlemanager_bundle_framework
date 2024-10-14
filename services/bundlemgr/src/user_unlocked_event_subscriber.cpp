@@ -379,5 +379,38 @@ bool UpdateAppDataMgr::CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_
     }
     return true;
 }
+
+void UpdateAppDataMgr::CreateSharefilesSubDataDirs(const std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    APP_LOGI("CreateSharefilesSubDataDirs begin for userid: [%{public}d]", userId);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("CreateSharefilesSubDataDirs failed: DataMgr is nullptr");
+        return;
+    }
+    std::string parentDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES;
+    for (const auto &bundleInfo : bundleInfos) {
+        std::string sharefilesDataDir = parentDir + bundleInfo.name;
+        bool isExist = false;
+        if (InstalldClient::GetInstance()->IsExistDir(sharefilesDataDir, isExist) != ERR_OK) {
+            APP_LOGW("CreateSharefilesSubDataDirs path: %{public}s IsExistDir failed",
+                sharefilesDataDir.c_str());
+            continue;
+        }
+        CreateDirParam createDirParam;
+        createDirParam.userId = userId;
+        createDirParam.bundleName = bundleInfo.name;
+        createDirParam.uid = bundleInfo.uid;
+        createDirParam.gid = bundleInfo.gid;
+        createDirParam.apl = bundleInfo.applicationInfo.appPrivilegeLevel;
+        createDirParam.isPreInstallApp = bundleInfo.isPreInstallApp;
+        createDirParam.debug = bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+        if (InstalldClient::GetInstance()->CreateSharefilesDataDirEl2(createDirParam) != ERR_OK) {
+            APP_LOGW("failed to CreateSharefilesDataDirEl2 for: %{public}s", bundleInfo.name.c_str());
+        }
+    }
+    APP_LOGI("CreateSharefilesSubDataDirs end for userid: [%{public}d]", userId);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

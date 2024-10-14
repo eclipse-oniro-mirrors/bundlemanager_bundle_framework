@@ -527,7 +527,9 @@ ErrCode BundleInstallerHost::InstallSandboxApp(const std::string &bundleName, in
     int32_t &appIndex)
 {
     if (bundleName.empty() || dplType <= LOWER_DLP_TYPE_BOUND || dplType >= UPPER_DLP_TYPE_BOUND) {
-        LOG_E(BMS_TAG_INSTALLER, "install sandbox failed due to error parameters");
+        LOG_E(BMS_TAG_INSTALLER, "install sandbox failed due to error parameters: ");
+        LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s, dplType: %{public}d, appIndex: %{public}d",
+            bundleName.c_str(), dplType, appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
     if (!BundlePermissionMgr::IsSystemApp()) {

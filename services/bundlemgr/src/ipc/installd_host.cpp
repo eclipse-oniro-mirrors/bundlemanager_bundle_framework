@@ -70,6 +70,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR):
             result = this->HandleCreateBundleDataDir(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_SHARE_FILES_DATA_DIR_EL2):
+            result = this->HandleCreateSharefilesDataDirEl2(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_BUNDLE_DATA_DIR):
             result = this->HandleRemoveBundleDataDir(data, reply);
             break;
@@ -361,6 +364,18 @@ bool InstalldHost::HandleCreateBundleDataDir(MessageParcel &data, MessageParcel 
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
     ErrCode result = CreateBundleDataDir(*info);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCreateSharefilesDataDirEl2(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+    }
+    ErrCode result = CreateSharefilesDataDirEl2(*info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

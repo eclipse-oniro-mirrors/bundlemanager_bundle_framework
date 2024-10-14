@@ -290,6 +290,7 @@ void BMSEventHandler::AfterBmsStart()
     BundleResourceHelper::RegisterCommonEventSubscriber();
     BundleResourceHelper::RegisterConfigurationObserver();
     ProcessCheckAppEl1Dir();
+    CheckAndCreateShareFilesSubDataDirs();
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
 }
 
@@ -3885,6 +3886,37 @@ void BMSEventHandler::ProcessCheckAppEl1DirTask()
         UpdateAppDataMgr::ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL1);
     }
     LOG_I(BMS_TAG_DEFAULT, "end");
+}
+
+void BMSEventHandler::CheckAndCreateShareFilesSubDataDirs()
+{
+    LOG_I(BMS_TAG_DEFAULT, "CheckAndCreateShareFilesSubDataDirs begin");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "CheckAndCreateShareFilesSubDataDirs DataMgr is nullptr");
+        return;
+    }
+
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::vector<BundleInfo> bundleInfos;
+        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+            LOG_W(BMS_TAG_DEFAULT, "CheckAndCreateShareFilesSubDataDirs failed to GetBundleInfos for: [%{public}d]",
+                userId);
+            continue;
+        }
+        std::string shareFilesDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES;
+        bool isExist = true;
+        ErrCode result = InstalldClient::GetInstance()->IsExistDir(shareFilesDir, isExist);
+        if (result != ERR_OK || !isExist) {
+            LOG_W(BMS_TAG_DEFAULT, "CheckAndCreateShareFilesSubDataDirs sharefile dir no exist: %{public}s",
+                shareFilesDir.c_str());
+            continue;
+        }
+        UpdateAppDataMgr::CreateSharefilesSubDataDirs(bundleInfos, userId);
+    }
+    LOG_I(BMS_TAG_DEFAULT, "CheckAndCreateShareFilesSubDataDirs end");
 }
 
 void BMSEventHandler::CleanAllBundleShaderCache() const

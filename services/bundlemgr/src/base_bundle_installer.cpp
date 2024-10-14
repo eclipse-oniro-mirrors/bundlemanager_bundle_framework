@@ -903,7 +903,6 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
     CreateExtensionDataDir(bundleInfo);
-
     ScopeGuard userGuard([&] {
         if (!hasInstalledInUser_ || (!isAppExist_)) {
             RemoveBundleUserData(oldInfo, false);
