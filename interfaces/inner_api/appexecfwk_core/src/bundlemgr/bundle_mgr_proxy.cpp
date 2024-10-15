@@ -1758,6 +1758,10 @@ bool BundleMgrProxy::RegisterBundleStatusCallback(const sptr<IBundleStatusCallba
         APP_LOGE("fail to RegisterBundleStatusCallback due to write bundleName fail");
         return false;
     }
+    if (!data.WriteInt32(bundleStatusCallback->GetUserId())) {
+        APP_LOGE("fail to RegisterBundleStatusCallback due to write userId fail");
+        return false;
+    }
     if (!data.WriteRemoteObject(bundleStatusCallback->AsObject())) {
         APP_LOGE("fail to RegisterBundleStatusCallback, for write parcel failed");
         return false;

@@ -83,8 +83,19 @@ public:
         bundleName_ = bundleName;
     }
 
+    int32_t GetUserId()
+    {
+        return userId_;
+    }
+
+    void SetUserId(const int32_t userId)
+    {
+        userId_ = userId;
+    }
+
 private:
     std::string bundleName_;
+    int32_t userId_ = 0;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
