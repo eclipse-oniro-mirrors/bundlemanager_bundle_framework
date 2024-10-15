@@ -2535,7 +2535,6 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         bool isEnabled = IsAbilityEnabled(ability.second, userId, appIndex);
         if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
             && !isEnabled) {
-            APP_LOGW_NOFUNC("ability:%{public}s disabled,", ability.second.name.c_str());
             continue;
         }
         AbilityInfo abilityInfo = ability.second;
@@ -2597,7 +2596,6 @@ void InnerBundleInfo::GetBundleWithAbilities(
             bool isEnabled = IsAbilityEnabled(ability.second, userId);
             if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
                 && !isEnabled) {
-                APP_LOGW_NOFUNC("ability:%{public}s disabled,", ability.second.name.c_str());
                 continue;
             }
             AbilityInfo abilityInfo = ability.second;
@@ -2896,7 +2894,7 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
     auto& key = NameAndUserIdToKey(abilityInfo.bundleName, userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGD("innerBundleUserInfos find key:%{public}s, error", key.c_str());
+        APP_LOGW_NOFUNC("key:%{public}s not found", key.c_str());
         return false;
     }
 
@@ -2904,6 +2902,8 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
         auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
         if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
             != disabledAbilities.end()) {
+            APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+                abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
             return false;
         } else {
             return true;
@@ -2913,11 +2913,14 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
     const std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = infoItem->second.cloneInfos;
     std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
     if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
+        APP_LOGW_NOFUNC("key:%{public}s not found", key.c_str());
         return false;
     }
     auto disabledAbilities = mpCloneInfos.at(appIndexKey).disabledAbilities;
     if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
         != disabledAbilities.end()) {
+        APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+            abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
         return false;
     } else {
         return true;
@@ -3031,13 +3034,15 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
     auto& key = NameAndUserIdToKey(abilityInfo.bundleName, userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("innerBundleUserInfos find key:%{public}s, error", key.c_str());
+        APP_LOGW_NOFUNC("key:%{public}s not found", key.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (appIndex == 0) {
         auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
         if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
             != disabledAbilities.end()) {
+            APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+                abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
             isEnable = false;
         } else {
             isEnable = true;
@@ -3047,11 +3052,14 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
     const std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = infoItem->second.cloneInfos;
     std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
     if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
+        APP_LOGW_NOFUNC("key:%{public}s not found", key.c_str());
         return ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP;
     }
     auto disabledAbilities = mpCloneInfos.at(appIndexKey).disabledAbilities;
     if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
         != disabledAbilities.end()) {
+        APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+            abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
         isEnable = false;
     } else {
         isEnable = true;
