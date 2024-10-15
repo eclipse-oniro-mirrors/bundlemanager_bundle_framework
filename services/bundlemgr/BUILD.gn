@@ -192,6 +192,10 @@ ohos_source_set("bundle_parser") {
   if (bundle_framework_overlay_install) {
     defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
   }
+
+  if (is_emulator) {
+    defines += [ "X86_EMULATOR_MODE" ]
+  }
   part_name = "bundle_framework"
 }
 
