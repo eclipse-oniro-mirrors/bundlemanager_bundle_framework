@@ -55,8 +55,6 @@ ohos_shared_library("bundle_napi_common") {
     "samgr:samgr_proxy",
   ]
 
-  public_external_deps = [ "node:node_header_notice" ]
-
   subsystem_name = "bundlemanager"
   innerapi_tags = [ "platformsdk" ]
   part_name = "bundle_framework"

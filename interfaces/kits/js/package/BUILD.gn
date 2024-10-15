@@ -43,10 +43,7 @@ ohos_shared_library("package") {
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
-  public_external_deps = [
-    "libuv:uv",
-    "node:node_header_notice",
-  ]
+  public_external_deps = [ "libuv:uv" ]
   relative_install_dir = "module"
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

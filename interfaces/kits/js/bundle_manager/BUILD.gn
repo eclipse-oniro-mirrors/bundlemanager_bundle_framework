@@ -48,7 +48,6 @@ ohos_shared_library("bundlemanager") {
     "napi:ace_napi",
   ]
 
-  public_external_deps = [ "node:node_header_notice" ]
   if (global_resmgr_enable && bundle_framework_graphics) {
     defines += [ "BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED" ]
     external_deps += [
