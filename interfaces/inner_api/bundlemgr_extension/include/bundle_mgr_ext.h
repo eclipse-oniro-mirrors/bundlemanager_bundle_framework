@@ -116,6 +116,10 @@ public:
     {
         return false;
     }
+    virtual bool CheckWhetherCanBeUninstalled(const std::string &bundleName)
+    {
+        return true;
+    }
     virtual bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum)
     {
         return false;
