@@ -334,7 +334,7 @@ public:
         return 0;
     }
 
-    virtual int StartUser(int userId, sptr<IUserCallback> callback) override
+    virtual int StartUser(int userId, sptr<IUserCallback> callback, bool isAppRecovery) override
     {
         return 0;
     }
