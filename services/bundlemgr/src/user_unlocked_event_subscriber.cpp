@@ -289,8 +289,16 @@ void UpdateAppDataMgr::CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t 
     parentEl1Dir = parentEl1Dir.replace(parentEl1Dir.find("%"), 1, std::to_string(userId)) + bundleInfo.name;
     std::string parentEl2Dir = BUNDLE_BACKUP_HOME_PATH_EL2_NEW;
     parentEl2Dir = parentEl2Dir.replace(parentEl2Dir.find("%"), 1, std::to_string(userId)) + bundleInfo.name;
-    if (!BundleUtil::IsExistDir(parentEl1Dir) || !BundleUtil::IsExistDir(parentEl2Dir)) {
-        APP_LOGE("parent dir(%{public}s or %{public}s) missing: backup", parentEl1Dir.c_str(), parentEl2Dir.c_str());
+    bool isEl1Existed = false;
+    auto result = InstalldClient::GetInstance()->IsExistDir(parentEl1Dir, isEl1Existed);
+    if (result == ERR_OK && !isEl1Existed) {
+        APP_LOGE("parent dir(%{public}s) missing: backup", parentEl1Dir.c_str());
+        return;
+    }
+    bool isEl2Existed = false;
+    result = InstalldClient::GetInstance()->IsExistDir(parentEl2Dir, isEl2Existed);
+    if (result == ERR_OK && !isEl2Existed) {
+        APP_LOGE("parent dir(%{public}s) missing: backup", parentEl2Dir.c_str());
         return;
     }
     std::string backupDirEl1 = parentEl1Dir + BUNDLE_BACKUP_INNER_DIR;
