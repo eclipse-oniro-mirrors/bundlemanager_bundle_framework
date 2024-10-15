@@ -154,6 +154,7 @@ group("fuzztest") {
     "fuzztest_others/bundleresconfiguration_fuzzer:BundleResConfigurationFuzzTest",
     "fuzztest_others/bundleresdrawable_fuzzer:BundleResDrawableFuzzTest",
     "fuzztest_others/bundlereshostimpl_fuzzer:BundleResHostImplFuzzTest",
+    "fuzztest_others/bundleresmgr_fuzzer:BundleResMgrFuzzTest",
     "fuzztest_others/bundleresparam_fuzzer:BundleResParamFuzzTest",
     "fuzztest_others/bundleresparser_fuzzer:BundleResParserFuzzTest",
     "fuzztest_others/bundleresprocess_fuzzer:BundleResProcessFuzzTest",
