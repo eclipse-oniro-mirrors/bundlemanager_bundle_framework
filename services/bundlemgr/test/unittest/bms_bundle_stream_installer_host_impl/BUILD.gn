@@ -87,6 +87,7 @@ ohos_unittest("BmsBundleInstallerHostTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
 
   public_deps = [

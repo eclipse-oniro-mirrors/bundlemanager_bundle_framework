@@ -59,6 +59,7 @@ ohos_unittest("BmsEventHandlerTest") {
     "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   if (bundle_framework_graphics) {
@@ -181,6 +182,7 @@ ohos_unittest("BmsEventHandlerUnLockedTest") {
     "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   if (bundle_framework_graphics) {

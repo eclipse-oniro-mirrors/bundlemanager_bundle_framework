@@ -99,6 +99,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
 
@@ -296,6 +297,7 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
 
@@ -495,6 +497,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
 
@@ -659,6 +662,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
 
@@ -814,6 +818,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
 
@@ -963,6 +968,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
 
@@ -1116,6 +1122,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   if (bundle_framework_graphics) {
@@ -1303,6 +1310,7 @@ ohos_unittest("BmsBundleInstallDriverTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   if (bundle_framework_graphics) {
@@ -1474,6 +1482,7 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
 
@@ -1667,6 +1676,7 @@ ohos_unittest("BmsBundleInstallerPermissionTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]

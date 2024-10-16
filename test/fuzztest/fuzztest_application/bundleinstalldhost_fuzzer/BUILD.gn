@@ -76,6 +76,7 @@ ohos_fuzztest("BundleInstalldHostFuzzTest") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
 
   external_deps += [
