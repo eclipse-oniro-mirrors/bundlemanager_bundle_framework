@@ -65,6 +65,7 @@ const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3j
 const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/libs/arm";
 const std::string TEST_CREATE_FILE_PATH = "/data/test/resource/bms/app_service_test/test_create_dir/test.hap";
 const std::string BUILD_HASH = "8670157ae28ac2dc08075c4a9364e320898b4aaf4c1ab691df6afdb854a6811b";
+const std::string SHARED_MODULE_TYPE = "shared";
 }  // namespace
 
 class BmsBundleAppServiceFwkInstallerTest : public testing::Test {
@@ -511,6 +512,43 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0500, Function | 
 }
 
 /**
+ * @tc.number: CheckNeedInstall_0600
+ * @tc.name: test CheckNeedInstall
+ * @tc.desc: 1.Test the CheckNeedInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0600, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.baseBundleInfo_->versionCode = VERSION_LOW;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    AddBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo newInfo;
+    bool getRes = dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, newInfo);
+    EXPECT_TRUE(getRes);
+
+    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME;
+    appServiceFwkInstaller.versionCode_ = newInfo.GetVersionCode();
+    infos[VERSION_ONE_LIBRARY_ONE_PATH] = newInfo;
+
+    InnerBundleInfo oldInfo;
+    oldInfo.baseBundleInfo_->versionCode = VERSION;
+    bool isDowngrade = false;
+    bool result = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo, isDowngrade);
+
+    EXPECT_FALSE(result);
+    DeleteBundleInfo(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: CheckNeedUpdate_0100
  * @tc.name: test CheckNeedUpdate
  * @tc.desc: 1.Test the CheckNeedUpdate
@@ -610,6 +648,33 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0500, Function | S
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.moduleName = MODULE_NAME_TEST;
     oldInfo.innerModuleInfos_[MODULE_NAME_TEST] = innerModuleInfo;
+
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = MODULE_NAME_TEST;
+    innerModuleInfo.buildHash = BUILD_HASH;
+    newInfo.innerModuleInfos_[MODULE_NAME_TEST] = innerModuleInfo;
+
+    bool res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
+    EXPECT_TRUE(appServiceFwkInstaller.moduleUpdate_);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: CheckNeedUpdate_0600
+ * @tc.name: test CheckNeedUpdate
+ * @tc.desc: 1.Test the CheckNeedUpdate
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0600, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    appServiceFwkInstaller.versionCode_ = VERSION_LOW;
+
+    InnerBundleInfo oldInfo;
+    oldInfo.baseBundleInfo_->versionCode = VERSION_LOW;
+    oldInfo.currentPackage_ = MODULE_NAME_TEST;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
 
     InnerBundleInfo newInfo;
     newInfo.currentPackage_ = MODULE_NAME_TEST;
@@ -778,6 +843,67 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0050, Functi
 }
 
 /**
+ * @tc.number: UninstallLowerVersion_0060
+ * @tc.name: test UninstallLowerVersion
+ * @tc.desc: 1.Test the UninstallLowerVersion
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0060, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME;
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->installStates_[BUNDLE_NAME] = InstallState::INSTALL_SUCCESS;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+
+    std::vector<std::string> moduleNameList;
+    auto res = appServiceFwkInstaller.UninstallLowerVersion(moduleNameList);
+    EXPECT_EQ(res, ERR_OK);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+    dataMgr->installStates_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: UninstallLowerVersion_0080
+ * @tc.name: test UninstallLowerVersion
+ * @tc.desc: 1.Test the UninstallLowerVersion
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0080, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME;
+    if (appServiceFwkInstaller.dataMgr_ == nullptr)
+    {
+        appServiceFwkInstaller.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_LIBRARY_ONE;
+    info.innerModuleInfos_.emplace(MODULE_NAME_LIBRARY_ONE, innerModuleInfo);
+    appServiceFwkInstaller.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, info);
+
+    std::vector<std::string> moduleNameList{MODULE_NAME_LIBRARY_ONE};
+    auto res = appServiceFwkInstaller.UninstallLowerVersion(moduleNameList);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: ProcessNewModuleInstall_0010
  * @tc.name: test ProcessNewModuleInstall
  * @tc.desc: 1.Test the ProcessNewModuleInstall
@@ -834,6 +960,31 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessInstall_0010, Function | Sm
 
     Security::Verify::ProvisionInfo provisionInfo;
     appServiceFwkInstaller.AddAppProvisionInfo(BUNDLE_NAME, provisionInfo, installParam);
+}
+
+/**
+ * @tc.number: ProcessInstall_0020
+ * @tc.name: test ProcessInstall
+ * @tc.desc: 1.Test the ProcessInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessInstall_0020, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    std::vector<std::string> hspPaths;
+    hspPaths.push_back(VERSION_ONE_LIBRARY_ONE_PATH);
+    InstallParam installParam;
+    installParam.isPreInstallApp = false;
+    installParam.specifiedDistributionType = BUNDLE_NAME;
+    installParam.additionalInfo = BUNDLE_NAME;
+
+    auto res = appServiceFwkInstaller.ProcessInstall(hspPaths, installParam);
+    appServiceFwkInstaller.deleteBundlePath_.push_back(VERSION_ONE_LIBRARY_ONE_PATH);
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    appServiceFwkInstaller.SavePreInstallBundleInfo(res, infos, installParam);
+    EXPECT_EQ(res, ERR_OK);
+    appServiceFwkInstaller.deleteBundlePath_.clear();
 }
 
 /**
@@ -914,6 +1065,54 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessNativeLibrary_0010, Functio
 }
 
 /**
+ * @tc.number: ProcessNativeLibrary_0020
+ * @tc.name: test ProcessNativeLibrary
+ * @tc.desc: 1.Test the ProcessNativeLibrary
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessNativeLibrary_0020, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.compressNativeLibs = true;
+    innerModuleInfo.nativeLibraryPath = "";
+    innerBundleInfo.innerModuleInfos_.emplace(MODULE_NAME_TEST, innerModuleInfo);
+
+    auto res = appServiceFwkInstaller.ProcessNativeLibrary(
+        VERSION_ONE_LIBRARY_ONE_PATH, BUNDLE_DATA_DIR, MODULE_NAME_TEST, BUNDLE_DATA_DIR, innerBundleInfo);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: SaveBundleInfoToStorage_0010
+ * @tc.name: test SaveBundleInfoToStorage
+ * @tc.desc: 1.Test the SaveBundleInfoToStorage
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, SaveBundleInfoToStorage_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller installer;
+    InitAppServiceFwkInstaller(installer);
+
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.dataMgr_->installStates_.clear();
+    InnerBundleInfo info;
+    info.currentPackage_ = MODULE_NAME_TEST;
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, info);
+
+    auto res = installer.SaveBundleInfoToStorage();
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: MoveSoToRealPath_0010
  * @tc.name: test MoveSoToRealPath
  * @tc.desc: 1.Test the MoveSoToRealPath
@@ -933,6 +1132,29 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveSoToRealPath_0010, Function | 
     infos.emplace(TEST_CREATE_FILE_PATH, innerBundleInfo);
     res = appServiceFwkInstaller.UpdateAppService(innerBundleInfo, infos, installParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: MoveSoToRealPath_0020
+ * @tc.name: test MoveSoToRealPath
+ * @tc.desc: 1.Test the MoveSoToRealPath
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveSoToRealPath_0020, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    auto res = appServiceFwkInstaller.MoveSoToRealPath(MODULE_NAME_LIBRARY_ONE, "data/test", MODULE_NAME_LIBRARY_ONE);
+    EXPECT_EQ(res, ERR_OK);
+
+    InstallParam installParam;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo info;
+    info.baseBundleInfo_->versionCode = VERSION_LOW;
+    appServiceFwkInstaller.versionCode_ = VERSION;
+    appServiceFwkInstaller.uninstallModuleVec_.emplace_back(MODULE_NAME_TEST);
+    res = appServiceFwkInstaller.UpdateAppService(info, infos, installParam);
+    EXPECT_EQ(res, ERR_OK);
+    appServiceFwkInstaller.uninstallModuleVec_.clear();
 }
 
 /**
@@ -1077,6 +1299,22 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ExtractModule_0100, Function | Sma
 }
 
 /**
+ * @tc.number: ExtractModule_0200
+ * @tc.name: test function of ExtractModule
+ * @tc.desc: 1. calling ExtractModule of AppServiceFwkInstaller
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ExtractModule_0200, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    InitAppServiceFwkInstaller(installer);
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    std::string bundlePath;
+    auto ret = installer.ExtractModule(oldInfo, newInfo, bundlePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: MoveSoToRealPath_0100
  * @tc.name: test function of MoveSoToRealPath
  * @tc.desc: calling MoveSoToRealPath of AppServiceFwkInstaller
@@ -1105,6 +1343,225 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0100, Fu
     }
     auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeliveryProfileToCodeSign_0200
+ * @tc.name: test function of DeliveryProfileToCodeSign
+ * @tc.desc: calling DeliveryProfileToCodeSign of AppServiceFwkInstaller
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0200, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    provisionInfo.profileBlockLength = 0;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: DeliveryProfileToCodeSign_0300
+ * @tc.name: test function of DeliveryProfileToCodeSign
+ * @tc.desc: calling DeliveryProfileToCodeSign of AppServiceFwkInstaller
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0300, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_NORMAL;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    provisionInfo.profileBlock = nullptr;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: DeliveryProfileToCodeSign_0400
+ * @tc.name: test function of DeliveryProfileToCodeSign
+ * @tc.desc: calling DeliveryProfileToCodeSign of AppServiceFwkInstaller
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0400, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_MDM;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    provisionInfo.profileBlock = nullptr;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: DeliveryProfileToCodeSign_0500
+ * @tc.name: test function of DeliveryProfileToCodeSign
+ * @tc.desc: calling DeliveryProfileToCodeSign of AppServiceFwkInstaller
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0500, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    provisionInfo.profileBlockLength = 0;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: DeliveryProfileToCodeSign_0600
+ * @tc.name: test function of DeliveryProfileToCodeSign
+ * @tc.desc: calling DeliveryProfileToCodeSign of AppServiceFwkInstaller
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0600, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    provisionInfo.profileBlockLength = 0;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeliveryProfileToCodeSign_0700
+ * @tc.name: test function of DeliveryProfileToCodeSign
+ * @tc.desc: calling DeliveryProfileToCodeSign of AppServiceFwkInstaller
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0700, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    provisionInfo.profileBlockLength = 1;
+    provisionInfo.bundleInfo.bundleName = BUNDLE_NAME;
+    provisionInfo.profileBlock = std::make_unique<unsigned char[]>(provisionInfo.profileBlockLength);
+
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeliveryProfileToCodeSign_0800
+ * @tc.name: test function of DeliveryProfileToCodeSign
+ * @tc.desc: calling DeliveryProfileToCodeSign of AppServiceFwkInstaller
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0800, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    installer.bundleName_ = BUNDLE_NAME;
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, info);
+
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_OK);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: DeliveryProfileToCodeSign_1000
+ * @tc.name: test function of DeliveryProfileToCodeSign
+ * @tc.desc: calling DeliveryProfileToCodeSign of AppServiceFwkInstaller
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_1000, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    hapVerifyResults.clear();
+    installer.bundleName_ = "";
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: DeliveryProfileToCodeSign_1100
+ * @tc.name: test function of DeliveryProfileToCodeSign
+ * @tc.desc: calling DeliveryProfileToCodeSign of AppServiceFwkInstaller
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_1100, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    provisionInfo.profileBlockLength = 1;
+    provisionInfo.bundleInfo.bundleName = BUNDLE_NAME;
+    provisionInfo.profileBlock = std::make_unique<unsigned char[]>(provisionInfo.profileBlockLength);
+
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyResults.push_back(hapVerifyResult);
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED);
 }
 
 /**
@@ -1210,6 +1667,35 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RollBack_0010, Function | SmallTes
 }
 
 /**
+ * @tc.number: RollBack_0020
+ * @tc.name: test RollBack
+ * @tc.desc: 1.test roll back
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RollBack_0020, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME;
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->installStates_[BUNDLE_NAME] = InstallState::INSTALL_SUCCESS;
+
+    InstallState state;
+    appServiceFwkInstaller.dataMgr_->installStates_.emplace(BUNDLE_NAME, state);
+
+    appServiceFwkInstaller.newInnerBundleInfo_.baseBundleInfo_->isPreInstallApp = true;
+    appServiceFwkInstaller.RollBack();
+    auto item = appServiceFwkInstaller.dataMgr_->installStates_.find(BUNDLE_NAME);
+    auto res = item == appServiceFwkInstaller.dataMgr_->installStates_.end();
+    EXPECT_FALSE(res);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+    dataMgr->installStates_.erase(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: ProcessModuleUpdate_0010
  * @tc.name: test ProcessModuleUpdate
  * @tc.desc: 1.test process module update
@@ -1235,5 +1721,289 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessModuleUpdate_0010, Function
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
     dataMgr->installStates_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: UnInstall_0010
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.test UnInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0010, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    std::string bundleName = "";
+    auto res = installer.UnInstall(bundleName);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: UnInstall_0020
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.test UnInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0020, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    auto res = installer.UnInstall(BUNDLE_NAME);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: UnInstall_0030
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.test UnInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0030, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    installer.dataMgr_->transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::UNINSTALL_START);
+
+    auto res = installer.UnInstall(BUNDLE_NAME);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+
+    installer.dataMgr_->transferStates_.clear();
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: UnInstall_0040
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.test UnInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0040, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    std::string bundleName = "";
+    std::string moduleName = MODULE_NAME_TEST;
+    auto res = installer.UnInstall(bundleName, moduleName);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: UnInstall_0050
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.test UnInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0050, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    std::string bundleName = BUNDLE_NAME;
+    std::string moduleName = "";
+    auto res = installer.UnInstall(bundleName, moduleName);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: UnInstall_0060
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.test UnInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0060, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    auto res = installer.UnInstall(BUNDLE_NAME, MODULE_NAME_TEST);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: UnInstall_0070
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.test UnInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0070, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    auto res = installer.UnInstall(BUNDLE_NAME, MODULE_NAME_TEST);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: UnInstall_0080
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.test UnInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0080, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.distro.moduleType = SHARED_MODULE_TYPE;
+    innerModuleInfo.moduleName = MODULE_NAME_LIBRARY_ONE;
+    innerBundleInfo.innerModuleInfos_.emplace(MODULE_NAME_LIBRARY_ONE, innerModuleInfo);
+
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    auto res = installer.UnInstall(BUNDLE_NAME, MODULE_NAME_TEST);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: UnInstall_0090
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.test UnInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0090, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    InnerBundleInfo innerBundleInfo;
+    auto res = installer.UnInstall(BUNDLE_NAME, MODULE_NAME_TEST, innerBundleInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: UnInstall_0100
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.test UnInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0100, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    installer.dataMgr_->installStates_.emplace(BUNDLE_NAME, InstallState::INSTALL_START);
+
+    auto res = installer.UnInstall(BUNDLE_NAME, MODULE_NAME_TEST, innerBundleInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    installer.dataMgr_->installStates_.clear();
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BeforeUninstall_0010
+ * @tc.name: test BeforeUninstall
+ * @tc.desc: 1.test BeforeUninstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, BeforeUninstall_0010, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    std::string bundleName = "";
+    auto res = installer.BeforeUninstall(bundleName);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BeforeUninstall_0020
+ * @tc.name: test BeforeUninstall
+ * @tc.desc: 1.test BeforeUninstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, BeforeUninstall_0020, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    installer.dataMgr_->bundleInfos_.clear();
+    auto res = installer.BeforeUninstall(BUNDLE_NAME);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BeforeUninstall_0030
+ * @tc.name: test BeforeUninstall
+ * @tc.desc: 1.test BeforeUninstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, BeforeUninstall_0030, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+
+    if (installer.dataMgr_ == nullptr)
+    {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    auto res = installer.BeforeUninstall(BUNDLE_NAME);
+    EXPECT_EQ(res, ERR_OK);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: CheckAndParseFiles_0010
+ * @tc.name: test CheckAndParseFiles
+ * @tc.desc: 1.test CheckAndParseFiles
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckAndParseFiles_0010, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<std::string> hspPaths;
+    InstallParam installParam;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+
+    auto res = installer.CheckAndParseFiles(hspPaths, installParam, newInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
 }
 }
