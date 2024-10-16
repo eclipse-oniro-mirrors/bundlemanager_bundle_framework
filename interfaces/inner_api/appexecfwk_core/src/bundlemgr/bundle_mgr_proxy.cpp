@@ -5050,6 +5050,19 @@ ErrCode BundleMgrProxy::GetCloneAppIndexes(const std::string &bundleName, std::v
     return ret;
 }
 
+ErrCode BundleMgrProxy::GetLaunchWant(Want &want)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetLaunchWant");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfoWithErrCode<Want>(BundleMgrInterfaceCode::GET_LAUNCH_WANT, data, want);
+}
+
 ErrCode BundleMgrProxy::QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName,
     int32_t flags, int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo, int32_t userId)
 {

@@ -561,6 +561,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_APP_INDEXES):
             errCode = this->HandleGetCloneAppIndexes(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LAUNCH_WANT):
+            errCode = this->HandleGetLaunchWant(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX):
             errCode = this->HandleQueryCloneExtensionAbilityInfoWithAppIndex(data, reply);
             break;
@@ -3901,6 +3904,24 @@ ErrCode BundleMgrHost::HandleGetCloneAppIndexes(MessageParcel &data, MessageParc
     if (ret == ERR_OK && !reply.WriteInt32Vector(appIndexes)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetLaunchWant(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    Want want;
+    ErrCode ret = GetLaunchWant(want);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteParcelable(&want)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }

@@ -2979,6 +2979,43 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0600, Function | SmallT
 }
 
 /**
+ * @tc.number: GetLaunchWant_0100
+ * @tc.name: test can not get the launch want
+ * @tc.desc: 1.system run normally
+ *           2.get launch want failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLaunchWant_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode testRet = bundleMgrProxy->GetLaunchWant(want);
+    EXPECT_NE(ERR_OK, testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetLaunchWant_0200
+ * @tc.name: test GetLaunchWant of BundleMgrHostImpl
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLaunchWant_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    AAFwk::Want want;
+    ErrCode testRet = hostImpl->GetLaunchWant(want);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetBundleList_0100
  * @tc.name: test can get all installed bundle names
  * @tc.desc: 1.system run normally
