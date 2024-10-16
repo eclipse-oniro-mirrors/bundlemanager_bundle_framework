@@ -4846,6 +4846,7 @@ static void ConvertInstallResult(InstallResult &installResult)
             installResult.resultMsg = "STATUS_INSTALL_FAILURE";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DEBUG_ENCRYPTED_BUNDLE_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERIFICATION_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARAM_ERROR):

@@ -5090,6 +5090,12 @@ ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std:
     bool isEncrypted = false;
     ErrCode result = InstalldClient::GetInstance()->CheckEncryption(param, isEncrypted);
     CHECK_RESULT(result, "fail to CheckSoEncryption, error is %{public}d");
+    if ((info.GetBaseApplicationInfo().debug || (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG))
+        && isEncrypted) {
+        LOG_E(BMS_TAG_INSTALLER, "-n %{public}s debug encrypted bundle is not allowed to install",
+            info.GetBundleName().c_str());
+        return ERR_APPEXECFWK_INSTALL_DEBUG_ENCRYPTED_BUNDLE_FAILED;
+    }
     if (isEncrypted) {
         LOG_D(BMS_TAG_INSTALLER, "module %{public}s is encrypted", modulePath_.c_str());
         info.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
@@ -5287,6 +5293,12 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         bool isEncrypted = false;
         ErrCode result = InstalldClient::GetInstance()->CheckEncryption(param, isEncrypted);
         CHECK_RESULT(result, "fail to CheckHapEncryption, error is %{public}d");
+        if ((info.second.GetBaseApplicationInfo().debug ||
+            (info.second.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG)) && isEncrypted) {
+            LOG_E(BMS_TAG_INSTALLER, "-n %{public}s debug encrypted bundle is not allowed to install",
+                bundleName_.c_str());
+            return ERR_APPEXECFWK_INSTALL_DEBUG_ENCRYPTED_BUNDLE_FAILED;
+        }
         oldInfo.SetMoudleIsEncrpted(info.second.GetCurrentModulePackage(), isEncrypted);
     }
     if (oldInfo.IsContainEncryptedModule()) {
