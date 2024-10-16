@@ -51,6 +51,7 @@
 #include "parameters.h"
 #include "securec.h"
 #include "hnp_api.h"
+#include "policycoreutils.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -1718,6 +1719,13 @@ bool InstalldOperator::CopyDriverSoFiles(const std::string &originalDir, const s
     if (!OHOS::ChangeModeFile(realDestinedDir, mode)) {
         LOG_E(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", realDestinedDir.c_str(),
             errno);
+        return false;
+    }
+    // Refresh the selinux tag of the driver file so that it matches the selinux tag of the parent directory file
+    int ret = RestoreconFromParentDir(realDestinedDir.c_str());
+    if (ret != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "RefreshFileSelinuxTag %{public}s failed, ret: %{public}d", realDestinedDir.c_str(),
+            ret);
         return false;
     }
     LOG_D(BMS_TAG_INSTALLD, "CopyDriverSoFiles end");

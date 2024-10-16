@@ -87,6 +87,7 @@ ohos_unittest("BmsBundleDataMgrTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
 
@@ -264,6 +265,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
 
@@ -432,6 +434,7 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
 

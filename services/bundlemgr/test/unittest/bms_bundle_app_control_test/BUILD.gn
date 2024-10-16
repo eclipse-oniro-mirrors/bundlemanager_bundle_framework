@@ -89,6 +89,7 @@ ohos_unittest("BmsBundleAppControlTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -249,6 +250,7 @@ ohos_unittest("BmsBundleMockAppControlTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   defines = []

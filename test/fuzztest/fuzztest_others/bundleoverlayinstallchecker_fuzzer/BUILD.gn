@@ -67,6 +67,7 @@ ohos_fuzztest("BundleOverlayInstallCheckerFuzzTest") {
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
 
   external_deps += [

@@ -83,6 +83,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
 
   external_deps += [
@@ -291,6 +292,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
 
   external_deps += [
@@ -433,6 +435,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
 
   external_deps += [
@@ -575,6 +578,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
 
   external_deps += [
@@ -718,6 +722,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
 
   external_deps += [
