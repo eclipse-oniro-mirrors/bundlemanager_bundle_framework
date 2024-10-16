@@ -43,8 +43,6 @@ ohos_shared_library("bundleresourcemanager") {
     "samgr:samgr_proxy",
   ]
 
-  public_external_deps = [ "node:node_header_notice" ]
-
   defines = []
 
   if (bundle_framework_bundle_resource) {

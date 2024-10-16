@@ -39,10 +39,7 @@ ohos_shared_library("innerbundlemanager") {
     "hilog:libhilog",
     "napi:ace_napi",
   ]
-  public_external_deps = [
-    "libuv:uv",
-    "node:node_header_notice",
-  ]
+  public_external_deps = [ "libuv:uv" ]
   if (bundle_framework_launcher) {
     defines += [ "BUNDLE_FRAMEWORK_LAUNCHER" ]
     sources += [

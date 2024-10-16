@@ -41,10 +41,7 @@ ohos_shared_library("defaultappmanager") {
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
-  public_external_deps = [
-    "libuv:uv",
-    "node:node_header_notice",
-  ]
+  public_external_deps = [ "libuv:uv" ]
   if (bundle_framework_default_app) {
     sources += [ "js_default_app.cpp" ]
     defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
