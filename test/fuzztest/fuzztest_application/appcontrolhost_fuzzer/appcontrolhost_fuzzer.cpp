@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#define private public
 #include "appcontrolhost_fuzzer.h"
 
 #include <cstddef>
@@ -29,15 +30,17 @@ constexpr uint32_t CODE_MAX = 23;
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    for (uint32_t code = 0; code <= CODE_MAX; code++) {
-        MessageParcel datas;
-        std::u16string descriptor = AppControlHost::GetDescriptor();
-        datas.WriteInterfaceToken(descriptor);
-        datas.WriteBuffer(data, size);
-        datas.RewindRead(0);
-        MessageParcel reply;
+    AppControlHost appControlHost;
+    MessageParcel datas;
+    std::u16string descriptor = AppControlHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    appControlHost.HandleAddAppInstallControlRule(datas, reply);
+    appControlHost.HandleDeleteAppInstallControlRule(datas, reply);
+    for (uint32_t code = 2; code <= CODE_MAX; code++) {
         MessageOption option;
-        AppControlHost appControlHost;
         appControlHost.OnRemoteRequest(code, datas, reply, option);
     }
     return true;
