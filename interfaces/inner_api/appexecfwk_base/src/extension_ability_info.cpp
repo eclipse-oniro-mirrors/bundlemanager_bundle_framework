@@ -118,6 +118,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "autoFill/smart", ExtensionAbilityType::AUTO_FILL_SMART },
     { "liveViewLockScreen", ExtensionAbilityType::LIVEVIEW_LOCKSCREEN },
     { "photoEditor", ExtensionAbilityType::PHOTO_EDITOR },
+    { "callerInfoQuery", ExtensionAbilityType::CALLER_INFO_QUERY },
     { "sysPicker/photoEditor", ExtensionAbilityType::SYSPICKER_PHOTOEDITOR },
     { "sys/visualExtension", ExtensionAbilityType::SYS_VISUAL },
     { "uiService", ExtensionAbilityType::UI_SERVICE },
