@@ -278,6 +278,11 @@ bool FilePathWriterDelegate::PrepareOutput()
     }
 
     file_ = fopen(outputFilePath_.Value().c_str(), "wb");
+    if (file_ == nullptr) {
+        APP_LOGE("fopen %{private}s err: %{public}d %{public}s",
+            outputFilePath_.Value().c_str(), errno, strerror(errno));
+        return false;
+    }
     return FilePath::PathIsValid(outputFilePath_);
 }
 
@@ -292,8 +297,10 @@ bool FilePathWriterDelegate::WriteBytes(const char *data, int numBytes)
 
 void FilePathWriterDelegate::SetTimeModified(const struct tm *time)
 {
-    fclose(file_);
-    file_ = nullptr;
+    if (file_ != nullptr) {
+        fclose(file_);
+        file_ = nullptr;
+    }
 }
 
 }  // namespace LIBZIP
