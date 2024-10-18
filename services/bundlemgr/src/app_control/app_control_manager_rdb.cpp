@@ -712,22 +712,20 @@ ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
             LOG_W(BMS_TAG_DEFAULT, "parse DisposedRule failed");
         }
         disposedRules.push_back(rule);
-        PrintCallerNameAndSetRuleTime(absSharedResultSet);
+        PrintDisposedRuleInfo(absSharedResultSet, rule);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     return ERR_OK;
 }
 
-void AppControlManagerRdb::PrintCallerNameAndSetRuleTime(
-    const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet)
+void AppControlManagerRdb::PrintDisposedRuleInfo(
+    const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet, const DisposedRule &rule)
 {
     std::string callerName;
-    if (absSharedResultSet->GetString(CALLING_NAME_INDEX, callerName) == NativeRdb::E_OK) {
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "GetAbilityRunningControlRule caller:%{public}s", callerName.c_str());
-    }
-    int32_t setRuleTime;
-    if (absSharedResultSet->GetInt(TIME_STAMP_INDEX, setRuleTime) == NativeRdb::E_OK) {
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "GetAbilityRunningControlRule time:%{public}d", setRuleTime);
-    }
+    absSharedResultSet->GetString(CALLING_NAME_INDEX, callerName);
+    int32_t setRuleTime = 0;
+    absSharedResultSet->GetInt(TIME_STAMP_INDEX, setRuleTime);
+    LOG_NOFUNC_W(BMS_TAG_DEFAULT, "control rule caller:%{public}s time:%{public}d rule:%{public}s",
+        callerName.c_str(), setRuleTime, rule.ToString().c_str());
 }
 }
 }
