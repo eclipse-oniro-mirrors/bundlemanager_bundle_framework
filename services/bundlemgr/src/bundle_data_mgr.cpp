@@ -8616,11 +8616,8 @@ ErrCode BundleDataMgr::GetAppIdByBundleName(
     if (item == bundleInfos_.end()) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    const InnerBundleInfo &innerBundleInfo = item->second;
-    if (innerBundleInfo.IsDisabled()) {
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-    }
-    appId = innerBundleInfo.GetBaseBundleInfo().appId;
+
+    appId = item->second.GetBaseBundleInfo().appId;
     return ERR_OK;
 }
 
