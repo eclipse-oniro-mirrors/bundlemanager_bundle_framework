@@ -24,6 +24,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/xattr.h>
 #include <unistd.h>
 
 #include "aot/aot_executor.h"
@@ -50,6 +51,7 @@
 #include "installd/installd_permission_mgr.h"
 #include "parameters.h"
 #include "inner_bundle_clone_common.h"
+#include "storage_acl.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -77,6 +79,7 @@ constexpr const char* EXTENSION_CONFIG_FILE_PATH = "/etc/ams_extension_config.js
 constexpr const char* EXTENSION_CONFIG_NAME = "ams_extension_config";
 constexpr const char* EXTENSION_TYPE_NAME = "extension_type_name";
 constexpr const char* EXTENSION_SERVICE_NEED_CREATE_SANDBOX = "need_create_sandbox";
+constexpr const char* SHELL_ENTRY_TXT = "g:2000:rx";
 constexpr int32_t INSTALLS_UID = 3060;
 enum class DirType : uint8_t {
     DIR_EL1,
@@ -446,14 +449,21 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", bundleDataDir.c_str());
         }
         bundleDataDir += createDirParam.bundleName;
-        if (!InstalldOperator::MkOwnerDir(bundleDataDir, S_IRWXU, createDirParam.uid, createDirParam.gid)) {
+        int mode = createDirParam.debug ? (S_IRWXU | S_IRGRP | S_IXGRP) : S_IRWXU;
+        if (!InstalldOperator::MkOwnerDir(bundleDataDir, mode, createDirParam.uid, createDirParam.gid)) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundledatadir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+        }
+        if (createDirParam.debug) {
+            int status = StorageDaemon::AclSetAccess(bundleDataDir, SHELL_ENTRY_TXT);
+            LOG_I(BMS_TAG_INSTALLD, "AclSetAccess: %{public}d, %{private}s", status, bundleDataDir.c_str());
+            status = StorageDaemon::AclSetDefault(bundleDataDir, SHELL_ENTRY_TXT);
+            LOG_I(BMS_TAG_INSTALLD, "AclSetDefault: %{public}d, %{private}s", status, bundleDataDir.c_str());
         }
         InstalldOperator::RmvDeleteDfx(bundleDataDir);
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             for (const auto &dir : BUNDLE_DATA_DIR) {
-                if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, S_IRWXU,
+                if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, mode,
                     createDirParam.uid, createDirParam.gid)) {
                     LOG_E(BMS_TAG_INSTALLD, "CreateBundledatadir MkOwnerDir el2 failed errno:%{public}d", errno);
                     return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
@@ -483,6 +493,12 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             databaseDir, S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, ServiceConstants::DATABASE_DIR_GID)) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundle databaseDir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+        }
+        if (createDirParam.debug) {
+            int status = StorageDaemon::AclSetAccess(databaseDir, SHELL_ENTRY_TXT);
+            LOG_I(BMS_TAG_INSTALLD, "AclSetAccess: %{public}d, %{private}s", status, databaseDir.c_str());
+            status = StorageDaemon::AclSetDefault(databaseDir, SHELL_ENTRY_TXT);
+            LOG_I(BMS_TAG_INSTALLD, "AclSetDefault: %{public}d, %{private}s", status, databaseDir.c_str());
         }
         InstalldOperator::RmvDeleteDfx(databaseDir);
         ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
