@@ -931,6 +931,8 @@ public:
     bool DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName);
     void GetAllBundleNames(std::set<std::string> &bundleNames);
 
+    void UpdateIsPreInstallApp(const std::string &bundleName, bool isPreInstallApp);
+
     /**
      * @brief Check whether the link can be opened.
      * @param link Indicates the link to be opened.

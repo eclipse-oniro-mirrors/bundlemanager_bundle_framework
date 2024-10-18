@@ -7325,6 +7325,35 @@ HWTEST_F(BmsBundleDataMgrTest, GetContinueBundleNames_0700, Function | SmallTest
 }
 
 /**
+ * @tc.number: UpdateIsPreInstallApp_0001
+ * @tc.name: UpdateIsPreInstallApp
+ * @tc.desc: test UpdateIsPreInstallApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, UpdateIsPreInstallApp_0001, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    if (bundleDataMgr != nullptr) {
+        InnerBundleInfo innerBundleInfo;
+        innerBundleInfo.SetIsPreInstallApp(true);
+        std::string bundleName = "";
+        bundleDataMgr->bundleInfos_[bundleName] = innerBundleInfo;
+        bundleDataMgr->UpdateIsPreInstallApp(bundleName, false);
+        EXPECT_TRUE(bundleDataMgr->bundleInfos_[bundleName].IsPreInstallApp());
+
+        bundleName = "com.test.bundle";
+        bundleDataMgr->bundleInfos_[bundleName] = innerBundleInfo;
+        bundleDataMgr->UpdateIsPreInstallApp(bundleName, false);
+        EXPECT_FALSE(bundleDataMgr->bundleInfos_[bundleName].IsPreInstallApp());
+
+        bundleDataMgr->UpdateIsPreInstallApp(bundleName, false);
+        EXPECT_FALSE(bundleDataMgr->bundleInfos_[bundleName].IsPreInstallApp());
+        bundleDataMgr->bundleInfos_.clear();
+    }
+}
+
+/**
  * @tc.number: BundleDataMgr_0100
  * @tc.name: BatchQueryAbilityInfos
  * @tc.desc: test BatchQueryAbilityInfos the BundleDataMgr
