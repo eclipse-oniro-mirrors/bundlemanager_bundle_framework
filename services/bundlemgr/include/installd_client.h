@@ -236,11 +236,7 @@ public:
     ErrCode AddUserDirDeleteDfx(int32_t userId);
 
 private:
-    /**
-     * @brief Get the installd proxy object.
-     * @return Returns true if the installd proxy object got successfully; returns false otherwise.
-     */
-    bool GetInstalldProxy();
+    sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();
 
     template<typename F, typename... Args>
@@ -249,12 +245,11 @@ private:
         int32_t maxRetryTimes = 2;
         ErrCode errCode = ERR_APPEXECFWK_INSTALLD_SERVICE_DIED;
         for (int32_t retryTimes = 0; retryTimes < maxRetryTimes; retryTimes++) {
-            if (!GetInstalldProxy()) {
+            auto proxy = GetInstalldProxy();
+            if (proxy == nullptr) {
                 return ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR;
             }
-            if (installdProxy_ != nullptr) {
-                errCode = (installdProxy_->*func)(std::forward<Args>(args)...);
-            }
+            errCode = (proxy->*func)(std::forward<Args>(args)...);
             if (errCode == ERR_APPEXECFWK_INSTALLD_SERVICE_DIED) {
                 APP_LOGE("CallService failed, retry times: %{public}d", retryTimes + 1);
                 ResetInstalldProxy();
