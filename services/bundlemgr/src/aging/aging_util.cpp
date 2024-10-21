@@ -50,7 +50,7 @@ bool AgingUtil::SortTwoAgingBundleInfos(AgingBundleInfo &bundle1, AgingBundleInf
         return bundle1.GetStartCount() < bundle2.GetStartCount();
     }
 
-    return bundle1.GetRecentlyUsedTime() <= bundle2.GetRecentlyUsedTime();
+    return bundle1.GetRecentlyUsedTime() < bundle2.GetRecentlyUsedTime();
 }
 
 int64_t AgingUtil::GetUnusedTimeMsBaseOnCurrentTime(int64_t currentTimeMs, int32_t days)

@@ -215,28 +215,25 @@ void InstalldClient::ResetInstalldProxy()
     installdProxy_ = nullptr;
 }
 
-bool InstalldClient::GetInstalldProxy()
+sptr<IInstalld> InstalldClient::GetInstalldProxy()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (installdProxy_ == nullptr) {
-        APP_LOGD("try to get installd proxy");
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (installdProxy_ == nullptr) {
-            sptr<IInstalld> tempProxy =
-                iface_cast<IInstalld>(SystemAbilityHelper::GetSystemAbility(INSTALLD_SERVICE_ID));
-            if ((tempProxy == nullptr) || (tempProxy->AsObject() == nullptr)) {
-                APP_LOGE("the installd proxy or remote object is null");
-                return false;
-            }
-            recipient_ = new (std::nothrow) InstalldDeathRecipient();
-            if (recipient_ == nullptr) {
-                APP_LOGE("the death recipient is nullptr");
-                return false;
-            }
-            tempProxy->AsObject()->AddDeathRecipient(recipient_);
-            installdProxy_ = tempProxy;
+        sptr<IInstalld> tempProxy =
+            iface_cast<IInstalld>(SystemAbilityHelper::GetSystemAbility(INSTALLD_SERVICE_ID));
+        if ((tempProxy == nullptr) || (tempProxy->AsObject() == nullptr)) {
+            APP_LOGE("the installd proxy or remote object is null");
+            return nullptr;
         }
+        recipient_ = new (std::nothrow) InstalldDeathRecipient();
+        if (recipient_ == nullptr) {
+            APP_LOGE("the death recipient is nullptr");
+            return nullptr;
+        }
+        tempProxy->AsObject()->AddDeathRecipient(recipient_);
+        installdProxy_ = tempProxy;
     }
-    return true;
+    return installdProxy_;
 }
 
 ErrCode InstalldClient::ScanDir(
@@ -464,7 +461,7 @@ ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
 
 bool InstalldClient::StartInstalldService()
 {
-    return GetInstalldProxy();
+    return GetInstalldProxy() != nullptr;
 }
 
 ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
