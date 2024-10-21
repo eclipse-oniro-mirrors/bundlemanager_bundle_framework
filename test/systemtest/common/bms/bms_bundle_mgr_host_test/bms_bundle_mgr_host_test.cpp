@@ -1918,5 +1918,20 @@ HWTEST_F(BmsBundleMgrHostTest, HandleCanOpenLink_0100, Function | MediumTest | L
     ErrCode res = bundleMgrHost.HandleCanOpenLink(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: HandleIsBundleInstalled_0001
+ * @tc.name: test the HandleIsBundleInstalled
+ * @tc.desc: 1. system running normally
+ *           2. test HandleIsBundleInstalled
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleIsBundleInstalled_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleIsBundleInstalled(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // AppExecFwk
 } // OHOS

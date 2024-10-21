@@ -835,6 +835,8 @@ private:
      */
     ErrCode HandleGetContinueBundleNames(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleIsBundleInstalled(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

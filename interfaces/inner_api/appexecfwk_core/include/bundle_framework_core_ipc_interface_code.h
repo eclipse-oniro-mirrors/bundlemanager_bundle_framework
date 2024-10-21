@@ -186,7 +186,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_ODID_BY_BUNDLENAME,
     GET_BUNDLE_INFOS_FOR_CONTINUATION,
     GET_CONTINUE_BUNDLE_NAMES,
-    GET_LAUNCH_WANT
+    GET_LAUNCH_WANT,
+    IS_BUNDLE_INSTALLED
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
