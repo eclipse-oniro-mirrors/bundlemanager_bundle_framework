@@ -155,6 +155,7 @@ ErrCode BmsDriverInstallerTest::InstallBundle(const std::vector<std::string> &bu
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.withCopyHaps = true;
     auto result = installer->Install(bundlePaths, installParam, receiver);
     return receiver->GetResultCode();
 }

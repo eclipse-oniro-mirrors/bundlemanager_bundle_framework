@@ -147,6 +147,7 @@ ErrCode BmsMultipleInstallerTest::InstallThirdPartyBundle(const std::string &fil
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::NORMAL;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(filePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -168,6 +169,7 @@ ErrCode BmsMultipleInstallerTest::InstallThirdPartyMultipleBundles(const std::ve
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = flag ? InstallFlag::NORMAL : InstallFlag::REPLACE_EXISTING;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(filePaths, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -188,6 +190,7 @@ ErrCode BmsMultipleInstallerTest::UpdateThirdPartyBundle(const std::string &file
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(filePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();

@@ -41,6 +41,7 @@
 #include "directory_ex.h"
 #ifdef WITH_SELINUX
 #include "hap_restorecon.h"
+#include "selinux/selinux.h"
 #ifndef SELINUX_HAP_DEBUGGABLE
 #define SELINUX_HAP_DEBUGGABLE 2
 #endif
@@ -1832,6 +1833,37 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(const std::string &bundleName
         LOG_E(BMS_TAG_INSTALLD, "failed to remove distributed file dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::MoveFile(originPath, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "move file %{public}s to %{public}s failed errno:%{public}d",
+            originPath.c_str(), targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(targetPath, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    if (!InstalldOperator::ChangeFileAttr(targetPath, INSTALLS_UID, INSTALLS_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "ChangeAttr %{public}s failed errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+
+#ifdef WITH_SELINUX
+    const char *context = "u:object_r:data_app_el1_file:s0";
+    if (lsetfilecon(targetPath.c_str(), context) < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "setcon %{public}s failed errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+#endif
     return ERR_OK;
 }
 }  // namespace AppExecFwk

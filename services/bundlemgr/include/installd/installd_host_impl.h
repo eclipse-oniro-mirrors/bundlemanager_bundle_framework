@@ -230,6 +230,8 @@ public:
 
     virtual ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList) override;
 
+    virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath) override;
+
 private:
     std::string GetAppDataPath(const std::string &bundleName, const std::string &el,
         const int32_t userId, const int32_t appIndex);
