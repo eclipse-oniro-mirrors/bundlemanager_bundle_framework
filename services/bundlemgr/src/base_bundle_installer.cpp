@@ -124,7 +124,8 @@ constexpr const char* DATA_EXTENSION_PATH = "/extension/";
 const std::string INSTALL_SOURCE_PREINSTALL = "pre-installed";
 const std::string INSTALL_SOURCE_UNKNOWN = "unknown";
 const std::string ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
-const std::string ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
+const char* OLD_ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
+const char* NEW_ARK_WEB_BUNDLE_NAME = "com.ohos.arkwebcore";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -1032,6 +1033,19 @@ void BaseBundleInstaller::KillRelatedProcessIfArkWeb(const std::string &bundleNa
 {
     if (!isAppExist || isOta || !IsArkWeb(bundleName)) {
         return;
+    }
+    std::string arkWebName = OHOS::system::GetParameter(ARK_WEB_BUNDLE_NAME_PARAM, "");
+    if (!arkWebName.empty()) {
+        if (bundleName != arkWebName) {
+            LOG_I(BMS_TAG_INSTALLER, "Bundle(%{public}s) is not arkweb", bundleName.c_str());
+            return;
+        }
+    } else {
+        if (bundleName != NEW_ARK_WEB_BUNDLE_NAME && bundleName != OLD_ARK_WEB_BUNDLE_NAME) {
+            LOG_I(BMS_TAG_INSTALLER, "Failed to get arkweb name and bundle name is %{public}s",
+                bundleName.c_str());
+            return;
+        }
     }
     auto appMgrClient = DelayedSingleton<AppMgrClient>::GetInstance();
     if (appMgrClient == nullptr) {
