@@ -274,31 +274,31 @@ bool InstalldClient::LoadInstalldService()
     return true;
 }
 
-bool InstalldClient::GetInstalldProxy()
+sptr<IInstalld> InstalldClient::GetInstalldProxy()
 {
     std::lock_guard<std::mutex> lock(getProxyMutex_);
     if (installdProxy_ != nullptr) {
         APP_LOGD("installd ready");
-        return true;
+        return installdProxy_;
     }
 
     APP_LOGI("try to get installd proxy");
     if (!LoadInstalldService()) {
         APP_LOGE("load installd service failed");
-        return false;
+        return nullptr;
     }
     if ((installdProxy_ == nullptr) || (installdProxy_->AsObject() == nullptr)) {
         APP_LOGE("the installd proxy or remote object is null");
-        return false;
+        return nullptr;
     }
 
     recipient_ = new (std::nothrow) InstalldDeathRecipient();
     if (recipient_ == nullptr) {
         APP_LOGE("the death recipient is nullptr");
-        return false;
+        return nullptr;
     }
     installdProxy_->AsObject()->AddDeathRecipient(recipient_);
-    return true;
+    return installdProxy_;
 }
 
 ErrCode InstalldClient::ScanDir(
@@ -506,7 +506,7 @@ void InstalldClient::OnLoadSystemAbilityFail()
 
 bool InstalldClient::StartInstalldService()
 {
-    return GetInstalldProxy();
+    return GetInstalldProxy() != nullptr;
 }
 
 ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
