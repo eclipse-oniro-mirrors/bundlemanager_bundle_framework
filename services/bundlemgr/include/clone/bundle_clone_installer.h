@@ -51,11 +51,6 @@ public:
      */
     ErrCode UninstallAllCloneApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
 
-    ErrCode ProcessCloneBundleInstall(const std::string &bundleName, const int32_t userId, int32_t &appIndex);
-
-    ErrCode ProcessCloneBundleUninstall(const std::string &bundleName, int32_t userId, int32_t appIndex);
-
-    void ResetInstallProperties();
 private:
     ErrCode CreateCloneDataDir(
         InnerBundleInfo &info, const int32_t userId, const int32_t &uid, const int32_t &appIndex) const;
@@ -63,6 +58,10 @@ private:
     bool AddKeyOperation(const std::string &bundleName, int32_t appIndex, int32_t userId, int32_t uid);
     void DeleteKeyOperation(const std::string &bundleName, int32_t appIndex, int32_t userId, int32_t uid);
     ErrCode GetDataMgr();
+
+    ErrCode ProcessCloneBundleInstall(const std::string &bundleName, const int32_t userId, int32_t &appIndex);
+    ErrCode ProcessCloneBundleUninstall(const std::string &bundleName, int32_t userId, int32_t appIndex);
+    void ResetInstallProperties();
 
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     int32_t uid_ = 0;
