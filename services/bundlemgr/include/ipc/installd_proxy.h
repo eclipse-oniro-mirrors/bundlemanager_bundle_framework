@@ -229,6 +229,8 @@ public:
     virtual ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList) override;
 
     virtual ErrCode AddUserDirDeleteDfx(int32_t userId) override;
+
+    virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath) override;
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

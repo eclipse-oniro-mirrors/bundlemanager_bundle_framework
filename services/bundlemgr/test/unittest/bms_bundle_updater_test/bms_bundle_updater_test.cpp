@@ -136,6 +136,7 @@ ErrCode BmsBundleUpdaterTest::InstallBundle(const std::string &bundlePath) const
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::NORMAL;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -178,6 +179,7 @@ ErrCode BmsBundleUpdaterTest::UpdateBundle(const std::string &bundlePath) const
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -198,6 +200,7 @@ ErrCode BmsBundleUpdaterTest::UpdateBundle(const std::string &bundlePath, const 
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
 
@@ -425,6 +428,7 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0700, Function | SmallTest | Level2)
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.withCopyHaps = true;
     installer->Install(BUNDLE_FILE_DIR + V2_BUNDLE, installParam, nullptr);
 
     std::this_thread::sleep_for(50ms);

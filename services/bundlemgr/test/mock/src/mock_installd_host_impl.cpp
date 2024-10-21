@@ -306,5 +306,9 @@ ErrCode InstalldHostImpl::AddUserDirDeleteDfx(int32_t userId)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

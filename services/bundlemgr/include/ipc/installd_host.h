@@ -214,6 +214,8 @@ private:
 
     bool HandleAddUserDirDeleteDfx(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleMoveHapToCodeDir(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();
