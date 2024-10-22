@@ -774,11 +774,6 @@ public:
     {
         baseApplicationInfo_->cacheDir = cacheDir;
     }
-    /**
-     * @brief Set application uid.
-     * @param uid Indicates the uid to be set.
-     */
-    void SetUid(int uid) {}
 
     int32_t GetUid(int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const
     {
@@ -814,11 +809,6 @@ public:
 
         return innerBundleUserInfo.gids[0];
     }
-    /**
-     * @brief Set application gid.
-     * @param gid Indicates the gid to be set.
-     */
-    void SetGid(int gid) {}
     /**
      * @brief Get application AppType.
      * @return Returns the AppType.
@@ -1098,8 +1088,6 @@ public:
     void RestoreFromOldInfo(const InnerBundleInfo &oldInfo)
     {
         SetAppCodePath(oldInfo.GetAppCodePath());
-        SetUid(oldInfo.GetUid());
-        SetGid(oldInfo.GetGid());
     }
     void RestoreModuleInfo(const InnerBundleInfo &oldInfo)
     {
@@ -2261,8 +2249,6 @@ private:
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
-    int uid_ = Constants::INVALID_UID;
-    int gid_ = ServiceConstants::INVALID_GID;
     int userId_ = Constants::DEFAULT_USERID;
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     std::shared_ptr<ApplicationInfo> baseApplicationInfo_;
