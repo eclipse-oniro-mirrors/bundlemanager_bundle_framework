@@ -119,6 +119,7 @@ constexpr const char* APP_CLONE = "APP_CLONE";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
+static std::mutex g_clearCacheListenerMutex;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
 static std::string g_ownBundleName;
 static std::mutex g_ownBundleNameMutex;
@@ -155,6 +156,7 @@ void ClearCacheListener::OnReceiveEvent(const EventFwk::CommonEventData &data)
 
 void RegisterClearCacheListener()
 {
+    std::lock_guard<std::mutex> lock(g_clearCacheListenerMutex);
     if (g_clearCacheListener != nullptr) {
         return;
     }
