@@ -2979,6 +2979,28 @@ void InnerBundleInfo::SetAccessTokenIdEx(
     infoItem->second.accessTokenIdEx = accessTokenIdEx.tokenIDEx;
 }
 
+void InnerBundleInfo::SetAccessTokenIdExWithAppIndex(
+    const Security::AccessToken::AccessTokenIDEx accessTokenIdEx,
+    const int32_t userId, const int32_t appIndex)
+{
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        return;
+    }
+
+    auto& userInfo = infoItem->second;
+    std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+
+    auto cloneKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    auto cloneItem = cloneInfos.find(cloneKey);
+    if (cloneItem == cloneInfos.end()) {
+        return;
+    }
+    cloneItem->second.accessTokenId = accessTokenIdEx.tokenIdExStruct.tokenID;
+    cloneItem->second.accessTokenIdEx = accessTokenIdEx.tokenIDEx;
+}
+
 void InnerBundleInfo::SetkeyId(const int32_t userId, const std::string &keyId)
 {
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);

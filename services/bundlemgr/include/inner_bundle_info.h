@@ -1408,6 +1408,10 @@ public:
 
     void SetAccessTokenIdEx(const Security::AccessToken::AccessTokenIDEx accessTokenIdEx, const int32_t userId);
 
+    void SetAccessTokenIdExWithAppIndex(
+        const Security::AccessToken::AccessTokenIDEx accessTokenIdEx,
+        const int32_t userId, const int32_t appIndex);
+
     void SetIsNewVersion(bool flag)
     {
         isNewVersion_ = flag;
