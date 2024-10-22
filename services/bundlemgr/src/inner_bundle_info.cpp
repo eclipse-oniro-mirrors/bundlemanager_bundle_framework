@@ -1429,8 +1429,8 @@ void InnerBundleInfo::BuildDefaultUserInfo()
         baseApplicationInfo_->bundleName.c_str());
     InnerBundleUserInfo defaultInnerBundleUserInfo;
     defaultInnerBundleUserInfo.bundleUserInfo.userId = GetUserId();
-    defaultInnerBundleUserInfo.uid = uid_;
-    defaultInnerBundleUserInfo.gids.emplace_back(gid_);
+    defaultInnerBundleUserInfo.uid = Constants::INVALID_UID;
+    defaultInnerBundleUserInfo.gids.emplace_back(ServiceConstants::INVALID_GID);
     defaultInnerBundleUserInfo.installTime = baseBundleInfo_->installTime;
     defaultInnerBundleUserInfo.updateTime = baseBundleInfo_->updateTime;
     defaultInnerBundleUserInfo.bundleName = baseApplicationInfo_->bundleName;
