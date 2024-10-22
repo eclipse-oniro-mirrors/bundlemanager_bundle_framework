@@ -615,7 +615,7 @@ ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
 }
 
 void AppControlManagerRdb::PrintDisposedRuleInfo(
-    const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet, const DisposedRule &rule)
+    const std::shared_ptr<NativeRdb::AbsSharedResultSet> absSharedResultSet, const DisposedRule &rule)
 {
     std::string callerName;
     absSharedResultSet->GetString(CALLING_NAME_INDEX, callerName);
