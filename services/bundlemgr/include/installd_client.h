@@ -235,6 +235,8 @@ public:
 
     ErrCode AddUserDirDeleteDfx(int32_t userId);
 
+    ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

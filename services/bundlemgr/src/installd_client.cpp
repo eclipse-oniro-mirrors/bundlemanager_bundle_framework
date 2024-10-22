@@ -570,5 +570,15 @@ ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
 {
     return CallService(&IInstalld::AddUserDirDeleteDfx, userId);
 }
+
+ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    if (originPath.empty() || targetPath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::MoveHapToCodeDir, originPath, targetPath);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

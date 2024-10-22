@@ -421,6 +421,11 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+    {
+        return ERR_OK;
+    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

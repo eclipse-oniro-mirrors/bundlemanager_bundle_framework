@@ -232,6 +232,8 @@ public:
 
     virtual ErrCode AddUserDirDeleteDfx(int32_t userId) override;
 
+    virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath) override;
+
 private:
     std::string GetExtensionConfigPath() const;
     void LoadNeedCreateSandbox(const nlohmann::json &object, std::vector<std::string> &typeList);
