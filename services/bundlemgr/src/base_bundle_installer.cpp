@@ -1483,10 +1483,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
-    if (!CheckWhetherCanBeUninstalled(bundleName)) {
-        return ERR_APPEXECFWK_UNINSTALL_CONTROLLED;
-    }
-
     auto &mtx = dataMgr_->GetBundleMutex(bundleName);
     std::lock_guard lock {mtx};
     InnerBundleInfo oldInfo;
@@ -1535,6 +1531,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
         LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s is not allow uninstall", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+    }
+
+    if (!CheckWhetherCanBeUninstalled(bundleName)) {
+        return ERR_APPEXECFWK_UNINSTALL_CONTROLLED;
     }
 
     // reboot scan case will not kill the bundle
