@@ -138,7 +138,8 @@ public:
      */
     virtual ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
         std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID,
-        const int32_t appIndex = 0) override;
+        const int32_t appIndex = 0, const uint32_t statFlag = 0,
+        const std::vector<std::string> &bundleModuleNames = {}) override;
 
     virtual ErrCode GetAllBundleStats(const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids) override;

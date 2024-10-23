@@ -448,8 +448,13 @@ bool InstalldHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &repl
     int32_t userId = data.ReadInt32();
     int32_t uid = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
+    uint32_t statFlag = data.ReadUint32();
+    std::vector<std::string> bundleMoudleNames;
+    if (!data.ReadStringVector(&bundleMoudleNames)) {
+        return false;
+    }
     std::vector<int64_t> bundleStats;
-    ErrCode result = GetBundleStats(bundleName, userId, bundleStats, uid, appIndex);
+    ErrCode result = GetBundleStats(bundleName, userId, bundleStats, uid, appIndex, statFlag, bundleMoudleNames);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64Vector(bundleStats)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetBundleStats write failed");
