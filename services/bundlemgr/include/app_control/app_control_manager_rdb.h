@@ -67,7 +67,7 @@ private:
         const std::string &appId, int32_t userId);
     ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
-    void PrintDisposedRuleInfo(const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
+    void PrintDisposedRuleInfo(const std::shared_ptr<NativeRdb::AbsSharedResultSet> absSharedResultSet,
         const DisposedRule &rule);
     std::shared_ptr<RdbDataManager> rdbDataManager_;
 };
