@@ -764,7 +764,8 @@ public:
 #endif
 
     bool GetBundleStats(const std::string &bundleName,
-        const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex = 0) const;
+        const int32_t userId, std::vector<int64_t> &bundleStats,
+        const int32_t appIndex = 0, const uint32_t statFlag = 0) const;
     bool GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const;
     bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,

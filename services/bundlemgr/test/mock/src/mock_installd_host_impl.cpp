@@ -108,8 +108,8 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
 }
 
 ErrCode InstalldHostImpl::GetBundleStats(
-    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t uid,
-    const int32_t appIndex)
+    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats,
+    const int32_t uid, const int32_t appIndex, const uint32_t statFlag)
 {
     return ERR_OK;
 }

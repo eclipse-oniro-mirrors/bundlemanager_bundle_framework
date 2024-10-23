@@ -947,6 +947,7 @@ int64_t InstalldOperator::GetDiskUsageFromPath(const std::vector<std::string> &p
     int64_t fileSize = 0;
     for (auto &st : path) {
         fileSize += GetDiskUsage(st);
+        LOG_D(BMS_TAG_INSTALLD, "GetBundleStats get cache size from: %{public}s", st.c_str());
     }
     return fileSize;
 }
