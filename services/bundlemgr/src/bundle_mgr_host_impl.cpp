@@ -2059,7 +2059,9 @@ ErrCode BundleMgrHostImpl::IsCloneApplicationEnabled(const std::string &bundleNa
 
 ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
-    APP_LOGI("SetApplicationEnabled param %{public}s  %{public}d %{public}d", bundleName.c_str(), isEnable, userId);
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    APP_LOGW_NOFUNC("SetApplicationEnabled %{public}s %{public}d %{public}d callingUid:%{public}d",
+        bundleName.c_str(), isEnable, userId, callingUid);
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
@@ -2198,6 +2200,9 @@ ErrCode BundleMgrHostImpl::IsCloneAbilityEnabled(const AbilityInfo &abilityInfo,
 
 ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
 {
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    APP_LOGW_NOFUNC("SetAbilityEnabled %{public}s %{public}d %{public}d callingUid:%{public}d",
+        abilityInfo.name.c_str(), isEnabled, userId, callingUid);
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
