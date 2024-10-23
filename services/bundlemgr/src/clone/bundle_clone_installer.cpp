@@ -254,6 +254,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         APP_LOGE("Get dataMgr shared_ptr nullptr");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
     }
+    std::lock_guard<std::mutex> cloneGuard(gCloneInstallerMutex);
     if (!dataMgr_->HasUserId(userId)) {
         APP_LOGE("install clone app user %{public}d not exist", userId);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST;
