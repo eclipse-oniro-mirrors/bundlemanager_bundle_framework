@@ -3229,6 +3229,16 @@ bool BMSEventHandler::InnerProcessUninstallForExistPreBundle(const BundleInfo &i
         LOG_I(BMS_TAG_DEFAULT, "no need to uninstall app(%{public}s) due to update", installedInfo.name.c_str());
         std::string moduleName;
         DeletePreInfoInDb(installedInfo.name, moduleName, true);
+        if (installedInfo.isPreInstallApp) {
+            // need update isPreInstallApp false
+            auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+            if (dataMgr == nullptr) {
+                LOG_W(BMS_TAG_DEFAULT, "DataMgr is nullptr, -n %{public}s need change isPreInstallApp",
+                    installedInfo.name.c_str());
+                return isUpdated;
+            }
+            dataMgr->UpdateIsPreInstallApp(installedInfo.name, false);
+        }
     }
     return isUpdated;
 }

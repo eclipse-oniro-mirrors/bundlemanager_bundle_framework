@@ -1247,6 +1247,26 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallForExistPreBundle_0400, Funct
 }
 
 /**
+ * @tc.number: InnerProcessUninstallForExistPreBundle_0500
+ * @tc.name: InnerProcessUninstallForExistPreBundle
+ * @tc.desc: test InnerProcessUninstallForExistPreBundle
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallForExistPreBundle_0500, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        HapModuleInfo moduleInfo_1;
+        moduleInfo_1.hapPath = "/data/app/el1/bundle/public/xxx.hap";
+        BundleInfo bundleInfo;
+        bundleInfo.isPreInstallApp = true;
+        bundleInfo.hapModuleInfos.emplace_back(moduleInfo_1);
+        bool ret = handler->InnerProcessUninstallForExistPreBundle(bundleInfo);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
  * @tc.number: GetValueFromJson_0100
  * @tc.name: GetValueFromJson
  * @tc.desc: test GetValueFromJson

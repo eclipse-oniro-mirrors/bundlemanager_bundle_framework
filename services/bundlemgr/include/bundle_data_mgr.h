@@ -916,6 +916,8 @@ public:
     ErrCode GetOdid(std::string &odid) const;
     ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
 
+    void UpdateIsPreInstallApp(const std::string &bundleName, bool isPreInstallApp);
+
     /**
      * @brief Check whether the link can be opened.
      * @param link Indicates the link to be opened.

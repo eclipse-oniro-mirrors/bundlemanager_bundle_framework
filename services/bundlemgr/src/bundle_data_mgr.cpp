@@ -8573,5 +8573,26 @@ ErrCode BundleDataMgr::IsBundleInstalled(const std::string &bundleName, int32_t 
     isInstalled = false;
     return ERR_OK;
 }
+
+void BundleDataMgr::UpdateIsPreInstallApp(const std::string &bundleName, bool isPreInstallApp)
+{
+    APP_LOGD("UpdateIsPreInstallApp %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return;
+    }
+
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
+        return;
+    }
+
+    if (infoItem->second.IsPreInstallApp() != isPreInstallApp) {
+        infoItem->second.SetIsPreInstallApp(isPreInstallApp);
+        SaveInnerBundleInfo(infoItem->second);
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
