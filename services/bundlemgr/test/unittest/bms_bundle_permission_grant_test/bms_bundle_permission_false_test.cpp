@@ -1717,4 +1717,17 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_27000, Funct
     bool ret = bundleInstallerHost_->UninstallAndRecover(BUNDLE_NAME, installParam, statusReceiver);
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: IsBundleInstalled_0001
+ * @tc.name: test IsBundleInstalled
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, IsBundleInstalled_0001, Function | SmallTest | Level1)
+{
+    bool isInstalled = false;
+    auto testRet = bundleMgrHostImpl_->IsBundleInstalled(BUNDLE_NAME, 0, 0, isInstalled);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_FALSE(isInstalled);
+}
 } // OHOS

@@ -13184,4 +13184,18 @@ HWTEST_F(BmsBundleKitServiceTest, GetCloneAppIndexes_0001, Function | SmallTest 
     ClearCloneInfo(bundleName, userId);
     MockUninstallBundle(bundleName);
 }
+
+/**
+ * @tc.number: IsBundleInstalled_0001
+ * @tc.name: test IsBundleInstalled
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsBundleInstalled_0001, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool isInstalled = false;
+    auto testRet = hostImpl->IsBundleInstalled(BUNDLE_NAME_TEST, DEFAULT_USERID, 0, isInstalled);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_FALSE(isInstalled);
+}
 }
