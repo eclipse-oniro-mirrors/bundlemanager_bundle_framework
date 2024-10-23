@@ -43,6 +43,10 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string srcFile (reinterpret_cast<const char*>(data), size);
     std::string destFile = "";
     Unzip(srcFile, destFile, options, zlibCallbackInfo);
+    std::vector<std::string> srcFiles;
+    Zips(srcFiles, destPath, options, includeHiddenFiles, zlibCallbackInfo);
+    int64_t originalsSize = 0;
+    LIBZIP::GetOriginalSize(srcFile, originalsSize);
     return true;
 }
 }
