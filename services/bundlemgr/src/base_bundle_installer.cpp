@@ -2756,7 +2756,7 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
             auto &userInfo = userInfoPair.second;
             const std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
             for (const auto &cloneInfoPair : cloneInfos) {
-                std::string cloneBundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(
+                std::string cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(
                     info.GetBundleName(), cloneInfoPair.second.appIndex);
                 ErrCode cloneRet = this->SetDirApl(info.GetBundleName(), cloneBundleName, info.GetAppPrivilegeLevel(),
                     info.IsPreInstallApp(), info.GetBaseApplicationInfo().appProvisionType);
