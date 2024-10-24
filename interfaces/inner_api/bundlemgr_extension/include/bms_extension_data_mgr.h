@@ -74,6 +74,7 @@ public:
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
     void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier);
     bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum);
+    std::string GetCompatibleDeviceType(const std::string &bundleName);
 private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;

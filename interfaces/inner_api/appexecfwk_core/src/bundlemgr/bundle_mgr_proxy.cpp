@@ -5190,6 +5190,32 @@ ErrCode BundleMgrProxy::GetAllDesktopShortcutInfo(int32_t userId, std::vector<Sh
         BundleMgrInterfaceCode::GET_ALL_DESKTOP_SHORTCUT_INFO, data, shortcutInfos);
 }
 
+ErrCode BundleMgrProxy::GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("Write bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_COMPATIBLED_DEVICE_TYPE, data, reply)) {
+        APP_LOGE("Fail to IsBundleInstalled from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        deviceType = reply.ReadString();
+    }
+    APP_LOGD("GetCompatibleDeviceType: ret: %{public}d, device type: %{public}s", ret, deviceType.c_str());
+    return ret;
+}
+
 ErrCode BundleMgrProxy::GetOdidByBundleName(const std::string &bundleName, std::string &odid)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

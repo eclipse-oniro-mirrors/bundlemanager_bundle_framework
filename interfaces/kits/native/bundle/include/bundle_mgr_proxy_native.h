@@ -40,8 +40,11 @@ public:
      */
     bool GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo);
 
+    bool GetCompatibleDeviceTypeNative(std::string &deviceType);
+
     enum {
-        GET_BUNDLE_INFO_FOR_SELF_NATIVE = 98
+        GET_BUNDLE_INFO_FOR_SELF_NATIVE = 98,
+        GET_COMPATIBLED_DEVICE_TYPE_NATIVE = 166
     };
 private:
     sptr<IRemoteObject> GetBmsProxy();
