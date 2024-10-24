@@ -1665,12 +1665,15 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         return ret == ERR_OK;
     }
     ApplicationInfo applicationInfo;
-    if (GetApplicationInfoV9(bundleName, static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE),
-        userId, applicationInfo) != ERR_OK) {
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr || dataMgr->GetApplicationInfoV9(bundleName,
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE),
+        userId, applicationInfo, appIndex) != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
+    
     if (!applicationInfo.userDataClearable) {
         APP_LOGE("can not clean dataFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);

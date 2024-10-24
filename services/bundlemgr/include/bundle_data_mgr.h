@@ -239,7 +239,8 @@ public:
      * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
      */
     ErrCode GetApplicationInfoV9(
-        const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) const;
+        const std::string &appName, int32_t flags, int32_t userId,
+        ApplicationInfo &appInfo, const int32_t appIndex = 0) const;
     /**
      * @brief Obtains the ApplicationInfo based on a given bundle name.
      * @param appName Indicates the application bundle name to be queried.

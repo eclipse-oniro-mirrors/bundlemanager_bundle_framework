@@ -2389,7 +2389,7 @@ bool BundleDataMgr::GetApplicationInfo(
 }
 
 ErrCode BundleDataMgr::GetApplicationInfoV9(
-    const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) const
+    const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo, const int32_t appIndex) const
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
@@ -2403,18 +2403,18 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
         == static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE)) {
         flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
     }
-    auto ret = GetInnerBundleInfoWithBundleFlagsV9(appName, flag, innerBundleInfo, requestUserId);
+    auto ret = GetInnerBundleInfoWithBundleFlagsV9(appName, flag, innerBundleInfo, requestUserId, appIndex);
     if (ret != ERR_OK) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetApplicationInfoV9 failed -n:%{public}s -u:%{public}d",
-            appName.c_str(), requestUserId);
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetApplicationInfoV9 failed -n:%{public}s -u:%{public}d -i:%{public}d",
+            appName.c_str(), requestUserId, appIndex);
         return ret;
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-    ret = innerBundleInfo.GetApplicationInfoV9(flags, responseUserId, appInfo);
+    ret = innerBundleInfo.GetApplicationInfoV9(flags, responseUserId, appInfo, appIndex);
     if (ret != ERR_OK) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetApplicationInfoV9 failed -n:%{public}s -u:%{public}d",
-            appName.c_str(), responseUserId);
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetApplicationInfoV9 failed -n:%{public}s -u:%{public}d -i:%{public}d",
+            appName.c_str(), responseUserId, appIndex);
         return ret;
     }
     return ret;
