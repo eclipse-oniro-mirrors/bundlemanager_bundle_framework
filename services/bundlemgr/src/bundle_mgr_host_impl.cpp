@@ -1541,7 +1541,10 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     if (appIndex > 0) {
         suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
     }
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+
+    std::vector<std::string> bundleEls = ServiceConstants::BUNDLE_EL;
+    bundleEls.push_back(ServiceConstants::DIR_EL5);
+    for (const auto &el : bundleEls) {
         std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el +
             ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + suffixName;
         rootDir.emplace_back(dataDir);
