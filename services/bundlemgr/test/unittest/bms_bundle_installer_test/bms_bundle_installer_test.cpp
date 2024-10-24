@@ -5853,7 +5853,7 @@ HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0030, Function | SmallTest | 
     BaseBundleInstaller installer;
     installer.RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
-    EXPECT_EQ(exist, -1);
+    EXPECT_EQ(exist, 0);
     UnInstallBundle(SYSTEMFIEID_NAME);
 }
 

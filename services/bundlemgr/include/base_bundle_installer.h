@@ -631,7 +631,7 @@ private:
         uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
     void ProcessAOT(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     void RemoveOldHapIfOTA(const InstallParam &installParam,
-        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo) const;
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
     ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
     ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
     ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);
