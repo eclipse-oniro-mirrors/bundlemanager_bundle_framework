@@ -4103,13 +4103,14 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
         return resCode;
     }
     AbilityInfo mainAbilityInfo;
+    int32_t currentActiveUserId = AccountHelper::GetCurrentActiveUserId();
     innerBundleInfo.GetMainAbilityInfo(mainAbilityInfo);
     NotifyBundleEvents installRes = {
         .isModuleUpdate = true,
         .type = NotifyType::UPDATE,
         .resultCode = ERR_OK,
-        .accessTokenId = innerBundleInfo.GetAccessTokenId(innerBundleInfo.GetUserId()),
-        .uid = innerBundleInfo.GetUid(innerBundleInfo.GetUserId()),
+        .accessTokenId = innerBundleInfo.GetAccessTokenId(currentActiveUserId),
+        .uid = innerBundleInfo.GetUid(currentActiveUserId),
         .bundleType = static_cast<int32_t>(innerBundleInfo.GetApplicationBundleType()),
         .bundleName = innerBundleInfo.GetBundleName(),
         .modulePackage = innerBundleInfo.GetModuleNameVec()[0],
