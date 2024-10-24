@@ -2750,6 +2750,68 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
             LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl databaseDir dir, error is %{public}d", result);
             return result;
         }
+
+        auto& bundleUserInfos = info.GetInnerBundleUserInfos();
+        for (const auto &userInfoPair : bundleUserInfos) {
+            auto &userInfo = userInfoPair.second;
+            const std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+            for (const auto &cloneInfoPair : cloneInfos) {
+                std::string cloneBundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(
+                    info.GetBundleName(), cloneInfoPair.second.appIndex);
+                ErrCode cloneRet = this->SetDirApl(info.GetBundleName(), cloneBundleName, info.GetAppPrivilegeLevel(),
+                    info.IsPreInstallApp(), info.GetBaseApplicationInfo().appProvisionType);
+                if (cloneRet != ERR_OK) {
+                    LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl clone bundle dir, error is %{public}d", cloneRet);
+                    return result;
+                }
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::SetDirApl(
+    const std::string &bundleName, const std::string &CloneBundleName, const std::string &appPrivilegeLevel,
+    bool isPreInstallApp, const std::string &appProvisionType)
+{
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+        std::string baseBundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR +
+                                        el +
+                                        ServiceConstants::PATH_SEPARATOR +
+                                        std::to_string(userId_);
+        std::string baseDataDir = baseBundleDataDir + ServiceConstants::BASE + CloneBundleName;
+        std::string databaseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + CloneBundleName;
+        bool isBaseExist = true;
+        bool isDatabaseExist = true;
+        ErrCode result = InstalldClient::GetInstance()->IsExistDir(baseDataDir, isBaseExist);
+        ErrCode dataResult = InstalldClient::GetInstance()->IsExistDir(databaseDataDir, isDatabaseExist);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "IsExistDir error is %{public}d", result);
+            return result;
+        }
+        if (dataResult != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "IsExistDataDir error is %{public}d", dataResult);
+            return dataResult;
+        }
+        if (!isBaseExist || !isDatabaseExist) {
+            LOG_D(BMS_TAG_INSTALLER, "base %{public}s or data %{public}s is not exist", baseDataDir.c_str(),
+                databaseDataDir.c_str());
+            continue;
+        }
+        result = InstalldClient::GetInstance()->SetDirApl(
+            baseDataDir, bundleName, appPrivilegeLevel, isPreInstallApp,
+            appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl baseDir dir, error is %{public}d", result);
+            return result;
+        }
+        result = InstalldClient::GetInstance()->SetDirApl(
+            databaseDataDir, bundleName, appPrivilegeLevel, isPreInstallApp,
+            appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl databaseDir dir, error is %{public}d", result);
+            return result;
+        }
     }
     return ERR_OK;
 }
