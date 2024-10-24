@@ -606,6 +606,12 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_BUNDLE_INSTALLED):
             errCode = HandleIsBundleInstalled(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_COMPATIBLED_DEVICE_TYPE_NATIVE):
+            errCode = HandleGetCompatibleDeviceTypeNative(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_COMPATIBLED_DEVICE_TYPE):
+            errCode = HandleGetCompatibleDeviceType(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -4116,6 +4122,39 @@ ErrCode BundleMgrHost::HandleIsBundleInstalled(MessageParcel &data, MessageParce
     }
     if ((ret == ERR_OK) && !reply.WriteBool(isBundleInstalled)) {
         APP_LOGE("Write isInstalled result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetCompatibleDeviceTypeNative(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string deviceType;
+    auto ret = GetCompatibleDeviceTypeNative(deviceType);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(deviceType)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetCompatibleDeviceType(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string deviceType;
+    auto ret = GetCompatibleDeviceType(bundleName, deviceType);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(deviceType)) {
+        APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

@@ -1933,5 +1933,35 @@ HWTEST_F(BmsBundleMgrHostTest, HandleIsBundleInstalled_0001, Function | MediumTe
     ErrCode res = bundleMgrHost.HandleIsBundleInstalled(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: HandleGetCompatibleDeviceTypeNative_0001
+ * @tc.name: test the HandleGetCompatibleDeviceTypeNative
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetCompatibleDeviceTypeNative
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetCompatibleDeviceTypeNative_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetCompatibleDeviceTypeNative(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetCompatibleDeviceType_0001
+ * @tc.name: test the HandleGetCompatibleDeviceType
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetCompatibleDeviceType
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetCompatibleDeviceType_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetCompatibleDeviceType(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // AppExecFwk
 } // OHOS

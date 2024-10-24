@@ -839,6 +839,10 @@ private:
 
     ErrCode HandleIsBundleInstalled(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetCompatibleDeviceTypeNative(MessageParcel &data, MessageParcel &reply);
+    
+    ErrCode HandleGetCompatibleDeviceType(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

@@ -20,6 +20,7 @@
 #include "app_mgr_interface.h"
 #include "aot/aot_handler.h"
 #include "bms_extension_client.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
@@ -4484,6 +4485,45 @@ ErrCode BundleMgrHostImpl::IsBundleInstalled(const std::string &bundleName, int3
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
+}
+
+ErrCode BundleMgrHostImpl::GetCompatibleDeviceTypeNative(std::string &deviceType)
+{
+    APP_LOGD("start GetCompatibleDeviceTypeNative");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::string bundleName;
+    dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), bundleName);
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    deviceType = bmsExtensionDataMgr.GetCompatibleDeviceType(bundleName);
+    APP_LOGI("deviceType : %{public}s", deviceType.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType)
+{
+    APP_LOGD("start GetCompatibleDeviceType");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    deviceType = bmsExtensionDataMgr.GetCompatibleDeviceType(bundleName);
+    APP_LOGI("deviceType : %{public}s", deviceType.c_str());
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
