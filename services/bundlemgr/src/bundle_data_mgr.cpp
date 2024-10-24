@@ -352,6 +352,8 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.UpdateRemovable(newInfo.IsPreInstallApp(), newInfo.IsRemovable());
             oldInfo.UpdateMultiAppMode(newInfo);
             oldInfo.UpdateReleaseType(newInfo);
+            oldInfo.SetAppType(newInfo.GetAppType());
+            oldInfo.SetAppFeature(newInfo.GetAppFeature());
         }
         if (oldInfo.GetOldAppIds().empty()) {
             oldInfo.AddOldAppId(oldInfo.GetAppId());
