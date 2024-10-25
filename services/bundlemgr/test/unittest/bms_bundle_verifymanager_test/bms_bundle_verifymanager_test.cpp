@@ -22,6 +22,7 @@
 
 #include "bundle_mgr_service.h"
 #include "verify_manager_host_impl.h"
+#include "verify_util.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -356,5 +357,41 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1200, Function | SmallTes
     abcPaths.push_back(DATA_STORAGE);
     auto ret1 = impl.CopyFilesToTempDir(BUNDLE_NAME, userId, abcPaths);
     EXPECT_FALSE(ret1);
+}
+
+/**
+ * @tc.number: GetBundleMutex
+ * @tc.name: test GetBundleMutex
+ * @tc.desc: 1.GetBundleMutex test
+ */
+HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1300, Function | SmallTest | Level1)
+{
+    VerifyManagerHostImpl impl;
+
+    std::string rootDir = "/data";
+    std::vector<std::string> names;
+    names.push_back("testname");
+    
+    impl.Rollback(rootDir, names);
+
+    std::string bundleName = "com.test.bundleName";
+    impl.RemoveTempFiles(bundleName);
+
+    bool ret = impl.VerifyAbc(rootDir, names);
+
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: VerifyAbc
+ * @tc.name: test VerifyAbc
+ * @tc.desc: 1.VerifyAbc test
+ */
+HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1400, Function | SmallTest | Level1)
+{
+    std::string abcPath = "/data/abc.path";
+    bool ret = VerifyUtil::VerifyAbc(abcPath);
+
+    EXPECT_FALSE(ret);
 }
 } // OHOS
