@@ -288,7 +288,7 @@ bool BundleResourceRdb::GetBundleResourceInfo(
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("bundleName %{public}s GoToFirstRow failed, ret %{public}d, systemState:%{public}s",
+        APP_LOGE_NOFUNC("rdb GetBundleResourceInfo -n %{public}s failed:%{public}d systemState:%{public}s",
             bundleName.c_str(), ret, systemState.c_str());
         return false;
     }
@@ -301,7 +301,7 @@ bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos,
     const int32_t appIndex)
 {
-    APP_LOGI("start, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+    APP_LOGI_NOFUNC("rdb GetLauncherAbilityResourceInfo -n %{public}s -i %{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
