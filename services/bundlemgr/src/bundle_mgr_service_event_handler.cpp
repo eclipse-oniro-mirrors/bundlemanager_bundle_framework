@@ -3594,7 +3594,7 @@ void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
             LOG_W(BMS_TAG_DEFAULT, "bundleName %{public}s not exist", bundleName.c_str());
             continue;
         }
-        if (versionCode <= hasInstalledInfo.GetVersionCode()) {
+        if ((versionCode <= hasInstalledInfo.GetVersionCode()) && IsHspPathExist(hasInstalledInfo)) {
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s downgrade",
                 bundleName.c_str());
             continue;
@@ -3644,7 +3644,7 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
             LOG_W(BMS_TAG_DEFAULT, "obtain bundleInfo failed, bundleName :%{public}s not exist", bundleName.c_str());
             continue;
         }
-        if (hapVersionCode <= hasInstalledInfo.versionCode) {
+        if ((hapVersionCode <= hasInstalledInfo.versionCode) && IsHapPathExist(hasInstalledInfo)) {
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: hapVersionCode is less than old hap versionCode",
                 bundleName.c_str());
             continue;
@@ -3662,6 +3662,40 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
         }
     }
     LOG_I(BMS_TAG_DEFAULT, "end");
+}
+
+bool BMSEventHandler::IsHapPathExist(const BundleInfo &bundleInfo)
+{
+    LOG_I(BMS_TAG_DEFAULT, "-n %{public}s need to check hap path exist", bundleInfo.name.c_str());
+    if (bundleInfo.hapModuleInfos.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "-n %{public}s has no moduleInfo", bundleInfo.name.c_str());
+        return false;
+    }
+    for (const auto &moduleInfo : bundleInfo.hapModuleInfos) {
+        if ((moduleInfo.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) &&
+            !BundleUtil::IsExistFile(moduleInfo.hapPath)) {
+            LOG_E(BMS_TAG_DEFAULT, "-p %{public}s hap path not exist", moduleInfo.hapPath.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool BMSEventHandler::IsHspPathExist(const InnerBundleInfo &innerBundleInfo)
+{
+    LOG_I(BMS_TAG_DEFAULT, "-n %{public}s need to check hsp path exist", innerBundleInfo.GetBundleName().c_str());
+    if (innerBundleInfo.GetInnerModuleInfos().empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "-n %{public}s has no moduleInfo", innerBundleInfo.GetBundleName().c_str());
+        return false;
+    }
+    for (const auto &moduleInfoIter : innerBundleInfo.GetInnerModuleInfos()) {
+        if ((moduleInfoIter.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) &&
+            !BundleUtil::IsExistFile(moduleInfoIter.second.hapPath)) {
+            LOG_E(BMS_TAG_DEFAULT, "-p %{public}s hsp path not exist", moduleInfoIter.second.hapPath.c_str());
+            return false;
+        }
+    }
+    return true;
 }
 
 void BMSEventHandler::CheckALLResourceInfo()
