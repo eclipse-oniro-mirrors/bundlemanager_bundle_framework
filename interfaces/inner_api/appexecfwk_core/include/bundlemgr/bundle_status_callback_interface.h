@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLE_STATUS_CALLBACK_INTERFACE_H
 
 #include "iremote_broker.h"
+#include "bundle_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -95,7 +96,7 @@ public:
 
 private:
     std::string bundleName_;
-    int32_t userId_ = 0;
+    int32_t userId_ = Constants::UNSPECIFIED_USERID;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
