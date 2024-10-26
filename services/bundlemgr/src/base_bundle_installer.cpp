@@ -5423,17 +5423,27 @@ void BaseBundleInstaller::ProcessAOT(bool isOTA, const std::unordered_map<std::s
 }
 
 void BaseBundleInstaller::RemoveOldHapIfOTA(const InstallParam &installParam,
-    const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo) const
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo)
 {
     if (!installParam.isOTA || installParam.copyHapToInstallPath) {
         return;
     }
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed");
+        return;
+    }
+    InnerBundleInfo newInfo;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, newInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "get failed for %{public}s", bundleName_.c_str());
+        return;
+    }
     for (const auto &info : newInfos) {
         std::string oldHapPath = oldInfo.GetModuleHapPath(info.second.GetCurrentModulePackage());
-        if (oldHapPath.empty() || oldHapPath.rfind(Constants::BUNDLE_CODE_DIR, 0) != 0) {
+        std::string newHapPath = newInfo.GetModuleHapPath(info.second.GetCurrentModulePackage());
+        if (oldHapPath == newHapPath || oldHapPath.find(Constants::BUNDLE_CODE_DIR) == std::string::npos) {
             continue;
         }
-        LOG_I(BMS_TAG_INSTALLER, "remove old hap %{public}s", oldHapPath.c_str());
+        LOG_W(BMS_TAG_INSTALLER, "remove old hap %{public}s", oldHapPath.c_str());
         if (InstalldClient::GetInstance()->RemoveDir(oldHapPath) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "remove old hap failed, errno: %{public}d", errno);
         }
