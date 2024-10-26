@@ -4630,7 +4630,7 @@ ErrCode InnerBundleInfo::VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appI
         if (isExistedRes != ERR_OK) {
             return isExistedRes;
         }
-        if (found == true) {
+        if (found) {
             APP_LOGE("AppIndex %{public}d existed in userId %{public}d", appIndex, userId);
             return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
         }
