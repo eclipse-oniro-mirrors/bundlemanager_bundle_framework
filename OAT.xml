@@ -63,7 +63,6 @@ Note:If the text contains special characters, please escape them according to th
             <filefilter name="defaultFilter" desc="Files not to check">
                 <filteritem type="filename" name="*.ha|*.hap|*.rpk" desc="valid and invalid bundle files for tests"/>
                 <filteritem type="filepath" name="figures/.*" desc="Self-developed image"/>
-                <filteritem type="filepath" name="test/sceneProject/.*.png" desc="Tdd-developed image"/>
             </filefilter>
         </filefilterlist>
     </oatconfig>
