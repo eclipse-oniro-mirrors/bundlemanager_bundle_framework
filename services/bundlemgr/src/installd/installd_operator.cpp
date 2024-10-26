@@ -80,6 +80,9 @@ constexpr const char* AI_SUFFIX = ".ai";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* BUNDLE_BACKUP_KEEP_DIR = "/.backup";
 constexpr const char* ATOMIC_SERVICE_PATH = "+auid-";
+const std::vector<std::string> DRIVER_EXECUTE_DIR {
+    "/print_service/cups/serverbin/filter", "/print_service/sane/backend"
+};
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -1603,6 +1606,12 @@ bool InstalldOperator::MoveFile(const std::string &srcPath, const std::string &d
         return false;
     }
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    auto filterExecuteFile = [&destPath](const std::string &dir) {
+        return destPath.find(dir) != std::string::npos;
+    };
+    if (std::any_of(DRIVER_EXECUTE_DIR.begin(), DRIVER_EXECUTE_DIR.end(), filterExecuteFile)) {
+        mode |= S_IXUSR;
+    }
     if (!OHOS::ChangeModeFile(destPath, mode)) {
         LOG_E(BMS_TAG_INSTALLD, "change mode failed");
         return false;
@@ -1715,12 +1724,6 @@ bool InstalldOperator::CopyDriverSoFiles(const std::string &originalDir, const s
         return false;
     }
     ChangeFileAttr(realDestinedDir, buf.st_uid, buf.st_gid);
-    mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH;
-    if (!OHOS::ChangeModeFile(realDestinedDir, mode)) {
-        LOG_E(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", realDestinedDir.c_str(),
-            errno);
-        return false;
-    }
     // Refresh the selinux tag of the driver file so that it matches the selinux tag of the parent directory file
     int ret = RestoreconFromParentDir(realDestinedDir.c_str());
     if (ret != 0) {
