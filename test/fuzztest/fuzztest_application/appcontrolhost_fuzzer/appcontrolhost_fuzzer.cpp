@@ -32,14 +32,14 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     AppControlHost appControlHost;
     MessageParcel datas;
-    std::u16string descriptor = AppControlHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
     MessageParcel reply;
     appControlHost.HandleAddAppInstallControlRule(datas, reply);
     appControlHost.HandleDeleteAppInstallControlRule(datas, reply);
     for (uint32_t code = 2; code <= CODE_MAX; code++) {
+        std::u16string descriptor = AppControlHost::GetDescriptor();
+        datas.WriteInterfaceToken(descriptor);
+        datas.WriteBuffer(data, size);
+        datas.RewindRead(0);
         MessageOption option;
         appControlHost.OnRemoteRequest(code, datas, reply, option);
     }
