@@ -108,7 +108,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
         auto callbackList = dataMgr->GetCallBackList();
         for (const auto& callback : callbackList) {
             int32_t callbackUserId = callback->GetUserId();
-            if (callbackUserId != Constants::DEFAULT_USERID && callbackUserId != publishUserId) {
+            if (callbackUserId != Constants::UNSPECIFIED_USERID && callbackUserId != publishUserId) {
                 LOG_W(BMS_TAG_DEFAULT, "not callback userId %{public}d incorrect", callbackUserId);
                 continue;
             }
