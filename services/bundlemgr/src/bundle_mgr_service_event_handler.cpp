@@ -31,6 +31,7 @@
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
 #endif
+#include "directory_ex.h"
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
 #include "dlp_permission_kit.h"
 #endif
@@ -106,6 +107,7 @@ constexpr char SEPARATOR = '/';
 constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
 constexpr int32_t SCENE_ID_OTA_INSTALL = 3;
+constexpr const char* PGO_FILE_PATH = "pgo_files";
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> systemHspList_;
@@ -279,6 +281,7 @@ void BMSEventHandler::AfterBmsStart()
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
     SetAllInstallFlag();
     HandleSceneBoard();
+    CleanTempDir();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
     ClearCache();
@@ -3940,6 +3943,34 @@ bool BMSEventHandler::InnerProcessUninstallForExistPreBundle(const BundleInfo &i
         }
     }
     return isUpdated;
+}
+
+void BMSEventHandler::CleanTempDir() const
+{
+    std::vector<std::string> dirs = {
+        std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+            ServiceConstants::STREAM_INSTALL_PATH,
+        std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+            ServiceConstants::SECURITY_STREAM_INSTALL_PATH,
+        std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+            ServiceConstants::SIGNATURE_FILE_PATH,
+        std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+            PGO_FILE_PATH,
+    };
+
+    for (const auto& dir : dirs) {
+        if (OHOS::IsEmptyFolder(dir)) {
+            continue;
+        }
+        LOG_I(BMS_TAG_DEFAULT, "clean %{public}s", dir.c_str());
+        if (!OHOS::ForceRemoveDirectory(dir)) {
+            LOG_E(BMS_TAG_DEFAULT, "remove failed: %{public}s", dir.c_str());
+            continue;
+        }
+        if (!BundleUtil::CreateTempDir(dir).empty()) {
+            LOG_E(BMS_TAG_DEFAULT, "create failed: %{public}s", dir.c_str());
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
