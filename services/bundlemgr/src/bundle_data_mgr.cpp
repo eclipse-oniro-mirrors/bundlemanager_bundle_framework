@@ -215,7 +215,8 @@ void BundleDataMgr::LoadAllBundleStateDataFromJsonDb()
         InnerBundleInfo& newInfo = infoItem->second;
         for (auto& bundleUserState : bundleState.second) {
             auto& tempUserInfo = bundleUserState.second;
-            newInfo.SetApplicationEnabled(tempUserInfo.enabled, bundleUserState.first);
+            newInfo.SetApplicationEnabled(tempUserInfo.enabled, bundleUserState.second.setEnabledCaller,
+                bundleUserState.first);
             for (auto& disabledAbility : tempUserInfo.disabledAbilities) {
                 newInfo.SetAbilityEnabled("", disabledAbility, false, bundleUserState.first);
             }
@@ -4223,7 +4224,7 @@ ErrCode BundleDataMgr::IsApplicationEnabled(
 }
 
 ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
-    int32_t appIndex, bool isEnable, int32_t userId)
+    int32_t appIndex, bool isEnable, const std::string &caller, int32_t userId)
 {
     APP_LOGD("SetApplicationEnabled %{public}s", bundleName.c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -4240,7 +4241,7 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
 
     InnerBundleInfo& newInfo = infoItem->second;
     if (appIndex != 0) {
-        auto ret = newInfo.SetCloneApplicationEnabled(isEnable, appIndex, requestUserId);
+        auto ret = newInfo.SetCloneApplicationEnabled(isEnable, appIndex, caller, requestUserId);
         if (ret != ERR_OK) {
             APP_LOGW("SetCloneApplicationEnabled for innerBundleInfo fail, errCode is %{public}d", ret);
             return ret;
@@ -4251,7 +4252,7 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
         }
         return ERR_OK;
     }
-    auto ret = newInfo.SetApplicationEnabled(isEnable, requestUserId);
+    auto ret = newInfo.SetApplicationEnabled(isEnable, caller, requestUserId);
     if (ret != ERR_OK) {
         APP_LOGW("SetApplicationEnabled failed, err %{public}d", ret);
         return ret;

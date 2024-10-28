@@ -46,6 +46,8 @@ struct InnerBundleCloneInfo {
     int64_t installTime = 0;
 
     bool encryptedKeyExisted = false;
+
+    std::string setEnabledCaller;
 };
 
 void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleCloneInfo);
