@@ -15,6 +15,8 @@
 
 #include "bundle_data_mgr.h"
 
+#include <sys/stat.h>
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
