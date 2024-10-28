@@ -1170,6 +1170,103 @@ HWTEST_F(BmsEventHandlerTest, IsQuickfixFlagExsit_0200, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: InnerProcessUninstallForExistPreBundle_0100
+ * @tc.name: InnerProcessUninstallForExistPreBundle
+ * @tc.desc: test InnerProcessUninstallForExistPreBundle
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallForExistPreBundle_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        BundleInfo bundleInfo;
+        bool ret = handler->InnerProcessUninstallForExistPreBundle(bundleInfo);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: InnerProcessUninstallForExistPreBundle_0200
+ * @tc.name: InnerProcessUninstallForExistPreBundle
+ * @tc.desc: test InnerProcessUninstallForExistPreBundle
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallForExistPreBundle_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        HapModuleInfo moduleInfo_1;
+        moduleInfo_1.hapPath = "/data/app/el1/bundle/public/xxx.hap";
+        BundleInfo bundleInfo;
+        bundleInfo.hapModuleInfos.emplace_back(moduleInfo_1);
+        bool ret = handler->InnerProcessUninstallForExistPreBundle(bundleInfo);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: InnerProcessUninstallForExistPreBundle_0300
+ * @tc.name: InnerProcessUninstallForExistPreBundle
+ * @tc.desc: test InnerProcessUninstallForExistPreBundle
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallForExistPreBundle_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        HapModuleInfo moduleInfo_1;
+        moduleInfo_1.hapPath = "/system/app/xxx.hap";
+        BundleInfo bundleInfo;
+        bundleInfo.hapModuleInfos.emplace_back(moduleInfo_1);
+        bool ret = handler->InnerProcessUninstallForExistPreBundle(bundleInfo);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: InnerProcessUninstallForExistPreBundle_0400
+ * @tc.name: InnerProcessUninstallForExistPreBundle
+ * @tc.desc: test InnerProcessUninstallForExistPreBundle
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallForExistPreBundle_0400, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        HapModuleInfo moduleInfo_1;
+        moduleInfo_1.hapPath = "/data/app/el1/bundle/public/xxx.hap";
+        HapModuleInfo moduleInfo_2;
+        moduleInfo_2.hapPath = "/system/app/xxx.hap";
+
+        BundleInfo bundleInfo;
+        bundleInfo.hapModuleInfos.emplace_back(moduleInfo_1);
+        bundleInfo.hapModuleInfos.emplace_back(moduleInfo_2);
+        bool ret = handler->InnerProcessUninstallForExistPreBundle(bundleInfo);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: InnerProcessUninstallForExistPreBundle_0500
+ * @tc.name: InnerProcessUninstallForExistPreBundle
+ * @tc.desc: test InnerProcessUninstallForExistPreBundle
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallForExistPreBundle_0500, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        HapModuleInfo moduleInfo_1;
+        moduleInfo_1.hapPath = "/data/app/el1/bundle/public/xxx.hap";
+        BundleInfo bundleInfo;
+        bundleInfo.isPreInstallApp = true;
+        bundleInfo.hapModuleInfos.emplace_back(moduleInfo_1);
+        bool ret = handler->InnerProcessUninstallForExistPreBundle(bundleInfo);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
  * @tc.number: GetValueFromJson_0100
  * @tc.name: GetValueFromJson
  * @tc.desc: test GetValueFromJson
