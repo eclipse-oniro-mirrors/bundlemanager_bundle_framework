@@ -3655,6 +3655,7 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
         installParam.installFlag = InstallFlag::REPLACE_EXISTING;
         installParam.copyHapToInstallPath = true;
         installParam.isOTA = isOta;
+        installParam.withCopyHaps = true;
         SystemBundleInstaller installer;
         std::vector<std::string> filePaths { scanPathIter };
         if (installer.OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP) != ERR_OK) {
