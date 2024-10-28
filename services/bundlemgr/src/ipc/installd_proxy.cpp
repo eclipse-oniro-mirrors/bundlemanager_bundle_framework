@@ -286,7 +286,8 @@ ErrCode InstalldProxy::CleanBundleDataDirByName(const std::string &bundleName, c
 }
 
 ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32_t userId,
-    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex)
+    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
+    const uint32_t statFlag)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -294,6 +295,7 @@ ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32
     INSTALLD_PARCEL_WRITE(data, Int32, userId);
     INSTALLD_PARCEL_WRITE(data, Int32, uid);
     INSTALLD_PARCEL_WRITE(data, Int32, appIndex);
+    INSTALLD_PARCEL_WRITE(data, Uint32, statFlag);
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_BUNDLE_STATS, data, reply, option);

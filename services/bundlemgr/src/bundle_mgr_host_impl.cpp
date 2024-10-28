@@ -3058,7 +3058,7 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
 }
 
 bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t userId,
-    std::vector<int64_t> &bundleStats, int32_t appIndex)
+    std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
@@ -3084,7 +3084,7 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGI("ret : %{public}d", ret);
         return ret == ERR_OK;
     }
-    return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex);
+    return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex, statFlag);
 }
 
 bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)

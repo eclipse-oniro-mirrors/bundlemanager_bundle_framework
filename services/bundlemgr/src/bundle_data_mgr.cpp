@@ -3531,7 +3531,7 @@ bool BundleDataMgr::HasUserInstallInBundle(
 }
 
 bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
-    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex) const
+    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex, const uint32_t statFlag) const
 {
     int32_t responseUserId = -1;
     int32_t uid = -1;
@@ -3544,14 +3544,12 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
         responseUserId = infoItem->second.GetResponseUserId(userId);
         uid = infoItem->second.GetUid(responseUserId, appIndex);
     }
-
-    ErrCode ret =
-        InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats, uid, appIndex);
+    ErrCode ret = InstalldClient::GetInstance()->GetBundleStats(
+        bundleName, responseUserId, bundleStats, uid, appIndex, statFlag);
     if (ret != ERR_OK) {
         APP_LOGW("%{public}s getStats failed", bundleName.c_str());
         return false;
     }
-
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
