@@ -790,11 +790,12 @@ ErrCode InstalldProxy::SetEncryptionPolicy(int32_t uid, const std::string &bundl
     return ERR_OK;
 }
 
-ErrCode InstalldProxy::DeleteEncryptionKeyId(const std::string &keyId)
+ErrCode InstalldProxy::DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(keyId));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);

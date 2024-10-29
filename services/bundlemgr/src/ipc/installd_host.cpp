@@ -812,9 +812,10 @@ bool InstalldHost::HandleSetEncryptionDir(MessageParcel &data, MessageParcel &re
 
 bool InstalldHost::HandleDeleteEncryptionKeyId(MessageParcel &data, MessageParcel &reply)
 {
-    std::string keyId = Str16ToStr8(data.ReadString16());
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
 
-    ErrCode result = DeleteEncryptionKeyId(keyId);
+    ErrCode result = DeleteEncryptionKeyId(bundleName, userId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

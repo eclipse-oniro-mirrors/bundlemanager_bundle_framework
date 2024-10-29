@@ -861,7 +861,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5400, Function | Sma
 {
     DeleteQuickFileDir(TEST_DIR_PATH);
     CreateQuickFileDir(TEST_DIR_PATH);
-    
+
     std::vector<std::string> oldSoFileNames;
     std::vector<std::string> diffFileNames;
     bool res = InstalldOperator::ProcessApplyDiffPatchPath(
@@ -1208,8 +1208,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7700, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7800, Function | SmallTest | Level0)
 {
-    std::string keyId;
-    bool ret = InstalldOperator::DeleteKeyId(keyId);
+    std::string bundleName;
+    int32_t userId = 100;
+    bool ret = InstalldOperator::DeleteKeyId(bundleName, userId);
     EXPECT_EQ(ret, false);
 }
 

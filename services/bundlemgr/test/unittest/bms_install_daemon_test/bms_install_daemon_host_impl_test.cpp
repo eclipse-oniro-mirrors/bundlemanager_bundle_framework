@@ -919,7 +919,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5200, Function | Sma
 {
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
-    auto ret = hostImpl->DeleteEncryptionKeyId("");
+    auto ret = hostImpl->DeleteEncryptionKeyId("", 100);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -962,7 +962,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5400, Function | Sma
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
-    
+
     std::string userId = "";
     std::string hnpRootPath = "";
     std::string hapPath = "";
@@ -982,7 +982,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5500, Function | Sma
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
-    
+
     std::string userId = "";
     std::string packageName = "";
     ErrCode ret = installdProxy->ProcessBundleUnInstallNative(userId, packageName);

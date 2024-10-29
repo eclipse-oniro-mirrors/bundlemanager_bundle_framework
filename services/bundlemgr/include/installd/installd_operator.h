@@ -291,7 +291,7 @@ public:
     static bool GenerateKeyIdAndSetPolicy(int32_t uid, const std::string &bundleName,
         const int32_t userId, std::string &keyId);
 
-    static bool DeleteKeyId(const std::string &keyId);
+    static bool DeleteKeyId(const std::string &bundleName, const int32_t userId);
 
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,

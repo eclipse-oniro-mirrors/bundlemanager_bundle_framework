@@ -838,7 +838,9 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4200, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->DeleteEncryptionKeyId(TEST_STRING);
+    std::string bundleName = TEST_STRING;
+    int32_t userId = 100;
+    auto ret = proxy->DeleteEncryptionKeyId(bundleName, userId);
     EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS
