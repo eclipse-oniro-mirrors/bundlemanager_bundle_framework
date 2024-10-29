@@ -601,7 +601,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetBundleStats_0100, TestS
     std::string bundleName = EMPTY_STRING;
     int userId = USERID;
     std::vector<int64_t> bundleStats;
-    ErrCode result = installClient_->GetBundleStats(bundleName, userId, bundleStats, 0, 0);
+    ErrCode result = installClient_->GetBundleStats(bundleName, userId, bundleStats, 0, 0, 0, {});
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetBundleStats_0100 end";
 }
@@ -617,9 +617,10 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetBundleStats_0200, TestS
     std::string bundleName = BUNDLE_NAME;
     int userId = USERID;
     std::vector<int64_t> bundleStats;
-    ErrCode result = installClient_->GetBundleStats(bundleName, userId, bundleStats, 0, 0);
+    std::vector<std::string> moduleNameList = {};
+    ErrCode result = installClient_->GetBundleStats(bundleName, userId, bundleStats, 0, 0, 0);
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::GetBundleStats,
-        bundleName, userId, bundleStats, 0, 0, 0));
+        bundleName, userId, bundleStats, 0, 0, 0, moduleNameList));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetBundleStats_0200 end";
 }
 
