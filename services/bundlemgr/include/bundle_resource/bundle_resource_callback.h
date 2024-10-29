@@ -41,14 +41,14 @@ public:
         const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
 
     // for application theme changed
-    bool OnApplicationThemeChanged(const std::string &theme, const int32_t themeId = 0,
+    bool OnApplicationThemeChanged(const std::string &theme, const int32_t themeId = 0, const int32_t themeIcon = 0,
         const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE));
 
     // for overlay
     bool OnOverlayStatusChanged(const std::string &bundleName, bool isEnabled, int32_t userId);
 
 private:
-    bool SetThemeIdForThemeChanged(const int32_t themeId);
+    bool SetThemeParamForThemeChanged(const int32_t themeId, const int32_t themeIcon);
 };
 } // AppExecFwk
 } // OHOS
