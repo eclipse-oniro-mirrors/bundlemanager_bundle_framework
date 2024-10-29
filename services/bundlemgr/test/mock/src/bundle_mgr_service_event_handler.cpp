@@ -710,6 +710,16 @@ void BMSEventHandler::CheckALLResourceInfo() {}
 
 void BMSEventHandler::ProcessBundleResourceInfo() {}
 
+bool BMSEventHandler::IsHapPathExist(const BundleInfo &bundleInfo)
+{
+    return true;
+}
+
+bool BMSEventHandler::IsHspPathExist(const InnerBundleInfo &innerBundleInfo)
+{
+    return true;
+}
+
 void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo& bundleInfo) {}
 
 bool BMSEventHandler::IsQuickfixFlagExsit(const BundleInfo& bundleInfo)
