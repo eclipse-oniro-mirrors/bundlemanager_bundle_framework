@@ -183,7 +183,7 @@ ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, 
 
 ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int32_t userId,
     std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
-    const uint32_t statFlag)
+    const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
@@ -191,7 +191,7 @@ ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int3
     }
 
     return CallService(&IInstalld::GetBundleStats, bundleName, userId, bundleStats,
-        uid, appIndex, statFlag);
+        uid, appIndex, statFlag, moduleNameList);
 }
 
 ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,
