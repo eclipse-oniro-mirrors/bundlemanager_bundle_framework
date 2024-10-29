@@ -120,7 +120,7 @@ ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, 
 
 ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int32_t userId,
     std::vector<int64_t> &bundleStats, const int32_t uid,
-    const int32_t appIndex, const uint32_t statFlag, const std::vector<std::string> &bundleModuleNames)
+    const int32_t appIndex, const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     return 0;
 }

@@ -15,6 +15,7 @@
 
 #include <cstdio>
 #include <cinttypes>
+#include "file_ex.h"
 #include <gtest/gtest.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -79,7 +80,7 @@ public:
     bool CheckBundleDataDirExist() const;
     bool GetBundleStats(const std::string &bundleName, const int32_t userId,
         std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex = 0,
-        const uint32_t statFlag = 0, const std::vector<std::string> &bundleModuleNames = {}) const;
+        const uint32_t statFlag = 0, const std::vector<std::string> &moduleNames = {}) const;
     int32_t GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames) const;
     void CreateFile(const std::string &filePath, const std::string &content) const;
@@ -211,13 +212,13 @@ bool BmsInstallDaemonTest::CheckBundleDataDirExist() const
 
 bool BmsInstallDaemonTest::GetBundleStats(const std::string &bundleName, const int32_t userId,
     std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
-    const uint32_t statFlag, const std::vector<std::string> &bundleModuleNames) const
+    const uint32_t statFlag, const std::vector<std::string> &moduleNames) const
 {
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
     if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats,
-        uid, appIndex, statFlag, bundleModuleNames) == ERR_OK) {
+        uid, appIndex, statFlag, moduleNames) == ERR_OK) {
         return true;
     }
     return false;
@@ -900,6 +901,10 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0400, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0500, Function | SmallTest | Level0)
 {
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
+    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
+    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
     std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
@@ -908,6 +913,8 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0500, Function | SmallTest | Level
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
 }
 
 /**
@@ -917,14 +924,20 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0500, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0600, Function | SmallTest | Level0)
 {
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
+    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
+    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
     std::vector<int64_t> stats;
-    std::string bunaleName1 = "com.ohos.certmanager";
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE);
     EXPECT_EQ(result, true);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
 }
 
 /**
@@ -934,14 +947,20 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0600, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0700, Function | SmallTest | Level0)
 {
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
+    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
+    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
     std::vector<int64_t> stats;
-    std::string bunaleName1 = "com.ohos.certmanager";
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE);
     EXPECT_EQ(result, true);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
 }
 
 /**
@@ -951,8 +970,12 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0700, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0800, Function | SmallTest | Level0)
 {
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
+    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
+    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
     std::vector<int64_t> stats;
-    std::string bunaleName1 = "com.ohos.certmanager";
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE |
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE);
@@ -960,6 +983,8 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0800, Function | SmallTest | Level
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
 }
 
 /**
@@ -969,8 +994,12 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0800, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0900, Function | SmallTest | Level0)
 {
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
+    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
+    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
     std::vector<int64_t> stats;
-    std::string bunaleName1 = "com.ohos.certmanager";
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE |
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE);
@@ -978,6 +1007,8 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0900, Function | SmallTest | Level
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
 }
 
 /**
@@ -987,8 +1018,12 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0900, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1000, Function | SmallTest | Level0)
 {
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
+    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
+    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
     std::vector<int64_t> stats;
-    std::string bunaleName1 = "com.ohos.certmanager";
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE |
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE |
@@ -997,6 +1032,8 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1000, Function | SmallTest | Level
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
 }
 
 /**
@@ -1006,14 +1043,20 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1000, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1100, Function | SmallTest | Level0)
 {
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
+    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
+    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
     std::vector<int64_t> stats;
-    std::string bunaleName1 = "com.ohos.certmanager";
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITH_ALL_SIZE);
     EXPECT_EQ(result, true);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
 }
 
 /**
@@ -1023,8 +1066,12 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1100, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1200, Function | SmallTest | Level0)
 {
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
+    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
+    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
     std::vector<int64_t> stats;
-    std::string bunaleName1 = "com.ohos.certmanager";
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITH_ALL_SIZE |
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE);
@@ -1032,6 +1079,8 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1200, Function | SmallTest | Level
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
 }
 
 /**
@@ -1041,13 +1090,19 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1200, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1300, Function | SmallTest | Level0)
 {
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
+    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
+    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
     std::vector<int64_t> stats;
-    std::string bunaleName1 = "com.ohos.certmanager";
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0, 0);
     EXPECT_EQ(result, true);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
+    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
 }
 
 /**
@@ -1065,10 +1120,10 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1400, Function | SmallTest | Level
     CreateFile(BUNDLE_EL2_DATA_MODULE_CACHE + "/test.ap", "hello world!");
     std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
-    std::vector<std::string> &bundleModuleNames = {"entry2"};
+    std::vector<std::string> moduleNameList = {"entry2"};
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITH_ALL_SIZE,
-        bundleModuleNames);
+        moduleNameList);
     EXPECT_EQ(result, true);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
@@ -1095,10 +1150,10 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1500, Function | SmallTest | Level
     CreateFile(BUNDLE_EL5_DATA_MODULE_CACHE + "/test.ap", "hello world!");
     std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
-    std::vector<std::string> &bundleModuleNames = {"entry2"};
+    std::vector<std::string> moduleNameList = {"entry5", "entry2"};
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITH_ALL_SIZE,
-        bundleModuleNames);
+        moduleNameList);
     EXPECT_EQ(result, true);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);

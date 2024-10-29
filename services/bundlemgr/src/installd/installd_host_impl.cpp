@@ -907,7 +907,7 @@ std::string InstalldHostImpl::GetAppDataPath(const std::string &bundleName, cons
 }
 
 int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
-    const int32_t userId, const int32_t appIndex, const std::vector<std::string> &bundleModuleNames)
+    const int32_t userId, const int32_t appIndex, const std::vector<std::string> &moduleNameList)
 {
     std::string bundleNameDir = bundleName;
     if (appIndex > 0) {
@@ -920,7 +920,7 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
         cachePaths.push_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
             ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE +
             bundleNameDir + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
-        for (const auto &moduleName : bundleModuleNames) {
+        for (const auto &moduleName : moduleNameList) {
             std::string moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
                 ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir +
                 ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
@@ -933,7 +933,7 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
 
 ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const int32_t userId,
     std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
-    const uint32_t statFlag, const std::vector<std::string> &bundleModuleNames)
+    const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     LOG_D(BMS_TAG_INSTALLD,
         "GetBundleStats, bundleName = %{public}s, userId = %{public}d, uid = %{public}d, appIndex = %{public}d",
@@ -963,7 +963,7 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     }
     if ((statFlag & OHOS::AppExecFwk::Constants::GET_BUNDLE_WITHOUT_CACHE_SIZE) !=
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE) {
-        bundleCacheSize = GetAppCacheSize(bundleName, userId, appIndex, bundleModuleNames);
+        bundleCacheSize = GetAppCacheSize(bundleName, userId, appIndex, moduleNameList);
     }
     // index 0 : bundle data size
     bundleStats[0] = appDataSize;
