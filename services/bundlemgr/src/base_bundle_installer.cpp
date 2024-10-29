@@ -879,6 +879,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         LOG_I(BMS_TAG_INSTALLER, "SetIsFreeInstallApp(%{public}d)",
             InstallFlag::FREE_INSTALL == installParam.installFlag);
         newInfo.SetIsFreeInstallApp(InstallFlag::FREE_INSTALL == installParam.installFlag);
+        SetApplicationFlagsForPreinstallSource(newInfos, installParam);
         result = ProcessBundleInstallStatus(newInfo, uid);
         CHECK_RESULT(result, "ProcessBundleInstallStatus failed %{public}d");
 
@@ -3808,6 +3809,15 @@ void BaseBundleInstaller::SetInstallSourceToAppInfo(std::unordered_map<std::stri
     std::string installSource = GetInstallSource(installParam);
     for (auto &info : infos) {
         info.second.SetInstallSource(installSource);
+    }
+}
+
+void BaseBundleInstaller::SetApplicationFlagsForPreinstallSource(
+    std::unordered_map<std::string, InnerBundleInfo> &infos, const InstallParam &installParam) const
+{
+    std::string installSource = GetInstallSource(installParam);
+    for (auto &info : infos) {
+        info.second.SetApplicationFlags(installParam.preinstallSourceFlag);
     }
 }
 

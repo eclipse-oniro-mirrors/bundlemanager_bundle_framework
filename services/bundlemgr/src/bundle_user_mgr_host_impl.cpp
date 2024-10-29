@@ -159,6 +159,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         installParam.userId = userId;
         installParam.isPreInstallApp = true;
         installParam.installFlag = InstallFlag::NORMAL;
+        installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
         userReceiverImpl->SetBundlePromise(bundlePromise);

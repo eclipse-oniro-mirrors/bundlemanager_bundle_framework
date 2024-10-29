@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "application_info.h"
 #include "bundle_constants.h"
 #include "parcel.h"
 namespace OHOS {
@@ -85,6 +86,7 @@ struct InstallParam : public Parcelable {
     bool allUser = false;
     // utilizing for code-signature
     std::map<std::string, std::string> verifyCodeParams;
+    ApplicationInfoFlag preinstallSourceFlag = ApplicationInfoFlag::FLAG_INSTALLED;
     // for MDM self update
     bool isSelfUpdate = false;
     // the profile-guided optimization(PGO) file path
