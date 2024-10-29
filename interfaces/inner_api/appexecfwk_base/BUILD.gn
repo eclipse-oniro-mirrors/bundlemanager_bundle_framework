@@ -89,8 +89,6 @@ ohos_shared_library("appexecfwk_base") {
 
   all_dependent_configs = [ ":bundle_all_dependent_config" ]
 
-  public_configs += [ ":bundle_all_dependent_config" ]
-
   defines = [
     "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
