@@ -3484,6 +3484,9 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
         }
         if (appIndex == 0 && infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
             for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+                if (innerModuleInfo.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
+                    continue;
+                }
                 bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
             }
         }
