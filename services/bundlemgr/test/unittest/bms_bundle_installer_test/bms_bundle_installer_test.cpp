@@ -511,7 +511,7 @@ HWTEST_F(BmsBundleInstallerTest, ThirdPartyInstall_0100, Function | SmallTest | 
     StopInstalldService();
     std::string bundleFile = RESOURCE_ROOT_PATH + TYPE_BUNDLE;
     auto result = InstallThirdPartyBundle(bundleFile);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR);
 }
 
 /**
@@ -3066,7 +3066,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0100, Function | SmallTest | Lev
     bundlePaths.push_back(bundlePath);
     BundleInstallChecker installChecker;
     auto ret = installChecker.CheckSysCap(bundlePaths);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_RPCID_FAILED);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }

@@ -3068,9 +3068,9 @@ bool BMSEventHandler::CheckAndParseHapFiles(
 
     ret = bundleInstallChecker->CheckSysCap(realPaths);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "hap(%{public}s) syscap check failed", hapFilePath.c_str());
-        return false;
+        LOG_I(BMS_TAG_DEFAULT, "hap(%{public}s) syscap check failed", hapFilePath.c_str());
     }
+    bool isSysCapValid = (ret == ERR_OK);
 
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
     ret = bundleInstallChecker->CheckMultipleHapsSignInfo(realPaths, hapVerifyResults);
@@ -3090,6 +3090,14 @@ bool BMSEventHandler::CheckAndParseHapFiles(
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "parse haps file(%{public}s) failed", hapFilePath.c_str());
         return false;
+    }
+
+    if (!isSysCapValid) {
+        ret = bundleInstallChecker->CheckDeviceType(infos);
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "CheckDeviceType failed due to errorCode : %{public}d", ret);
+            return false;
+        }
     }
 
     ret = bundleInstallChecker->CheckHspInstallCondition(hapVerifyResults);
