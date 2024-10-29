@@ -38,6 +38,12 @@ using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::s
 class InstalldOperator {
 public:
     /**
+     * @brief Check link file and unlink.
+     * @param path Indicates the file path to be checked.
+     * @return Returns true if the file is link and unlink succeed; returns false otherwise.
+     */
+    static bool CheckAndDeleteLinkFile(const std::string &path);
+    /**
      * @brief Check whether a file exist.
      * @param path Indicates the file path to be checked.
      * @return Returns true if the file exist; returns false otherwise.

@@ -138,6 +138,23 @@ struct fscrypt_asdp_policy {
     char app_key2_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE];
 } __attribute__((__packed__));
 
+bool InstalldOperator::CheckAndDeleteLinkFile(const std::string &path)
+{
+    struct stat path_stat;
+    if (lstat(path.c_str(), &path_stat) == 0) {
+        if (S_ISLNK(path_stat.st_mode)) {
+            if (unlink(path.c_str()) == 0) {
+                return true;
+            }
+            LOG_E(BMS_TAG_INSTALLD, "CheckAndDeleteLinkFile unlink %{public}s failed, error: %{public}d",
+                path.c_str(), errno);
+        }
+    }
+    LOG_E(BMS_TAG_INSTALLD, "CheckAndDeleteLinkFile lstat or S_ISLNK %{public}s failed, errno:%{public}d",
+        path.c_str(), errno);
+    return false;
+}
+
 bool InstalldOperator::IsExistFile(const std::string &path)
 {
     if (path.empty()) {
@@ -770,12 +787,20 @@ bool InstalldOperator::DeleteFiles(const std::string &dataPath)
         }
         subPath = OHOS::IncludeTrailingPathDelimiter(dataPath) + std::string(ptr->d_name);
         if (ptr->d_type == DT_DIR) {
-            ret = OHOS::ForceRemoveDirectory(subPath);
-        } else {
-            if (access(subPath.c_str(), F_OK) == 0) {
-                ret = OHOS::RemoveFile(subPath);
+            if (!OHOS::ForceRemoveDirectory(subPath)) {
+                ret = false;
             }
+            continue;
         }
+        if (access(subPath.c_str(), F_OK) == 0) {
+            ret = OHOS::RemoveFile(subPath);
+            if (!ret) {
+                LOG_I(BMS_TAG_INSTALLD, "RemoveFile %{public}s failed, error: %{public}d", subPath.c_str(), errno);
+            }
+            continue;
+        }
+        // maybe lnk_file
+        ret = CheckAndDeleteLinkFile(subPath);
     }
     closedir(dir);
     return ret;
