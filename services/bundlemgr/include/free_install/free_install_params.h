@@ -47,6 +47,11 @@ enum ServiceCenterFunction {
     CONNECT_DELAYED_HEARTBEAT = 8,
 };
 
+const std::set<ServiceCenterFunction> DISCONNECT_ABILITY_FUNC = {
+    ServiceCenterFunction::CONNECT_UPGRADE_CHECK,
+    ServiceCenterFunction::CONNECT_PRELOAD_INSTALL
+};
+
 enum ServiceCenterResultCode {
     FREE_INSTALL_OK = 0,
     FREE_INSTALL_DOWNLOADING = 1,
