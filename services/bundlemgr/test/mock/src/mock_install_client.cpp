@@ -146,9 +146,9 @@ void InstalldClient::ResetInstalldProxy()
     return;
 }
 
-bool InstalldClient::GetInstalldProxy()
+sptr<IInstalld> InstalldClient::GetInstalldProxy()
 {
-    return true;
+    return nullptr;
 }
 
 ErrCode InstalldClient::ScanDir(
@@ -243,7 +243,7 @@ ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &
 
 bool InstalldClient::StartInstalldService()
 {
-    return GetInstalldProxy();
+    return GetInstalldProxy() != nullptr;
 }
 
 ErrCode InstalldClient::ExtractDriverSoFiles(const std::string &srcPath,
