@@ -29,6 +29,12 @@ std::mutex g_mutex;
 
 const int8_t MAX_FORM_NAME = 127;
 const int8_t DEFAULT_RECT_SHAPE = 1;
+#ifndef FORM_DIMENSION_2_3
+const int8_t DIMENSION_2_3 = 8;
+#endif
+#ifndef FORM_DIMENSION_3_3
+const int8_t DIMENSION_3_3 = 9;
+#endif
 constexpr const char* FORM_COLOR_MODE_MAP_KEY[] = {
     "auto",
     "dark",
@@ -46,7 +52,9 @@ constexpr const char* DIMENSION_MAP_KEY[] = {
     "4*4",
     "2*1",
     "1*1",
-    "6*4"
+    "6*4",
+    "2*3",
+    "3*3"
 };
 const int32_t DIMENSION_MAP_VALUE[] = {
     1,
@@ -55,7 +63,9 @@ const int32_t DIMENSION_MAP_VALUE[] = {
     4,
     5,
     6,
-    7
+    7,
+    8,
+    9
 };
 constexpr const char* SHAPE_MAP_KEY[] = {
     "rect",
@@ -353,6 +363,22 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
             APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
             continue;
         }
+                
+        int32_t dimensionItem = DIMENSION_MAP_VALUE[i];
+        #ifndef FORM_DIMENSION_2_3
+            if (dimensionItem == DIMENSION_2_3) {
+                APP_LOGW("dimension invalid in wearable Device form %{public}d", dimensionItem);
+                continue;
+            }
+        #endif
+
+        #ifndef FORM_DIMENSION_3_3
+            if (dimensionItem == DIMENSION_3_3) {
+                APP_LOGW("dimension invalid in wearable Device form %{public}d", dimensionItem);
+                continue;
+            }
+        #endif
+
         supportDimensionSet.emplace(DIMENSION_MAP_VALUE[i]);
     }
     for (i = 0; i < len; i++) {
