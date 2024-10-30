@@ -47,5 +47,17 @@ int32_t ServiceCenterStatusCallback::OnDelayedHeartbeat(std::string installResul
     server->OnDelayedHeartbeat(installResult);
     return ERR_OK;
 }
+
+int32_t ServiceCenterStatusCallback::OnServiceCenterReceived(std::string installResultStr)
+{
+    LOG_I(BMS_TAG_DEFAULT, "OnDelayedHeartbeat");
+    auto server = server_.lock();
+    if (server == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "pointer is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    server->OnServiceCenterReceived(installResultStr);
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
