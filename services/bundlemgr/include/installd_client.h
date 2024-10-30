@@ -223,7 +223,7 @@ public:
     ErrCode SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
         const int32_t userId, std::string &keyId);
 
-    ErrCode DeleteEncryptionKeyId(const std::string &keyId);
+    ErrCode DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId);
 
     ErrCode RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs);
 

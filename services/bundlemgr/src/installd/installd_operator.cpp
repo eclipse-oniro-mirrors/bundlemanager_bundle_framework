@@ -323,7 +323,7 @@ bool InstalldOperator::ExtractFiles(const std::string hnpPackageInfo, const Extr
                 LOG_E(BMS_TAG_INSTALLD, "determine prefix failed");
                 return false;
             }
-            
+
             std::string targetName = entryName.substr(prefix.length());
             if (hnpPackageInfoMap.find(targetName) == hnpPackageInfoMap.end()) {
                 LOG_E(BMS_TAG_INSTALLD, "illegal native bundle");
@@ -2042,10 +2042,10 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
     return true;
 }
 
-bool InstalldOperator::DeleteKeyId(const std::string &keyId)
+bool InstalldOperator::DeleteKeyId(const std::string &bundleName, const int32_t userId)
 {
-    LOG_D(BMS_TAG_INSTALLD, "DeleteKeyId keyId is %{public}s", keyId.c_str());
-    auto ret = Security::AccessToken::El5FilekeyManagerKit::DeleteAppKey(keyId);
+    LOG_D(BMS_TAG_INSTALLD, "DeleteKeyId bundleName is %{public}s", bundleName.c_str());
+    auto ret = Security::AccessToken::El5FilekeyManagerKit::DeleteAppKey(bundleName, userId);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "Call DeleteAppKey failed ret = %{public}d", ret);
         return false;

@@ -525,13 +525,13 @@ ErrCode InstalldClient::SetEncryptionPolicy(int32_t uid, const std::string &bund
     return CallService(&IInstalld::SetEncryptionPolicy, uid, bundleName, userId, keyId);
 }
 
-ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
+ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId)
 {
-    if (keyId.empty()) {
-        APP_LOGE("keyId is empty");
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::DeleteEncryptionKeyId, keyId);
+    return CallService(&IInstalld::DeleteEncryptionKeyId, bundleName, userId);
 }
 
 ErrCode InstalldClient::RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs)

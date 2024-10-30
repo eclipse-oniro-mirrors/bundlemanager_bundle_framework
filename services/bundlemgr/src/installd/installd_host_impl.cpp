@@ -726,7 +726,7 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
         LOG_I(BMS_TAG_INSTALLD, "bundleName:%{public}s is atomic service, need process", bundleName.c_str());
         return InnerRemoveAtomicServiceBundleDataDir(bundleName, userId);
     }
-    
+
     ErrCode result = InnerRemoveBundleDataDir(bundleName, userId);
     if (result != ERR_OK) {
         return InnerRemoveBundleDataDir(bundleName, userId);
@@ -1519,17 +1519,17 @@ ErrCode InstalldHostImpl::SetEncryptionPolicy(int32_t uid, const std::string &bu
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::DeleteEncryptionKeyId(const std::string &keyId)
+ErrCode InstalldHostImpl::DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (keyId.empty()) {
+    if (bundleName.empty()) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function DeleteEncryptionKeyId with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldOperator::DeleteKeyId(keyId)) {
+    if (!InstalldOperator::DeleteKeyId(bundleName, userId)) {
         LOG_E(BMS_TAG_INSTALLD, "EncryptionPaths fail");
         return ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED;
     }
