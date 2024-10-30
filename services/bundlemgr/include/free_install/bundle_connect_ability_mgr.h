@@ -99,6 +99,12 @@ public:
     void DisconnectAbility();
 
     bool SendRequest(int32_t code, MessageParcel &data, MessageParcel &reply);
+
+    /**
+     * @brief Executed when a service callback
+     * @param installResultStr The json string of InstallResult
+     */
+    void OnServiceCenterReceived(std::string installResultStr);
 private:
     /**
      * @brief Notify the service center center to start the installation free process.
