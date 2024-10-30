@@ -4665,6 +4665,9 @@ bool BundleDataMgr::RestoreUidAndGid()
                 } else {
                     bundleIdMap_[bundleId] = cloneBundleName;
                 }
+                BundleUtil::MakeFsConfig(cloneBundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(cloneBundleName, bundleId,
+                    ServiceConstants::SHAREFS_CONFIG_PATH);
             }
         }
     }
