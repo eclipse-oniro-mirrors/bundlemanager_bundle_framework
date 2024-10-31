@@ -57,6 +57,8 @@ const std::string FUNCATION_GET_SHARED_BUNDLE_INFO_BY_SELF = "BundleMgrHostImpl:
 const std::string FUNCATION_GET_HAP_MODULE_INFO = "BundleMgrHostImpl::GetHapModuleInfo";
 const std::string FUNCATION_BATCH_BUNDLE_INFO = "BundleMgrHostImpl::BatchGetBundleInfo";
 const std::string FUNCATION_GET_BUNDLE_INFO = "BundleMgrHostImpl::GetBundleInfo";
+const std::string FUNCATION_GET_BUNDLE_INFO_V9 = "BundleMgrHostImpl::GetBundleInfoV9";
+const std::string FUNCATION_GET_BUNDLE_INFO_FOR_SELF = "BundleMgrHostImpl::GetBundleInfoForSelf";
 }
 
 bool BundleMgrHostImpl::GetApplicationInfo(
@@ -237,6 +239,8 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_BUNDLE_INFO_V9);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     LOG_D(BMS_TAG_QUERY, "GetBundleInfoV9, bundleName:%{public}s, flags:%{public}d, userId:%{public}d",
         bundleName.c_str(), flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -298,6 +302,8 @@ ErrCode BundleMgrHostImpl::BatchGetBundleInfo(const std::vector<std::string> &bu
 ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_BUNDLE_INFO_FOR_SELF);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     auto uid = IPCSkeleton::GetCallingUid();
     int32_t userId = uid / Constants::BASE_USER_RANGE;
     std::string bundleName;
