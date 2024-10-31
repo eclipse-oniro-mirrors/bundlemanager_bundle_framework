@@ -448,12 +448,12 @@ bool BundleDataMgr::RemoveModuleInfo(
         oldInfo.SetTsanEnabled(oldInfo.IsTsanEnabled());
         oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
         oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
+        DeleteRouterInfo(bundleName, modulePackage);
         if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.at(bundleName) = oldInfo;
             return true;
         }
-        DeleteRouterInfo(bundleName, modulePackage);
         APP_LOGD("after delete modulePackage:%{public}s info", modulePackage.c_str());
     }
     return true;
