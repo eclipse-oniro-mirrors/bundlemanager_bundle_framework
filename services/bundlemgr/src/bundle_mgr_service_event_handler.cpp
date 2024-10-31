@@ -3451,14 +3451,16 @@ void BMSEventHandler::HandleSceneBoard() const
     bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
     LOG_I(BMS_TAG_DEFAULT, "HandleSceneBoard sceneBoardEnable : %{public}d", sceneBoardEnable);
     dataMgr->SetApplicationEnabled(ServiceConstants::SYSTEM_UI_BUNDLE_NAME, 0, !sceneBoardEnable,
-        Constants::DEFAULT_USERID);
+        ServiceConstants::CALLER_NAME_BMS, Constants::DEFAULT_USERID);
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     std::for_each(userIds.cbegin(), userIds.cend(), [dataMgr, sceneBoardEnable](const int32_t userId) {
         if (userId == 0) {
             return;
         }
-        dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, 0, sceneBoardEnable, userId);
-        dataMgr->SetApplicationEnabled(ServiceConstants::LAUNCHER_BUNDLE_NAME, 0, !sceneBoardEnable, userId);
+        dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, 0, sceneBoardEnable,
+            ServiceConstants::CALLER_NAME_BMS, userId);
+        dataMgr->SetApplicationEnabled(ServiceConstants::LAUNCHER_BUNDLE_NAME, 0, !sceneBoardEnable,
+            ServiceConstants::CALLER_NAME_BMS, userId);
     });
 #endif
 }
@@ -3594,7 +3596,7 @@ void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
             LOG_W(BMS_TAG_DEFAULT, "bundleName %{public}s not exist", bundleName.c_str());
             continue;
         }
-        if (versionCode <= hasInstalledInfo.GetVersionCode()) {
+        if ((versionCode <= hasInstalledInfo.GetVersionCode()) && IsHspPathExist(hasInstalledInfo)) {
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s downgrade",
                 bundleName.c_str());
             continue;
@@ -3644,7 +3646,7 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
             LOG_W(BMS_TAG_DEFAULT, "obtain bundleInfo failed, bundleName :%{public}s not exist", bundleName.c_str());
             continue;
         }
-        if (hapVersionCode <= hasInstalledInfo.versionCode) {
+        if ((hapVersionCode <= hasInstalledInfo.versionCode) && IsHapPathExist(hasInstalledInfo)) {
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: hapVersionCode is less than old hap versionCode",
                 bundleName.c_str());
             continue;
@@ -3655,6 +3657,7 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
         installParam.installFlag = InstallFlag::REPLACE_EXISTING;
         installParam.copyHapToInstallPath = true;
         installParam.isOTA = isOta;
+        installParam.withCopyHaps = true;
         SystemBundleInstaller installer;
         std::vector<std::string> filePaths { scanPathIter };
         if (installer.OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP) != ERR_OK) {
@@ -3662,6 +3665,40 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
         }
     }
     LOG_I(BMS_TAG_DEFAULT, "end");
+}
+
+bool BMSEventHandler::IsHapPathExist(const BundleInfo &bundleInfo)
+{
+    LOG_I(BMS_TAG_DEFAULT, "-n %{public}s need to check hap path exist", bundleInfo.name.c_str());
+    if (bundleInfo.hapModuleInfos.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "-n %{public}s has no moduleInfo", bundleInfo.name.c_str());
+        return false;
+    }
+    for (const auto &moduleInfo : bundleInfo.hapModuleInfos) {
+        if ((moduleInfo.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) &&
+            !BundleUtil::IsExistFile(moduleInfo.hapPath)) {
+            LOG_E(BMS_TAG_DEFAULT, "-p %{public}s hap path not exist", moduleInfo.hapPath.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool BMSEventHandler::IsHspPathExist(const InnerBundleInfo &innerBundleInfo)
+{
+    LOG_I(BMS_TAG_DEFAULT, "-n %{public}s need to check hsp path exist", innerBundleInfo.GetBundleName().c_str());
+    if (innerBundleInfo.GetInnerModuleInfos().empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "-n %{public}s has no moduleInfo", innerBundleInfo.GetBundleName().c_str());
+        return false;
+    }
+    for (const auto &moduleInfoIter : innerBundleInfo.GetInnerModuleInfos()) {
+        if ((moduleInfoIter.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) &&
+            !BundleUtil::IsExistFile(moduleInfoIter.second.hapPath)) {
+            LOG_E(BMS_TAG_DEFAULT, "-p %{public}s hsp path not exist", moduleInfoIter.second.hapPath.c_str());
+            return false;
+        }
+    }
+    return true;
 }
 
 void BMSEventHandler::CheckALLResourceInfo()

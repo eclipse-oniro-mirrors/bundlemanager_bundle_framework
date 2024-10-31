@@ -494,7 +494,8 @@ public:
             APP_LOGD("can not find userId %{public}d when GetApplicationEnabled", userId);
             return false;
         }
-
+        PrintSetEnabledInfo(innerBundleUserInfo.bundleUserInfo.enabled, userId, 0, innerBundleUserInfo.bundleName,
+            innerBundleUserInfo.bundleUserInfo.setEnabledCaller);
         return innerBundleUserInfo.bundleUserInfo.enabled;
     }
 
@@ -505,8 +506,9 @@ public:
      * @param userId Indicates the user ID.
      * @return Returns ERR_OK if the SetApplicationEnabled is successfully; returns error code otherwise.
      */
-    ErrCode SetApplicationEnabled(bool enabled, int32_t userId = Constants::UNSPECIFIED_USERID);
-    ErrCode SetCloneApplicationEnabled(bool enabled, int32_t appIndex, int32_t userId);
+    ErrCode SetApplicationEnabled(bool enabled, const std::string &caller,
+        int32_t userId = Constants::UNSPECIFIED_USERID);
+    ErrCode SetCloneApplicationEnabled(bool enabled, int32_t appIndex, const std::string &caller, int32_t userId);
     ErrCode SetCloneAbilityEnabled(const std::string &moduleName, const std::string &abilityName,
         bool isEnabled, int32_t userId, int32_t appIndex);
     /**
@@ -774,11 +776,6 @@ public:
     {
         baseApplicationInfo_->cacheDir = cacheDir;
     }
-    /**
-     * @brief Set application uid.
-     * @param uid Indicates the uid to be set.
-     */
-    void SetUid(int uid) {}
 
     int32_t GetUid(int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const
     {
@@ -814,11 +811,6 @@ public:
 
         return innerBundleUserInfo.gids[0];
     }
-    /**
-     * @brief Set application gid.
-     * @param gid Indicates the gid to be set.
-     */
-    void SetGid(int gid) {}
     /**
      * @brief Get application AppType.
      * @return Returns the AppType.
@@ -1098,8 +1090,6 @@ public:
     void RestoreFromOldInfo(const InnerBundleInfo &oldInfo)
     {
         SetAppCodePath(oldInfo.GetAppCodePath());
-        SetUid(oldInfo.GetUid());
-        SetGid(oldInfo.GetGid());
     }
     void RestoreModuleInfo(const InnerBundleInfo &oldInfo)
     {
@@ -1414,6 +1404,10 @@ public:
     }
 
     void SetAccessTokenIdEx(const Security::AccessToken::AccessTokenIDEx accessTokenIdEx, const int32_t userId);
+
+    void SetAccessTokenIdExWithAppIndex(
+        const Security::AccessToken::AccessTokenIDEx accessTokenIdEx,
+        const int32_t userId, const int32_t appIndex);
 
     void SetIsNewVersion(bool flag)
     {
@@ -2254,11 +2248,11 @@ private:
         const std::unordered_map<std::string, std::string> &moduleNameMap,
         std::vector<RequestPermission> &requestPermissions) const;
     void GetApplicationReservedFlagAdaptClone(ApplicationInfo &appInfo, int32_t appIndex) const;
+    void PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_t appIndex,
+        const std::string &bundleName, const std::string &caller) const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
-    int uid_ = Constants::INVALID_UID;
-    int gid_ = ServiceConstants::INVALID_GID;
     int userId_ = Constants::DEFAULT_USERID;
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     std::shared_ptr<ApplicationInfo> baseApplicationInfo_;

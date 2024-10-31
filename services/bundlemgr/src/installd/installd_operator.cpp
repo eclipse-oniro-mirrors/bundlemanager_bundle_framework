@@ -80,6 +80,9 @@ constexpr const char* AI_SUFFIX = ".ai";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* BUNDLE_BACKUP_KEEP_DIR = "/.backup";
 constexpr const char* ATOMIC_SERVICE_PATH = "+auid-";
+const std::vector<std::string> DRIVER_EXECUTE_DIR {
+    "/print_service/cups/serverbin/filter", "/print_service/sane/backend"
+};
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -134,6 +137,23 @@ struct fscrypt_asdp_policy {
     char reserved;
     char app_key2_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE];
 } __attribute__((__packed__));
+
+bool InstalldOperator::CheckAndDeleteLinkFile(const std::string &path)
+{
+    struct stat path_stat;
+    if (lstat(path.c_str(), &path_stat) == 0) {
+        if (S_ISLNK(path_stat.st_mode)) {
+            if (unlink(path.c_str()) == 0) {
+                return true;
+            }
+            LOG_E(BMS_TAG_INSTALLD, "CheckAndDeleteLinkFile unlink %{public}s failed, error: %{public}d",
+                path.c_str(), errno);
+        }
+    }
+    LOG_E(BMS_TAG_INSTALLD, "CheckAndDeleteLinkFile lstat or S_ISLNK %{public}s failed, errno:%{public}d",
+        path.c_str(), errno);
+    return false;
+}
 
 bool InstalldOperator::IsExistFile(const std::string &path)
 {
@@ -767,12 +787,20 @@ bool InstalldOperator::DeleteFiles(const std::string &dataPath)
         }
         subPath = OHOS::IncludeTrailingPathDelimiter(dataPath) + std::string(ptr->d_name);
         if (ptr->d_type == DT_DIR) {
-            ret = OHOS::ForceRemoveDirectory(subPath);
-        } else {
-            if (access(subPath.c_str(), F_OK) == 0) {
-                ret = OHOS::RemoveFile(subPath);
+            if (!OHOS::ForceRemoveDirectory(subPath)) {
+                ret = false;
             }
+            continue;
         }
+        if (access(subPath.c_str(), F_OK) == 0) {
+            ret = OHOS::RemoveFile(subPath);
+            if (!ret) {
+                LOG_I(BMS_TAG_INSTALLD, "RemoveFile %{public}s failed, error: %{public}d", subPath.c_str(), errno);
+            }
+            continue;
+        }
+        // maybe lnk_file
+        ret = CheckAndDeleteLinkFile(subPath);
     }
     closedir(dir);
     return ret;
@@ -955,6 +983,7 @@ int64_t InstalldOperator::GetDiskUsageFromPath(const std::vector<std::string> &p
     int64_t fileSize = 0;
     for (auto &st : path) {
         fileSize += GetDiskUsage(st);
+        LOG_D(BMS_TAG_INSTALLD, "GetBundleStats get cache size from: %{public}s", st.c_str());
     }
     return fileSize;
 }
@@ -1603,6 +1632,12 @@ bool InstalldOperator::MoveFile(const std::string &srcPath, const std::string &d
         return false;
     }
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    auto filterExecuteFile = [&destPath](const std::string &dir) {
+        return destPath.find(dir) != std::string::npos;
+    };
+    if (std::any_of(DRIVER_EXECUTE_DIR.begin(), DRIVER_EXECUTE_DIR.end(), filterExecuteFile)) {
+        mode |= S_IXUSR;
+    }
     if (!OHOS::ChangeModeFile(destPath, mode)) {
         LOG_E(BMS_TAG_INSTALLD, "change mode failed");
         return false;
@@ -1715,12 +1750,6 @@ bool InstalldOperator::CopyDriverSoFiles(const std::string &originalDir, const s
         return false;
     }
     ChangeFileAttr(realDestinedDir, buf.st_uid, buf.st_gid);
-    mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH;
-    if (!OHOS::ChangeModeFile(realDestinedDir, mode)) {
-        LOG_E(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", realDestinedDir.c_str(),
-            errno);
-        return false;
-    }
     // Refresh the selinux tag of the driver file so that it matches the selinux tag of the parent directory file
     int ret = RestoreconFromParentDir(realDestinedDir.c_str());
     if (ret != 0) {
@@ -2145,6 +2174,7 @@ void InstalldOperator::RmvDeleteDfx(const std::string &path)
     close(fd);
     return;
 }
+
 
 #if defined(CODE_ENCRYPTION_ENABLE)
 std::mutex InstalldOperator::encryptionMutex_;

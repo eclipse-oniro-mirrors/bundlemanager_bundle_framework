@@ -215,7 +215,8 @@ void BundleDataMgr::LoadAllBundleStateDataFromJsonDb()
         InnerBundleInfo& newInfo = infoItem->second;
         for (auto& bundleUserState : bundleState.second) {
             auto& tempUserInfo = bundleUserState.second;
-            newInfo.SetApplicationEnabled(tempUserInfo.enabled, bundleUserState.first);
+            newInfo.SetApplicationEnabled(tempUserInfo.enabled, bundleUserState.second.setEnabledCaller,
+                bundleUserState.first);
             for (auto& disabledAbility : tempUserInfo.disabledAbilities) {
                 newInfo.SetAbilityEnabled("", disabledAbility, false, bundleUserState.first);
             }
@@ -352,6 +353,8 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.UpdateRemovable(newInfo.IsPreInstallApp(), newInfo.IsRemovable());
             oldInfo.UpdateMultiAppMode(newInfo);
             oldInfo.UpdateReleaseType(newInfo);
+            oldInfo.SetAppType(newInfo.GetAppType());
+            oldInfo.SetAppFeature(newInfo.GetAppFeature());
         }
         if (oldInfo.GetOldAppIds().empty()) {
             oldInfo.AddOldAppId(oldInfo.GetAppId());
@@ -3468,10 +3471,6 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
 
-    if (bundleInfoIter->second.IsDisabled()) {
-        APP_LOGD("app %{public}s is disabled", bundleInfoIter->second.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_UID;
-    }
     if (bundleInfoIter->second.GetUid(userId, appIndex) == uid) {
         innerBundleInfo = bundleInfoIter->second;
         return ERR_OK;
@@ -3533,10 +3532,11 @@ bool BundleDataMgr::HasUserInstallInBundle(
 }
 
 bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
-    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex) const
+    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex, const uint32_t statFlag) const
 {
     int32_t responseUserId = -1;
     int32_t uid = -1;
+    std::vector<std::string> moduleNameList;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
@@ -3545,15 +3545,14 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
         }
         responseUserId = infoItem->second.GetResponseUserId(userId);
         uid = infoItem->second.GetUid(responseUserId, appIndex);
+        infoItem->second.GetModuleNames(moduleNameList);
     }
-
-    ErrCode ret =
-        InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats, uid, appIndex);
+    ErrCode ret = InstalldClient::GetInstance()->GetBundleStats(
+        bundleName, responseUserId, bundleStats, uid, appIndex, statFlag, moduleNameList);
     if (ret != ERR_OK) {
         APP_LOGW("%{public}s getStats failed", bundleName.c_str());
         return false;
     }
-
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
@@ -4227,7 +4226,7 @@ ErrCode BundleDataMgr::IsApplicationEnabled(
 }
 
 ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
-    int32_t appIndex, bool isEnable, int32_t userId)
+    int32_t appIndex, bool isEnable, const std::string &caller, int32_t userId)
 {
     APP_LOGD("SetApplicationEnabled %{public}s", bundleName.c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -4244,7 +4243,7 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
 
     InnerBundleInfo& newInfo = infoItem->second;
     if (appIndex != 0) {
-        auto ret = newInfo.SetCloneApplicationEnabled(isEnable, appIndex, requestUserId);
+        auto ret = newInfo.SetCloneApplicationEnabled(isEnable, appIndex, caller, requestUserId);
         if (ret != ERR_OK) {
             APP_LOGW("SetCloneApplicationEnabled for innerBundleInfo fail, errCode is %{public}d", ret);
             return ret;
@@ -4255,7 +4254,7 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
         }
         return ERR_OK;
     }
-    auto ret = newInfo.SetApplicationEnabled(isEnable, requestUserId);
+    auto ret = newInfo.SetApplicationEnabled(isEnable, caller, requestUserId);
     if (ret != ERR_OK) {
         APP_LOGW("SetApplicationEnabled failed, err %{public}d", ret);
         return ret;
@@ -4667,6 +4666,9 @@ bool BundleDataMgr::RestoreUidAndGid()
                 } else {
                     bundleIdMap_[bundleId] = cloneBundleName;
                 }
+                BundleUtil::MakeFsConfig(cloneBundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(cloneBundleName, bundleId,
+                    ServiceConstants::SHAREFS_CONFIG_PATH);
             }
         }
     }
@@ -5037,10 +5039,6 @@ bool BundleDataMgr::GetInnerBundleUserInfoByUserId(const std::string &bundleName
         APP_LOGW("bundleName:%{public}s not exist", bundleName.c_str());
         return false;
     }
-    if (infoItem->second.IsDisabled()) {
-        APP_LOGW("app %{public}s is disabled", infoItem->second.GetBundleName().c_str());
-        return false;
-    }
 
     return infoItem->second.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfo);
 }
@@ -5125,10 +5123,6 @@ bool BundleDataMgr::GetInnerBundleUserInfos(
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("%{public}s not exist", bundleName.c_str());
-        return false;
-    }
-    if (infoItem->second.IsDisabled()) {
-        APP_LOGW("app %{public}s is disabled", infoItem->second.GetBundleName().c_str());
         return false;
     }
 
@@ -8616,11 +8610,8 @@ ErrCode BundleDataMgr::GetAppIdByBundleName(
     if (item == bundleInfos_.end()) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    const InnerBundleInfo &innerBundleInfo = item->second;
-    if (innerBundleInfo.IsDisabled()) {
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-    }
-    appId = innerBundleInfo.GetBaseBundleInfo().appId;
+
+    appId = item->second.GetBaseBundleInfo().appId;
     return ERR_OK;
 }
 

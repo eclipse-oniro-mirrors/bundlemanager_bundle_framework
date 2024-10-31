@@ -136,7 +136,8 @@ public:
      */
     virtual ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
         std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID,
-        const int32_t appIndex = 0) override;
+        const int32_t appIndex = 0, const uint32_t statFlag = 0,
+        const std::vector<std::string> &moduleNameList = {}) override;
 
     virtual ErrCode GetAllBundleStats(const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids) override;
@@ -151,6 +152,9 @@ public:
      */
     virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         bool isPreInstallApp, bool debug) override;
+
+    std::string GetAppDataPath(const std::string &bundleName, const std::string &el,
+        const int32_t userId, const int32_t appIndex);
 
     /**
      * @brief Get all cache file path.
@@ -232,6 +236,8 @@ public:
 
     virtual ErrCode AddUserDirDeleteDfx(int32_t userId) override;
 
+    virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath) override;
+
 private:
     std::string GetExtensionConfigPath() const;
     void LoadNeedCreateSandbox(const nlohmann::json &object, std::vector<std::string> &typeList);
@@ -247,6 +253,8 @@ private:
     unsigned int GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox);
     ErrCode InnerRemoveAtomicServiceBundleDataDir(const std::string &bundleName, const int32_t userId);
     ErrCode InnerRemoveBundleDataDir(const std::string &bundleName, const int32_t userId);
+    int64_t GetAppCacheSize(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, const std::vector<std::string> &moduleNames = {});
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

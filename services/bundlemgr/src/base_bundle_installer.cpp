@@ -65,6 +65,7 @@
 #include "storage_manager_proxy.h"
 #endif
 #include "iservice_registry.h"
+#include "inner_bundle_clone_common.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -325,9 +326,6 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 
     // uninstall all sandbox app before
     UninstallAllSandboxApps(bundleName, installParam.userId);
-
-    std::shared_ptr<BundleCloneInstaller> cloneInstaller = std::make_shared<BundleCloneInstaller>();
-    cloneInstaller->UninstallAllCloneApps(bundleName, installParam.userId);
 
     int32_t uid = Constants::INVALID_UID;
     bool isUninstalledFromBmsExtension = false;
@@ -1482,10 +1480,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
-    if (!CheckWhetherCanBeUninstalled(bundleName)) {
-        return ERR_APPEXECFWK_UNINSTALL_CONTROLLED;
-    }
-
     auto &mtx = dataMgr_->GetBundleMutex(bundleName);
     std::lock_guard lock {mtx};
     InnerBundleInfo oldInfo;
@@ -1536,6 +1530,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
+    if (!CheckWhetherCanBeUninstalled(bundleName)) {
+        return ERR_APPEXECFWK_UNINSTALL_CONTROLLED;
+    }
+
     // reboot scan case will not kill the bundle
     if (installParam.GetKillProcess()) {
         // kill the bundle process during uninstall.
@@ -1544,6 +1542,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return ERR_APPEXECFWK_UNINSTALL_KILLING_APP_ERROR;
         }
     }
+
+    std::shared_ptr<BundleCloneInstaller> cloneInstaller = std::make_shared<BundleCloneInstaller>();
+    cloneInstaller->UninstallAllCloneApps(bundleName, installParam.userId);
 
     auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_, installParam.isKeepData);
     if (res != ERR_OK) {
@@ -2745,6 +2746,68 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
         result = InstalldClient::GetInstance()->SetDirApl(
             databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
             info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl databaseDir dir, error is %{public}d", result);
+            return result;
+        }
+
+        auto& bundleUserInfos = info.GetInnerBundleUserInfos();
+        for (const auto &userInfoPair : bundleUserInfos) {
+            auto &userInfo = userInfoPair.second;
+            const std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+            for (const auto &cloneInfoPair : cloneInfos) {
+                std::string cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(
+                    info.GetBundleName(), cloneInfoPair.second.appIndex);
+                ErrCode cloneRet = this->SetDirApl(info.GetBundleName(), cloneBundleName, info.GetAppPrivilegeLevel(),
+                    info.IsPreInstallApp(), info.GetBaseApplicationInfo().appProvisionType);
+                if (cloneRet != ERR_OK) {
+                    LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl clone bundle dir, error is %{public}d", cloneRet);
+                    return result;
+                }
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::SetDirApl(
+    const std::string &bundleName, const std::string &CloneBundleName, const std::string &appPrivilegeLevel,
+    bool isPreInstallApp, const std::string &appProvisionType)
+{
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+        std::string baseBundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR +
+                                        el +
+                                        ServiceConstants::PATH_SEPARATOR +
+                                        std::to_string(userId_);
+        std::string baseDataDir = baseBundleDataDir + ServiceConstants::BASE + CloneBundleName;
+        std::string databaseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + CloneBundleName;
+        bool isBaseExist = true;
+        bool isDatabaseExist = true;
+        ErrCode result = InstalldClient::GetInstance()->IsExistDir(baseDataDir, isBaseExist);
+        ErrCode dataResult = InstalldClient::GetInstance()->IsExistDir(databaseDataDir, isDatabaseExist);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "IsExistDir error is %{public}d", result);
+            return result;
+        }
+        if (dataResult != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "IsExistDataDir error is %{public}d", dataResult);
+            return dataResult;
+        }
+        if (!isBaseExist || !isDatabaseExist) {
+            LOG_D(BMS_TAG_INSTALLER, "base %{public}s or data %{public}s is not exist", baseDataDir.c_str(),
+                databaseDataDir.c_str());
+            continue;
+        }
+        result = InstalldClient::GetInstance()->SetDirApl(
+            baseDataDir, bundleName, appPrivilegeLevel, isPreInstallApp,
+            appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl baseDir dir, error is %{public}d", result);
+            return result;
+        }
+        result = InstalldClient::GetInstance()->SetDirApl(
+            databaseDataDir, bundleName, appPrivilegeLevel, isPreInstallApp,
+            appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl databaseDir dir, error is %{public}d", result);
             return result;
@@ -4822,10 +4885,10 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 signatureFileMap_.at(hapPathRecord.first));
             CHECK_RESULT(result, "Copy hap to install path failed or code signature hap failed %{public}d");
         } else {
-            if (InstalldClient::GetInstance()->CopyFile(
+            if (InstalldClient::GetInstance()->MoveHapToCodeDir(
                 hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "Copy hap to install path failed");
-                return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+                return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
             }
             if (VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "enable code signature failed");
@@ -5360,17 +5423,27 @@ void BaseBundleInstaller::ProcessAOT(bool isOTA, const std::unordered_map<std::s
 }
 
 void BaseBundleInstaller::RemoveOldHapIfOTA(const InstallParam &installParam,
-    const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo) const
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo)
 {
     if (!installParam.isOTA || installParam.copyHapToInstallPath) {
         return;
     }
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed");
+        return;
+    }
+    InnerBundleInfo newInfo;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, newInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "get failed for %{public}s", bundleName_.c_str());
+        return;
+    }
     for (const auto &info : newInfos) {
         std::string oldHapPath = oldInfo.GetModuleHapPath(info.second.GetCurrentModulePackage());
-        if (oldHapPath.empty() || oldHapPath.rfind(Constants::BUNDLE_CODE_DIR, 0) != 0) {
+        std::string newHapPath = newInfo.GetModuleHapPath(info.second.GetCurrentModulePackage());
+        if (oldHapPath == newHapPath || oldHapPath.find(Constants::BUNDLE_CODE_DIR) == std::string::npos) {
             continue;
         }
-        LOG_I(BMS_TAG_INSTALLER, "remove old hap %{public}s", oldHapPath.c_str());
+        LOG_W(BMS_TAG_INSTALLER, "remove old hap %{public}s", oldHapPath.c_str());
         if (InstalldClient::GetInstance()->RemoveDir(oldHapPath) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "remove old hap failed, errno: %{public}d", errno);
         }
@@ -5869,6 +5942,20 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         }
         if (needUpdate) {
             newInfo.SetAccessTokenIdEx(accessTokenIdEx, uerInfo.second.bundleUserInfo.userId);
+        }
+
+        const std::map<std::string, InnerBundleCloneInfo> &cloneInfos = uerInfo.second.cloneInfos;
+        for (const auto &cloneInfoPair : cloneInfos) {
+            Security::AccessToken::AccessTokenIDEx cloneAccessTokenIdEx;
+            cloneAccessTokenIdEx.tokenIDEx = cloneInfoPair.second.accessTokenIdEx;
+            if (BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo) != ERR_OK) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
+                return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+            }
+            if (needUpdate) {
+                newInfo.SetAccessTokenIdExWithAppIndex(cloneAccessTokenIdEx,
+                    uerInfo.second.bundleUserInfo.userId, cloneInfoPair.second.appIndex);
+            }
         }
     }
     if (needUpdate && !dataMgr_->UpdateInnerBundleInfo(newInfo)) {

@@ -855,7 +855,7 @@ public:
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
-        std::vector<int64_t> &bundleStats, int32_t appIndex = 0) override;
+        std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
 
@@ -1079,6 +1079,7 @@ private:
     bool CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex);
     bool CheckCanSetEnable(const std::string &bundleName);
     bool IsAppLinking(int32_t flags) const;
+    std::string GetCallerName();
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

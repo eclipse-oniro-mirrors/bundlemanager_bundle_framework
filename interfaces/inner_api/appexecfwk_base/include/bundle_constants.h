@@ -79,6 +79,13 @@ enum class AppType {
     THIRD_PARTY_APP,
 };
 
+enum NoGetBundleStatsFlag : uint32_t {
+    GET_BUNDLE_WITH_ALL_SIZE = 0x00000000,
+    GET_BUNDLE_WITHOUT_INSTALL_SIZE = 0x00000001,
+    GET_BUNDLE_WITHOUT_DATA_SIZE = 0x00000002,
+    GET_BUNDLE_WITHOUT_CACHE_SIZE = 0x00000004,
+};
+
 constexpr const char* ACTION_HOME = "action.system.home";
 constexpr const char* WANT_ACTION_HOME = "ohos.want.action.home";
 constexpr const char* ENTITY_HOME = "entity.system.home";

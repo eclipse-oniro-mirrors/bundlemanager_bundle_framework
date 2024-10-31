@@ -1292,6 +1292,58 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallForExistPreBundle_0500, Funct
 }
 
 /**
+ * @tc.number: IsHapPathExist_0010
+ * @tc.name: IsHapPathExist
+ * @tc.desc: test IsHapPathExist
+ */
+HWTEST_F(BmsEventHandlerTest, IsHapPathExist_0010, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        BundleInfo bundleInfo;
+        bool ret = handler->IsHapPathExist(bundleInfo);
+        EXPECT_FALSE(ret);
+        HapModuleInfo moduleInfo_1;
+        moduleInfo_1.hapPath = "/data/app/el1/bundle/public/xxx.hap";
+        bundleInfo.hapModuleInfos.emplace_back(moduleInfo_1);
+        ret = handler->IsHapPathExist(bundleInfo);
+        EXPECT_FALSE(ret);
+        bundleInfo.hapModuleInfos.clear();
+        moduleInfo_1.hapPath = "/system/app/xxx.hap";
+        bundleInfo.hapModuleInfos.emplace_back(moduleInfo_1);
+        ret = handler->IsHapPathExist(bundleInfo);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: IsHspPathExist_0010
+ * @tc.name: IsHspPathExist
+ * @tc.desc: test IsHspPathExist
+ */
+HWTEST_F(BmsEventHandlerTest, IsHspPathExist_0010, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        InnerBundleInfo bundleInfo;
+        bool ret = handler->IsHspPathExist(bundleInfo);
+        EXPECT_FALSE(ret);
+        InnerModuleInfo moduleInfo_1;
+        moduleInfo_1.hapPath = "/data/app/el1/bundle/public/xxx.hsp";
+        bundleInfo.innerModuleInfos_["test"] = moduleInfo_1;
+        ret = handler->IsHspPathExist(bundleInfo);
+        EXPECT_FALSE(ret);
+        bundleInfo.innerModuleInfos_.clear();
+        moduleInfo_1.hapPath = "/system/app/xxx.hap";
+        bundleInfo.innerModuleInfos_["test"] = moduleInfo_1;
+        ret = handler->IsHspPathExist(bundleInfo);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
  * @tc.number: GetValueFromJson_0100
  * @tc.name: GetValueFromJson
  * @tc.desc: test GetValueFromJson

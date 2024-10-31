@@ -286,7 +286,8 @@ ErrCode InstalldProxy::CleanBundleDataDirByName(const std::string &bundleName, c
 }
 
 ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32_t userId,
-    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex)
+    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
+    const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -294,6 +295,18 @@ ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32
     INSTALLD_PARCEL_WRITE(data, Int32, userId);
     INSTALLD_PARCEL_WRITE(data, Int32, uid);
     INSTALLD_PARCEL_WRITE(data, Int32, appIndex);
+    INSTALLD_PARCEL_WRITE(data, Uint32, statFlag);
+    if (!data.WriteInt32(moduleNameList.size())) {
+        LOG_E(BMS_TAG_INSTALLD, "GetBundleStats failed: write module name count fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (size_t i = 0; i < moduleNameList.size(); i++) {
+        if (!data.WriteString(moduleNameList[i])) {
+            LOG_E(BMS_TAG_INSTALLD, "WriteParcelable moduleNames:[%{public}s] failed",
+                moduleNameList[i].c_str());
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_BUNDLE_STATS, data, reply, option);
@@ -903,6 +916,18 @@ ErrCode InstalldProxy::CreateExtensionDataDir(const CreateDirParam &createDirPar
     MessageParcel reply;
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::CREATE_EXTENSION_DATA_DIR, data, reply, option);
+}
+
+ErrCode InstalldProxy::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(originPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetPath));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::MOVE_HAP_TO_CODE_DIR, data, reply, option);
 }
 
 ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

@@ -338,6 +338,7 @@ void BundleInstallerHost::HandleUninstallAndRecoverMessage(MessageParcel &data)
         return;
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    installParam->preinstallSourceFlag = ApplicationInfoFlag::FLAG_RECOVER_INSTALLED;
     UninstallAndRecover(bundleName, *installParam, statusReceiver);
     LOG_D(BMS_TAG_INSTALLER, "handle UninstallAndRecover message finished");
 }

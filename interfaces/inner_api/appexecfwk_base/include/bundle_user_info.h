@@ -36,6 +36,8 @@ struct BundleUserInfo : public Parcelable {
     // element is moduleName_state
     std::vector<std::string> overlayModulesState;
 
+    std::string setEnabledCaller;
+
     bool IsInitialState() const;
     void Reset();
     bool ReadFromParcel(Parcel &parcel);

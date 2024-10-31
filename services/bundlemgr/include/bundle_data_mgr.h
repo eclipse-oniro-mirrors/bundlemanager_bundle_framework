@@ -454,7 +454,7 @@ public:
      * @return Returns result of the operation.
      */
     ErrCode SetApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
-        int32_t userId = Constants::UNSPECIFIED_USERID);
+        const std::string &caller, int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability to check.
@@ -771,7 +771,8 @@ public:
 #endif
 
     bool GetBundleStats(const std::string &bundleName,
-        const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex = 0) const;
+        const int32_t userId, std::vector<int64_t> &bundleStats,
+        const int32_t appIndex = 0, const uint32_t statFlag = 0) const;
     bool GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const;
     bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,

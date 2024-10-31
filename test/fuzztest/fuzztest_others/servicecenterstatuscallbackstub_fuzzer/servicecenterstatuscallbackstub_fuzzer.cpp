@@ -41,6 +41,10 @@ public:
     {
         return 0;
     }
+    virtual int32_t OnServiceCenterReceived(std::string installResultStr) override
+    {
+        return 0;
+    }
 };
 uint32_t GetU32Data(const char* ptr)
 {

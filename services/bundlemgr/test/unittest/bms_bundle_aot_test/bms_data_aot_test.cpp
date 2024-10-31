@@ -1466,7 +1466,9 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3700, Function | SmallTest | Level0)
 HWTEST_F(BmsAOTMgrTest, AOTHandler_3800, Function | SmallTest | Level0)
 {
     system::SetParameter(OTA_COMPILE_SWITCH, "on");
+    system::SetParameter(OTA_COMPILE_TIME, "0");
     AOTHandler::GetInstance().HandleOTACompile();
+    sleep(1);
     EXPECT_EQ(AOTHandler::GetInstance().OTACompileDeadline_, true);
 }
 

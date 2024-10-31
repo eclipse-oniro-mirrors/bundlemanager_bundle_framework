@@ -1542,7 +1542,10 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     if (appIndex > 0) {
         suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
     }
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+
+    std::vector<std::string> bundleEls = ServiceConstants::BUNDLE_EL;
+    bundleEls.push_back(ServiceConstants::DIR_EL5);
+    for (const auto &el : bundleEls) {
         std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el +
             ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + suffixName;
         rootDir.emplace_back(dataDir);
@@ -1652,7 +1655,7 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
-    
+
     if (!applicationInfo.userDataClearable) {
         APP_LOGE("can not clean dataFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
@@ -1883,19 +1886,13 @@ bool BundleMgrHostImpl::DumpBundleInfo(
 {
     APP_LOGD("DumpBundleInfo begin");
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-    if (userId == Constants::ALL_USERID) {
-        if (!GetBundleUserInfos(bundleName, innerBundleUserInfos)) {
-            APP_LOGE("get all userInfos in bundle(%{public}s) failed", bundleName.c_str());
-            return false;
-        }
-        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
-    } else {
-        InnerBundleUserInfo innerBundleUserInfo;
-        if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
-            APP_LOGI("get userInfo in bundle(%{public}s) failed", bundleName.c_str());
-        }
-        innerBundleUserInfos.emplace_back(innerBundleUserInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo) &&
+        !GetBundleUserInfo(bundleName, Constants::DEFAULT_USERID, innerBundleUserInfo)) {
+        APP_LOGE("get all userInfos in bundle(%{public}s) failed", bundleName.c_str());
+        return false;
     }
+    innerBundleUserInfos.emplace_back(innerBundleUserInfo);
 
     BundleInfo bundleInfo;
     if (!GetBundleInfo(bundleName,
@@ -2060,7 +2057,9 @@ ErrCode BundleMgrHostImpl::IsCloneApplicationEnabled(const std::string &bundleNa
 
 ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
-    APP_LOGI("SetApplicationEnabled param %{public}s  %{public}d %{public}d", bundleName.c_str(), isEnable, userId);
+    std::string caller = GetCallerName();
+    APP_LOGW_NOFUNC("SetApplicationEnabled %{public}s %{public}d %{public}d caller:%{public}s",
+        bundleName.c_str(), isEnable, userId, caller.c_str());
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
@@ -2070,7 +2069,7 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE)) {
         APP_LOGE("verify permission failed");
-        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0);
+        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0, caller);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (!CheckCanSetEnable(bundleName)) {
@@ -2080,18 +2079,18 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0);
+        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0, caller);
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
 
-    auto ret = dataMgr->SetApplicationEnabled(bundleName, 0, isEnable, userId);
+    auto ret = dataMgr->SetApplicationEnabled(bundleName, 0, isEnable, caller, userId);
     if (ret != ERR_OK) {
         APP_LOGE("Set application(%{public}s) enabled value faile", bundleName.c_str());
-        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0);
+        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0, caller);
         return ret;
     }
 
-    EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, 0);
+    EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, 0, caller);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
@@ -2115,15 +2114,16 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
 ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
     const std::string &bundleName, int32_t appIndex, bool isEnable, int32_t userId)
 {
-    APP_LOGI("SetCloneApplicationEnabled param %{public}s %{public}d %{public}d %{public}d",
-        bundleName.c_str(), appIndex, isEnable, userId);
+    std::string caller = GetCallerName();
+    APP_LOGW_NOFUNC("SetCloneApplicationEnabled param %{public}s %{public}d %{public}d %{public}d caller:%{public}s",
+        bundleName.c_str(), appIndex, isEnable, userId, caller.c_str());
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE)) {
         APP_LOGE("verify permission failed");
-        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex);
+        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
@@ -2133,18 +2133,17 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex);
+        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
-
-    auto ret = dataMgr->SetApplicationEnabled(bundleName, appIndex, isEnable, userId);
+    auto ret = dataMgr->SetApplicationEnabled(bundleName, appIndex, isEnable, caller, userId);
     if (ret != ERR_OK) {
         APP_LOGE("Set application(%{public}s) enabled value fail", bundleName.c_str());
-        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex);
+        EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex, caller);
         return ret;
     }
 
-    EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, appIndex);
+    EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, appIndex, caller);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
@@ -2199,6 +2198,9 @@ ErrCode BundleMgrHostImpl::IsCloneAbilityEnabled(const AbilityInfo &abilityInfo,
 
 ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
 {
+    std::string caller = GetCallerName();
+    APP_LOGW_NOFUNC("SetAbilityEnabled %{public}s %{public}d %{public}d caller:%{public}s",
+        abilityInfo.name.c_str(), isEnabled, userId, caller.c_str());
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
@@ -2209,7 +2211,7 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE)) {
         APP_LOGE("verify permission failed");
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
-            userId, isEnabled, 0);
+            userId, isEnabled, 0, caller);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (!CheckCanSetEnable(abilityInfo.bundleName)) {
@@ -2220,17 +2222,17 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
-            userId, isEnabled, 0);
+            userId, isEnabled, 0, caller);
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
     auto ret = dataMgr->SetAbilityEnabled(abilityInfo, 0, isEnabled, userId);
     if (ret != ERR_OK) {
         APP_LOGE("Set ability(%{public}s) enabled value failed", abilityInfo.bundleName.c_str());
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
-            userId, isEnabled, 0);
+            userId, isEnabled, 0, caller);
         return ret;
     }
-    EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, 0);
+    EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, 0, caller);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
@@ -2251,7 +2253,9 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
 ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo,
     int32_t appIndex, bool isEnabled, int32_t userId)
 {
-    APP_LOGD("start SetCloneAbilityEnabled");
+    std::string caller = GetCallerName();
+    APP_LOGW_NOFUNC("SetCloneAbilityEnabled %{public}s %{public}d %{public}d %{public}d caller:%{public}s",
+        abilityInfo.name.c_str(), appIndex, isEnabled, userId, caller.c_str());
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -2259,7 +2263,7 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE)) {
         APP_LOGE("verify permission failed");
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
-            userId, isEnabled, appIndex);
+            userId, isEnabled, appIndex, caller);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
@@ -2269,17 +2273,18 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
-            userId, isEnabled, appIndex);
+            userId, isEnabled, appIndex, caller);
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
     auto ret = dataMgr->SetAbilityEnabled(abilityInfo, appIndex, isEnabled, userId);
     if (ret != ERR_OK) {
         APP_LOGE("Set ability(%{public}s) enabled value failed", abilityInfo.bundleName.c_str());
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
-            userId, isEnabled, appIndex);
+            userId, isEnabled, appIndex, caller);
         return ret;
     }
-    EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, appIndex);
+    EventReport::SendComponentStateSysEvent(
+        abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, appIndex, caller);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
@@ -3057,7 +3062,7 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
 }
 
 bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t userId,
-    std::vector<int64_t> &bundleStats, int32_t appIndex)
+    std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
@@ -3083,7 +3088,7 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGI("ret : %{public}d", ret);
         return ret == ERR_OK;
     }
-    return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex);
+    return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex, statFlag);
 }
 
 bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
@@ -4102,13 +4107,14 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
         return resCode;
     }
     AbilityInfo mainAbilityInfo;
+    int32_t currentActiveUserId = AccountHelper::GetCurrentActiveUserId();
     innerBundleInfo.GetMainAbilityInfo(mainAbilityInfo);
     NotifyBundleEvents installRes = {
         .isModuleUpdate = true,
         .type = NotifyType::UPDATE,
         .resultCode = ERR_OK,
-        .accessTokenId = innerBundleInfo.GetAccessTokenId(innerBundleInfo.GetUserId()),
-        .uid = innerBundleInfo.GetUid(innerBundleInfo.GetUserId()),
+        .accessTokenId = innerBundleInfo.GetAccessTokenId(currentActiveUserId),
+        .uid = innerBundleInfo.GetUid(currentActiveUserId),
         .bundleType = static_cast<int32_t>(innerBundleInfo.GetApplicationBundleType()),
         .bundleName = innerBundleInfo.GetBundleName(),
         .modulePackage = innerBundleInfo.GetModuleNameVec()[0],
@@ -4524,6 +4530,22 @@ ErrCode BundleMgrHostImpl::GetCompatibleDeviceType(const std::string &bundleName
     deviceType = bmsExtensionDataMgr.GetCompatibleDeviceType(bundleName);
     APP_LOGI("deviceType : %{public}s", deviceType.c_str());
     return ERR_OK;
+}
+
+std::string BundleMgrHostImpl::GetCallerName()
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return Constants::EMPTY_STRING;
+    }
+    std::string callerName;
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    auto ret = dataMgr->GetNameForUid(uid, callerName);
+    if (ret != ERR_OK) {
+        callerName = std::to_string(uid);
+    }
+    return callerName;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

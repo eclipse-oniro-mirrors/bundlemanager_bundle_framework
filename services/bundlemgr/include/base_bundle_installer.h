@@ -529,6 +529,9 @@ private:
     std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     ErrCode UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo);
     ErrCode SetDirApl(const InnerBundleInfo &info);
+    ErrCode SetDirApl(
+        const std::string &bundleName, const std::string &CloneBundleName, const std::string &appPrivilegeLevel,
+        bool isPreInstallApp, const std::string &appProvisionType);
     /**
      * @brief Check to set isRemovable true when install.
      * @param newInfos Indicates all innerBundleInfo for all haps need to be installed.
@@ -631,7 +634,7 @@ private:
         uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
     void ProcessAOT(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     void RemoveOldHapIfOTA(const InstallParam &installParam,
-        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo) const;
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
     ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
     ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
     ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);

@@ -39,6 +39,12 @@ public:
      * @param installResult the json of InstallResult
      */
     virtual int32_t OnDelayedHeartbeat(std::string installResult) = 0;
+
+    /**
+     * @brief Executed when a service callback
+     * @param installResultStr The json string of InstallResult
+     */
+    virtual int32_t OnServiceCenterReceived(std::string installResultStr) = 0;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

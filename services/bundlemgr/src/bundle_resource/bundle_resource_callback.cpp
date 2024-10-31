@@ -86,7 +86,7 @@ bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language,
 }
 
 bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
-    const int32_t themeId, const uint32_t type)
+    const int32_t themeId, const int32_t themeIcon, const uint32_t type)
 {
     APP_LOGI("start, theme:%{public}s, themeId:%{public}d", theme.c_str(), themeId);
     if (theme.empty()) {
@@ -109,8 +109,8 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
         return false;
     }
 #ifdef GLOBAL_RESMGR_ENABLE
-    if (!SetThemeIdForThemeChanged(themeId)) {
-        APP_LOGE("set theme id failed, themeId %{public}d", themeId);
+    if (!SetThemeParamForThemeChanged(themeId, themeIcon)) {
+        APP_LOGE("set theme param failed, themeId %{public}d themeIcon %{public}d", themeId, themeIcon);
     }
 #endif
 
@@ -166,7 +166,7 @@ bool BundleResourceCallback::OnOverlayStatusChanged(
     return true;
 }
 
-bool BundleResourceCallback::SetThemeIdForThemeChanged(const int32_t themeId)
+bool BundleResourceCallback::SetThemeParamForThemeChanged(const int32_t themeId, const int32_t themeIcon)
 {
     if (themeId <= 0) {
         return false;
@@ -174,7 +174,7 @@ bool BundleResourceCallback::SetThemeIdForThemeChanged(const int32_t themeId)
 #ifdef GLOBAL_RESMGR_ENABLE
     auto resourcePtr = std::shared_ptr<Global::Resource::ResourceManager>(Global::Resource::CreateResourceManager());
     if (resourcePtr == nullptr) {
-        APP_LOGE("resource is nullptr, themeId %{public}d", themeId);
+        APP_LOGE("resource is nullptr, themeId %{public}d themeIcon %{public}d", themeId, themeIcon);
         return false;
     }
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
@@ -183,18 +183,21 @@ bool BundleResourceCallback::SetThemeIdForThemeChanged(const int32_t themeId)
         currentUserId = Constants::START_USERID;
     }
     resourcePtr->userId = currentUserId;
-    APP_LOGI("start set themeId %{public}d userId %{public}d", themeId, currentUserId);
+    APP_LOGI("start set themeId %{public}d userId %{public}d themeIcon %{public}d",
+        themeId, currentUserId, themeIcon);
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
     if (resConfig == nullptr) {
-        APP_LOGE("resConfig is nullptr, themeId %{public}d", themeId);
+        APP_LOGE("resConfig is nullptr, themeId %{public}d themeIcon %{public}d", themeId, themeIcon);
         return false;
     }
     resConfig->SetThemeId(themeId);
+    resConfig->SetThemeIcon(themeIcon > 0 ? true : false);
     Global::Resource::RState ret = resourcePtr->UpdateResConfig(*resConfig); // no need to process ret
     if (ret != Global::Resource::RState::SUCCESS) {
-        APP_LOGW("UpdateResConfig ret %{public}d, themeId %{public}d", static_cast<int32_t>(ret), themeId);
+        APP_LOGW("UpdateResConfig ret %{public}d, themeId %{public}d, themeIcon %{public}d",
+            static_cast<int32_t>(ret), themeId, themeIcon);
     }
-    APP_LOGI("end set themeId %{public}d", themeId);
+    APP_LOGI("end set themeId %{public}d themeIcon %{public}d", themeId, themeIcon);
 #endif
     return true;
 }

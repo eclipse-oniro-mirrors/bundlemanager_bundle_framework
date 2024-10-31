@@ -165,14 +165,15 @@ ErrCode InstalldClient::CleanBundleDataDirByName(
 }
 
 ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int32_t userId,
-    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex)
+    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
+    const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-
-    return CallService(&IInstalld::GetBundleStats, bundleName, userId, bundleStats, uid, appIndex);
+    return CallService(&IInstalld::GetBundleStats, bundleName, userId, bundleStats,
+        uid, appIndex, statFlag, moduleNameList);
 }
 
 ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,
@@ -216,28 +217,25 @@ void InstalldClient::ResetInstalldProxy()
     installdProxy_ = nullptr;
 }
 
-bool InstalldClient::GetInstalldProxy()
+sptr<IInstalld> InstalldClient::GetInstalldProxy()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (installdProxy_ == nullptr) {
-        APP_LOGD("try to get installd proxy");
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (installdProxy_ == nullptr) {
-            sptr<IInstalld> tempProxy =
-                iface_cast<IInstalld>(SystemAbilityHelper::GetSystemAbility(INSTALLD_SERVICE_ID));
-            if ((tempProxy == nullptr) || (tempProxy->AsObject() == nullptr)) {
-                APP_LOGE("the installd proxy or remote object is null");
-                return false;
-            }
-            recipient_ = new (std::nothrow) InstalldDeathRecipient();
-            if (recipient_ == nullptr) {
-                APP_LOGE("the death recipient is nullptr");
-                return false;
-            }
-            tempProxy->AsObject()->AddDeathRecipient(recipient_);
-            installdProxy_ = tempProxy;
+        sptr<IInstalld> tempProxy =
+            iface_cast<IInstalld>(SystemAbilityHelper::GetSystemAbility(INSTALLD_SERVICE_ID));
+        if ((tempProxy == nullptr) || (tempProxy->AsObject() == nullptr)) {
+            APP_LOGE("the installd proxy or remote object is null");
+            return nullptr;
         }
+        recipient_ = new (std::nothrow) InstalldDeathRecipient();
+        if (recipient_ == nullptr) {
+            APP_LOGE("the death recipient is nullptr");
+            return nullptr;
+        }
+        tempProxy->AsObject()->AddDeathRecipient(recipient_);
+        installdProxy_ = tempProxy;
     }
-    return true;
+    return installdProxy_;
 }
 
 ErrCode InstalldClient::ScanDir(
@@ -465,7 +463,7 @@ ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &bundleName, con
 
 bool InstalldClient::StartInstalldService()
 {
-    return GetInstalldProxy();
+    return GetInstalldProxy() != nullptr;
 }
 
 ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
@@ -481,6 +479,16 @@ ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
 int64_t InstalldClient::GetDiskUsage(const std::string& dir, bool isRealPath)
 {
     return 0;
+}
+
+ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    if (originPath.empty() || targetPath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::MoveHapToCodeDir, originPath, targetPath);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
