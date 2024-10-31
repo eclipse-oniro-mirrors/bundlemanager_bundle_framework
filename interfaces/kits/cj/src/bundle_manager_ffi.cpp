@@ -44,6 +44,9 @@ std::vector<std::string> CharPtrToVector(char** charPtr, int32_t size)
 
 CArrString VectorToCArrString(std::vector<std::string> &vec)
 {
+    if (vec.size() == 0) {
+        return {nullptr, 0};
+    }
     char** result = new char* [vec.size()];
     if (result == nullptr) {
         APP_LOGE("VectorToCArrString malloc failed");
