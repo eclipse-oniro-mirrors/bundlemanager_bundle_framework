@@ -360,7 +360,9 @@ void InnerEventReport::InnerSendBundleStateChangeExceptionEvent(const EventInfo&
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
-        TYPE, type);
+        TYPE, type,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
 void InnerEventReport::InnerSendBundleCleanCacheExceptionEvent(const EventInfo& eventInfo)
@@ -490,7 +492,9 @@ void InnerEventReport::InnerSendBundleStateChangeEvent(const EventInfo& eventInf
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
         TYPE, type,
-        EVENT_PARAM_STATE, state);
+        EVENT_PARAM_STATE, state,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
 void InnerEventReport::InnerSendBundleCleanCacheEvent(const EventInfo& eventInfo)

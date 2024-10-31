@@ -178,6 +178,7 @@ constexpr const char* API_RELEASE_TYPE_CANARY = "Canary";
 const std::set<std::string> ALLOW_MULTI_ICON_BUNDLE = {
     "com.ohos.contacts"
 };
+constexpr const char* CALLER_NAME_BMS = "bms";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS
