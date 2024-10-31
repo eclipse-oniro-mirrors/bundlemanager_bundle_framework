@@ -19,6 +19,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_manager.h"
 #include "bundle_mgr_service.h"
+#include "hitrace_meter.h"
 #include "xcollie_helper.h"
 #include "scope_guard.h"
 
@@ -29,6 +30,7 @@ const std::string FUNCATION_GET_BUNDLE_RESOURCE_INFO = "BundleResourceHostImpl::
 ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo, const int32_t appIndex)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start, bundleName: %{public}s, flags: %{public}u", bundleName.c_str(), flags);
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_BUNDLE_RESOURCE_INFO);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });

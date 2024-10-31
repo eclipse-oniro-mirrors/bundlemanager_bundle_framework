@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <atomic>
+#include <cstdlib>
 #include "rdb_data_manager.h"
 
 #include "app_log_wrapper.h"
@@ -31,6 +32,8 @@ constexpr int16_t WRITE_TIMEOUT = 300; // 300s
 constexpr int8_t CLOSE_TIME = 20; // delay 20s stop rdbStore
 constexpr const char* BMS_BACK_UP_RDB_NAME = "bms-backup.db";
 constexpr int32_t OPERATION_TYPE_OF_INSUFFICIENT_DISK = 3;
+static std::atomic<int64_t> g_lastReportTime = 0;
+constexpr int64_t REPORTING_INTERVAL = 1000 * 60 * 30; // 30min
 }
 
 std::mutex RdbDataManager::restoreRdbMutex_;
@@ -106,11 +109,26 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
 
 void RdbDataManager::CheckSystemSizeAndHisysEvent(const std::string &path, const std::string &fileName)
 {
-    bool flag = BundleUtil::CheckSystemSizeAndHisysEvent(path, fileName);
-    if (flag) {
+    if (!CheckIsSatisfyTime()) {
+        APP_LOGD("not satisfy time");
+        return;
+    }
+    bool isInsufficientSpace = BundleUtil::CheckSystemSizeAndHisysEvent(path, fileName);
+    if (isInsufficientSpace) {
         APP_LOGW("space not enough %{public}s", fileName.c_str());
         EventReport::SendDiskSpaceEvent(fileName, 0, OPERATION_TYPE_OF_INSUFFICIENT_DISK);
     }
+}
+
+bool RdbDataManager::CheckIsSatisfyTime()
+{
+    int64_t now = BundleUtil::GetCurrentTimeMs();
+    if (abs(now - g_lastReportTime) < REPORTING_INTERVAL) {
+        APP_LOGD("time is not up yet");
+        return false;
+    }
+    g_lastReportTime = now;
+    return true;
 }
 
 void RdbDataManager::BackupRdb()
