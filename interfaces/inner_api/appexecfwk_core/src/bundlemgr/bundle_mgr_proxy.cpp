@@ -5341,5 +5341,31 @@ ErrCode BundleMgrProxy::IsBundleInstalled(const std::string &bundleName, int32_t
     isInstalled = reply.ReadBool();
     return ERR_OK;
 }
+
+ErrCode BundleMgrProxy::GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("Write bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_COMPATIBLED_DEVICE_TYPE, data, reply)) {
+        APP_LOGE("Fail to IsBundleInstalled from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        deviceType = reply.ReadString();
+    }
+    APP_LOGD("GetCompatibleDeviceType: ret: %{public}d, device type: %{public}s", ret, deviceType.c_str());
+    return ret;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

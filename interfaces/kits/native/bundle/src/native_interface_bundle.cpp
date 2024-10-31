@@ -248,3 +248,29 @@ OH_NativeBundle_ElementName OH_NativeBundle_GetMainElementName()
     }
     return elementName;
 }
+
+char* OH_NativeBundle_GetCompatibleDeviceType()
+{
+    OHOS::AppExecFwk::BundleMgrProxyNative bundleMgrProxyNative;
+    std::string deviceType;
+    if (!bundleMgrProxyNative.GetCompatibleDeviceTypeNative(deviceType)) {
+        APP_LOGE("can not get compatible device type");
+        return nullptr;
+    }
+    if (deviceType.size() + 1 > CHAR_MAX_LENGTH) {
+        APP_LOGE("failed due to the length of device type is too long");
+        return nullptr;
+    }
+    char* deviceTypeC = static_cast<char*>(malloc(deviceType.size() + 1));
+    if (deviceTypeC == nullptr) {
+        APP_LOGE("failed due to malloc error");
+        return nullptr;
+    }
+    if (strcpy_s(deviceTypeC, deviceType.size() + 1, deviceType.c_str()) != EOK) {
+        APP_LOGE("failed due to strcpy_s error");
+        free(deviceTypeC);
+        return nullptr;
+    }
+    APP_LOGI("OH_NativeBundle_GetCompatibleDeviceType success");
+    return deviceTypeC;
+}

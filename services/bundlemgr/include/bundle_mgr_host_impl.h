@@ -1036,6 +1036,9 @@ public:
     virtual ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId,
         int32_t appIndex, bool &isInstalled) override;
 
+    virtual ErrCode GetCompatibleDeviceTypeNative(std::string &deviceType) override;
+    virtual ErrCode GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType) override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK

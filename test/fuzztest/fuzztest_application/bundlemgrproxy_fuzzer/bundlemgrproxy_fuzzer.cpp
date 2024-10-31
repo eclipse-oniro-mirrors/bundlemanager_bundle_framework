@@ -330,6 +330,8 @@ namespace OHOS {
         bundleMgrProxy.GetAllDesktopShortcutInfo(reinterpret_cast<uintptr_t>(data), shortcutInfos);
         bundleMgrProxy.GetOdidByBundleName(bundleName, odid);
         bundleMgrProxy.GetBundleInfosForContinuation(0, bundleInfos, reinterpret_cast<uintptr_t>(data));
+        std::string deviceType;
+        bundleMgrProxy.GetCompatibleDeviceType(bundleName, deviceType);
         return true;
     }
 }

@@ -20,6 +20,7 @@
 #include "bms_extension_data_mgr.h"
 #include "bms_extension_profile.h"
 #include "bundle_mgr_ext_register.h"
+#include "parameter.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -552,6 +553,21 @@ bool BmsExtensionDataMgr::DetermineCloneNum(
         return false;
     }
     return bundleMgrExtPtr->DetermineCloneNum(bundleName, appIdentifier, cloneNum);
+}
+
+std::string BmsExtensionDataMgr::GetCompatibleDeviceType(const std::string &bundleName)
+{
+    if ((Init() == ERR_OK) && handler_) {
+        auto bundleMgrExtPtr =
+            BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+        if (bundleMgrExtPtr) {
+            return bundleMgrExtPtr->GetCompatibleDeviceType(bundleName);
+        }
+        APP_LOGE("create class: %{public}s failed", bmsExtension_.bmsExtensionBundleMgr.extensionName.c_str());
+        return "";
+    }
+    APP_LOGW("access bms-extension failed");
+    return GetDeviceType();
 }
 } // AppExecFwk
 } // OHOS

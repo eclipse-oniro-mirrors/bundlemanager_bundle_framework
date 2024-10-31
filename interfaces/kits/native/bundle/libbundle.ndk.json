@@ -14,5 +14,9 @@
     {
       "first_introduced": "13",
       "name": "OH_NativeBundle_GetMainElementName"
+    },
+    {
+      "first_introduced": "14",
+      "name": "OH_NativeBundle_GetCompatibleDeviceType"
     }
 ]
