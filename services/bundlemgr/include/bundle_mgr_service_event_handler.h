@@ -517,6 +517,8 @@ private:
     bool GetSystemParameter(const std::string &key, std::string &value);
     void SaveSystemFingerprint();
     void HandlePreInstallException();
+    static bool IsHapPathExist(const BundleInfo &bundleInfo);
+    static bool IsHspPathExist(const InnerBundleInfo &innerBundleInfo);
 
     bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);
