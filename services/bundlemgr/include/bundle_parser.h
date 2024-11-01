@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,6 +58,13 @@ public:
      */
     ErrCode ParsePreInstallConfig(
         const std::string &configFile, std::set<PreScanInfo> &scanInfos) const;
+    /**
+     * @brief Parse scanAppInfos by the configFile.
+     * @param configFile Indicates the path of configFile.
+     * @param scanInfos Indicates the obtained InnerBundleInfo object.
+     * @return Returns ERR_OK if the bundle successfully parsed; returns ErrCode otherwise.
+     */
+    ErrCode ParsePreAppListConfig(const std::string &configFile, std::set<PreScanInfo> &scanAppInfos) const;
     /**
      * @brief Parse bundleNames by the configFile.
      * @param configFile Indicates the path of configFile.

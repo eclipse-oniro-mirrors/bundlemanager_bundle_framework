@@ -3110,4 +3110,34 @@ HWTEST_F(BmsBundleParserTest, BundleParser_2100, Function | MediumTest | Level1)
     auto ret = bundleParser.CheckRouterData(data);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: BundleParser_2200
+ * @tc.name: Test ParsePreAppListConfig
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_2200, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string configFile;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode ret = bundleParser.ParsePreAppListConfig(configFile, scanInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: BundleParser_2300
+ * @tc.name: Test ParsePreAppListConfig
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_2300, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string configFile = "config.cfg";
+    std::set<PreScanInfo> scanInfos;
+    ErrCode ret = bundleParser.ParsePreAppListConfig(configFile, scanInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+}
 } // OHOS

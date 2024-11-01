@@ -33,6 +33,7 @@ namespace OHOS {
 namespace AppExecFwk {
 std::atomic_uint g_installedHapNum = 0;
 constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
+constexpr const char* DATA_PRELOAD_APP = "/data/preload/app/";
 constexpr uint8_t FACTOR = 8;
 constexpr uint8_t INTERVAL = 6;
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold";
@@ -157,6 +158,11 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         installParam.isPreInstallApp = !info.GetIsNonPreDriverApp();
         installParam.installFlag = InstallFlag::NORMAL;
         installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
+        if (!info.GetBundlePaths().empty() && (info.GetBundlePaths().front().find(DATA_PRELOAD_APP) == 0) &&
+            userId != Constants::START_USERID) {
+            APP_LOGW("data preload app only install in 100 ,bundleName: %{public}s", info.GetBundleName().c_str());
+            continue;
+        }
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
         userReceiverImpl->SetBundlePromise(bundlePromise);

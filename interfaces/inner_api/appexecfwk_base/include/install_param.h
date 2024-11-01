@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -91,6 +91,8 @@ struct InstallParam : public Parcelable {
     std::string specifiedDistributionType = "";
     // Indicates the additional Info
     std::string additionalInfo = "";
+    bool isDataPreloadHap = false;
+    std::string appIdentifier;
     // utilizing for code-signature
     std::map<std::string, std::string> verifyCodeParams;
     ApplicationInfoFlag preinstallSourceFlag = ApplicationInfoFlag::FLAG_INSTALLED;

@@ -72,6 +72,7 @@ namespace AppExecFwk {
 using namespace OHOS::Security;
 namespace {
 constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
+constexpr const char* DATA_PRELOAD_APP = "/data/preload/app/";
 constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* LOG = "log";
@@ -101,6 +102,7 @@ constexpr const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 constexpr const char* IS_ROOT_MODE_PARAM = "const.debuggable";
 constexpr const char* BMS_ACTIVATION_LOCK = "persist.bms.activation-lock";
 constexpr const char* BMS_TRUE = "true";
+constexpr const char* BMS_FALSE = "false";
 constexpr int8_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
 
 const std::set<std::string> SINGLETON_WHITE_LIST = {
@@ -203,6 +205,11 @@ ErrCode BaseBundleInstaller::InstallBundle(
 
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessBundleInstall(bundlePaths, installParam, appType, uid);
+    if (result != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON && result != ERR_OK &&
+        installParam.isDataPreloadHap && GetUserId(installParam.userId) == Constants::DEFAULT_USERID) {
+        LOG_E(BMS_TAG_INSTALLER, "set parameter BMS_DATA_PRELOAD false");
+        OHOS::system::SetParameter(ServiceConstants::BMS_DATA_PRELOAD, BMS_FALSE);
+    }
     if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty()) {
         NotifyBundleEvents installRes = {
             .isModuleUpdate = isModuleUpdate_,
@@ -1151,6 +1158,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
+    if (userId_ == Constants::DEFAULT_USERID && installParam.isDataPreloadHap &&
+        installParam.appIdentifier != appIdentifier_) {
+        result = ERR_APPEXECFWK_INSTALL_VERIFICATION_FAILED;
+    }
+    CHECK_RESULT(result, "check DataPreloadHap appIdentifier failed %{public}d");
     // washing machine judge
     if (!installParam.isPreInstallApp) {
         for (const auto &infoIter: newInfos) {
@@ -1257,6 +1269,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         result = SaveHapToInstallPath(newInfos);
         CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
     }
+
+    if (installParam.isDataPreloadHap) {
+        // Verify Code Signature For Data Preload Hap
+        for (const auto &preinstalledAppPath : bundlePaths) {
+            VerifyCodeSignatureForHap(newInfos, preinstalledAppPath, preinstalledAppPath);
+        }
+    }
     // delete old native library path
     if (NeedDeleteOldNativeLib(newInfos, oldInfo)) {
         LOG_I(BMS_TAG_INSTALLER, "Delete old library");
@@ -1333,6 +1352,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     groupDirGuard.Dismiss();
     extensionDirGuard.Dismiss();
     ScreenLockFileProtectionDirGuard.Dismiss();
+    if (isAppExist_) {
+        RemoveDataPreloadHapFiles(bundleName_);
+    }
     RemoveOldGroupDirs();
     RemoveOldExtensionDirs();
     /* process quick fix when install new moudle */
@@ -1630,6 +1652,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 #endif
     LOG_D(BMS_TAG_INSTALLER, "finish to process %{public}s bundle uninstall", bundleName.c_str());
+    RemoveDataPreloadHapFiles(bundleName);
 
     // remove drive so file
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
@@ -1794,6 +1817,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 return result;
             }
 
+            RemoveDataPreloadHapFiles(bundleName);
             if (oldInfo.IsPreInstallApp()) {
                 LOG_I(BMS_TAG_INSTALLER, "%{public}s detected, Marking as uninstalled", bundleName.c_str());
                 MarkPreInstallState(bundleName, true);
@@ -1981,7 +2005,13 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     innerInstallParam.isPreInstallApp = true;
     innerInstallParam.removable = preInstallBundleInfo.IsRemovable();
     innerInstallParam.copyHapToInstallPath = false;
-    return ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid);
+    innerInstallParam.isDataPreloadHap = IsDataPreloadHap(pathVec.front());
+    ErrCode resultCode = ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid);
+    if (resultCode != ERR_OK && innerInstallParam.isDataPreloadHap) {
+        LOG_E(BMS_TAG_INSTALLER, "set parameter BMS_DATA_PRELOAD false");
+        OHOS::system::SetParameter(ServiceConstants::BMS_DATA_PRELOAD, BMS_FALSE);
+    }
+    return resultCode;
 }
 
 ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData)
@@ -3319,6 +3349,45 @@ ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int
         .append(ServiceConstants::PATH_SEPARATOR).append(bundleName);
     LOG_D(BMS_TAG_INSTALLER, "DeleteArkProfile %{public}s", arkProfilePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
+}
+
+bool BaseBundleInstaller::RemoveDataPreloadHapFiles(const std::string &bundleName) const
+{
+    if (dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "null dataMgr_");
+        return false;
+    }
+
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(bundleName);
+    if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        LOG_I(BMS_TAG_INSTALLER, "no PreInstallBundleInfo(%{public}s) in db", bundleName.c_str());
+        return true;
+    }
+    if (preInstallBundleInfo.GetBundlePaths().empty()) {
+        LOG_W(BMS_TAG_INSTALLER, "path is empty , bundleName: %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    auto preinstalledAppPath = preInstallBundleInfo.GetBundlePaths().front();
+    LOG_D(BMS_TAG_INSTALLER, "removeDataPreloadHapFiles %{public}s", preinstalledAppPath.c_str());
+    if (IsDataPreloadHap(preinstalledAppPath)) {
+        std::filesystem::path apFilePath(preinstalledAppPath);
+        std::string delDir = apFilePath.parent_path().string();
+        if (InstalldClient::GetInstance()->RemoveDir(delDir) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "removeDir failed :%{public}s", delDir.c_str());
+        }
+        if (!dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+            LOG_E(BMS_TAG_INSTALLER, "deletePreInfoInDb bundle %{public}s failed", bundleName.c_str());
+        }
+    }
+
+    return true;
+}
+
+bool BaseBundleInstaller::IsDataPreloadHap(const std::string &path) const
+{
+    return path.find(DATA_PRELOAD_APP) == 0;
 }
 
 ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::string &modulePath)
@@ -5282,7 +5351,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
-    codeSignatureParam.isPreInstalledBundle = info.IsPreInstallApp();
+    codeSignatureParam.isPreInstalledBundle = IsDataPreloadHap(modulePath_) ? false : info.IsPreInstallApp();
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
@@ -5317,7 +5386,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
-    codeSignatureParam.isPreInstalledBundle = (iter->second).IsPreInstallApp();
+    codeSignatureParam.isPreInstalledBundle = IsDataPreloadHap(realHapPath) ? false : (iter->second).IsPreInstallApp();
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
