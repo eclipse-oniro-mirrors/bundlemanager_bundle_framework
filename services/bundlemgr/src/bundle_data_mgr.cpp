@@ -396,7 +396,7 @@ bool BundleDataMgr::AddNewModuleInfo(
 }
 
 bool BundleDataMgr::RemoveModuleInfo(
-    const std::string &bundleName, const std::string &modulePackage, InnerBundleInfo &oldInfo)
+    const std::string &bundleName, const std::string &modulePackage, InnerBundleInfo &oldInfo, bool needSaveStorage)
 {
     APP_LOGD("remove module info:%{public}s/%{public}s", bundleName.c_str(), modulePackage.c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -443,6 +443,10 @@ bool BundleDataMgr::RemoveModuleInfo(
         oldInfo.SetTsanEnabled(oldInfo.IsTsanEnabled());
         oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
         oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
+        if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(oldInfo)) {
+            APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
+            return false;
+        }
         DeleteRouterInfo(bundleName, modulePackage);
         bundleInfos_.at(bundleName) = oldInfo;
         APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());

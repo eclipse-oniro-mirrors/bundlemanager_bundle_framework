@@ -4361,7 +4361,7 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
             std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
             driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(package), false);
 
-            if (!dataMgr_->RemoveModuleInfo(bundleName_, package, info)) {
+            if (!dataMgr_->RemoveModuleInfo(bundleName_, package, info, false)) {
                 LOG_E(BMS_TAG_INSTALLER, "RemoveModuleInfo failed");
                 return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
             }
