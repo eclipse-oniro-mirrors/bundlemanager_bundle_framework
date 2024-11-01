@@ -112,7 +112,7 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
     if (mark.status == InstallExceptionStatus::INSTALL_FINISH) {
         return;
     }
-    APP_LOGI_NOFUNC("%{public}s status is %{public}d", info.GetBundleName().c_str(), mark.status);
+    APP_LOGI_NOFUNC("handle -n %{public}s status is %{public}d", info.GetBundleName().c_str(), mark.status);
     std::string appCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
         ServiceConstants::PATH_SEPARATOR + info.GetBundleName();
     auto moduleDir = appCodePath + ServiceConstants::PATH_SEPARATOR + mark.packageName;

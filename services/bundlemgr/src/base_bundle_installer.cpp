@@ -2231,10 +2231,6 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
     if (isAppExist_) {
         oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_NEW_START);
     }
-    if (!dataMgr_->SaveInnerBundleInfo(oldInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "save install mark failed");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
     std::string modulePath = newInfo.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_;
     result = ExtractModule(newInfo, modulePath);
     if (result != ERR_OK) {
@@ -2342,10 +2338,6 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     }
 
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_EXISTED_START);
-    if (!dataMgr_->SaveInnerBundleInfo(oldInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "save install mark failed");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
 
     result = CheckArkProfileDir(newInfo, oldInfo);
     CHECK_RESULT(result, "CheckArkProfileDir failed %{public}d");
@@ -3074,7 +3066,7 @@ bool BaseBundleInstaller::SetEncryptionDirPolicy(InnerBundleInfo &info)
     }
     LOG_D(BMS_TAG_INSTALLER, "%{public}s, keyId: %{public}s", bundleName.c_str(), keyId.c_str());
     info.SetkeyId(userId_, keyId);
-    if (!dataMgr_->UpdateInnerBundleInfo(info)) {
+    if (!dataMgr_->UpdateInnerBundleInfo(info, false)) {
         LOG_E(BMS_TAG_INSTALLER, "save keyId failed");
         return false;
     }
@@ -4648,29 +4640,29 @@ void BaseBundleInstaller::ProcessEncryptedKeyExisted(int32_t res, uint32_t type,
     std::string bundleName = infos.begin()->bundleName;
     if (type == CodeOperation::ADD) {
         if (res == ERR_OK) {
-            dataMgr_->UpdateAppEncryptedStatus(bundleName, true, 0);
+            dataMgr_->UpdateAppEncryptedStatus(bundleName, true, 0, false);
         } else {
-            dataMgr_->UpdateAppEncryptedStatus(bundleName, false, 0);
+            dataMgr_->UpdateAppEncryptedStatus(bundleName, false, 0, false);
         }
         return;
     } else if (type == CodeOperation::DELETE) {
         if (res == ERR_OK) {
-            dataMgr_->UpdateAppEncryptedStatus(bundleName, false, 0);
+            dataMgr_->UpdateAppEncryptedStatus(bundleName, false, 0, false);
         } else {
-            dataMgr_->UpdateAppEncryptedStatus(bundleName, true, 0);
+            dataMgr_->UpdateAppEncryptedStatus(bundleName, true, 0, false);
         }
         return;
     }
     // UPDATE
     if (res == ERR_OK) {
-        dataMgr_->UpdateAppEncryptedStatus(bundleName, true, 0);
+        dataMgr_->UpdateAppEncryptedStatus(bundleName, true, 0, false);
         for (const auto &codeProtectBundleInfo : infos) {
-            dataMgr_->UpdateAppEncryptedStatus(bundleName, true, codeProtectBundleInfo.appIndex);
+            dataMgr_->UpdateAppEncryptedStatus(bundleName, true, codeProtectBundleInfo.appIndex, false);
         }
     } else {
-        dataMgr_->UpdateAppEncryptedStatus(bundleName, false, 0);
+        dataMgr_->UpdateAppEncryptedStatus(bundleName, false, 0, false);
         for (const auto &codeProtectBundleInfo : infos) {
-            dataMgr_->UpdateAppEncryptedStatus(bundleName, false, codeProtectBundleInfo.appIndex);
+            dataMgr_->UpdateAppEncryptedStatus(bundleName, false, codeProtectBundleInfo.appIndex, false);
         }
     }
 }
@@ -5606,7 +5598,7 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         LOG_D(BMS_TAG_INSTALLER, "application does not contain encrypted module");
         oldInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
     }
-    if (dataMgr_ == nullptr || !dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
+    if (dataMgr_ == nullptr || !dataMgr_->UpdateInnerBundleInfo(oldInfo, false)) {
         LOG_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -5958,7 +5950,7 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             }
         }
     }
-    if (needUpdate && !dataMgr_->UpdateInnerBundleInfo(newInfo)) {
+    if (needUpdate && !dataMgr_->UpdateInnerBundleInfo(newInfo, false)) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed %{publlic}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -6254,7 +6246,7 @@ void BaseBundleInstaller::MarkInstallFinish()
     if (!InitDataMgr()) {
         return;
     }
-    if (!dataMgr_->UpdateInnerBundleInfo(info)) {
+    if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
         LOG_W(BMS_TAG_INSTALLER, "save mark failed");
     }
 }

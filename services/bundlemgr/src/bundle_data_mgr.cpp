@@ -318,12 +318,9 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
             BuildExternalOverlayConnection(info.GetCurrentModulePackage(), info, info.GetUserId());
         }
 #endif
-        if (dataStorage_->SaveStorageBundleInfo(info)) {
-            APP_LOGD("write storage success bundle:%{public}s", bundleName.c_str());
-            bundleInfos_.emplace(bundleName, info);
-            AddAppHspBundleName(info.GetApplicationBundleType(), bundleName);
-            return true;
-        }
+        bundleInfos_.emplace(bundleName, info);
+        AddAppHspBundleName(info.GetApplicationBundleType(), bundleName);
+        return true;
     }
     return false;
 }
@@ -391,11 +388,9 @@ bool BundleDataMgr::AddNewModuleInfo(
             return false;
         }
 #endif
-        if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
-            APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
-            bundleInfos_.at(bundleName) = oldInfo;
-            return true;
-        }
+        APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
+        bundleInfos_.at(bundleName) = oldInfo;
+        return true;
     }
     return false;
 }
@@ -449,12 +444,8 @@ bool BundleDataMgr::RemoveModuleInfo(
         oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
         oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
         DeleteRouterInfo(bundleName, modulePackage);
-        if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
-            APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
-            bundleInfos_.at(bundleName) = oldInfo;
-            return true;
-        }
-        APP_LOGD("after delete modulePackage:%{public}s info", modulePackage.c_str());
+        bundleInfos_.at(bundleName) = oldInfo;
+        APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
     }
     return true;
 }
@@ -681,10 +672,6 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             return false;
         }
 #endif
-        if (!dataStorage_->SaveStorageBundleInfo(oldInfo)) {
-            APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
-            return false;
-        }
         APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
         bundleInfos_.at(bundleName) = oldInfo;
         return true;
@@ -6555,7 +6542,7 @@ bool BundleDataMgr::UpdateQuickFixInnerBundleInfo(const std::string &bundleName,
     return false;
 }
 
-bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo)
+bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage)
 {
     std::string bundleName = innerBundleInfo.GetBundleName();
     if (bundleName.empty()) {
@@ -6570,12 +6557,12 @@ bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo
         return false;
     }
 
-    if (dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
-        bundleInfos_.at(bundleName) = innerBundleInfo;
-        return true;
+    if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGE("to update InnerBundleInfo:%{public}s failed", bundleName.c_str());
+        return false;
     }
-    APP_LOGE("to update InnerBundleInfo:%{public}s failed", bundleName.c_str());
-    return false;
+    bundleInfos_.at(bundleName) = innerBundleInfo;
+    return true;
 }
 
 bool BundleDataMgr::QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
@@ -7557,7 +7544,6 @@ void BundleDataMgr::BuildExternalOverlayConnection(const std::string &moduleName
                     info.second.SetOverlayModuleState(overlayModule, OVERLAY_ENABLE, innerUserId);
                 }
             }
-            dataStorage_->SaveStorageBundleInfo(info.second);
         }
     }
 }
@@ -8631,7 +8617,7 @@ ErrCode BundleDataMgr::GetSignatureInfoByBundleName(const std::string &bundleNam
 }
 
 ErrCode BundleDataMgr::UpdateAppEncryptedStatus(
-    const std::string &bundleName, bool isExisted, int32_t appIndex)
+    const std::string &bundleName, bool isExisted, int32_t appIndex, bool needSaveStorage)
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
@@ -8648,7 +8634,7 @@ ErrCode BundleDataMgr::UpdateAppEncryptedStatus(
         LOG_E(BMS_TAG_DEFAULT, "dataStorage_ nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
+    if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(item->second)) {
         APP_LOGE("SaveStorageBundleInfo failed for bundle %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }

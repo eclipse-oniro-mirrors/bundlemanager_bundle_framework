@@ -129,7 +129,7 @@ public:
     bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo,
         InnerBundleInfo &oldInfo, bool isUpgrade = false);
 
-    bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo);
+    bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
     /**
      * @brief Get an InnerBundleInfo if exist (will change the status to DISABLED).
      * @param bundleName Indicates the bundle name.
@@ -972,7 +972,8 @@ public:
 
     ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) const;
 
-    ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex = 0);
+    ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted,
+        int32_t appIndex = 0, bool needSaveStorage = true);
 
     ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
     ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
