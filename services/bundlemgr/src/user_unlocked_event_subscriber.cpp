@@ -33,6 +33,18 @@ constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
 constexpr const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
 constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
+std::mutex task_mutex_;
+std::atomic<uint32_t> currentTaskNum_ = 0;
+
+template<typename Func, typename...Args>
+inline void RETURN_IF_NEW_TASK(Func func, uint32_t tempTask, Args&&... args)
+{
+    if (currentTaskNum_ != tempTask) {
+        APP_LOGI("need stop current task, new first");
+        return;
+    }
+    func(std::forward<Args>(args)...);
+}
 }
 UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)
@@ -186,6 +198,13 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
 
 void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
 {
+    uint32_t tempTaskNum = currentTaskNum_.fetch_add(1) + 1;
+    std::lock_guard<std::mutex> guard(task_mutex_);
+    APP_LOGI("UpdateAppDataDirSelinuxLabel hold task_mutex_");
+    if (tempTaskNum != currentTaskNum_) {
+        APP_LOGI("need stop current task, new first, -u %{public}d", userId);
+        return;
+    }
     APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d start", userId);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -199,15 +218,15 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
         return;
     }
 
-    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::BUNDLE_EL[1]);
+    RETURN_IF_NEW_TASK(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::BUNDLE_EL[1]);
 #ifdef CHECK_ELDIR_ENABLED
-    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL3);
-    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL4);
+    RETURN_IF_NEW_TASK(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL3);
+    RETURN_IF_NEW_TASK(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL4);
 #endif
-    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL5);
-    ProcessUpdateAppLogDir(bundleInfos, userId);
-    ProcessFileManagerDir(bundleInfos, userId);
-    ProcessNewBackupDir(bundleInfos, userId);
+    RETURN_IF_NEW_TASK(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL5);
+    RETURN_IF_NEW_TASK(ProcessUpdateAppLogDir, tempTaskNum, bundleInfos, userId);
+    RETURN_IF_NEW_TASK(ProcessFileManagerDir, tempTaskNum, bundleInfos, userId);
+    RETURN_IF_NEW_TASK(ProcessNewBackupDir, tempTaskNum, bundleInfos, userId);
     APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d end", userId);
 }
 
