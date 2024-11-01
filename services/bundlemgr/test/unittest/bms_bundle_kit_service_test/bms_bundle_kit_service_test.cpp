@@ -28,6 +28,7 @@
 #include "bundle_data_mgr.h"
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_mgr_client_impl.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_mgr_host.h"
@@ -257,6 +258,7 @@ const std::string TYPE_VIDEO_MS_VIDEO = "video/x-msvideo";
 const std::string UTD_GENERAL_AVI = "general.avi";
 const std::string UTD_GENERAL_VIDEO = "general.video";
 constexpr const char* APP_LINKING = "applinking";
+const int32_t APP_INDEX = 1;
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -365,6 +367,130 @@ public:
 void ICleanCacheCallbackTest::OnCleanCacheFinished(bool succeeded) {}
 
 sptr<IRemoteObject> ICleanCacheCallbackTest::AsObject()
+{
+    return nullptr;
+}
+
+class IBundleInstallerTest : public IBundleInstaller {
+    bool Install(const std::string& bundleFilePath, const InstallParam& installParam,
+        const sptr<IStatusReceiver>& statusReceiver);
+    bool Recover(
+        const std::string& bundleName, const InstallParam& installParam, const sptr<IStatusReceiver>& statusReceiver);
+    bool Install(const std::vector<std::string>& bundleFilePaths, const InstallParam& installParam,
+        const sptr<IStatusReceiver>& statusReceiver);
+    bool Uninstall(
+        const std::string& bundleName, const InstallParam& installParam, const sptr<IStatusReceiver>& statusReceiver);
+    bool Uninstall(const UninstallParam& uninstallParam, const sptr<IStatusReceiver>& statusReceiver);
+    bool Uninstall(const std::string& bundleName, const std::string& modulePackage, const InstallParam& installParam,
+        const sptr<IStatusReceiver>& statusReceiver);
+    ErrCode InstallSandboxApp(const std::string& bundleName, int32_t dlpType, int32_t userId, int32_t& appIndex);
+    ErrCode UninstallSandboxApp(const std::string& bundleName, int32_t appIndex, int32_t userId);
+    sptr<IBundleStreamInstaller> CreateStreamInstaller(
+        const InstallParam& installParam, const sptr<IStatusReceiver>& statusReceiver);
+    bool DestoryBundleStreamInstaller(uint32_t streamInstallerId);
+    ErrCode StreamInstall(const std::vector<std::string>& bundleFilePaths, const InstallParam& installParam,
+        const sptr<IStatusReceiver>& statusReceiver);
+    sptr<IRemoteObject> AsObject();
+};
+
+bool IBundleInstallerTest::Install(
+    const std::string& bundleFilePath, const InstallParam& installParam, const sptr<IStatusReceiver>& statusReceiver)
+{
+    return true;
+}
+
+bool IBundleInstallerTest::Recover(
+    const std::string& bundleName, const InstallParam& installParam, const sptr<IStatusReceiver>& statusReceiver)
+{
+    return true;
+}
+
+bool IBundleInstallerTest::Install(const std::vector<std::string>& bundleFilePaths, const InstallParam& installParam,
+    const sptr<IStatusReceiver>& statusReceiver)
+{
+    return true;
+}
+
+bool IBundleInstallerTest::Uninstall(
+    const std::string& bundleName, const InstallParam& installParam, const sptr<IStatusReceiver>& statusReceiver)
+{
+    return true;
+}
+
+bool IBundleInstallerTest::Uninstall(const UninstallParam& uninstallParam, const sptr<IStatusReceiver>& statusReceiver)
+{
+    return true;
+}
+
+bool IBundleInstallerTest::Uninstall(const std::string& bundleName, const std::string& modulePackage,
+    const InstallParam& installParam, const sptr<IStatusReceiver>& statusReceiver)
+{
+    return true;
+}
+
+ErrCode IBundleInstallerTest::InstallSandboxApp(
+    const std::string& bundleName, int32_t dlpType, int32_t userId, int32_t& appIndex)
+{
+    return ERR_OK;
+}
+
+ErrCode IBundleInstallerTest::UninstallSandboxApp(const std::string& bundleName, int32_t appIndex, int32_t userId)
+{
+    return ERR_OK;
+}
+
+sptr<IBundleStreamInstaller> IBundleInstallerTest::CreateStreamInstaller(
+    const InstallParam& installParam, const sptr<IStatusReceiver>& statusReceiver)
+{
+    return nullptr;
+}
+
+bool IBundleInstallerTest::DestoryBundleStreamInstaller(uint32_t streamInstallerId)
+{
+    return true;
+}
+
+ErrCode IBundleInstallerTest::StreamInstall(const std::vector<std::string>& bundleFilePaths,
+    const InstallParam& installParam, const sptr<IStatusReceiver>& statusReceiver)
+{
+    return ERR_OK;
+}
+
+sptr<IRemoteObject> IBundleInstallerTest::AsObject()
+{
+    return nullptr;
+}
+
+class IBundleStatusCallbackTest : public IBundleStatusCallback {
+public:
+    void OnBundleStateChanged(const uint8_t installType, const int32_t resultCode, const std::string& resultMsg,
+        const std::string& bundleName);
+    void OnBundleAdded(const std::string& bundleName, const int userId);
+    void OnBundleUpdated(const std::string& bundleName, const int userId);
+    void OnBundleRemoved(const std::string& bundleName, const int userId);
+    sptr<IRemoteObject> AsObject();
+};
+
+void IBundleStatusCallbackTest::OnBundleStateChanged(
+    const uint8_t installType, const int32_t resultCode, const std::string& resultMsg, const std::string& bundleName)
+{}
+
+void IBundleStatusCallbackTest::OnBundleAdded(const std::string& bundleName, const int userId)
+{
+    SetBundleName(MODULE_NAME_TEST_1);
+}
+
+void IBundleStatusCallbackTest::OnBundleUpdated(const std::string& bundleName, const int userId)
+{
+    SetBundleName(MODULE_NAME_TEST_2);
+}
+
+void IBundleStatusCallbackTest::OnBundleRemoved(const std::string& bundleName, const int userId)
+{
+    SetBundleName(MODULE_NAME_TEST_3);
+}
+
+sptr<IRemoteObject> IBundleStatusCallbackTest::AsObject()
 {
     return nullptr;
 }
@@ -13197,5 +13323,130 @@ HWTEST_F(BmsBundleKitServiceTest, IsBundleInstalled_0001, Function | SmallTest |
     auto testRet = hostImpl->IsBundleInstalled(BUNDLE_NAME_TEST, DEFAULT_USERID, 0, isInstalled);
     EXPECT_EQ(testRet, ERR_OK);
     EXPECT_FALSE(isInstalled);
+}
+
+/**
+ * @tc.number: Mgr_Proxy_AddDesktopShortcutInfo_0100
+ * @tc.name: test BundleMgrProxy interface AddDesktopShortcutInfo
+ * @tc.desc: 1.return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_AddDesktopShortcutInfo_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    auto ret = bundleMgrProxy->AddDesktopShortcutInfo(shortcutInfo, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: Mgr_Proxy_DeleteDesktopShortcutInfo_0100
+ * @tc.name: test BundleMgrProxy interface DeleteDesktopShortcutInfo
+ * @tc.desc: 1.return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_DeleteDesktopShortcutInfo_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    ShortcutInfo shortcutInfo = MockShortcutInfo(BUNDLE_NAME_DEMO, SHORTCUT_TEST_ID);
+    auto ret = bundleMgrProxy->DeleteDesktopShortcutInfo(shortcutInfo, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: Mgr_Proxy_GetAllDesktopShortcutInfo_0100
+ * @tc.name: test BundleMgrProxy interface GetAllDesktopShortcutInfo
+ * @tc.desc: 1.return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetAllDesktopShortcutInfo_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto ret = bundleMgrProxy->GetAllDesktopShortcutInfo(DEFAULT_USERID, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: OnBundleAdded_0100
+ * @tc.name: test IBundleStatusCallback interface OnBundleAdded
+ * @tc.desc: 1.GetBundleName is MODULE_NAME_TEST_1
+ */
+HWTEST_F(BmsBundleKitServiceTest, OnBundleAdded_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IBundleStatusCallback> bundleStatusCallback = std::make_shared<IBundleStatusCallbackTest>();
+    ASSERT_NE(bundleStatusCallback, nullptr);
+    bundleStatusCallback->OnBundleAdded("", DEFAULT_USERID, APP_INDEX);
+    auto bundleName = bundleStatusCallback->GetBundleName();
+    EXPECT_EQ(bundleName, MODULE_NAME_TEST_1);
+}
+
+/**
+ * @tc.number: OnBundleUpdated_0100
+ * @tc.name: test IBundleStatusCallback interface OnBundleUpdated
+ * @tc.desc: 1.GetBundleName is MODULE_NAME_TEST_2
+ */
+HWTEST_F(BmsBundleKitServiceTest, OnBundleUpdated_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IBundleStatusCallback> bundleStatusCallback = std::make_shared<IBundleStatusCallbackTest>();
+    ASSERT_NE(bundleStatusCallback, nullptr);
+    bundleStatusCallback->OnBundleUpdated("", DEFAULT_USERID, APP_INDEX);
+    auto bundleName = bundleStatusCallback->GetBundleName();
+    EXPECT_EQ(bundleName, MODULE_NAME_TEST_2);
+}
+
+/**
+ * @tc.number: OnBundleRemoved_0100
+ * @tc.name: test IBundleStatusCallback interface OnBundleRemoved
+ * @tc.desc: 1.GetBundleName is MODULE_NAME_TEST_3
+ */
+HWTEST_F(BmsBundleKitServiceTest, OnBundleRemoved_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IBundleStatusCallback> bundleStatusCallback = std::make_shared<IBundleStatusCallbackTest>();
+    ASSERT_NE(bundleStatusCallback, nullptr);
+    bundleStatusCallback->OnBundleRemoved("", DEFAULT_USERID, APP_INDEX);
+    auto bundleName = bundleStatusCallback->GetBundleName();
+    EXPECT_EQ(bundleName, MODULE_NAME_TEST_3);
+}
+
+/**
+ * @tc.number: UninstallAndRecover_0100
+ * @tc.name: test IBundleInstaller interface UninstallAndRecover
+ * @tc.desc: 1.return true
+ */
+HWTEST_F(BmsBundleKitServiceTest, UninstallAndRecover_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IBundleInstaller> bundleInstaller = std::make_shared<IBundleInstallerTest>();
+    ASSERT_NE(bundleInstaller, nullptr);
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver;
+    EXPECT_TRUE(bundleInstaller->UninstallAndRecover("", installParam, statusReceiver));
+}
+
+/**
+ * @tc.number: InstallCloneApp_0100
+ * @tc.name: test IBundleInstaller interface InstallCloneApp
+ * @tc.desc: 1.ret is ERR_OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, InstallCloneApp_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IBundleInstaller> bundleInstaller = std::make_shared<IBundleInstallerTest>();
+    ASSERT_NE(bundleInstaller, nullptr);
+    int32_t appIndex = APP_INDEX;
+    auto ret = bundleInstaller->InstallCloneApp("", DEFAULT_USERID, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallCloneApp_0100
+ * @tc.name: test IBundleInstaller interface UninstallCloneApp
+ * @tc.desc: 1.ret is ERR_OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, UninstallCloneApp_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IBundleInstaller> bundleInstaller = std::make_shared<IBundleInstallerTest>();
+    ASSERT_NE(bundleInstaller, nullptr);
+    auto ret = bundleInstaller->UninstallCloneApp("", DEFAULT_USERID, APP_INDEX);
+    EXPECT_EQ(ret, ERR_OK);
 }
 }
