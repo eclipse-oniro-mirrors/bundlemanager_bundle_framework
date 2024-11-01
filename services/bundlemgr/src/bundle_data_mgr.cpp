@@ -7654,6 +7654,27 @@ void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params)
     }
 }
 
+int32_t BundleDataMgr::GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t appIndex) const
+{
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return Constants::INVALID_UID;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW_NOFUNC("FetchInnerBundleInfo not found %{public}s", bundleName.c_str());
+        return Constants::INVALID_UID;
+    }
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetUserIdByCallingUid();
+    }
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+    return innerBundleInfo.GetUid(responseUserId, appIndex);
+}
+
 void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
 {
     std::string parentDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
