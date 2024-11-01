@@ -15,15 +15,9 @@
 
 #include "bundle_parser.h"
 
-#include <cerrno>
 #include <fstream>
 #include <sstream>
-#include <unistd.h>
 
-#include "app_log_wrapper.h"
-#include "app_privilege_capability.h"
-#include "bundle_constants.h"
-#include "bundle_extractor.h"
 #include "bundle_profile.h"
 #include "default_permission_profile.h"
 #include "module_profile.h"

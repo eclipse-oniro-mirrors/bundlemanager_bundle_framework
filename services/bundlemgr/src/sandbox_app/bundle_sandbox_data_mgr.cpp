@@ -15,10 +15,7 @@
 
 #include "bundle_sandbox_data_mgr.h"
 
-#include "app_log_wrapper.h"
-#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
-#include "bundle_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {

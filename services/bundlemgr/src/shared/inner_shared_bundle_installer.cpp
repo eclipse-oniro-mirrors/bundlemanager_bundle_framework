@@ -15,13 +15,9 @@
 
 #include "inner_shared_bundle_installer.h"
 
-#include "app_log_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
-#include "bundle_util.h"
 #include "installd_client.h"
-#include "preinstalled_application_info.h"
-#include "shared/base_shared_bundle_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {

@@ -16,7 +16,6 @@
 #include "quick_fix/patch_extractor.h"
 
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
 
 namespace OHOS {
 namespace AppExecFwk {

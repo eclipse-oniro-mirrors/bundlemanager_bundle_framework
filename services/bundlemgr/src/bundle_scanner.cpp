@@ -15,19 +15,12 @@
 
 #include "bundle_scanner.h"
 
-#include <cerrno>
-#include <cstddef>
 #include <dirent.h>
-#include <string>
 
-#include "app_log_wrapper.h"
-#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
-#include "bundle_util.h"
 #include "hitrace_meter.h"
 #include "datetime_ex.h"
 #include "perf_profile.h"
-#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {

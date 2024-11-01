@@ -15,19 +15,9 @@
 
 #include "bundle_profile.h"
 
-#include <algorithm>
-#include <fstream>
-#include <mutex>
 #include <sstream>
 
-#include "app_log_wrapper.h"
-#include "app_privilege_capability.h"
-#include "bundle_constants.h"
-#include "bundle_service_constants.h"
-#include "bundle_util.h"
-#include "common_profile.h"
 #include "parameter.h"
-#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {

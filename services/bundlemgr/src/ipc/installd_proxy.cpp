@@ -15,10 +15,7 @@
 
 #include "ipc/installd_proxy.h"
 
-#include "ipc_types.h"
-
 #include "app_log_tag_wrapper.h"
-#include "bundle_constants.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
 

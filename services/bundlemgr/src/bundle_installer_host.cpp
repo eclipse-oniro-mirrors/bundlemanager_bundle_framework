@@ -16,21 +16,12 @@
 #include "bundle_installer_host.h"
 
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
 #include "bundle_clone_installer.h"
-#include "bundle_constants.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "bundle_multiuser_installer.h"
 #include "bundle_permission_mgr.h"
-#include "bundle_sandbox_app_helper.h"
-#include "bundle_util.h"
-#include "ffrt.h"
-#include "installd_client.h"
 #include "ipc_skeleton.h"
-#include "ipc_types.h"
-#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {

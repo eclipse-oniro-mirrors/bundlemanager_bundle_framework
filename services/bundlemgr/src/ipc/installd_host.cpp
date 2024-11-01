@@ -16,7 +16,6 @@
 #include "ipc/installd_host.h"
 
 #include "app_log_tag_wrapper.h"
-#include "appexecfwk_errors.h"
 #include "bundle_constants.h"
 #include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"

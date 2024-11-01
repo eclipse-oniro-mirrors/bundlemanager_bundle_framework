@@ -16,10 +16,9 @@
 #include "app_jump_interceptor_event_subscriber.h"
 #include "app_jump_interceptor_manager_rdb.h"
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
 #include "ffrt.h"
-#include "want.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 const std::string WANT_PARAM_USER_ID = "userId";

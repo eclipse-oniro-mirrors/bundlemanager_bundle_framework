@@ -15,14 +15,9 @@
 
 #include "app_service_fwk_installer.h"
 
-#include "app_log_wrapper.h"
 #include "app_provision_info_manager.h"
-#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
-#include "bundle_permission_mgr.h"
-#include "bundle_util.h"
 #include "installd_client.h"
-#include "preinstalled_application_info.h"
 #include "scope_guard.h"
 
 namespace OHOS {

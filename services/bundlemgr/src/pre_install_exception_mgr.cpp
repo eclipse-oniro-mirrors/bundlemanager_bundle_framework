@@ -15,9 +15,7 @@
 
 #include "pre_install_exception_mgr.h"
 
-#include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
-#include "json_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {

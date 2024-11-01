@@ -16,8 +16,6 @@
 #include "quick_fix_deleter.h"
 
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "installd_client.h"
 #include "scope_guard.h"

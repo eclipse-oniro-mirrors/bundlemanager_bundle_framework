@@ -15,8 +15,6 @@
 
 #include "preinstall_data_storage_rdb.h"
 
-#include "app_log_wrapper.h"
-
 namespace OHOS {
 namespace AppExecFwk {
 namespace {

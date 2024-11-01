@@ -15,10 +15,6 @@
 
 #include "default_permission_profile.h"
 
-#include <mutex>
-
-#include "app_log_wrapper.h"
-
 namespace OHOS {
 namespace AppExecFwk {
 namespace {

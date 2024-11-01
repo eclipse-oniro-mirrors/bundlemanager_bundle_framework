@@ -16,7 +16,6 @@
 #include "bundle_overlay_install_checker.h"
 
 #include "bundle_overlay_manager.h"
-#include "bundle_permission_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
