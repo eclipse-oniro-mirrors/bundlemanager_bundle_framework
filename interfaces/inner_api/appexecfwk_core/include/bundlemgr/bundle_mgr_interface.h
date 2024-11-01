@@ -1227,7 +1227,7 @@ public:
     }
 
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats,
-        int32_t appIndex = 0)
+        int32_t appIndex = 0, uint32_t statFlag = 0)
     {
         return false;
     }
