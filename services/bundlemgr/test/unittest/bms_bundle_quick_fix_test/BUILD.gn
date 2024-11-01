@@ -115,6 +115,7 @@ ohos_unittest("BmsBundleQuickFixTest") {
   }
   if (bundle_framework_quick_fix) {
     include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
+    include_dirs += [ "${inner_api_path}/appexecfwk_core/include/quick_fix" ]
     sources += quick_fix
     sources += [ "bms_bundle_quick_fix_test.cpp" ]
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
