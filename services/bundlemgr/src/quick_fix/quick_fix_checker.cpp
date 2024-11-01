@@ -15,11 +15,8 @@
 
 #include "quick_fix_checker.h"
 
-#include <set>
-
 #include "app_log_tag_wrapper.h"
 #include "bundle_install_checker.h"
-#include "bundle_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {

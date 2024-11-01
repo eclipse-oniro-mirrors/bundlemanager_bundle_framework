@@ -16,9 +16,6 @@
 #include "service_center_death_recipient.h"
 
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "parcel.h"
-#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {

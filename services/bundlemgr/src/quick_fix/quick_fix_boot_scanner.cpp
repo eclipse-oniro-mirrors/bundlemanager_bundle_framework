@@ -16,13 +16,7 @@
 #include "quick_fix_boot_scanner.h"
 
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
-#include "bundle_info.h"
 #include "bundle_mgr_service.h"
-#include "bundle_util.h"
-#include "inner_app_quick_fix.h"
-#include "inner_bundle_info.h"
 #include "installd_client.h"
 #include "quick_fix_deleter.h"
 #include "quick_fix_delete_state.h"

@@ -21,20 +21,12 @@
 #ifdef CODE_SIGNATURE_ENABLE
 #include "aot/aot_sign_data_cache_mgr.h"
 #endif
-#include "app_log_wrapper.h"
 #include "bundle_common_event.h"
-#include "bundle_constants.h"
-#include "bundle_distributed_manager.h"
 #include "bundle_memory_guard.h"
-#include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
-#include "common_event_data.h"
-#include "common_event_manager.h"
-#include "common_event_support.h"
 #include "datetime_ex.h"
 #include "el5_filekey_callback.h"
 #include "el5_filekey_manager_kit.h"
-#include "ffrt.h"
 #include "installd_client.h"
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_manager_host_impl.h"
@@ -42,7 +34,6 @@
 #include "perf_profile.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
-#include "want.h"
 #ifdef HICOLLIE_ENABLE
 #include "xcollie/watchdog.h"
 #endif
