@@ -1623,11 +1623,11 @@ void BundleInstallChecker::DetermineCloneNum(InnerBundleInfo &innerBundleInfo)
         if (!bmsExtensionDataMgr.DetermineCloneNum(applicationInfo.bundleName, appIdentifier, cloneNum)) {
             return;
         }
-        LOG_I(BMS_TAG_INSTALLER, "install -n %{public}s -c %{public}d",
-            applicationInfo.bundleName.c_str(), cloneNum);
         if (cloneNum == 0) {
             return;
         }
+        LOG_I(BMS_TAG_INSTALLER, "install -n %{public}s -c %{public}d",
+            applicationInfo.bundleName.c_str(), cloneNum);
         applicationInfo.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
         applicationInfo.multiAppMode.maxCount = cloneNum;
         innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
