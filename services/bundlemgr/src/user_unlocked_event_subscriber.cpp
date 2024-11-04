@@ -32,13 +32,13 @@ static constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
 constexpr const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
-std::mutex task_mutex_;
-std::atomic<uint32_t> currentTaskNum_ = 0;
+static std::mutex TASK_MUTEX;
+static std::atomic<uint32_t> CURRENT_TASK_NUM = 0;
 
 template<typename Func, typename...Args>
 inline void RETURN_IF_NEW_TASK(Func func, uint32_t tempTask, Args&&... args)
 {
-    if (currentTaskNum_ != tempTask) {
+    if (CURRENT_TASK_NUM != tempTask) {
         APP_LOGI("need stop current task, new first");
         return;
     }
@@ -183,10 +183,10 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
 
 void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
 {
-    uint32_t tempTaskNum = currentTaskNum_.fetch_add(1) + 1;
-    std::lock_guard<std::mutex> guard(task_mutex_);
-    APP_LOGI("UpdateAppDataDirSelinuxLabel hold task_mutex_");
-    if (tempTaskNum != currentTaskNum_) {
+    uint32_t tempTaskNum = CURRENT_TASK_NUM.fetch_add(1) + 1;
+    std::lock_guard<std::mutex> guard(TASK_MUTEX);
+    APP_LOGI("UpdateAppDataDirSelinuxLabel hold TASK_MUTEX");
+    if (tempTaskNum != CURRENT_TASK_NUM) {
         APP_LOGI("need stop current task, new first, -u %{public}d", userId);
         return;
     }
