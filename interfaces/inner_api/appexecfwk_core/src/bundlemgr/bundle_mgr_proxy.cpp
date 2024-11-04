@@ -5370,7 +5370,7 @@ ErrCode BundleMgrProxy::GetCompatibleDeviceType(const std::string &bundleName, s
 
 ErrCode BundleMgrProxy::GetBundleNameByAppIdOrAppIdentifier(const std::string &appId, std::string &bundleName)
 {
-    APP_LOGD("GetBundleNameByAppIdOrAppIdentifier: appId: %{public}s", ret, appId.c_str());
+    APP_LOGD("GetBundleNameByAppIdOrAppIdentifier: appId: %{public}s", appId.c_str());
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (appId.empty()) {

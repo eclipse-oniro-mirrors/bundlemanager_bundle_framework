@@ -4555,7 +4555,7 @@ ErrCode BundleMgrHostImpl::GetBundleNameByAppIdOrAppIdentifier(const std::string
         APP_LOGW("get bundleName by appId %{public}s failed %{public}d", appId.c_str(), ret);
         return ret;
     }
-    APP_LOGI("appId: %{public}s bundleName : %{public}s", appId.c_str(), bundleName.c_str());
+    APP_LOGI("appId: %{private}s bundleName : %{public}s", appId.c_str(), bundleName.c_str());
     return ERR_OK;
 }
 

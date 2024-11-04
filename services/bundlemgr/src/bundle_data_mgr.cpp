@@ -8861,12 +8861,12 @@ ErrCode BundleDataMgr::GetBundleNameByAppIdOrAppIdentifier(const std::string &ap
     }
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &[key, innerInfo] : bundleInfos_) {
-        if (innerInfo->GetAppId() == appId || innerInfo->GetAppIdentifier() == appId) {
+        if (innerInfo.GetAppId() == appId || innerInfo.GetAppIdentifier() == appId) {
             bundleName = key;
             return ERR_OK;
         }
     }
-    APP_LOGI("get bundleName failed %{public}s", appId.c_str());
+    APP_LOGI("get bundleName failed %{private}s", appId.c_str());
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 }  // namespace AppExecFwk
