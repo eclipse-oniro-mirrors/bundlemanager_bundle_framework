@@ -4538,6 +4538,27 @@ ErrCode BundleMgrHostImpl::GetCompatibleDeviceType(const std::string &bundleName
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::GetBundleNameByAppIdOrAppIdentifier(const std::string &appId, std::string &bundleName)
+{
+    APP_LOGD("start GetBundleNameByAppIdOrAppIdentifier");
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto ret = dataMgr->GetBundleNameByAppIdOrAppIdentifier(appId, bundleName);
+    if (ret != ERR_OK) {
+        APP_LOGW("get bundleName by appId %{public}s failed %{public}d", appId.c_str(), ret);
+        return ret;
+    }
+    APP_LOGI("appId: %{public}s bundleName : %{public}s", appId.c_str(), bundleName.c_str());
+    return ERR_OK;
+}
+
 std::string BundleMgrHostImpl::GetCallerName()
 {
     auto dataMgr = GetDataMgrFromService();
