@@ -1770,6 +1770,14 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             // The versionCode of Hap is equal to the installed versionCode.
             // You can only install new modules by OTA
             if (hasInstalledInfo.versionCode == hapVersionCode) {
+                InnerBundleInfo info;
+                if (dataMgr->FetchInnerBundleInfo(bundleName, info) &&
+                    info.GetInstallMark().status != InstallExceptionStatus::INSTALL_FINISH) {
+                    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA status error: %{public}s %{public}d",
+                        bundleName.c_str(), info.GetInstallMark().status);
+                    updateBundle = true;
+                    break;
+                }
                 // update pre install app data dir selinux label
                 if (!updateSelinuxLabel) {
                     UpdateAppDataSelinuxLabel(bundleName, hasInstalledInfo.applicationInfo.appPrivilegeLevel,
