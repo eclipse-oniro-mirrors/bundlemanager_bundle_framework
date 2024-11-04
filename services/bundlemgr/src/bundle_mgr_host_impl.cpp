@@ -1883,19 +1883,13 @@ bool BundleMgrHostImpl::DumpBundleInfo(
 {
     APP_LOGD("DumpBundleInfo begin");
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-    if (userId == Constants::ALL_USERID) {
-        if (!GetBundleUserInfos(bundleName, innerBundleUserInfos)) {
-            APP_LOGE("get all userInfos in bundle(%{public}s) failed", bundleName.c_str());
-            return false;
-        }
-        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
-    } else {
-        InnerBundleUserInfo innerBundleUserInfo;
-        if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
-            APP_LOGI("get userInfo in bundle(%{public}s) failed", bundleName.c_str());
-        }
-        innerBundleUserInfos.emplace_back(innerBundleUserInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo) &&
+        !GetBundleUserInfo(bundleName, Constants::DEFAULT_USERID, innerBundleUserInfo)) {
+        APP_LOGE("get all userInfos in bundle(%{public}s) failed", bundleName.c_str());
+        return false;
     }
+    innerBundleUserInfos.emplace_back(innerBundleUserInfo);
 
     BundleInfo bundleInfo;
     if (!GetBundleInfo(bundleName,
