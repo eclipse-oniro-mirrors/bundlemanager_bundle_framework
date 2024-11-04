@@ -4857,7 +4857,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleExceptionHandler_0100, TestSize.Level1)
     BundleExceptionHandler BundleExceptionHandler(dataStorageSptr);
     BundleExceptionHandler.HandleInvalidBundle(info, isBundleValid);
     auto mark = info.GetInstallMark();
-    EXPECT_EQ(mark.status, InstallExceptionStatus::INSTALL_FINISH);
+    EXPECT_EQ(mark.status, InstallExceptionStatus::UPDATING_EXISTED_START);
 
     ret = BundleUtil::DeleteDir(moduleDir);
     EXPECT_TRUE(ret);
