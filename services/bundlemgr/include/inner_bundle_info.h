@@ -493,7 +493,8 @@ public:
             APP_LOGD("can not find userId %{public}d when GetApplicationEnabled", userId);
             return false;
         }
-
+        PrintSetEnabledInfo(innerBundleUserInfo.bundleUserInfo.enabled, userId, 0, innerBundleUserInfo.bundleName,
+            innerBundleUserInfo.bundleUserInfo.setEnabledCaller);
         return innerBundleUserInfo.bundleUserInfo.enabled;
     }
 
@@ -504,8 +505,9 @@ public:
      * @param userId Indicates the user ID.
      * @return Returns ERR_OK if the SetApplicationEnabled is successfully; returns error code otherwise.
      */
-    ErrCode SetApplicationEnabled(bool enabled, int32_t userId = Constants::UNSPECIFIED_USERID);
-    ErrCode SetCloneApplicationEnabled(bool enabled, int32_t appIndex, int32_t userId);
+    ErrCode SetApplicationEnabled(bool enabled, const std::string &caller,
+        int32_t userId = Constants::UNSPECIFIED_USERID);
+    ErrCode SetCloneApplicationEnabled(bool enabled, int32_t appIndex, const std::string &caller, int32_t userId);
     ErrCode SetCloneAbilityEnabled(const std::string &moduleName, const std::string &abilityName,
         bool isEnabled, int32_t userId, int32_t appIndex);
     /**
@@ -2240,6 +2242,8 @@ private:
     void InnerProcessRequestPermissions(
         const std::unordered_map<std::string, std::string> &moduleNameMap,
         std::vector<RequestPermission> &requestPermissions) const;
+    void PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_t appIndex,
+        const std::string &bundleName, const std::string &caller) const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;

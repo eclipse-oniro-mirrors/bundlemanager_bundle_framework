@@ -280,6 +280,7 @@ const std::vector<std::string> &DISALLOWLIST = {"com.example.actsregisterjserror
 const std::string ENTRY = "entry";
 const std::string FEATURE = "feature";
 constexpr const char* OVERLAY_STATE = "overlayState";
+const std::string CALLER_NAME_UT = "ut";
 }  // namespace
 
 struct Param {
@@ -2525,7 +2526,7 @@ HWTEST_F(BmsBundleDataMgrTest, SetApplicationEnabled_0100, Function | SmallTest 
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     ErrCode res = GetBundleDataMgr()->SetApplicationEnabled(
-        BUNDLE_NAME_TEST, 0, isEnabled, Constants::ALL_USERID);
+        BUNDLE_NAME_TEST, 0, isEnabled, CALLER_NAME_UT, Constants::ALL_USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 

@@ -1912,6 +1912,8 @@ ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled
     }
     if (appIndex == 0) {
         isEnabled = innerBundleUserInfo.bundleUserInfo.enabled;
+        PrintSetEnabledInfo(isEnabled, userId, appIndex, innerBundleUserInfo.bundleName,
+            innerBundleUserInfo.bundleUserInfo.setEnabledCaller);
         return ERR_OK;
     } else if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
         const std::map<std::string, InnerBundleCloneInfo> mpCloneInfos = innerBundleUserInfo.cloneInfos;
@@ -1920,6 +1922,8 @@ ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled
             return ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP;
         }
         isEnabled = mpCloneInfos.at(key).enabled;
+        PrintSetEnabledInfo(isEnabled, userId, appIndex, innerBundleUserInfo.bundleName,
+            mpCloneInfos.at(key).setEnabledCaller);
         return ERR_OK;
     } else {
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
@@ -3403,7 +3407,7 @@ void InnerBundleInfo::InnerProcessRequestPermissions(
     requestPermissions.erase(iter, requestPermissions.end());
 }
 
-ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
+ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, const std::string &caller, int32_t userId)
 {
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
@@ -3414,10 +3418,14 @@ ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
     }
 
     infoItem->second.bundleUserInfo.enabled = enabled;
+    if (!caller.empty()) {
+        infoItem->second.bundleUserInfo.setEnabledCaller = caller;
+    }
     return ERR_OK;
 }
 
-ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appIndex, int32_t userId)
+ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appIndex, const std::string &caller,
+    int32_t userId)
 {
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
@@ -3434,6 +3442,7 @@ ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appInd
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
     }
     iter->second.enabled = enabled;
+    iter->second.setEnabledCaller = caller;
     return ERR_OK;
 }
 
@@ -4697,6 +4706,15 @@ std::set<int32_t> InnerBundleInfo::GetCloneBundleAppIndexes() const
 uint8_t InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag flag)
 {
     return 1 << (static_cast<uint8_t>(flag) - 1);
+}
+
+void InnerBundleInfo::PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_t appIndex,
+    const std::string &bundleName, const std::string &caller) const
+{
+    if (!isEnabled) {
+        APP_LOGW_NOFUNC("-n %{public}s -u %{public}d -i %{public}d disabled caller is %{public}s",
+            bundleName.c_str(), userId, appIndex, caller.c_str());
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

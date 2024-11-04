@@ -451,7 +451,7 @@ public:
      * @return Returns result of the operation.
      */
     ErrCode SetApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
-        int32_t userId = Constants::UNSPECIFIED_USERID);
+        const std::string &caller, int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability to check.

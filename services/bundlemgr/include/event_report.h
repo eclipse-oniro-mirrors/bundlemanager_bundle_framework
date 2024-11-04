@@ -209,8 +209,8 @@ public:
      * @param isEnable Indicates the isEnable.
      * @param appIndex Indicates the app index for clone app.
      */
-    static void SendComponentStateSysEventForException(const std::string &bundleName,
-        const std::string &abilityName, int32_t userId, bool isEnable, int32_t appIndex);
+    static void SendComponentStateSysEventForException(const std::string &bundleName, const std::string &abilityName,
+        int32_t userId, bool isEnable, int32_t appIndex, const std::string &callingName);
     /**
      * @brief Send component diable or enable system events.
      * @param bundleName Indicates the bundleName.
@@ -219,8 +219,8 @@ public:
      * @param isEnable Indicates the isEnable.
      * @param appIndex Indicates the app index for clone app.
      */
-    static void SendComponentStateSysEvent(const std::string &bundleName,
-        const std::string &abilityName, int32_t userId, bool isEnable, int32_t appIndex);
+    static void SendComponentStateSysEvent(const std::string &bundleName, const std::string &abilityName,
+        int32_t userId, bool isEnable, int32_t appIndex, const std::string &callingName);
     /**
      * @brief Send clean cache system events.
      * @param bundleName Indicates the bundleName.
