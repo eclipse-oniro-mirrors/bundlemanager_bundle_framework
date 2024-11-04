@@ -27,7 +27,13 @@ namespace CJSystemapi {
 namespace BundleManager {
  
 namespace Convert {
-    RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo, int32_t);
+    RetApplicationInfo ConvertApplicationInfo(const AppExecFwk::ApplicationInfo& cAppInfo);
+    RetExtensionAbilityInfo ConvertExtensionAbilityInfo(const AppExecFwk::ExtensionAbilityInfo& extensionInfos);
+    CArrRetExtensionAbilityInfo ConvertArrExtensionAbilityInfo(
+        const std::vector<AppExecFwk::ExtensionAbilityInfo>& extensionInfos);
+    RetAbilityInfo ConvertAbilityInfo(const AppExecFwk::AbilityInfo& cAbilityInfos);
+    RetHapModuleInfo ConvertHapModuleInfo(const AppExecFwk::HapModuleInfo& hapModuleInfo);
+    RetBundleInfo ConvertBundleInfo(const AppExecFwk::BundleInfo& cBundleInfo, int32_t flags);
 } // Convert
  
 } // BundleManager
