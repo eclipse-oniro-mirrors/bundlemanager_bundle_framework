@@ -132,10 +132,10 @@ void PreInstallExceptionMgr::DeletePreInstallExceptionInfosFromDb()
     }
 
     if (jsonObject.empty()) {
-        APP_LOGI("Exception information is empty, Deleting pre-install exception information from database");
+        APP_LOGI_NOFUNC("Exception information is empty, Deleting pre-install exception information from database");
         bmsPara->DeleteBmsParam(PREINSTALL_EXCEPTION);
     } else {
-        APP_LOGI("Updating pre-install exception information in database");
+        APP_LOGI_NOFUNC("Updating pre-install exception in database");
         bmsPara->SaveBmsParam(PREINSTALL_EXCEPTION, jsonObject.dump());
     }
 }
@@ -156,7 +156,7 @@ void PreInstallExceptionMgr::SavePreInstallExceptionPath(
 
     exceptionPaths_.insert(bundleDir);
     SavePreInstallExceptionInfosToDb();
-    APP_LOGI("Pre-install exception infos saved to database successfully");
+    APP_LOGI_NOFUNC("Pre-install exception save success");
 }
 
 void PreInstallExceptionMgr::DeletePreInstallExceptionPath(const std::string &bundleDir)
@@ -180,8 +180,7 @@ void PreInstallExceptionMgr::DeletePreInstallExceptionPath(const std::string &bu
 
     exceptionPaths_.erase(bundleDir);
     DeletePreInstallExceptionInfosFromDb();
-    APP_LOGI("Pre-install exception infos deleted from database successfully for bundleDir %{public}s",
-             bundleDir.c_str());
+    APP_LOGI_NOFUNC("Pre-install exception delete success bundleDir:%{public}s", bundleDir.c_str());
 }
 
 void PreInstallExceptionMgr::SavePreInstallExceptionBundleName(const std::string &bundleName)
@@ -199,8 +198,7 @@ void PreInstallExceptionMgr::SavePreInstallExceptionBundleName(const std::string
 
     exceptionBundleNames_.insert(bundleName);
     SavePreInstallExceptionInfosToDb();
-    APP_LOGI("Pre-install exception infos saved to database successfully for bundleName %{public}s",
-             bundleName.c_str());
+    APP_LOGI_NOFUNC("Pre-install exception save success -n %{public}s", bundleName.c_str());
 }
 
 void PreInstallExceptionMgr::DeletePreInstallExceptionBundleName(const std::string &bundleName)
@@ -218,8 +216,7 @@ void PreInstallExceptionMgr::DeletePreInstallExceptionBundleName(const std::stri
 
     exceptionBundleNames_.erase(bundleName);
     DeletePreInstallExceptionInfosFromDb();
-    APP_LOGI("Pre-install exception infos deleted from database successfully for bundleName %{public}s",
-             bundleName.c_str());
+    APP_LOGI_NOFUNC("Pre-install exception delete success -n %{public}s", bundleName.c_str());
 }
 
 void PreInstallExceptionMgr::ClearAll()
@@ -235,7 +232,7 @@ void PreInstallExceptionMgr::ClearAll()
     exceptionPaths_.clear();
     exceptionBundleNames_.clear();
     hasInit_ = false;
-    APP_LOGI("Pre-install exception information cleared successfully");
+    APP_LOGI_NOFUNC("Pre-install exception cleare success");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

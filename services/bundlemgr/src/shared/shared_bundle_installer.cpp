@@ -35,7 +35,7 @@ ErrCode SharedBundleInstaller::ParseFiles()
 {
     ErrCode result = ERR_OK;
     if (installParam_.sharedBundleDirPaths.empty()) {
-        APP_LOGI("sharedBundleDirPaths is empty");
+        APP_LOGI_NOFUNC("sharedBundleDirPaths is empty");
         return result;
     }
 

@@ -146,7 +146,7 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
 {
     LOG_D(BMS_TAG_INSTALLER, "check hap syscaps start");
     if (bundlePaths.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "check hap syscaps failed due to empty bundlePaths");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "empty bundlePaths check hap syscaps fail");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
