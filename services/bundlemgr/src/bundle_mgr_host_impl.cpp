@@ -4116,7 +4116,7 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
     int32_t currentActiveUserId = AccountHelper::GetCurrentActiveUserId();
     innerBundleInfo.GetMainAbilityInfo(mainAbilityInfo);
     NotifyBundleEvents installRes = {
-        .isModuleUpdate = true,
+        .isModuleUpdate = false,
         .type = NotifyType::UPDATE,
         .resultCode = ERR_OK,
         .accessTokenId = innerBundleInfo.GetAccessTokenId(currentActiveUserId),
