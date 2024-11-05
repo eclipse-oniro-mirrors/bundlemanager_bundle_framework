@@ -843,7 +843,7 @@ private:
     
     ErrCode HandleGetCompatibleDeviceType(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetBundleNameByAppIdOrAppIdentifier(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetBundleNameByAppId(MessageParcel &data, MessageParcel &reply);
 
 private:
     /**

@@ -5368,9 +5368,9 @@ ErrCode BundleMgrProxy::GetCompatibleDeviceType(const std::string &bundleName, s
     return ret;
 }
 
-ErrCode BundleMgrProxy::GetBundleNameByAppIdOrAppIdentifier(const std::string &appId, std::string &bundleName)
+ErrCode BundleMgrProxy::GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
 {
-    APP_LOGD("GetBundleNameByAppIdOrAppIdentifier: appId: %{public}s", appId.c_str());
+    APP_LOGD("GetBundleNameByAppId: appId: %{private}s", appId.c_str());
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (appId.empty()) {
@@ -5394,7 +5394,7 @@ ErrCode BundleMgrProxy::GetBundleNameByAppIdOrAppIdentifier(const std::string &a
     if (ret == ERR_OK) {
         bundleName = reply.ReadString();
     }
-    APP_LOGD("GetBundleNameByAppIdOrAppIdentifier: ret: %{public}d, bundleName: %{public}s", ret, bundleName.c_str());
+    APP_LOGD("GetBundleNameByAppId: ret: %{public}d, bundleName: %{public}s", ret, bundleName.c_str());
     return ret;
 }
 }  // namespace AppExecFwk

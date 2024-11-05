@@ -1038,7 +1038,7 @@ public:
 
     virtual ErrCode GetCompatibleDeviceTypeNative(std::string &deviceType) override;
     virtual ErrCode GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType) override;
-    virtual ErrCode GetBundleNameByAppIdOrAppIdentifier(const std::string &appId, std::string &bundleName) override;
+    virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

@@ -333,7 +333,7 @@ namespace OHOS {
         std::string deviceType;
         bundleMgrProxy.GetCompatibleDeviceType(bundleName, deviceType);
         std::string queryBundleName;
-        bundleMgrProxy.GetBundleNameByAppIdOrAppIdentifier(appId, queryBundleName);
+        bundleMgrProxy.GetBundleNameByAppId(appId, queryBundleName);
         return true;
     }
 }

@@ -1965,17 +1965,17 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetCompatibleDeviceType_0001, Function | Me
 }
 
 /**
- * @tc.number: HandleGetBundleNameByAppIdOrAppIdentifier_0001
- * @tc.name: test the HandleGetBundleNameByAppIdOrAppIdentifier
+ * @tc.number: HandleGetBundleNameByAppId_0001
+ * @tc.name: test the HandleGetBundleNameByAppId
  * @tc.desc: 1. system running normally
- *           2. test HandleGetBundleNameByAppIdOrAppIdentifier
+ *           2. test HandleGetBundleNameByAppId
  */
-HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleNameByAppIdOrAppIdentifier_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleNameByAppId_0001, Function | MediumTest | Level1)
 {
     BundleMgrHost bundleMgrHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = bundleMgrHost.HandleGetBundleNameByAppIdOrAppIdentifier(data, reply);
+    ErrCode res = bundleMgrHost.HandleGetBundleNameByAppId(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
 } // AppExecFwk

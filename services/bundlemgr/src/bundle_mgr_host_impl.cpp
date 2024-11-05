@@ -4529,9 +4529,13 @@ ErrCode BundleMgrHostImpl::GetCompatibleDeviceType(const std::string &bundleName
     return ERR_OK;
 }
 
-ErrCode BundleMgrHostImpl::GetBundleNameByAppIdOrAppIdentifier(const std::string &appId, std::string &bundleName)
+ErrCode BundleMgrHostImpl::GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
 {
-    APP_LOGD("start GetBundleNameByAppIdOrAppIdentifier");
+    APP_LOGD("start GetBundleNameByAppId");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("Verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -4541,9 +4545,9 @@ ErrCode BundleMgrHostImpl::GetBundleNameByAppIdOrAppIdentifier(const std::string
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    auto ret = dataMgr->GetBundleNameByAppIdOrAppIdentifier(appId, bundleName);
+    auto ret = dataMgr->GetBundleNameByAppId(appId, bundleName);
     if (ret != ERR_OK) {
-        APP_LOGW("get bundleName by appId %{public}s failed %{public}d", appId.c_str(), ret);
+        APP_LOGW("get bundleName by appId %{private}s failed %{public}d", appId.c_str(), ret);
         return ret;
     }
     APP_LOGI("appId: %{private}s bundleName : %{public}s", appId.c_str(), bundleName.c_str());

@@ -8873,14 +8873,14 @@ void BundleDataMgr::UpdateIsPreInstallApp(const std::string &bundleName, bool is
     }
 }
 
-ErrCode BundleDataMgr::GetBundleNameByAppIdOrAppIdentifier(const std::string &appId, std::string &bundleName)
+ErrCode BundleDataMgr::GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
 {
-    APP_LOGD("start GetBundleNameByAppIdOrAppIdentifier %{public}s", appId.c_str());
+    APP_LOGD("start GetBundleNameByAppId %{private}s", appId.c_str());
     if (appId.empty()) {
         APP_LOGW("appId is empty");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &[key, innerInfo] : bundleInfos_) {
         if (innerInfo.GetAppId() == appId || innerInfo.GetAppIdentifier() == appId) {
             bundleName = key;

@@ -9742,34 +9742,34 @@ HWTEST_F(ActsBmsKitSystemTest, GetCompatibleDeviceType_0002, Function | MediumTe
 }
 
 /**
- * @tc.number: GetBundleNameByAppIdOrAppIdentifier_0001
- * @tc.name: test GetBundleNameByAppIdOrAppIdentifier interface
- * @tc.desc: GetBundleNameByAppIdOrAppIdentifier failed for calling bundle name is invalid
+ * @tc.number: GetBundleNameByAppId_0001
+ * @tc.name: test GetBundleNameByAppId interface
+ * @tc.desc: GetBundleNameByAppId failed for calling bundle name is invalid
  */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleNameByAppIdOrAppIdentifier_0001, Function | MediumTest | Level1)
+HWTEST_F(ActsBmsKitSystemTest, GetBundleNameByAppId_0001, Function | MediumTest | Level1)
 {
-    std::cout << "START GetBundleNameByAppIdOrAppIdentifier_0001" << std::endl;
+    std::cout << "START GetBundleNameByAppId_0001" << std::endl;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
     std::string bundleName;
-    auto queryResult = bundleMgrProxy->GetBundleNameByAppIdOrAppIdentifier("", bundleName);
+    auto queryResult = bundleMgrProxy->GetBundleNameByAppId("", bundleName);
     EXPECT_EQ(queryResult, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
-    std::cout << "END GetBundleNameByAppIdOrAppIdentifier_0001" << std::endl;
+    std::cout << "END GetBundleNameByAppId_0001" << std::endl;
 }
 
 /**
- * @tc.number: GetBundleNameByAppIdOrAppIdentifier_0002
- * @tc.name: test GetBundleNameByAppIdOrAppIdentifier interface
+ * @tc.number: GetBundleNameByAppId_0002
+ * @tc.name: test GetBundleNameByAppId interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
  *           2.install the app
- *           3.call GetBundleNameByAppIdOrAppIdentifier
+ *           3.call GetBundleNameByAppId
  */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleNameByAppIdOrAppIdentifier_0002, Function | MediumTest | Level1)
+HWTEST_F(ActsBmsKitSystemTest, GetBundleNameByAppId_0002, Function | MediumTest | Level1)
 {
-    std::cout << "START GetBundleNameByAppIdOrAppIdentifier_0002" << std::endl;
+    std::cout << "START GetBundleNameByAppId_0002" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "right1.hap";
-    std::string appName = "com.example.l3jsdemo";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -9779,9 +9779,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleNameByAppIdOrAppIdentifier_0002, Functio
     ASSERT_NE(bundleMgrProxy, nullptr);
 
     std::string bundleName;
-    std::string appId =
-        "com.example.l3jsdemo_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
-    auto queryResult = bundleMgrProxy->GetBundleNameByAppIdOrAppIdentifier(appId, bundleName);
+    std::string appId = appName +
+        "_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+    auto queryResult = bundleMgrProxy->GetBundleNameByAppId(appId, bundleName);
 
     EXPECT_EQ(queryResult, ERR_OK);
 
@@ -9789,7 +9789,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleNameByAppIdOrAppIdentifier_0002, Functio
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    std::cout << "END GetBundleNameByAppIdOrAppIdentifier_0002" << std::endl;
+    std::cout << "END GetBundleNameByAppId_0002" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
