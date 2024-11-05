@@ -7883,7 +7883,7 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param)
     }
     LOG_D(BMS_TAG_INSTALLER, "%{public}s, keyId: %{public}s", info.GetBundleName().c_str(), keyId.c_str());
     info.SetkeyId(el5Param.userId, keyId);
-    if (!UpdateInnerBundleInfo(info)) {
+    if (!UpdateInnerBundleInfo(info, false)) {
         LOG_E(BMS_TAG_INSTALLER, "save keyId failed");
     }
 }

@@ -700,10 +700,9 @@ private:
     bool VerifyActivationLock() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
     void CreateScreenLockProtectionDir();
+    void CreateEl5AndSetPolicy(const InnerBundleInfo &info);
     void DeleteScreenLockProtectionDir(const std::string bundleName) const;
-    bool SetEncryptionDirPolicy(InnerBundleInfo &info);
     void DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, bool isKeepData) const;
-    void CreateScreenLockProtectionExistDirs(const InnerBundleInfo &info, const std::string &dir);
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
 #endif
