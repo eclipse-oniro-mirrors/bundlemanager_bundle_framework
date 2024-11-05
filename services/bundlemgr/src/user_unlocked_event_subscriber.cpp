@@ -36,7 +36,7 @@ static std::mutex TASK_MUTEX;
 static std::atomic<uint32_t> CURRENT_TASK_NUM = 0;
 
 template<typename Func, typename...Args>
-inline void RETURN_IF_NEW_TASK(Func func, uint32_t tempTask, Args&&... args)
+inline void ReturnIfNewTask(Func func, uint32_t tempTask, Args&&... args)
 {
     if (CURRENT_TASK_NUM != tempTask) {
         APP_LOGI("need stop current task, new first");
@@ -202,14 +202,14 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
         return;
     }
 
-    RETURN_IF_NEW_TASK(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::BUNDLE_EL[1]);
+    ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::BUNDLE_EL[1]);
 #ifdef CHECK_ELDIR_ENABLED
-    RETURN_IF_NEW_TASK(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL3);
-    RETURN_IF_NEW_TASK(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL4);
+    ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL3);
+    ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL4);
 #endif
-    RETURN_IF_NEW_TASK(ProcessUpdateAppLogDir, tempTaskNum, bundleInfos, userId);
-    RETURN_IF_NEW_TASK(ProcessFileManagerDir, tempTaskNum, bundleInfos, userId);
-    RETURN_IF_NEW_TASK(ProcessNewBackupDir, tempTaskNum, bundleInfos, userId);
+    ReturnIfNewTask(ProcessUpdateAppLogDir, tempTaskNum, bundleInfos, userId);
+    ReturnIfNewTask(ProcessFileManagerDir, tempTaskNum, bundleInfos, userId);
+    ReturnIfNewTask(ProcessNewBackupDir, tempTaskNum, bundleInfos, userId);
     APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d end", userId);
 }
 
