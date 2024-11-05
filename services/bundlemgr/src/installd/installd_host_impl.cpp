@@ -867,9 +867,34 @@ std::string InstalldHostImpl::GetAppDataPath(const std::string &bundleName, cons
     }
 }
 
+int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex, const std::vector<std::string> &moduleNameList)
+{
+    std::string bundleNameDir = bundleName;
+    if (appIndex > 0) {
+        bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
+    std::vector<std::string> cachePaths;
+    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
+    elPath.push_back(ServiceConstants::DIR_EL5);
+    for (const auto &el : elPath) {
+        cachePaths.push_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE +
+            bundleNameDir + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
+        for (const auto &moduleName : moduleNameList) {
+            std::string moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir +
+                ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
+            cachePaths.push_back(moduleCachePath);
+            LOG_D(BMS_TAG_INSTALLD, "GetBundleStats, add module cache path: %{public}s", moduleCachePath.c_str());
+        }
+    }
+    return InstalldOperator::GetDiskUsageFromPath(cachePaths);
+}
+
 ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const int32_t userId,
     std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
-    const uint32_t statFlag)
+    const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     LOG_D(BMS_TAG_INSTALLD,
         "GetBundleStats, bundleName = %{public}s, userId = %{public}d, uid = %{public}d, appIndex = %{public}d",
@@ -899,15 +924,7 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     }
     if ((statFlag & OHOS::AppExecFwk::Constants::GET_BUNDLE_WITHOUT_CACHE_SIZE) !=
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE) {
-
-        std::vector<std::string> cachePath;
-        std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
-        elPath.push_back(ServiceConstants::DIR_EL5);
-        for (const auto &el : elPath) {
-            std::string filePath = GetAppDataPath(bundleName, el, userId, appIndex);
-            InstalldOperator::TraverseCacheDirectory(filePath, cachePath);
-        }
-        bundleCacheSize = InstalldOperator::GetDiskUsageFromPath(cachePath);
+        bundleCacheSize = GetAppCacheSize(bundleName, userId, appIndex, moduleNameList);
     }
     // index 0 : bundle data size
     bundleStats[0] = appDataSize;

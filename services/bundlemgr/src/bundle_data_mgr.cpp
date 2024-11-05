@@ -3448,6 +3448,7 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
 {
     int32_t responseUserId = -1;
     int32_t uid = -1;
+    std::vector<std::string> moduleNameList;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
@@ -3456,9 +3457,10 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
         }
         responseUserId = infoItem->second.GetResponseUserId(userId);
         uid = infoItem->second.GetUid(responseUserId, appIndex);
+        infoItem->second.GetModuleNames(moduleNameList);
     }
     ErrCode ret = InstalldClient::GetInstance()->GetBundleStats(
-        bundleName, responseUserId, bundleStats, uid, appIndex, statFlag);
+        bundleName, responseUserId, bundleStats, uid, appIndex, statFlag, moduleNameList);
     if (ret != ERR_OK) {
         APP_LOGW("%{public}s getStats failed", bundleName.c_str());
         return false;
