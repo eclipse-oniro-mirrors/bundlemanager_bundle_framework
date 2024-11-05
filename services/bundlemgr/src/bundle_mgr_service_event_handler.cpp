@@ -93,6 +93,7 @@ constexpr const char* RESTOR_BUNDLE_NAME_LIST = "list";
 constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/temp/quickfix_app_recover.json";
 
 constexpr const char* INNER_UNDER_LINE = "_";
+constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> systemHspList_;
@@ -1646,6 +1647,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         return;
     }
 
+    std::unordered_map<std::string, std::pair<std::string, bool>> needInstallMap;
     for (auto &scanPathIter : scanPathList) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "reboot scan bundle path: %{public}s ", scanPathIter.c_str());
         bool removable = IsPreInstallRemovable(scanPathIter);
@@ -1756,27 +1758,72 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 break;
             }
         }
-
-        if (updateBundle) {
-            filePaths.clear();
-            filePaths.emplace_back(scanPathIter);
-        }
-
-        if (filePaths.empty()) {
+        if (!updateBundle) {
 #ifdef USE_PRE_BUNDLE_PROFILE
             UpdateRemovable(bundleName, removable);
 #endif
             continue;
         }
-
-        if (!OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, removable)) {
-            LOG_E(BMS_TAG_DEFAULT, "OTA bundle(%{public}s) failed", bundleName.c_str());
-            SavePreInstallException(scanPathIter);
-#ifdef USE_PRE_BUNDLE_PROFILE
-            UpdateRemovable(bundleName, removable);
-#endif
+        // system resource need update first
+        if (bundleName == SYSTEM_RESOURCES_APP) {
+            std::vector<std::string> filePaths = {scanPathIter};
+            (void)BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, removable);
+            continue;
         }
+        needInstallMap[bundleName] = std::make_pair(scanPathIter, removable);
     }
+    if (!InnerMultiProcessBundleInstall(needInstallMap, appType)) {
+        LOG_E(BMS_TAG_DEFAULT, "multi install failed");
+    }
+}
+
+bool BMSEventHandler::InnerMultiProcessBundleInstall(
+    const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap,
+    Constants::AppType appType)
+{
+    if (needInstallMap.empty()) {
+        LOG_I(BMS_TAG_DEFAULT, "no bundle need to update when ota");
+        return true;
+    }
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (bundleMgrService == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "bundleMgrService is nullptr");
+        return false;
+    }
+
+    sptr<BundleInstallerHost> installerHost = bundleMgrService->GetBundleInstaller();
+    if (installerHost == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "installerHost is nullptr");
+        return false;
+    }
+
+    size_t taskTotalNum = needInstallMap.size();
+    size_t threadsNum = static_cast<size_t>(installerHost->GetThreadsNum());
+    LOG_I(BMS_TAG_DEFAULT, "multi install start, totalNum: %{public}zu, num: %{public}zu", taskTotalNum, threadsNum);
+    std::atomic_uint taskEndNum = 0;
+    std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
+    for (auto iter = needInstallMap.begin(); iter != needInstallMap.end(); ++iter) {
+        std::string bundleName = iter->first;
+        std::pair pair = iter->second;
+        auto task = [bundleName, pair, taskTotalNum, appType, &taskEndNum, &bundlePromise]() {
+            std::vector<std::string> filePaths = {pair.first};
+            (void)BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, pair.second);
+            taskEndNum++;
+            if (bundlePromise && taskEndNum >= taskTotalNum) {
+                bundlePromise->NotifyAllTasksExecuteFinished();
+                LOG_I(BMS_TAG_DEFAULT, "All tasks has executed and notify promise when ota");
+            }
+        };
+
+        installerHost->AddTask(task, "BootRebootStartInstall : " + bundleName);
+    }
+
+    if (taskEndNum < taskTotalNum) {
+        bundlePromise->WaitForAllTasksExecute();
+        LOG_I(BMS_TAG_DEFAULT, "Wait for all tasks execute when ota");
+    }
+    LOG_I(BMS_TAG_DEFAULT, "multi install end");
+    return true;
 }
 
 bool BMSEventHandler::UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const
@@ -2337,13 +2384,14 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundleNeedCheckUser(filePaths, installParam, bundleName, appType);
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "bundle %{public}s with return code: %{public}d", bundleName.c_str(), ret);
-    if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
-        ret = ERR_OK;
-    }
-    if (ret != ERR_OK) {
+    if ((ret != ERR_OK) && (ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
         APP_LOGE("OTA bundle(%{public}s) failed, errCode:%{public}d", bundleName.c_str(), ret);
+        if (!filePaths.empty()) {
+            SavePreInstallException(filePaths[0]);
+        }
+        return false;
     }
-    return ret == ERR_OK;
+    return true;
 }
 
 bool BMSEventHandler::OTAInstallSystemSharedBundle(
