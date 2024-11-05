@@ -1312,5 +1312,65 @@ HWTEST_F(BmsInstallMultiUserTest, BMS_Install_multi_user_2800, Function | Medium
     UninstallBundle(BUNDLE_NAME, Constants::ALL_USERID);
     std::cout << "END BMS_Install_multi_user_2800" << std::endl;
 }
+
+/**
+ * @tc.number: BMS_Install_multi_user_2900
+ * @tc.name:  test the installation of a third-party bundle for multi users
+ * @tc.desc: 1.install hap user 101 successfully
+ *           2.create user 101 successfully
+ *           3.updata install the same version-code hapA and hapB under the user ALL_USERID successfully
+ *           4.query shortcutInfo under user 101 successfully
+ */
+HWTEST_F(BmsInstallMultiUserTest, BMS_Install_multi_user_2900, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Install_multi_user_2900" << std::endl;
+    int32_t userId = CreateNewUser();
+    EXPECT_NE(userId, 0);
+
+    std::vector<std::string> bundleFilePaths = { THIRD_BUNDLE_PATH + "bundleClient1.hap" };
+    auto res1 = InstallBundle(bundleFilePaths, userId);
+    EXPECT_EQ(res1, ERR_OK);
+
+    auto bmsProxy = GetBundleMgrProxy();
+    EXPECT_NE(bmsProxy, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto res = bmsProxy->GetShortcutInfoV9("com.example.ohosproject.hmservice", shortcutInfos, userId);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_FALSE(shortcutInfos.empty());
+
+    UninstallBundle("com.example.ohosproject.hmservice", Constants::ALL_USERID);
+    std::cout << "END BMS_Install_multi_user_2900" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Install_multi_user_3000
+ * @tc.name:  test the installation of a third-party bundle for multi users
+ * @tc.desc: 1.install hap user 101 successfully
+ *           2.create user 101 successfully
+ *           3.updata install the same version-code hapA and hapB under the user ALL_USERID successfully
+ *           4.query shortcutInfo under user 100 failed
+ */
+HWTEST_F(BmsInstallMultiUserTest, BMS_Install_multi_user_3000, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Install_multi_user_3000" << std::endl;
+    int32_t userId = CreateNewUser();
+    EXPECT_NE(userId, 0);
+
+    std::vector<std::string> bundleFilePaths = { THIRD_BUNDLE_PATH + "bundleClient1.hap" };
+    auto res1 = InstallBundle(bundleFilePaths, userId);
+    EXPECT_EQ(res1, ERR_OK);
+
+    auto bmsProxy = GetBundleMgrProxy();
+    EXPECT_NE(bmsProxy, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto res = bmsProxy->GetShortcutInfoV9("com.example.ohosproject.hmservice", shortcutInfos, 100);
+    EXPECT_NE(res, ERR_OK);
+    EXPECT_TRUE(shortcutInfos.empty());
+
+    UninstallBundle("com.example.ohosproject.hmservice", Constants::ALL_USERID);
+    std::cout << "END BMS_Install_multi_user_3000" << std::endl;
+}
 } // AppExecFwk
 } // OHOS
