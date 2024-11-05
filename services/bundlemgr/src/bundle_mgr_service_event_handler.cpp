@@ -1770,6 +1770,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             // The versionCode of Hap is equal to the installed versionCode.
             // You can only install new modules by OTA
             if (hasInstalledInfo.versionCode == hapVersionCode) {
+                LOG_NOFUNC_W(BMS_TAG_DEFAULT, "versionCode same -n %{public}s -v %{public}d",
+                    bundleName.c_str(), hapVersionCode);
                 InnerBundleInfo info;
                 if (dataMgr->FetchInnerBundleInfo(bundleName, info) &&
                     info.GetInstallMark().status != InstallExceptionStatus::INSTALL_FINISH) {
@@ -2706,8 +2708,6 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
         for (auto preBundlePath : loadIter.second.GetBundlePaths()) {
             auto parserInfoIter = parserInfoMap.find(preBundlePath);
             if (parserInfoIter != parserInfoMap.end()) {
-                LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA uninstall -n %{public}s modulePath:%{public}s exits",
-                    bundleName.c_str(), preBundlePath.c_str());
                 continue;
             }
 
