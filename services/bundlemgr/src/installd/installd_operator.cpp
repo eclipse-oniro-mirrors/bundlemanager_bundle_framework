@@ -833,11 +833,14 @@ bool InstalldOperator::DeleteFilesExceptDirs(const std::string &dataPath, const 
         filePath = OHOS::IncludeTrailingPathDelimiter(dataPath) + std::string(ptr->d_name);
         if (ptr->d_type == DT_DIR) {
             ret = OHOS::ForceRemoveDirectory(filePath);
-        } else {
-            if (access(filePath.c_str(), F_OK) == 0) {
-                ret = OHOS::RemoveFile(filePath);
-            }
+            continue;
         }
+        if (access(filePath.c_str(), F_OK) == 0) {
+            ret = OHOS::RemoveFile(filePath);
+            continue;
+        }
+        // maybe lnk_file
+        ret = CheckAndDeleteLinkFile(filePath);
     }
     closedir(dir);
     return ret;
