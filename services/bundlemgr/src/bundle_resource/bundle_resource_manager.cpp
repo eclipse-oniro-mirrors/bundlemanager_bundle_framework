@@ -21,6 +21,7 @@
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
 #include "event_report.h"
+#include "hitrace_meter.h"
 #include "thread_pool.h"
 
 namespace OHOS {
@@ -395,6 +396,7 @@ bool BundleResourceManager::GetAllResourceName(std::vector<std::string> &keyName
 bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo, int32_t appIndex)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
     if (bundleResourceRdb_->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo, appIndex)) {
