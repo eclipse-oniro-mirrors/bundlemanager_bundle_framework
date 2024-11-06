@@ -4033,7 +4033,8 @@ ErrCode BundleMgrHostImpl::GetDeveloperIds(const std::string &appDistributionTyp
     return dataMgr->GetDeveloperIds(appDistributionType, developerIdList, userId);
 }
 
-ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, const bool &state)
+ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, const bool &state,
+    bool isNeedSendNotify)
 {
     APP_LOGD("start SwitchUninstallState, bundleName : %{public}s, state : %{public}d", bundleName.c_str(), state);
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -4051,7 +4052,39 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->SwitchUninstallState(bundleName, state);
+    auto resCode = dataMgr->SwitchUninstallState(bundleName, state, isNeedSendNotify);
+    if (resCode != ERR_OK) {
+        APP_LOGE("set status fail");
+        return resCode;
+    }
+    if (!isNeedSendNotify) {
+        APP_LOGI("no need notify %{public}s", bundleName.c_str());
+        return resCode;
+    }
+    InnerBundleInfo innerBundleInfo;
+    bool isSuccess = dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo);
+    if (!isSuccess) {
+        APP_LOGE("get innerBundleInfo fail");
+        return resCode;
+    }
+    AbilityInfo mainAbilityInfo;
+    int32_t currentActiveUserId = AccountHelper::GetCurrentActiveUserId();
+    innerBundleInfo.GetMainAbilityInfo(mainAbilityInfo);
+    NotifyBundleEvents installRes = {
+        .isModuleUpdate = false,
+        .type = NotifyType::UPDATE,
+        .resultCode = ERR_OK,
+        .accessTokenId = innerBundleInfo.GetAccessTokenId(currentActiveUserId),
+        .uid = innerBundleInfo.GetUid(currentActiveUserId),
+        .bundleType = static_cast<int32_t>(innerBundleInfo.GetApplicationBundleType()),
+        .bundleName = innerBundleInfo.GetBundleName(),
+        .modulePackage = innerBundleInfo.GetModuleNameVec()[0],
+        .abilityName = mainAbilityInfo.name,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
+    };
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
+    return resCode;
 }
 
 void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info)

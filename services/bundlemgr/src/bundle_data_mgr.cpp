@@ -1898,6 +1898,9 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         APP_LOGD("bundleName %{public}s exist mainAbility", info.GetBundleName().c_str());
         info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
             responseUserId, mainAbilityInfo.applicationInfo);
+        if (mainAbilityInfo.applicationInfo.removable && info.IsNeedSendNotify()) {
+            mainAbilityInfo.applicationInfo.removable = info.GetUninstallState();
+        }
         mainAbilityInfo.installTime = installTime;
         // fix labelId or iconId is equal 0
         ModifyLauncherAbilityInfo(info.GetIsNewVersion(), mainAbilityInfo);
@@ -7840,7 +7843,8 @@ ErrCode BundleDataMgr::GetDeveloperIds(const std::string &appDistributionType,
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const bool &state)
+ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const bool &state,
+    const bool isNeedSendNotify)
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
@@ -7857,6 +7861,7 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
         return ERR_OK;
     }
     innerBundleInfo.SetUninstallState(state);
+    innerBundleInfo.SetNeedSendNotify(isNeedSendNotify);
     if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;

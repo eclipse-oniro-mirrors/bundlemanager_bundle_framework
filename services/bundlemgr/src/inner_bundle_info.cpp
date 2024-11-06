@@ -4385,6 +4385,16 @@ void InnerBundleInfo::SetUninstallState(const bool &uninstallState)
     uninstallState_ = uninstallState;
 }
 
+bool InnerBundleInfo::IsNeedSendNotify() const
+{
+    return isNeedSendNotify_;
+}
+
+void InnerBundleInfo::SetNeedSendNotify(const bool needStatus)
+{
+    isNeedSendNotify_ = needStatus;
+}
+
 std::vector<std::string> InnerBundleInfo::GetAllExtensionDirsInSpecifiedModule(const std::string &moduleName) const
 {
     std::vector<std::string> dirVec;
