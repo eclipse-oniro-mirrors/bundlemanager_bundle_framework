@@ -15,41 +15,20 @@
 
 #include "bundle_mgr_host_impl.h"
 
-#include <dirent.h>
-#include <future>
-#include <mutex>
-#include <set>
-#include <string>
-
 #include "account_helper.h"
-#include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
-#include "app_privilege_capability.h"
+#include "app_mgr_interface.h"
 #include "aot/aot_handler.h"
 #include "bms_extension_client.h"
-#include "bundle_constants.h"
-#include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
-#include "bundle_resource_helper.h"
-#include "bundle_sandbox_app_helper.h"
-#include "bundle_util.h"
-#include "bundle_verify_mgr.h"
-#include "directory_ex.h"
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_proxy.h"
 #endif
-#include "element_name.h"
-#include "ffrt.h"
 #include "hitrace_meter.h"
-#include "if_system_ability_manager.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
-#include "json_serializer.h"
-#include "scope_guard.h"
-#include "system_ability_definition.h"
-#include "app_mgr_interface.h"
 #include "system_ability_helper.h"
 #include "inner_bundle_clone_common.h"
 #ifdef DEVICE_USAGE_STATISTICS_ENABLED
@@ -58,6 +37,7 @@
 #endif
 #include "scope_guard.h"
 #include "xcollie_helper.h"
+#include "system_ability_definition.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -1903,19 +1883,13 @@ bool BundleMgrHostImpl::DumpBundleInfo(
 {
     APP_LOGD("DumpBundleInfo begin");
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
-    if (userId == Constants::ALL_USERID) {
-        if (!GetBundleUserInfos(bundleName, innerBundleUserInfos)) {
-            APP_LOGE("get all userInfos in bundle(%{public}s) failed", bundleName.c_str());
-            return false;
-        }
-        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
-    } else {
-        InnerBundleUserInfo innerBundleUserInfo;
-        if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
-            APP_LOGI("get userInfo in bundle(%{public}s) failed", bundleName.c_str());
-        }
-        innerBundleUserInfos.emplace_back(innerBundleUserInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo) &&
+        !GetBundleUserInfo(bundleName, Constants::DEFAULT_USERID, innerBundleUserInfo)) {
+        APP_LOGE("get all userInfos in bundle(%{public}s) failed", bundleName.c_str());
+        return false;
     }
+    innerBundleUserInfos.emplace_back(innerBundleUserInfo);
 
     BundleInfo bundleInfo;
     if (!GetBundleInfo(bundleName,
@@ -2425,7 +2399,8 @@ bool BundleMgrHostImpl::GetShortcutInfos(
     return dataMgr->GetShortcutInfos(bundleName, userId, shortcutInfos);
 }
 
-ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
+ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName,
+    std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
@@ -2442,7 +2417,7 @@ ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName, std:
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetShortcutInfoV9(bundleName, Constants::UNSPECIFIED_USERID, shortcutInfos);
+    return dataMgr->GetShortcutInfoV9(bundleName, userId, shortcutInfos);
 }
 
 bool BundleMgrHostImpl::GetAllCommonEventInfo(const std::string &eventKey,
@@ -3063,7 +3038,7 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
 }
 
 bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t userId,
-    std::vector<int64_t> &bundleStats, int32_t appIndex)
+    std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
@@ -3089,7 +3064,7 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGI("ret : %{public}d", ret);
         return ret == ERR_OK;
     }
-    return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex);
+    return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex, statFlag);
 }
 
 bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
@@ -4197,9 +4172,8 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
     }
     auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
     if (res != ERR_OK) {
-        APP_LOGE(
-            "failed -n %{public}s -u %{public}d -i %{public}d -f %{public}d err:%{public}d",
-            bundleName.c_str(), userId, appIndex, flags, res);
+        APP_LOGE_NOFUNC("GetCloneBundleInfo fail -n %{public}s -u %{public}d -i %{public}d -f %{public}d"
+            " err:%{public}d", bundleName.c_str(), userId, appIndex, flags, res);
         return res;
     }
     return ERR_OK;

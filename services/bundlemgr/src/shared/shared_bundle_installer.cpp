@@ -15,7 +15,6 @@
 
 #include "shared_bundle_installer.h"
 
-#include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "scope_guard.h"
 
@@ -36,7 +35,7 @@ ErrCode SharedBundleInstaller::ParseFiles()
 {
     ErrCode result = ERR_OK;
     if (installParam_.sharedBundleDirPaths.empty()) {
-        APP_LOGI("sharedBundleDirPaths is empty");
+        APP_LOGI_NOFUNC("sharedBundleDirPaths is empty");
         return result;
     }
 

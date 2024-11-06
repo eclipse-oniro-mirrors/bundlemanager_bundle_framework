@@ -16,13 +16,10 @@
 #include "bundle_install_checker.h"
 
 #include "app_log_tag_wrapper.h"
-#include "bundle_data_mgr.h"
 #include "bms_extension_data_mgr.h"
 #include "bundle_mgr_service.h"
-#include "bundle_mgr_service_event_handler.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
-#include "bundle_util.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "privilege_extension_ability_type.h"
@@ -149,7 +146,7 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
 {
     LOG_D(BMS_TAG_INSTALLER, "check hap syscaps start");
     if (bundlePaths.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "check hap syscaps failed due to empty bundlePaths");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "empty bundlePaths check hap syscaps fail");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 

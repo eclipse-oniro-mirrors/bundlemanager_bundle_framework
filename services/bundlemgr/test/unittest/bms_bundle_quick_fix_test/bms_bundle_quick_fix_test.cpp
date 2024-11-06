@@ -14,6 +14,7 @@
  */
 
 #define private public
+#define protected public
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -36,6 +37,7 @@
 #include "quick_fix_data_mgr.h"
 #include "quick_fix_deleter.h"
 #include "quick_fix_deployer.h"
+#include "quick_fix_manager_proxy.h"
 #include "quick_fix_switcher.h"
 #include "quick_fix_checker.h"
 #include "quick_fix_status_callback_proxy.h"
@@ -84,6 +86,7 @@ const std::string VALID_FILE_PATH_3 = "/data/service/el1/public/bms/bundle_manag
 const std::string VALID_FILE_PATH_4 = "../";
 const std::string INVALID_FILE_NAME = "..hello.hqf";
 const std::string VALID_FILE_NAME = "hello.hqf";
+const int32_t ERR_CODE = 8388613;
 }  // namespace
 
 class BmsBundleQuickFixTest : public testing::Test {
@@ -5006,6 +5009,106 @@ HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0003, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: QuickFixBootScanner_0200
+ * @tc.name: Test QuickFixBootScanner
+ * @tc.desc: 1.Test SetQuickFixState
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixBootScanner_0200, Function | SmallTest | Level0)
+{
+    QuickFixBootScanner scanner;
+    const std::shared_ptr<QuickFixState> state;
+    scanner.SetQuickFixState(state);
+    EXPECT_EQ(scanner.state_, nullptr);
+}
+
+/**
+ * @tc.number: DefaultNativeSo_0200
+ * Function: DefaultNativeSo
+ * @tc.name: test DefaultNativeSo
+ */
+HWTEST_F(BmsBundleQuickFixTest, DefaultNativeSo_0200, Function | SmallTest | Level0)
+{
+    PatchProfile patchProfile;
+    PatchExtractor patchExtractor(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A);
+    patchExtractor.zipFile_.isOpen_ = true;
+    ZipEntry zipEntry;
+    bool res = patchExtractor.Init();
+    patchExtractor.zipFile_.entriesMap_.emplace(
+        std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A + ServiceConstants::BASE, zipEntry);
+    EXPECT_TRUE(res);
+    bool isSystemLib64Exist = true;
+    AppqfInfo appqfInfo;
+    res = patchProfile.DefaultNativeSo(patchExtractor, isSystemLib64Exist, appqfInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: DefaultNativeSo_0300
+ * Function: DefaultNativeSo
+ * @tc.name: test DefaultNativeSo
+ */
+HWTEST_F(BmsBundleQuickFixTest, DefaultNativeSo_0300, Function | SmallTest | Level0)
+{
+    PatchProfile patchProfile;
+    PatchExtractor patchExtractor(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A);
+    patchExtractor.zipFile_.isOpen_ = true;
+    ZipEntry zipEntry;
+    bool res = patchExtractor.Init();
+    patchExtractor.zipFile_.entriesMap_.emplace(
+        std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A + ServiceConstants::BASE, zipEntry);
+    EXPECT_TRUE(res);
+    bool isSystemLib64Exist = false;
+    AppqfInfo appqfInfo;
+    res = patchProfile.DefaultNativeSo(patchExtractor, isSystemLib64Exist, appqfInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: DefaultNativeSo_0400
+ * Function: DefaultNativeSo
+ * @tc.name: test DefaultNativeSo
+ */
+HWTEST_F(BmsBundleQuickFixTest, DefaultNativeSo_0400, Function | SmallTest | Level0)
+{
+    PatchProfile patchProfile;
+    PatchExtractor patchExtractor(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI);
+    patchExtractor.zipFile_.isOpen_ = true;
+    ZipEntry zipEntry;
+    bool res = patchExtractor.Init();
+    patchExtractor.zipFile_.entriesMap_.emplace(
+        std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI + ServiceConstants::BASE, zipEntry);
+    EXPECT_TRUE(res);
+    bool isSystemLib64Exist = false;
+    AppqfInfo appqfInfo;
+    res = patchProfile.DefaultNativeSo(patchExtractor, isSystemLib64Exist, appqfInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: ParseNativeSo_0100
+ * Function: ParseNativeSo
+ * @tc.name: test ParseNativeSo
+ */
+HWTEST_F(BmsBundleQuickFixTest, ParseNativeSo_0100, Function | SmallTest | Level0)
+{
+    PatchProfile patchProfile;
+    PatchExtractor patchExtractor(ServiceConstants::LIBS);
+    patchExtractor.zipFile_.isOpen_ = true;
+    ZipEntry zipEntry;
+    bool res = patchExtractor.Init();
+    patchExtractor.zipFile_.entriesMap_.emplace(std::string(ServiceConstants::LIBS) + ServiceConstants::BASE, zipEntry);
+    EXPECT_TRUE(res);
+    AppqfInfo deployedAppqfInfo;
+    deployedAppqfInfo.versionCode = QUICK_FIX_VERSION_CODE;
+    deployedAppqfInfo.versionName = QUICK_FIX_VERSION_NAME;
+    deployedAppqfInfo.cpuAbi = "arm";
+    deployedAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+    deployedAppqfInfo.type = QuickFixType::HOT_RELOAD;
+    res = patchProfile.ParseNativeSo(patchExtractor, deployedAppqfInfo);
+    EXPECT_FALSE(res);
+}
+
+/**
  * @tc.number: QuickFixManagerHost_0100
  * @tc.name: test OnRemoteRequest by QuickFixManagerHost
  * @tc.desc: OnRemoteRequest
@@ -5035,6 +5138,39 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHost_0100, Function | SmallTest |
     
     code = -1;
     ret = quickFixMgrHostImpl.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: QuickFixManagerHost_0200
+ * @tc.name: test OnRemoteRequest by QuickFixManagerHost
+ * @tc.desc: OnRemoteRequest
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHost_0200, Function | SmallTest | Level0)
+{
+    QuickFixManagerHost quickFixMgrHost;
+
+    uint32_t code = static_cast<uint32_t>(QuickFixManagerInterfaceCode::DEPLOY_QUICK_FIX);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    int ret = quickFixMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = static_cast<uint32_t>(QuickFixManagerInterfaceCode::SWITCH_QUICK_FIX);
+    ret = quickFixMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = static_cast<uint32_t>(QuickFixManagerInterfaceCode::DELETE_QUICK_FIX);
+    ret = quickFixMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = static_cast<uint32_t>(QuickFixManagerInterfaceCode::CREATE_FD);
+    ret = quickFixMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = -1;
+    ret = quickFixMgrHost.OnRemoteRequest(code, data, reply, option);
     EXPECT_NE(ret, 0);
 }
 
@@ -5103,5 +5239,124 @@ HWTEST_F(BmsBundleQuickFixTest, SwitchQuickFixResult_0500, Function | SmallTest 
     Parcel parcel;
     std::string ret = result.ToString();
     EXPECT_FALSE(ret.empty());
+}
+
+/**
+ * @tc.number: QuickFixStatusCallbackHost_0100
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest by QuickFixStatusCallbackHost
+ * @tc.desc: OnRemoteRequest.
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixStatusCallbackHost_0100, Function | SmallTest | Level0)
+{
+    MockQuickFixCallback quickFixStatusCallbackHost;
+    uint32_t code = static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DEPLOYED);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    int ret = quickFixStatusCallbackHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_SWITCHED);
+    ret = quickFixStatusCallbackHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DELETED);
+    ret = quickFixStatusCallbackHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = -1;
+    ret = quickFixStatusCallbackHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number:QuickFixManagerProxy_0100
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix by QuickFixManagerProxy
+ * @tc.desc: DeployQuickFix.
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerProxy_0100, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> object;
+    QuickFixManagerProxy quickFixProxy(object);
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+    std::vector<std::string> bundleFilePaths;
+
+    ErrCode ret = quickFixProxy.DeployQuickFix(bundleFilePaths, callback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+
+    bundleFilePaths.push_back(HAP_FILE_PATH1);
+    ret = quickFixProxy.DeployQuickFix(bundleFilePaths, nullptr);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+
+    ret = quickFixProxy.DeployQuickFix(bundleFilePaths, callback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED);
+}
+
+/**
+ * @tc.number:QuickFixManagerProxy_0200
+ * Function: SwitchQuickFix
+ * @tc.name: test SwitchQuickFix by QuickFixManagerProxy
+ * @tc.desc: SwitchQuickFix.
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerProxy_0200, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> object;
+    QuickFixManagerProxy quickFixProxy(object);
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+
+    ErrCode ret = quickFixProxy.SwitchQuickFix("", true, callback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+
+    ret = quickFixProxy.SwitchQuickFix(BUNDLE_NAME, true, callback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED);
+}
+
+/**
+ * @tc.number:QuickFixManagerProxy_0300
+ * Function: DeleteQuickFix
+ * @tc.name: test DeleteQuickFix by QuickFixManagerProxy
+ * @tc.desc: DeleteQuickFix.
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerProxy_0300, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> object;
+    QuickFixManagerProxy quickFixProxy(object);
+    sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
+    EXPECT_NE(callback, nullptr) << "the callback is nullptr";
+
+    ErrCode ret = quickFixProxy.DeleteQuickFix("", callback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+
+    ret = quickFixProxy.DeleteQuickFix(BUNDLE_NAME, nullptr);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+
+    ret = quickFixProxy.DeleteQuickFix(BUNDLE_NAME, callback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED);
+}
+
+/**
+ * @tc.number:QuickFixManagerProxy_0400
+ * Function: CopyFiles
+ * @tc.name: test CopyFiles by QuickFixManagerProxy
+ * @tc.desc: CopyFiles.
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerProxy_0400, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> object;
+    QuickFixManagerProxy quickFixProxy(object);
+    std::vector<std::string> sourceFiles;
+    std::vector<std::string> destFiles;
+    ErrCode ret = quickFixProxy.CopyFiles(sourceFiles, destFiles);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+
+    sourceFiles.push_back(FILE1_PATH);
+    CreateFiles(sourceFiles);
+    ret = quickFixProxy.CopyFiles(sourceFiles, destFiles);
+    EXPECT_EQ(ret, ERR_CODE);
+    DeleteFiles(sourceFiles);
 }
 } // OHOS

@@ -15,15 +15,8 @@
 
 #include "bundle_resource_process.h"
 
-#include <mutex>
-
-#include "ability_info.h"
 #include "account_helper.h"
-#include "app_log_wrapper.h"
-#include "bundle_constants.h"
-#include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
-#include "bundle_resource_manager.h"
 #include "bundle_resource_parser.h"
 
 namespace OHOS {

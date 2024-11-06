@@ -4734,7 +4734,7 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetJsonProfile(static_cast<ProfileType>(profileType), bundleName, moduleName, profile, userId));
     if (ret != SUCCESS) {
-        APP_LOGE("GetJsonProfile call error, bundleName is %{public}s", bundleName.c_str());
+        APP_LOGE_NOFUNC("napi GetJsonProfile err:%{public}d -n %{public}s", ret, bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_JSON_PROFILE, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);

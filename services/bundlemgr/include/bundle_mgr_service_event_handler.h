@@ -413,7 +413,7 @@ private:
      * @param removable Indicates whether it can be removed.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
-    bool OTAInstallSystemBundleNeedCheckUser(
+    static bool OTAInstallSystemBundleNeedCheckUser(
         const std::vector<std::string> &filePaths,
         const std::string &bundleName,
         Constants::AppType appType,
@@ -480,6 +480,10 @@ private:
         std::greater<int32_t>> &taskMap, int32_t userId);
     void AddTaskParallel(
         int32_t taskPriority, const std::vector<PreScanInfo> &tasks, int32_t userId);
+
+    bool InnerMultiProcessBundleInstall(
+        const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap,
+        Constants::AppType appType);
 
     bool CheckOtaFlag(OTAFlag flag, bool &result);
     bool UpdateOtaFlag(OTAFlag flag);

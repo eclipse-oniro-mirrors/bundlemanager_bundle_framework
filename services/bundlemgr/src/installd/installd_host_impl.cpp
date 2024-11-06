@@ -859,57 +859,48 @@ std::string InstalldHostImpl::GetAppDataPath(const std::string &bundleName, cons
 {
     if (appIndex == 0) {
         return ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
-                std::to_string(userId) + ServiceConstants::BASE + bundleName;
+            std::to_string(userId) + ServiceConstants::BASE + bundleName;
     } else {
         std::string innerDataDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
         return ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
-                std::to_string(userId) + ServiceConstants::BASE + innerDataDir;
+            std::to_string(userId) + ServiceConstants::BASE + innerDataDir;
     }
 }
 
-int64_t InstalldHostImpl::HandleAppDataSizeStats(const std::string &bundleName,
-    const int32_t userId, const int32_t appIndex)
+int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex, const std::vector<std::string> &moduleNameList)
 {
-    std::vector<std::string> bundlePath;
-    bundlePath.push_back(Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName); // bundle code
-    bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
-    // ark profile
-    bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR + bundleName);
-    int64_t fileSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
-    bundlePath.clear();
-    int64_t allBundleLocalSize = 0;
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        std::string filePath = GetAppDataPath(bundleName, el, userId, appIndex);
-        LOG_D(BMS_TAG_INSTALLD, "filePath = %{public}s", filePath.c_str());
-        if (appIndex > 0) {
-            continue;
-        }
-        allBundleLocalSize += InstalldOperator::GetDiskUsage(filePath);
-        if (el == ServiceConstants::BUNDLE_EL[1]) {
-            for (const auto &dataDir : BUNDLE_DATA_DIR) {
-                bundlePath.push_back(filePath + dataDir);
-            }
-        } else {
-            bundlePath.push_back(filePath);
+    std::string bundleNameDir = bundleName;
+    if (appIndex > 0) {
+        bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
+    std::vector<std::string> cachePaths;
+    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
+    elPath.push_back(ServiceConstants::DIR_EL5);
+    for (const auto &el : elPath) {
+        cachePaths.push_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE +
+            bundleNameDir + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
+        for (const auto &moduleName : moduleNameList) {
+            std::string moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir +
+                ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
+            cachePaths.push_back(moduleCachePath);
+            LOG_D(BMS_TAG_INSTALLD, "GetBundleStats, add module cache path: %{public}s", moduleCachePath.c_str());
         }
     }
-    int64_t bundleLocalSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
-    LOG_D(BMS_TAG_INSTALLD,
-        "GetBundleStats, allBundleLocalSize = %{public}" PRId64 ", bundleLocalSize = %{public}" PRId64,
-        allBundleLocalSize, bundleLocalSize);
-    int64_t systemFolderSize = allBundleLocalSize - bundleLocalSize;
-    if (appIndex == 0) {
-        return fileSize + systemFolderSize;
-    }
-    return 0;
+    return InstalldOperator::GetDiskUsageFromPath(cachePaths);
 }
 
 ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const int32_t userId,
-    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex)
+    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
+    const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     LOG_D(BMS_TAG_INSTALLD,
         "GetBundleStats, bundleName = %{public}s, userId = %{public}d, uid = %{public}d, appIndex = %{public}d",
         bundleName.c_str(), userId, uid, appIndex);
+    LOG_D(BMS_TAG_INSTALLD,
+        "GetBundleStats, statFlag = %{public}d", statFlag);
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
@@ -917,17 +908,30 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     if (bundleName.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-
-    int64_t appDataSize = HandleAppDataSizeStats(bundleName, userId, appIndex);
+    bundleStats = {0, 0, 0, 0, 0};
+    std::vector<std::string> bundlePath;
+    bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
+    int64_t appDataSize = 0;
+    int64_t bundleDataSize = 0;
+    int64_t bundleCacheSize = 0;
+    if ((statFlag & OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE) !=
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE) {
+        appDataSize = appIndex == 0 ? InstalldOperator::GetDiskUsageFromPath(bundlePath) : 0;
+    }
+    if ((statFlag & OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE) !=
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE) {
+        bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
+    }
+    if ((statFlag & OHOS::AppExecFwk::Constants::GET_BUNDLE_WITHOUT_CACHE_SIZE) !=
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE) {
+        bundleCacheSize = GetAppCacheSize(bundleName, userId, appIndex, moduleNameList);
+    }
     // index 0 : bundle data size
-    bundleStats.push_back(appDataSize);
+    bundleStats[0] = appDataSize;
     // index 1 : local bundle data size
-    int64_t bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
-    bundleStats.push_back(bundleDataSize);
-    bundleStats.push_back(0);
-    bundleStats.push_back(0);
+    bundleStats[1] = bundleDataSize;
     // index 4 : cache size
-    bundleStats.push_back(0);
+    bundleStats[4] = bundleCacheSize;
     return ERR_OK;
 }
 

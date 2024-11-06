@@ -1358,4 +1358,23 @@ HWTEST_F(BmsEventHandlerTest, UpdatePreinstallDBForUninstalledBundle_0100, Funct
     handler->UpdatePreinstallDBForUninstalledBundle(BUNDLE_NAME, innerBundleInfos);
     EXPECT_NE(innerBundleInfo.baseBundleInfo_, nullptr);
 }
+
+/**
+ * @tc.number: InnerMultiProcessBundleInstall_0100
+ * @tc.name: InnerMultiProcessBundleInstall
+ * @tc.desc: test InnerMultiProcessBundleInstall
+ */
+HWTEST_F(BmsEventHandlerTest, InnerMultiProcessBundleInstall_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::unordered_map<std::string, std::pair<std::string, bool>> needInstallMap;
+        bool ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP);
+        EXPECT_TRUE(ret);
+        needInstallMap["testName"] = std::make_pair("notExist", true);
+        ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP);
+        EXPECT_TRUE(ret);
+    }
+}
 } // OHOS

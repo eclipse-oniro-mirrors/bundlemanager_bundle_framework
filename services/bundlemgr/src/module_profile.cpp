@@ -15,19 +15,10 @@
 
 #include "module_profile.h"
 
-#include <algorithm>
-#include <mutex>
 #include <sstream>
 
-#include "app_log_wrapper.h"
-#include "app_privilege_capability.h"
-#include "bundle_constants.h"
-#include "bundle_service_constants.h"
-#include "bundle_util.h"
-#include "common_profile.h"
 #include "parameter.h"
 #include "parameters.h"
-#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -2736,9 +2727,17 @@ ErrCode ModuleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserNativeSo(moduleJson, bundleExtractor, innerBundleInfo)) {
+#ifdef X86_EMULATOR_MODE
+        APP_LOGE("Parser native so failed");
+        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+#endif
         APP_LOGW("Parser native so failed");
     }
     if (!ParserArkNativeFilePath(moduleJson, bundleExtractor, innerBundleInfo)) {
+#ifdef X86_EMULATOR_MODE
+        APP_LOGE("Parser ark native file failed");
+        return ERR_APPEXECFWK_PARSE_AN_FAILED;
+#endif
         APP_LOGW("Parser ark native file failed");
     }
     return ERR_OK;

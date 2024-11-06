@@ -15,17 +15,13 @@
 
 #include "quick_fix/patch_profile.h"
 
-#include <mutex>
 #include <sstream>
 
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "bundle_constants.h"
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "json_util.h"
 #include "parameter.h"
-#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -340,6 +336,10 @@ ErrCode PatchProfile::TransformTo(
     // hot reload does not process so files
     if ((appQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) &&
         (!ParseNativeSo(patchExtractor, appQuickFix.deployingAppqfInfo))) {
+#ifdef X86_EMULATOR_MODE
+        LOG_E(BMS_TAG_DEFAULT, "ParseNativeSo failed");
+        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+#endif
         LOG_W(BMS_TAG_DEFAULT, "ParseNativeSo failed");
     }
     return ERR_OK;

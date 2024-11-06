@@ -270,13 +270,14 @@ napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerGetShortcutInfo(std::string &bundleName, std::vector<OHOS::AppExecFwk::ShortcutInfo> &shortcutInfos)
+static ErrCode InnerGetShortcutInfo(std::string &bundleName,
+    std::vector<OHOS::AppExecFwk::ShortcutInfo> &shortcutInfos, int32_t userId)
 {
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    return launcherService->GetShortcutInfoV9(bundleName, shortcutInfos);
+    return launcherService->GetShortcutInfoV9(bundleName, shortcutInfos, userId);
 }
 
 void GetShortcutInfoExec(napi_env env, void *data)
@@ -286,7 +287,8 @@ void GetShortcutInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerGetShortcutInfo(asyncCallbackInfo->bundleName, asyncCallbackInfo->shortcutInfos);
+    asyncCallbackInfo->err = InnerGetShortcutInfo(asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->shortcutInfos, asyncCallbackInfo->userId);
     asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
 }
 
@@ -354,7 +356,7 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
 {
     APP_LOGI_NOFUNC("napi GetShortcutInfoSync called");
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -363,6 +365,13 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return nullptr;
+    }
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
+            APP_LOGW("parse userId falied");
+            userId = Constants::UNSPECIFIED_USERID;
+        }
     }
 
     auto launcherService = GetLauncherService();
@@ -374,9 +383,9 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
-    ErrCode ret = CommonFunc::ConvertErrCode(launcherService->GetShortcutInfoV9(bundleName, shortcutInfos));
+    ErrCode ret = CommonFunc::ConvertErrCode(launcherService->GetShortcutInfoV9(bundleName, shortcutInfos, userId));
     if (ret != SUCCESS) {
-        APP_LOGE("GetShortcutInfoV9 failed, bundleName is %{public}s", bundleName.c_str());
+        APP_LOGE("failed, ret %{public}d", ret);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_SHORTCUT_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);

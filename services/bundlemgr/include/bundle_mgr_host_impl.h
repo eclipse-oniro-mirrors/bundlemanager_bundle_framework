@@ -697,7 +697,7 @@ public:
      * @return Returns errCode of result.
      */
     virtual ErrCode GetShortcutInfoV9(const std::string &bundleName,
-        std::vector<ShortcutInfo> &shortcutInfos) override;
+        std::vector<ShortcutInfo> &shortcutInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.
@@ -855,7 +855,7 @@ public:
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
-        std::vector<int64_t> &bundleStats, int32_t appIndex = 0) override;
+        std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
 

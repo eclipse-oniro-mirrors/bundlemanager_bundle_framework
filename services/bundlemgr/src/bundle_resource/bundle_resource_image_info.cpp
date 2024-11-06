@@ -15,7 +15,6 @@
 
 #include "bundle_resource_image_info.h"
 
-#include <fstream>
 #include <sstream>
 
 #include "app_log_wrapper.h"

@@ -15,13 +15,8 @@
 
 #include "bundle_resource_parser.h"
 
-#include <cstdlib>
-#include "nlohmann/json.hpp"
-
-#include "app_log_wrapper.h"
 #include "bundle_resource_configuration.h"
 #include "bundle_resource_image_info.h"
-#include "bundle_system_state.h"
 #include "bundle_resource_drawable.h"
 #include "bundle_util.h"
 #include "json_util.h"

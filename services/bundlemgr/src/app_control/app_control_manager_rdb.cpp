@@ -17,8 +17,6 @@
 
 #include "app_control_constants.h"
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
 #include "bms_extension_client.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
@@ -36,6 +34,7 @@ namespace {
     const int32_t APP_ID_INDEX = 4;
     const int32_t CONTROL_MESSAGE_INDEX = 5;
     const int32_t DISPOSED_STATUS_INDEX = 6;
+    constexpr int8_t TIME_STAMP_INDEX = 8;
     // app control table key
     const std::string CALLING_NAME = "CALLING_NAME";
     const std::string APP_CONTROL_LIST = "APP_CONTROL_LIST";
@@ -608,8 +607,20 @@ ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
             LOG_W(BMS_TAG_DEFAULT, "parse DisposedRule failed");
         }
         disposedRules.push_back(rule);
+        PrintDisposedRuleInfo(absSharedResultSet, rule);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     return ERR_OK;
+}
+
+void AppControlManagerRdb::PrintDisposedRuleInfo(
+    const std::shared_ptr<NativeRdb::AbsSharedResultSet> absSharedResultSet, const DisposedRule &rule)
+{
+    std::string callerName;
+    absSharedResultSet->GetString(CALLING_NAME_INDEX, callerName);
+    int32_t setRuleTime = 0;
+    absSharedResultSet->GetInt(TIME_STAMP_INDEX, setRuleTime);
+    LOG_NOFUNC_W(BMS_TAG_DEFAULT, "control rule caller:%{public}s time:%{public}d rule:%{public}s",
+        callerName.c_str(), setRuleTime, rule.ToString().c_str());
 }
 }
 }

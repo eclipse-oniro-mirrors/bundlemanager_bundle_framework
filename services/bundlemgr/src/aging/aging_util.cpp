@@ -15,8 +15,6 @@
 
 #include "aging/aging_util.h"
 
-#include "app_log_wrapper.h"
-#include "aging/aging_bundle_info.h"
 #include "aging/aging_constants.h"
 #include "aging/aging_request.h"
 #include "bundle_util.h"

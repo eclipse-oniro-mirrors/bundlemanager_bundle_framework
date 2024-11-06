@@ -15,8 +15,6 @@
 
 #include "aot/aot_args.h"
 
-#include <algorithm>
-
 #include "parcel_macro.h"
 #include "string_ex.h"
 

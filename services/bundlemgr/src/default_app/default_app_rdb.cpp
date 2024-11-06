@@ -16,11 +16,8 @@
 #include "default_app_rdb.h"
 
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
-#include "default_app_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {

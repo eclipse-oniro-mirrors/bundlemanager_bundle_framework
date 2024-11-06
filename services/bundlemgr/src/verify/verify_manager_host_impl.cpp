@@ -15,16 +15,10 @@
 
 #include "verify_manager_host_impl.h"
 
-#include <fcntl.h>
 #include <sys/wait.h>
-#include <unistd.h>
-#include <unistd.h>
 
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
-#include "bundle_util.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "verify_util.h"

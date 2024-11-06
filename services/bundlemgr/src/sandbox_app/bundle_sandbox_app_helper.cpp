@@ -15,8 +15,6 @@
 
 #include "bundle_sandbox_app_helper.h"
 
-#include "app_log_wrapper.h"
-
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
 #include "bundle_sandbox_installer.h"
 #endif

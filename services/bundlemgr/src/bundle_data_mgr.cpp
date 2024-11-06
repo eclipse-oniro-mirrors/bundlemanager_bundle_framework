@@ -15,23 +15,15 @@
 
 #include "bundle_data_mgr.h"
 
-#include <algorithm>
-#include <chrono>
-#include <cinttypes>
-#include <sstream>
-
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
 #endif
 #endif
 #include "account_helper.h"
-#include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_client.h"
-#include "bms_extension_data_mgr.h"
-#include "bundle_constants.h"
 #include "bundle_data_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
 #include "bundle_event_callback_death_recipient.h"
@@ -39,7 +31,6 @@
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_status_callback_death_recipient.h"
-#include "bundle_util.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
@@ -47,17 +38,13 @@
 #include "inner_bundle_clone_common.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
-#include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
 #include "locale_info.h"
 #endif
 #include "mime_type_mgr.h"
-#include "nlohmann/json.hpp"
-#include "free_install_params.h"
 #include "parameters.h"
 #include "router_map_helper.h"
-#include "singleton.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_data_manager.h"
 #endif
@@ -3457,10 +3444,11 @@ bool BundleDataMgr::HasUserInstallInBundle(
 }
 
 bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
-    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex) const
+    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex, const uint32_t statFlag) const
 {
     int32_t responseUserId = -1;
     int32_t uid = -1;
+    std::vector<std::string> moduleNameList;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
@@ -3469,15 +3457,14 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
         }
         responseUserId = infoItem->second.GetResponseUserId(userId);
         uid = infoItem->second.GetUid(responseUserId, appIndex);
+        infoItem->second.GetModuleNames(moduleNameList);
     }
-
-    ErrCode ret =
-        InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats, uid, appIndex);
+    ErrCode ret = InstalldClient::GetInstance()->GetBundleStats(
+        bundleName, responseUserId, bundleStats, uid, appIndex, statFlag, moduleNameList);
     if (ret != ERR_OK) {
         APP_LOGW("%{public}s getStats failed", bundleName.c_str());
         return false;
     }
-
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
@@ -3931,12 +3918,14 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     APP_LOGD("GetInnerBundleInfoWithFlags: %{public}s", bundleName.c_str());
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        APP_LOGW_NOFUNC("%{public}s not find", bundleName.c_str());
+        LOG_NOFUNC_E(BMS_TAG_COMMON, "bundle not exist -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+            bundleName.c_str(), userId, appIndex, flags);
         return false;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
     if (innerBundleInfo.IsDisabled()) {
-        APP_LOGD("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        LOG_NOFUNC_E(BMS_TAG_COMMON, "bundle disabled -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+            bundleName.c_str(), userId, appIndex, flags);
         return false;
     }
 
@@ -4012,12 +4001,14 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
         bundleName.c_str(), flags, userId, appIndex);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        APP_LOGD("GetInnerBundleInfoWithFlagsV9: bundleName %{public}s not find", bundleName.c_str());
+        LOG_NOFUNC_E(BMS_TAG_COMMON, "bundle not exist -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+            bundleName.c_str(), userId, appIndex, flags);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
     if (innerBundleInfo.IsDisabled()) {
-        APP_LOGD("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        LOG_NOFUNC_E(BMS_TAG_COMMON, "bundle disabled -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+            bundleName.c_str(), userId, appIndex, flags);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 

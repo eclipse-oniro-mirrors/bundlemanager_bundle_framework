@@ -15,12 +15,7 @@
 #include "router_map_helper.h"
 
 #include "app_log_wrapper.h"
-#include "bundle_info.h"
 #include "router_item_compare.h"
-
-#include <map>
-#include <regex>
-#include <set>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -56,7 +51,7 @@ std::string RouterMapHelper::ExtractVersionFromOhmurl(const std::string &ohmurl)
     size_t lastAmpersandPos = ohmurl.rfind('&');
     std::string versionString;
     if (lastAmpersandPos == std::string::npos) {
-        APP_LOGI("No ampersand found in the input ohmurl");
+        APP_LOGI_NOFUNC("No ampersand found in the input ohmurl");
         return versionString;
     }
     // "+1" for start intercepting after the "&" character

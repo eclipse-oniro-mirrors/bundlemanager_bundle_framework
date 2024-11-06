@@ -15,9 +15,6 @@
 
 #include "pre_bundle_profile.h"
 
-#include "app_log_wrapper.h"
-#include "string_ex.h"
-
 namespace OHOS {
 namespace AppExecFwk {
 namespace {

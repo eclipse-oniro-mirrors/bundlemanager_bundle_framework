@@ -2603,7 +2603,7 @@ bool BundleMgrProxy::GetShortcutInfos(const std::string &bundleName, std::vector
 }
 
 ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName,
-    std::vector<ShortcutInfo> &shortcutInfos)
+    std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
@@ -2619,6 +2619,10 @@ ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName,
 
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to GetShortcutInfos due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetShortcutInfos due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfosWithErrCode<ShortcutInfo>(
@@ -3106,7 +3110,7 @@ bool BundleMgrProxy::ObtainCallingBundleName(std::string &bundleName)
 }
 
 bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userId,
-    std::vector<int64_t> &bundleStats, int32_t appIndex)
+    std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag)
 {
     APP_LOGD("begin to GetBundleStats");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -3125,6 +3129,10 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     }
     if (!data.WriteInt32(appIndex)) {
         APP_LOGE("fail to GetBundleStats due to write appIndex fail");
+        return false;
+    }
+    if (!data.WriteUint32(statFlag)) {
+        APP_LOGE("fail to GetBundleStats due to write statFlag fail");
         return false;
     }
 

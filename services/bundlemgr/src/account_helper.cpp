@@ -15,8 +15,6 @@
 
 #include "account_helper.h"
 
-#include <vector>
-
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 
@@ -75,7 +73,7 @@ int32_t AccountHelper::GetOsAccountLocalIdFromUid(const int32_t callingUid)
     int32_t localId;
     ErrCode err = AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(callingUid, localId);
     if (err != ERR_OK || localId == Constants::DEFAULT_USERID) {
-        APP_LOGW("GetOsAccountLocalIdFromUid failed: uid %{public}d, req from active userid", callingUid);
+        APP_LOGW_NOFUNC("GetOsAccountLocalIdFromUid fail uid:%{public}d req from active userid", callingUid);
         return AccountHelper::GetCurrentActiveUserId();
     }
     return localId;
