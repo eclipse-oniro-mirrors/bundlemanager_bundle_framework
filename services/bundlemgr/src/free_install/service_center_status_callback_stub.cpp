@@ -45,6 +45,9 @@ int32_t ServiceCenterStatusCallbackStub::OnRemoteRequest(
     if (code == ServiceCenterFunction::CONNECT_DELAYED_HEARTBEAT) {
         return OnDelayedHeartbeat(Str16ToStr8(result));
     }
+    if (DISCONNECT_ABILITY_FUNC.find(static_cast<ServiceCenterFunction>(code)) != DISCONNECT_ABILITY_FUNC.end()) {
+        return OnServiceCenterReceived(Str16ToStr8(result));
+    }
     return OnInstallFinished(Str16ToStr8(result));
 }
 }  // namespace AppExecFwk

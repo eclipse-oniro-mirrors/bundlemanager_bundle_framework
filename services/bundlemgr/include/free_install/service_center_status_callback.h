@@ -44,6 +44,11 @@ public:
      */
     int32_t OnDelayedHeartbeat(std::string installResult);
 
+    /**
+     * @brief Executed when a service callback
+     * @param installResultStr The json string of InstallResult
+     */
+    int32_t OnServiceCenterReceived(std::string installResultStr);
 private:
     std::weak_ptr<BundleConnectAbilityMgr> server_;
 };
