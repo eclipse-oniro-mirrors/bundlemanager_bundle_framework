@@ -3511,7 +3511,7 @@ ErrCode BaseBundleInstaller::DeleteOldArkNativeFile(const InnerBundleInfo &oldIn
     return result;
 }
 
-ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData) const
+ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData)
 {
     ErrCode result = ERR_OK;
     if (!isKeepData) {
@@ -3541,12 +3541,21 @@ ErrCode BaseBundleInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info) co
     return result;
 }
 
-ErrCode BaseBundleInstaller::RemoveBundleDataDir(const InnerBundleInfo &info, bool forException) const
+ErrCode BaseBundleInstaller::RemoveBundleDataDir(const InnerBundleInfo &info, bool forException)
 {
     ErrCode result =
         InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_,
             info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE);
-    CHECK_RESULT(result, "RemoveBundleDataDir failed %{public}d");
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "RemoveBundleDataDir failed %{public}d", result);
+        InstallParam installParam;
+        SendBundleSystemEvent(
+            info.GetBundleName(),
+            BundleEventType::UNINSTALL,
+            installParam,
+            sysEventInfo_.preBundleScene,
+            ERR_APPEXECFWK_UNINSTALL_BUNDLE_FILE_DELETE_FAILED);
+    }
 
     if (forException) {
         result = InstalldClient::GetInstance()->RemoveExtensionDir(userId_, createExtensionDirs_);
