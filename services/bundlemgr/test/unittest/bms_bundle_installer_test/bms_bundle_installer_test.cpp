@@ -376,20 +376,6 @@ void BmsBundleInstallerTest::ClearBundleInfo()
     EXPECT_TRUE(result) << "the bundle info in db clear fail: " << BUNDLE_NAME;
 }
 
-
-/**
- * @tc.number: SetEncryptionDirPolicy_0100
- * @tc.name: test SetEncryptionDirPolicy
- * @tc.desc: test SetEncryptionDirPolicy of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, SetEncryptionDirPolicy_0100, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo info;
-    bool ret = installer.SetEncryptionDirPolicy(info);
-    EXPECT_FALSE(ret);
-}
-
 /**
  * @tc.number: PrepareSkillUri_0100
  * @tc.name: test PrepareSkillUri
@@ -6171,8 +6157,6 @@ HWTEST_F(BmsBundleInstallerTest, RollbackHmpCommonInfo_0100, Function | SmallTes
     BaseBundleInstaller installer;
 
     InnerBundleInfo info;
-    std::string dir;
-    installer.CreateScreenLockProtectionExistDirs(info, dir);
 
     std::vector<std::string> extensionDataGroupIds;
     std::vector<std::string> bundleDataGroupIds;

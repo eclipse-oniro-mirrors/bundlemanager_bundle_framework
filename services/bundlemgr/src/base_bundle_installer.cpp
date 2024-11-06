@@ -3009,71 +3009,6 @@ std::vector<std::string> BaseBundleInstaller::GenerateScreenLockProtectionDir(co
     return dirs;
 }
 
-bool BaseBundleInstaller::SetEncryptionDirPolicy(InnerBundleInfo &info)
-{
-    InnerBundleUserInfo userInfo;
-    if (!InitDataMgr()) {
-        return false;
-    }
-    if (!info.GetInnerBundleUserInfo(userId_, userInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "%{public}s get user %{public}d failed", info.GetBundleName().c_str(), userId_);
-        return false;
-    }
-
-    if (!userInfo.keyId.empty()) {
-        LOG_I(BMS_TAG_INSTALLER, "keyId is not empty, bundleName: %{public}s", info.GetBundleName().c_str());
-        return true;
-    }
-
-    int32_t uid = userInfo.uid;
-    std::string bundleName = info.GetBundleName();
-    std::string keyId = "";
-    auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(uid, bundleName, userId_, keyId);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "SetEncryptionPolicy failed");
-    }
-    LOG_D(BMS_TAG_INSTALLER, "%{public}s, keyId: %{public}s", bundleName.c_str(), keyId.c_str());
-    info.SetkeyId(userId_, keyId);
-    if (!dataMgr_->UpdateInnerBundleInfo(info, false)) {
-        LOG_E(BMS_TAG_INSTALLER, "save keyId failed");
-        return false;
-    }
-    return result == ERR_OK;
-}
-
-void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleInfo &info,
-    const std::string &dir)
-{
-    auto pos = dir.rfind(ServiceConstants::PATH_SEPARATOR);
-    if (pos == std::string::npos || !BundleUtil::IsExistDir(dir.substr(0, pos))) {
-        LOG_E(BMS_TAG_INSTALLER, "parent dir(%{public}s) missing: el5", dir.substr(0, pos).c_str());
-        return;
-    }
-    InnerBundleUserInfo newInnerBundleUserInfo;
-    if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
-            info.GetBundleName().c_str(), userId_);
-        return;
-    }
-    LOG_I(BMS_TAG_INSTALLER, "create el5 dir: %{public}s, uid: %{public}d",
-        dir.c_str(), newInnerBundleUserInfo.uid);
-    int32_t mode = S_IRWXU;
-    int32_t gid = newInnerBundleUserInfo.uid;
-    if (dir.find(ServiceConstants::DATABASE) != std::string::npos) {
-        mode = S_IRWXU | S_IRWXG | S_ISGID;
-        gid = ServiceConstants::DATABASE_DIR_GID;
-    }
-    if (InstalldClient::GetInstance()->Mkdir(dir, mode, newInnerBundleUserInfo.uid, gid) != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "create Screen Lock Protection dir %{public}s failed", dir.c_str());
-    }
-    ErrCode result = InstalldClient::GetInstance()->SetDirApl(
-        dir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
-        info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
-    if (result != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "fail to SetDirApl dir %{public}s, error is %{public}d", dir.c_str(), result);
-    }
-}
-
 void BaseBundleInstaller::CreateScreenLockProtectionDir()
 {
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
@@ -3106,13 +3041,23 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
         }
         return;
     }
-    for (const std::string &dir : dirs) {
-        LOG_D(BMS_TAG_INSTALLER, "create el5 dir: %{public}s.", dir.c_str());
-        CreateScreenLockProtectionExistDirs(info, dir);
+    CreateEl5AndSetPolicy(info);
+}
+
+void BaseBundleInstaller::CreateEl5AndSetPolicy(const InnerBundleInfo &info)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed");
+        return;
     }
-    if (!SetEncryptionDirPolicy(info)) {
-        LOG_E(BMS_TAG_INSTALLER, "Encryption failed dir");
-    }
+    CreateDirParam el5Param;
+    el5Param.bundleName = info.GetBundleName();
+    el5Param.userId = userId_;
+    el5Param.uid = info.GetUid(userId_);
+    el5Param.apl = info.GetAppPrivilegeLevel();
+    el5Param.isPreInstallApp = info.IsPreInstallApp();
+    el5Param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    dataMgr_->CreateEl5Dir(std::vector<CreateDirParam> {el5Param});
 }
 
 void BaseBundleInstaller::GetUninstallBundleInfo(bool isKeepData, int32_t userId,

@@ -7799,16 +7799,16 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
     APP_LOGI("begin create dirs");
     auto res = InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams);
     APP_LOGI("end, res %{public}d", res);
-    CreateEl5Dir(el5Params);
+    CreateEl5Dir(el5Params, true);
     return res;
 }
 
-void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params)
+void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage)
 {
     for (const auto &el5Param : el5Params) {
         APP_LOGI("-n %{public}s -u %{public}d", el5Param.bundleName.c_str(), el5Param.userId);
         InnerCreateEl5Dir(el5Param);
-        SetEl5DirPolicy(el5Param);
+        SetEl5DirPolicy(el5Param, needSaveStorage);
     }
 }
 
@@ -7862,7 +7862,7 @@ void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
     }
 }
 
-void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param)
+void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSaveStorage)
 {
     InnerBundleInfo info;
     if (!FetchInnerBundleInfo(el5Param.bundleName, info)) {
@@ -7883,7 +7883,7 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param)
     }
     LOG_D(BMS_TAG_INSTALLER, "%{public}s, keyId: %{public}s", info.GetBundleName().c_str(), keyId.c_str());
     info.SetkeyId(el5Param.userId, keyId);
-    if (!UpdateInnerBundleInfo(info)) {
+    if (!UpdateInnerBundleInfo(info, needSaveStorage)) {
         LOG_E(BMS_TAG_INSTALLER, "save keyId failed");
     }
 }
