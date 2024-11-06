@@ -27,11 +27,23 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-static constexpr int32_t MODE_BASE = 07777;
-static constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
-const std::string BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
-const std::string BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
-const std::string BUNDLE_BACKUP_INNER_DIR = "/.backup";
+static constexpr int16_t MODE_BASE = 07777;
+static constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
+constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
+constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
+constexpr const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
+static std::mutex TASK_MUTEX;
+static std::atomic<uint32_t> CURRENT_TASK_NUM = 0;
+
+template<typename Func, typename...Args>
+inline void ReturnIfNewTask(Func func, uint32_t tempTask, Args&&... args)
+{
+    if (CURRENT_TASK_NUM != tempTask) {
+        APP_LOGI("need stop current task, new first");
+        return;
+    }
+    func(std::forward<Args>(args)...);
+}
 }
 UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)
@@ -171,6 +183,13 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
 
 void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
 {
+    uint32_t tempTaskNum = CURRENT_TASK_NUM.fetch_add(1) + 1;
+    std::lock_guard<std::mutex> guard(TASK_MUTEX);
+    APP_LOGI("UpdateAppDataDirSelinuxLabel hold TASK_MUTEX");
+    if (tempTaskNum != CURRENT_TASK_NUM) {
+        APP_LOGI("need stop current task, new first, -u %{public}d", userId);
+        return;
+    }
     APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d start", userId);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -183,14 +202,14 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
         return;
     }
 
-    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::BUNDLE_EL[1]);
+    ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::BUNDLE_EL[1]);
 #ifdef CHECK_ELDIR_ENABLED
-    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL3);
-    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL4);
+    ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL3);
+    ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL4);
 #endif
-    ProcessUpdateAppLogDir(bundleInfos, userId);
-    ProcessFileManagerDir(bundleInfos, userId);
-    ProcessNewBackupDir(bundleInfos, userId);
+    ReturnIfNewTask(ProcessUpdateAppLogDir, tempTaskNum, bundleInfos, userId);
+    ReturnIfNewTask(ProcessFileManagerDir, tempTaskNum, bundleInfos, userId);
+    ReturnIfNewTask(ProcessNewBackupDir, tempTaskNum, bundleInfos, userId);
     APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d end", userId);
 }
 
