@@ -8872,5 +8872,23 @@ void BundleDataMgr::UpdateIsPreInstallApp(const std::string &bundleName, bool is
         SaveInnerBundleInfo(infoItem->second);
     }
 }
+
+ErrCode BundleDataMgr::GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
+{
+    APP_LOGD("start GetBundleNameByAppId %{private}s", appId.c_str());
+    if (appId.empty()) {
+        APP_LOGW("appId is empty");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &[key, innerInfo] : bundleInfos_) {
+        if (innerInfo.GetAppId() == appId || innerInfo.GetAppIdentifier() == appId) {
+            bundleName = key;
+            return ERR_OK;
+        }
+    }
+    APP_LOGI("get bundleName failed %{private}s", appId.c_str());
+    return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -1116,7 +1116,9 @@ public:
         int32_t appIndex, bool &isInstalled) override;
 
     virtual ErrCode GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType) override;
-     
+
+    virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

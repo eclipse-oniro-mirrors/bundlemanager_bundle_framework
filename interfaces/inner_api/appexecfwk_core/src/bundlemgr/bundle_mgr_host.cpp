@@ -611,6 +611,8 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_COMPATIBLED_DEVICE_TYPE):
             errCode = HandleGetCompatibleDeviceType(data, reply);
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_NAME_BY_APP_ID_OR_APP_IDENTIFIER):
+            errCode = HandleGetBundleNameByAppId(data, reply);
             break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
@@ -4155,6 +4157,23 @@ ErrCode BundleMgrHost::HandleGetCompatibleDeviceType(MessageParcel &data, Messag
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!reply.WriteString(deviceType)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleNameByAppId(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string appId = data.ReadString();
+    std::string bundleName;
+    auto ret = GetBundleNameByAppId(appId, bundleName);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(bundleName)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

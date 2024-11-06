@@ -5367,5 +5367,35 @@ ErrCode BundleMgrProxy::GetCompatibleDeviceType(const std::string &bundleName, s
     APP_LOGD("GetCompatibleDeviceType: ret: %{public}d, device type: %{public}s", ret, deviceType.c_str());
     return ret;
 }
+
+ErrCode BundleMgrProxy::GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
+{
+    APP_LOGD("GetBundleNameByAppId: appId: %{private}s", appId.c_str());
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (appId.empty()) {
+        APP_LOGE("appId empty");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appId)) {
+        APP_LOGE("Write app id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_NAME_BY_APP_ID_OR_APP_IDENTIFIER, data, reply)) {
+        APP_LOGE("Fail to get bundleName from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        bundleName = reply.ReadString();
+    }
+    APP_LOGD("GetBundleNameByAppId: ret: %{public}d, bundleName: %{public}s", ret, bundleName.c_str());
+    return ret;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

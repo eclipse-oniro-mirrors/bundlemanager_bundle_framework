@@ -843,6 +843,8 @@ private:
     
     ErrCode HandleGetCompatibleDeviceType(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetBundleNameByAppId(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.
