@@ -102,11 +102,9 @@ public:
      * @param bundleName Indicates the bundle name.
      * @param newInfo Indicates the new InnerBundleInfo object.
      * @param oldInfo Indicates the old InnerBundleInfo object.
-     * @param isUpgrade Indicates whether the module is upgraded.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool AddNewModuleInfo(const std::string &bundleName, const InnerBundleInfo &newInfo,
-        InnerBundleInfo &oldInfo, bool isUpgrade = false);
+    bool AddNewModuleInfo(const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     /**
      * @brief Remove module info from an exist InnerBundleInfo.
      * @param bundleName Indicates the bundle name.
@@ -122,11 +120,9 @@ public:
      * @param bundleName Indicates the bundle name.
      * @param newInfo Indicates the new InnerBundleInfo object.
      * @param oldInfo Indicates the old InnerBundleInfo object.
-     * @param isUpgrade Indicates whether the module is upgraded.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo,
-        InnerBundleInfo &oldInfo, bool isUpgrade = false);
+    bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
     bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo);
     /**

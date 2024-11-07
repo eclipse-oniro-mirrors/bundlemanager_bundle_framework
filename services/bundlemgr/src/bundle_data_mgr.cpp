@@ -323,7 +323,7 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
 }
 
 bool BundleDataMgr::AddNewModuleInfo(
-    const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, bool isUpgrade)
+    const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
     APP_LOGD("add new module info module name %{public}s ", newInfo.GetCurrentModulePackage().c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -341,7 +341,7 @@ bool BundleDataMgr::AddNewModuleInfo(
     if (statusItem->second == InstallState::UPDATING_SUCCESS) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
         ProcessAllowedAcls(newInfo, oldInfo);
-        if (isUpgrade || IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
+        if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
             oldInfo.UpdateRemovable(newInfo.IsPreInstallApp(), newInfo.IsRemovable());
@@ -587,7 +587,7 @@ bool BundleDataMgr::RemoveInnerBundleUserInfo(
 }
 
 bool BundleDataMgr::UpdateInnerBundleInfo(
-    const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, bool isUpgrade)
+    const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
     APP_LOGD("UpdateInnerBundleInfo:%{public}s", bundleName.c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -619,7 +619,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
-        if (isUpgrade || IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
+        if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(
                 newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
@@ -7436,7 +7436,9 @@ bool BundleDataMgr::IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &old
     const InnerBundleInfo &newInfo) const
 {
     return newInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK ||
-        !oldInfo.HasEntry() || newInfo.HasEntry();
+        !oldInfo.HasEntry() || newInfo.HasEntry() ||
+        (oldInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE &&
+        oldInfo.GetVersionCode() < newInfo.GetVersionCode());
 }
 
 std::string BundleDataMgr::GetModuleNameByBundleAndAbility(
