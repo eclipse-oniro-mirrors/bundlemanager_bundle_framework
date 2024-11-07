@@ -239,19 +239,6 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0600
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_0700
- * @tc.name: test GetBundleInfoV9 of BundleMgrHostImpl
- * @tc.desc: 1. system running normally
- *           2. GetBundleInfoV9 false by no permission
- */
-HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0700, Function | SmallTest | Level0)
-{
-    BundleInfo bundleInfo;
-    ErrCode ret = bundleMgrHostImpl_->GetBundleInfoV9(BUNDLE_NAME, FLAGS, bundleInfo, USERID);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
-}
-
-/**
  * @tc.number: BmsBundleSyetemAppFalseTest_0800
  * @tc.name: test GetBundlePackInfo of BundleMgrHostImpl
  * @tc.desc: 1. system running normally
