@@ -30,6 +30,7 @@
 #include "preinstall_data_storage_rdb.h"
 #include "bundle_event_callback_death_recipient.h"
 #include "bundle_mgr_service.h"
+#include "bundle_mgr_client.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_status_callback_death_recipient.h"
@@ -4830,6 +4831,24 @@ bool BundleDataMgr::GetShortcutInfos(
     GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
     return true;
 }
+
+std::string BundleDataMgr::TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,
+    const AbilityInfo &abilityInfo) const
+{
+    std::string rawData;
+    GetJsonProfileByExtractor(hapPath, profileName, rawData);
+    if (rawData.empty()) { // if get failed ,try get from resmgr
+        BundleMgrClient bundleMgrClient;
+        std::vector<std::string> rawJson;
+        if (!bundleMgrClient.GetResConfigFile(abilityInfo, META_DATA_SHORTCUTS_NAME, rawJson)) {
+            APP_LOGD("GetResConfigFile return false");
+            return "";
+        }
+        return rawJson.empty() ? "" : rawJson[0];
+    }
+    return rawData;
+}
+
 bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
     const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const
 {
@@ -4854,7 +4873,7 @@ bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
                 return false;
             }
             std::string profileName = PROFILE_PATH + resName.substr(pos + strlen(PROFILE_PREFIX)) + JSON_SUFFIX;
-            GetJsonProfileByExtractor(hapPath, profileName, rawData);
+            rawData = TryGetRawDataByExtractor(hapPath, profileName, abilityInfo);
             break;
         }
     }
