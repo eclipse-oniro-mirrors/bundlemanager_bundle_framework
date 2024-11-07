@@ -22,7 +22,6 @@
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    constexpr size_t FOO_MAX_LEN = 1024;
     constexpr size_t U32_AT_SIZE = 4;
     constexpr size_t MESSAGE_SIZE = 21;
     constexpr size_t DCAMERA_SHIFT_24 = 24;
@@ -54,11 +53,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
 
     if (size < OHOS::U32_AT_SIZE) {
-        return 0;
-    }
-
-    /* Validate the length of size */
-    if (size > OHOS::FOO_MAX_LEN) {
         return 0;
     }
 
