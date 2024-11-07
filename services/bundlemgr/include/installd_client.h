@@ -235,6 +235,8 @@ public:
 
     ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList);
 
+    ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

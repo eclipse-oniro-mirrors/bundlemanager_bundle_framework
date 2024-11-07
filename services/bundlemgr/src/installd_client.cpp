@@ -567,5 +567,15 @@ ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &ty
 {
     return CallService(&IInstalld::GetExtensionSandboxTypeList, typeList);
 }
+
+ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    if (originPath.empty() || targetPath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::MoveHapToCodeDir, originPath, targetPath);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

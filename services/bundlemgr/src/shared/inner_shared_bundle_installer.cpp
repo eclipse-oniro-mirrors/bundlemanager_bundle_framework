@@ -592,7 +592,7 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
     if (!signatureFileDir_.empty()) {
         result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, signatureFileDir_);
     } else {
-        result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath);
+        result = InstalldClient::GetInstance()->MoveHapToCodeDir(bundlePath, tempHspPath);
         CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
         bool isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
         result = VerifyCodeSignatureForHsp(tempHspPath, appIdentifier_, isEnterpriseBundle_,

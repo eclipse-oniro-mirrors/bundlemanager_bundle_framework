@@ -163,6 +163,7 @@ ErrCode BmsBundleManagerTest::InstallThirdPartyBundle(const std::string &filePat
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(filePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -184,6 +185,7 @@ ErrCode BmsBundleManagerTest::UpdateThirdPartyBundle(const std::string &filePath
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(filePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();

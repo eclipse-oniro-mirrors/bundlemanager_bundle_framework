@@ -903,6 +903,18 @@ ErrCode InstalldProxy::CreateExtensionDataDir(const CreateDirParam &createDirPar
     return TransactInstalldCmd(InstalldInterfaceCode::CREATE_EXTENSION_DATA_DIR, data, reply, option);
 }
 
+ErrCode InstalldProxy::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(originPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetPath));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::MOVE_HAP_TO_CODE_DIR, data, reply, option);
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {

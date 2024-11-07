@@ -301,5 +301,10 @@ ErrCode InstalldHostImpl::GetExtensionSandboxTypeList(std::vector<std::string> &
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
