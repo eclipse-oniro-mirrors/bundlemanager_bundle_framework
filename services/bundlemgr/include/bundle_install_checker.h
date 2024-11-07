@@ -178,6 +178,8 @@ public:
 
     void SetCheckResultMsg(const std::string checkResultMsg);
 
+    bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
 private:
 
     ErrCode ParseBundleInfo(
@@ -243,7 +245,6 @@ private:
 
     bool CheckProxyPermissionLevel(const std::string &permissionName) const;
     bool MatchOldSignatures(const std::string &bundleName, const std::vector<std::string> &appSignatures);
-    bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     std::tuple<bool, std::string, std::string> GetValidReleaseType(
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void DetermineCloneNum(InnerBundleInfo &innerBundleInfo);

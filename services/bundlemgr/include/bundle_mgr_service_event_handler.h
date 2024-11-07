@@ -26,6 +26,7 @@
 #include "common_event_manager.h"
 #include "common_event_subscriber.h"
 #include "common_event_support.h"
+#include "interfaces/hap_verify.h"
 #include "pre_install_exception_mgr.h"
 #include "pre_scan_info.h"
 #include "nlohmann/json.hpp"
@@ -413,6 +414,10 @@ private:
      * @param infos Indicates the obtained BundleInfo object.
      * @return Returns true if the BundleInfo is successfully obtained; returns false otherwise.
      */
+
+    ErrCode VerifyMultipleHaps(const std::vector<std::string> &bundlePaths,
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
     static bool ParseHapFiles(
         const std::string &hapFilePath,
         std::unordered_map<std::string, InnerBundleInfo> &infos);

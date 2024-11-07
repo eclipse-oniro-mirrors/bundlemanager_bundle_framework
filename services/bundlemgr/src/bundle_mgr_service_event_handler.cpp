@@ -3084,7 +3084,7 @@ bool BMSEventHandler::CheckAndParseHapFiles(
     bool isSysCapValid = (ret == ERR_OK);
 
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
-    ret = bundleInstallChecker->CheckMultipleHapsSignInfo(realPaths, hapVerifyResults);
+    ret = VerifyMultipleHaps(realPaths, hapVerifyResults);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "CheckMultipleHapsSignInfo %{public}s failed", hapFilePath.c_str());
         return false;
@@ -3129,6 +3129,48 @@ bool BMSEventHandler::CheckAndParseHapFiles(
     });
 
     return true;
+}
+
+ErrCode BMSEventHandler::VerifyMultipleHaps(const std::vector<std::string> &bundlePaths,
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    if (bundlePaths.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "empty bundlePaths");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    for (const std::string &bundlePath : bundlePaths) {
+        Security::Verify::HapVerifyResult hapVerifyResult;
+        auto verifyRes = Security::Verify::HapVerify(bundlePath, hapVerifyResult, true);
+#ifndef X86_EMULATOR_MODE
+        if (verifyRes != ERR_OK) {
+            LOG_E(BMS_TAG_DEFAULT, "verify failed: %{public}s, err: %{public}d", bundlePath.c_str(), verifyRes);
+            return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+        }
+#endif
+        hapVerifyRes.emplace_back(hapVerifyResult);
+    }
+
+    if (hapVerifyRes.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "no sign info in the all haps");
+        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+    }
+
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
+        std::make_unique<BundleInstallChecker>();
+    if (!bundleInstallChecker->CheckProvisionInfoIsValid(hapVerifyRes)) {
+#ifndef X86_EMULATOR_MODE
+        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+#else
+        // on emulator if check signature failed clear appid
+        for (auto &verifyRes : hapVerifyRes) {
+            Security::Verify::ProvisionInfo provisionInfo = verifyRes.GetProvisionInfo();
+            provisionInfo.appId = Constants::EMPTY_STRING;
+            verifyRes.SetProvisionInfo(provisionInfo);
+        }
+#endif
+    }
+    LOG_D(BMS_TAG_DEFAULT, "finish check multiple haps signInfo");
+    return ERR_OK;
 }
 
 bool BMSEventHandler::ParseHapFiles(
