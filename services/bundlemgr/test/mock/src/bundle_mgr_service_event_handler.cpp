@@ -731,7 +731,7 @@ bool BMSEventHandler::GetValueFromJson(nlohmann::json& jsonObject)
 
 void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string& path) {}
 
-void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(
+void BMSEventHandler::UpdatePreinstallDBForNotUpdatedBundle(
     const std::string& bundleName, const std::unordered_map<std::string, InnerBundleInfo>& innerBundleInfos)
 {}
 

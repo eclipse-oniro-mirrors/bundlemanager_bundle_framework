@@ -1369,20 +1369,20 @@ HWTEST_F(BmsEventHandlerTest, GetValueFromJson_0100, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: UpdatePreinstallDBForUninstalledBundle_0100
- * @tc.name: UpdatePreinstallDBForUninstalledBundle
- * @tc.desc: test UpdatePreinstallDBForUninstalledBundle
+ * @tc.number: UpdatePreinstallDBForNotUpdatedBundle_0100
+ * @tc.name: UpdatePreinstallDBForNotUpdatedBundle
+ * @tc.desc: test UpdatePreinstallDBForNotUpdatedBundle
  */
-HWTEST_F(BmsEventHandlerTest, UpdatePreinstallDBForUninstalledBundle_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsEventHandlerTest, UpdatePreinstallDBForNotUpdatedBundle_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     std::unordered_map<std::string, InnerBundleInfo> innerBundleInfos;
     InnerBundleInfo innerBundleInfo;
-    handler->UpdatePreinstallDBForUninstalledBundle(BUNDLE_NAME, innerBundleInfos);
+    handler->UpdatePreinstallDBForNotUpdatedBundle(BUNDLE_NAME, innerBundleInfos);
     EXPECT_NE(innerBundleInfo.baseBundleInfo_, nullptr);
     innerBundleInfos.insert({ BUNDLE_NAME, innerBundleInfo });
-    handler->UpdatePreinstallDBForUninstalledBundle(BUNDLE_NAME, innerBundleInfos);
+    handler->UpdatePreinstallDBForNotUpdatedBundle(BUNDLE_NAME, innerBundleInfos);
     EXPECT_NE(innerBundleInfo.baseBundleInfo_, nullptr);
 }
 
