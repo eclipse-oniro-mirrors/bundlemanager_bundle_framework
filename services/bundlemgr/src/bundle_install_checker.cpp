@@ -176,7 +176,7 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
 
 ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     const std::vector<std::string> &bundlePaths,
-    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes)
+    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile)
 {
     LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo");
     if (bundlePaths.empty()) {
@@ -185,11 +185,16 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     }
     for (const std::string &bundlePath : bundlePaths) {
         Security::Verify::HapVerifyResult hapVerifyResult;
-        auto verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
+        ErrCode verifyRes = ERR_OK;
+        if (readFile) {
+            verifyRes = Security::Verify::HapVerify(bundlePath, hapVerifyResult, true);
+        } else {
+            verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
+        }
 #ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "hap file verify failed, bundlePath: %{public}s", bundlePath.c_str());
-            return verifyRes;
+            return readFile ? ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE : verifyRes;
         }
 #endif
         hapVerifyRes.emplace_back(hapVerifyResult);

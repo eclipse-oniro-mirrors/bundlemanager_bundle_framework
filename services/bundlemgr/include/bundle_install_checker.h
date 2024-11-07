@@ -62,11 +62,12 @@ public:
      * @brief Check signature info of multiple haps.
      * @param bundlePaths Indicates the file paths of all HAP packages.
      * @param hapVerifyRes Indicates the signature info.
+     * @param readFile Indicates using READ or MMAP to get content of the file.
      * @return Returns ERR_OK if the every hap has signature info and all haps have same signature info.
      */
     ErrCode CheckMultipleHapsSignInfo(
         const std::vector<std::string> &bundlePaths,
-        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, bool readFile = false);
 
     /**
      * @brief To check the hap hash param.

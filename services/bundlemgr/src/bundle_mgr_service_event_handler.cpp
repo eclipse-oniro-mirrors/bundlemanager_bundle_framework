@@ -2450,7 +2450,7 @@ bool BMSEventHandler::CheckAndParseHapFiles(
     }
 
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
-    ret = bundleInstallChecker->CheckMultipleHapsSignInfo(realPaths, hapVerifyResults);
+    ret = bundleInstallChecker->CheckMultipleHapsSignInfo(realPaths, hapVerifyResults, true);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "CheckMultipleHapsSignInfo %{public}s failed", hapFilePath.c_str());
         return false;
