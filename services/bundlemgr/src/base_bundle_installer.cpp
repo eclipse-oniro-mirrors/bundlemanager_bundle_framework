@@ -102,7 +102,6 @@ constexpr const char* IS_ROOT_MODE_PARAM = "const.debuggable";
 constexpr const char* BMS_ACTIVATION_LOCK = "persist.bms.activation-lock";
 constexpr const char* BMS_TRUE = "true";
 constexpr int8_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
-constexpr int32_t USER_SHELL_UID = 2000;
 
 const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.formrenderservice",
@@ -1147,7 +1146,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "hap files check signature info failed %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_SIGNATURE_CHECKED);               // ---- 15%
 
-    if (sysEventInfo_.callingUid == USER_SHELL_UID &&
+    if (sysEventInfo_.callingUid == ServiceConstants::SHELL_UID &&
         hapVerifyResults[0].GetProvisionInfo().type == Security::Verify::ProvisionType::RELEASE) {
         return ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL;
     }
