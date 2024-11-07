@@ -1496,7 +1496,8 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state)
+    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state,
+        bool isNeedSendNotify = true)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
