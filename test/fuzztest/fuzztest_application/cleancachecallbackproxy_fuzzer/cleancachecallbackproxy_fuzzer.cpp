@@ -28,7 +28,7 @@ namespace OHOS {
         sptr<IRemoteObject> object;
         CleanCacheCallbackProxy callbackProxy(object);
         bool succeeded = false;
-        if (size % THRESHOLD) {
+        if (reinterpret_cast<uintptr_t>(data) % THRESHOLD) {
             succeeded = true;
         }
         callbackProxy.OnCleanCacheFinished(succeeded);
