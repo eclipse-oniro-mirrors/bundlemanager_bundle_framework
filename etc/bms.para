@@ -12,3 +12,4 @@
 # limitations under the License.
 
 bootevent.bms.main.bundles.ready = false
+persist.bms.data.preload = true

@@ -543,7 +543,7 @@ private:
     bool IsTestSystemUpgrade();
     bool IsSystemFingerprintChanged();
     std::string GetCurSystemFingerprint();
-    std::string GetOldSystemFingerprint();
+    static std::string GetOldSystemFingerprint();
     bool GetSystemParameter(const std::string &key, std::string &value);
     void SaveSystemFingerprint();
     void HandlePreInstallException();

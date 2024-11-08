@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -89,6 +89,7 @@ constexpr const char* HSP_VERSION_PREFIX = "v";
 constexpr const char* OTA_FLAG = "otaFlag";
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
+constexpr const char* DEFAULT_DATA_PRE_BUNDLE_DIR = "/app_list.json";
 constexpr const char* PRODUCT_SUFFIX = "/etc/app";
 constexpr const char* MODULE_UPDATE_PRODUCT_SUFFIX = "/etc/app/module_update";
 constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
@@ -677,6 +678,14 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
         dir + EXTENSION_TYPE_LIST_CONFIG, extensiontype_);
     bundleParser.ParsePreInstallConfig(
         dir + SHARED_BUNDLES_INSTALL_LIST_CONFIG, installList_);
+
+    std::string oldSystemFingerprint = GetOldSystemFingerprint();
+    if (oldSystemFingerprint.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "only scan app_list.json on first startup");
+        bundleParser.ParsePreAppListConfig(dir + DEFAULT_DATA_PRE_BUNDLE_DIR, installList_);
+    } else {
+        LOG_W(BMS_TAG_DEFAULT, "data preload app is not support OTA");
+    }
 }
 
 void BMSEventHandler::GetPreInstallDir(std::vector<std::string> &bundleDirs)
@@ -1063,6 +1072,8 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.removable = preScanInfo.removable;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
+    installParam.isDataPreloadHap = preScanInfo.isDataPreloadHap;
+    installParam.appIdentifier = preScanInfo.appIdentifier;
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
     SystemBundleInstaller installer;
     ErrCode ret = installer.InstallSystemBundle(preScanInfo.bundleDir, installParam, appType);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -102,6 +102,8 @@ struct PreScanInfo {
     std::string bundleDir;
     bool removable = true;
     int32_t priority = 0;
+    std::string appIdentifier;
+    bool isDataPreloadHap = false;
 
     bool operator < (const PreScanInfo &preScanInfo) const
     {
@@ -122,12 +124,16 @@ struct PreScanInfo {
         bundleDir.clear();
         removable = true;
         priority = 0;
+        appIdentifier.clear();
+        isDataPreloadHap = false;
     }
 
     std::string ToString() const
     {
         return "[ bundleDir = " + bundleDir
             + ", removable = " + GetBoolStrVal(removable)
+            + ", appIdentifier = " + appIdentifier
+            + ", isDataPreloadHap = " + GetBoolStrVal(isDataPreloadHap)
             + ", priority = " + std::to_string(priority) + "]";
     }
 };

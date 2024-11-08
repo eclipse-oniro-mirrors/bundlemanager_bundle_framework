@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,13 @@ public:
     ErrCode TransformTo(
         const nlohmann::json &jsonBuf,
         std::set<PreScanInfo> &scanInfos) const;
+    /**
+     * @brief Transform the jsonBuf to scanAppListInfos.
+     * @param jsonBuf Indicates the jsonBuf.
+     * @param scanAppInfos Indicates the scanAppInfos.
+     * @return Returns ERR_OK if the information transformed successfully; returns error code otherwise.
+     */
+    ErrCode TransformToAppList(const nlohmann::json &jsonBuf, std::set<PreScanInfo> &scanAppInfos) const;
     /**
      * @brief Transform the jsonBuf to bundleNames.
      * @param jsonBuf Indicates the jsonBuf.

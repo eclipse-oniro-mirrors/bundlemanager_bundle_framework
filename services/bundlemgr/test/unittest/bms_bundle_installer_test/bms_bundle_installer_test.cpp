@@ -1908,6 +1908,35 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1800, Function | SmallTest 
 }
 
 /**
+ * @tc.number: baseBundleInstaller_1900
+ * @tc.name: test RemoveDataPreloadHapFiles
+ * @tc.desc: 1.Test the RemoveDataPreloadHapFiles of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1900, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = nullptr;
+    bool ret = installer.RemoveDataPreloadHapFiles(BUNDLE_NAME);
+    EXPECT_EQ(ret, false);
+
+    installer.dataMgr_ = GetBundleDataMgr();
+    ret = installer.RemoveDataPreloadHapFiles(BUNDLE_NAME);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_2000
+ * @tc.name: test IsDataPreloadHap
+ * @tc.desc: 1.Test the IsDataPreloadHap of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2000, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    bool ret = installer.IsDataPreloadHap(SYSTEMFIEID_HAP_PATH);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: baseBundleInstaller_2100
  * @tc.name: test baseBundleInstaller
  * @tc.desc: 1.Test the dataMgr_ is nullptr

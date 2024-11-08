@@ -155,6 +155,45 @@ const std::string TEST_URI_HTTP = "http://www.test.com";
 const std::string META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr int32_t MOCK_BUNDLE_MGR_EXT_FLAG = 10;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
+const nlohmann::json APP_LIST0 = R"(
+{
+    "app_list": [
+        {
+            "app_dir":"/data/preload/app/app_dir",
+            "appIdentifier":"5765880207853134833"
+        }
+    ]
+}
+)"_json;
+const nlohmann::json APP_LIST1 = R"(
+{
+    "app_list": [
+        {
+            "app_dir":"app_dir",
+            "appIdentifier":"5765880207853134833"
+        }
+    ]
+}
+)"_json;
+const nlohmann::json APP_LIST2 = R"(
+{
+    "app_list": [
+        {
+            "app_dir1":"app_dir",
+            "appIdentifier":""
+        }
+    ]
+}
+)"_json;
+const nlohmann::json APP_LIST3 = R"(
+{
+    "app_list":
+        {
+            "app_dir1":"app_dir",
+            "appIdentifier1":"5765880207853134833"
+        }
+}
+)"_json;
 const nlohmann::json INSTALL_LIST = R"(
 {
     "install_list": [
@@ -3949,6 +3988,71 @@ HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_1600, Function | SmallTest | Lev
     std::set<std::string> extensionTypeList;
     ErrCode res = preBundleProfile.TransformJsonToExtensionTypeList(EXTENSION_TYPE_LIST2, extensionTypeList);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_1700
+ * @tc.name: test TransformToAppList
+ * @tc.desc: 1. call TransformToAppList, return ERR_OK
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_1700, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformToAppList(APP_LIST0, scanInfos);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: PreBundleProfile_1900
+ * @tc.name: test TransformToAppList
+ * @tc.desc: 1. call TransformToAppList, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_1900, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformToAppList(INSTALL_LIST, scanInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_2000
+ * @tc.name: test TransformToAppList
+ * @tc.desc: 1. call TransformToAppList, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_2000, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformToAppList(APP_LIST3, scanInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_2100
+ * @tc.name: test TransformToAppList
+ * @tc.desc: 1. call TransformToAppList, return ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_2100, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformToAppList(APP_LIST1, scanInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
+}
+
+/**
+ * @tc.number: PreBundleProfile_2200
+ * @tc.name: test TransformToAppList
+ * @tc.desc: 1. call TransformToAppList, return ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_2200, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformToAppList(APP_LIST2, scanInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
 }
 
 /**
