@@ -1192,6 +1192,8 @@ private:
         std::vector<ExtensionAbilityInfo> &infos, const std::string &typeName) const;
     bool GetShortcutInfosByInnerBundleInfo(
         const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const;
+    std::string TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,
+        const AbilityInfo &abilityInfo) const;
 private:
     mutable std::shared_mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;
