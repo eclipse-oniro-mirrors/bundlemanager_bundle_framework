@@ -2042,7 +2042,7 @@ HWTEST_F(BmsDataMgrTest, MatchShare_0200, Function | SmallTest | Level1)
     EXPECT_EQ(MatchShare(utds15, skills), false);
 
     std::map<std::string, int32_t> utds16 = {{"general.png", 1}, {"general.media", 9}};
-    EXPECT_EQ(MatchShare(utds12, skills), true);
+    EXPECT_EQ(MatchShare(utds16, skills), false);
 
     std::map<std::string, int32_t> utds17 = {{"general.png", 1}, {"general.media", 8}};
     EXPECT_EQ(MatchShare(utds17, skills), true);
