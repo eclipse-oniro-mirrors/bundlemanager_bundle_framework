@@ -1119,6 +1119,10 @@ public:
 
     virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName) override;
 
+    virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
+        std::string &dataDir) override;
+
+    virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

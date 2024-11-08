@@ -21,6 +21,7 @@
 #include "application_info.h"
 #include "app_provision_info.h"
 #include "bundle_constants.h"
+#include "bundle_dir.h"
 #include "bundle_event_callback_interface.h"
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
@@ -1611,6 +1612,17 @@ public:
     }
 
     virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
+        std::string &dataDir)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

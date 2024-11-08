@@ -282,6 +282,7 @@ ohos_shared_library("libbms") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "os_account:libaccountkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "syscap_codec:syscap_interface_shared",

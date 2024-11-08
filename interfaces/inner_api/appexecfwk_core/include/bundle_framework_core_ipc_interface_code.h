@@ -191,7 +191,9 @@ enum class BundleMgrInterfaceCode : uint32_t {
     IS_BUNDLE_INSTALLED = 165,
     GET_COMPATIBLED_DEVICE_TYPE_NATIVE = 166,
     GET_COMPATIBLED_DEVICE_TYPE = 167,
-    GET_BUNDLE_NAME_BY_APP_ID_OR_APP_IDENTIFIER = 168
+    GET_BUNDLE_NAME_BY_APP_ID_OR_APP_IDENTIFIER = 168,
+    GET_DIR_BY_BUNDLENAME_AND_APPINDEX = 169,
+    GET_ALL_BUNDLE_DIRS = 170,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

@@ -211,5 +211,14 @@ ErrCode BundleMgrClient::GetDirByBundleNameAndAppIndex(const std::string &bundle
     }
     return impl_->GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
 }
+
+ErrCode BundleMgrClient::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return impl_->GetAllBundleDirs(userId, bundleDirs);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

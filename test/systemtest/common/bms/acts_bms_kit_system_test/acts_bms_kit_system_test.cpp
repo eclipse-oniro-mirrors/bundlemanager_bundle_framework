@@ -9791,5 +9791,25 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleNameByAppId_0002, Function | MediumTest 
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetBundleNameByAppId_0002" << std::endl;
 }
+
+/**
+ * @tc.number: GetAllBundleDirs_0001
+ * @tc.name: test GetAllBundleDirs interface
+ * @tc.desc: 1. call GetAllBundleDirs
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleDirs_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllBundleDirs_0001" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        std::vector<BundleDir> bundleDirs;
+        ErrCode ret = bundleMgrProxy->GetAllBundleDirs(0, bundleDirs);
+        EXPECT_EQ(ret, ERR_OK);
+        ret = bundleMgrProxy->GetAllBundleDirs(200, bundleDirs);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    }
+    std::cout << "END GetAllBundleDirs_0001" << std::endl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
