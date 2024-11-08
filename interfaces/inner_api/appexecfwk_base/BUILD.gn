@@ -114,6 +114,13 @@ ohos_shared_library("appexecfwk_base") {
     external_deps += [ "udmf:utd_client" ]
   }
 
+  if (bundle_framework_form_dimension_2_3) {
+    defines += [ "FORM_DIMENSION_2_3" ]
+  }
+  if (bundle_framework_form_dimension_3_3) {
+    defines += [ "FORM_DIMENSION_3_3" ]
+  }
+
   public_external_deps = [
     "ability_base:base",
     "ability_base:want",
