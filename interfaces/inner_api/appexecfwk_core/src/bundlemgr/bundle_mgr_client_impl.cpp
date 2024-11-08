@@ -536,14 +536,25 @@ ErrCode BundleMgrClientImpl::GetDirByBundleNameAndAppIndex(const std::string &bu
     std::string &dataDir)
 {
     APP_LOGD("GetDir begin");
-    if (appIndex < 0) {
-        return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
-    } else if (appIndex == 0) {
-        dataDir = bundleName;
-    } else {
-        dataDir = "+clone-" + std::to_string(appIndex) + "+" + bundleName;
+    Connect();
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("connect fail");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    return ERR_OK;
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    return bundleMgr_->GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
+}
+
+ErrCode BundleMgrClientImpl::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)
+{
+    APP_LOGD("GetAllBundleDirs begin");
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE("connect fail");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    return bundleMgr_->GetAllBundleDirs(userId, bundleDirs);
 }
 
 ErrCode BundleMgrClientImpl::Connect()

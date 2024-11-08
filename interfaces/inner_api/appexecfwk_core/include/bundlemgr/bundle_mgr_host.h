@@ -841,6 +841,9 @@ private:
 
     ErrCode HandleIsBundleInstalled(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetDirByBundleNameAndAppIndex(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetAllBundleDirs(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

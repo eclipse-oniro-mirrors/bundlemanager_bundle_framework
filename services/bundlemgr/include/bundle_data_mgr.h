@@ -25,6 +25,7 @@
 #include <shared_mutex>
 #include <string>
 
+#include "bundle_dir.h"
 #include "want.h"
 
 #include "ability_info.h"
@@ -53,6 +54,7 @@
 #include "element.h"
 #endif
 #include "uninstall_data_mgr_storage_rdb.h"
+#include "ohos_account_kits.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -995,6 +997,17 @@ public:
     ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled);
     void CreateEl5Dir(const std::vector<CreateDirParam> &el5Params);
     int32_t GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t appIndex) const;
+    ErrCode GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const;
+    ErrCode GetDirForAtomicServiceByUserId(const std::string &bundleName, int32_t userId,
+        AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const;
+    std::string GetDirForApp(const std::string &bundleName, const int32_t appIndex) const;
+    ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
+        std::string &dataDir) const;
+    std::vector<int32_t> GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
+        int32_t userId) const;
+    ErrCode GetBundleDir(int32_t userId, BundleType type, AccountSA::OhosAccountInfo &accountInfo,
+        BundleDir &bundleDir) const;
+    ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) const;
 
 private:
     /**

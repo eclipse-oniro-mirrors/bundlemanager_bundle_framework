@@ -5338,5 +5338,52 @@ ErrCode BundleMgrProxy::IsBundleInstalled(const std::string &bundleName, int32_t
     isInstalled = reply.ReadBool();
     return ERR_OK;
 }
+
+ErrCode BundleMgrProxy::GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
+    std::string &dataDir)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("Write bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("Write appIndex id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_DIR_BY_BUNDLENAME_AND_APPINDEX, data, reply)) {
+        APP_LOGE("Fail to GetDir from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        dataDir = reply.ReadString();
+    }
+    APP_LOGD("GetDirByBundleNameAndAppIndex: ret: %{public}d, dataDir: %{public}s", ret, dataDir.c_str());
+    return ret;
+}
+
+ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write user id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<BundleDir>(
+        BundleMgrInterfaceCode::GET_ALL_BUNDLE_DIRS, data, bundleDirs);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -62,6 +62,7 @@
 #endif
 
 #include "shortcut_data_storage_rdb.h"
+#include "ohos_account_kits.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -107,6 +108,9 @@ const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
 };
 const std::string SCHEME_END = "://";
 const std::string LINK_FEATURE = "linkFeature";
+const std::string ATOMIC_SERVICE_DIR_PREFIX = "+auid-";
+const std::string CLONE_APP_DIR_PREFIX = "+clone-";
+const std::string PLUS = "+";
 constexpr const char* PARAM_URI_SEPARATOR = ":///";
 constexpr const char* URI_SEPARATOR = "://";
 constexpr uint32_t PARAM_URI_SEPARATOR_LEN = 4;
@@ -9108,6 +9112,138 @@ void BundleDataMgr::UpdateIsPreInstallApp(const std::string &bundleName, bool is
         infoItem->second.SetIsPreInstallApp(isPreInstallApp);
         SaveInnerBundleInfo(infoItem->second);
     }
+}
+
+ErrCode BundleDataMgr::GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const
+{
+    APP_LOGD("start GetDirForAtomicService name: %{public}s", bundleName.c_str());
+    AccountSA::OhosAccountInfo accountInfo;
+    auto ret = AccountSA::OhosAccountKits::GetInstance().GetOhosAccountInfo(accountInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetOhosAccountInfo failed, errCode: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED;
+    }
+    dataDir = ATOMIC_SERVICE_DIR_PREFIX + accountInfo.uid_ + PLUS + bundleName;
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetDirForAtomicServiceByUserId(const std::string &bundleName, int32_t userId,
+    AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const
+{
+    APP_LOGD("start GetDirForAtomicServiceByUserId name: %{public}s userId: %{public}d", bundleName.c_str(), userId);
+    if (accountInfo.uid_.empty()) {
+        auto ret = AccountSA::OhosAccountKits::GetInstance().GetOhosAccountInfoByUserId(userId, accountInfo);
+        if (ret != ERR_OK) {
+            APP_LOGE("GetOsAccountDistributedInfo failed, errCode: %{public}d", ret);
+            return ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED;
+        }
+    }
+    dataDir = ATOMIC_SERVICE_DIR_PREFIX + accountInfo.uid_ + PLUS + bundleName;
+    return ERR_OK;
+}
+
+std::string BundleDataMgr::GetDirForApp(const std::string &bundleName, const int32_t appIndex) const
+{
+    APP_LOGD("start GetDirForApp name: %{public}s appIndex: %{public}d", bundleName.c_str(), appIndex);
+    if (appIndex == 0) {
+        return bundleName;
+    } else {
+        return CLONE_APP_DIR_PREFIX + std::to_string(appIndex) + PLUS + bundleName;
+    }
+}
+
+ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
+    std::string &dataDir) const
+{
+    APP_LOGD("start GetDir bundleName : %{public}s appIndex : %{public}d", bundleName.c_str(), appIndex);
+    if (appIndex < 0) {
+        return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+    }
+    BundleType type = BundleType::APP;
+    GetBundleType(bundleName, type);
+    if (type == BundleType::ATOMIC_SERVICE) {
+        return GetDirForAtomicService(bundleName, dataDir);
+    }
+    dataDir = GetDirForApp(bundleName, appIndex);
+    return ERR_OK;
+}
+
+std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
+    int32_t userId) const
+{
+    std::vector<int32_t> cloneAppIndexes;
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        return cloneAppIndexes;
+    }
+    const std::map<std::string, InnerBundleCloneInfo> &cloneInfos = innerBundleUserInfo.cloneInfos;
+    if (cloneInfos.empty()) {
+        return cloneAppIndexes;
+    }
+    for (const auto &cloneInfo : cloneInfos) {
+        LOG_D(BMS_TAG_QUERY, "get cloneAppIndexes by inner bundle info: %{public}d", cloneInfo.second.appIndex);
+        cloneAppIndexes.emplace_back(cloneInfo.second.appIndex);
+    }
+    return cloneAppIndexes;
+}
+
+ErrCode BundleDataMgr::GetBundleDir(int32_t userId, BundleType type, AccountSA::OhosAccountInfo &accountInfo,
+    BundleDir &bundleDir) const
+{
+    APP_LOGD("start GetBundleDir");
+    if (type == BundleType::ATOMIC_SERVICE) {
+        std::string dataDir;
+        auto ret = GetDirForAtomicServiceByUserId(bundleDir.bundleName, userId, accountInfo, dataDir);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+        bundleDir.dir = dataDir;
+    } else {
+        bundleDir.dir = GetDirForApp(bundleDir.bundleName, bundleDir.appIndex);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) const
+{
+    APP_LOGD("start GetAllBundleDirs");
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid userid :%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    AccountSA::OhosAccountInfo accountInfo;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &info = item.second;
+        std::string bundleName = info.GetBundleName();
+        int32_t responseUserId = info.GetResponseUserId(requestUserId);
+        if (responseUserId == Constants::INVALID_USERID) {
+            APP_LOGD("bundle %{public}s is not installed in user %{public}d or 0", bundleName.c_str(), userId);
+            continue;
+        }
+        BundleType type = info.GetApplicationBundleType();
+        if (type != BundleType::ATOMIC_SERVICE && type != BundleType::APP) {
+            continue;
+        }
+
+        std::vector<int32_t> allAppIndexes = {0};
+        if (type == BundleType::APP) {
+            std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, responseUserId);
+            allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
+        }
+        for (int32_t appIndex: allAppIndexes) {
+            BundleDir bundleDir;
+            bundleDir.bundleName = bundleName;
+            bundleDir.appIndex = appIndex;
+            auto ret = GetBundleDir(responseUserId, type, accountInfo, bundleDir);
+            if (ret != ERR_OK) {
+                return ret;
+            }
+            bundleDirs.emplace_back(bundleDir);
+        }
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
