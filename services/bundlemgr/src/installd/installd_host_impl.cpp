@@ -607,7 +607,7 @@ static ErrCode RemoveBackupExtHomeDir(const std::string &bundleName, const int u
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
-    if (!InstalldOperator::DeleteDirFast(bundleBackupDir)) {
+    if (!InstalldOperator::DeleteDir(bundleBackupDir)) {
         LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed, errno is %{public}d", bundleBackupDir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
@@ -626,7 +626,7 @@ static ErrCode RemoveNewBackupExtHomeDir(const std::string &bundleName, const in
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
-    if (!InstalldOperator::DeleteDirFast(bundleBackupDir)) {
+    if (!InstalldOperator::DeleteDir(bundleBackupDir)) {
         LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed, errno is %{public}d", bundleBackupDir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
@@ -671,13 +671,13 @@ static ErrCode RemoveDistributedDir(const std::string &bundleName, const int use
 {
     std::string distributedFile = DISTRIBUTED_FILE + bundleName;
     distributedFile = distributedFile.replace(distributedFile.find("%"), 1, std::to_string(userid));
-    if (!InstalldOperator::DeleteDirFast(distributedFile)) {
+    if (!InstalldOperator::DeleteDir(distributedFile)) {
         LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed, errno is %{public}d", distributedFile.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     std::string fileNonAccount = DISTRIBUTED_FILE_NON_ACCOUNT + bundleName;
     fileNonAccount = fileNonAccount.replace(fileNonAccount.find("%"), 1, std::to_string(userid));
-    if (!InstalldOperator::DeleteDirFast(fileNonAccount)) {
+    if (!InstalldOperator::DeleteDir(fileNonAccount)) {
         LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed, errno is %{public}d", fileNonAccount.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
@@ -702,7 +702,7 @@ static ErrCode RemoveShareDir(const std::string &bundleName, const int userid)
 {
     std::string shareFileDir = SHARE_FILE_PATH + bundleName;
     shareFileDir = shareFileDir.replace(shareFileDir.find("%"), 1, std::to_string(userid));
-    if (!InstalldOperator::DeleteDirFast(shareFileDir)) {
+    if (!InstalldOperator::DeleteDir(shareFileDir)) {
         LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", shareFileDir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
@@ -722,7 +722,7 @@ static ErrCode RemoveCloudDir(const std::string &bundleName, const int userid)
 {
     std::string cloudFileDir = CLOUD_FILE_PATH + bundleName;
     cloudFileDir = cloudFileDir.replace(cloudFileDir.find("%"), 1, std::to_string(userid));
-    if (!InstalldOperator::DeleteDirFast(cloudFileDir)) {
+    if (!InstalldOperator::DeleteDir(cloudFileDir)) {
         LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", cloudFileDir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
@@ -1883,7 +1883,7 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(const std::string &bundleName
         }
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             std::string logDir = GetBundleDataDir(el, userId) + ServiceConstants::LOG + bundleName;
-            if (!InstalldOperator::DeleteDirFast(logDir)) {
+            if (!InstalldOperator::DeleteDir(logDir)) {
                 LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
                 return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
             }
