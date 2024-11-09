@@ -3385,10 +3385,6 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
 
-    if (bundleInfoIter->second.IsDisabled()) {
-        APP_LOGD("app %{public}s is disabled", bundleInfoIter->second.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_UID;
-    }
     if (bundleInfoIter->second.GetUid(userId, appIndex) == uid) {
         innerBundleInfo = bundleInfoIter->second;
         return ERR_OK;
@@ -4928,10 +4924,6 @@ bool BundleDataMgr::GetInnerBundleUserInfoByUserId(const std::string &bundleName
         APP_LOGW("bundleName:%{public}s not exist", bundleName.c_str());
         return false;
     }
-    if (infoItem->second.IsDisabled()) {
-        APP_LOGW("app %{public}s is disabled", infoItem->second.GetBundleName().c_str());
-        return false;
-    }
 
     return infoItem->second.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfo);
 }
@@ -5016,10 +5008,6 @@ bool BundleDataMgr::GetInnerBundleUserInfos(
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("%{public}s not exist", bundleName.c_str());
-        return false;
-    }
-    if (infoItem->second.IsDisabled()) {
-        APP_LOGW("app %{public}s is disabled", infoItem->second.GetBundleName().c_str());
         return false;
     }
 
