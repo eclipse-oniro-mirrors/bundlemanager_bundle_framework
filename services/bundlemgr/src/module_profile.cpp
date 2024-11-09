@@ -199,6 +199,7 @@ struct Ability {
     std::string preferMultiWindowOrientation = "default";
     std::vector<std::string> continueType;
     std::vector<std::string> continueBundleNames;
+    std::string process;
 };
 
 struct Extension {
@@ -221,6 +222,7 @@ struct Extension {
     std::vector<Metadata> metadata;
     std::string extensionProcessMode;
     std::vector<std::string> dataGroupIds;
+    std::string customProcess;
 };
 
 struct MultiAppMode {
@@ -642,6 +644,12 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_PROCESS,
+        ability.process,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, Extension &extension)
@@ -795,6 +803,12 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_PROCESS,
+        extension.customProcess,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
@@ -2136,6 +2150,7 @@ bool ToAbilityInfo(
         abilityInfo.continueType = ability.continueType;
     }
     abilityInfo.orientationId = ability.orientationId;
+    abilityInfo.process = ability.process;
     return true;
 }
 
@@ -2194,6 +2209,7 @@ void ToExtensionInfo(
     for (const std::string &dataGroup : extension.dataGroupIds) {
         extensionInfo.dataGroupIds.emplace_back(dataGroup);
     }
+    extensionInfo.customProcess = extension.customProcess;
 }
 
 bool GetPermissions(
