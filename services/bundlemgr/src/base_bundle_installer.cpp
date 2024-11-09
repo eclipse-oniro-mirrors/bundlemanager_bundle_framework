@@ -3764,7 +3764,7 @@ void BaseBundleInstaller::CreateExtensionDataDir(InnerBundleInfo &info) const
     createDirParam.gid = newInnerBundleUserInfo.uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
-    createDirParam.debug = info.GetBaseApplicationInfo().debug;
+    createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     createDirParam.extensionDirs.assign(createExtensionDirs_.begin(), createExtensionDirs_.end());
 
     auto result = InstalldClient::GetInstance()->CreateExtensionDataDir(createDirParam);
