@@ -23,9 +23,26 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-EventListener::EventListener(napi_env env, const std::string& type) : env_(env), type_(type) {}
 
-EventListener::~EventListener() {}
+void HandleEnvCleanup(void *data)
+{
+    if (data != nullptr) {
+        EventListener *evtListener = static_cast<EventListener *>(data);
+        evtListener->SetValid(false);
+    }
+}
+
+EventListener::EventListener(napi_env env, const std::string& type) : env_(env), type_(type)
+{
+    napi_status status = napi_add_env_cleanup_hook(env_, HandleEnvCleanup, this);
+    APP_LOGD("EventListener() %{public}d", status);
+}
+
+EventListener::~EventListener()
+{
+    napi_status status = napi_remove_env_cleanup_hook(env_, HandleEnvCleanup, this);
+    APP_LOGD("~EventListener() %{public}d", status);
+}
 
 void EventListener::Add(napi_env env, napi_value handler)
 {
@@ -82,6 +99,11 @@ void EventListener::Emit(std::string &bundleName, int32_t userId, int32_t appInd
 {
     APP_LOGD("EventListener Emit Init callback size is %{publuic}d",
         static_cast<int32_t>(callbackRefs_.size()));
+    std::lock_guard<std::mutex> lock(validMutex_);
+    if (!valid_) {
+        APP_LOGE("env is invalid");
+        return;
+    }
     for (const auto &callbackRef : callbackRefs_) {
         EmitOnUV(bundleName, userId, appIndex, callbackRef);
     }
@@ -145,6 +167,15 @@ void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, int3
 bool EventListener::HasSameEnv(napi_env env) const
 {
     return env_ == env;
+}
+
+void EventListener::SetValid(bool valid)
+{
+    std::lock_guard<std::mutex> lock(validMutex_);
+    valid_ = valid;
+    if (!valid) {
+        env_ = nullptr;
+    }
 }
 }
 }
