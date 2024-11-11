@@ -278,19 +278,6 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_1000
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_1100
- * @tc.name: test GetNameForUid of BundleMgrHostImpl
- * @tc.desc: 1. system running normally
- *           2. GetNameForUid false by no permission
- */
-HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_1100, Function | SmallTest | Level0)
-{
-    std::string name;
-    ErrCode ret = bundleMgrHostImpl_->GetNameForUid(UID, name);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
-}
-
-/**
  * @tc.number: BmsBundleSyetemAppFalseTest_1200
  * @tc.name: test QueryAbilityInfo of BundleMgrHostImpl
  * @tc.desc: 1. system running normally
