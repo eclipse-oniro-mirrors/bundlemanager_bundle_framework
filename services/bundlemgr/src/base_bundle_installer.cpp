@@ -848,7 +848,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             oldInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
-            if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx) != ERR_OK) {
+            if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)
+                && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
             }
@@ -1959,9 +1960,11 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             oldInfo.AddInnerBundleUserInfo(curInnerBundleUserInfo);
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
-            if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx) != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
-                return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+            if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)) {
+                if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx) != ERR_OK) {
+                    LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
+                    return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+                }
             }
             accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
             oldInfo.SetAccessTokenIdEx(accessTokenIdEx, userId_);
@@ -2024,7 +2027,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_SUCCESS)) {
+    if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_SUCCESS, isKeepData)) {
         LOG_E(BMS_TAG_INSTALLER, "delete inner info failed");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
@@ -2046,9 +2049,11 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
     }
 
     accessTokenId_ = info.GetAccessTokenId(userId_);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
-        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+    if (!isKeepData) {
+        if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+            AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+        }
     }
 
     return ERR_OK;
@@ -2099,9 +2104,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     }
 
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
-    if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, info)) {
+        if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
     }
     accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
     info.SetAccessTokenIdEx(accessTokenIdEx, userId_);
@@ -4763,9 +4770,11 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
 
     // delete accessTokenId
     accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
-        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+    if (!isKeepData) {
+        if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+            AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+        }
     }
     if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
         int32_t uid = innerBundleInfo.GetUid(userId_);
@@ -6322,6 +6331,30 @@ bool BaseBundleInstaller::DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundl
     appControlMgr->DeleteDisposedRuleOnlyForBms(oldBundleInfo.GetAppId());
     return true;
 #endif
+}
+
+bool BaseBundleInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
+    Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo)
+{
+    UninstallBundleInfo uninstallBundleInfo;
+    if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        return false;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "bundleName:%{public}s getUninstallBundleInfo success", bundleName.c_str());
+    if (uninstallBundleInfo.userInfos.empty()) {
+        return false;
+    }
+    if (uninstallBundleInfo.userInfos.find(std::to_string(userId)) != uninstallBundleInfo.userInfos.end()) {
+        accessTokenIdEx.tokenIdExStruct.tokenID =
+            uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenId;
+        accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo) == ERR_OK) {
+            return true;
+        } else {
+            LOG_W(BMS_TAG_INSTALLER, "bundleName:%{public}s UpdateHapToken failed", bundleName.c_str());
+        }
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
