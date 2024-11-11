@@ -1073,6 +1073,7 @@ private:
     bool CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex);
     bool CheckCanSetEnable(const std::string &bundleName);
     bool IsAppLinking(int32_t flags) const;
+    std::string GetCallerName();
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

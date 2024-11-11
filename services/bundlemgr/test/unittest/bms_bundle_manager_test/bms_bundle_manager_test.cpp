@@ -85,6 +85,7 @@ const size_t NUMBER_ONE = 1;
 const uint32_t BUNDLE_BACKUP_VERSION = 1000000;
 const uint32_t BUNDLE_BACKUP_LABEL_ID = 16777218;
 const uint32_t BUNDLE_BACKUP_ICON_ID = 16777221;
+const std::string CALLER_NAME_UT = "ut";
 }  // namespace
 
 class BmsBundleManagerTest : public testing::Test {
@@ -2132,7 +2133,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0010, Function | SmallTest |
     InnerBundleInfo info;
     info.innerBundleUserInfos_.clear();
     bool enabled = true;
-    ErrCode ret = info.SetApplicationEnabled(enabled, USERID);
+    ErrCode ret = info.SetApplicationEnabled(enabled, CALLER_NAME_UT, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -3406,7 +3407,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0021, Function | SmallTest | Leve
 {
     InnerBundleInfo info;
     ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled(
-        TEST_BUNDLE_NAME, 0, false, Constants::INVALID_USERID);
+        TEST_BUNDLE_NAME, 0, false, CALLER_NAME_UT, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     AbilityInfo abilityInfo;
     testRet = GetBundleDataMgr()->SetAbilityEnabled(
@@ -3654,7 +3655,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0009, Function | SmallTest 
 {
     bool isEnable = true;
     ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled(
-        TEST_BUNDLE_NAME, 0, isEnable, USERID);
+        TEST_BUNDLE_NAME, 0, isEnable, CALLER_NAME_UT, USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -5603,7 +5604,7 @@ HWTEST_F(BmsBundleManagerTest, GetJsonProfile_0004, Function | SmallTest | Level
     std::string wrongName = "wrong";
     std::string profile;
 
-    auto ret = dataMgr->SetApplicationEnabled(BUNDLE_BACKUP_NAME, 0, false, USERID);
+    auto ret = dataMgr->SetApplicationEnabled(BUNDLE_BACKUP_NAME, 0, false, CALLER_NAME_UT, USERID);
     EXPECT_EQ(ret, ERR_OK);
     ret = dataMgr->GetJsonProfile(profileType, BUNDLE_BACKUP_NAME, MODULE_NAME, profile, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);

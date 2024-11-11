@@ -259,6 +259,7 @@ const std::string UTD_GENERAL_AVI = "general.avi";
 const std::string UTD_GENERAL_VIDEO = "general.video";
 constexpr const char* APP_LINKING = "applinking";
 const int32_t APP_INDEX = 1;
+const std::string CALLER_NAME_UT = "ut";
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -4000,7 +4001,8 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0200, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, CALLER_NAME_UT,
+        Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
@@ -4020,14 +4022,16 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0300, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, false, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, false, CALLER_NAME_UT,
+        Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
     EXPECT_EQ(0, ret);
     EXPECT_FALSE(isEnable);
 
-    int32_t testRet2 = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, Constants::DEFAULT_USERID);
+    int32_t testRet2 = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, CALLER_NAME_UT,
+        Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet2);
     ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
     EXPECT_EQ(0, ret);
@@ -4059,7 +4063,8 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0500, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled("", 0, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled("", 0, true, CALLER_NAME_UT,
+        Constants::DEFAULT_USERID);
     EXPECT_NE(0, testRet);
     bool isEnable = false;
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
@@ -4079,7 +4084,8 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0600, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, CALLER_NAME_UT,
+        Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t testRet1 = GetBundleDataMgr()->IsApplicationEnabled("", 0, isEnable);
@@ -4141,7 +4147,8 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0800, Function | Small
  */
 HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0900, Function | SmallTest | Level1)
 {
-    ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled("", 0, true, Constants::INVALID_USERID);
+    ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled("", 0, true, CALLER_NAME_UT,
+        Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 

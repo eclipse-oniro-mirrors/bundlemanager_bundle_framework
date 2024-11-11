@@ -77,6 +77,7 @@ const std::string EVENT_PARAM_SCENE_ID = "SCENE_ID";
 const std::string EVENT_PARAM_HAPPEN_TIME = "HAPPEN_TIME";
 const std::string EVENT_PARAM_MODULE_NAME = "MODULE_NAME";
 const std::string EVENT_PARAM_IS_FREE_INSTALL = "IS_FREE_INSTALL";
+const char* EVENT_PARAM_APP_INDEX = "APP_INDEX";
 
 const std::string FREE_INSTALL_TYPE = "FreeInstall";
 const std::string PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -330,7 +331,9 @@ void InnerEventReport::InnerSendBundleStateChangeExceptionEvent(const EventInfo&
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
-        TYPE, type);
+        TYPE, type,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
 void InnerEventReport::InnerSendBundleCleanCacheExceptionEvent(const EventInfo& eventInfo)
@@ -460,7 +463,9 @@ void InnerEventReport::InnerSendBundleStateChangeEvent(const EventInfo& eventInf
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
         TYPE, type,
-        EVENT_PARAM_STATE, state);
+        EVENT_PARAM_STATE, state,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
 void InnerEventReport::InnerSendBundleCleanCacheEvent(const EventInfo& eventInfo)

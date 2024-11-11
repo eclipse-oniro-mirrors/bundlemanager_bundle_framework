@@ -32,6 +32,7 @@ const char* BUNDLE_USER_INFO_USER_ID = "userId";
 const char* BUNDLE_USER_INFO_ENABLE = "enabled";
 const char* BUNDLE_USER_INFO_DISABLE_ABILITIES = "disabledAbilities";
 const char* BUNDLE_USER_INFO_OVERLAY_STATE = "overlayState";
+const char* BUNDLE_USER_INFO_SET_ENABLED_CALLER = "setEnabledCaller";
 } // namespace
 
 bool BundleUserInfo::ReadFromParcel(Parcel &parcel)
@@ -51,6 +52,7 @@ bool BundleUserInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < overlayStateSize; i++) {
         overlayModulesState.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
+    setEnabledCaller = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -78,6 +80,7 @@ bool BundleUserInfo::Marshalling(Parcel &parcel) const
     for (const auto &overlayModuleState : overlayModulesState) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(overlayModuleState));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(setEnabledCaller));
     return true;
 }
 
@@ -125,6 +128,7 @@ void to_json(nlohmann::json& jsonObject, const BundleUserInfo& bundleUserInfo)
         {BUNDLE_USER_INFO_ENABLE, bundleUserInfo.enabled},
         {BUNDLE_USER_INFO_DISABLE_ABILITIES, bundleUserInfo.disabledAbilities},
         {BUNDLE_USER_INFO_OVERLAY_STATE, bundleUserInfo.overlayModulesState},
+        {BUNDLE_USER_INFO_SET_ENABLED_CALLER, bundleUserInfo.setEnabledCaller},
     };
 }
 
@@ -164,6 +168,14 @@ void from_json(const nlohmann::json& jsonObject, BundleUserInfo& bundleUserInfo)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_USER_INFO_SET_ENABLED_CALLER,
+        bundleUserInfo.setEnabledCaller,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("module bundleUserInfo jsonObject error : %{public}d", parseResult);
     }
