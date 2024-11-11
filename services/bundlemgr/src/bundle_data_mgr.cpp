@@ -1764,44 +1764,49 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
     }
     auto shareSummary = pickerSummary.GetWantParams(WANT_PARAM_SUMMARY);
     auto utds = shareSummary.KeySet();
-    for (const auto &utd : utds) {
-        int32_t count = shareSummary.GetIntParam(utd, DEFAULT_SUMMARY_COUNT);
-        if (count <= DEFAULT_SUMMARY_COUNT) {
-            LOG_W(BMS_TAG_QUERY, "invalid utd count");
-            return false;
-        }
-        bool match = false;
-        for (const auto &skill : shareActionSkills) {
-            if (MatchUtd(skill, utd, count)) {
-                match = true;
+    for (auto &skill : shareActionSkills) {
+        bool match = true;
+        for (const auto &utd : utds) {
+            int32_t count = shareSummary.GetIntParam(utd, DEFAULT_SUMMARY_COUNT);
+            if (!MatchUtd(skill, utd, count)) {
+                match = false;
                 break;
             }
         }
-        if (!match) {
-            LOG_D(BMS_TAG_QUERY, "match failed");
-            return false;
-        }
-    }
-    return true;
-}
-
-bool BundleDataMgr::MatchUtd(const Skill &skill, const std::string &utd, int32_t count) const
-{
-    for (const SkillUri &skillUri : skill.uris) {
-        if (skillUri.maxFileSupported < count) {
-            continue;
-        }
-        if (!skillUri.utd.empty()) {
-            if (MatchUtd(skillUri.utd, utd)) {
-                return true;
-            }
-        } else {
-            if (MatchTypeWithUtd(skillUri.type, utd)) {
-                return true;
-            }
+        if (match) {
+            return true;
         }
     }
     return false;
+}
+
+bool BundleDataMgr::MatchUtd(Skill &skill, const std::string &utd, int32_t count) const
+{
+    if (skill.uris.empty() || count <= DEFAULT_SUMMARY_COUNT) {
+        LOG_W(BMS_TAG_QUERY, "skill.uris is empty or invalid utd count");
+        return false;
+    }
+    bool isMatch = false;
+    for (SkillUri &skillUri : skill.uris) {
+        if (!skillUri.utd.empty()) {
+            if (MatchUtd(skillUri.utd, utd)) {
+                skillUri.maxFileSupported -= count;
+                isMatch = true;
+                if (skillUri.maxFileSupported < 0) {
+                    return false;
+                }
+            }
+        } else {
+            if (MatchTypeWithUtd(skillUri.type, utd)) {
+                skillUri.maxFileSupported -= count;
+                isMatch = true;
+                if (skillUri.maxFileSupported < 0) {
+                    return false;
+                }
+            }
+        }
+    }
+    return isMatch;
 }
 
 bool BundleDataMgr::MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const
