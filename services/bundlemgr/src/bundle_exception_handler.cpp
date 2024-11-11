@@ -124,12 +124,10 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
         isBundleValid = false;
     } else if (mark.status == InstallExceptionStatus::UPDATING_EXISTED_START) {
         if (InstalldClient::GetInstance()->RemoveDir(moduleDir + ServiceConstants::TMP_SUFFIX) == ERR_OK) {
-            info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
             info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         }
     } else if (mark.status == InstallExceptionStatus::UPDATING_NEW_START &&
         RemoveBundleAndDataDir(moduleDir, moduleDataDir, info.GetUserId())) {
-        info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
         info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     } else if (mark.status == InstallExceptionStatus::UNINSTALL_BUNDLE_START &&
         RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId())) {  // continue to uninstall
@@ -144,7 +142,6 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
         }
         if (RemoveBundleAndDataDir(moduleDir, moduleDataDir, info.GetUserId())) {
             info.RemoveModuleInfo(mark.packageName);
-            info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
             info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         }
     } else if (mark.status == InstallExceptionStatus::UPDATING_FINISH) {
@@ -152,7 +149,6 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
             ERR_OK) {
             APP_LOGI_NOFUNC("%{public}s rename module failed, may not exist", info.GetBundleName().c_str());
         }
-        info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
     }
 }
 }  // namespace AppExecFwkConstants
