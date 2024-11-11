@@ -30,6 +30,7 @@
 #include "preinstall_data_storage_rdb.h"
 #include "bundle_event_callback_death_recipient.h"
 #include "bundle_mgr_service.h"
+#include "bundle_mgr_client.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_status_callback_death_recipient.h"
@@ -91,10 +92,11 @@ constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
 constexpr const char* SCHEME_HTTPS = "https";
-const std::string BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
-const std::string ENTRY = "entry";
-const std::string CLONE_BUNDLE_PREFIX = "clone_";
 constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
+constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
+constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
+constexpr const char* ENTRY = "entry";
+constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -2039,7 +2041,7 @@ void BundleDataMgr::GetBundleNameAndIndexByName(
         appIndex = 0;
         return;
     }
-    bundleName = keyName.substr(pos + CLONE_BUNDLE_PREFIX.size());
+    bundleName = keyName.substr(pos + strlen(CLONE_BUNDLE_PREFIX));
 }
 
 std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundleName, int32_t userId) const
@@ -4770,7 +4772,73 @@ bool BundleDataMgr::GetShortcutInfos(
             bundleName.c_str(), requestUserId);
         return false;
     }
-    innerBundleInfo.GetShortcutInfos(shortcutInfos);
+    GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
+    return true;
+}
+
+std::string BundleDataMgr::TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,
+    const AbilityInfo &abilityInfo) const
+{
+    std::string rawData;
+    GetJsonProfileByExtractor(hapPath, profileName, rawData);
+    if (rawData.empty()) { // if get failed ,try get from resmgr
+        BundleMgrClient bundleMgrClient;
+        std::vector<std::string> rawJson;
+        if (!bundleMgrClient.GetResConfigFile(abilityInfo, META_DATA_SHORTCUTS_NAME, rawJson)) {
+            APP_LOGD("GetResConfigFile return false");
+            return "";
+        }
+        return rawJson.empty() ? "" : rawJson[0];
+    }
+    return rawData;
+}
+
+bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
+    const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    if (!info.GetIsNewVersion()) {
+        info.GetShortcutInfos(shortcutInfos);
+        return true;
+    }
+    AbilityInfo abilityInfo;
+    info.GetMainAbilityInfo(abilityInfo);
+    if (abilityInfo.hapPath.empty() || abilityInfo.metadata.size() <= 0) {
+        return false;
+    }
+    std::string rawData;
+    for (const auto &meta : abilityInfo.metadata) {
+        if (meta.name.compare(META_DATA_SHORTCUTS_NAME) == 0) {
+            std::string resName = meta.resource;
+            std::string hapPath = abilityInfo.hapPath;
+            size_t pos = resName.rfind(PROFILE_PREFIX);
+            bool posValid = (pos != std::string::npos) && (pos != resName.length() - strlen(PROFILE_PREFIX));
+            if (!posValid) {
+                APP_LOGE("resName invalid %{public}s", resName.c_str());
+                return false;
+            }
+            std::string profileName = PROFILE_PATH + resName.substr(pos + strlen(PROFILE_PREFIX)) + JSON_SUFFIX;
+            rawData = TryGetRawDataByExtractor(hapPath, profileName, abilityInfo);
+            break;
+        }
+    }
+    if (rawData.empty()) {
+        APP_LOGE("shortcutinfo is empty");
+        return false;
+    }
+    nlohmann::json jsonObject = nlohmann::json::parse(rawData, nullptr, false);
+    if (jsonObject.is_discarded()) {
+        APP_LOGE("shortcuts json invalid");
+        return false;
+    }
+    ShortcutJson shortcutJson = jsonObject.get<ShortcutJson>();
+    for (const Shortcut &item : shortcutJson.shortcuts) {
+        ShortcutInfo shortcutInfo;
+        shortcutInfo.bundleName = abilityInfo.bundleName;
+        shortcutInfo.moduleName = abilityInfo.moduleName;
+        info.InnerProcessShortcut(item, shortcutInfo);
+        shortcutInfo.sourceType = 1;
+        shortcutInfos.emplace_back(shortcutInfo);
+    }
     return true;
 }
 
@@ -4792,7 +4860,7 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
         return ret;
     }
 
-    innerBundleInfo.GetShortcutInfos(shortcutInfos);
+    GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
     return ERR_OK;
 }
 
