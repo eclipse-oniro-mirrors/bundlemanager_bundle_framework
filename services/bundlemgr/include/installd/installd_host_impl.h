@@ -253,6 +253,9 @@ private:
     unsigned int GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox);
     ErrCode InnerRemoveAtomicServiceBundleDataDir(const std::string &bundleName, const int32_t userId);
     ErrCode InnerRemoveBundleDataDir(const std::string &bundleName, const int32_t userId);
+    ErrCode AclSetDir(bool debug, const std::string &dir, bool setAccess, bool setDefault);
+    ErrCode AclSetExtensionDirs(bool debug, const std::string &parentDir,
+        const std::vector<std::string> &extensionDirs, bool setAccess, bool setDefault);
     int64_t GetAppCacheSize(const std::string &bundleName, const int32_t userId,
         const int32_t appIndex, const std::vector<std::string> &moduleNames = {});
 };
