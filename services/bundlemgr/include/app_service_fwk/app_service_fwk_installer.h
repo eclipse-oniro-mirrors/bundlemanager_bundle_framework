@@ -102,6 +102,7 @@ private:
     void GenerateOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     ErrCode VerifyCodeSignatureForHsp(const std::string &realHspPath, const std::string &realSoPath) const;
+    void MarkInstallFinish();
 
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;

@@ -127,9 +127,9 @@ bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBun
         return false;
     }
 
+    APP_LOGI("rdb SaveStorageBundleInfo -n %{public}s", innerBundleInfo.GetBundleName().c_str());
     bool ret = rdbDataManager_->InsertData(
         innerBundleInfo.GetBundleName(), innerBundleInfo.ToString());
-    APP_LOGD("SaveStorageBundleInfo %{public}d", ret);
     BackupRdb();
     return ret;
 }
