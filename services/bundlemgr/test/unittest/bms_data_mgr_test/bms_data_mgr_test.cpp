@@ -2372,7 +2372,7 @@ HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0002, Function | MediumTest |
     shortcutDataStorageRdb = nullptr;
 }
 
-HWTEST_F(BmsDataMgrTest, GetAllExtensionInfosByExtensionTypeName_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsDataMgrTest, GetOneExtensionInfosByExtensionTypeName_0100, Function | SmallTest | Level1)
 {
     auto dataMgr = GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
@@ -2382,14 +2382,14 @@ HWTEST_F(BmsDataMgrTest, GetAllExtensionInfosByExtensionTypeName_0100, Function 
     std::vector<ExtensionAbilityInfo> infos;
     int32_t appIndex = 0;
     std::string typeName = "";
-    dataMgr->GetAllExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
+    dataMgr->GetOneExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), true);
     ExtensionAbilityInfo extensionAbilityInfo;
     info.InsertExtensionInfo("", extensionAbilityInfo);
-    dataMgr->GetAllExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
+    dataMgr->GetOneExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), false);
     flags = 1;
-    dataMgr->GetAllExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
+    dataMgr->GetOneExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), false);
 }
 } // OHOS

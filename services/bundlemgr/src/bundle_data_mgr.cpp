@@ -5229,7 +5229,7 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosByExtensionTypeName(const std::
     return ERR_OK;
 }
 
-void BundleDataMgr::GetAllExtensionInfosByExtensionTypeName(const std::string &typeName, uint32_t flags, int32_t userId,
+void BundleDataMgr::GetOneExtensionInfosByExtensionTypeName(const std::string &typeName, uint32_t flags, int32_t userId,
     const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
     auto extensionInfos = info.GetInnerExtensionInfos();
@@ -5697,7 +5697,7 @@ void BundleDataMgr::GetExtensionAbilityInfoByTypeName(uint32_t flags, int32_t us
                 continue;
             }
             int32_t responseUserId = item.second.GetResponseUserId(userId);
-            GetAllExtensionInfosByExtensionTypeName(typeName, flags, responseUserId, item.second, infos);
+            GetOneExtensionInfosByExtensionTypeName(typeName, flags, responseUserId, item.second, infos);
             if (infos.size() > 0) {
                 return;
             }
