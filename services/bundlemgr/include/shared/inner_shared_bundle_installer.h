@@ -120,6 +120,7 @@ private:
     ErrCode VerifyCodeSignatureForHsp(const std::string &tempHspPath, const std::string &appIdentifier,
         bool isEnterpriseBundle, bool isCompileSdkOpenHarmony, const std::string &bundleName) const;
     void UpdateInnerModuleInfo(const std::string packageName, const InnerModuleInfo &innerModuleInfo);
+    void MarkInstallFinish();
 
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;

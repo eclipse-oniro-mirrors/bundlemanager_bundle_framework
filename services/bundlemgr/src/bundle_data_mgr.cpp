@@ -315,12 +315,9 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
             BuildExternalOverlayConnection(info.GetCurrentModulePackage(), info, info.GetUserId());
         }
 #endif
-        if (dataStorage_->SaveStorageBundleInfo(info)) {
-            APP_LOGD("write storage success bundle:%{public}s", bundleName.c_str());
-            bundleInfos_.emplace(bundleName, info);
-            AddAppHspBundleName(info.GetApplicationBundleType(), bundleName);
-            return true;
-        }
+        bundleInfos_.emplace(bundleName, info);
+        AddAppHspBundleName(info.GetApplicationBundleType(), bundleName);
+        return true;
     }
     return false;
 }
@@ -386,17 +383,15 @@ bool BundleDataMgr::AddNewModuleInfo(
             return false;
         }
 #endif
-        if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
-            APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
-            bundleInfos_.at(bundleName) = oldInfo;
-            return true;
-        }
+        APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
+        bundleInfos_.at(bundleName) = oldInfo;
+        return true;
     }
     return false;
 }
 
 bool BundleDataMgr::RemoveModuleInfo(
-    const std::string &bundleName, const std::string &modulePackage, InnerBundleInfo &oldInfo)
+    const std::string &bundleName, const std::string &modulePackage, InnerBundleInfo &oldInfo, bool needSaveStorage)
 {
     APP_LOGD("remove module info:%{public}s/%{public}s", bundleName.c_str(), modulePackage.c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -442,11 +437,11 @@ bool BundleDataMgr::RemoveModuleInfo(
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
         oldInfo.SetTsanEnabled(oldInfo.IsTsanEnabled());
         oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
-        if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
-            APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
-            bundleInfos_.at(bundleName) = oldInfo;
-            return true;
+        if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(oldInfo)) {
+            APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
+            return false;
         }
+        bundleInfos_.at(bundleName) = oldInfo;
         APP_LOGD("after delete modulePackage:%{public}s info", modulePackage.c_str());
     }
     return true;
@@ -672,10 +667,6 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             return false;
         }
 #endif
-        if (!dataStorage_->SaveStorageBundleInfo(oldInfo)) {
-            APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
-            return false;
-        }
         APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
         bundleInfos_.at(bundleName) = oldInfo;
         return true;
@@ -6474,7 +6465,7 @@ bool BundleDataMgr::UpdateQuickFixInnerBundleInfo(const std::string &bundleName,
     return false;
 }
 
-bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo)
+bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage)
 {
     std::string bundleName = innerBundleInfo.GetBundleName();
     if (bundleName.empty()) {
@@ -6489,12 +6480,12 @@ bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo
         return false;
     }
 
-    if (dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
-        bundleInfos_.at(bundleName) = innerBundleInfo;
-        return true;
+    if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGE("to update InnerBundleInfo:%{public}s failed", bundleName.c_str());
+        return false;
     }
-    APP_LOGE("to update InnerBundleInfo:%{public}s failed", bundleName.c_str());
-    return false;
+    bundleInfos_.at(bundleName) = innerBundleInfo;
+    return true;
 }
 
 bool BundleDataMgr::QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
@@ -7447,7 +7438,6 @@ void BundleDataMgr::BuildExternalOverlayConnection(const std::string &moduleName
                     info.second.SetOverlayModuleState(overlayModule, OVERLAY_ENABLE, innerUserId);
                 }
             }
-            dataStorage_->SaveStorageBundleInfo(info.second);
         }
     }
 }

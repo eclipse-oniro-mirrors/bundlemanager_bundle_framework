@@ -234,6 +234,7 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
         }
     }
     SavePreInstallBundleInfo(result, newInfos, installParam);
+    MarkInstallFinish();
     return result;
 }
 
@@ -628,6 +629,8 @@ void AppServiceFwkInstaller::MergeBundleInfos(InnerBundleInfo &info)
 
 ErrCode AppServiceFwkInstaller::SaveBundleInfoToStorage()
 {
+    newInnerBundleInfo_.SetInstallMark(bundleName_, newInnerBundleInfo_.GetCurModuleName(),
+        InstallExceptionStatus::INSTALL_START);
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_START)) {
         APP_LOGE("UpdateBundleInstallState failed");
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
@@ -767,10 +770,6 @@ ErrCode AppServiceFwkInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         return ERR_APPEXECFWK_INSTALL_INCONSISTENT_MODULE_NAME;
     }
     oldInfo.SetInstallMark(bundleName_, moduleName, InstallExceptionStatus::UPDATING_EXISTED_START);
-    if (!dataMgr_->SaveInnerBundleInfo(oldInfo)) {
-        APP_LOGE("save install mark failed");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
 
     std::string oldHspPath = oldInfo.GetModuleHapPath(moduleName);
     if (!oldHspPath.empty()) {
@@ -786,7 +785,6 @@ ErrCode AppServiceFwkInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
-    oldInfo.SetInstallMark(bundleName_, moduleName, InstallExceptionStatus::UPDATING_FINISH);
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), Constants::DEFAULT_USERID);
     if (!dataMgr_->UpdateInnerBundleInfo(bundleName_, newInfo, oldInfo)) {
         APP_LOGE("update innerBundleInfo %{public}s failed", bundleName_.c_str());
@@ -807,10 +805,6 @@ ErrCode AppServiceFwkInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo
     }
 
     oldInfo.SetInstallMark(bundleName_, moduleName, InstallExceptionStatus::UPDATING_NEW_START);
-    if (!dataMgr_->SaveInnerBundleInfo(oldInfo)) {
-        APP_LOGE("save install mark failed");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
 
     auto result = ExtractModule(newInfo, hspPath, installParam.copyHapToInstallPath);
     if (result != ERR_OK) {
@@ -823,7 +817,6 @@ ErrCode AppServiceFwkInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
-    oldInfo.SetInstallMark(bundleName_, moduleName, InstallExceptionStatus::INSTALL_FINISH);
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), Constants::DEFAULT_USERID);
     if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo)) {
         APP_LOGE(
@@ -1032,6 +1025,23 @@ ErrCode AppServiceFwkInstaller::DeliveryProfileToCodeSign(
             provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
     }
     return ERR_OK;
+}
+
+void AppServiceFwkInstaller::MarkInstallFinish()
+{
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("dataMgr_ is nullptr");
+        return;
+    }
+    InnerBundleInfo info;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, info)) {
+        APP_LOGE("mark finish failed, -n %{public}s not exist", bundleName_.c_str());
+        return;
+    }
+    info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
+    if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
+        APP_LOGE("save mark failed, -n %{public}s", bundleName_.c_str());
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -112,7 +112,8 @@ public:
      * @param oldInfo Indicates the old InnerBundleInfo object.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool RemoveModuleInfo(const std::string &bundleName, const std::string &modulePackage, InnerBundleInfo &oldInfo);
+    bool RemoveModuleInfo(const std::string &bundleName, const std::string &modulePackage, InnerBundleInfo &oldInfo,
+        bool needSaveStorage = true);
 
     bool RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundleInfo &info);
     /**
@@ -124,7 +125,7 @@ public:
      */
     bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
-    bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo);
+    bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
     /**
      * @brief Get an InnerBundleInfo if exist (will change the status to DISABLED).
      * @param bundleName Indicates the bundle name.
