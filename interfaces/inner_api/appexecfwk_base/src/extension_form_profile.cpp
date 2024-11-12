@@ -379,7 +379,7 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
             }
         #endif
 
-        supportDimensionSet.emplace(DIMENSION_MAP_VALUE[i]);
+        supportDimensionSet.emplace(dimensionItem);
     }
     for (i = 0; i < len; i++) {
         if (DIMENSION_MAP_KEY[i] == form.defaultDimension) break;
