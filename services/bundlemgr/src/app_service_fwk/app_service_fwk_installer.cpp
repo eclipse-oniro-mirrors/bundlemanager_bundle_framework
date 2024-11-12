@@ -1131,6 +1131,7 @@ void AppServiceFwkInstaller::MarkInstallFinish()
         APP_LOGE("mark finish failed, -n %{public}s not exist", bundleName_.c_str());
         return;
     }
+    info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
         APP_LOGE("save mark failed, -n %{public}s", bundleName_.c_str());
