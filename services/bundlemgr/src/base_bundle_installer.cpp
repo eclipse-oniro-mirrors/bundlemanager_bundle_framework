@@ -104,14 +104,6 @@ constexpr const char* BMS_ACTIVATION_LOCK = "persist.bms.activation-lock";
 constexpr const char* BMS_TRUE = "true";
 constexpr const char* BMS_FALSE = "false";
 constexpr int8_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
-
-const std::set<std::string> SINGLETON_WHITE_LIST = {
-    "com.ohos.formrenderservice",
-    "com.ohos.sceneboard",
-    "com.ohos.callui",
-    "com.ohos.mms",
-    "com.ohos.FusionSearch"
-};
 constexpr const char* DATA_EXTENSION_PATH = "/extension/";
 const char* INSTALL_SOURCE_PREINSTALL = "pre-installed";
 const char* INSTALL_SOURCE_UNKNOWN = "unknown";
@@ -2156,7 +2148,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
 
 bool BaseBundleInstaller::AllowSingletonChange(const std::string &bundleName)
 {
-    return SINGLETON_WHITE_LIST.find(bundleName) != SINGLETON_WHITE_LIST.end();
+    return ServiceConstants::SINGLETON_WHITE_LIST.find(bundleName) != ServiceConstants::SINGLETON_WHITE_LIST.end();
 }
 
 ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
