@@ -2213,7 +2213,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         LOG_E(BMS_TAG_INSTALLER, "process asan log directory failed");
         return result;
     }
-    if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo, isFeatureNeedUninstall_)) {
+    if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "add module %{public}s to innerBundleInfo %{public}s failed",
             modulePackage_.c_str(), bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
@@ -2341,7 +2341,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     newInfo.RestoreModuleInfo(oldInfo);
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_FINISH);
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
-    if (!dataMgr_->UpdateInnerBundleInfo(bundleName_, newInfo, oldInfo, isFeatureNeedUninstall_)) {
+    if (!dataMgr_->UpdateInnerBundleInfo(bundleName_, newInfo, oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "update innerBundleInfo %{public}s failed", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
