@@ -518,6 +518,9 @@ private:
     std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     ErrCode UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo);
     ErrCode SetDirApl(const InnerBundleInfo &info);
+    ErrCode SetDirApl(
+        int32_t userId, const std::string &bundleName, const std::string &CloneBundleName,
+        const std::string &appPrivilegeLevel, bool isPreInstallApp, const std::string &appProvisionType);
     /**
      * @brief Check to set isRemovable true when install.
      * @param newInfos Indicates all innerBundleInfo for all haps need to be installed.
