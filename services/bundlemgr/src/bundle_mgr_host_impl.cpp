@@ -3642,9 +3642,15 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithTypeName(const Want &wa
     }
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, infos);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfosV9 is failed");
-        return ret;
+    dataMgr->QueryAllCloneExtensionInfosV9(want, flags, userId, infos);
+    if (infos.empty()) {
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_QUERY,
+                "QueryExtensionAbilityInfosV9 is failed, -type %{public}s, -f %{public}d -u %{public}d ret: %{public}d",
+                typeName.c_str(), flags, userId, ret);
+            return ret;
+        }
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     if (typeName.empty()) {
         extensionInfos = infos;
