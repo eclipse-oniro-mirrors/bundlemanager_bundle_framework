@@ -703,7 +703,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfos(MessageParcel &data, MessagePar
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!WriteParcelableVector(infos, reply)) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
