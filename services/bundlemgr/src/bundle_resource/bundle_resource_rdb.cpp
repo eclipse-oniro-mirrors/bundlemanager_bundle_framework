@@ -24,7 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
-const int8_t CLOSE_TIME = 15; // delay 15s to backup
+const int8_t CLOSE_TIME = 60; // delay 60s to backup
 }
 
 BundleResourceRdb::BundleResourceRdb()
