@@ -707,6 +707,11 @@ void BMSEventHandler::CheckALLResourceInfo() {}
 
 void BMSEventHandler::ProcessBundleResourceInfo() {}
 
+bool InnerCheckSingletonBundleUserInfo(const InnerBundleInfo &bundleInfo)
+{
+    return true;
+}
+
 bool BMSEventHandler::IsHapPathExist(const BundleInfo &bundleInfo)
 {
     return true;

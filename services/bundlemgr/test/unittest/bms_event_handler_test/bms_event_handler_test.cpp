@@ -1404,4 +1404,39 @@ HWTEST_F(BmsEventHandlerTest, InnerMultiProcessBundleInstall_0100, Function | Sm
         EXPECT_TRUE(ret);
     }
 }
+
+/**
+ * @tc.number: InnerCheckSingletonBundleUserInfo_0100
+ * @tc.name: InnerCheckSingletonBundleUserInfo
+ * @tc.desc: test InnerCheckSingletonBundleUserInfo
+ */
+HWTEST_F(BmsEventHandlerTest, InnerCheckSingletonBundleUserInfo_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        InnerBundleInfo innerBundleInfo;
+        innerBundleInfo.baseApplicationInfo_->bundleName = "InnerCheckSingletonBundleUserInfo";
+        bool ret = handler->InnerCheckSingletonBundleUserInfo(innerBundleInfo);
+        EXPECT_TRUE(ret);
+        InnerBundleUserInfo userInfo;
+        userInfo.bundleUserInfo.userId = 100;
+        innerBundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+
+        userInfo.bundleUserInfo.userId = 101;
+        innerBundleInfo.innerBundleUserInfos_["_101"] = userInfo;
+
+        ret = handler->InnerCheckSingletonBundleUserInfo(innerBundleInfo);
+        EXPECT_TRUE(ret);
+
+        userInfo.bundleUserInfo.userId = 0;
+        innerBundleInfo.innerBundleUserInfos_["_0"] = userInfo;
+        ret = handler->InnerCheckSingletonBundleUserInfo(innerBundleInfo);
+        EXPECT_FALSE(ret);
+
+        innerBundleInfo.SetSingleton(true);
+        ret = handler->InnerCheckSingletonBundleUserInfo(innerBundleInfo);
+        EXPECT_FALSE(ret);
+    }
+}
 } // OHOS
