@@ -1153,10 +1153,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "hap files check signature info failed %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_SIGNATURE_CHECKED);               // ---- 15%
 
-    if (sysEventInfo_.callingUid == ServiceConstants::SHELL_UID &&
-        hapVerifyResults[0].GetProvisionInfo().type == Security::Verify::ProvisionType::RELEASE) {
-        return ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL;
-    }
+    result = CheckShellInstall(hapVerifyResults);
+    CHECK_RESULT(result, "check shell install failed %{public}d");
 
     // parse the bundle infos for all haps
     // key is bundlePath , value is innerBundleInfo
@@ -3742,6 +3740,19 @@ ErrCode BaseBundleInstaller::CheckMultipleHapsSignInfo(
     return bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyRes);
 }
 
+ErrCode BaseBundleInstaller::CheckShellInstall(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    if (sysEventInfo_.callingUid != ServiceConstants::SHELL_UID || hapVerifyRes.empty()) {
+        return ERR_OK;
+    }
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
+    if (provisionInfo.distributionType == Security::Verify::AppDistType::APP_GALLERY &&
+        provisionInfo.type == Security::Verify::ProvisionType::RELEASE) {
+        return ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL;
+    }
+    return ERR_OK;
+}
+
 ErrCode BaseBundleInstaller::ParseHapFiles(
     const std::vector<std::string> &bundlePaths,
     const InstallParam &installParam,
@@ -5374,6 +5385,11 @@ ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std:
         LOG_E(BMS_TAG_INSTALLER, "-n %{public}s debug encrypted bundle is not allowed to install",
             info.GetBundleName().c_str());
         return ERR_APPEXECFWK_INSTALL_DEBUG_ENCRYPTED_BUNDLE_FAILED;
+    }
+    if (isEncrypted && sysEventInfo_.callingUid == ServiceConstants::SHELL_UID) {
+        LOG_E(BMS_TAG_INSTALLER, "-n %{public}s encrypted bundle is not allowed for shell",
+            info.GetBundleName().c_str());
+        return ERR_APPEXECFWK_INSTALL_ENCRYPTED_BUNDLE_NOT_ALLOWED_FOR_SHELL;
     }
     if (isEncrypted) {
         LOG_D(BMS_TAG_INSTALLER, "module %{public}s is encrypted", modulePath_.c_str());
