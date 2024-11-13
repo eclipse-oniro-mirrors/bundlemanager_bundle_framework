@@ -268,7 +268,7 @@ private:
      * @param isKeepData Indicates that whether to save data.
      * @return Returns ERR_OK if the bundle directories removed successfully; returns error code otherwise.
      */
-    ErrCode RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData) const;
+    ErrCode RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData);
     /**
      * @brief Remove the code and data directories of a module in a bundle.
      * @param info Indicates the InnerBundleInfo object of a bundle.
@@ -513,7 +513,7 @@ private:
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
-    ErrCode RemoveBundleDataDir(const InnerBundleInfo &info, bool forException = false) const;
+    ErrCode RemoveBundleDataDir(const InnerBundleInfo &info, bool forException = false);
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     ErrCode UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo);
