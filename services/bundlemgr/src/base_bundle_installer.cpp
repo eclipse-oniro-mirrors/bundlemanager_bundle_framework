@@ -323,9 +323,6 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     // uninstall all sandbox app before
     UninstallAllSandboxApps(bundleName, installParam.userId);
 
-    std::shared_ptr<BundleCloneInstaller> cloneInstaller = std::make_shared<BundleCloneInstaller>();
-    cloneInstaller->UninstallAllCloneApps(bundleName, installParam.userId);
-
     int32_t uid = Constants::INVALID_UID;
     bool isUninstalledFromBmsExtension = false;
     ErrCode result = ProcessBundleUninstall(bundleName, installParam, uid);
@@ -1523,6 +1520,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return ERR_APPEXECFWK_UNINSTALL_KILLING_APP_ERROR;
         }
     }
+
+    std::shared_ptr<BundleCloneInstaller> cloneInstaller = std::make_shared<BundleCloneInstaller>();
+    cloneInstaller->UninstallAllCloneApps(bundleName, installParam.userId);
 
     auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_, installParam.isKeepData);
     if (res != ERR_OK) {
