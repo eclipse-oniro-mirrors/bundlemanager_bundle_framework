@@ -1062,7 +1062,7 @@ private:
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
     void GetAllExtensionInfos(uint32_t flags, int32_t userId, const InnerBundleInfo &info,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
-    void GetAllExtensionInfosByExtensionTypeName(const std::string &typeName, uint32_t flags, int32_t userId,
+    void GetOneExtensionInfosByExtensionTypeName(const std::string &typeName, uint32_t flags, int32_t userId,
         const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
     bool MatchUtd(Skill &skill, const std::string &utd, int32_t count) const;
     bool MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const;
