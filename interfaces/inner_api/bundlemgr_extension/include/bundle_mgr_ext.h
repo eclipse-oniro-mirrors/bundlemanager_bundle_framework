@@ -39,6 +39,10 @@ public:
     {
         return ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED;
     }
+    virtual bool IsRdDevice()
+    {
+        return false;
+    }
     virtual ErrCode QueryAbilityInfos(const Want &want, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos)
     {

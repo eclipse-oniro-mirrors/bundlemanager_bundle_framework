@@ -387,6 +387,8 @@ private:
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, InnerBundleInfo> &infos);
 
+    ErrCode CheckShellInstall(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
     ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, InnerBundleInfo> &infos, bool isSysCapValid);
 
@@ -712,6 +714,7 @@ private:
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
     void VerifyDomain();
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
+    bool IsRdDevice() const;
     void SetAtomicServiceModuleUpgrade(const InnerBundleInfo &oldInfo);
     void UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
