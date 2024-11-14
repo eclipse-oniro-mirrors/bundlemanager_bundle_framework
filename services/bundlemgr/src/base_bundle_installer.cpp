@@ -3747,7 +3747,7 @@ ErrCode BaseBundleInstaller::CheckShellInstall(std::vector<Security::Verify::Hap
     }
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
     if (provisionInfo.distributionType == Security::Verify::AppDistType::APP_GALLERY &&
-        provisionInfo.type == Security::Verify::ProvisionType::RELEASE) {
+        provisionInfo.type == Security::Verify::ProvisionType::RELEASE && !IsRdDevice()) {
         return ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL;
     }
     return ERR_OK;
@@ -6051,6 +6051,17 @@ void BaseBundleInstaller::ClearDomainVerifyStatus(const std::string &appIdentifi
     LOG_I(BMS_TAG_INSTALLER, "app domain verify is disabled");
     return;
 #endif
+}
+
+bool BaseBundleInstaller::IsRdDevice() const
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bool res = bmsExtensionDataMgr.IsRdDevice();
+    if (res) {
+        LOG_I(BMS_TAG_INSTALLER, "current device is rd device");
+        return true;
+    }
+    return false;
 }
 
 ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const
