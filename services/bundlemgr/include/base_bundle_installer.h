@@ -753,6 +753,7 @@ private:
         const InnerBundleInfo &oldBundleInfo, bool isPreInstallApp);
 
     bool DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo);
+    void ProcessAddResourceInfo(const InstallParam &installParam, const std::string &bundleName, int32_t userId);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
