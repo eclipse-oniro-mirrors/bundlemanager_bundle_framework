@@ -3924,20 +3924,64 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
 
 void BMSEventHandler::InnerProcessRebootUninstallWrongBundle()
 {
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
+        return;
+    }
+    for (const auto &bundleName : ServiceConstants::SINGLETON_WHITE_LIST) {
+        InnerBundleInfo bundleInfo;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo)) {
+            LOG_W(BMS_TAG_DEFAULT, "-n %{public}s is not exist", bundleName.c_str());
+            continue;
+        }
+        InnerCheckSingletonBundleUserInfo(bundleInfo);
+    }
+}
+
+bool BMSEventHandler::InnerCheckSingletonBundleUserInfo(const InnerBundleInfo &bundleInfo)
+{
+    const auto bundleUserInfos = bundleInfo.GetInnerBundleUserInfos();
+    if (bundleUserInfos.size() <= 1) {
+        return true;
+    }
+    std::set<int32_t> userIds;
+    for (const auto &item : bundleUserInfos) {
+        userIds.insert(item.second.bundleUserInfo.userId);
+    }
+    if (userIds.find(Constants::DEFAULT_USERID) == userIds.end()) {
+        return true;
+    }
+    const std::string bundleName = bundleInfo.GetBundleName();
+    LOG_I(BMS_TAG_DEFAULT, "-n %{public}s is exist different user info", bundleName.c_str());
     InstallParam installParam;
     installParam.userId = Constants::DEFAULT_USERID;
     installParam.SetKillProcess(false);
     installParam.needSendEvent = false;
-    std::vector<std::string> wrongBundleNameList;
-    wrongBundleNameList.emplace_back(Constants::SCENE_BOARD_BUNDLE_NAME);
-
-    for (const auto &bundle : wrongBundleNameList) {
+    if (!bundleInfo.IsSingleton()) {
+        LOG_I(BMS_TAG_DEFAULT, "-n %{public}s delete 0 userInfo", bundleName.c_str());
         SystemBundleInstaller installer;
-        if (!installer.UninstallSystemBundle(bundle, installParam)) {
-            LOG_W(BMS_TAG_DEFAULT, "OTA uninstall bundle %{public}s userId %{public}d error", bundle.c_str(),
+        if (!installer.UninstallSystemBundle(bundleName, installParam)) {
+            LOG_W(BMS_TAG_DEFAULT, "OTA uninstall bundle %{public}s userId %{public}d error", bundleName.c_str(),
                 installParam.userId);
+            return false;
+        }
+        return true;
+    }
+    for (const auto &userId : userIds) {
+        if (userId == Constants::DEFAULT_USERID) {
+            continue;
+        }
+        LOG_I(BMS_TAG_DEFAULT, "-n %{public}s delete %{public}d userInfo", bundleName.c_str(), userId);
+        installParam.userId = userId;
+        SystemBundleInstaller installer;
+        if (!installer.UninstallSystemBundle(bundleName, installParam)) {
+            LOG_W(BMS_TAG_DEFAULT, "OTA uninstall bundle %{public}s userId %{public}d error", bundleName.c_str(),
+                installParam.userId);
+            return false;
         }
     }
+    return true;
 }
 
 void BMSEventHandler::ProcessCheckAppEl1Dir()

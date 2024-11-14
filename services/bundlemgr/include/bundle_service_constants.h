@@ -181,6 +181,14 @@ const std::set<std::string> ALLOW_MULTI_ICON_BUNDLE = {
     "com.ohos.contacts"
 };
 constexpr const char* CALLER_NAME_BMS = "bms";
+// allow singleton change
+const std::set<std::string> SINGLETON_WHITE_LIST = {
+    "com.ohos.formrenderservice",
+    "com.ohos.sceneboard",
+    "com.ohos.callui",
+    "com.ohos.mms",
+    "com.ohos.FusionSearch"
+};
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

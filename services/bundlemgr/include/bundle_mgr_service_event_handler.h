@@ -631,6 +631,7 @@ private:
     void UpdatePreinstallDBForNotUpdatedBundle(const std::string &bundleName,
         const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos);
     void InnerProcessRebootUninstallWrongBundle();
+    bool InnerCheckSingletonBundleUserInfo(const InnerBundleInfo &bundleInfo);
     void ProcessCheckAppEl1Dir();
     void static ProcessCheckAppEl1DirTask();
     void CleanAllBundleShaderCache() const;
