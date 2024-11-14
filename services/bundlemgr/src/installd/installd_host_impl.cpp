@@ -1811,12 +1811,12 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(const std::string &bundleName
 {
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
         std::string bundleDataDir = GetBundleDataDir(el, userId) + ServiceConstants::BASE + bundleName;
-        if (!InstalldOperator::DeleteDir(bundleDataDir)) {
+        if (!InstalldOperator::DeleteDirFast(bundleDataDir)) {
             LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
         std::string databaseDir = GetBundleDataDir(el, userId) + ServiceConstants::DATABASE + bundleName;
-        if (!InstalldOperator::DeleteDir(databaseDir)) {
+        if (!InstalldOperator::DeleteDirFast(databaseDir)) {
             LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }

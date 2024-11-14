@@ -294,6 +294,9 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
   ]
+
+  external_deps += bundle_install_external_deps
+
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
   if (build_selinux) {
     external_deps += [ "selinux_adapter:libhap_restorecon" ]

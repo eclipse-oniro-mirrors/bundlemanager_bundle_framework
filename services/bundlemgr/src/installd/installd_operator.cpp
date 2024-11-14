@@ -46,6 +46,7 @@
 #include "bundle_util.h"
 #include "directory_ex.h"
 #include "el5_filekey_manager_kit.h"
+#include "ffrt.h"
 #include "parameters.h"
 #include "securec.h"
 #include "hnp_api.h"
@@ -223,6 +224,62 @@ bool InstalldOperator::DeleteDir(const std::string &path)
         return OHOS::ForceRemoveDirectory(path);
     }
     return true;
+}
+
+bool InstalldOperator::DeleteDirFast(const std::string &path)
+{
+    std::string newPath = GetSameLevelTmpPath(path);
+    if (newPath.empty()) {
+        return DeleteDir(path);
+    }
+    if (rename(path.c_str(), newPath.c_str()) != 0) {
+        LOG_W(BMS_TAG_INSTALLD, "rename failed:%{public}s,%{public}s,%{public}s",
+            std::strerror(errno), path.c_str(), newPath.c_str());
+        return DeleteDir(path);
+    }
+    auto task = [newPath]() {
+        bool ret = InstalldOperator::DeleteDir(newPath);
+        if (!ret) {
+            LOG_E(BMS_TAG_INSTALLD, "async del failed,%{public}s", newPath.c_str());
+        }
+    };
+    ffrt::submit(task);
+    return true;
+}
+
+std::string InstalldOperator::GetSameLevelTmpPath(const std::string &path)
+{
+    if (path.empty()) {
+        LOG_I(BMS_TAG_INSTALLD, "path empty");
+        return Constants::EMPTY_STRING;
+    }
+    std::filesystem::path parentPath = std::filesystem::path(path).parent_path();
+    if (parentPath.empty()) {
+        LOG_I(BMS_TAG_INSTALLD, "parentPath empty");
+        return Constants::EMPTY_STRING;
+    }
+    std::error_code ec;
+    std::filesystem::path canonicalParentPath = std::filesystem::canonical(parentPath, ec);
+    if (ec) {
+        LOG_I(BMS_TAG_INSTALLD, "canonical failed:%{public}s", ec.message().c_str());
+        return Constants::EMPTY_STRING;
+    }
+    uint32_t maxTry = 3;
+    for (uint32_t i = 1; i <= maxTry; ++i) {
+        std::string childPath = ServiceConstants::UNINSTALL_TMP_PREFIX + std::to_string(BundleUtil::GetCurrentTimeNs());
+        std::filesystem::path fullPath = canonicalParentPath / childPath;
+        if (std::filesystem::exists(fullPath, ec)) {
+            LOG_I(BMS_TAG_INSTALLD, "fullPath exists");
+            continue;
+        }
+        if (ec) {
+            LOG_I(BMS_TAG_INSTALLD, "exists failed:%{public}s", ec.message().c_str());
+            continue;
+        }
+        return fullPath.string();
+    }
+    LOG_I(BMS_TAG_INSTALLD, "GetSameLevelTmpPath failed");
+    return Constants::EMPTY_STRING;
 }
 
 bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::string &targetSoPath,
