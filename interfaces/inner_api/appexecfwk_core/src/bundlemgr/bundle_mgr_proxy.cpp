@@ -237,7 +237,8 @@ bool BundleMgrProxy::GetApplicationInfos(
         return false;
     }
 
-    if (!GetParcelableInfos<ApplicationInfo>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS, data, appInfos)) {
+    if (!GetVectorFromParcelIntelligent<ApplicationInfo>(
+        BundleMgrInterfaceCode::GET_APPLICATION_INFOS, data, appInfos)) {
         LOG_E(BMS_TAG_QUERY, "fail to GetApplicationInfos from server");
         return false;
     }
