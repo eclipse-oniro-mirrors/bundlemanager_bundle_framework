@@ -520,6 +520,7 @@ ohos_shared_library("installs") {
     "appspawn:hnpapi",
     "bounds_checking_function:libsec_shared",
     "eventhandler:libeventhandler",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",

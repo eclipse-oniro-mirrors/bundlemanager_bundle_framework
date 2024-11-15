@@ -80,6 +80,8 @@ public:
      * @return Returns true if the directory deleted successfully; returns false otherwise.
      */
     static bool DeleteDir(const std::string &path);
+
+    static bool DeleteDirFast(const std::string &path);
     /**
      * @brief Extract the files of a compressed package to a specific directory.
      * @param srcModulePath Indicates the package file path.
@@ -316,6 +318,7 @@ private:
     static bool OpenEncryptionHandle();
 #endif
     static void FsyncResFile(const std::string &path, const ExtractFileType &extractFileType);
+    static std::string GetSameLevelTmpPath(const std::string &path);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
