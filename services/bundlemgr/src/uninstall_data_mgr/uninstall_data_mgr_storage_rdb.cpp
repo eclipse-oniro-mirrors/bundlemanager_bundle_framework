@@ -104,6 +104,43 @@ bool UninstallDataMgrStorageRdb::GetUninstallBundleInfo(const std::string &bundl
     return true;
 }
 
+bool UninstallDataMgrStorageRdb::GetAllUninstallBundleInfo(
+    std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos)
+{
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("null rdbDataManager");
+        return false;
+    }
+
+    std::map<std::string, std::string> datas;
+    if (!rdbDataManager_->QueryAllData(datas)) {
+        return false;
+    }
+    TransformStrToInfo(datas, uninstallBundleInfos);
+    return !uninstallBundleInfos.empty();
+}
+
+void UninstallDataMgrStorageRdb::TransformStrToInfo(const std::map<std::string, std::string> &datas,
+    std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos)
+{
+    APP_LOGI("start");
+    if (rdbDataManager_ == nullptr || datas.empty()) {
+        APP_LOGE("null rdbDataManager");
+        return;
+    }
+
+    for (auto &data : datas) {
+        UninstallBundleInfo uninstallBundleInfo;
+        nlohmann::json jsonObject = nlohmann::json::parse(data.second, nullptr, false);
+        if (jsonObject == nullptr || jsonObject.is_discarded()) {
+            APP_LOGE("error key: %{plublic}s", data.first.c_str());
+            continue;
+        }
+        from_json(jsonObject, uninstallBundleInfo);
+        uninstallBundleInfos.insert(std::make_pair(data.first, uninstallBundleInfo));
+    }
+}
+
 bool UninstallDataMgrStorageRdb::DeleteUninstallBundleInfo(const std::string &bundleName)
 {
     if (rdbDataManager_ == nullptr) {
