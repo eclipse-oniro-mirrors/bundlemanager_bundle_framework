@@ -6089,6 +6089,19 @@ void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32
 
     constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
     ErrCode result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, uid, gid);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "Mkdir %{public}s failed, error is %{public}d",
+            ServiceConstants::CLOUD_SHADER_PATH, result);
+        return;
+    }
+    
+    constexpr int32_t commonMode = (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_COMMON_PATH, commonMode, uid, gid);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "Mkdir %{public}s failed, error is %{public}d",
+            ServiceConstants::CLOUD_SHADER_COMMON_PATH, result);
+        return;
+    }
     LOG_I(BMS_TAG_INSTALLER, "Create cloud shader cache result: %{public}d", result);
 }
 

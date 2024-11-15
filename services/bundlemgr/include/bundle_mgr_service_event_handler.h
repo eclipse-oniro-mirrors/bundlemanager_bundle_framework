@@ -523,6 +523,7 @@ private:
     void InnerProcessCheckShaderCacheDir();
     void ProcessCheckCloudShaderDir();
     void InnerProcessCheckCloudShaderDir();
+    void InnerProcessCheckCloudShaderCommonDir(const int32_t uid, const int32_t gid);
     void ProcessNewBackupDir();
     void ProcessCheckRecoverableApplicationInfo();
     void InnerProcessCheckRecoverableApplicationInfo();

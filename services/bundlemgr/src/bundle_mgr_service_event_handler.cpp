@@ -1441,16 +1441,21 @@ void BMSEventHandler::ProcessNewBackupDir()
 void BMSEventHandler::InnerProcessCheckCloudShaderDir()
 {
     bool cloudExist = true;
+    bool commonExist = true;
     ErrCode result = InstalldClient::GetInstance()->IsExistDir(ServiceConstants::CLOUD_SHADER_PATH, cloudExist);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "IsExistDir failed, error is %{public}d", result);
         return;
     }
-    if (cloudExist) {
-        LOG_D(BMS_TAG_DEFAULT, "CLOUD_SHADER_PATH is exist");
+    result = InstalldClient::GetInstance()->IsExistDir(ServiceConstants::CLOUD_SHADER_COMMON_PATH, commonExist);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "IsExistDir failed, error is %{public}d", result);
+        commonExist = false;
+    }
+    if (cloudExist && commonExist) {
+        LOG_D(BMS_TAG_DEFAULT, "CLOUD_SHADER_PATH and CLOUD_SHADER_COMMON_PATH existed");
         return;
     }
-
     const std::string bundleName = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
     if (bundleName.empty()) {
         return;
@@ -1469,9 +1474,29 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
         LOG_D(BMS_TAG_DEFAULT, "Obtain bundleInfo failed, bundleName: %{public}s not exist", bundleName.c_str());
         return;
     }
+    if (!cloudExist) {
+        constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
+        result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, info.uid, info.gid);
+        if (result != ERR_OK) {
+            LOG_W(BMS_TAG_DEFAULT, "Mkdir CLOUD_SHADER_PATH failed, error is %{public}d", result);
+            return;
+        }
+    }
+    if (!commonExist) {
+        InnerProcessCheckCloudShaderCommonDir(info.uid, info.gid);
+    }
+    LOG_I(BMS_TAG_DEFAULT, "Create cloud shader cache result: %{public}d", result);
+}
 
-    constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
-    result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, info.uid, info.gid);
+void BMSEventHandler::InnerProcessCheckCloudShaderCommonDir(const int32_t uid, const int32_t gid)
+{
+    constexpr int32_t commonMode = (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    ErrCode result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_COMMON_PATH,
+        commonMode, uid, gid);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "Mkdir CLOUD_SHADER_COMMON_PATH failed, error is %{public}d", result);
+        return;
+    }
     LOG_I(BMS_TAG_DEFAULT, "Create cloud shader cache result: %{public}d", result);
 }
 

@@ -171,6 +171,7 @@ constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 // shader
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
+constexpr const char* CLOUD_SHADER_COMMON_PATH = "/data/local/shader_cache/cloud/common";
 constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlename";
 // apiReleaseType
 constexpr const char* API_RELEASE_TYPE_RELEASE = "Release";
