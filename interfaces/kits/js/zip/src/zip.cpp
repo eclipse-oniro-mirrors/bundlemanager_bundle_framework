@@ -268,6 +268,10 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
                 }
             } else {
                 std::unique_ptr<WriterDelegate> writer = writerFactory(destDir, entryPath);
+                if (!writer->PrepareOutput()) {
+                    APP_LOGE("PrepareOutput err");
+                    return ERR_ZLIB_DEST_FILE_DISABLED;
+                }
                 if (!reader.ExtractCurrentEntry(writer.get(), std::numeric_limits<uint64_t>::max())) {
                     APP_LOGI("Failed to extract");
                     return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
