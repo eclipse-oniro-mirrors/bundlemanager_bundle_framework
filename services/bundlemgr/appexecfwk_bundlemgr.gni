@@ -157,6 +157,7 @@ bundle_install_deps = [
 
 bundle_install_external_deps = [
   "ffrt:libffrt",
+  "os_account:libaccountkits",
   "storage_service:storage_manager_acl",
   "zlib:shared_libz",
 ]

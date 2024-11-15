@@ -4592,5 +4592,43 @@ std::string BundleMgrHostImpl::GetCallerName()
     }
     return callerName;
 }
+
+ErrCode BundleMgrHostImpl::GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
+    std::string &dataDir)
+{
+    APP_LOGD("start GetDirByBundleNameAndAppIndex");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
+}
+
+ErrCode BundleMgrHostImpl::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAllBundleDirs(userId, bundleDirs);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
