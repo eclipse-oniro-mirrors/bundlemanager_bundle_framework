@@ -2170,6 +2170,7 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     innerModuleInfo.deviceTypes = configJson.module.deviceType;
     innerModuleInfo.buildHash = configJson.module.buildHash;
     innerModuleInfo.compressNativeLibs = configJson.deveicConfig.defaultDevice.compressNativeLibs;
+    innerModuleInfo.debug = configJson.deveicConfig.defaultDevice.debug;
     return true;
 }
 

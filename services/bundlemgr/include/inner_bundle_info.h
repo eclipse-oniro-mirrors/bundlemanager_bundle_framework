@@ -77,6 +77,7 @@ struct InnerModuleInfo {
     bool gwpAsanEnabled = false;
     bool tsanEnabled = false;
     bool needDelete = false;
+    bool debug = false;
     uint32_t innerModuleInfoFlag = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
@@ -481,7 +482,7 @@ public:
      * @param applicationInfo Indicates the ApplicationInfo object.
      * @param isEntry Indicates the isEntry.
      */
-    void UpdateBaseApplicationInfo(const ApplicationInfo &applicationInfo, bool isEntry);
+    void UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo);
     /**
      * @brief Get application enabled.
      * @param userId Indicates the user ID.
@@ -2191,7 +2192,8 @@ public:
     void SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted);
     bool IsEncryptedMoudle(const std::string &packageName) const;
     bool IsContainEncryptedModule() const;
-    void UpdateDebug(bool debug, bool isEntry);
+    void UpdateDebug(const InnerBundleInfo &newInfo);
+    bool GetDebugFromModules(const std::map<std::string, InnerModuleInfo> &innerModuleInfos);
     ErrCode GetAppServiceHspInfo(BundleInfo &bundleInfo) const;
     std::vector<std::string> GetQuerySchemes() const;
     void UpdateOdid(const std::string &developerId, const std::string &odid);

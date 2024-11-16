@@ -145,6 +145,7 @@ constexpr const char* MODULE_PACKAGE_NAME = "packageName";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
 constexpr const char* MODULE_HWASAN_ENABLED = "hwasanEnabled";
 constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
+constexpr const char* MODULE_DEBUG = "debug";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
@@ -446,6 +447,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
             InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED))},
         {MODULE_UBSAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
             InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED))},
+        {MODULE_DEBUG, info.debug},
     };
 }
 
@@ -985,6 +987,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_UBSAN_ENABLED,
         ubsanEnabled,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_DEBUG,
+        info.debug,
         false,
         parseResult);
     if (parseResult != ERR_OK) {
@@ -1712,9 +1720,9 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
     }
 }
 
-void InnerBundleInfo::UpdateBaseApplicationInfo(
-    const ApplicationInfo &applicationInfo, bool isEntry)
+void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
 {
+    const ApplicationInfo &applicationInfo = newInfo.GetBaseApplicationInfo();
     baseApplicationInfo_->name = applicationInfo.name;
     baseApplicationInfo_->bundleName = applicationInfo.bundleName;
 
@@ -1763,7 +1771,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->targetBundleName = applicationInfo.targetBundleName;
     baseApplicationInfo_->targetPriority = applicationInfo.targetPriority;
 #endif
-    UpdateDebug(applicationInfo.debug, isEntry);
+    UpdateDebug(newInfo);
     baseApplicationInfo_->organization = applicationInfo.organization;
     baseApplicationInfo_->multiProjects = applicationInfo.multiProjects;
     baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
@@ -2146,6 +2154,9 @@ void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
 
         extensionSkillInfos_.erase(extensionSkillItem);
     }
+
+    // update application debug
+    baseApplicationInfo_->debug = GetDebugFromModules(innerModuleInfos_);
 }
 
 std::string InnerBundleInfo::ToString() const
@@ -4150,13 +4161,32 @@ std::string InnerBundleInfo::GetCertificate() const
     return baseBundleInfo_->signatureInfo.certificate;
 }
 
-void InnerBundleInfo::UpdateDebug(bool debug, bool isEntry)
+void InnerBundleInfo::UpdateDebug(const InnerBundleInfo &newInfo)
 {
-    if (isEntry) {
-        baseApplicationInfo_->debug = debug;
-    } else if (!HasEntry() && debug) {
-        baseApplicationInfo_->debug = debug;
+    std::string moduleName = newInfo.GetCurrentModulePackage();
+    auto it = innerModuleInfos_.find(moduleName);
+    if (it != innerModuleInfos_.end()) {
+        it->second.debug = newInfo.GetBaseApplicationInfo().debug;
     }
+    if (newInfo.HasEntry()) {
+        baseApplicationInfo_->debug = newInfo.GetBaseApplicationInfo().debug;
+    } else if (!HasEntry()) {
+        baseApplicationInfo_->debug =
+            newInfo.GetBaseApplicationInfo().debug || GetDebugFromModules(innerModuleInfos_);
+    }
+}
+
+bool InnerBundleInfo::GetDebugFromModules(const std::map<std::string, InnerModuleInfo> &innerModuleInfos)
+{
+    bool debug = false;
+    for (const auto &item : innerModuleInfos) {
+        if (item.second.isEntry) {
+            return item.second.debug;
+        } else {
+            debug = debug || item.second.debug;
+        }
+    }
+    return debug;
 }
 
 void InnerBundleInfo::AddOldAppId(const std::string &appId)
