@@ -1674,7 +1674,6 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 LOG_E(BMS_TAG_DEFAULT, "OTA Install new bundle(%{public}s) error", bundleName.c_str());
                 SavePreInstallException(scanPathIter);
             }
-
             continue;
         }
 
@@ -1692,8 +1691,6 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                     LOG_E(BMS_TAG_DEFAULT, "OTA Install prefab bundle(%{public}s) error", bundleName.c_str());
                     SavePreInstallException(scanPathIter);
                 }
-            } else {
-                UpdatePreinstallDBForUninstalledBundle(bundleName, infos);
             }
             continue;
         }
@@ -1786,6 +1783,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     if (!InnerMultiProcessBundleInstall(needInstallMap, appType)) {
         LOG_E(BMS_TAG_DEFAULT, "multi install failed");
     }
+    UpdatePreinstallDB(needInstallMap);
 }
 
 bool BMSEventHandler::InnerMultiProcessBundleInstall(
@@ -3104,7 +3102,26 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
     EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
 }
 
-void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(const std::string &bundleName,
+void BMSEventHandler::UpdatePreinstallDB(
+    const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap)
+{
+    for (const auto &existInfo : loadExistData_) {
+        std::string bundleName = existInfo.first;
+        auto it = needInstallMap.find(bundleName);
+        if (it != needInstallMap.end()) {
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s installed already update", bundleName.c_str());
+            continue;
+        }
+        auto hapParseInfoMapIter = hapParseInfoMap_.find(bundleName);
+        if (hapParseInfoMapIter == hapParseInfoMap_.end()) {
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s not preinstalled", bundleName.c_str());
+            continue;
+        }
+        UpdatePreinstallDBForNotUpdatedBundle(bundleName, hapParseInfoMapIter->second);
+    }
+}
+
+void BMSEventHandler::UpdatePreinstallDBForNotUpdatedBundle(const std::string &bundleName,
     const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos)
 {
     if (innerBundleInfos.empty()) {
@@ -3121,11 +3138,7 @@ void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(const std::string &
         LOG_W(BMS_TAG_DEFAULT, "get preinstalled bundle info failed :%{public}s", bundleName.c_str());
         return;
     }
-    if (innerBundleInfos.begin()->second.GetBaseBundleInfo().versionCode <= preInstallBundleInfo.GetVersionCode()) {
-        LOG_I(BMS_TAG_DEFAULT, "bundle no change");
-        return;
-    }
-    LOG_I(BMS_TAG_DEFAULT, "begin update preinstall DB for %{public}s", bundleName.c_str());
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "begin update preinstall DB for %{public}s", bundleName.c_str());
     preInstallBundleInfo.ClearBundlePath();
     bool findEntry = false;
     for (const auto &item : innerBundleInfos) {
@@ -3143,7 +3156,9 @@ void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(const std::string &
             findEntry = true;
         }
     }
-    dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    if (!dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "update preinstall DB fail -n %{public}s", bundleName.c_str());
+    }
 }
 
 bool BMSEventHandler::IsQuickfixFlagExsit(const BundleInfo &bundleInfo)
