@@ -104,7 +104,6 @@ bool BaseExtractor::ExtractFile(const std::string &fileName, const std::string &
         }
         return false;
     }
-    fileStream.flush();
     fileStream.clear();
     fileStream.close();
     return true;
