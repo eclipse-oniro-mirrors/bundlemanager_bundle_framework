@@ -811,7 +811,7 @@ int64_t BundleUtil::GetFileSize(const std::string &filePath)
 }
 
 std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
-    std::vector<std::string> &toDeletePaths)
+    std::vector<std::string> &toDeletePaths, bool rename)
 {
     APP_LOGD("the original dir is %{public}s", filePath.c_str());
     std::string destination = "";
@@ -859,9 +859,17 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
     if (destination.empty()) {
         return "";
     }
-    if (!CopyFileFast(filePath, destination)) {
-        APP_LOGE("copy file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
-        return "";
+    if (rename) {
+        APP_LOGI("rename file from %{public}s to %{public}s", filePath.c_str(), destination.c_str());
+        if (!RenameFile(filePath, destination)) {
+            APP_LOGE("rename file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
+            return "";
+        }
+    } else {
+        if (!CopyFileFast(filePath, destination)) {
+            APP_LOGE("copy file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
+            return "";
+        }
     }
     return destination;
 }

@@ -77,6 +77,15 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         std::string pgoPath = Str16ToStr8(parcel.ReadString16());
         pgoParams.emplace(moduleName, pgoPath);
     }
+
+    int32_t parametersSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, parametersSize);
+    CONTAINER_SECURITY_VERIFY(parcel, parametersSize, &parameters);
+    for (int32_t i = 0; i < parametersSize; ++i) {
+        std::string key = Str16ToStr8(parcel.ReadString16());
+        std::string value = Str16ToStr8(parcel.ReadString16());
+        parameters.emplace(key, value);
+    }
     return true;
 }
 
@@ -125,6 +134,12 @@ bool InstallParam::Marshalling(Parcel &parcel) const
     for (const auto &pgoParam : pgoParams) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pgoParam.first));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pgoParam.second));
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(parameters.size()));
+    for (const auto &parameter : parameters) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(parameter.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(parameter.second));
     }
     return true;
 }
