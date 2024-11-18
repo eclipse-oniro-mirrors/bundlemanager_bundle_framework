@@ -209,6 +209,9 @@ void BMSEventHandler::BeforeBmsStart()
     }
 
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_START);
+    if (SetParameter("bms.scanning_apps.status", "0") != 0) {
+        LOG_E(BMS_TAG_DEFAULT, "set bms.scanning_apps.status 0 failed");
+    }
 }
 
 void BMSEventHandler::OnBmsStarting()
@@ -295,6 +298,9 @@ void BMSEventHandler::AfterBmsStart()
     BundleResourceHelper::RegisterConfigurationObserver();
     ProcessCheckAppEl1Dir();
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
+    if (SetParameter("bms.scanning_apps.status", "1") != 0) {
+        LOG_E(BMS_TAG_DEFAULT, "set bms.scanning_apps.status 1 failed");
+    }
 }
 
 void BMSEventHandler::ClearCache()

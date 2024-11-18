@@ -15,3 +15,4 @@ const.bms.optimizing_apps.switch = foundation:foundation:0755
 bms.optimizing_apps.status = foundation:foundation:0755
 bootevent.bms.main.bundles.ready = foundation:foundation:0755
 persist.bms.data.preload = foundation:foundation:0755
+bms.scanning_apps.status = foundation:foundation:0755
