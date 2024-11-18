@@ -66,6 +66,11 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &createDirParam)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<CreateDirParam> &createDirParams)
 {
     return ERR_OK;

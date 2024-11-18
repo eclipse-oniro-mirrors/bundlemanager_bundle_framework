@@ -44,6 +44,7 @@ public:
     static void ProcessUpdateAppLogDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
     static void ProcessFileManagerDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
     static void ProcessExtensionDir(const BundleInfo &bundleInfo, std::vector<std::string> &dirs);
+    static void CreateSharefilesSubDataDirs(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
     static void ProcessNewBackupDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
 private:
     static void CheckPathAttribute(const std::string &path, const BundleInfo &bundleInfo, bool &isExist);

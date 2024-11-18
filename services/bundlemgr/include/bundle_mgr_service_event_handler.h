@@ -635,6 +635,8 @@ private:
     bool InnerCheckSingletonBundleUserInfo(const InnerBundleInfo &bundleInfo);
     void ProcessCheckAppEl1Dir();
     void static ProcessCheckAppEl1DirTask();
+    // check el2 data dir for all userids's bundleinfos
+    void CheckAndCreateShareFilesSubDataDirs();
     void CleanAllBundleShaderCache() const;
     void CleanTempDir() const;
     // Used to save the information parsed by Hap in the scanned directory.

@@ -240,6 +240,12 @@ public:
 
 private:
     std::string GetExtensionConfigPath() const;
+    /**
+     * @brief Create /data/app/el2/userid/sharefiles/ bundle data directory.
+     * @param createDirParam Indicates param to be set to the directory.
+     * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
+     */
+    ErrCode CreateSharefilesDataDirEl2(const CreateDirParam &createDirParam);
     void LoadNeedCreateSandbox(const nlohmann::json &object, std::vector<std::string> &typeList);
     bool LoadExtensionNeedCreateSandbox(const nlohmann::json &object, std::string extensionTypeName);
     bool ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf);

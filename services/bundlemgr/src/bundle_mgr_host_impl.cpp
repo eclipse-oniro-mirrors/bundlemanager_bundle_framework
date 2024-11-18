@@ -1572,6 +1572,13 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
         std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el +
             ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + suffixName;
         rootDir.emplace_back(dataDir);
+
+        // add el2 sharefiles dir to be cleaned
+        if (el == ServiceConstants::BUNDLE_EL[1]) {
+            std::string shareFilesDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES + suffixName;
+            rootDir.emplace_back(shareFilesDataDir);
+        }
     }
 
     auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, appIndex, this]() {

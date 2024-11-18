@@ -68,6 +68,7 @@ constexpr const char* CLONE = "clone";
 constexpr const char* PLUS_SIGN = "+";
 constexpr const char* MINUS_SIGN = "-";
 constexpr const char* DATABASE = "/database/";
+constexpr const char* SHAREFILES = "/sharefiles/";
 constexpr const char* LOG = "/log/";
 constexpr const char* HAPS = "/haps/";
 constexpr const char* EXTENSION_DIR = "+extension-";

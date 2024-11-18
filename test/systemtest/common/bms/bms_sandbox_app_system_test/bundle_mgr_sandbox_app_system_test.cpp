@@ -52,6 +52,7 @@ const std::string BUNDLE_DATA_DIR1 = "/data/app/el1/100/base/";
 const std::string BUNDLE_DATA_DIR2 = "/data/app/el1/100/database/";
 const std::string BUNDLE_DATA_DIR3 = "/data/app/el2/100/base/";
 const std::string BUNDLE_DATA_DIR4 = "/data/app/el2/100/database/";
+const std::string DATA_EL2_SHAREFILES_PATH = "/data/app/el2/100/sharefiles/";
 const std::string ACCESS_TOKEN_ID = "accessTokenId";
 const int32_t TIMEOUT = 60;
 const int32_t DEFAULT_USERID = 100;
@@ -60,6 +61,13 @@ const int32_t DLP_TYPE_2 = 2;
 const int32_t MAX_NUMBER_SANDBOX_APP = 100;
 bool g_ReceivedInstallSandbox = false;
 bool g_RceivedUninstallSandbox = false;
+const std::vector<std::string> BUNDLE_DATA_SUB_DIRS = {
+    "/cache",
+    "/files",
+    "/temp",
+    "/preferences",
+    "/haps"
+};
 } // namespace
 
 class StatusReceiverImpl : public StatusReceiverHost {
@@ -151,6 +159,8 @@ public:
     static void CheckPathAreExisted(const std::string &bundleName, int32_t appIndex);
     static void CheckPathAreNonExisted(const std::string &bundleName, int32_t appIndex);
     static void CheckSandboxAppInfo(const std::string &bundleName, int32_t appIndex);
+    static void CheckEl2DataSubDirsExist(const std::string &bundleName);
+    static void CheckEl2DataSubDirsNoExist(const std::string &bundleName);
     static sptr<IBundleMgr> GetBundleMgrProxy();
     static sptr<IBundleInstaller> GetInstallerProxy();
 };
@@ -282,6 +292,8 @@ void BundleMgrSandboxAppSystemTest::CheckPathAreExisted(const std::string &bundl
     dataPath = BUNDLE_DATA_DIR4 + innerBundleName;
     ret = access(dataPath.c_str(), F_OK);
     EXPECT_EQ(ret, 0);
+
+    CheckEl2DataSubDirsExist(innerBundleName);
 }
 
 void BundleMgrSandboxAppSystemTest::CheckPathAreNonExisted(const std::string &bundleName, int32_t appIndex)
@@ -322,6 +334,34 @@ void BundleMgrSandboxAppSystemTest::CheckPathAreNonExisted(const std::string &bu
     dataPath = BUNDLE_DATA_DIR4 + innerBundleName;
     ret = access(dataPath.c_str(), F_OK);
     EXPECT_NE(ret, 0);
+
+    CheckEl2DataSubDirsNoExist(innerBundleName);
+}
+
+void BundleMgrSandboxAppSystemTest::CheckEl2DataSubDirsExist(const std::string &bundleName)
+{
+    bool isExist = true;
+    if (access(DATA_EL2_SHAREFILES_PATH.c_str(), F_OK) != 0) {
+        isExist = false;
+        std::cout << "the sharefiles dir doesn't exist:" << DATA_EL2_SHAREFILES_PATH << std::endl;
+    }
+    if (isExist) {
+        auto dataPath = DATA_EL2_SHAREFILES_PATH + bundleName;
+        int32_t ret = access(dataPath.c_str(), F_OK);
+        EXPECT_EQ(ret, 0);
+        for (const auto &dir : BUNDLE_DATA_SUB_DIRS) {
+            std::string childBundleDataDir = dataPath + dir;
+            ret = access(childBundleDataDir.c_str(), F_OK);
+            EXPECT_EQ(ret, 0);
+        }
+    }
+}
+
+void BundleMgrSandboxAppSystemTest::CheckEl2DataSubDirsNoExist(const std::string &bundleName)
+{
+    auto dataPath = DATA_EL2_SHAREFILES_PATH + bundleName;
+    int32_t result1 = access(dataPath.c_str(), F_OK);
+    EXPECT_NE(result1, 0) << "the sandbox app sharefiles dir exist: " << dataPath;
 }
 
 void BundleMgrSandboxAppSystemTest::CheckSandboxAppInfo(const std::string &bundleName, int32_t appIndex)
