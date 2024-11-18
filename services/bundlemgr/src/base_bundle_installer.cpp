@@ -6323,10 +6323,14 @@ bool BaseBundleInstaller::DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundl
 void BaseBundleInstaller::ProcessAddResourceInfo(const InstallParam &installParam,
     const std::string &bundleName, int32_t userId)
 {
-    if (installParam.isOTA && userId != Constants::START_USERID) {
+    if (!InitDataMgr()) {
         return;
     }
-    BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
+    if (installParam.isOTA && userId != Constants::START_USERID &&
+        dataMgr_->HasUserInstallInBundle(bundleName, Constants::START_USERID)) {
+        return;
+    }
+    BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
