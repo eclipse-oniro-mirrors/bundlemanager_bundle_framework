@@ -1841,6 +1841,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             }
 
             if (hasInstalledInfo.versionCode > hapVersionCode) {
+                if (CheckIsBundleUpdatedByHapPath(hasInstalledInfo)) {
+                    break;
+                }
                 LOG_NOFUNC_E(BMS_TAG_DEFAULT, "-n %{public}s update failed versionCode:%{public}d lower than "
                     "current:%{public}d", bundleName.c_str(), hapVersionCode, hasInstalledInfo.versionCode);
                 SendBundleUpdateFailedEvent(hasInstalledInfo);
@@ -1865,6 +1868,16 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         LOG_E(BMS_TAG_DEFAULT, "multi install failed");
     }
     UpdatePreinstallDB(needInstallMap);
+}
+
+bool BMSEventHandler::CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo)
+{
+    for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        if (hapModuleInfo.hapPath.find(Constants::BUNDLE_CODE_DIR) != 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool BMSEventHandler::InnerMultiProcessBundleInstall(

@@ -294,6 +294,9 @@ void InnerEventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInf
 
 void InnerEventReport::InnerSendBundleInstallExceptionEvent(const EventInfo& eventInfo)
 {
+    if (eventInfo.errCode == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
+        return;
+    }
     InnerEventWrite(
         BUNDLE_INSTALL_EXCEPTION,
         HiSysEventType::FAULT,
@@ -309,6 +312,11 @@ void InnerEventReport::InnerSendBundleInstallExceptionEvent(const EventInfo& eve
 
 void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& eventInfo)
 {
+    if (eventInfo.errCode == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE ||
+        eventInfo.errCode == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_MODULE ||
+        eventInfo.errCode == ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR) {
+        return;
+    }
     InnerEventWrite(
         BUNDLE_UNINSTALL_EXCEPTION,
         HiSysEventType::FAULT,
