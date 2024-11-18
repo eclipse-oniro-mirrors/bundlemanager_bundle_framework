@@ -1467,9 +1467,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_W(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
-    if (installParam.GetIsUninstallAndRecover() && !oldInfo.IsPreInstallApp()) {
-        LOG_E(BMS_TAG_INSTALLER, "UninstallAndRecover bundle is not pre-install app");
-        return ERR_APPEXECFWK_UNINSTALL_AND_RECOVER_NOT_PREINSTALLED_BUNDLE;
+    if (installParam.GetIsUninstallAndRecover()) {
+        PreInstallBundleInfo preInstallBundleInfo;
+        if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+            LOG_E(BMS_TAG_INSTALLER, "UninstallAndRecover %{public}s is not pre-install app", bundleName.c_str());
+            return ERR_APPEXECFWK_UNINSTALL_AND_RECOVER_NOT_PREINSTALLED_BUNDLE;
+        }
     }
     bundleType_ = oldInfo.GetApplicationBundleType();
     uninstallBundleAppId_ = oldInfo.GetAppId();
