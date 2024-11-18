@@ -2657,13 +2657,43 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
 
 ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
 {
+    auto& bundleUserInfos = info.GetInnerBundleUserInfos();
+    for (const auto &userInfoPair : bundleUserInfos) {
+        auto &userInfo = userInfoPair.second;
+        const std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+        auto userId = userInfo.bundleUserInfo.userId;
+        ErrCode userRet = SetDirApl(userId, info.GetBundleName(), info.GetBundleName(),
+            info.GetAppPrivilegeLevel(), info.IsPreInstallApp(), info.GetBaseApplicationInfo().appProvisionType);
+        if (userRet != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER,
+                "fail to SetDirApl bundle dir, userId %{public}d, error is %{public}d", userId, userRet);
+            return userRet;
+        }
+        for (const auto &cloneInfoPair : cloneInfos) {
+            std::string cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(
+                info.GetBundleName(), cloneInfoPair.second.appIndex);
+            ErrCode cloneRet = this->SetDirApl(userId, info.GetBundleName(), cloneBundleName,
+                info.GetAppPrivilegeLevel(), info.IsPreInstallApp(), info.GetBaseApplicationInfo().appProvisionType);
+            if (cloneRet != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl clone bundle dir, error is %{public}d", cloneRet);
+                return cloneRet;
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::SetDirApl(
+    int32_t userId, const std::string &bundleName, const std::string &CloneBundleName,
+    const std::string &appPrivilegeLevel, bool isPreInstallApp, const std::string &appProvisionType)
+{
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
         std::string baseBundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR +
                                         el +
                                         ServiceConstants::PATH_SEPARATOR +
-                                        std::to_string(userId_);
-        std::string baseDataDir = baseBundleDataDir + ServiceConstants::BASE + info.GetBundleName();
-        std::string databaseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + info.GetBundleName();
+                                        std::to_string(userId);
+        std::string baseDataDir = baseBundleDataDir + ServiceConstants::BASE + CloneBundleName;
+        std::string databaseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + CloneBundleName;
         bool isBaseExist = true;
         bool isDatabaseExist = true;
         ErrCode result = InstalldClient::GetInstance()->IsExistDir(baseDataDir, isBaseExist);
@@ -2682,15 +2712,15 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
             continue;
         }
         result = InstalldClient::GetInstance()->SetDirApl(
-            baseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
-            info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+            baseDataDir, bundleName, appPrivilegeLevel, isPreInstallApp,
+            appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl baseDir dir, error is %{public}d", result);
             return result;
         }
         result = InstalldClient::GetInstance()->SetDirApl(
-            databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
-            info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+            databaseDataDir, bundleName, appPrivilegeLevel, isPreInstallApp,
+            appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl databaseDir dir, error is %{public}d", result);
             return result;
