@@ -319,7 +319,7 @@ void BundleMgrService::CreateBmsServiceDir()
         APP_LOGE("create dir failed");
     }
     ret = InstalldClient::GetInstance()->Mkdir(
-        std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::APP_INSTALL_PATH,
+        std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH,
         S_IRWXU | S_IRWXG | S_IXOTH,
         Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID);
     if (!ret) {

@@ -5004,7 +5004,7 @@ void BaseBundleInstaller::RestoreHaps(const std::vector<std::string> &bundlePath
         return;
     }
     const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
-        ServiceConstants::APP_INSTALL_PATH + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR;
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR;
     std::string targetDir = bundlePaths.front().substr(0, bundlePaths.front().find_last_of('/') + 1);
     if (bundlePaths.front().find(APP_INSTALL_SANDBOX_PATH) == 0) {
         targetDir = newPrefix + targetDir.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
@@ -5531,16 +5531,22 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
         parsedPaths.assign(inBundlePaths.begin(), inBundlePaths.end());
         return ERR_OK;
     }
+    LOG_I(BMS_TAG_INSTALLER, "rename install");
     const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
-        ServiceConstants::APP_INSTALL_PATH + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR;
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR;
 
     for (const auto &bundlePath : inBundlePaths) {
+        if (bundlePath.find("..") != std::string::npos) {
+            LOG_E(BMS_TAG_INSTALLER, "path invalid: %{public}s", bundlePath.c_str());
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
         if (bundlePath.find(APP_INSTALL_SANDBOX_PATH) == 0) {
             std::string newPath = newPrefix + bundlePath.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
             parsedPaths.push_back(newPath);
             LOG_D(BMS_TAG_INSTALLER, "parsed path: %{public}s", newPath.c_str());
         } else {
-            LOG_W(BMS_TAG_INSTALLER, "path invalid: %{public}s", bundlePath.c_str());
+            LOG_E(BMS_TAG_INSTALLER, "path invalid: %{public}s", bundlePath.c_str());
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
     }
     return ERR_OK;

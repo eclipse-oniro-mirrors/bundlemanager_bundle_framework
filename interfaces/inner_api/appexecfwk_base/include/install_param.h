@@ -111,8 +111,8 @@ private:
     bool isUninstallAndRecover = false;
 
 public:
-    static constexpr const char* RENAME_INSTALL_KEY = "renameInstall";
-    static constexpr const char* RENAME_INSTALL_ENABLE_VALUE = "1";
+    static constexpr const char* RENAME_INSTALL_KEY = "ohos.bms.param.renameInstall";
+    static constexpr const char* RENAME_INSTALL_ENABLE_VALUE = "true";
 
     bool GetForceExecuted() const
     {

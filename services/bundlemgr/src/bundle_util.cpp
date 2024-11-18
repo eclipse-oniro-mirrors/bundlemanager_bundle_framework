@@ -860,7 +860,7 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         return "";
     }
     if (rename) {
-        APP_LOGI("rename file from %{public}s to %{public}s", filePath.c_str(), destination.c_str());
+        APP_LOGD("rename file from %{public}s to %{public}s", filePath.c_str(), destination.c_str());
         if (!RenameFile(filePath, destination)) {
             APP_LOGE("rename file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
             return "";
