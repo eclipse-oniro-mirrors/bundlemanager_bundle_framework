@@ -330,7 +330,7 @@ private:
     static EnforceMetadataProcessForApp enforceMetadataProcessForApp_;
     static bool OpenEncryptionHandle();
 #endif
-    static void FsyncFile(const std::string &path);
+    static void FsyncResFile(const std::string &path, const ExtractFileType &extractFileType);
     static std::string GetSameLevelTmpPath(const std::string &path);
 };
 }  // namespace AppExecFwk
