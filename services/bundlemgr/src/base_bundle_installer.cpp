@@ -85,6 +85,7 @@ constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
 constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
+constexpr const char* LIBS_TMP = "libs_tmp";
 
 #ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
@@ -1271,14 +1272,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
             VerifyCodeSignatureForHap(newInfos, preinstalledAppPath, preinstalledAppPath);
         }
     }
-    // delete old native library path
-    if (NeedDeleteOldNativeLib(newInfos, oldInfo)) {
-        LOG_I(BMS_TAG_INSTALLER, "Delete old library");
-        DeleteOldNativeLibraryPath();
-    }
-
     // move so file to real installation dir
-    result = MoveSoFileToRealInstallationDir(newInfos);
+    result = MoveSoFileToRealInstallationDir(newInfos, oldInfo);
     CHECK_RESULT_WITH_ROLLBACK(result, "move so file to install path failed %{public}d", newInfos, oldInfo);
 
 #ifdef WEBVIEW_ENABLE
@@ -4515,7 +4510,7 @@ ErrCode BaseBundleInstaller::CheckNativeFileWithOldInfo(
 }
 
 bool BaseBundleInstaller::HasAllOldModuleUpdate(
-    const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+    const InnerBundleInfo &oldInfo, const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
 {
     const auto &newInfo = newInfos.begin()->second;
     bool allOldModuleUpdate = true;
@@ -5659,24 +5654,69 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
     return ERR_OK;
 }
 
+std::string BaseBundleInstaller::GetRealSoPath(const std::string &bundleName,
+    const std::string &nativeLibraryPath, bool isNeedDeleteOldPath) const
+{
+    std::string realSoDir;
+    if (isNeedDeleteOldPath) {
+        realSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+            .append(bundleName).append(ServiceConstants::PATH_SEPARATOR)
+            .append(LIBS_TMP);
+    } else {
+        realSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+            .append(bundleName).append(ServiceConstants::PATH_SEPARATOR)
+            .append(nativeLibraryPath);
+    }
+    return realSoDir;
+}
+
+ErrCode BaseBundleInstaller::InnerProcessSoFilesForBundleUpdate(
+    const std::string &bundleName,
+    const std::string &nativeLibraryPath) const
+{
+    LOG_I(BMS_TAG_INSTALLER, "-n %{public}s delete old library when update", bundleName.c_str());
+    // delete old native library path
+    DeleteOldNativeLibraryPath();
+    if (!nativeLibraryPath.empty()) {
+        std::string realSoDir = GetRealSoPath(bundleName, nativeLibraryPath, false);
+        InstalldClient::GetInstance()->CreateBundleDir(realSoDir);
+        std::string tempSoDir = GetRealSoPath(bundleName, nativeLibraryPath, true);
+        auto result = InstalldClient::GetInstance()->RenameModuleDir(tempSoDir, realSoDir);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "-n %{public}s rename module dir failed, error is %{public}d",
+                bundleName.c_str(), result);
+            return result;
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
-    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+    const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const InnerBundleInfo &oldInfo)
 {
     LOG_D(BMS_TAG_INSTALLER, "start to move so file to real installation dir");
+    if (infos.empty()) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "no hap info to process");
+        return ERR_OK;
+    }
+    bool isNeedDeleteOldPath = NeedDeleteOldNativeLib(infos, oldInfo);
+    std::string bundleName = infos.begin()->second.GetBundleName();
+    std::string cpuAbi = "";
+    std::string nativeLibraryPath = "";
     for (const auto &info : infos) {
         if (info.second.IsLibIsolated(info.second.GetCurModuleName()) ||
             !info.second.IsCompressNativeLibs(info.second.GetCurModuleName())) {
-            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "so files are isolated or decompressed no necessary to move");
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "-n %{public}s so files are isolated or decompressed no necessary to move",
+                bundleName.c_str());
             continue;
         }
-        std::string cpuAbi = "";
-        std::string nativeLibraryPath = "";
         bool isSoExisted = info.second.FetchNativeSoAttrs(info.second.GetCurrentModulePackage(), cpuAbi,
             nativeLibraryPath);
         if (isSoExisted) {
             std::string tempSoDir;
             tempSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
-                .append(info.second.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR)
+                .append(bundleName).append(ServiceConstants::PATH_SEPARATOR)
                 .append(info.second.GetCurrentModulePackage())
                 .append(ServiceConstants::TMP_SUFFIX).append(ServiceConstants::PATH_SEPARATOR)
                 .append(nativeLibraryPath);
@@ -5690,10 +5730,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
                 LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s not existed not need move", tempSoDir.c_str());
                 continue;
             }
-            std::string realSoDir;
-            realSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
-                .append(info.second.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR)
-                .append(nativeLibraryPath);
+            std::string realSoDir = GetRealSoPath(bundleName, nativeLibraryPath, isNeedDeleteOldPath);
             LOG_D(BMS_TAG_INSTALLER, "move file from %{public}s to %{public}s", tempSoDir.c_str(), realSoDir.c_str());
             isDirExisted = false;
             result = InstalldClient::GetInstance()->IsExistDir(realSoDir, isDirExisted);
@@ -5705,15 +5742,16 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
                 InstalldClient::GetInstance()->CreateBundleDir(realSoDir);
             }
             result = InstalldClient::GetInstance()->MoveFiles(tempSoDir, realSoDir);
-            if (result != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLER, "move file to real path failed %{public}d", result);
-                return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
-            }
+            CHECK_RESULT(result, "move file to real path failed %{public}d");
             RemoveTempSoDir(tempSoDir);
             if (!installedModules_[info.second.GetCurrentModulePackage()]) {
                 RemoveTempPathOnlyUsedForSo(info.second);
             }
         }
+    }
+    if (isNeedDeleteOldPath) {
+        auto result = InnerProcessSoFilesForBundleUpdate(bundleName, nativeLibraryPath);
+        CHECK_RESULT(result, "process so files failed %{public}d when bundle update");
     }
     return ERR_OK;
 }
@@ -5902,7 +5940,7 @@ void BaseBundleInstaller::RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &inn
 }
 
 bool BaseBundleInstaller::NeedDeleteOldNativeLib(
-    std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     const InnerBundleInfo &oldInfo)
 {
     if (newInfos.empty()) {
