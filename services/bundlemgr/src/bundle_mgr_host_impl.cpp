@@ -2168,7 +2168,6 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
     }
 
     NotifyBundleEvents installRes = {
-        .isApplicationEnabled = isEnable,
         .type = NotifyType::APPLICATION_ENABLE,
         .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
@@ -2176,7 +2175,8 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         .bundleName = bundleName
     };
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    NotifyBundleStatus(installRes);
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
     IPCSkeleton::SetCallingIdentity(identity);
     return ERR_OK;
 }

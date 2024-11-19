@@ -49,7 +49,6 @@ enum class SandboxInstallType : uint8_t {
 };
 
 struct NotifyBundleEvents {
-    bool isApplicationEnabled = true;
     bool isAgingUninstall = false;
     bool isBmsExtensionUninstalled = false;
     bool isModuleUpdate = false;
