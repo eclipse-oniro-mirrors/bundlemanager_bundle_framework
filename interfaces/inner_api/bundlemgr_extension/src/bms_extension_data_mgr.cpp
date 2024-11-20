@@ -114,6 +114,21 @@ ErrCode BmsExtensionDataMgr::HapVerify(const std::string &filePath, Security::Ve
     return ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED;
 }
 
+bool BmsExtensionDataMgr::IsRdDevice()
+{
+    if ((Init() != ERR_OK) || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return false;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return false;
+    }
+    return bundleMgrExtPtr->IsRdDevice();
+}
+
 ErrCode BmsExtensionDataMgr::QueryAbilityInfos(const Want &want, int32_t userId,
     std::vector<AbilityInfo> &abilityInfos)
 {
