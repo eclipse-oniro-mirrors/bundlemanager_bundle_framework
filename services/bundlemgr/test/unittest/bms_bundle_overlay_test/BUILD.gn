@@ -42,7 +42,6 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
-    "${services_path}/bundlemgr/test/mock/src/mock_quick_fix_callback.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
@@ -90,12 +89,16 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
     "battery_manager:batterysrv_client",
-    "device_usage_statistics:usagestatsinner",
     "display_manager:displaymgr",
     "ffrt:libffrt",
     "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
+
+  if (device_usage_statistics_enabled) {
+    external_deps += [ "device_usage_statistics:usagestatsinner" ]
+    defines += [ "DEVICE_USAGE_STATISTICS_ENABLED" ]
+  }
 
   external_deps += bundle_install_external_deps
 
@@ -192,12 +195,16 @@ ohos_unittest("BmsBundleOverlayInfoTest") {
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
     "battery_manager:batterysrv_client",
-    "device_usage_statistics:usagestatsinner",
     "display_manager:displaymgr",
     "ffrt:libffrt",
     "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
+
+  if (device_usage_statistics_enabled) {
+    external_deps += [ "device_usage_statistics:usagestatsinner" ]
+    defines += [ "DEVICE_USAGE_STATISTICS_ENABLED" ]
+  }
 
   if (bundle_framework_power_mgr_enable) {
     external_deps += aot_external_deps
@@ -299,12 +306,16 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
     "battery_manager:batterysrv_client",
-    "device_usage_statistics:usagestatsinner",
     "display_manager:displaymgr",
     "ffrt:libffrt",
     "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
+
+  if (device_usage_statistics_enabled) {
+    external_deps += [ "device_usage_statistics:usagestatsinner" ]
+    defines += [ "DEVICE_USAGE_STATISTICS_ENABLED" ]
+  }
 
   external_deps += bundle_install_external_deps
 
@@ -442,12 +453,16 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
     "battery_manager:batterysrv_client",
-    "device_usage_statistics:usagestatsinner",
     "display_manager:displaymgr",
     "ffrt:libffrt",
     "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
+
+  if (device_usage_statistics_enabled) {
+    external_deps += [ "device_usage_statistics:usagestatsinner" ]
+    defines += [ "DEVICE_USAGE_STATISTICS_ENABLED" ]
+  }
 
   external_deps += bundle_install_external_deps
 
@@ -585,12 +600,16 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
     "battery_manager:batterysrv_client",
-    "device_usage_statistics:usagestatsinner",
     "display_manager:displaymgr",
     "ffrt:libffrt",
     "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
+
+  if (device_usage_statistics_enabled) {
+    external_deps += [ "device_usage_statistics:usagestatsinner" ]
+    defines += [ "DEVICE_USAGE_STATISTICS_ENABLED" ]
+  }
 
   external_deps += bundle_install_external_deps
 
@@ -729,12 +748,16 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
     "battery_manager:batterysrv_client",
-    "device_usage_statistics:usagestatsinner",
     "display_manager:displaymgr",
     "ffrt:libffrt",
     "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
+
+  if (device_usage_statistics_enabled) {
+    external_deps += [ "device_usage_statistics:usagestatsinner" ]
+    defines += [ "DEVICE_USAGE_STATISTICS_ENABLED" ]
+  }
 
   external_deps += bundle_install_external_deps
 
