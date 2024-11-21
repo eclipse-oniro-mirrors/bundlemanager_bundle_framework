@@ -583,7 +583,8 @@ std::vector<std::string> BMSEventHandler::CheckHapPaths(
 {
     std::vector<std::string> checkHapPaths;
     for (const auto &hapPath : hapPaths) {
-        if (!BundleUtil::CheckFileType(hapPath, ServiceConstants::INSTALL_FILE_SUFFIX)) {
+        if (!BundleUtil::CheckFileType(hapPath, ServiceConstants::INSTALL_FILE_SUFFIX) &&
+            !BundleUtil::CheckFileType(hapPath, ServiceConstants::HSP_FILE_SUFFIX)) {
             LOG_E(BMS_TAG_DEFAULT, "Check hapPath(%{public}s) failed", hapPath.c_str());
             continue;
         }
@@ -755,9 +756,17 @@ void BMSEventHandler::CollectInstallInfos(
             std::vector<InnerBundleInfo> innerBundleInfos { hapInfoIter.second };
             installInfos.emplace(bundleName, innerBundleInfos);
             continue;
+        } else {
+            std::vector<InnerBundleInfo> &infos = installInfos.at(bundleName);
+            if (!infos.empty() && hapInfoIter.second.GetVersionCode() < infos[0].GetVersionCode()) {
+                continue;
+            }
+            if (std::find_if(infos.begin(), infos.end(), [&hapInfoIter](const InnerBundleInfo &info) {
+                    return info.GetCurModuleName() == hapInfoIter.second.GetCurModuleName();
+                }) == infos.end()) {
+                installInfos.at(bundleName).emplace_back(hapInfoIter.second);
+            }
         }
-
-        installInfos.at(bundleName).emplace_back(hapInfoIter.second);
     }
 }
 
@@ -3130,6 +3139,9 @@ bool BMSEventHandler::CheckAndParseHapFiles(
         checkParam.appType = Constants::AppType::SYSTEM_APP;
     }
 
+    if (!LoadPreInstallProFile()) {
+        LOG_W(BMS_TAG_DEFAULT, "load json failed for restore %{public}s", hapFilePath.c_str());
+    }
     ret = bundleInstallChecker->ParseHapFiles(
         realPaths, checkParam, hapVerifyResults, infos);
     if (ret != ERR_OK) {
