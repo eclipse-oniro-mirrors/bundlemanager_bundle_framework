@@ -3150,9 +3150,9 @@ void BMSEventHandler::UpdatePreinstallDBForNotUpdatedBundle(const std::string &b
             preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
             preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
         }
-        auto bundleInfo = item.second.GetBaseBundleInfo();
-        if (!bundleInfo.hapModuleInfos.empty() &&
-            bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+        auto innerModuleInfos = item.second.GetInnerModuleInfos();
+        if (!innerModuleInfos.empty() &&
+            innerModuleInfos.begin()->second.distro.moduleType == Profile::MODULE_TYPE_ENTRY) {
             findEntry = true;
         }
     }
