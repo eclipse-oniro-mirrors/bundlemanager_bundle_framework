@@ -109,6 +109,9 @@ constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
 constexpr int32_t SCENE_ID_OTA_INSTALL = 3;
 constexpr const char* PGO_FILE_PATH = "pgo_files";
+constexpr const char* BUNDLE_SCAN_PARAM = "bms.scanning_apps.status";
+constexpr const char* BUNDLE_SCAN_START = "0";
+constexpr const char* BUNDLE_SCAN_FINISH = "1";
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> systemHspList_;
@@ -209,6 +212,9 @@ void BMSEventHandler::BeforeBmsStart()
     }
 
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_START);
+    if (SetParameter(BUNDLE_SCAN_PARAM, BUNDLE_SCAN_START) != 0) {
+        LOG_E(BMS_TAG_DEFAULT, "set bms.scanning_apps.status 0 failed");
+    }
 }
 
 void BMSEventHandler::OnBmsStarting()
@@ -285,6 +291,9 @@ void BMSEventHandler::AfterBmsStart()
     CleanTempDir();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
+    if (SetParameter(BUNDLE_SCAN_PARAM, BUNDLE_SCAN_FINISH) != 0) {
+        LOG_E(BMS_TAG_DEFAULT, "set bms.scanning_apps.status 1 failed");
+    }
     ClearCache();
     if (needNotifyBundleScanStatus_) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
