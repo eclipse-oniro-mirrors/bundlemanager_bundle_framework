@@ -3612,7 +3612,7 @@ ErrCode BaseBundleInstaller::RemoveBundleDataDir(const InnerBundleInfo &info, bo
     ErrCode result =
         InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_,
             info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE);
-    if (result != ERR_OK) {
+    if (result == ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED) {
         LOG_W(BMS_TAG_INSTALLER, "RemoveBundleDataDir failed %{public}d", result);
         InstallParam installParam;
         SendBundleSystemEvent(
@@ -3620,7 +3620,9 @@ ErrCode BaseBundleInstaller::RemoveBundleDataDir(const InnerBundleInfo &info, bo
             BundleEventType::UNINSTALL,
             installParam,
             sysEventInfo_.preBundleScene,
-            ERR_APPEXECFWK_UNINSTALL_BUNDLE_FILE_DELETE_FAILED);
+            ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED);
+    } else {
+        CHECK_RESULT(result, "RemoveBundleDataDir failed %{public}d");
     }
 
     if (forException) {
