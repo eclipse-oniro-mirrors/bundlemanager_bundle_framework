@@ -1494,7 +1494,8 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4900, Function | Sma
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
-    impl->UpdateAppControlledInfo(NOT_EXIST_USERID);
+    std::vector<std::string> modifyAppIds;
+    impl->UpdateAppControlledInfo(NOT_EXIST_USERID, modifyAppIds);
     EXPECT_FALSE(dataMgr->bundleInfos_[BUNDLE_NAME].innerBundleUserInfos_.empty());
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(BUNDLE_NAME);
 }
@@ -1512,7 +1513,8 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5000, Function | Sma
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);
-    impl->UpdateAppControlledInfo(ALL_USERID);
+    std::vector<std::string> modifyAppIds;
+    impl->UpdateAppControlledInfo(ALL_USERID, modifyAppIds);
     EXPECT_TRUE(dataMgr->bundleInfos_[BUNDLE_NAME].innerBundleUserInfos_.empty());
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(BUNDLE_NAME);
 }

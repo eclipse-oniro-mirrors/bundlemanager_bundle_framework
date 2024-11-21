@@ -72,7 +72,7 @@ ErrCode AppControlManagerHostImpl::AddAppInstallControlRule(const std::vector<st
         return ret;
     }
     if (ruleType == AppControlConstants::APP_DISALLOWED_UNINSTALL) {
-        UpdateAppControlledInfo(userId);
+        UpdateAppControlledInfo(userId, appIds);
     }
     return ERR_OK;
 }
@@ -101,7 +101,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
         return ret;
     }
     if (ruleType == AppControlConstants::APP_DISALLOWED_UNINSTALL) {
-        UpdateAppControlledInfo(userId);
+        UpdateAppControlledInfo(userId, appIds);
     }
     return ERR_OK;
 }
@@ -124,13 +124,21 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
         LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
+    std::vector<std::string> modifyAppIds;
+    if (ruleType == AppControlConstants::APP_DISALLOWED_UNINSTALL) {
+        auto ret = appControlManager_->GetAppInstallControlRule(AppControlConstants::EDM_CALLING,
+            ruleType, userId, modifyAppIds);
+        if (ret != ERR_OK) {
+            LOG_W(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed code:%{public}d", ret);
+        }
+    }
     auto ret = appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, userId);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "CleanAppInstallControlRule failed due to error %{public}d", ret);
         return ret;
     }
     if (ruleType == AppControlConstants::APP_DISALLOWED_UNINSTALL) {
-        UpdateAppControlledInfo(userId);
+        UpdateAppControlledInfo(userId, modifyAppIds);
     }
     return ERR_OK;
 }
@@ -412,7 +420,8 @@ ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, W
     return ret;
 }
 
-void AppControlManagerHostImpl::UpdateAppControlledInfo(int32_t userId) const
+void AppControlManagerHostImpl::UpdateAppControlledInfo(int32_t userId,
+    const std::vector<std::string> &modifyAppIds) const
 {
     LOG_D(BMS_TAG_DEFAULT, "start to UpdateAppControlledInfo under userId %{public}d", userId);
     std::vector<std::string> appIds;
@@ -437,6 +446,25 @@ void AppControlManagerHostImpl::UpdateAppControlledInfo(int32_t userId) const
         auto iterator = std::find(appIds.begin(), appIds.end(), info.second.GetAppId());
         userInfo.isRemovable = (iterator != appIds.end()) ? false : true;
         dataMgr_->AddInnerBundleUserInfo(info.first, userInfo);
+        auto modifyAppIdsIterator = std::find(modifyAppIds.begin(), modifyAppIds.end(), info.second.GetAppId());
+        if (modifyAppIdsIterator != modifyAppIds.end()) {
+            AbilityInfo mainAbilityInfo;
+            info.second.GetMainAbilityInfo(mainAbilityInfo);
+            NotifyBundleEvents installRes = {
+                .isModuleUpdate = false,
+                .type = NotifyType::UPDATE,
+                .resultCode = ERR_OK,
+                .accessTokenId = info.second.GetAccessTokenId(userId),
+                .uid = info.second.GetUid(userId),
+                .bundleType = static_cast<int32_t>(info.second.GetApplicationBundleType()),
+                .bundleName = info.second.GetBundleName(),
+                .modulePackage = info.second.GetModuleNameVec()[0],
+                .abilityName = mainAbilityInfo.name,
+                .appDistributionType = info.second.GetAppDistributionType(),
+            };
+            std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+            commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
+        }
     }
 }
 
