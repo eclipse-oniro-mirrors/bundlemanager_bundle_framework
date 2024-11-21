@@ -2422,8 +2422,7 @@ void BaseBundleInstaller::ProcessQuickFixWhenInstallNewModule(const InstallParam
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     // hqf extract diff file or apply diff patch failed does not affect the hap installation
     InnerBundleInfo bundleInfo;
-    bool isBundleExist = false;
-    if (!GetInnerBundleInfoWithDisable(bundleInfo, isBundleExist) || !isBundleExist) {
+    if (!FetchInnerBundleInfo(bundleInfo)) {
         return;
     }
     for (auto &info : newInfos) {
@@ -4237,6 +4236,14 @@ bool BaseBundleInstaller::GetInnerBundleInfoWithDisable(InnerBundleInfo &info, b
     return true;
 }
 
+bool BaseBundleInstaller::FetchInnerBundleInfo(InnerBundleInfo &info)
+{
+    if (!InitDataMgr()) {
+        return false;
+    }
+    return dataMgr_->FetchInnerBundleInfo(bundleName_, info);
+}
+
 bool BaseBundleInstaller::InitDataMgr()
 {
     if (dataMgr_ == nullptr) {
@@ -4957,7 +4964,14 @@ void BaseBundleInstaller::OnSingletonChange(bool killProcess)
     if (singletonState_ == SingletonState::DEFAULT) {
         return;
     }
-
+    if (!InitDataMgr()) {
+        return;
+    }
+    // need enable bundle when return
+    ScopeGuard enableGuard([&] {
+        dataMgr_->EnableBundle(bundleName_);
+    });
+    
     InnerBundleInfo info;
     bool isExist = false;
     if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
@@ -5029,8 +5043,7 @@ void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
 {
     LOG_D(BMS_TAG_INSTALLER, "GetInstallEventInfo start, bundleName:%{public}s", bundleName_.c_str());
     InnerBundleInfo info;
-    bool isExist = false;
-    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
+    if (!FetchInnerBundleInfo(info)) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return;
     }
@@ -5436,12 +5449,8 @@ void BaseBundleInstaller::RemoveOldHapIfOTA(const InstallParam &installParam,
     if (!installParam.isOTA || installParam.copyHapToInstallPath) {
         return;
     }
-    if (!InitDataMgr()) {
-        LOG_E(BMS_TAG_INSTALLER, "init failed");
-        return;
-    }
     InnerBundleInfo newInfo;
-    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, newInfo)) {
+    if (!FetchInnerBundleInfo(newInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "get failed for %{public}s", bundleName_.c_str());
         return;
     }
@@ -5577,8 +5586,7 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
 {
     LOG_D(BMS_TAG_INSTALLER, "begin to check hap encryption");
     InnerBundleInfo oldInfo;
-    bool isExist = false;
-    if (!GetInnerBundleInfoWithDisable(oldInfo, isExist) || !isExist) {
+    if (!FetchInnerBundleInfo(oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -6004,8 +6012,7 @@ void BaseBundleInstaller::VerifyDomain()
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     LOG_D(BMS_TAG_INSTALLER, "start to verify domain");
     InnerBundleInfo bundleInfo;
-    bool isExist = false;
-    if (!GetInnerBundleInfoWithDisable(bundleInfo, isExist) || !isExist) {
+    if (!FetchInnerBundleInfo(bundleInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return;
     }
@@ -6277,8 +6284,7 @@ void BaseBundleInstaller::CheckBundleNameAndStratAbility(const std::string &bund
 void BaseBundleInstaller::MarkInstallFinish()
 {
     InnerBundleInfo info;
-    bool isExist = false;
-    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
+    if (!FetchInnerBundleInfo(info)) {
         LOG_W(BMS_TAG_INSTALLER, "mark finish failed");
         return;
     }
@@ -6294,14 +6300,12 @@ void BaseBundleInstaller::MarkInstallFinish()
 
 bool BaseBundleInstaller::HasDriverExtensionAbility(const std::string &bundleName)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
+    if (!InitDataMgr()) {
         return false;
     }
 
     InnerBundleInfo info;
-    bool isAppExist = dataMgr->FetchInnerBundleInfo(bundleName, info);
+    bool isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName, info);
     if (isAppExist) {
         const auto extensions = info.GetInnerExtensionInfos();
         for (const auto &item : extensions) {
