@@ -2003,7 +2003,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     innerInstallParam.isPreInstallApp = true;
     innerInstallParam.removable = preInstallBundleInfo.IsRemovable();
     innerInstallParam.copyHapToInstallPath = false;
-    innerInstallParam.isDataPreloadHap = IsDataPreloadHap(pathVec.front());
+    innerInstallParam.isDataPreloadHap = IsDataPreloadHap(pathVec.empty() ? "" : pathVec.front());
     ErrCode resultCode = ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid);
     if (resultCode != ERR_OK && innerInstallParam.isDataPreloadHap) {
         LOG_E(BMS_TAG_INSTALLER, "set parameter BMS_DATA_PRELOAD false");

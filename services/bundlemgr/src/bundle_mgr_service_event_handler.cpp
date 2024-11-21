@@ -1086,7 +1086,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
     SystemBundleInstaller installer;
     ErrCode ret = installer.InstallSystemBundle(preScanInfo.bundleDir, installParam, appType);
-    if (ret != ERR_OK && ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
+    if (ret != ERR_OK && ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON && !preScanInfo.isDataPreloadHap) {
         LOG_W(BMS_TAG_DEFAULT, "Install System app:%{public}s error", preScanInfo.bundleDir.c_str());
         SavePreInstallException(preScanInfo.bundleDir);
     }
