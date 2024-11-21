@@ -95,9 +95,9 @@ ohos_fuzztest("BmsEcologicalRulemgrServiceClientFuzzTest") {
   if (bundle_framework_quick_fix) {
     include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
     sources += quick_fix
-    sources += [ "bmsecologicalrulemgrserviceclient_fuzzer.cpp" ]
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
   }
+  sources += [ "bmsecologicalrulemgrserviceclient_fuzzer.cpp" ]
   if (bundle_framework_free_install) {
     sources += aging
     sources += free_install

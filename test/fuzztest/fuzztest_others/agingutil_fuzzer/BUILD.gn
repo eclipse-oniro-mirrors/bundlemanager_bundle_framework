@@ -105,9 +105,9 @@ ohos_fuzztest("AgingUtilFuzzTest") {
   if (bundle_framework_quick_fix) {
     include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
     sources += quick_fix
-    sources += [ "agingutil_fuzzer.cpp" ]
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
   }
+  sources += [ "agingutil_fuzzer.cpp" ]
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
