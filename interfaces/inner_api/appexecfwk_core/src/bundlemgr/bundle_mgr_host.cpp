@@ -611,6 +611,7 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_COMPATIBLED_DEVICE_TYPE):
             errCode = HandleGetCompatibleDeviceType(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_NAME_BY_APP_ID_OR_APP_IDENTIFIER):
             errCode = HandleGetBundleNameByAppId(data, reply);
             break;
