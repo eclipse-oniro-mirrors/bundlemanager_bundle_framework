@@ -648,9 +648,9 @@ private:
     ErrCode CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void UpdateAppInstallControlled(int32_t userId);
     ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos,
-        const InnerBundleInfo &oldInfo);
-    ErrCode InnerProcessSoFilesForBundleUpdate(const std::string &bundleName,
-        const std::string &nativeLibraryPath) const;
+        bool needDeleteOldLibraryPath);
+    ErrCode FinalProcessHapAndSoForBundleUpdate(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        bool needCopyHapToInstallPath, bool needDeleteOldLibraryPath);
     void ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
         std::unordered_map<std::string, InnerBundleInfo> &infos,
         int32_t userId, const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
