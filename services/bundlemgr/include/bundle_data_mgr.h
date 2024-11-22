@@ -426,6 +426,14 @@ public:
     bool GetBundleList(
         std::vector<std::string> &bundleNames, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
+     * @brief Obtains debug bundle names installed.
+     * @param bundleNames Indicates the debug bundle Names.
+     * @param userId Indicates the user ID.
+     * @return Returns true if have debug bundle installed; returns false otherwise.
+     */
+    bool GetDebugBundleList(
+        std::vector<std::string> &bundleNames, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    /**
      * @brief Set the bundle status disable.
      * @param bundleName Indicates the bundle name.
      * @return Returns true if the bundle status successfully set; returns false otherwise.
