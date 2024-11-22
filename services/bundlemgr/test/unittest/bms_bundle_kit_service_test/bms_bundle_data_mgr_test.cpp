@@ -79,6 +79,7 @@ const std::string MODULE_TEST = "moduleNameTest";
 const std::string ABILITY_NAME_TEST1 = ".Reading1";
 const int32_t BASE_TEST_UID = 65535;
 const int32_t TEST_UID = 20065535;
+const int32_t TEST_MAX_UID = 20065534;
 const std::string BUNDLE_LABEL = "Hello, OHOS";
 const std::string BUNDLE_DESCRIPTION = "example helloworld";
 const std::string BUNDLE_VENDOR = "example";
@@ -7745,5 +7746,70 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllBundleDirs_0002, Function | SmallTest | Lev
         EXPECT_EQ(ret, ERR_OK);
         EXPECT_EQ(bundleDirs.size(), 0);
     }
+}
+
+/**
+ * @tc.number: GetAllUninstallBundleInfo_0100
+ * @tc.name: GetAllUninstallBundleInfo
+ * @tc.desc: test GetAllUninstallBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllUninstallBundleInfo_0100, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    bundleDataMgr->uninstallDataMgr_ = nullptr;
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    auto ret = bundleDataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
+    EXPECT_FALSE(ret);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: GetAllUninstallBundleInfo_0200
+ * @tc.name: GetAllUninstallBundleInfo
+ * @tc.desc: test GetAllUninstallBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllUninstallBundleInfo_0200, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, USERID);
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    auto ret = bundleDataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RestoreUidAndGidFromUninstallInfo_0100
+ * @tc.name: RestoreUidAndGidFromUninstallInfo
+ * @tc.desc: test RestoreUidAndGidFromUninstallInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, RestoreUidAndGidFromUninstallInfo_0100, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
+
+    UninstallDataUserInfo uninstallDataUserInfo;
+    uninstallDataUserInfo.uid = TEST_MAX_UID;
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo));
+
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    auto ret = bundleDataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME_TEST, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+
+    bundleDataMgr->RestoreUidAndGidFromUninstallInfo();
+    auto bundleId = TEST_MAX_UID - USERID * Constants::BASE_USER_RANGE;
+    ret = bundleDataMgr->bundleIdMap_.find(bundleId) != bundleDataMgr->bundleIdMap_.end();
+    EXPECT_TRUE(ret);
+    auto restoreBundleName = bundleDataMgr->bundleIdMap_.at(bundleId);
+    EXPECT_EQ(restoreBundleName, BUNDLE_NAME_TEST);
+    bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, USERID);
+    bundleDataMgr->bundleIdMap_.erase(bundleId);
 }
 } // OHOS

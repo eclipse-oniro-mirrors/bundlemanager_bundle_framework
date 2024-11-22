@@ -28,7 +28,10 @@ public:
     bool UpdateUninstallBundleInfo(const std::string &bundleName, const UninstallBundleInfo &uninstallBundleInfo);
     bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo);
     bool DeleteUninstallBundleInfo(const std::string &bundleName);
+    bool GetAllUninstallBundleInfo(std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos);
 private:
+    void TransformStrToInfo(const std::map<std::string, std::string> &datas,
+        std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos);
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
 };
 }  // namespace AppExecFwk
