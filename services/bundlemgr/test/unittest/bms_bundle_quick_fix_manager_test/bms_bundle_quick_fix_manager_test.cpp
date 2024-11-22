@@ -147,6 +147,7 @@ void BmsBundleQuickFixManagerTest::DeleteFiles(const std::vector<std::string>& d
 HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0100, Function | SmallTest | Level1)
 {
     APP_LOGI("begin of BmsBundleQuickFixManager_0100.");
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     auto quickFixManagerProxy = GetQuickFixManagerProxy();
     ASSERT_NE(quickFixManagerProxy, nullptr);
     std::vector<std::string> sourceFiles {FILE1_PATH, FILE2_PATH};
@@ -165,6 +166,9 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0100, Function |
     EXPECT_EQ(content2, FILE2_PATH);
     DeleteFiles(sourceFiles);
     DeleteFiles(destFiles);
+#else
+    ASSERT_TRUE(true);
+#endif
     APP_LOGI("end of BmsBundleQuickFixManager_0100.");
 }
 
@@ -176,6 +180,7 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0100, Function |
 HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0200, Function | SmallTest | Level1)
 {
     APP_LOGI("begin of BmsBundleQuickFixManager_0200.");
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     auto quickFixManagerProxy = GetQuickFixManagerProxy();
     ASSERT_NE(quickFixManagerProxy, nullptr);
     std::vector<std::string> sourceFiles {INVALID_FILE_SUFFIX_PATH};
@@ -184,6 +189,9 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0200, Function |
     auto ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
     DeleteFiles(sourceFiles);
+#else
+    ASSERT_TRUE(true);
+#endif
     APP_LOGI("end of BmsBundleQuickFixManager_0200.");
 }
 
@@ -195,12 +203,16 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0200, Function |
 HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0300, Function | SmallTest | Level1)
 {
     APP_LOGI("begin of BmsBundleQuickFixManager_0300.");
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     auto quickFixManagerProxy = GetQuickFixManagerProxy();
     ASSERT_NE(quickFixManagerProxy, nullptr);
     std::vector<std::string> sourceFiles {NOT_EXIST_FILE_PATH};
     std::vector<std::string> destFiles;
     auto ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+#else
+     ASSERT_TRUE(true);
+#endif
     APP_LOGI("end of BmsBundleQuickFixManager_0300.");
 }
 
@@ -212,12 +224,16 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0300, Function |
 HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0400, Function | SmallTest | Level1)
 {
     APP_LOGI("begin of BmsBundleQuickFixManager_0400.");
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     auto quickFixManagerProxy = GetQuickFixManagerProxy();
     ASSERT_NE(quickFixManagerProxy, nullptr);
     std::vector<std::string> sourceFiles;
     std::vector<std::string> destFiles;
     auto ret = quickFixManagerProxy->CopyFiles(sourceFiles, destFiles);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+#else
+    ASSERT_TRUE(true);
+#endif
     APP_LOGI("end of BmsBundleQuickFixManager_0400.");
 }
 

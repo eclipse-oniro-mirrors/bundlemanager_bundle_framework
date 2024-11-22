@@ -100,6 +100,18 @@ ohos_fuzztest("QuickFixDeployerFuzzTest") {
     sources += quick_fix
     sources += [ "quickfixdeployer_fuzzer.cpp" ]
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
+  } else {
+    include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
+    sources += quick_fix
+    sources += [ "quickfixdeployer_fuzzer.cpp" ]
+    sources += [
+      "${services_path}/bundlemgr/include/quick_fix/patch_extractor.h",
+      "${services_path}/bundlemgr/include/quick_fix/patch_parser.h",
+      "${services_path}/bundlemgr/include/quick_fix/patch_profile.h",
+      "${services_path}/bundlemgr/src/quick_fix/patch_extractor.cpp",
+      "${services_path}/bundlemgr/src/quick_fix/patch_parser.cpp",
+      "${services_path}/bundlemgr/src/quick_fix/patch_profile.cpp",
+    ]
   }
   if (bundle_framework_free_install) {
     sources += aging
