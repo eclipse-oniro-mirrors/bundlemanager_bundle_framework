@@ -67,7 +67,6 @@ ohos_fuzztest("AgingUtilFuzzTest") {
     "battery_manager:batterysrv_client",
     "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
-    "device_usage_statistics:usagestatsinner",
     "display_manager:displaymgr",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -81,6 +80,10 @@ ohos_fuzztest("AgingUtilFuzzTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  if (device_usage_statistics_enabled) {
+    external_deps += [ "device_usage_statistics:usagestatsinner" ]
+    defines += [ "DEVICE_USAGE_STATISTICS_ENABLED" ]
+  }
   if (code_signature_enable) {
     sources += [
       "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
