@@ -161,6 +161,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         if (!info.GetBundlePaths().empty() && (info.GetBundlePaths().front().find(DATA_PRELOAD_APP) == 0) &&
             userId != Constants::START_USERID) {
             APP_LOGW("data preload app only install in 100 ,bundleName: %{public}s", info.GetBundleName().c_str());
+            totalHapNum--;
             continue;
         }
         sptr<UserReceiverImpl> userReceiverImpl(
