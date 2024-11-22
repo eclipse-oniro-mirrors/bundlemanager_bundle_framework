@@ -191,9 +191,7 @@ bool ZipReader::ExtractCurrentEntry(WriterDelegate *delegate, uint64_t numBytesT
     }
     const int openResult = unzOpenCurrentFile(zipFile_);
     if (openResult != UNZ_OK) {
-        return false;
-    }
-    if (!delegate->PrepareOutput()) {
+        APP_LOGE("unzOpen err %{public}d", openResult);
         return false;
     }
     auto buf = std::make_unique<char[]>(kZipBufSize);
