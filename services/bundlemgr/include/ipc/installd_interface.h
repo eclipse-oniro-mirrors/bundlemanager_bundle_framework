@@ -103,6 +103,11 @@ public:
     {
         return ERR_APPEXECFWK_INSTALLD_STOP_AOT_FAILED;
     }
+
+    virtual ErrCode DeleteUninstallTmpDirs(const std::vector<std::string> &dirs)
+    {
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
     /**
      * @brief Rename the module directory from temporaily path to the real path.
      * @param oldPath Indicates the old path name.
@@ -134,7 +139,7 @@ public:
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
     virtual ErrCode RemoveBundleDataDir(const std::string &bundleDir, const int32_t userId,
-        bool isAtomicService = false)
+        bool isAtomicService = false, const bool async = false)
     {
         return ERR_OK;
     }

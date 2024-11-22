@@ -6316,7 +6316,7 @@ HWTEST_F(BmsBundleInstallerTest, InnerRemoveAtomicServiceBundleDataDir_0100, Fun
     InstalldHostImpl hostImpl;
     std::string bundleName = BUNDLE_NAME;
     int32_t userId = USERID;
-    ErrCode ret = hostImpl.InnerRemoveAtomicServiceBundleDataDir(bundleName, userId);
+    ErrCode ret = hostImpl.InnerRemoveAtomicServiceBundleDataDir(bundleName, userId, false);
     EXPECT_EQ(ret, ERR_OK);
 }
 

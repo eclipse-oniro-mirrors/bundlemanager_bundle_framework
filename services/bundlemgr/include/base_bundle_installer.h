@@ -259,7 +259,7 @@ private:
      * @param isKeepData Indicates that whether to save data.
      * @return Returns ERR_OK if the bundle removed successfully; returns error code otherwise.
      */
-    ErrCode RemoveBundle(InnerBundleInfo &info, bool isKeepData);
+    ErrCode RemoveBundle(InnerBundleInfo &info, bool isKeepData, const bool async = false);
     /**
      * @brief Create the code and data directories of a bundle.
      * @param info Indicates the InnerBundleInfo object of a bundle.
@@ -279,7 +279,7 @@ private:
      * @param isKeepData Indicates that whether to save data.
      * @return Returns ERR_OK if the bundle directories removed successfully; returns error code otherwise.
      */
-    ErrCode RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData);
+    ErrCode RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData, const bool async = false);
     /**
      * @brief Remove the code and data directories of a module in a bundle.
      * @param info Indicates the InnerBundleInfo object of a bundle.
@@ -508,7 +508,8 @@ private:
      * @param needRemoveData Indicates need remove data or not.
      * @return Returns BundleUserMgr.
      */
-    ErrCode RemoveBundleUserData(InnerBundleInfo &innerBundleInfo, bool needRemoveData = true);
+    ErrCode RemoveBundleUserData(
+        InnerBundleInfo &innerBundleInfo, bool needRemoveData = true, const bool async = false);
     /**
      * @brief Create bundle user data.
      * @param innerBundleInfo Indicates the bundle type of the application.
@@ -526,7 +527,8 @@ private:
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
-    ErrCode RemoveBundleDataDir(const InnerBundleInfo &info, bool forException = false);
+    ErrCode RemoveBundleDataDir(
+        const InnerBundleInfo &info, bool forException = false, const bool async = false);
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     ErrCode UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo);
