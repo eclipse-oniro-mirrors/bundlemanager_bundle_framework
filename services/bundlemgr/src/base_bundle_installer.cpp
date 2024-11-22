@@ -1666,7 +1666,32 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     RemoveProfileFromCodeSign(bundleName);
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
     SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+    UninstallDebugAppSandbox(bundleName, uid, userId_, oldInfo);
     return ERR_OK;
+}
+
+void BaseBundleInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid, int32_t userId,
+    const InnerBundleInfo& innerBundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    LOG_D(BMS_TAG_INSTALLER, "call UninstallDebugAppSandbox start");
+    ApplicationInfo appInfo;
+    innerBundleInfo.GetApplicationInfo(ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
+    bool isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    bool isDebugApp = appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    if (isDeveloperMode && isDebugApp) {
+        int32_t flagIndex = 0;
+        AppSpawnRemoveSandboxDirMsg removeSandboxDirMsg;
+        removeSandboxDirMsg.code = MSG_UNINSTALL_DEBUG_HAP;
+        removeSandboxDirMsg.bundleName = bundleName;
+        removeSandboxDirMsg.bundleIndex = innerBundleInfo.GetAppIndex();
+        removeSandboxDirMsg.uid = uid;
+        removeSandboxDirMsg.flags = static_cast<AppFlagsIndex>(flagIndex);
+        if (BundleAppSpawnClient::GetInstance().RemoveSandboxDir(removeSandboxDirMsg) != 0) {
+            LOG_E(BMS_TAG_INSTALLER, "removeSandboxDir failed");
+        }
+    }
+    LOG_D(BMS_TAG_INSTALLER, "call UninstallDebugAppSandbox end");
 }
 
 void BaseBundleInstaller::DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName)
