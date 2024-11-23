@@ -20,13 +20,12 @@ using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
 namespace {
-    const std::string BUNDLE_NAME = "com.ohos.resourcedemo";
 }
     bool fuzzelParseBundleResourceCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
         ExtendResourceInfo extendResourceInfo;
-        if (!impl.ParseBundleResource(BUNDLE_NAME, extendResourceInfo)) {
+        if (!impl.ParseBundleResource(std::string(reinterpret_cast<const char*>(data), size), extendResourceInfo)) {
             return false;
         }
         return true;

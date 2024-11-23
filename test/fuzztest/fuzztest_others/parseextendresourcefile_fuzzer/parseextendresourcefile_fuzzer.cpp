@@ -26,7 +26,7 @@ namespace {
     bool fuzzelParseExtendResourceFileCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        std::vector<std::string> filePaths;
+        std::vector<std::string> filePaths = {std::string(reinterpret_cast<const char*>(data), size)};
         filePaths.emplace_back(FILE_PATH);
         std::vector<ExtendResourceInfo> extendResourceInfos;
         auto ret = impl.ParseExtendResourceFile(BUNDLE_NAME, filePaths, extendResourceInfos);

@@ -26,7 +26,7 @@ namespace {
     {
         ExtendResourceManagerHostImpl impl;
         std::string emptyBundleName;
-        std::vector<std::string> moduleNames;
+        std::vector<std::string> moduleNames = {std::string(reinterpret_cast<const char*>(data), size)};
         std::vector<ExtendResourceInfo> extendResourceInfos;
         auto ret = impl.CheckModuleExist(TEST_BUNDLE, moduleNames, extendResourceInfos);
         if (ret != ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST) {

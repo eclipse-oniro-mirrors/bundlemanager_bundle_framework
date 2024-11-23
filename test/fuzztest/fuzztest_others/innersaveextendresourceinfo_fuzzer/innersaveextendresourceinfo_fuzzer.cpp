@@ -22,7 +22,7 @@ namespace OHOS {
     bool fuzzelInnerSaveExtendResourceInfoCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        std::vector<std::string> filePaths;
+        std::vector<std::string> filePaths = {std::string(reinterpret_cast<const char*>(data), size)};
         std::string emptyBundleName;
         auto ret = impl.AddExtResource(emptyBundleName, filePaths);
         if (ret != ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST) {

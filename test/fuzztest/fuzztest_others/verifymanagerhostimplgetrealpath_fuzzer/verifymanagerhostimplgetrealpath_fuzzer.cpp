@@ -31,7 +31,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     VerifyManagerHostImpl impl;
     std::string bundleName;
     int32_t userId = 100;
-    std::string relativePath;
+    std::string relativePath = std::string(data, size);
     std::vector<std::string> abcPaths;
     impl.GetRealPath(bundleName, userId, relativePath);
     impl.CopyFilesToTempDir(bundleName, userId, abcPaths);

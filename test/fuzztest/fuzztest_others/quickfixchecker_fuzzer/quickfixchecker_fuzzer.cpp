@@ -57,7 +57,7 @@ AppQuickFix CreateAppQuickFix()
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     QuickFixChecker quickFixChecker;
-    std::vector<std::string> bundlePaths;
+    std::vector<std::string> bundlePaths = {std::string(data, size)};
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
     quickFixChecker.CheckMultipleHqfsSignInfo(bundlePaths, hapVerifyRes);
     std::unordered_map<std::string, AppQuickFix> infos;

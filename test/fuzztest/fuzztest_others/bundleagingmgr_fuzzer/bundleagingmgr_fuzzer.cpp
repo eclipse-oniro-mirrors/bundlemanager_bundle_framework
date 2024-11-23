@@ -22,11 +22,14 @@
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t U32_AT_SIZE = 4;
+constexpr size_t BASE_SIZE = 2;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = nullptr;
-    bundleAgingMgr->Start(BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
+    BundleAgingMgr::AgingTriggertype triggerType = reinterpret_cast<uintptr_t>(data) % OHOS::BASE_SIZE ?
+        BundleAgingMgr::AgingTriggertype::FREE_INSTALL : BundleAgingMgr::AgingTriggertype::UPDATE_REMOVABLE_FLAG;
+    bundleAgingMgr->Start(triggerType);
     bundleAgingMgr->InitAgingtTimer();
     bundleAgingMgr->ResetRequest();
     bundleAgingMgr->IsReachStartAgingThreshold();

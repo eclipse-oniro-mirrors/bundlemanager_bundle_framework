@@ -29,6 +29,7 @@ namespace OHOS {
         BaseBundleInstaller basebundleinstall;
         std::vector<std::string> bundlePaths;
         InstallParam installParam;
+        installParam.additionalInfo = std::string(data, size);
         std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
         auto ret1 = basebundleinstall.CheckMultipleHapsSignInfo(bundlePaths, installParam, hapVerifyRes);
         return true;

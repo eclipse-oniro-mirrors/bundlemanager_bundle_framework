@@ -29,7 +29,7 @@ namespace {
         ExtendResourceManagerHostImpl impl;
         std::vector<std::string> oldFilePaths;
         oldFilePaths.push_back(FILE_PATH);
-        std::vector<std::string> newFilePaths;
+        std::vector<std::string> newFilePaths = {std::string(reinterpret_cast<const char*>(data), size)};
         newFilePaths.push_back(DIR_PATH_TWO);
         auto ret = impl.CopyToTempDir(BUNDLE_NAME, oldFilePaths, newFilePaths);
         if (ret == ERR_OK) {

@@ -19,13 +19,12 @@
 using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
-namespace {
-    const std::string BUNDLE_NAME = "com.ohos.resourcedemo";
-}
+
     bool fuzzelSendBroadCastCaseOne(const uint8_t* data, size_t size)
     {
+        std::string bundleName (reinterpret_cast<const char*>(data), size);
         ExtendResourceManagerHostImpl impl;
-        impl.SendBroadcast(BUNDLE_NAME, false);
+        impl.SendBroadcast(bundleName, false);
         return true;
     }
 }

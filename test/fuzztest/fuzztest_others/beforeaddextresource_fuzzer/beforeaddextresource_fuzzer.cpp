@@ -28,7 +28,7 @@ namespace {
     bool fuzzelBeforeAddExtResourceCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        std::vector<std::string> filePaths;
+        std::vector<std::string> filePaths = {std::string(reinterpret_cast<const char*>(data), size)};
         auto ret = impl.BeforeAddExtResource(EMPTY_STRING, filePaths);
         if (ret == ERR_OK) {
             return true;
@@ -39,7 +39,7 @@ namespace {
     bool fuzzelBeforeAddExtResourceCaseTwo(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        std::vector<std::string> filePaths;
+        std::vector<std::string> filePaths = {std::string(reinterpret_cast<const char*>(data), size)};
         auto ret = impl.BeforeAddExtResource(BUNDLE_NAME, filePaths);
         if (ret == ERR_OK) {
             return true;
@@ -50,7 +50,7 @@ namespace {
     bool fuzzelBeforeAddExtResourceCaseThree(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        std::vector<std::string> filePaths;
+        std::vector<std::string> filePaths = {std::string(reinterpret_cast<const char*>(data), size)};
         filePaths.emplace_back(FILE_PATH);
         filePaths.emplace_back(INVALID_PATH);
         auto ret = impl.BeforeAddExtResource(BUNDLE_NAME, filePaths);

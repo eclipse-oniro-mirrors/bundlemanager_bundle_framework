@@ -20,8 +20,6 @@ using namespace OHOS::AppExecFwk;
 namespace {
     const int32_t FD = 0;
     const std::string FILE_PATH = "data/test";
-    const std::string EMPTY_STRING = "";
-    const std::string TEST_BUNDLE = "com.test.ext.resource";
 }
 
 namespace OHOS {
@@ -30,7 +28,7 @@ namespace OHOS {
         ExtendResourceManagerHostImpl impl;
         int32_t fd = FD;
         std::string path = FILE_PATH;
-        auto ret = impl.CreateFd(TEST_BUNDLE, fd, path);
+        auto ret = impl.CreateFd(std::string(reinterpret_cast<const char*>(data), size), fd, path);
         if (ret == ERR_OK) {
             return true;
         }
@@ -42,7 +40,7 @@ namespace OHOS {
         ExtendResourceManagerHostImpl impl;
         int32_t fd = FD;
         std::string path = FILE_PATH;
-        auto ret = impl.CreateFd(EMPTY_STRING, fd, path);
+        auto ret = impl.CreateFd(std::string(reinterpret_cast<const char*>(data), size), fd, path);
         if (ret == ERR_OK) {
             return true;
         }

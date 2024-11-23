@@ -29,6 +29,7 @@ namespace OHOS {
         BaseBundleInstaller basebundleinstall;
         std::unordered_map<std::string, InnerBundleInfo> newInfos;
         InnerBundleInfo oldInfo;
+        oldInfo.SetBundleInstallTime(reinterpret_cast<uintptr_t>(data));
         const InstallParam installParam;
         int32_t uid = 0;
         auto ret1 = basebundleinstall.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);

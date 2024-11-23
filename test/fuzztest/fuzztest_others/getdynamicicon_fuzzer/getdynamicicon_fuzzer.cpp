@@ -26,7 +26,7 @@ namespace {
     {
         ExtendResourceManagerHostImpl impl;
         std::string emptyStr;
-        std::string moudleName;
+        std::string moudleName = std::string(reinterpret_cast<const char*>(data), size);
         auto ret = impl.GetDynamicIcon(emptyStr, moudleName);
         if (ret == ERR_OK) {
             return true;
@@ -37,7 +37,7 @@ namespace {
     bool fuzzelGetDynamicIconCaseTwo(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        std::string moudleName;
+        std::string moudleName = std::string(reinterpret_cast<const char*>(data), size);
         auto ret = impl.GetDynamicIcon(TEST_BUNDLE, moudleName);
         if (ret == ERR_OK) {
             return true;

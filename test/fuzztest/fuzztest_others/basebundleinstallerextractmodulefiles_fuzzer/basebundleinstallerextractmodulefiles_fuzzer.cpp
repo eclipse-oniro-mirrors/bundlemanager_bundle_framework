@@ -28,7 +28,7 @@ namespace OHOS {
     {
         BaseBundleInstaller basebundleinstall;
         InnerBundleInfo info;
-        std::string modulePath;
+        std::string modulePath = std::string(data, size);
         std::string targetSoPath;
         std::string cpuAbi;
         auto ret1 = basebundleinstall.ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);

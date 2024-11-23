@@ -19,14 +19,11 @@
 using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
-namespace {
-    const std::string BUNDLE_NAME2 = "com.ohos.mms";
-}
     bool fuzzelGetInnerBundleInfoCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
         InnerBundleInfo info;
-        bool ret = impl.GetInnerBundleInfo(BUNDLE_NAME2, info);
+        bool ret = impl.GetInnerBundleInfo(std::string(reinterpret_cast<const char*>(data), size), info);
         if (ret == ERR_OK) {
             return true;
         }

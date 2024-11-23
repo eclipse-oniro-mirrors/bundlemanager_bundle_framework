@@ -28,6 +28,7 @@ namespace OHOS {
     {
         BaseBundleInstaller basebundleinstall;
         InnerBundleInfo info;
+        info.SetBundleInstallTime(reinterpret_cast<uintptr_t>(data));
         auto ret1 = basebundleinstall.RenameModuleDir(info);
         return true;
     }

@@ -25,6 +25,7 @@ namespace OHOS {
     {
         Parcel dataMessageParcel;
         InstallParam oldInstallParam;
+        oldInstallParam.additionalInfo = std::string(reinterpret_cast<const char*>(data), size);
         if (!oldInstallParam.Marshalling(dataMessageParcel)) {
             return false;
         }

@@ -20,17 +20,16 @@ using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
 namespace {
-    const std::string DIR_PATH_ONE = "/data/service/el1";
-    const std::string DIR_PATH_TWO = "/data/test/test";
+    const std::string DIR_PATH = "/data/service/el1";
 }
     bool fuzzelMkDirIfNotExistCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        auto ret = impl.MkdirIfNotExist(DIR_PATH_ONE);
+        auto ret = impl.MkdirIfNotExist(DIR_PATH);
         if (ret != ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR) {
             return false;
         }
-        ret = impl.MkdirIfNotExist(DIR_PATH_TWO);
+        ret = impl.MkdirIfNotExist(std::string(reinterpret_cast<const char*>(data), size));
         if (ret != ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR) {
             return false;
         }

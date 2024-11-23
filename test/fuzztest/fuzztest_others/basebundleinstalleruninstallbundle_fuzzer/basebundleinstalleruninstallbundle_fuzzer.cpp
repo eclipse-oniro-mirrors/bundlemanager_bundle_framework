@@ -27,7 +27,7 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char *data, size_t size)
     {
         BaseBundleInstaller basebundleinstall;
-        std::string bundleName;
+        std::string bundleName = std::string(data, size);
         InstallParam installParam;
         auto ret1 = basebundleinstall.UninstallBundle(bundleName, installParam);
         return true;

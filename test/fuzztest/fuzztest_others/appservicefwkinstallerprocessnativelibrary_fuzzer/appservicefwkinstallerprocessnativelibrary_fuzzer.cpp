@@ -27,15 +27,15 @@ namespace OHOS {
 constexpr size_t U32_AT_SIZE = 4;
 const std::string VERSION_ONE_LIBRARY_ONE_PATH = "/data/test/resource/bms/app_service_test/appService_v1_library1.hsp";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
-const std::string MODULE_NAME_TEST = "moduleName";
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     AppServiceFwkInstaller appServicefwk;
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
+    std::string moduleName = std::string(data, size);
+    innerBundleInfo.currentPackage_ = moduleName;
     appServicefwk.ProcessNativeLibrary(
-        VERSION_ONE_LIBRARY_ONE_PATH, BUNDLE_DATA_DIR, MODULE_NAME_TEST, BUNDLE_DATA_DIR, innerBundleInfo);
+        VERSION_ONE_LIBRARY_ONE_PATH, BUNDLE_DATA_DIR, moduleName, BUNDLE_DATA_DIR, innerBundleInfo);
     return true;
 }
 } // namespace OHOS

@@ -28,7 +28,7 @@ namespace OHOS {
     {
         BaseBundleInstaller basebundleinstall;
         InnerBundleInfo info;
-        std::string bundleName;
+        std::string bundleName = std::string(data, size);
         auto ret1 = basebundleinstall.CheckUninstallInnerBundleInfo(info, bundleName);
         return true;
     }

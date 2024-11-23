@@ -29,7 +29,7 @@ namespace OHOS {
         BaseBundleInstaller basebundleinstall;
         InnerBundleInfo info;
         int32_t userId = 0;
-        std::string bundleName;
+        std::string bundleName = std::string(data, size);
         auto ret1 = basebundleinstall.ProcessBundleUnInstallNative(info, userId, bundleName);
         return true;
     }

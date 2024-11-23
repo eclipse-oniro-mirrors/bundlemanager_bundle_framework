@@ -28,6 +28,7 @@ namespace OHOS {
     {
         BaseBundleInstaller basebundleinstall;
         InnerBundleInfo info;
+        info.SetBundleInstallTime(reinterpret_cast<uintptr_t>(data));
         int32_t userId = 0;
         auto ret1 = basebundleinstall.ProcessBundleInstallNative(info, userId);
         return true;

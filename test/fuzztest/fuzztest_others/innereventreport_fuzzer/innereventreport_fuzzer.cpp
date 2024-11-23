@@ -29,6 +29,7 @@ constexpr uint8_t CODE_MAX = 22;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     EventInfo eventInfo;
+    eventInfo.abilityName = std::string(reinterpret_cast<const char*>(data), size);
     for (uint8_t code = 0; code <= CODE_MAX; code++) {
         InnerEventReport::SendSystemEvent(BMSEventType(code), eventInfo);
     }

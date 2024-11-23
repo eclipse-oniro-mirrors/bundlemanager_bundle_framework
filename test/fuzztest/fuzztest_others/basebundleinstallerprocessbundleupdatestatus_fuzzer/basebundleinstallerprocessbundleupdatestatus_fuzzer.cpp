@@ -28,6 +28,7 @@ namespace OHOS {
     {
         BaseBundleInstaller basebundleinstall;
         InnerBundleInfo oldInfo;
+        oldInfo.SetBundleInstallTime(reinterpret_cast<uintptr_t>(data));
         InnerBundleInfo newInfo;
         bool isReplace = true;
         auto ret1 = basebundleinstall.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace);
