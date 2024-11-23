@@ -7063,4 +7063,54 @@ HWTEST_F(BmsBundleInstallerTest, SetDisposedRuleWhenBundleUpdateStart_0030, Func
     ret = installer.DeleteDisposedRuleWhenBundleUpdateEnd(oldBundleInfo);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: GetRealSoPath_0010
+ * @tc.name: test GetRealSoPath
+ * @tc.desc: 1.Test the GetRealSoPath
+*/
+HWTEST_F(BmsBundleInstallerTest, GetRealSoPath_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string path = installer.GetRealSoPath(BUNDLE_NAME, "libs/arms", true);
+    EXPECT_TRUE(path.find("libs_tmp") != std::string::npos);
+    path = installer.GetRealSoPath(BUNDLE_NAME, "libs/arms", false);
+    EXPECT_TRUE(path.find("libs_tmp") == std::string::npos);
+}
+
+/**
+ * @tc.number: FinalProcessHapAndSoForBundleUpdate_0010
+ * @tc.name: test FinalProcessHapAndSoForBundleUpdate
+ * @tc.desc: 1.Test the FinalProcessHapAndSoForBundleUpdate
+*/
+HWTEST_F(BmsBundleInstallerTest, FinalProcessHapAndSoForBundleUpdate_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    auto ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, true, true);
+    EXPECT_EQ(ret, ERR_OK);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    infos[BUNDLE_NAME] = innerBundleInfo;
+
+    ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, true, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+
+    ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, false, true);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, false, false);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, false, true);
+    EXPECT_EQ(ret, ERR_OK);
+
+    InnerBundleInfo innerBundleInfoWithSO;
+    innerBundleInfoWithSO.baseApplicationInfo_->bundleName = MODULE_NAME;
+    innerBundleInfoWithSO.baseApplicationInfo_->nativeLibraryPath = "libs/arms";
+    infos[MODULE_NAME] = innerBundleInfoWithSO;
+
+    ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, false, true);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
