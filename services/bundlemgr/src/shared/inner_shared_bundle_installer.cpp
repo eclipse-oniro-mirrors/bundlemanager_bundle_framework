@@ -182,7 +182,13 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
 
     // save specifiedDistributionType and additionalInfo
     SaveInstallParamInfo(bundleName_, installParam);
-    MarkInstallFinish();
+    // check mark install finish
+    result = MarkInstallFinish();
+    if (result != ERR_OK) {
+        APP_LOGE("mark install finish failed %{public}d", result);
+        RollBack();
+        return result;
+    }
     APP_LOGD("install shared bundle successfully: %{public}s", bundleName_.c_str());
     return result;
 }
@@ -787,23 +793,27 @@ void InnerSharedBundleInstaller::SetCheckResultMsg(const std::string checkResult
     bundleInstallChecker_->SetCheckResultMsg(checkResultMsg);
 }
 
-void InnerSharedBundleInstaller::MarkInstallFinish()
+ErrCode InnerSharedBundleInstaller::MarkInstallFinish()
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return;
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     InnerBundleInfo info;
     if (!dataMgr->FetchInnerBundleInfo(bundleName_, info)) {
         APP_LOGE("mark finish failed, -n %{public}s not exist", bundleName_.c_str());
-        return;
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!dataMgr->UpdateInnerBundleInfo(info, true)) {
-        APP_LOGE("save mark failed, -n %{public}s", bundleName_.c_str());
+        if (!dataMgr->UpdateInnerBundleInfo(info, true)) {
+            APP_LOGE("save mark failed, -n %{public}s", bundleName_.c_str());
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
     }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
