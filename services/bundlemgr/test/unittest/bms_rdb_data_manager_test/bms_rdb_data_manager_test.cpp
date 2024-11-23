@@ -321,20 +321,6 @@ HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0800, Function | SmallTest 
 }
 
 /**
- * @tc.number: BundleDataStorageRdb_0900
- * @tc.name: BackupRdb
- * @tc.desc: 1.BackupRdb
- */
-HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0900, Function | SmallTest | Level1)
-{
-    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
-    ASSERT_NE(dataStorage, nullptr);
-    dataStorage->isBackingUp_ = false;
-    dataStorage->BackupRdb();
-    EXPECT_TRUE(dataStorage->isBackingUp_);
-}
-
-/**
  * @tc.number: PreInstallDataStorageRdb_0100
  * @tc.name: save and delete
  * @tc.desc: 1.SavePreInstallStorageBundleInfo

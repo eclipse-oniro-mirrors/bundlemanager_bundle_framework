@@ -120,8 +120,6 @@ bool RdbDataManager::CreateTable()
     return true;
 }
 
-void RdbDataManager::BackupRdb() {}
-
 std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryByStep(const NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
     return nullptr;
