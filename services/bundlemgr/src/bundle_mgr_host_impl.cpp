@@ -4173,8 +4173,9 @@ void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hap
     auto typeIter = APP_DISTRIBUTION_TYPE_MAPS.find(provisionInfo.distributionType);
     if (typeIter == APP_DISTRIBUTION_TYPE_MAPS.end()) {
         distributionType = Constants::APP_DISTRIBUTION_TYPE_NONE;
+    } else {
+        distributionType = typeIter->second;
     }
-    distributionType = typeIter->second;
     info.SetAppDistributionType(distributionType);
 }
 
