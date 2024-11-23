@@ -1320,7 +1320,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     RemoveOldExtensionDirs();
     /* process quick fix when install new moudle */
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
-    BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
+    ProcessAddResourceInfo(installParam, bundleName_, userId_);
     VerifyDomain();
     MarkInstallFinish();
     return result;
@@ -6047,6 +6047,19 @@ bool BaseBundleInstaller::DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundl
     appControlMgr->DeleteDisposedRuleOnlyForBms(oldBundleInfo.GetAppId());
     return true;
 #endif
+}
+
+void BaseBundleInstaller::ProcessAddResourceInfo(const InstallParam &installParam,
+    const std::string &bundleName, int32_t userId)
+{
+    if (!InitDataMgr()) {
+        return;
+    }
+    if (installParam.isOTA && userId != Constants::START_USERID &&
+        dataMgr_->HasUserInstallInBundle(bundleName, Constants::START_USERID)) {
+        return;
+    }
+    BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
