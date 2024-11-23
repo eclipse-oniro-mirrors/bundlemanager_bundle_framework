@@ -64,6 +64,11 @@ ErrCode InstalldClient::StopAOT()
     return 0;
 }
 
+ErrCode InstalldClient::DeleteUninstallTmpDirs(const std::vector<std::string> &dirs)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldClient::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     return 0;
@@ -79,7 +84,8 @@ ErrCode InstalldClient::CreateBundleDataDirWithVector(const std::vector<CreateDi
     return ERR_OK;
 }
 
-ErrCode InstalldClient::RemoveBundleDataDir(const std::string &bundleName, const int32_t userId, bool isAtomicService)
+ErrCode InstalldClient::RemoveBundleDataDir(
+    const std::string &bundleName, const int32_t userId, bool isAtomicService, const bool async)
 {
     if (bundleName.empty()) {
         return -1;

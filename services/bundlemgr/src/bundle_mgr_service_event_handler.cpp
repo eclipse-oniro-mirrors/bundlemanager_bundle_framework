@@ -4128,6 +4128,8 @@ void BMSEventHandler::CleanTempDir() const
             LOG_E(BMS_TAG_DEFAULT, "create failed: %{public}s", dir.c_str());
         }
     }
+
+    UpdateAppDataMgr::DeleteUninstallTmpDirs(Constants::DEFAULT_USERID);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

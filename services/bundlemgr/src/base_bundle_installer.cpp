@@ -1575,7 +1575,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
-        auto res = RemoveBundleUserData(oldInfo, installParam.isKeepData);
+        auto res = RemoveBundleUserData(oldInfo, installParam.isKeepData, !installParam.isRemoveUser);
         if (res != ERR_OK) {
             return res;
         }
@@ -1602,7 +1602,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ret;
     }
 
-    ErrCode result = RemoveBundle(oldInfo, installParam.isKeepData);
+    ErrCode result = RemoveBundle(oldInfo, installParam.isKeepData, !installParam.isRemoveUser);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove whole bundle failed");
         return result;
@@ -2012,7 +2012,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     return resultCode;
 }
 
-ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData)
+ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData, const bool async)
 {
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
@@ -2032,7 +2032,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
             PrepareBundleDirQuota(info.GetBundleName(), uid, bundleDataDir, 0);
         }
     }
-    ErrCode result = RemoveBundleAndDataDir(info, isKeepData);
+    ErrCode result = RemoveBundleAndDataDir(info, isKeepData, async);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove bundle dir failed");
         return result;
@@ -3577,11 +3577,11 @@ ErrCode BaseBundleInstaller::DeleteOldArkNativeFile(const InnerBundleInfo &oldIn
     return result;
 }
 
-ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData)
+ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData, const bool async)
 {
     ErrCode result = ERR_OK;
     if (!isKeepData) {
-        result = RemoveBundleDataDir(info);
+        result = RemoveBundleDataDir(info, false, async);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to remove bundleData dir %{public}s, error is %{public}d",
                 info.GetBundleName().c_str(), result);
@@ -3607,11 +3607,12 @@ ErrCode BaseBundleInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info) co
     return result;
 }
 
-ErrCode BaseBundleInstaller::RemoveBundleDataDir(const InnerBundleInfo &info, bool forException)
+ErrCode BaseBundleInstaller::RemoveBundleDataDir(
+    const InnerBundleInfo &info, bool forException, const bool async)
 {
     ErrCode result =
         InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_,
-            info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE);
+            info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE, async);
     if (result == ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED) {
         LOG_W(BMS_TAG_INSTALLER, "RemoveBundleDataDir failed %{public}d", result);
         InstallParam installParam;
@@ -4765,7 +4766,8 @@ bool BaseBundleInstaller::CheckReleaseTypeIsCompatible(
     return true;
 }
 
-ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleInfo, bool isKeepData)
+ErrCode BaseBundleInstaller::RemoveBundleUserData(
+    InnerBundleInfo &innerBundleInfo, bool isKeepData, const bool async)
 {
     auto bundleName = innerBundleInfo.GetBundleName();
     LOG_D(BMS_TAG_INSTALLER, "remove user(%{public}d) in bundle(%{public}s)", userId_, bundleName.c_str());
@@ -4803,7 +4805,7 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
 
     ErrCode result = ERR_OK;
     if (!isKeepData) {
-        result = RemoveBundleDataDir(innerBundleInfo);
+        result = RemoveBundleDataDir(innerBundleInfo, false, async);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "remove user data directory failed");
             return result;

@@ -71,7 +71,8 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<Create
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userId, bool isAtomicService)
+ErrCode InstalldHostImpl::RemoveBundleDataDir(
+    const std::string &bundleName, const int userId, bool isAtomicService, const bool async)
 {
     return ERR_OK;
 }
@@ -218,6 +219,11 @@ ErrCode InstalldHostImpl::PendSignAOT(const std::string &anFileName, const std::
 }
 
 ErrCode InstalldHostImpl::StopAOT()
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::DeleteUninstallTmpDirs(const std::vector<std::string> &dirs)
 {
     return ERR_OK;
 }
