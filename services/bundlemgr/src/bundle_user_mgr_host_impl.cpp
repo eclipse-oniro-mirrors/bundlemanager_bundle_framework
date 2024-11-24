@@ -158,12 +158,6 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         installParam.isPreInstallApp = !info.GetIsNonPreDriverApp();
         installParam.installFlag = InstallFlag::NORMAL;
         installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
-        if (!info.GetBundlePaths().empty() && (info.GetBundlePaths().front().find(DATA_PRELOAD_APP) == 0) &&
-            userId != Constants::START_USERID) {
-            APP_LOGW("data preload app only install in 100 ,bundleName: %{public}s", info.GetBundleName().c_str());
-            totalHapNum--;
-            continue;
-        }
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
         userReceiverImpl->SetBundlePromise(bundlePromise);
@@ -205,6 +199,11 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
         if (std::find(disallowList.begin(), disallowList.end(),
             preInfo.GetBundleName()) != disallowList.end()) {
             APP_LOGI("BundleName is same as black list %{public}s", preInfo.GetBundleName().c_str());
+            continue;
+        }
+        if (!isStartUser && !preInfo.GetBundlePaths().empty() &&
+            (preInfo.GetBundlePaths().front().find(DATA_PRELOAD_APP) == 0)) {
+            APP_LOGW("data preload app only install in 100 ,bundleName: %{public}s", preInfo.GetBundleName().c_str());
             continue;
         }
         if (isStartUser) {
