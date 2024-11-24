@@ -19,11 +19,13 @@
 #include <string>
 
 #include "iremote_object.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class SystemAbilityHelper {
 public:
+    using Want = OHOS::AAFwk::Want;
     /**
      * @brief Get a pointer to a IRemoteObject object from system ability service.
      * @param systemAbilityId Indicates the system ability ID to be got.
@@ -54,6 +56,8 @@ public:
     static int UninstallApp(const std::string &bundleName, int32_t uid, int32_t appIndex);
 
     static int UpgradeApp(const std::string &bundleName, int32_t uid, int32_t appIndex);
+
+    static int StartAbility(const Want &want);
 
     static bool UnloadSystemAbility(const int32_t systemAbilityId);
 };

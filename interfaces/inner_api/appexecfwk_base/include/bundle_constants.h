@@ -148,6 +148,10 @@ constexpr const char* SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 
 // clone application
 constexpr int32_t MAIN_APP_INDEX = 0;
+
+//param key-value
+constexpr const char* VERIFY_UNINSTALL_RULE_KEY = "ohos.bms.param.verifyUninstallRule";
+constexpr const char* VERIFY_UNINSTALL_RULE_VALUE = "true";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

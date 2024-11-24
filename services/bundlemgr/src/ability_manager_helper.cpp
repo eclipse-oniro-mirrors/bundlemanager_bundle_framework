@@ -121,5 +121,21 @@ int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName)
     return FAILED;
 #endif
 }
+
+bool AbilityManagerHelper::StartAbility(const Want &want)
+{
+#ifdef ABILITY_RUNTIME_ENABLE
+    APP_LOGI("enter");
+    auto ret = SystemAbilityHelper::StartAbility(want);
+    if (ret != 0) {
+        APP_LOGE("bms to StartAbility failed ret: %{public}d", ret);
+        return false;
+    }
+    return true;
+#else
+    APP_LOGI("ABILITY_RUNTIME_ENABLE is false");
+    return false;
+#endif
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
