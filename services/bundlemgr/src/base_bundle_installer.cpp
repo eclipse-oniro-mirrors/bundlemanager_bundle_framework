@@ -6407,7 +6407,7 @@ ErrCode BaseBundleInstaller::CheckShellCanInstallPreApp(
     if (newInfos.empty()) {
         return ERR_OK;
     }
-    const std::string &bundleName = newInfos.begin()->second.GetBundleName();
+    std::string bundleName = newInfos.begin()->second.GetBundleName();
     if (dataMgr_->IsBundleExist(bundleName)) {
         return ERR_OK;
     }
@@ -6419,7 +6419,7 @@ ErrCode BaseBundleInstaller::CheckShellCanInstallPreApp(
         LOG_NOFUNC_W(BMS_TAG_DEFAULT, "pre bundle path empty");
         return ERR_OK;
     }
-    const std::string &hapPath = preInstallBundleInfo.GetBundlePaths().front();
+    std::string hapPath = preInstallBundleInfo.GetBundlePaths().front();
     Security::Verify::HapVerifyResult hapVerifyResult;
     ErrCode verifyRes = BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult);
     if (verifyRes != ERR_OK) {
