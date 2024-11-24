@@ -58,6 +58,20 @@ public:
     static bool FromString(const std::string &ruleString, DisposedRule &rule);
     std::string ToString() const;
 };
+
+struct UninstallDisposedRule : public Parcelable {
+public:
+    std::shared_ptr<AAFwk::Want> want = nullptr;
+    ComponentType componentType = ComponentType::UI_ABILITY;
+    int32_t priority = 0;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static UninstallDisposedRule *Unmarshalling(Parcel &parcel);
+
+    static bool FromString(const std::string &ruleString, UninstallDisposedRule &rule);
+    std::string ToString() const;
+};
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_DISPOSED_RULE_H
