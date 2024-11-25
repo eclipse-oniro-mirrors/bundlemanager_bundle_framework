@@ -1121,7 +1121,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7400, Functi
 {
     InstallParam installParam;
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
-    sptr<IBundleStreamInstaller> ret = bundleInstallerHost_->CreateStreamInstaller(installParam, receiver);
+    std::vector<std::string> originHapPaths;
+    sptr<IBundleStreamInstaller> ret = bundleInstallerHost_->CreateStreamInstaller(
+        installParam, receiver, originHapPaths);
     EXPECT_EQ(ret, nullptr);
 }
 
@@ -1487,7 +1489,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_10000, Funct
     sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
     EXPECT_NE(statusReceiver, nullptr);
     bundleInstallerHost_->Init();
-    sptr<IBundleStreamInstaller> ret = bundleInstallerHost_->CreateStreamInstaller(installParam, statusReceiver);
+    std::vector<std::string> originHapPaths;
+    sptr<IBundleStreamInstaller> ret = bundleInstallerHost_->CreateStreamInstaller(
+        installParam, statusReceiver, originHapPaths);
     EXPECT_EQ(ret, nullptr);
 }
 

@@ -62,6 +62,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     InstallParam installParam;
     UninstallParam uninstallParam;
     sptr<IStatusReceiver> statusReceiver;
+    std::vector<std::string> originHapPaths;
     bundleInstallerHost->Init();
     bundleInstallerHost->Install(bundleFilePath, installParam, statusReceiver);
     bundleInstallerHost->Recover(bundleName, installParam, statusReceiver);
@@ -72,7 +73,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     bundleInstallerHost->InstallByBundleName(bundleName, installParam, statusReceiver);
     bundleInstallerHost->InstallSandboxApp(bundleName, dplType, userId, appIndex);
     bundleInstallerHost->UninstallSandboxApp(bundleName, appIndex, userId);
-    bundleInstallerHost->CreateStreamInstaller(installParam, statusReceiver);
+    bundleInstallerHost->CreateStreamInstaller(installParam, statusReceiver, originHapPaths);
     bundleInstallerHost->DestoryBundleStreamInstaller(streamInstallerId);
     bundleInstallerHost->StreamInstall(bundleFilePaths, installParam, statusReceiver);
     bundleInstallerHost->UpdateBundleForSelf(bundleFilePaths, installParam, statusReceiver);

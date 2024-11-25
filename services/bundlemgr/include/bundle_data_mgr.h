@@ -743,6 +743,8 @@ public:
         const std::vector<std::string> &moduleNames);
     bool UpateCurDynamicIconModule(
         const std::string &bundleName, const std::string &moduleName);
+    void CreateAppInstallDir(int32_t userId);
+    void RemoveAppInstallDir(int32_t userId);
 
     /**
      * @brief Sets whether to enable isRemovable based on given bundle name, module name and isEnable.

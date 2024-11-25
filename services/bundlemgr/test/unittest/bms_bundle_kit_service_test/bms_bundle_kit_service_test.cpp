@@ -386,8 +386,8 @@ class IBundleInstallerTest : public IBundleInstaller {
         const sptr<IStatusReceiver>& statusReceiver);
     ErrCode InstallSandboxApp(const std::string& bundleName, int32_t dlpType, int32_t userId, int32_t& appIndex);
     ErrCode UninstallSandboxApp(const std::string& bundleName, int32_t appIndex, int32_t userId);
-    sptr<IBundleStreamInstaller> CreateStreamInstaller(
-        const InstallParam& installParam, const sptr<IStatusReceiver>& statusReceiver);
+    sptr<IBundleStreamInstaller> CreateStreamInstaller(const InstallParam& installParam,
+        const sptr<IStatusReceiver>& statusReceiver, const std::vector<std::string>& originHapPaths);
     bool DestoryBundleStreamInstaller(uint32_t streamInstallerId);
     ErrCode StreamInstall(const std::vector<std::string>& bundleFilePaths, const InstallParam& installParam,
         const sptr<IStatusReceiver>& statusReceiver);
@@ -440,8 +440,8 @@ ErrCode IBundleInstallerTest::UninstallSandboxApp(const std::string& bundleName,
     return ERR_OK;
 }
 
-sptr<IBundleStreamInstaller> IBundleInstallerTest::CreateStreamInstaller(
-    const InstallParam& installParam, const sptr<IStatusReceiver>& statusReceiver)
+sptr<IBundleStreamInstaller> IBundleInstallerTest::CreateStreamInstaller(const InstallParam& installParam,
+    const sptr<IStatusReceiver>& statusReceiver, const std::vector<std::string>& originHapPaths)
 {
     return nullptr;
 }
@@ -10064,7 +10064,8 @@ HWTEST_F(BmsBundleKitServiceTest, BundleStreamInstallerHostImplInit_0100, Functi
     BundleStreamInstallerHostImpl impl(installerId, installedUid);
     InstallParam installParam;
     sptr<IStatusReceiver> statusReceiver;
-    bool res = impl.Init(installParam, statusReceiver);
+    const std::vector<std::string> originHapPaths;
+    bool res = impl.Init(installParam, statusReceiver, originHapPaths);
     EXPECT_TRUE(res);
     impl.UnInit();
 }

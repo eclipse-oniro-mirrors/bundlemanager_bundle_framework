@@ -29,6 +29,7 @@ namespace OHOS {
         std::string bundleFilePath (reinterpret_cast<const char*>(data), size);
         InstallParam installParam;
         sptr<IStatusReceiver> statusReceiver;
+        std::vector<std::string> originHapPaths;
         bundleinstallerProxy.Install(bundleFilePath, installParam, statusReceiver);
 
         std::string bundleName (reinterpret_cast<const char*>(data), size);
@@ -46,7 +47,7 @@ namespace OHOS {
         int32_t appIndex = reinterpret_cast<uintptr_t>(data);
         bundleinstallerProxy.InstallSandboxApp(bundleName, dlpType, userId, appIndex);
         bundleinstallerProxy.UninstallSandboxApp(bundleName, appIndex, userId);
-        bundleinstallerProxy.CreateStreamInstaller(installParam, statusReceiver);
+        bundleinstallerProxy.CreateStreamInstaller(installParam, statusReceiver, originHapPaths);
         bundleinstallerProxy.DestoryBundleStreamInstaller(reinterpret_cast<uintptr_t>(data));
         bundleinstallerProxy.StreamInstall(bundleFilePaths, installParam, statusReceiver);
         return true;
