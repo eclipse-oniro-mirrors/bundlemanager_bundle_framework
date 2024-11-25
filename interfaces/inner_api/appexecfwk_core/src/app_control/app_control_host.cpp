@@ -107,7 +107,7 @@ ErrCode AppControlHost::HandleAddAppInstallControlRule(MessageParcel& data, Mess
 {
     std::vector<std::string> appIds;
     int32_t appIdSize = data.ReadInt32();
-    if (appIdSize > AppControlConstants::LIST_MAX_SIZE) {
+    if (appIdSize > AppControlConstants::LIST_MAX_SIZE || appIdSize < 0) {
         LOG_E(BMS_TAG_DEFAULT, "HandleAddAppInstallControlRule parameter is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
@@ -129,7 +129,7 @@ ErrCode AppControlHost::HandleDeleteAppInstallControlRule(MessageParcel& data, M
     AppInstallControlRuleType controlRuleType = static_cast<AppInstallControlRuleType>(data.ReadInt32());
     std::vector<std::string> appIds;
     int32_t appIdSize = data.ReadInt32();
-    if (appIdSize > AppControlConstants::LIST_MAX_SIZE) {
+    if (appIdSize > AppControlConstants::LIST_MAX_SIZE || appIdSize < 0) {
         LOG_E(BMS_TAG_DEFAULT, "HandleDeleteAppInstallControlRule parameter is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
