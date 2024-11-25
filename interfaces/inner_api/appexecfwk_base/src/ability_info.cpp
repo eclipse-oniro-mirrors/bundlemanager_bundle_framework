@@ -108,6 +108,7 @@ const char* JSON_KEY_ISOLATION_PROCESS = "isolationProcess";
 const char* JSON_KEY_CONTINUE_TYPE = "continueType";
 const char* JSON_KEY_APP_INDEX = "appIndex";
 const char* JSON_KEY_SKILLS = "skills";
+const std::string JSON_KEY_ORIENTATION_ID = "orientationId";
 const char* JSON_KEY_CONTINUE_BUNDLE_NAME = "continueBundleName";
 const uint16_t ABILITY_CAPACITY = 10240; // 10K
 }  // namespace
@@ -324,6 +325,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
         }
         skills.emplace_back(*abilitySkillPtr);
     }
+    orientationId = parcel.ReadUint32();
     return true;
 }
 
@@ -497,6 +499,7 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     for (auto &skill : skills) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &skill);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, orientationId);
     return true;
 }
 
@@ -629,7 +632,8 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_CONTINUE_TYPE, abilityInfo.continueType},
         {JSON_KEY_CONTINUE_BUNDLE_NAME, abilityInfo.continueBundleNames},
         {JSON_KEY_APP_INDEX, abilityInfo.appIndex},
-        {JSON_KEY_SKILLS, abilityInfo.skills}
+        {JSON_KEY_SKILLS, abilityInfo.skills},
+        {JSON_KEY_ORIENTATION_ID, abilityInfo.orientationId}
     };
     if (abilityInfo.maxWindowRatio == 0) {
         // maxWindowRatio in json string will be 0 instead of 0.0
@@ -1335,6 +1339,14 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_ORIENTATION_ID,
+        abilityInfo.orientationId,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("AbilityInfo from_json error : %{public}d", parseResult);
     }
