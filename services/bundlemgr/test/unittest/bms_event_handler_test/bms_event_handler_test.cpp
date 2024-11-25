@@ -1439,4 +1439,72 @@ HWTEST_F(BmsEventHandlerTest, InnerCheckSingletonBundleUserInfo_0100, Function |
         EXPECT_FALSE(ret);
     }
 }
+
+/**
+ * @tc.number: GetBundleNameByPreInstallPath_0100
+ * @tc.name: GetBundleNameByPreInstallPath
+ * @tc.desc: test GetBundleNameByPreInstallPath
+ */
+HWTEST_F(BmsEventHandlerTest, GetBundleNameByPreInstallPath_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::string path = "";
+        std::string bundleName = handler->GetBundleNameByPreInstallPath(path);
+        EXPECT_TRUE(bundleName.empty());
+
+        path = "/";
+        bundleName = handler->GetBundleNameByPreInstallPath(path);
+        EXPECT_TRUE(bundleName.empty());
+
+        path = "aaa/bbb";
+        bundleName = handler->GetBundleNameByPreInstallPath(path);
+        EXPECT_FALSE(bundleName.empty());
+    }
+}
+
+/**
+ * @tc.number: HandleInstallModuleUpdateSystemHsp_0100
+ * @tc.name: HandleInstallModuleUpdateSystemHsp
+ * @tc.desc: test HandleInstallModuleUpdateSystemHsp
+ */
+HWTEST_F(BmsEventHandlerTest, HandleInstallModuleUpdateSystemHsp_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::vector<std::string> appDirList;
+        bool ret = handler->HandleInstallModuleUpdateSystemHsp(appDirList);
+        EXPECT_TRUE(ret);
+
+        appDirList.emplace_back("/system/not/exist");
+        ret = handler->HandleInstallModuleUpdateSystemHsp(appDirList);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: CheckIsModuleUpdate_0100
+ * @tc.name: CheckIsModuleUpdate
+ * @tc.desc: test CheckIsModuleUpdate
+ */
+HWTEST_F(BmsEventHandlerTest, CheckIsModuleUpdate_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::string path;
+        bool ret = handler->CheckIsModuleUpdate(path);
+        EXPECT_FALSE(ret);
+
+        path = "module_update";
+        ret = handler->CheckIsModuleUpdate(path);
+        EXPECT_TRUE(ret);
+
+        path = "/module_update";
+        ret = handler->CheckIsModuleUpdate(path);
+        EXPECT_TRUE(ret);
+    }
+}
 } // OHOS
