@@ -638,6 +638,7 @@ private:
     void static ProcessCheckAppEl1DirTask();
     void CleanAllBundleShaderCache() const;
     void CleanTempDir() const;
+    bool CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo);
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.
