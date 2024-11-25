@@ -278,7 +278,7 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
             } },
         { BMSEventType::APP_CONTROL_RULE,
             [](const EventInfo& eventInfo) {
-                InnerSendAppConitolRule(eventInfo);
+                InnerSendAppControlRule(eventInfo);
             } }
     };
 
@@ -614,7 +614,7 @@ void InnerEventReport::InnerSendBmsDiskSpaceEvent(const EventInfo& eventInfo)
         OPERATION_TYPE, eventInfo.operationType);
 }
 
-void InnerEventReport::InnerSendAppConitolRule(const EventInfo& eventInfo)
+void InnerEventReport::InnerSendAppControlRule(const EventInfo& eventInfo)
 {
     InnerEventWrite(
         APP_CONTROL_RULE,

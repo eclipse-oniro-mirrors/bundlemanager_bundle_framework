@@ -299,7 +299,7 @@ public:
      * @brief Send info when add or remove app contitol rule.
      * @param eventInfo report info.
      */
-    static void SendAppConitolRuleEvent(const EventInfo& eventInfo);
+    static void SendAppControlRuleEvent(const EventInfo& eventInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
