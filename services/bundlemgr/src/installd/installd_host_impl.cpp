@@ -68,6 +68,7 @@ constexpr const char* CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2 = "/data/service/el2/%/backup/bundles/";
 constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 constexpr const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
+constexpr const char* SHAREFILES_DATA_PATH_EL2 = "/data/app/el2/%/sharefiles/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1 = "/data/service/el1/%/backup/bundles/";
 constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
@@ -386,6 +387,58 @@ static void CreateCloudDir(const std::string &bundleName, const int32_t userid, 
         });
     }
 }
+
+/**
+ * @brief Create bundle data dir(BUNDLE_DATA_DIR) in /data/app/el2/userid/sharefiles/
+ * @return ErrCode
+ */
+ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &createDirParam)
+{
+    std::string bundleName = createDirParam.bundleName;
+    LOG_I(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 begin for %{public}s", bundleName.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 installd permission denied, only used for foundation");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    ErrCode res = ERR_OK;
+    bool isExist = false;
+    FileStat fileStat;
+    int32_t uid = createDirParam.uid;
+    int32_t gid = createDirParam.gid;
+    std::string shareFilesDataDir = SHAREFILES_DATA_PATH_EL2;
+    shareFilesDataDir.replace(shareFilesDataDir.find("%"), 1, std::to_string(createDirParam.userId));
+    // check /data/app/el2/userid/sharefiles exist or not
+    if (access(shareFilesDataDir.c_str(), F_OK) != 0) {
+        LOG_W(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 No %{public}s, bundleName:%{public}s",
+            shareFilesDataDir.c_str(), bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+    }
+    isExist = true;
+    std::string bundleShareFilesDataDir = shareFilesDataDir + bundleName;
+    if (!InstalldOperator::MkOwnerDir(bundleShareFilesDataDir, S_IRWXU, uid, gid)) {
+        LOG_E(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 MkOwnerDir %{public}s failed: %{public}d",
+            bundleShareFilesDataDir.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+    }
+    for (const auto &dir : BUNDLE_DATA_DIR) {
+        std::string childBundleDataDir = bundleShareFilesDataDir + dir;
+        if (!InstalldOperator::MkOwnerDir(childBundleDataDir, S_IRWXU, uid, gid)) {
+            LOG_W(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 MkOwnerDir [%{public}s] failed: %{public}d",
+                childBundleDataDir.c_str(), errno);
+        }
+    }
+    unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
+        createDirParam.isDlpSandbox);
+    res = SetDirApl(bundleShareFilesDataDir, bundleName, createDirParam.apl, hapFlags);
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 SetDirApl failed: %{public}s, errno: %{public}d",
+            bundleShareFilesDataDir.c_str(), res);
+        return res;
+    }
+    LOG_I(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 succeed for %{public}s", bundleName.c_str());
+    return res;
+}
+
 ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<CreateDirParam> &createDirParams)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
@@ -467,6 +520,10 @@ ErrCode InstalldHostImpl::AclSetExtensionDirs(bool debug, const std::string &par
 
 ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
+    const std::string bundleName = createDirParam.bundleName;
+    const int32_t userId = createDirParam.userId;
+    LOG_I(BMS_TAG_INSTALLD, "CreateBundleDataDir %{public}s begin, %{public}d",
+        bundleName.c_str(), userId);
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
@@ -474,7 +531,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     }
     if (createDirParam.bundleName.empty() || createDirParam.userId < 0 ||
         createDirParam.uid < 0 || createDirParam.gid < 0) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function CreateBundleDataDir with invalid param, bundleName %{public}s "
+        LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir invalid param, bundleName %{public}s "
             "userId %{public}d uid %{public}d gid %{public}d", createDirParam.bundleName.c_str(),
             createDirParam.userId, createDirParam.uid, createDirParam.gid);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -486,7 +543,6 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             (el == ServiceConstants::BUNDLE_EL[0])) {
             continue;
         }
-
         std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::BASE;
         if (access(bundleDataDir.c_str(), F_OK) != 0) {
             LOG_W(BMS_TAG_INSTALLD, "Base directory %{public}s does not existed, bundleName:%{public}s",
@@ -510,7 +566,8 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             for (const auto &dir : BUNDLE_DATA_DIR) {
                 if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, mode,
                     createDirParam.uid, createDirParam.gid)) {
-                    LOG_E(BMS_TAG_INSTALLD, "CreateBundledatadir MkOwnerDir el2 failed errno:%{public}d", errno);
+                    LOG_E(BMS_TAG_INSTALLD, "CreateBundledatadir MkOwnerDir el2 failed errno:%{public}d",
+                        errno);
                     return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
                 }
             }
@@ -526,12 +583,16 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                 ServiceConstants::LOG_DIR_GID, true) != ERR_OK) {
                 LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
             }
+            std::string shareFilesDataDir = SHAREFILES_DATA_PATH_EL2;
+            shareFilesDataDir.replace(shareFilesDataDir.find("%"), 1, std::to_string(createDirParam.userId));
+            CreateSharefilesDataDirEl2(createDirParam);
         }
         ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
             return ret;
         }
+        
         std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
         std::string databaseDir = databaseParentDir + createDirParam.bundleName;
         mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG | S_ISGID);
@@ -591,12 +652,13 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
     }
+
     CreateNewBackupExtHomeDir(createDirParam.bundleName,
         createDirParam.userId, createDirParam.uid, newBundleBackupDir, DirType::DIR_EL1);
     ret = SetDirApl(newBundleBackupDir, createDirParam.bundleName, createDirParam.apl,
         createDirParam.isPreInstallApp, createDirParam.debug);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir DIR_EL1 SetDirApl failed, errno is %{public}d", ret);
+        LOG_E(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir DIR_EL1 SetDirApl failed: %{public}d", ret);
     }
 
     CreateShareDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, createDirParam.gid);
@@ -779,6 +841,19 @@ static void CleanCloudDir(const std::string &bundleName, const int userid)
     }
 }
 
+static void CleanBundleDataSubDirs(const std::string &bundleDataDir)
+{
+    for (const auto &dir : BUNDLE_DATA_DIR) {
+        std::string subDir = bundleDataDir + dir;
+        if (!InstalldOperator::DeleteFiles(subDir)) {
+            LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed: %{public}d", subDir.c_str(), errno);
+        }
+    }
+    if (!InstalldOperator::DeleteFilesExceptDirs(bundleDataDir, BUNDLE_DATA_DIR)) {
+        LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
+    }
+}
+
 static void CleanBundleDataForEl2(const std::string &bundleName, const int userid, const int appIndex)
 {
     std::string suffixName = bundleName;
@@ -796,15 +871,11 @@ static void CleanBundleDataForEl2(const std::string &bundleName, const int useri
         LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
     }
     std::string bundleDataDir = dataDir + ServiceConstants::BASE + suffixName;
-    for (const auto &dir : BUNDLE_DATA_DIR) {
-        std::string subDir = bundleDataDir + dir;
-        if (!InstalldOperator::DeleteFiles(subDir)) {
-            LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", subDir.c_str(), errno);
-        }
-    }
-    if (!InstalldOperator::DeleteFilesExceptDirs(bundleDataDir, BUNDLE_DATA_DIR)) {
-        LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
-    }
+    CleanBundleDataSubDirs(bundleDataDir);
+
+    // add data sharefiles bundle dir to be cleaned
+    std::string dataShareFilesBundleDir = dataDir + ServiceConstants::SHAREFILES + suffixName;
+    CleanBundleDataSubDirs(dataShareFilesBundleDir);
 }
 
 ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int32_t userId,
@@ -978,10 +1049,21 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
         cachePaths.push_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
             ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE +
             bundleNameDir + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
+        if (ServiceConstants::BUNDLE_EL[1] == el) {
+            cachePaths.push_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES +
+                bundleNameDir + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
+        }
         for (const auto &moduleName : moduleNameList) {
             std::string moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
                 ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir +
                 ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
+            cachePaths.push_back(moduleCachePath);
+            LOG_D(BMS_TAG_INSTALLD, "GetBundleStats, add module cache path: %{public}s", moduleCachePath.c_str());
+            moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES +
+                bundleNameDir + ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR +
+                Constants::CACHE_DIR;
             cachePaths.push_back(moduleCachePath);
             LOG_D(BMS_TAG_INSTALLD, "GetBundleStats, add module cache path: %{public}s", moduleCachePath.c_str());
         }
@@ -1917,20 +1999,28 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(
     const std::string &bundleName, const int32_t userId, const bool async)
 {
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        std::string bundleDataDir = GetBundleDataDir(el, userId) + ServiceConstants::BASE + bundleName;
+        std::string dataDir = GetBundleDataDir(el, userId);
+        std::string bundleDataDir = dataDir + ServiceConstants::BASE + bundleName;
         if (!InstalldOperator::DeleteDirFlexible(bundleDataDir, async)) {
             LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
-        std::string databaseDir = GetBundleDataDir(el, userId) + ServiceConstants::DATABASE + bundleName;
+        std::string databaseDir = dataDir + ServiceConstants::DATABASE + bundleName;
         if (!InstalldOperator::DeleteDirFlexible(databaseDir, async)) {
             LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
         if (el == ServiceConstants::BUNDLE_EL[1]) {
-            std::string logDir = GetBundleDataDir(el, userId) + ServiceConstants::LOG + bundleName;
+            std::string logDir = dataDir + ServiceConstants::LOG + bundleName;
             if (!InstalldOperator::DeleteDir(logDir)) {
                 LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
+                return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+            }
+
+            // remove SHAREFILES_DATA_PATH_EL2
+            std::string shareFilesDataDir = dataDir + ServiceConstants::SHAREFILES + bundleName;
+            if (!InstalldOperator::DeleteDir(shareFilesDataDir)) {
+                LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed: %{public}d", shareFilesDataDir.c_str(), errno);
                 return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
             }
         }

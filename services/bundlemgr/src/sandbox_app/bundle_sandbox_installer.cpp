@@ -72,7 +72,8 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     userId_ = userId;
 
     if (!dataMgr_->HasUserId(userId_)) {
-        APP_LOGE("the user %{public}d does not exist when when install sandbox application", userId_);
+        APP_LOGE("the user %{public}d does not exist when when install sandbox application",
+            userId_);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_USER_NOT_EXIST;
     }
 

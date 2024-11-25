@@ -36,6 +36,7 @@ const std::string THIRD_BUNDLE_PATH = "/data/test/bms_bundle/";
 const std::string SYSTEM_BUNDLE_PATH = "/system/app/";
 const std::string CODE_ROOT_PATH = "/data/app/el1/bundle/public/";
 const std::string DATA_ROOT_PATH = "/data/app/el2/100/base/";
+const std::string DATA_EL2_SHAREFILES_PATH = "/data/app/el2/100/sharefiles/";
 const std::string THIRD_BASE_BUNDLE_NAME = "com.third.hiworld.example";
 const std::string SYSTEM_BASE_BUNDLE_NAME = "com.system.hiworld.example";
 const std::string MSG_SUCCESS = "[SUCCESS]";
@@ -45,6 +46,13 @@ const int TIMEOUT = 10;
 const int32_t USERID = 100;
 const int32_t USERID_ERROR = 10000;
 constexpr const char* BUNDLE_DATA_BASE_FILE = "/data/bundlemgr/bmsdb.json";
+const std::vector<std::string> BUNDLE_DATA_SUB_DIRS = {
+    "/cache",
+    "/files",
+    "/temp",
+    "/preferences",
+    "/haps"
+};
 }  // namespace
 
 namespace OHOS {
@@ -150,11 +158,14 @@ public:
     void CheckInstallIsSuccess(const std::string &bundleName, const std::string &modulePackage,
         const std::vector<std::string> &abilityNames) const;
     void CheckFileNonExist(const std::string &bundleName) const;
+    static void CheckDataAppEl2DirsExist(const std::string &bundleName);
+    static void CheckDataAppEl2DirsNotExist(const std::string &bundleName);
     static sptr<IBundleMgr> GetBundleMgrProxy();
     static sptr<IBundleInstaller> GetInstallerProxy();
     void ClearJsonFile() const;
     bool UpdateBundleForSelf(const std::vector<std::string> &bundleFilePaths) const;
 };
+
 
 sptr<IBundleMgr> BmsInstallSystemTest::GetBundleMgrProxy()
 {
@@ -337,6 +348,32 @@ bool BmsInstallSystemTest::CheckFilePath(const std::string &checkFilePath) const
         return false;
     }
     return true;
+}
+
+void BmsInstallSystemTest::CheckDataAppEl2DirsExist(const std::string &bundleName)
+{
+    bool isExist = true;
+    if (access(DATA_EL2_SHAREFILES_PATH.c_str(), F_OK) != 0) {
+        isExist = false;
+        std::cout << "the sharefiles dir doesn't exist:" << DATA_EL2_SHAREFILES_PATH << std::endl;
+    }
+    if (isExist) {
+        auto dataPath = DATA_EL2_SHAREFILES_PATH + bundleName;
+        int32_t ret = access(dataPath.c_str(), F_OK);
+        EXPECT_EQ(ret, 0);
+        for (const auto &dir : BUNDLE_DATA_SUB_DIRS) {
+            std::string childBundleDataDir = dataPath + dir;
+            ret = access(childBundleDataDir.c_str(), F_OK);
+            EXPECT_EQ(ret, 0);
+        }
+    }
+}
+
+void BmsInstallSystemTest::CheckDataAppEl2DirsNotExist(const std::string &bundleName)
+{
+    auto dataPath = DATA_EL2_SHAREFILES_PATH + bundleName;
+    int result1 = access(dataPath.c_str(), F_OK);
+    EXPECT_NE(result1, 0) << "the dir exist: " << dataPath;
 }
 
 void BmsInstallSystemTest::CheckInstallIsSuccess(
@@ -1331,6 +1368,56 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3300, Function | MediumTest | Level2)
     EXPECT_FALSE(getInfoResult);
     std::cout << "END BMS_Install_3300" << std::endl;
 }
+
+/**
+ * @tc.number: BMS_Install_3400
+ * @tc.name: test the installation of a third-party bundle and check /data/app/el2/userid/sharefiles
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a third-party bundle
+ *           2.install the bundle
+ *           3.check the sharefiles path
+ */
+HWTEST_F(BmsInstallSystemTest, BMS_Install_3400, Function | MediumTest | Level2)
+{
+    std::cout << "START BMS_Install_3400" << std::endl;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
+    CheckDataAppEl2DirsExist(bundleName);
+
+    std::string uninstallMsg;
+    UninstallBundle(bundleName, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+    std::cout << "END BMS_Install_3400" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Install_3500
+ * @tc.name: test the installation of a third-party bundle and check /data/app/el2/userid/sharefiles when be uninstalled
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a third-party bundle
+ *           2.install the bundle
+ *           3.uninstall the bundle
+ *           4.check the sharefiles path no exist
+ */
+HWTEST_F(BmsInstallSystemTest, BMS_Install_3500, Function | MediumTest | Level2)
+{
+    std::cout << "START BMS_Install_3500" << std::endl;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
+    CheckDataAppEl2DirsExist(bundleName);
+
+    std::string uninstallMsg;
+    UninstallBundle(bundleName, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+    CheckDataAppEl2DirsNotExist(bundleName);
+    std::cout << "END BMS_Install_3500" << std::endl;
+}
+
 /**
  * @tc.number: BMS_InstallProgressInfo_0100
  * @tc.name: test the Installation progress of a third-party bundle

@@ -636,6 +636,8 @@ private:
     bool InnerCheckSingletonBundleUserInfo(const InnerBundleInfo &bundleInfo);
     void ProcessCheckAppEl1Dir();
     void static ProcessCheckAppEl1DirTask();
+    // check el2 data dir for all userids's bundleinfos
+    void CheckAndCreateShareFilesSubDataDirs();
     void CleanAllBundleShaderCache() const;
     void CleanTempDir() const;
     bool CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo);
