@@ -169,7 +169,7 @@ void BundleMonitorCallback::OnReceiveEvent(const EventFwk::CommonEventData &even
     std::string bundleName = want.GetElement().GetBundleName();
     int userId = want.GetIntParam(Constants::USER_ID, Constants::INVALID_USERID);
     int32_t appIndex = want.GetIntParam(Constants::APP_INDEX, Constants::DEFAULT_APP_INDEX);
-    APP_LOGD("OnReceiveEvent action = %{public}s, bundle = %{public}s, userId = %{public}d, appIndex = %{public}d",
+    APP_LOGI_NOFUNC("monitor callback OnReceiveEvent action:%{public}s -n %{public}s -u %{public}d -i %{public}d",
         action.c_str(), bundleName.c_str(), userId, appIndex);
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED) {
         BundleMonitorEmit(ADD, bundleName, userId, appIndex);
