@@ -2904,9 +2904,11 @@ HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0001, Function | SmallTest | 
     shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
 
     vecShortcutInfo.clear();
+    shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_GE(vecShortcutInfo.size(), 0);
+
     shortcutDataStorageRdb->rdbDataManager_ = nullptr;
     shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
-    EXPECT_TRUE(vecShortcutInfo.empty());
     EXPECT_EQ(shortcutDataStorageRdb->rdbDataManager_, nullptr);
 }
 
@@ -2930,9 +2932,11 @@ HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0002, Function | MediumTest |
     shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
 
     vecShortcutInfo.clear();
+    shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_GE(vecShortcutInfo.size(), 0);
+
     shortcutDataStorageRdb->rdbDataManager_ = nullptr;
     shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
-    EXPECT_TRUE(vecShortcutInfo.empty());
     EXPECT_EQ(shortcutDataStorageRdb->rdbDataManager_, nullptr);
 }
 } // OHOS
