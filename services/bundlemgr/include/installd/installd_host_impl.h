@@ -69,6 +69,8 @@ public:
     virtual ErrCode PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData) override;
 
     virtual ErrCode StopAOT() override;
+
+    virtual ErrCode DeleteUninstallTmpDirs(const std::vector<std::string> &dirs) override;
     /**
      * @brief Rename the module directory from temporaily path to the real path.
      * @param oldPath Indicates the old path name.
@@ -90,8 +92,8 @@ public:
      * @param userid Indicates userid to be set to the directory.
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
-    virtual ErrCode RemoveBundleDataDir(
-        const std::string &bundleName, const int32_t userId, bool isAtomicService = false) override;
+    virtual ErrCode RemoveBundleDataDir(const std::string &bundleName, const int32_t userId,
+        bool isAtomicService = false, const bool async = false) override;
     /**
      * @brief Remove a module data directory.
      * @param ModuleDir Indicates the module data directory path that to be created.
@@ -257,8 +259,9 @@ private:
     ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         unsigned int hapFlags);
     unsigned int GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox);
-    ErrCode InnerRemoveAtomicServiceBundleDataDir(const std::string &bundleName, const int32_t userId);
-    ErrCode InnerRemoveBundleDataDir(const std::string &bundleName, const int32_t userId);
+    ErrCode InnerRemoveAtomicServiceBundleDataDir(
+        const std::string &bundleName, const int32_t userId, const bool async);
+    ErrCode InnerRemoveBundleDataDir(const std::string &bundleName, const int32_t userId, const bool async);
     ErrCode AclSetDir(bool debug, const std::string &dir, bool setAccess, bool setDefault);
     ErrCode AclSetExtensionDirs(bool debug, const std::string &parentDir,
         const std::vector<std::string> &extensionDirs, bool setAccess, bool setDefault);

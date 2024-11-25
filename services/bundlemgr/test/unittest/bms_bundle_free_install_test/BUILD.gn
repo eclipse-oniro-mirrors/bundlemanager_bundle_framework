@@ -127,10 +127,13 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     defines += [ "ACCOUNT_ENABLE" ]
   }
   if (bundle_framework_quick_fix) {
-    include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
-    sources += quick_fix
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
   }
+  include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
+  sources += quick_fix
+  sources -=
+      [ "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp" ]
+
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -154,8 +157,6 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   if (bundle_framework_quick_fix) {
-    sources -=
-        [ "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp" ]
   }
   sources += [
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
@@ -303,10 +304,13 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     defines += [ "ACCOUNT_ENABLE" ]
   }
   if (bundle_framework_quick_fix) {
-    include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
-    sources += quick_fix
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
   }
+  include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
+  sources += quick_fix
+  sources -=
+      [ "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp" ]
+
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -330,8 +334,6 @@ ohos_unittest("BmsBundleFreeInstallTest") {
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   if (bundle_framework_quick_fix) {
-    sources -=
-        [ "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp" ]
   }
   sources += [
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",

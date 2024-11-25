@@ -72,7 +72,8 @@ public:
      * @param userid Indicates userid to be set to the directory.
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
-    ErrCode RemoveBundleDataDir(const std::string &bundleName, const int32_t userId, bool isAtomicService = false);
+    ErrCode RemoveBundleDataDir(const std::string &bundleName, const int32_t userId,
+        bool isAtomicService = false, const bool async = false);
     /**
      * @brief Remove a module data directory.
      * @param ModuleDir Indicates the module data directory path that to be created.
@@ -196,6 +197,8 @@ public:
     ErrCode PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData);
 
     ErrCode StopAOT();
+
+    ErrCode DeleteUninstallTmpDirs(const std::vector<std::string> &dirs);
 
     ErrCode VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
 

@@ -397,6 +397,7 @@ private:
      * @brief Set the flag indicates that all system and vendor applications installed.
      * @return
      */
+    void CreateAppInstallDir() const;
     void SetAllInstallFlag() const;
     /**
      * @brief Check and parse hap.
@@ -639,6 +640,7 @@ private:
     void CheckAndCreateShareFilesSubDataDirs();
     void CleanAllBundleShaderCache() const;
     void CleanTempDir() const;
+    bool CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo);
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.

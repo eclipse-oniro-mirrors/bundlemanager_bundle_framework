@@ -259,7 +259,7 @@ private:
      * @param isKeepData Indicates that whether to save data.
      * @return Returns ERR_OK if the bundle removed successfully; returns error code otherwise.
      */
-    ErrCode RemoveBundle(InnerBundleInfo &info, bool isKeepData);
+    ErrCode RemoveBundle(InnerBundleInfo &info, bool isKeepData, const bool async = false);
     /**
      * @brief Create the code and data directories of a bundle.
      * @param info Indicates the InnerBundleInfo object of a bundle.
@@ -279,7 +279,7 @@ private:
      * @param isKeepData Indicates that whether to save data.
      * @return Returns ERR_OK if the bundle directories removed successfully; returns error code otherwise.
      */
-    ErrCode RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData);
+    ErrCode RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData, const bool async = false);
     /**
      * @brief Remove the code and data directories of a module in a bundle.
      * @param info Indicates the InnerBundleInfo object of a bundle.
@@ -508,7 +508,8 @@ private:
      * @param needRemoveData Indicates need remove data or not.
      * @return Returns BundleUserMgr.
      */
-    ErrCode RemoveBundleUserData(InnerBundleInfo &innerBundleInfo, bool needRemoveData = true);
+    ErrCode RemoveBundleUserData(
+        InnerBundleInfo &innerBundleInfo, bool needRemoveData = true, const bool async = false);
     /**
      * @brief Create bundle user data.
      * @param innerBundleInfo Indicates the bundle type of the application.
@@ -526,7 +527,8 @@ private:
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
-    ErrCode RemoveBundleDataDir(const InnerBundleInfo &info, bool forException = false);
+    ErrCode RemoveBundleDataDir(
+        const InnerBundleInfo &info, bool forException = false, const bool async = false);
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     ErrCode UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo);
@@ -562,6 +564,7 @@ private:
     void SaveHapPathToRecords(
         bool isPreInstallApp, const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void OnSingletonChange(bool killProcess);
+    void RestoreHaps(const std::vector<std::string> &bundlePaths, const InstallParam &installParam);
     bool AllowSingletonChange(const std::string &bundleName);
     void MarkPreInstallState(const std::string &bundleName, bool isUninstalled);
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
@@ -640,6 +643,8 @@ private:
     void RemoveOldHapIfOTA(const InstallParam &installParam,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
     ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
+    ErrCode ParseHapPaths(const InstallParam &installParam, const std::vector<std::string> &inBundlePaths,
+        std::vector<std::string> &parsedPaths);
     ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
     ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);
     ErrCode MoveFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
@@ -746,7 +751,7 @@ private:
     void SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,
         const UninstallBundleInfo &uninstallBundleInfo);
     void DeleteUninstallBundleInfo(const std::string &bundleName);
-    void MarkInstallFinish();
+    ErrCode MarkInstallFinish();
     bool IsArkWeb(const std::string &bundleName) const;
 #ifdef WEBVIEW_ENABLE
     ErrCode VerifyArkWebInstall(const std::string &bundleName);
@@ -757,6 +762,8 @@ private:
 
     bool DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo);
     void ProcessAddResourceInfo(const InstallParam &installParam, const std::string &bundleName, int32_t userId);
+    bool FetchInnerBundleInfo(InnerBundleInfo &info);
+    ErrCode CheckShellCanInstallPreApp(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

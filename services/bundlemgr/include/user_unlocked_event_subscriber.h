@@ -46,6 +46,7 @@ public:
     static void ProcessExtensionDir(const BundleInfo &bundleInfo, std::vector<std::string> &dirs);
     static void CreateSharefilesSubDataDirs(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
     static void ProcessNewBackupDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
+    static void DeleteUninstallTmpDirs(const int32_t userId);
 private:
     static void CheckPathAttribute(const std::string &path, const BundleInfo &bundleInfo, bool &isExist);
     static void CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t userId);
@@ -54,6 +55,7 @@ private:
     static bool CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_t userId);
     static void CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t userId);
     static bool CreateEl5Dir(const CreateDirParam &createDirParam);
+    static std::vector<std::string> GetBundleDataDirs(const int32_t userId);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

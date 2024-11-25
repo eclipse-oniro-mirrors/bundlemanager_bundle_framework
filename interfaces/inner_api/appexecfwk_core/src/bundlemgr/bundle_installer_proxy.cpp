@@ -263,7 +263,7 @@ ErrCode BundleInstallerProxy::UninstallSandboxApp(const std::string &bundleName,
 }
 
 sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const InstallParam &installParam,
-    const sptr<IStatusReceiver> &statusReceiver)
+    const sptr<IStatusReceiver> &statusReceiver, const std::vector<std::string> &originHapPaths)
 {
     LOG_D(BMS_TAG_INSTALLER, "create stream installer begin");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -289,6 +289,11 @@ sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const I
         return nullptr;
     }
     if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
+        LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
+        return nullptr;
+    }
+    if (!data.WriteStringVector(originHapPaths)) {
         LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
@@ -377,19 +382,21 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
-    sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(installParam, statusReceiver);
+    sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(installParam, statusReceiver, realPaths);
     if (streamInstaller == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "stream install failed due to nullptr stream installer");
         return ERR_OK;
     }
     ErrCode res = ERR_OK;
     // copy hap or hsp file to bms service
-    for (const auto &path : realPaths) {
-        res = WriteHapFileToStream(streamInstaller, path);
-        if (res != ERR_OK) {
-            DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-            LOG_E(BMS_TAG_INSTALLER, "WriteHapFileToStream failed due to %{public}d", res);
-            return res;
+    if (!installParam.IsRenameInstall()) {
+        for (const auto &path : realPaths) {
+            res = WriteHapFileToStream(streamInstaller, path);
+            if (res != ERR_OK) {
+                DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
+                LOG_E(BMS_TAG_INSTALLER, "WriteHapFileToStream failed due to %{public}d", res);
+                return res;
+            }
         }
     }
     // copy sig file to bms service

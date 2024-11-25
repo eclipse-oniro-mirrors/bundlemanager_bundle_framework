@@ -78,6 +78,7 @@ enum class InstalldInterfaceCode : uint32_t {
     GET_EXTENSION_SANDBOX_TYPE_LIST,
     ADD_USER_DIR_DELETE_DFX,
     MOVE_HAP_TO_CODE_DIR,
+    DELETE_UNINSTALL_TMP_DIRS,
 };
 
 } // namespace AppExecFwk

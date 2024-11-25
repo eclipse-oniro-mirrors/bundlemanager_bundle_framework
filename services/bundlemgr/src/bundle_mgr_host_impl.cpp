@@ -59,6 +59,8 @@ const std::string FUNCATION_BATCH_BUNDLE_INFO = "BundleMgrHostImpl::BatchGetBund
 const std::string FUNCATION_GET_BUNDLE_INFO = "BundleMgrHostImpl::GetBundleInfo";
 const std::string FUNCATION_GET_BUNDLE_INFO_V9 = "BundleMgrHostImpl::GetBundleInfoV9";
 const std::string FUNCATION_GET_BUNDLE_INFO_FOR_SELF = "BundleMgrHostImpl::GetBundleInfoForSelf";
+const std::string CLONE_APP_DIR_PREFIX = "+clone-";
+const std::string PLUS = "+";
 }
 
 bool BundleMgrHostImpl::GetApplicationInfo(
@@ -4178,8 +4180,9 @@ void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hap
     auto typeIter = APP_DISTRIBUTION_TYPE_MAPS.find(provisionInfo.distributionType);
     if (typeIter == APP_DISTRIBUTION_TYPE_MAPS.end()) {
         distributionType = Constants::APP_DISTRIBUTION_TYPE_NONE;
+    } else {
+        distributionType = typeIter->second;
     }
-    distributionType = typeIter->second;
     info.SetAppDistributionType(distributionType);
 }
 
@@ -4600,22 +4603,39 @@ std::string BundleMgrHostImpl::GetCallerName()
     return callerName;
 }
 
+ErrCode GetDirForApp(const std::string &bundleName, const int32_t appIndex, std::string &dataDir)
+{
+    APP_LOGD("start GetDirForApp");
+    if (appIndex < 0) {
+        return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+    } else if (appIndex == 0) {
+        dataDir = bundleName;
+    } else {
+        dataDir = CLONE_APP_DIR_PREFIX + std::to_string(appIndex) + PLUS + bundleName;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHostImpl::GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
     std::string &dataDir)
 {
     APP_LOGD("start GetDirByBundleNameAndAppIndex");
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("Verify permission failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    BundleType type;
+    dataMgr->GetBundleType(bundleName, type);
+    if (type != BundleType::ATOMIC_SERVICE) {
+        return GetDirForApp(bundleName, appIndex, dataDir);
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)
+        && !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return dataMgr->GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
 }

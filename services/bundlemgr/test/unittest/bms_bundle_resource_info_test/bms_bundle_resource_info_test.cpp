@@ -19,6 +19,8 @@
 
 #include "bundle_resource_info.h"
 
+#include "string_ex.h"
+
 using namespace testing::ext;
 
 namespace OHOS {
@@ -61,6 +63,101 @@ HWTEST_F(BmsBundleResourceInfoTest, ReadFromParcel_0100, Function | MediumTest |
 }
 
 /**
+ * @tc.number: ReadFromParcel_0200
+ * @tc.name: test the ReadFromParcel
+ * @tc.desc: 1. system running normally
+ *           2. test ReadFromParcel
+ */
+HWTEST_F(BmsBundleResourceInfoTest, ReadFromParcel_0200, Function | MediumTest | Level1)
+{
+    BundleResourceInfo bundleResourceInfo;
+    Parcel parcel;
+    std::string bundleName = "bundleName";
+    parcel.WriteString16(Str8ToStr16(bundleName));
+    parcel.WriteInt32(1);
+
+    auto res = bundleResourceInfo.ReadFromParcel(parcel);
+    EXPECT_FALSE(res);
+    EXPECT_EQ(bundleResourceInfo.bundleName, bundleName);
+}
+
+/**
+ * @tc.number: ReadFromParcel_0300
+ * @tc.name: test the ReadFromParcel
+ * @tc.desc: 1. system running normally
+ *           2. test ReadFromParcel
+ */
+HWTEST_F(BmsBundleResourceInfoTest, ReadFromParcel_0300, Function | MediumTest | Level1)
+{
+    BundleResourceInfo bundleResourceInfo;
+    Parcel parcel;
+    std::string bundleName = "bundleName";
+    parcel.WriteString16(Str8ToStr16(bundleName));
+    std::string label = "label";
+    parcel.WriteString16(Str8ToStr16(label));
+    parcel.WriteInt32(1);
+
+    auto res = bundleResourceInfo.ReadFromParcel(parcel);
+    EXPECT_FALSE(res);
+    EXPECT_EQ(bundleResourceInfo.bundleName, bundleName);
+    EXPECT_EQ(bundleResourceInfo.label, label);
+}
+
+/**
+ * @tc.number: ReadFromParcel_0400
+ * @tc.name: test the ReadFromParcel
+ * @tc.desc: 1. system running normally
+ *           2. test ReadFromParcel
+ */
+HWTEST_F(BmsBundleResourceInfoTest, ReadFromParcel_0400, Function | MediumTest | Level1)
+{
+    BundleResourceInfo bundleResourceInfo;
+    Parcel parcel;
+    std::string bundleName = "bundleName";
+    parcel.WriteString16(Str8ToStr16(bundleName));
+    std::string label = "label";
+    parcel.WriteString16(Str8ToStr16(label));
+    std::string icon = "icon";
+    parcel.WriteString16(Str8ToStr16(icon));
+    parcel.WriteString16(Str8ToStr16(icon));
+
+    auto res = bundleResourceInfo.ReadFromParcel(parcel);
+    EXPECT_FALSE(res);
+    EXPECT_EQ(bundleResourceInfo.bundleName, bundleName);
+    EXPECT_EQ(bundleResourceInfo.label, label);
+    EXPECT_EQ(bundleResourceInfo.icon, icon);
+}
+
+/**
+ * @tc.number: ReadFromParcel_0500
+ * @tc.name: test the ReadFromParcel
+ * @tc.desc: 1. system running normally
+ *           2. test ReadFromParcel
+ */
+HWTEST_F(BmsBundleResourceInfoTest, ReadFromParcel_0500, Function | MediumTest | Level1)
+{
+    BundleResourceInfo bundleResourceInfo;
+    Parcel parcel;
+    std::string bundleName = "bundleName";
+    parcel.WriteString16(Str8ToStr16(bundleName));
+    std::string label = "label";
+    parcel.WriteString16(Str8ToStr16(label));
+    std::string icon = "icon";
+    parcel.WriteString16(Str8ToStr16(icon));
+    parcel.WriteInt32(0);
+    parcel.WriteInt32(0);
+    int32_t appIndex = 1;
+    parcel.WriteInt32(appIndex);
+
+    auto res = bundleResourceInfo.ReadFromParcel(parcel);
+    EXPECT_TRUE(res);
+    EXPECT_EQ(bundleResourceInfo.bundleName, bundleName);
+    EXPECT_EQ(bundleResourceInfo.label, label);
+    EXPECT_EQ(bundleResourceInfo.icon, icon);
+    EXPECT_EQ(bundleResourceInfo.appIndex, appIndex);
+}
+
+/**
  * @tc.number: Marshalling_0100
  * @tc.name: test the Marshalling
  * @tc.desc: 1. system running normally
@@ -90,6 +187,93 @@ HWTEST_F(BmsBundleResourceInfoTest, UnMarshalling_0100, Function | MediumTest | 
     std::string element = "testElement";
     auto res = bundleResourceInfo.Unmarshalling(parcel);
     ASSERT_EQ(res, nullptr);
+}
+
+/**
+ * @tc.number: UnMarshalling_0200
+ * @tc.name: test the UnMarshalling
+ * @tc.desc: 1. system running normally
+ *           2. test UnMarshalling
+ */
+HWTEST_F(BmsBundleResourceInfoTest, UnMarshalling_0200, Function | MediumTest | Level1)
+{
+    Parcel parcel;
+    std::string bundleName = "bundleName";
+    parcel.WriteString16(Str8ToStr16(bundleName));
+    parcel.WriteInt32(1);
+    auto res = BundleResourceInfo::Unmarshalling(parcel);
+    ASSERT_EQ(res, nullptr);
+}
+/**
+ * @tc.number: UnMarshalling_0300
+ * @tc.name: test the UnMarshalling
+ * @tc.desc: 1. system running normally
+ *           2. test UnMarshalling
+ */
+HWTEST_F(BmsBundleResourceInfoTest, UnMarshalling_0300, Function | MediumTest | Level1)
+{
+    Parcel parcel;
+    std::string bundleName = "bundleName";
+    parcel.WriteString16(Str8ToStr16(bundleName));
+    std::string label = "label";
+    parcel.WriteString16(Str8ToStr16(label));
+    parcel.WriteInt32(1);
+
+    auto res = BundleResourceInfo::Unmarshalling(parcel);
+    ASSERT_EQ(res, nullptr);
+}
+
+/**
+ * @tc.number: UnMarshalling_0400
+ * @tc.name: test the UnMarshalling
+ * @tc.desc: 1. system running normally
+ *           2. test UnMarshalling
+ */
+HWTEST_F(BmsBundleResourceInfoTest, UnMarshalling_0400, Function | MediumTest | Level1)
+{
+    Parcel parcel;
+    std::string bundleName = "bundleName";
+    parcel.WriteString16(Str8ToStr16(bundleName));
+    std::string label = "label";
+    parcel.WriteString16(Str8ToStr16(label));
+    std::string icon = "icon";
+    parcel.WriteString16(Str8ToStr16(icon));
+    parcel.WriteString16(Str8ToStr16(icon));
+
+    auto res = BundleResourceInfo::Unmarshalling(parcel);
+    ASSERT_EQ(res, nullptr);
+}
+
+/**
+ * @tc.number: UnMarshalling_0500
+ * @tc.name: test the UnMarshalling
+ * @tc.desc: 1. system running normally
+ *           2. test UnMarshalling
+ */
+HWTEST_F(BmsBundleResourceInfoTest, UnMarshalling_0500, Function | MediumTest | Level1)
+{
+    Parcel parcel;
+    std::string bundleName = "bundleName";
+    parcel.WriteString16(Str8ToStr16(bundleName));
+    std::string label = "label";
+    parcel.WriteString16(Str8ToStr16(label));
+    std::string icon = "icon";
+    parcel.WriteString16(Str8ToStr16(icon));
+    parcel.WriteInt32(0);
+    parcel.WriteInt32(0);
+    int32_t appIndex = 1;
+    parcel.WriteInt32(appIndex);
+
+    auto bundleResourceInfo = BundleResourceInfo::Unmarshalling(parcel);
+    ASSERT_NE(bundleResourceInfo, nullptr);
+    if (bundleResourceInfo != nullptr) {
+        EXPECT_EQ(bundleResourceInfo->bundleName, bundleName);
+        EXPECT_EQ(bundleResourceInfo->label, label);
+        EXPECT_EQ(bundleResourceInfo->icon, icon);
+        EXPECT_EQ(bundleResourceInfo->appIndex, appIndex);
+        delete bundleResourceInfo;
+        bundleResourceInfo = nullptr;
+    }
 }
 }
 }

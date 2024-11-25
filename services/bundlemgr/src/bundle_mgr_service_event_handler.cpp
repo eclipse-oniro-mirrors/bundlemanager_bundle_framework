@@ -109,6 +109,9 @@ constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
 constexpr int32_t SCENE_ID_OTA_INSTALL = 3;
 constexpr const char* PGO_FILE_PATH = "pgo_files";
+constexpr const char* BUNDLE_SCAN_PARAM = "bms.scanning_apps.status";
+constexpr const char* BUNDLE_SCAN_START = "0";
+constexpr const char* BUNDLE_SCAN_FINISH = "1";
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> systemHspList_;
@@ -209,6 +212,9 @@ void BMSEventHandler::BeforeBmsStart()
     }
 
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_START);
+    if (SetParameter(BUNDLE_SCAN_PARAM, BUNDLE_SCAN_START) != 0) {
+        LOG_E(BMS_TAG_DEFAULT, "set bms.scanning_apps.status 0 failed");
+    }
 }
 
 void BMSEventHandler::OnBmsStarting()
@@ -280,11 +286,15 @@ void BMSEventHandler::AfterBmsStart()
     }
 #endif
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
+    CreateAppInstallDir();
     SetAllInstallFlag();
     HandleSceneBoard();
     CleanTempDir();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
+    if (SetParameter(BUNDLE_SCAN_PARAM, BUNDLE_SCAN_FINISH) != 0) {
+        LOG_E(BMS_TAG_DEFAULT, "set bms.scanning_apps.status 1 failed");
+    }
     ClearCache();
     if (needNotifyBundleScanStatus_) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
@@ -1077,7 +1087,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
     SystemBundleInstaller installer;
     ErrCode ret = installer.InstallSystemBundle(preScanInfo.bundleDir, installParam, appType);
-    if (ret != ERR_OK && ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
+    if (ret != ERR_OK && ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON && !preScanInfo.isDataPreloadHap) {
         LOG_W(BMS_TAG_DEFAULT, "Install System app:%{public}s error", preScanInfo.bundleDir.c_str());
         SavePreInstallException(preScanInfo.bundleDir);
     }
@@ -1118,6 +1128,23 @@ void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &shared
     SystemBundleInstaller installer;
     if (!installer.InstallSystemSharedBundle(installParam, false, appType)) {
         LOG_W(BMS_TAG_DEFAULT, "install system shared bundle: %{public}s error", sharedBundlePath.c_str());
+    }
+}
+
+void BMSEventHandler::CreateAppInstallDir() const
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        if (userId == Constants::DEFAULT_USERID) {
+            continue;
+        }
+        dataMgr->CreateAppInstallDir(userId);
     }
 }
 
@@ -1842,6 +1869,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             }
 
             if (hasInstalledInfo.versionCode > hapVersionCode) {
+                if (CheckIsBundleUpdatedByHapPath(hasInstalledInfo)) {
+                    break;
+                }
                 LOG_NOFUNC_E(BMS_TAG_DEFAULT, "-n %{public}s update failed versionCode:%{public}d lower than "
                     "current:%{public}d", bundleName.c_str(), hapVersionCode, hasInstalledInfo.versionCode);
                 SendBundleUpdateFailedEvent(hasInstalledInfo);
@@ -1866,6 +1896,16 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         LOG_E(BMS_TAG_DEFAULT, "multi install failed");
     }
     UpdatePreinstallDB(needInstallMap);
+}
+
+bool BMSEventHandler::CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo)
+{
+    for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        if (hapModuleInfo.hapPath.find(Constants::BUNDLE_CODE_DIR) != 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool BMSEventHandler::InnerMultiProcessBundleInstall(
@@ -3856,9 +3896,9 @@ void BMSEventHandler::UpdatePreinstallDBForNotUpdatedBundle(const std::string &b
             preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
             preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
         }
-        auto bundleInfo = item.second.GetBaseBundleInfo();
-        if (!bundleInfo.hapModuleInfos.empty() &&
-            bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+        auto innerModuleInfos = item.second.GetInnerModuleInfos();
+        if (!innerModuleInfos.empty() &&
+            innerModuleInfos.begin()->second.distro.moduleType == Profile::MODULE_TYPE_ENTRY) {
             findEntry = true;
         }
     }
@@ -4152,6 +4192,8 @@ void BMSEventHandler::CleanTempDir() const
             LOG_E(BMS_TAG_DEFAULT, "create failed: %{public}s", dir.c_str());
         }
     }
+
+    UpdateAppDataMgr::DeleteUninstallTmpDirs(Constants::DEFAULT_USERID);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

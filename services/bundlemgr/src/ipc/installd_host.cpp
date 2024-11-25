@@ -214,6 +214,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::ADD_USER_DIR_DELETE_DFX):
             result = this->HandleAddUserDirDeleteDfx(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_UNINSTALL_TMP_DIRS):
+            result = this->HandleDeleteUninstallTmpDirs(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -347,6 +350,27 @@ bool InstalldHost::HandleStopAOT(MessageParcel &data, MessageParcel &reply)
     return true;
 }
 
+bool InstalldHost::HandleDeleteUninstallTmpDirs(MessageParcel &data, MessageParcel &reply)
+{
+    uint32_t size = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, data, size);
+    uint32_t maxSize = 1000;
+    if (size > maxSize) {
+        LOG_E(BMS_TAG_INSTALLD, "size too large");
+        return false;
+    }
+    std::vector<std::string> dirs;
+    dirs.reserve(size);
+    for (uint32_t i = 0; i < size; i++) {
+        std::string dir;
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, data, dir);
+        dirs.emplace_back(dir);
+    }
+    ErrCode result = DeleteUninstallTmpDirs(dirs);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
 bool InstalldHost::HandleRenameModuleDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string oldPath = Str16ToStr8(data.ReadString16());
@@ -395,7 +419,8 @@ bool InstalldHost::HandleRemoveBundleDataDir(MessageParcel &data, MessageParcel 
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
     bool isAtomicService = data.ReadBool();
-    ErrCode result = RemoveBundleDataDir(bundleName, userId, isAtomicService);
+    bool async = data.ReadBool();
+    ErrCode result = RemoveBundleDataDir(bundleName, userId, isAtomicService, async);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

@@ -117,14 +117,14 @@ ohos_shared_library("appexecfwk_core") {
 
   if (bundle_framework_quick_fix) {
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
-    sources += [
-      "src/quick_fix/quick_fix_manager_host.cpp",
-      "src/quick_fix/quick_fix_manager_proxy.cpp",
-      "src/quick_fix/quick_fix_result_info.cpp",
-      "src/quick_fix/quick_fix_status_callback_host.cpp",
-      "src/quick_fix/quick_fix_status_callback_proxy.cpp",
-    ]
   }
+  sources += [
+    "src/quick_fix/quick_fix_manager_host.cpp",
+    "src/quick_fix/quick_fix_manager_proxy.cpp",
+    "src/quick_fix/quick_fix_result_info.cpp",
+    "src/quick_fix/quick_fix_status_callback_host.cpp",
+    "src/quick_fix/quick_fix_status_callback_proxy.cpp",
+  ]
 
   if (bundle_framework_overlay_install) {
     defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
