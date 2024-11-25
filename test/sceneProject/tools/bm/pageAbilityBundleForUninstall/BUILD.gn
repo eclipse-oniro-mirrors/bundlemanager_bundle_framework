@@ -18,7 +18,7 @@ ohos_hap("pageAbilityBundleForUninstall") {
   hap_profile = "./src/main/config.json"
   hap_name = "pageAbilityBundleForUninstall"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_tool/tools/resource/bm/${hap_name}.hap"
+  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/tools/resource/bm/${hap_name}.hap"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",

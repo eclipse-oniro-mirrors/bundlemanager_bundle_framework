@@ -201,6 +201,7 @@ ohos_source_set("bundle_parser") {
 
 group("bms_target") {
   deps = [
+    ":bundle_tool_libs",
     ":installs",
     ":installs.cfg",
     ":libbms",
@@ -568,6 +569,45 @@ ohos_shared_library("installs") {
 ohos_prebuilt_etc("installs.cfg") {
   source = "installs.cfg"
   relative_install_dir = "init"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
+
+config("bundle_tool_libs_config") {
+  include_dirs = [
+    "include",
+    "include/shared",
+    "include/sandbox_app",
+    "include/rdb",
+    "include/installd",
+    "include/quick_fix",
+    "include/uninstall_data_mgr",
+    "include/navigation",
+  ]
+}
+
+ohos_shared_library("bundle_tool_libs") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+  public_configs = [ ":bundle_tool_libs_config" ]
+
+  sources = [ "${kits_path}/js/bundlemgr/bundle_death_recipient.cpp" ]
+
+  deps = [ "${core_path}:appexecfwk_core" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
+
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }
