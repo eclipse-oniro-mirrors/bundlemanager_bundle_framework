@@ -406,6 +406,7 @@ constexpr const char* DEVICE_CONFIG_ACCESSIBLE = "accessible";
 // metadata
 constexpr const char* META_DATA_NAME = "name";
 constexpr const char* META_DATA_VALUE = "value";
+constexpr const char* META_DATA_VALUEID = "valueId";
 constexpr const char* META_DATA_RESOURCE = "resource";
 // hnppackge
 constexpr const char* HNP_PACKAGE = "package";

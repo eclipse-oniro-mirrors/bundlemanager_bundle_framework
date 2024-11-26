@@ -81,6 +81,7 @@ const char* JSON_KEY_START_WINDOW_BACKGROUND = "startWindowBackground";
 const char* JSON_KEY_START_WINDOW_BACKGROUND_ID = "startWindowBackgroundId";
 const char* JSON_KEY_COMPILE_MODE = "compileMode";
 const char* META_DATA = "metadata";
+const char* META_DATA_VALUEID = "valueId";
 const char* META_DATA_NAME = "name";
 const char* META_DATA_VALUE = "value";
 const char* META_DATA_RESOURCE = "resource";
@@ -549,6 +550,7 @@ void to_json(nlohmann::json &jsonObject, const MetaData &metaData)
 void to_json(nlohmann::json &jsonObject, const Metadata &metadata)
 {
     jsonObject = nlohmann::json {
+        {META_DATA_VALUEID, metadata.valueId},
         {META_DATA_NAME, metadata.name},
         {META_DATA_VALUE, metadata.value},
         {META_DATA_RESOURCE, metadata.resource}
@@ -691,6 +693,14 @@ void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        META_DATA_VALUEID,
+        metadata.valueId,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         META_DATA_NAME,
