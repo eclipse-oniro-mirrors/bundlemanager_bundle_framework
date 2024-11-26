@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -106,7 +106,12 @@ private:
 
 class BundleMgrExtTest : public BundleMgrExt {
 public:
-    bool CheckApiInfo(const BundleInfo& bundleInfo);
+    bool CheckApiInfo(const BundleInfo& bundleInfo) override;
+    bool IsRdDevice() override;
+    void CheckBundleNameAndStratAbility(const std::string& bundleName, const std::string& appIdentifier) override;
+    bool CheckBundleNameAndStratAbilityTest(const std::string& bundleName, const std::string& appIdentifier);
+    bool BmsCheckBundleNameAndStratAbilityTest(const std::string& bundleName, const std::string& appIdentifier);
+    std::string GetCompatibleDeviceType(const std::string& bundleName) override;
 };
 
 std::shared_ptr<BundleMgrService> BmsExtensionDataMgrTest::bundleMgrService_ =
@@ -142,6 +147,46 @@ const std::shared_ptr<BundleDataMgr> BmsExtensionDataMgrTest::GetDataMgr() const
 bool BundleMgrExtTest::CheckApiInfo(const BundleInfo& bundleInfo)
 {
     return true;
+}
+
+bool BundleMgrExtTest::IsRdDevice()
+{
+    return true;
+}
+
+void BundleMgrExtTest::CheckBundleNameAndStratAbility(const std::string& bundleName, const std::string& appIdentifier)
+{
+    return;
+}
+
+bool BundleMgrExtTest::CheckBundleNameAndStratAbilityTest(
+    const std::string& bundleName, const std::string& appIdentifier)
+{
+    if (bundleName == "bundleNameTest" && appIdentifier == "appIdentifierTest") {
+        CheckBundleNameAndStratAbility(bundleName, appIdentifier);
+        return true;
+    }
+    return false;
+}
+
+bool BundleMgrExtTest::BmsCheckBundleNameAndStratAbilityTest(
+    const std::string& bundleName, const std::string& appIdentifier)
+{
+    if (bundleName == "bundleNameTest" && appIdentifier == "appIdentifierTest") {
+        BmsExtensionDataMgr bmsExtensionDataMgrTest;
+        bmsExtensionDataMgrTest.CheckBundleNameAndStratAbility(bundleName, appIdentifier);
+        return true;
+    }
+    return false;
+}
+
+std::string BundleMgrExtTest::GetCompatibleDeviceType(const std::string& bundleName)
+{
+    std::string typeName = "";
+    if (bundleName == "bundleNameTest") {
+        typeName = "GetCompatibleDeviceTypetest";
+    }
+    return typeName;
 }
 
 bool BmsExtensionDataMgrTest::CheckBmsExtensionProfile()
@@ -1104,5 +1149,83 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0028, Function | SmallTest
 #else
     EXPECT_NE(res, ERR_OK);
 #endif
+}
+
+/**
+ * @tc.number: BundleMgrExt_0029
+ * @tc.name: IsRdDevice
+ * @tc.desc: IsRdDevice
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0029, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    bool res = bundleMgrExtTest.IsRdDevice();
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0030
+ * @tc.name: CheckBundleNameAndStratAbility
+ * @tc.desc: CheckBundleNameAndStratAbility
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0030, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName = "bundleNameTest";
+    std::string appIdentifier = "appIdentifierTest";
+    bool res = bundleMgrExtTest.CheckBundleNameAndStratAbilityTest(bundleName, appIdentifier);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0031
+ * @tc.name: GetCompatibleDeviceType
+ * @tc.desc: GetCompatibleDeviceType
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0031, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName = "bundleNameTest";
+    std::string res = bundleMgrExtTest.GetCompatibleDeviceType(bundleName);
+    EXPECT_EQ(res, "GetCompatibleDeviceTypetest");
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgrTest_0032
+ * @tc.name: IsRdDevice
+ * @tc.desc: IsRdDevice
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0032, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgrTest;
+    bool res = bmsExtensionDataMgrTest.IsRdDevice();
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgrTest_0033
+ * @tc.name: CheckBundleNameAndStratAbility
+ * @tc.desc: CheckBundleNameAndStratAbility
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0033, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bmsExtensionDataMgrTest;
+    std::string bundleName = "bundleNameTest";
+    std::string appIdentifier = "appIdentifierTest";
+    bool res = bmsExtensionDataMgrTest.BmsCheckBundleNameAndStratAbilityTest(bundleName, appIdentifier);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgrTest_0034
+ * @tc.name: GetCompatibleDeviceType
+ * @tc.desc: GetCompatibleDeviceType
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0034, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgrTest;
+    std::string bundleName = "bundleNameTest";
+    std::string res = bmsExtensionDataMgrTest.GetCompatibleDeviceType(bundleName);
+    EXPECT_EQ(res, "default");
 }
 } // OHOS
