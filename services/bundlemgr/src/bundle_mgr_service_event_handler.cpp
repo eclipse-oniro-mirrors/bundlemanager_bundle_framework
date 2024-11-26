@@ -4081,10 +4081,10 @@ void BMSEventHandler::ProcessCheckAppEl1DirTask()
 
 void BMSEventHandler::CheckAndCreateShareFilesSubDataDirs()
 {
-    LOG_I(BMS_TAG_DEFAULT, "CheckAndCreateShareFilesSubDataDirs begin");
+    LOG_D(BMS_TAG_DEFAULT, "begin");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "CheckAndCreateShareFilesSubDataDirs DataMgr is nullptr");
+        LOG_W(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
     }
 
@@ -4093,7 +4093,7 @@ void BMSEventHandler::CheckAndCreateShareFilesSubDataDirs()
         std::vector<BundleInfo> bundleInfos;
         if (dataMgr->GetBundleInfosV9(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
             bundleInfos, userId) != ERR_OK) {
-            LOG_W(BMS_TAG_DEFAULT, "CheckAndCreateShareFilesSubDataDirs failed to GetBundleInfos for: [%{public}d]",
+            LOG_W(BMS_TAG_DEFAULT, "failed to GetBundleInfos for: [%{public}d]",
                 userId);
             continue;
         }
@@ -4102,13 +4102,13 @@ void BMSEventHandler::CheckAndCreateShareFilesSubDataDirs()
         bool isExist = true;
         ErrCode result = InstalldClient::GetInstance()->IsExistDir(shareFilesDir, isExist);
         if (result != ERR_OK || !isExist) {
-            LOG_W(BMS_TAG_DEFAULT, "CheckAndCreateShareFilesSubDataDirs sharefile dir no exist: %{public}s",
+            LOG_W(BMS_TAG_DEFAULT, "sharefile dir no exist: %{public}s",
                 shareFilesDir.c_str());
             continue;
         }
         UpdateAppDataMgr::CreateSharefilesSubDataDirs(bundleInfos, userId);
     }
-    LOG_I(BMS_TAG_DEFAULT, "CheckAndCreateShareFilesSubDataDirs end");
+    LOG_D(BMS_TAG_DEFAULT, "end");
 }
 
 void BMSEventHandler::CleanAllBundleShaderCache() const

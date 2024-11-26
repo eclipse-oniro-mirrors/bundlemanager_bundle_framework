@@ -462,20 +462,20 @@ bool UpdateAppDataMgr::CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_
 
 void UpdateAppDataMgr::CreateSharefilesSubDataDirs(const std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    APP_LOGI("CreateSharefilesSubDataDirs begin for userid: [%{public}d]", userId);
+    APP_LOGD("begin for userid: [%{public}d]", userId);
     std::string parentDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES;
     for (const auto &bundleInfo : bundleInfos) {
         std::string sharefilesDataDir = parentDir + bundleInfo.name;
         bool isExist = false;
         if (InstalldClient::GetInstance()->IsExistDir(sharefilesDataDir, isExist) != ERR_OK) {
-            APP_LOGW("CreateSharefilesSubDataDirs path: %{public}s IsExistDir failed",
+            APP_LOGW("path: %{public}s IsExistDir failed",
                 sharefilesDataDir.c_str());
             continue;
         }
         if (InstalldClient::GetInstance()->Mkdir(sharefilesDataDir,
             S_IRWXU, bundleInfo.uid, bundleInfo.gid) != ERR_OK) {
-            APP_LOGW("CreateSharefilesSubDataDirs MkOwnerDir %{public}s failed: %{public}d",
+            APP_LOGW("MkOwnerDir %{public}s failed: %{public}d",
                 sharefilesDataDir.c_str(), errno);
             continue;
         }
@@ -483,19 +483,19 @@ void UpdateAppDataMgr::CreateSharefilesSubDataDirs(const std::vector<BundleInfo>
             std::string childBundleDataDir = sharefilesDataDir + dir;
             if (InstalldClient::GetInstance()->Mkdir(childBundleDataDir,
                 S_IRWXU, bundleInfo.uid, bundleInfo.gid) != ERR_OK) {
-                APP_LOGW("CreateSharefilesSubDataDirs MkOwnerDir [%{public}s] failed: %{public}d",
+                APP_LOGW("MkOwnerDir [%{public}s] failed: %{public}d",
                     childBundleDataDir.c_str(), errno);
             }
         }
         if (InstalldClient::GetInstance()->SetDirApl(sharefilesDataDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
             bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG) != ERR_OK) {
-            APP_LOGW("CreateSharefilesSubDataDirs SetDirApl failed: %{public}s", sharefilesDataDir.c_str());
+            APP_LOGW("SetDirApl failed: %{public}s", sharefilesDataDir.c_str());
             continue;
         }
-        APP_LOGD("CreateSharefilesSubDataDirs succeed for %{public}s", bundleInfo.name.c_str());
+        APP_LOGD("succeed for %{public}s", bundleInfo.name.c_str());
     }
-    APP_LOGI("CreateSharefilesSubDataDirs end for userid: [%{public}d]", userId);
+    APP_LOGD("end for userid: [%{public}d]", userId);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
