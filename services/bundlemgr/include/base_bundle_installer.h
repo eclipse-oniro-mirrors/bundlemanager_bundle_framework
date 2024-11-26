@@ -724,12 +724,12 @@ private:
     bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId) const;
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName) const;
     void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier) const;
-    void MarkInstallFinish();
 
     bool SetDisposedRuleWhenBundleUpdateStart(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InnerBundleInfo &oldBundleInfo, bool isPreInstallApp);
 
     bool DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo);
+    ErrCode MarkInstallFinish();
     bool IsArkWeb(const std::string &bundleName) const;
 #ifdef WEBVIEW_ENABLE
     ErrCode VerifyArkWebInstall(const std::string &bundleName);
