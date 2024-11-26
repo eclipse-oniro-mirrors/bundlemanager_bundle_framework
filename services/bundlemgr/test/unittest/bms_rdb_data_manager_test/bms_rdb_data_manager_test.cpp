@@ -510,6 +510,28 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1000, Function | SmallTest | Leve
     EXPECT_EQ(ret, nullptr);
 }
 
+/**
+ * @tc.number: RdbDataManager_1100
+ * @tc.name: test insert with retry
+ * @tc.desc: 1.test the interface of RdbDataManager
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1100, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+
+    auto rdbStore = rdbDataManager->GetRdbStore();
+    ASSERT_NE(rdbStore, nullptr);
+
+    NativeRdb::ValuesBucket valuesBucket;
+    valuesBucket.PutString("key", KEY_ONE);
+    valuesBucket.PutString("value", VALUE_ONE);
+    int64_t rowId = -1;
+
+    auto ret = rdbDataManager->InsertWithRetry(rdbStore, rowId, valuesBucket);
+    EXPECT_EQ(ret, NativeRdb::E_OK);
+}
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 /**
  * @tc.number: DefaultAppRdb_0100
