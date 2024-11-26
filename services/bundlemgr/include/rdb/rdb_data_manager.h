@@ -56,6 +56,9 @@ public:
     void CheckSystemSizeAndHisysEvent(const std::string &path, const std::string &fileName);
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
+    int32_t InsertWithRetry(std::shared_ptr<NativeRdb::RdbStore> rdbStore, int64_t &rowId,
+        const NativeRdb::ValuesBucket &valuesBucket);
+    bool IsRetryErrCode(int32_t errCode);
     std::mutex rdbMutex_;
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
     bool isInitial_ = false;

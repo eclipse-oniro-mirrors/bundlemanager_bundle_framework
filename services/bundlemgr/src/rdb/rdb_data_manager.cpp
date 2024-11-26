@@ -31,6 +31,8 @@ const int32_t WRITE_TIMEOUT = 300; // 300s
 const int32_t CLOSE_TIME = 20; // delay 20s stop rdbStore
 constexpr const char* BMS_BACK_UP_RDB_NAME = "bms-backup.db";
 constexpr int32_t OPERATION_TYPE_OF_INSUFFICIENT_DISK = 3;
+constexpr int32_t RETRY_TIMES = 3;
+constexpr int32_t RETRY_INTERVAL = 500; // 500ms
 }
 
 std::mutex RdbDataManager::restoreRdbMutex_;
@@ -141,8 +143,7 @@ bool RdbDataManager::InsertData(const std::string &key, const std::string &value
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BMS_KEY, key);
     valuesBucket.PutString(BMS_VALUE, value);
-    auto ret = rdbStore->InsertWithConflictResolution(
-        rowId, bmsRdbConfig_.tableName, valuesBucket, NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
+    auto ret = InsertWithRetry(rdbStore, rowId, valuesBucket);
     return ret == NativeRdb::E_OK;
 }
 
@@ -156,8 +157,7 @@ bool RdbDataManager::InsertData(const NativeRdb::ValuesBucket &valuesBucket)
     }
 
     int64_t rowId = -1;
-    auto ret = rdbStore->InsertWithConflictResolution(
-        rowId, bmsRdbConfig_.tableName, valuesBucket, NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
+    auto ret = InsertWithRetry(rdbStore, rowId, valuesBucket);
     return ret == NativeRdb::E_OK;
 }
 
@@ -435,6 +435,37 @@ std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryByStep(
         return nullptr;
     }
     return absSharedResultSet;
+}
+
+int32_t RdbDataManager::InsertWithRetry(std::shared_ptr<NativeRdb::RdbStore> rdbStore, int64_t &rowId,
+    const NativeRdb::ValuesBucket &valuesBucket)
+{
+    int32_t retryCnt = 0;
+    int32_t ret = 0;
+    do {
+        ret = rdbStore->InsertWithConflictResolution(rowId, bmsRdbConfig_.tableName,
+            valuesBucket, NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
+        if (ret == NativeRdb::E_OK || !IsRetryErrCode(ret)) {
+            break;
+        }
+        if (++retryCnt < RETRY_TIMES) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_INTERVAL));
+        }
+        APP_LOGW("rdb insert failed, retry count: %{public}d, ret: %{public}d", retryCnt, ret);
+    } while (retryCnt < RETRY_TIMES);
+    return ret;
+}
+
+bool RdbDataManager::IsRetryErrCode(int32_t errCode)
+{
+    if (errCode == NativeRdb::E_DATABASE_BUSY ||
+        errCode == NativeRdb::E_SQLITE_BUSY ||
+        errCode == NativeRdb::E_SQLITE_LOCKED ||
+        errCode == NativeRdb::E_SQLITE_NOMEM ||
+        errCode == NativeRdb::E_SQLITE_IOERR) {
+        return true;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
