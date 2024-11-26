@@ -100,6 +100,7 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_0200, Function | SmallTest 
     ASSERT_NE(rdbDataManager, nullptr);
     MockGetRdbStore(nullptr);
     rdbDataManager->rdbStore_ = nullptr;
+    rdbDataManager->BackupRdb();
     NativeRdb::ValuesBucket valuesBucket;
     auto ret = rdbDataManager->InsertData(valuesBucket);
     EXPECT_FALSE(ret);

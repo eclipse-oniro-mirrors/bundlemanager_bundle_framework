@@ -21,6 +21,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
+const int32_t CLOSE_TIME = 360; // delay 6 mins to backup
 }
 BundleDataStorageRdb::BundleDataStorageRdb()
 {
@@ -129,6 +130,7 @@ bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBun
     APP_LOGI("rdb SaveStorageBundleInfo -n %{public}s", innerBundleInfo.GetBundleName().c_str());
     bool ret = rdbDataManager_->InsertData(
         innerBundleInfo.GetBundleName(), innerBundleInfo.ToString());
+    BackupRdb();
     return ret;
 }
 
@@ -141,6 +143,7 @@ bool BundleDataStorageRdb::DeleteStorageBundleInfo(const InnerBundleInfo &innerB
 
     bool ret = rdbDataManager_->DeleteData(innerBundleInfo.GetBundleName());
     APP_LOGD("DeleteStorageBundleInfo %{public}d", ret);
+    BackupRdb();
     return ret;
 }
 
@@ -149,5 +152,31 @@ bool BundleDataStorageRdb::ResetKvStore()
     return true;
 }
 
+void BundleDataStorageRdb::BackupRdb()
+{
+    if (isBackingUp_) {
+        return;
+    }
+    isBackingUp_ = true;
+    std::weak_ptr<BundleDataStorageRdb> weakPtr = weak_from_this();
+    auto task = [weakPtr] {
+        APP_LOGI("bms.db backup start");
+        std::this_thread::sleep_for(std::chrono::seconds(CLOSE_TIME));
+        auto sharedPtr = weakPtr.lock();
+        if (sharedPtr == nullptr) {
+            APP_LOGE("sharedPtr is null");
+            return;
+        }
+        if (sharedPtr->rdbDataManager_ != nullptr) {
+            sharedPtr->rdbDataManager_->BackupRdb();
+        } else {
+            APP_LOGE("rdbDataManager_ is null");
+        }
+        sharedPtr->isBackingUp_ = false;
+        APP_LOGI("bms.db backup end");
+    };
+    std::thread backUpThread(task);
+    backUpThread.detach();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
