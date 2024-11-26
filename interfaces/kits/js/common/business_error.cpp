@@ -35,6 +35,7 @@ constexpr const char* ERR_MSG_MODULE_NOT_EXIST = "The specified module is not fo
 constexpr const char* ERR_MSG_ABILITY_NOT_EXIST = "The specified ability is not found.";
 constexpr const char* ERR_MSG_INVALID_USER_ID = "The specified user id is not found.";
 constexpr const char* ERR_MSG_APPID_NOT_EXIST = "The specified appId is an empty string.";
+constexpr const char* ERR_MSG_APPIDENTIFIER_NOT_EXIST = "The specified appIdentifier is an empty string.";
 constexpr const char* ERR_MSG_PERMISSION_NOT_EXIST = "The specified permission is not found.";
 constexpr const char* ERR_MSG_DEVICE_ID_NOT_EXIST = "The specified deviceId is not found.";
 constexpr const char* ERR_MSG_INVALID_APP_INDEX = "The specified app index is invalid.";
@@ -162,6 +163,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_ABILITY_NOT_EXIST, ERR_MSG_ABILITY_NOT_EXIST },
     { ERROR_INVALID_USER_ID, ERR_MSG_INVALID_USER_ID },
     { ERROR_INVALID_APPID, ERR_MSG_APPID_NOT_EXIST },
+    { ERROR_INVALID_APPIDENTIFIER, ERR_MSG_APPIDENTIFIER_NOT_EXIST },
     { ERROR_INVALID_APPINDEX, ERR_MSG_INVALID_APP_INDEX },
     { ERROR_PERMISSION_NOT_EXIST, ERR_MSG_PERMISSION_NOT_EXIST },
     { ERROR_DEVICE_ID_NOT_EXIST, ERR_MSG_DEVICE_ID_NOT_EXIST },

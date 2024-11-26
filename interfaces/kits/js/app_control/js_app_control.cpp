@@ -44,9 +44,15 @@ const char* SET_DISPOSED_STATUS_SYNC = "SetDisposedStatusSync";
 const char* DELETE_DISPOSED_STATUS_SYNC = "DeleteDisposedStatusSync";
 const char* GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
 const char* APP_ID = "appId";
+const char* APP_IDENTIFIER = "appIdentifier";
 const char* DISPOSED_WANT = "disposedWant";
 const char* DISPOSED_RULE = "disposedRule";
 const char* DISPOSED_RULE_TYPE = "DisposedRule";
+const char* UNINSTALL_DISPOSED_RULE = "uninstallDisposedRule";
+const char* UNINSTALL_DISPOSED_RULE_TYPE = "UninstallDisposedRule";
+const char* SET_UNINSTALL_DISPOSED_RULE = "SetUninstallDisposedRule";
+const char* DELETE_UNINSTALL_DISPOSED_RULE = "DeleteUninstallDisposedRule";
+const char* GET_UNINSTALL_DISPOSED_RULE = "GetUninstallDisposedRule";
 }
 static OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> GetAppControlProxy()
 {
@@ -744,6 +750,262 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
             APP_LOGW("parse appIndex falied");
         }
         return InnerSetDisposedRule(env, appId, rule, appIndex);
+    }
+    APP_LOGE("parameter is invalid");
+    BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+    return nRet;
+}
+
+void ConvertRuleInfo(napi_env env, napi_value nRule, const UninstallDisposedRule &rule)
+{
+    napi_value nWant = nullptr;
+    if (rule.want != nullptr) {
+        nWant = CreateJsWant(env, *rule.want);
+    } else {
+        napi_create_object(env, &nWant);
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "want", nWant));
+    napi_value nComponentType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.componentType), &nComponentType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "componentType", nComponentType));
+    napi_value nPriority;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, rule.priority, &nPriority));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "priority", nPriority));
+}
+
+
+bool ParseUninstallDiposedRule(napi_env env, napi_value nRule, UninstallDisposedRule &rule)
+{
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, nRule, &valueType), false);
+    if (valueType != napi_object) {
+        APP_LOGW("nRule not object type");
+        return false;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, nRule, TYPE_WANT, &prop);
+    AAFwk::Want want;
+    if (!UnwrapWant(env, prop, want)) {
+        APP_LOGW("parse want failed");
+        return false;
+    }
+    rule.want = std::make_shared<AAFwk::Want>(want);
+    napi_get_named_property(env, nRule, "componentType", &prop);
+    int32_t componentType;
+    if (!CommonFunc::ParseInt(env, prop, componentType)) {
+        APP_LOGW("componentType parseInt failed");
+        return false;
+    }
+    if (componentType > static_cast<int32_t>(ComponentType::UI_EXTENSION) ||
+        componentType < static_cast<int32_t>(ComponentType::UI_ABILITY)) {
+        APP_LOGW("componentType not valid");
+        return false;
+    }
+    rule.componentType = static_cast<ComponentType>(componentType);
+    napi_get_named_property(env, nRule, "priority", &prop);
+    if (!CommonFunc::ParseInt(env, prop, rule.priority)) {
+        APP_LOGW("priority parseInt failed");
+        return false;
+    }
+    return true;
+}
+
+static napi_value InnerGetUninstallDisposedRule(napi_env env, std::string &appIdentifier,
+    int32_t appIndex, int32_t userId)
+{
+    if (appIdentifier.empty()) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_INVALID_APPIDENTIFIER, GET_UNINSTALL_DISPOSED_RULE);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    auto appControlProxy = GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("null appControlProxy");
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            GET_UNINSTALL_DISPOSED_RULE);
+        napi_throw(env, error);
+        return nullptr;
+    }
+    UninstallDisposedRule uninstallDisposedRule;
+    ErrCode ret = ERR_OK;
+    ret = appControlProxy->GetUninstallDisposedRule(appIdentifier, appIndex, userId, uninstallDisposedRule);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetUninstallDisposedRule failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_UNINSTALL_DISPOSED_RULE, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRule = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nRule));
+    ConvertRuleInfo(env, nRule, uninstallDisposedRule);
+    return nRule;
+}
+
+napi_value GetUninstallDisposedRule(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string appIdentifier;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appIdentifier)) {
+        APP_LOGE("appIdentifier %{public}s invalid", appIdentifier.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_IDENTIFIER, TYPE_STRING);
+        return nullptr;
+    }
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    if (args.GetMaxArgc() == ARGS_SIZE_ONE) {
+        return InnerGetUninstallDisposedRule(env, appIdentifier, appIndex, userId);
+    }
+    if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
+            APP_LOGW("parse appIndex falied");
+        }
+        return InnerGetUninstallDisposedRule(env, appIdentifier, appIndex, userId);
+    }
+    APP_LOGE("parameter is invalid");
+    BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+    return nullptr;
+}
+
+static napi_value InnerSetUninstallDisposedRule(napi_env env, std::string &appIdentifier,
+    UninstallDisposedRule &rule, int32_t appIndex, int32_t userId)
+{
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    auto appControlProxy = GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("null appControlProxy");
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            SET_UNINSTALL_DISPOSED_RULE);
+        napi_throw(env, error);
+        return nRet;
+    }
+    ErrCode ret = ERR_OK;
+    ret = appControlProxy->SetUninstallDisposedRule(appIdentifier, rule, appIndex, userId);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != NO_ERROR) {
+        APP_LOGE("SetUninstallDisposedRule err = %{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, SET_UNINSTALL_DISPOSED_RULE, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    return nRet;
+}
+
+napi_value SetUninstallDisposedRule(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin");
+    NapiArg args(env, info);
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("Napi func init failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nRet;
+    }
+    std::string appIdentifier;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appIdentifier)) {
+        APP_LOGE("appIdentifier %{public}s invalid!", appIdentifier.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_IDENTIFIER, TYPE_STRING);
+        return nRet;
+    }
+    if (appIdentifier.empty()) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_INVALID_APPIDENTIFIER, SET_UNINSTALL_DISPOSED_RULE);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    UninstallDisposedRule rule;
+    if (!ParseUninstallDiposedRule(env, args[ARGS_POS_ONE], rule)) {
+        APP_LOGE("rule invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR,
+            UNINSTALL_DISPOSED_RULE, UNINSTALL_DISPOSED_RULE_TYPE);
+        return nRet;
+    }
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+        return InnerSetUninstallDisposedRule(env, appIdentifier, rule, appIndex, userId);
+    }
+    if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], appIndex)) {
+            APP_LOGW("parse appIndex falied");
+        }
+        return InnerSetUninstallDisposedRule(env, appIdentifier, rule, appIndex, userId);
+    }
+    APP_LOGE("parameter is invalid");
+    BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+    return nRet;
+}
+
+static napi_value InnerDeleteUninstallDisposedRule(napi_env env, std::string &appIdentifier,
+    int32_t appIndex, int32_t userId)
+{
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    if (appIdentifier.empty()) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_INVALID_APPIDENTIFIER, DELETE_UNINSTALL_DISPOSED_RULE);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    auto appControlProxy = GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("null appControlProxy");
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            DELETE_UNINSTALL_DISPOSED_RULE);
+        napi_throw(env, error);
+        return nullptr;
+    }
+    ErrCode ret = ERR_OK;
+    ret = appControlProxy->DeleteUninstallDisposedRule(appIdentifier, appIndex, userId);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("DeleteUninstallDisposedRule failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, DELETE_UNINSTALL_DISPOSED_RULE, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    return nRet;
+}
+
+napi_value DeleteUninstallDisposedRule(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin");
+    NapiArg args(env, info);
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nRet;
+    }
+    std::string appIdentifier;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appIdentifier)) {
+        APP_LOGE("appIdentifier %{public}s invalid", appIdentifier.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_IDENTIFIER, TYPE_STRING);
+        return nRet;
+    }
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    if (args.GetMaxArgc() == ARGS_SIZE_ONE) {
+        return InnerDeleteUninstallDisposedRule(env, appIdentifier, appIndex, userId);
+    }
+    if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
+            APP_LOGW("parse appIndex falied");
+        }
+        return InnerDeleteUninstallDisposedRule(env, appIdentifier, appIndex, userId);
     }
     APP_LOGE("parameter is invalid");
     BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);

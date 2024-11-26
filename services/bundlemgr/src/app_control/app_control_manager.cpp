@@ -552,5 +552,40 @@ void AppControlManager::DeleteAbilityRunningRuleBmsCache(const std::string &appI
         abilityRunningControlRuleCacheForBms_.erase(iterBms);
     }
 }
+
+ErrCode AppControlManager::SetUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
+    const UninstallDisposedRule& rule, int32_t appIndex, int32_t userId)
+{
+    auto ret = appControlManagerDb_->SetUninstallDisposedRule(callerName, appIdentifier, rule, appIndex, userId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "set to rdb failed");
+        return ret;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "%{public}s set uninstall rule, user:%{public}d index:%{public}d",
+        callerName.c_str(), userId, appIndex);
+    return ERR_OK;
+}
+
+ErrCode AppControlManager::GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
+    int32_t userId, UninstallDisposedRule& rule)
+{
+    auto ret = appControlManagerDb_->GetUninstallDisposedRule(appIdentifier, appIndex, userId, rule);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "get from rdb failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManager::DeleteUninstallDisposedRule(
+    const std::string &callerName, const std::string &appIdentifier, int32_t appIndex, int32_t userId)
+{
+    auto ret = appControlManagerDb_->DeleteUninstallDisposedRule(callerName, appIdentifier, appIndex, userId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "delete from rdb failed");
+        return ret;
+    }
+    return ERR_OK;
+}
 }
 }
