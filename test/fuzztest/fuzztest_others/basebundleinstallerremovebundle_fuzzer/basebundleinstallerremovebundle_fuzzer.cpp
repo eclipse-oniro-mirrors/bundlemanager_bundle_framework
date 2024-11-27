@@ -28,6 +28,7 @@ namespace OHOS {
     {
         BaseBundleInstaller basebundleinstall;
         InnerBundleInfo info;
+        info.SetBundleInstallTime(reinterpret_cast<uintptr_t>(data));
         bool isKeepData = true;
         auto ret1 = basebundleinstall.RemoveBundle(info, isKeepData);
         return true;

@@ -27,6 +27,7 @@ namespace {
     bool fuzzelCheckFileParamCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
+        impl.MkdirIfNotExist(std::string(reinterpret_cast<const char*>(data), size));
         auto ret = impl.CheckFileParam(INVALID_PATH);
         if (ret == ERR_OK) {
             return true;
@@ -37,6 +38,7 @@ namespace {
     bool fuzzelCheckFileParamCaseTwo(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
+        impl.MkdirIfNotExist(std::string(reinterpret_cast<const char*>(data), size));
         auto ret = impl.CheckFileParam(INVALID_SUFFIX);
         if (ret == ERR_OK) {
             return true;
@@ -47,6 +49,7 @@ namespace {
     bool fuzzelCheckFileParamCaseThree(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
+        impl.MkdirIfNotExist(std::string(reinterpret_cast<const char*>(data), size));
         auto ret = impl.CheckFileParam(INVALID_PREFIX);
         if (ret == ERR_OK) {
             return true;

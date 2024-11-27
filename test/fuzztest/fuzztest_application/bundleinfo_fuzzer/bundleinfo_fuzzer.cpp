@@ -25,6 +25,7 @@ namespace OHOS {
     {
         Parcel dataMessageParcel;
         BundleInfo oldBundleInfo;
+        oldBundleInfo.name = std::string(reinterpret_cast<const char*>(data), size);
         if (!oldBundleInfo.Marshalling(dataMessageParcel)) {
             return false;
         }

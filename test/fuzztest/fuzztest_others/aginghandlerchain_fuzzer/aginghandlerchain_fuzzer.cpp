@@ -26,6 +26,7 @@ constexpr uint8_t ENABLE = 2;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     AgingRequest request;
+    request.SetTotalDataBytes(reinterpret_cast<uintptr_t>(data));
     AgingHandlerChain agingHandlerChain;
     std::shared_ptr<AgingHandler> handler;
     agingHandlerChain.AddHandler(handler);

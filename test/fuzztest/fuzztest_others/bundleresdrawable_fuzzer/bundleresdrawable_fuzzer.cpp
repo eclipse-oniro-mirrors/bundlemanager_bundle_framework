@@ -30,7 +30,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     BundleResourceDrawable drawable;
     uint32_t iconId = 1;
-    int32_t density = 1;
+    int32_t density = reinterpret_cast<uintptr_t>(data);
     ResourceInfo resourceInfo;
     drawable.GetIconResourceByTheme(iconId, density, nullptr, resourceInfo);
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());

@@ -30,6 +30,7 @@ namespace OHOS {
     {
         AppServiceFwkInstaller appServiceFwk;
         InnerBundleInfo info;
+        info.SetAppCodePath(std::string(data, size));
         appServiceFwk.RemoveBundleCodeDir(info);
         return true;
     }

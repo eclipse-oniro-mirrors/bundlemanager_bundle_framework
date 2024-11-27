@@ -31,6 +31,8 @@ namespace OHOS {
     {
         AppServiceFwkInstaller appServicefwk;
         InnerBundleInfo innerBundleInfo;
+        int64_t installTime = reinterpret_cast<uintptr_t>(data);
+        innerBundleInfo.SetBundleInstallTime(installTime);
         innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
         appServicefwk.MergeBundleInfos(innerBundleInfo);
         return true;

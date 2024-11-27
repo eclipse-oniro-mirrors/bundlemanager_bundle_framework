@@ -22,7 +22,6 @@ namespace OHOS {
 namespace {
     const std::string DIR_PATH_ONE = "/data/service/el1";
     const std::string DIR_PATH_TWO = "/data/test/test";
-    const std::string TEST_MODULE = "testModule";
     const std::string BUNDLE_NAME = "com.ohos.resourcedemo";
 }
     bool fuzzelRemoveExtResourcesDbCaseOne(const uint8_t* data, size_t size)
@@ -37,7 +36,7 @@ namespace {
             return false;
         }   
         std::vector<std::string> moduleNames;
-        moduleNames.push_back(TEST_MODULE);
+        moduleNames.push_back(std::string(reinterpret_cast<const char*>(data), size));
         ret = impl.RemoveExtResourcesDb(BUNDLE_NAME, moduleNames);
         return ret;
     }

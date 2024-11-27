@@ -24,6 +24,7 @@ namespace OHOS {
     {
         Parcel dataMessageParcel;
         ElementName oldElementName;
+        oldElementName.SetDeviceID(std::string(reinterpret_cast<const char*>(data), size));
         if (!oldElementName.Marshalling(dataMessageParcel)) {
             return false;
         }

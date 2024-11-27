@@ -28,6 +28,7 @@ namespace OHOS {
     {
         BaseBundleInstaller basebundleinstall;
         InnerBundleInfo info;
+        info.SetBundleInstallTime(reinterpret_cast<uintptr_t>(data));
         std::string modulePath;
         auto ret1 = basebundleinstall.ExtractModule(info, modulePath);
         return true;

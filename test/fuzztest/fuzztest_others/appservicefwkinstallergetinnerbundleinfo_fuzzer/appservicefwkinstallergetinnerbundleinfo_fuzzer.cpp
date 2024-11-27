@@ -30,6 +30,7 @@ namespace OHOS {
     {
         AppServiceFwkInstaller appServiceFwk;
         InnerBundleInfo info;
+        info.SetBundleInstallTime(reinterpret_cast<uintptr_t>(data));
         bool isAppExist;
         appServiceFwk.GetInnerBundleInfoWithDisable(info, isAppExist);
         return true;

@@ -30,7 +30,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
     BundleResourceConfiguration::InitResourceGlobalConfig(resourceManager);
     BundleResourceConfiguration::InitResourceGlobalConfig(HAP_FILE_PATH1, resourceManager);
-    std::vector<std::string> overlayHaps;
+    std::vector<std::string> overlayHaps = {std::string(data, size)};
     overlayHaps.emplace_back(HAP_FILE_PATH1);
     BundleResourceConfiguration::InitResourceGlobalConfig(HAP_FILE_PATH1, overlayHaps, resourceManager);
     return true;

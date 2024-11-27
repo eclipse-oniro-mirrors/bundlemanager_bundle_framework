@@ -29,6 +29,7 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
         InstallParam installParam;
+        installParam.additionalInfo = std::string(data, size);
         installParam.isPreInstallApp = true;
         installParam.removable = false;
         AppServiceFwkInstaller appServicefwk;

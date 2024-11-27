@@ -30,8 +30,9 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
         InstallParam installParam;
-        installParam.isPreInstallApp = false;
-        installParam.specifiedDistributionType = BUNDLE_NAME;
+        bool isPreInstallApp = false;
+        installParam.isPreInstallApp = isPreInstallApp;
+        installParam.specifiedDistributionType = std::string(data, size);
         installParam.additionalInfo = BUNDLE_NAME;
         AppServiceFwkInstaller appServiceFwk;
         Security::Verify::ProvisionInfo provisionInfo;

@@ -25,8 +25,8 @@ namespace {
     bool fuzzelDisableDynamicIconCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        std::string emptyStr;
-        auto ret = impl.DisableDynamicIcon(emptyStr);
+        std::string bundleName (reinterpret_cast<const char*>(data), size);
+        auto ret = impl.DisableDynamicIcon(bundleName);
         if (ret == ERR_OK) {
             return true;
         }

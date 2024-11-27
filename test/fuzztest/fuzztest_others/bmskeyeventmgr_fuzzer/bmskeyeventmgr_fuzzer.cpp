@@ -26,7 +26,7 @@ constexpr size_t U32_AT_SIZE = 4;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     BmsKeyEventMgr::ProcessMainBundleStatusFinally();
-    BmsKeyEventMgr::ProcessMainBundleInstallFailed("", 0);
+    BmsKeyEventMgr::ProcessMainBundleInstallFailed(std::string(data, size), 0);
     return true;
 }
 } // namespace OHOS

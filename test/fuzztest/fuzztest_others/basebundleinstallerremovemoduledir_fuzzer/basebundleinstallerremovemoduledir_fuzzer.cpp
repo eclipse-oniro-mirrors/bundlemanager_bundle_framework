@@ -27,7 +27,7 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char *data, size_t size)
     {
         BaseBundleInstaller basebundleinstall;
-        std::string modulePath;
+        std::string modulePath = std::string(data, size);
         auto ret1 = basebundleinstall.RemoveModuleDir(modulePath);
         return true;
     }

@@ -23,6 +23,7 @@ namespace OHOS {
     {
         Parcel dataMessageParcel;
         CommonEventInfo oldCommonEventInfo;
+        oldCommonEventInfo.name = std::string(reinterpret_cast<const char*>(data), size);
         if (!oldCommonEventInfo.Marshalling(dataMessageParcel)) {
             return false;
         }

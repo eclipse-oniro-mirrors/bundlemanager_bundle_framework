@@ -29,7 +29,8 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
         AppServiceFwkInstaller appServicefwk;
-        appServicefwk.MoveSoToRealPath("", "", "");
+        std::string moduleName = std::string(data, size);
+        appServicefwk.MoveSoToRealPath(moduleName, "", "");
         return true;
     }
 }

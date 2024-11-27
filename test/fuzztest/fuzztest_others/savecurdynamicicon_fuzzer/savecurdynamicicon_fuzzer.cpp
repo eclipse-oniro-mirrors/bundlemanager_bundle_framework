@@ -26,13 +26,13 @@ namespace {
     bool fuzzelSaveCurDynamicIconCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        impl.SaveCurDynamicIcon(BUNDLE_NAME2, TEST_MODULE);
+        impl.SaveCurDynamicIcon(std::string(reinterpret_cast<const char*>(data), size), TEST_MODULE);
         return true;
     }
     bool fuzzelSaveCurDynamicIconCaseTwo(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        impl.SaveCurDynamicIcon(BUNDLE_NAME2, "");
+        impl.SaveCurDynamicIcon(BUNDLE_NAME2, std::string(reinterpret_cast<const char*>(data), size));
         return true;
     }
 }

@@ -27,6 +27,7 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char *data, size_t size)
     {
         BaseBundleInstaller basebundleinstall;
+        basebundleinstall.SetCallingUid(reinterpret_cast<uintptr_t>(data));
         bool isBootScene = true;
         basebundleinstall.MarkPreBundleSyeEventBootTag(isBootScene);
         return true;

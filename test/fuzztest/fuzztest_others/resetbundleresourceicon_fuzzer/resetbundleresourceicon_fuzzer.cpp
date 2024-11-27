@@ -19,13 +19,10 @@
 using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
-namespace {
-    const std::string BUNDLE_NAME2 = "com.ohos.mms";
-}
     bool fuzzelResetBundleResourceIconCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
-        bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME2);
+        bool ret = impl.ResetBundleResourceIcon(std::string(reinterpret_cast<const char*>(data), size));
         return ret;
     }
 }

@@ -27,7 +27,7 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char *data, size_t size)
     {
         BaseBundleInstaller basebundleinstall;
-        std::vector<std::string> bundlePaths;
+        std::vector<std::string> bundlePaths = {std::string(data, size)};
         auto ret1 = basebundleinstall.CheckSysCap(bundlePaths);
         return true;
     }

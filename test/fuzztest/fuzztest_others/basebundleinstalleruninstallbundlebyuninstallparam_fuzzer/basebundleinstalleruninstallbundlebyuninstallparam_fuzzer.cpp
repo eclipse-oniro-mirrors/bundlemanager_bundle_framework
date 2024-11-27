@@ -28,6 +28,7 @@ namespace OHOS {
     {
         BaseBundleInstaller basebundleinstall;
         UninstallParam uninstallParam;
+        uninstallParam.bundleName = std::string(data, size);
         auto ret1 = basebundleinstall.UninstallBundleByUninstallParam(uninstallParam);
         return true;
     }

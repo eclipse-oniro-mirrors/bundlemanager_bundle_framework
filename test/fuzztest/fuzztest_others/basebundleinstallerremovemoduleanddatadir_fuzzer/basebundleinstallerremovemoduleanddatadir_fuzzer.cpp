@@ -29,7 +29,7 @@ namespace OHOS {
         BaseBundleInstaller basebundleinstall;
         InnerBundleInfo info;
         std::string modulePackage;
-        int32_t userId = 0;
+        int32_t userId = reinterpret_cast<uintptr_t>(data);
         bool isKeepData = true;
         auto ret1 = basebundleinstall.RemoveModuleAndDataDir(info, modulePackage, userId, isKeepData);
         return true;

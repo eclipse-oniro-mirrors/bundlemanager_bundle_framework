@@ -27,6 +27,7 @@ namespace OHOS {
     {
         Parcel dataMessageParcel;
         AbilityInfo oldAbilityInfo;
+        oldAbilityInfo.name = std::string(reinterpret_cast<const char*>(data), size);
         if (!oldAbilityInfo.Marshalling(dataMessageParcel)) {
             return false;
         }

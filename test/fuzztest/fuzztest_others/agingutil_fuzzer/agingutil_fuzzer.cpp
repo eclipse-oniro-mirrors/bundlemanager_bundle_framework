@@ -27,7 +27,10 @@ constexpr size_t U32_AT_SIZE = 4;
 constexpr uint8_t ENABLE = 2;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    AgingBundleInfo agingBundleInfo;
+    std::string name = std::string(data, size);
+    int64_t time = reinterpret_cast<uintptr_t>(data);
+    int32_t startCount = 0;
+    AgingBundleInfo agingBundleInfo{name, time, startCount};
     agingBundleInfo.GetBundleName();
     agingBundleInfo.GetRecentlyUsedTime();
     agingBundleInfo.GetStartCount();

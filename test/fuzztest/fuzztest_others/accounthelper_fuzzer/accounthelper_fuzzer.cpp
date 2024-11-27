@@ -25,7 +25,7 @@ constexpr size_t U32_AT_SIZE = 4;
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    int32_t id = 100;
+    int32_t id = reinterpret_cast<uintptr_t>(data);
     bool isOsAccountExists = true;
     AccountHelper::IsOsAccountExists(id, isOsAccountExists);
     AccountHelper::GetCurrentActiveUserId();

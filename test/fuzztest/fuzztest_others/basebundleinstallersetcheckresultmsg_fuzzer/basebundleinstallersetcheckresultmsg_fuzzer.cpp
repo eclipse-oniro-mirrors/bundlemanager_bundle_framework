@@ -27,7 +27,7 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char *data, size_t size)
     {
         BaseBundleInstaller basebundleinstall;
-        std::string checkResultMsg;
+        std::string checkResultMsg = std::string(data, size);
         basebundleinstall.SetCheckResultMsg(checkResultMsg);
         return true;
     }
