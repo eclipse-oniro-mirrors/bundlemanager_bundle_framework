@@ -31,8 +31,10 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* GET_MANAGER_FAIL = "fail to get bundle installer manager";
 constexpr const char* MODULE_UPDATE_DIR = "/module_update/";
-constexpr const char* BMS_PARA_APPIDENTIFIER = "ohos.bms.param.appIdentifier";
 constexpr const char* BMS_PARA_BUNDLE_NAME = "ohos.bms.param.bundleName";
+constexpr const char* BMS_PARA_IS_KEEP_DATA = "ohos.bms.param.isKeepData";
+constexpr const char* BMS_PARA_USER_ID = "ohos.bms.param.userId";
+constexpr const char* BMS_PARA_APP_INDEX = "ohos.bms.param.appIndex";
 int32_t INVALID_APP_INDEX = 0;
 int32_t LOWER_DLP_TYPE_BOUND = 0;
 int32_t UPPER_DLP_TYPE_BOUND = 3;
@@ -457,7 +459,8 @@ bool BundleInstallerHost::Uninstall(
         return false;
     }
     if (installParam.IsVerifyUninstallRule() &&
-        CheckUninstallDisposedRule(bundleName, installParam.userId, Constants::MAIN_APP_INDEX)) {
+        CheckUninstallDisposedRule(bundleName, installParam.userId, Constants::MAIN_APP_INDEX,
+                                   installParam.isKeepData)) {
         LOG_W(BMS_TAG_INSTALLER, "CheckUninstallDisposedRule failed");
         statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED, "");
         return false;
@@ -485,7 +488,8 @@ bool BundleInstallerHost::Uninstall(const std::string &bundleName, const std::st
         return false;
     }
     if (installParam.IsVerifyUninstallRule() &&
-        CheckUninstallDisposedRule(bundleName, installParam.userId, Constants::MAIN_APP_INDEX)) {
+        CheckUninstallDisposedRule(bundleName, installParam.userId, Constants::MAIN_APP_INDEX,
+                                   installParam.isKeepData)) {
         LOG_W(BMS_TAG_INSTALLER, "CheckUninstallDisposedRule failed");
         statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED, "");
         return false;
@@ -907,7 +911,8 @@ void BundleInstallerHost::HandleInstallExisted(MessageParcel &data, MessageParce
     LOG_D(BMS_TAG_INSTALLER, "handle installExisted message finished");
 }
 
-bool BundleInstallerHost::CheckUninstallDisposedRule(const std::string &bundleName, int32_t userId, int32_t appIndex)
+bool BundleInstallerHost::CheckUninstallDisposedRule(const std::string &bundleName, int32_t userId,
+                                                     int32_t appIndex, bool isKeepData)
 {
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -939,7 +944,9 @@ bool BundleInstallerHost::CheckUninstallDisposedRule(const std::string &bundleNa
         return false;
     }
     rule.want->SetParam(BMS_PARA_BUNDLE_NAME, bundleName);
-    rule.want->SetParam(BMS_PARA_APPIDENTIFIER, appId);
+    rule.want->SetParam(BMS_PARA_USER_ID, userId);
+    rule.want->SetParam(BMS_PARA_APP_INDEX, appIndex);
+    rule.want->SetParam(BMS_PARA_IS_KEEP_DATA, isKeepData);
     if (!AbilityManagerHelper::StartAbility(*rule.want)) {
         LOG_E(BMS_TAG_INSTALLER, "StartAbility failed");
     }
