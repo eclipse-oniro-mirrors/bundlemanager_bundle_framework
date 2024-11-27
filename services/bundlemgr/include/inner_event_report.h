@@ -59,7 +59,7 @@ private:
     static void InnerSendQueryOfContinueTypeEvent(const EventInfo& eventInfo);
     static void InnerSendFreeInstallEvent(const EventInfo& eventInfo);
     static void InnerSendBmsDiskSpaceEvent(const EventInfo& eventInfo);
-    static void InnerSendAppConitolRule(const EventInfo& eventInfo);
+    static void InnerSendAppControlRule(const EventInfo& eventInfo);
 
     template<typename... Types>
     static void InnerEventWrite(const std::string &eventName,

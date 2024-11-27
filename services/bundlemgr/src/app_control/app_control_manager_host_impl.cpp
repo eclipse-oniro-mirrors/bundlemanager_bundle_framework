@@ -752,7 +752,7 @@ ErrCode AppControlManagerHostImpl::SetUninstallDisposedRule(const std::string &a
     info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_ADD_RULE);
     info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_UNINSTALL_DISPOSE_RULE);
     info.appIndex = appIndex;
-    EventReport::SendAppConitolRuleEvent(info);
+    EventReport::SendAppControlRuleEvent(info);
     return ret;
 }
 
@@ -796,7 +796,7 @@ ErrCode AppControlManagerHostImpl::DeleteUninstallDisposedRule(const std::string
     info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_REMOVE_RULE);
     info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_UNINSTALL_DISPOSE_RULE);
     info.appIndex = appIndex;
-    EventReport::SendAppConitolRuleEvent(info);
+    EventReport::SendAppControlRuleEvent(info);
     return ret;
 }
 
