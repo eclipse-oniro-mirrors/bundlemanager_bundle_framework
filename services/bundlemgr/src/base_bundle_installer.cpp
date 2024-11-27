@@ -2928,8 +2928,12 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
 
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "fail to create bundle data dir, error is %{public}d", result);
-        return result;
+        if (AccountHelper::IsOsAccountVerified(userId_)) {
+            LOG_E(BMS_TAG_INSTALLER, "fail to create bundle data dir, error is %{public}d", result);
+            return result;
+        } else {
+            LOG_W(BMS_TAG_INSTALLER, "user %{public}d is not activated", userId_);
+        }
     }
     std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE + info.GetBundleName();
