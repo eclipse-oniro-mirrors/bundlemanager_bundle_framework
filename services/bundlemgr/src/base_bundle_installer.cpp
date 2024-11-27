@@ -5600,7 +5600,6 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    bool isNewModuleEncrypted = false;
     for (const auto &info : infos) {
         if (hapPathRecords_.find(info.first) == hapPathRecords_.end()) {
             LOG_E(BMS_TAG_INSTALLER, "path %{public}s cannot be found in hapPathRecord", info.first.c_str());
@@ -5625,15 +5624,8 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
             return ERR_APPEXECFWK_INSTALL_DEBUG_ENCRYPTED_BUNDLE_FAILED;
         }
         newInfo.SetMoudleIsEncrpted(info.second.GetCurrentModulePackage(), isEncrypted);
-        isNewModuleEncrypted = isEncrypted ? true : isNewModuleEncrypted;
     }
-    if (isNewModuleEncrypted || IsOldModuleEncrptyed(infos, oldInfo)) {
-        LOG_D(BMS_TAG_INSTALLER, "application contains encrypted module");
-        newInfo.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
-    } else {
-        LOG_D(BMS_TAG_INSTALLER, "application does not contain encrypted module");
-        newInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
-    }
+    UpdateEncryptionStatus(infos, oldInfo, newInfo);
     if (dataMgr_ == nullptr || !dataMgr_->UpdateInnerBundleInfo(newInfo, false)) {
         LOG_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -5641,9 +5633,28 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
     return ERR_OK;
 }
 
-bool BaseBundleInstaller::IsOldModuleEncrptyed(
-    const std::unordered_map<std::string, InnerBundleInfo> &infos, const InnerBundleInfo oldInfo)
+void BaseBundleInstaller::UpdateEncryptionStatus(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo)
 {
+    if (IsBundleEncrypted(infos, oldInfo, newInfo)) {
+        LOG_D(BMS_TAG_INSTALLER, "application contains encrypted module");
+        newInfo.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
+    } else {
+        LOG_D(BMS_TAG_INSTALLER, "application does not contain encrypted module");
+        newInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
+    }
+}
+
+bool BaseBundleInstaller::IsBundleEncrypted(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo)
+{
+    // any of the new module is entryped, then the bundle is entryped
+    for (const auto &info : infos) {
+        if (newInfo.IsEncryptedMoudle(info.second.GetCurrentModulePackage())) {
+            LOG_D(BMS_TAG_INSTALLER, "new installed module is encrypted");
+            return true;
+        }
+    }
     // infos does not contain encrypted module
     // if upgrade, no need to check old bundle
     if (infos.empty() || infos.begin()->second.GetVersionCode() > oldInfo.GetVersionCode()) {
@@ -5656,16 +5667,16 @@ bool BaseBundleInstaller::IsOldModuleEncrptyed(
     // if old bundle is encrypted, check whether all encrypted old modules are updated
     std::vector<std::string> encryptedModuleNames;
     oldInfo.GetAllEncryptedModuleNames(encryptedModuleNames);
-    for (const auto &moduelName : encryptedModuleNames) {
+    for (const auto &moduleName : encryptedModuleNames) {
         bool moduleUpdated = false;
         for (const auto &info : infos) {
-            if (moduelName == info.second.GetModuleName(info.second.GetCurrentModulePackage())) {
+            if (moduleName == info.second.GetModuleName(info.second.GetCurrentModulePackage())) {
                 moduleUpdated = true;
                 break;
             }
         }
         if (!moduleUpdated) {
-            LOG_I(BMS_TAG_INSTALLER, "%{public}s is encrypted and not updated", moduelName.c_str());
+            LOG_I(BMS_TAG_INSTALLER, "%{public}s is encrypted and not updated", moduleName.c_str());
             return true;
         }
     }
