@@ -5654,19 +5654,18 @@ bool BaseBundleInstaller::IsOldModuleEncrptyed(
         return false;
     }
     // if old bundle is encrypted, check whether all encrypted old modules are updated
-    for (const auto &moduelInfo : oldInfo.GetInnerModuleInfos()) {
-        if (!moduelInfo.second.isEncrypted) {
-            continue;
-        }
+    std::vector<std::string> encryptedModuleNames;
+    oldInfo.GetAllEncryptedModuleNames(encryptedModuleNames);
+    for (const auto &moduelName : encryptedModuleNames) {
         bool moduleUpdated = false;
         for (const auto &info : infos) {
-            if (moduelInfo.second.moduleName == info.second.GetModuleName(info.second.GetCurrentModulePackage())) {
+            if (moduelName == info.second.GetModuleName(info.second.GetCurrentModulePackage())) {
                 moduleUpdated = true;
                 break;
             }
         }
         if (!moduleUpdated) {
-            LOG_I(BMS_TAG_INSTALLER, "An old encrypted module is not updated");
+            LOG_I(BMS_TAG_INSTALLER, "%{public}s is encrypted and not updated", moduelName.c_str());
             return true;
         }
     }
