@@ -4120,6 +4120,15 @@ bool InnerBundleInfo::IsEncryptedMoudle(const std::string &packageName) const
     return it->second.isEncrypted;
 }
 
+void InnerBundleInfo::GetAllEncryptedModuleNames(std::vector<std::string> &moduleNames) const
+{
+    for (const auto &info : innerModuleInfos_) {
+        if (info.second.isEncrypted) {
+            moduleNames.emplace_back(info.second.moduleName);
+        }
+    }
+}
+
 bool InnerBundleInfo::IsContainEncryptedModule() const
 {
     for (const auto &info : innerModuleInfos_) {

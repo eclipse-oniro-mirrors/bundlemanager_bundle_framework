@@ -1271,7 +1271,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
     if (installParam.copyHapToInstallPath) {
         LOG_D(BMS_TAG_INSTALLER, "begin to copy hap to install path");
-        result = SaveHapToInstallPath(newInfos);
+        result = SaveHapToInstallPath(newInfos, oldInfo);
         CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
     }
 
@@ -4884,7 +4884,8 @@ void BaseBundleInstaller::SaveHapPathToRecords(
     }
 }
 
-ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos)
+ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const InnerBundleInfo &oldInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     // size of code signature files should be same with the size of hap and hsp
@@ -4926,7 +4927,7 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     LOG_D(BMS_TAG_INSTALLER, "copy hap to install path success");
 
     // 2. check encryption of hap
-    if ((result = CheckHapEncryption(infos)) != ERR_OK) {
+    if ((result = CheckHapEncryption(infos, oldInfo)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "check encryption of hap failed %{public}d", result);
         return result;
     }
@@ -5649,11 +5650,12 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
     return tempDir.append(hapPath.substr(posOfPathSep));
 }
 
-ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos)
+ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const InnerBundleInfo &oldInfo)
 {
     LOG_D(BMS_TAG_INSTALLER, "begin to check hap encryption");
-    InnerBundleInfo oldInfo;
-    if (!FetchInnerBundleInfo(oldInfo)) {
+    InnerBundleInfo newInfo;
+    if (!FetchInnerBundleInfo(newInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -5680,20 +5682,64 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
                 bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_DEBUG_ENCRYPTED_BUNDLE_FAILED;
         }
-        oldInfo.SetMoudleIsEncrpted(info.second.GetCurrentModulePackage(), isEncrypted);
+        newInfo.SetMoudleIsEncrpted(info.second.GetCurrentModulePackage(), isEncrypted);
     }
-    if (oldInfo.IsContainEncryptedModule()) {
-        LOG_D(BMS_TAG_INSTALLER, "application contains encrypted module");
-        oldInfo.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
-    } else {
-        LOG_D(BMS_TAG_INSTALLER, "application does not contain encrypted module");
-        oldInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
-    }
-    if (dataMgr_ == nullptr || !dataMgr_->UpdateInnerBundleInfo(oldInfo, false)) {
+    UpdateEncryptionStatus(infos, oldInfo, newInfo);
+    if (dataMgr_ == nullptr || !dataMgr_->UpdateInnerBundleInfo(newInfo, false)) {
         LOG_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     return ERR_OK;
+}
+
+void BaseBundleInstaller::UpdateEncryptionStatus(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo)
+{
+    if (IsBundleEncrypted(infos, oldInfo, newInfo)) {
+        LOG_D(BMS_TAG_INSTALLER, "application contains encrypted module");
+        newInfo.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
+    } else {
+        LOG_D(BMS_TAG_INSTALLER, "application does not contain encrypted module");
+        newInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
+    }
+}
+
+bool BaseBundleInstaller::IsBundleEncrypted(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo)
+{
+    // any of the new module is entryped, then the bundle is entryped
+    for (const auto &info : infos) {
+        if (newInfo.IsEncryptedMoudle(info.second.GetCurrentModulePackage())) {
+            LOG_D(BMS_TAG_INSTALLER, "new installed module is encrypted");
+            return true;
+        }
+    }
+    // infos does not contain encrypted module
+    // if upgrade, no need to check old bundle
+    if (infos.empty() || infos.begin()->second.GetVersionCode() > oldInfo.GetVersionCode()) {
+        return false;
+    }
+    // if not upgrade and old bundle is not encrypted, the new bundle is alse not encrypted
+    if (!oldInfo.IsContainEncryptedModule()) {
+        return false;
+    }
+    // if old bundle is encrypted, check whether all encrypted old modules are updated
+    std::vector<std::string> encryptedModuleNames;
+    oldInfo.GetAllEncryptedModuleNames(encryptedModuleNames);
+    for (const auto &moduleName : encryptedModuleNames) {
+        bool moduleUpdated = false;
+        for (const auto &info : infos) {
+            if (moduleName == info.second.GetModuleName(info.second.GetCurrentModulePackage())) {
+                moduleUpdated = true;
+                break;
+            }
+        }
+        if (!moduleUpdated) {
+            LOG_I(BMS_TAG_INSTALLER, "%{public}s is encrypted and not updated", moduleName.c_str());
+            return true;
+        }
+    }
+    return false;
 }
 
 ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(

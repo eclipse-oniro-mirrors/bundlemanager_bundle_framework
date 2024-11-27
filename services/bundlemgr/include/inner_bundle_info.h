@@ -2190,6 +2190,7 @@ public:
     std::vector<std::string> GetOldAppIds() const;
     void SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted);
     bool IsEncryptedMoudle(const std::string &packageName) const;
+    void GetAllEncryptedModuleNames(std::vector<std::string> &moduleNames) const;
     bool IsContainEncryptedModule() const;
     void UpdateDebug(bool debug, bool isEntry);
     ErrCode GetAppServiceHspInfo(BundleInfo &bundleInfo) const;
