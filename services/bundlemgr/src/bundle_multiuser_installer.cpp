@@ -16,6 +16,7 @@
 #include "bundle_multiuser_installer.h"
 
 #include "ability_manager_helper.h"
+#include "account_helper.h"
 #include "bms_extension_data_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
@@ -188,8 +189,12 @@ ErrCode BundleMultiUserInstaller::CreateDataDir(InnerBundleInfo &info,
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
-        APP_LOGE("fail to create data dir, error is %{public}d", result);
-        return result;
+        if (AccountHelper::IsOsAccountVerified(userId)) {
+            APP_LOGE("fail to create data dir, error is %{public}d", result);
+            return result;
+        } else {
+            APP_LOGW("user %{public}d is not activated", userId);
+        }
     }
     APP_LOGI("CreateDataDir successfully");
     return result;

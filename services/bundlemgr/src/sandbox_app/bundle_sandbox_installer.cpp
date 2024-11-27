@@ -16,6 +16,7 @@
 #include "bundle_sandbox_installer.h"
 
 #include "ability_manager_helper.h"
+#include "account_helper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "datetime_ex.h"
@@ -257,8 +258,12 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
     createDirParam.isDlpSandbox = (appIndex > DLP_SANDBOX_APP_INDEX);
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
-        APP_LOGE("fail to create sandbox data dir, error is %{public}d", result);
-        return result;
+        if (AccountHelper::IsOsAccountVerified(userId_)) {
+            APP_LOGE("fail to create sandbox data dir, error is %{public}d", result);
+            return result;
+        } else {
+            APP_LOGW("user %{public}d is not activated", userId_);
+        }
     }
     std::string dataBaseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
         ServiceConstants::DATABASE + innerDataDir;

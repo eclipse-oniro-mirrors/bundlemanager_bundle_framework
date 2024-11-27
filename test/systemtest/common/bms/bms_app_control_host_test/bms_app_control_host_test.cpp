@@ -358,5 +358,50 @@ HWTEST_F(BmsAppControlHostTest, HandleGetAbilityRunningControlRule_0100, Functio
     ErrCode res = appControlHost.HandleGetAbilityRunningControlRule(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: HandleSetUninstallDisposedRule_0100
+ * @tc.name: Test HandleSetUninstallDisposedRule by AppControlHost
+ * @tc.desc: 1.HandleSetUninstallDisposedRule test
+ */
+HWTEST_F(BmsAppControlHostTest, HandleSetUninstallDisposedRule_0100, Function | MediumTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleSetUninstallDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetUninstallDisposedRule_0100
+ * @tc.name: Test HandleGetUninstallDisposedRule by AppControlHost
+ * @tc.desc: 1.HandleGetUninstallDisposedRule test
+ */
+HWTEST_F(BmsAppControlHostTest, HandleGetUninstallDisposedRule_0100, Function | MediumTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleGetUninstallDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleDeleteUninstallDisposedRule_0100
+ * @tc.name: Test HandleDeleteUninstallDisposedRule by AppControlHost
+ * @tc.desc: 1.HandleDeleteUninstallDisposedRule test
+ */
+HWTEST_F(BmsAppControlHostTest, HandleDeleteUninstallDisposedRule_0100, Function | MediumTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleDeleteUninstallDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // AppExecFwk
 } // OHOS

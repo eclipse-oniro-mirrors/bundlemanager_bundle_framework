@@ -2184,4 +2184,216 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7900, Function | Sma
     auto res = appControlManager->DeleteAppInstallControlRule(CALLER_BUNDLE_NAME, controlRuleType, USERID);
     EXPECT_EQ(ERR_OK, res);
 }
+
+/**
+ * @tc.number: UninstallDisposedRule_0100
+ * @tc.name: Test SetUninstallDisposedRule by AppControlProxy
+ * @tc.desc: 1.SetUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    UninstallDisposedRule uninstallDisposedRule;
+    ErrCode res = appControlProxy->SetUninstallDisposedRule(APPID, uninstallDisposedRule, APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: UninstallDisposedRule_0200
+ * @tc.name: Test HandleSetUninstallDisposedRule by AppControlHost
+ * @tc.desc: 1.HandleSetUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0200, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleSetUninstallDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: UninstallDisposedRule_0300
+ * @tc.name: Test SetUninstallDisposedRule by AppControlManager
+ * @tc.desc: 1.SetUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0300, Function | SmallTest | Level1)
+{
+    AppControlManager appControlManager;
+    UninstallDisposedRule rule;
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    ASSERT_NE(rdb->rdbDataManager_, nullptr);
+    rdb->rdbDataManager_->bmsRdbConfig_.dbName = ServiceConstants::BUNDLE_RDB_NAME;
+    rdb->rdbDataManager_->bmsRdbConfig_.tableName = "app_control";
+    appControlManager.appControlManagerDb_ = rdb;
+    auto res = appControlManager.SetUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallDisposedRule_0400
+ * @tc.name: Test SetUninstallDisposedRule by AppControlManagerRdb
+ * @tc.desc: 1.SetUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0400, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    UninstallDisposedRule uninstallDisposedRule;
+    auto res = rdb->SetUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, uninstallDisposedRule, APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallDisposedRule_0500
+ * @tc.name: Test GetUninstallDisposedRule by AppControlProxy
+ * @tc.desc: 1.GetUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0500, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    UninstallDisposedRule uninstallDisposedRule;
+    ErrCode res = appControlProxy->GetUninstallDisposedRule(APPID, APP_INDEX, USERID, uninstallDisposedRule);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: UninstallDisposedRule_0600
+ * @tc.name: Test HandleGetUninstallDisposedRule by AppControlHost
+ * @tc.desc: 1.HandleGetUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0600, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleGetUninstallDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallDisposedRule_0700
+ * @tc.name: Test GetUninstallDisposedRule by AppControlManager
+ * @tc.desc: 1.GetUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0700, Function | SmallTest | Level1)
+{
+    AppControlManager appControlManager;
+    UninstallDisposedRule uninstallDisposedRule;
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    ASSERT_NE(rdb->rdbDataManager_, nullptr);
+    rdb->rdbDataManager_->bmsRdbConfig_.dbName = ServiceConstants::BUNDLE_RDB_NAME;
+    rdb->rdbDataManager_->bmsRdbConfig_.tableName = "app_control";
+    appControlManager.appControlManagerDb_ = rdb;
+    auto res = appControlManager.GetUninstallDisposedRule(APPID, APP_INDEX, USERID, uninstallDisposedRule);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallDisposedRule_0800
+ * @tc.name: Test GetUninstallDisposedRule by AppControlManagerRdb
+ * @tc.desc: 1.GetUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0800, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    UninstallDisposedRule uninstallDisposedRule;
+    auto res = rdb->GetUninstallDisposedRule(APPID, APP_INDEX, USERID, uninstallDisposedRule);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallDisposedRule_0900
+ * @tc.name: Test GetUninstallDisposedRule by AppControlManagerRdb
+ * @tc.desc: 1.GetUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0900, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    UninstallDisposedRule rule;
+    rule.componentType = ComponentType::UI_ABILITY;
+    rule.priority = 0;
+    rdb->SetUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, APP_INDEX, USERID);
+    UninstallDisposedRule uninstallDisposedRule;
+    auto res = rdb->GetUninstallDisposedRule(APPID, APP_INDEX, USERID, uninstallDisposedRule);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(rule.componentType, uninstallDisposedRule.componentType);
+    EXPECT_EQ(rule.priority, uninstallDisposedRule.priority);
+}
+
+/**
+ * @tc.number: UninstallDisposedRule_1000
+ * @tc.name: Test DeleteUninstallDisposedRule by AppControlManager
+ * @tc.desc: 1.DeleteUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_1000, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    UninstallDisposedRule uninstallDisposedRule;
+    auto res = appControlManager->DeleteUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallDisposedRule_1100
+ * @tc.name: Test HandleDeleteUninstallDisposedRule by AppControlHost
+ * @tc.desc: 1.HandleDeleteUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_1100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleDeleteUninstallDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallDisposedRule_1200
+ * @tc.name: Test DeleteUninstallDisposedRule by AppControlManager
+ * @tc.desc: 1.DeleteUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_1200, Function | SmallTest | Level1)
+{
+    AppControlManager appControlManager;
+    UninstallDisposedRule uninstallDisposedRule;
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    ASSERT_NE(rdb->rdbDataManager_, nullptr);
+    rdb->rdbDataManager_->bmsRdbConfig_.dbName = ServiceConstants::BUNDLE_RDB_NAME;
+    rdb->rdbDataManager_->bmsRdbConfig_.tableName = "app_control";
+    appControlManager.appControlManagerDb_ = rdb;
+    auto res = appControlManager.DeleteUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallDisposedRule_1300
+ * @tc.name: Test DeleteUninstallDisposedRule by AppControlManagerRdb
+ * @tc.desc: 1.DeleteUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_1300, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    UninstallDisposedRule uninstallDisposedRule;
+    auto res = rdb->DeleteUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // OHOS

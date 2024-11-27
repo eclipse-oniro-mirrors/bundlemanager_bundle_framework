@@ -222,6 +222,9 @@ enum class AppControlManagerInterfaceCode : uint8_t {
     GET_DISPOSED_RULE_FOR_CLONE_APP = 21,
     SET_DISPOSED_RULE_FOR_CLONE_APP = 22,
     DELETE_DISPOSED_RULE_FOR_CLONE_APP = 23,
+    SET_UNINSTALL_DISPOSED_RULE = 24,
+    GET_UNINSTALL_DISPOSED_RULE = 25,
+    DELETE_UNINSTALL_DISPOSED_RULE = 26,
 };
 
 /* SAID: 401-96 Interface No.96 subservice also provides the following interfaces */

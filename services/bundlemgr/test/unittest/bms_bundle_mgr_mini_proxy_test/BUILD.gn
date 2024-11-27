@@ -1,0 +1,61 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("../../../../../appexecfwk.gni")
+module_output_path = "bundle_framework/bundlemgrservice"
+
+ohos_unittest("BmsBundleMgrMiniProxyTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "${bundle_framework_path}/interfaces/inner_api/appexecfwk_core/include/bundlemgr",
+    "${bundle_framework_path}/interfaces/kits/cj/src",
+  ]
+
+  sources = [ "bms_bundle_mgr_mini_proxy_test.cpp" ]
+
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  deps = [
+    "${bundle_framework_path}/interfaces/inner_api/appexecfwk_core:bundlemgr_mini",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+  ]
+
+  defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:app_manager",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+}
+
+group("unittest") {
+  testonly = true
+  deps = [ ":BmsBundleMgrMiniProxyTest" ]
+}

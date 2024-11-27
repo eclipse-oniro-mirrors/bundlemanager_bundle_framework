@@ -74,6 +74,13 @@ public:
         int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode DeleteDisposedRuleForCloneApp(const std::string &appId, int32_t appIndex,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    
+    virtual ErrCode SetUninstallDisposedRule(const std::string &appIdentifier,
+        const UninstallDisposedRule &disposedRule, int32_t appIndex, int32_t userId) override;
+    virtual ErrCode GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
+        int32_t userId, UninstallDisposedRule &rule) override;
+    virtual ErrCode DeleteUninstallDisposedRule(const std::string &appIdentifier,
+        int32_t appIndex, int32_t userId) override;
 
 private:
     bool WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &data);

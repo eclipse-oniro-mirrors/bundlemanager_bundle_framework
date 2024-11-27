@@ -22,6 +22,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_service_constants.h"
+#include "event_report.h"
 #include "ipc_skeleton.h"
 
 namespace OHOS {
@@ -671,5 +672,133 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedRuleForCloneApp(const std::stri
     }
     return ret;
 }
+
+ErrCode AppControlManagerHostImpl::GetUninstallDisposedRule(const std::string &appIdentifier,
+    int32_t appIndex, int32_t userId, UninstallDisposedRule &rule)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({PERMISSION_DISPOSED_STATUS,
+        PERMISSION_GET_DISPOSED_STATUS})) {
+        LOG_W(BMS_TAG_DEFAULT, "verify get uninstall disposed rule permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+        LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "null appControlManager_");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    auto ret = appControlManager_->GetUninstallDisposedRule(appIdentifier, appIndex, userId, rule);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "error:%{public}d, appIndex:%{public}d",
+            ret, appIndex);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::SetUninstallDisposedRule(const std::string &appIdentifier,
+    const UninstallDisposedRule &rule, int32_t appIndex, int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
+        LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+        LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    if (rule.want == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "null want");
+        return ERR_BUNDLE_MANAGER_INVALID_UNINSTALL_RULE;
+    }
+    if (callerName != rule.want->GetBundle()) {
+        LOG_E(BMS_TAG_DEFAULT, "callerName is not equal to bundleName in want");
+        return ERR_BUNDLE_MANAGER_INVALID_UNINSTALL_RULE;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "null appControlManager_");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    auto ret = appControlManager_->SetUninstallDisposedRule(callerName, appIdentifier, rule, appIndex, userId);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "error:%{public}d, appIndex:%{public}d",
+            ret, appIndex);
+    }
+    EventInfo info;
+    info.callingName = callerName;
+    info.userId = userId;
+    info.appIds.push_back(appIdentifier);
+    info.rule = rule.ToString();
+    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_ADD_RULE);
+    info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_UNINSTALL_DISPOSE_RULE);
+    info.appIndex = appIndex;
+    EventReport::SendAppControlRuleEvent(info);
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::DeleteUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
+    int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
+        LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+        LOG_E(BMS_TAG_DEFAULT, "appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "null appControlManager_");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    auto ret = appControlManager_->DeleteUninstallDisposedRule(callerName, appIdentifier, appIndex, userId);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "error:%{public}d, appIndex:%{public}d", ret, appIndex);
+    }
+    EventInfo info;
+    info.callingName = callerName;
+    info.userId = userId;
+    info.appIds.push_back(appIdentifier);
+    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_REMOVE_RULE);
+    info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_UNINSTALL_DISPOSE_RULE);
+    info.appIndex = appIndex;
+    EventReport::SendAppControlRuleEvent(info);
+    return ret;
+}
+
 } // AppExecFwk
 } // OHOS

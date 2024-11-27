@@ -7746,4 +7746,16 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllBundleDirs_0002, Function | SmallTest | Lev
         EXPECT_EQ(bundleDirs.size(), 0);
     }
 }
+
+/**
+ * @tc.number: IBundleStatusCallback_0001
+ * @tc.name: SetUserId
+ * @tc.desc: test SetUserId
+ */
+HWTEST_F(BmsBundleDataMgrTest, IBundleStatusCallback_0001, Function | SmallTest | Level1)
+{
+    IBundleStatusCallbackTest iBundleStatusCallbackTest;
+    iBundleStatusCallbackTest.SetUserId(Constants::DEFAULT_USERID);
+    EXPECT_EQ(iBundleStatusCallbackTest.GetUserId(), Constants::DEFAULT_USERID);
+}
 } // OHOS
