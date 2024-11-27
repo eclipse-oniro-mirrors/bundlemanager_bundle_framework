@@ -30,7 +30,6 @@ public:
 
     static bool UninstallApplicationProcesses(
         const std::string &bundleName, const int uid, bool isUpgradeApp = false, int32_t appIndex = 0);
-    static int32_t IsRunning(const std::string &bundleName, const int bundleUid);
     static int32_t IsRunning(const std::string &bundleName);
 };
 }  // namespace AppExecFwk

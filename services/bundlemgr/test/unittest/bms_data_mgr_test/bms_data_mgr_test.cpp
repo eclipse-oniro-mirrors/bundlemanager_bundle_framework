@@ -1157,9 +1157,6 @@ HWTEST_F(BmsDataMgrTest, BundleStateStorage_0200, Function | SmallTest | Level0)
 HWTEST_F(BmsDataMgrTest, AbilityManager_0100, Function | SmallTest | Level0)
 {
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-    int bundleUid = -1;
-    int ret = AbilityManagerHelper::IsRunning("", bundleUid);
-    EXPECT_EQ(ret, -1);
     bool res = AbilityManagerHelper::UninstallApplicationProcesses("", 0);
     EXPECT_EQ(res, true);
 #endif
