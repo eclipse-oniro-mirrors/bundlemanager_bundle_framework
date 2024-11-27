@@ -30,7 +30,7 @@ constexpr int8_t BMS_KEY_INDEX = 0;
 constexpr int8_t BMS_VALUE_INDEX = 1;
 constexpr int16_t WRITE_TIMEOUT = 300; // 300s
 constexpr int8_t CLOSE_TIME = 20; // delay 20s stop rdbStore
-constexpr const char* BMS_BACK_UP_RDB_NAME = "bmsdb_slave.db";
+constexpr const char* BMS_BACK_UP_RDB_NAME = "bms-backup.db";
 constexpr int32_t OPERATION_TYPE_OF_INSUFFICIENT_DISK = 3;
 static std::atomic<int64_t> g_lastReportTime = 0;
 constexpr int64_t REPORTING_INTERVAL = 1000 * 60 * 30; // 30min
@@ -64,7 +64,6 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
     rdbStoreConfig.SetAllowRebuild(true);
-    rdbStoreConfig.SetHaMode(NativeRdb::HAMode::MAIN_REPLICA);
     if (!isInitial_) {
         rdbStoreConfig.SetIntegrityCheck(NativeRdb::IntegrityCheck::FULL);
         isInitial_ = true;
@@ -96,7 +95,7 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     if (rebuildType == NativeRdb::RebuiltType::REBUILT || isNeedRebuildDb) {
         APP_LOGI("start %{public}s restore ret %{public}d, type:%{public}d", bmsRdbConfig_.dbName.c_str(),
             rebuildCode, static_cast<int32_t>(rebuildType));
-        int32_t restoreRet = rdbStore_->Restore("");
+        int32_t restoreRet = rdbStore_->Restore(rdbFilePath);
         if (restoreRet != NativeRdb::E_OK) {
             APP_LOGE("rdb restore failed ret:%{public}d", restoreRet);
         }
@@ -130,6 +129,21 @@ bool RdbDataManager::CheckIsSatisfyTime()
     }
     g_lastReportTime = now;
     return true;
+}
+
+void RdbDataManager::BackupRdb()
+{
+    APP_LOGI("%{public}s backup start", bmsRdbConfig_.dbName.c_str());
+    auto rdbStore = GetRdbStore();
+    if (rdbStore == nullptr) {
+        APP_LOGE("RdbStore is null");
+        return;
+    }
+    auto ret = rdbStore->Backup(bmsRdbConfig_.dbPath + std::string("/") + std::string(BMS_BACK_UP_RDB_NAME));
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("Backup failed, errCode:%{public}d", ret);
+    }
+    APP_LOGI("%{public}s backup end", bmsRdbConfig_.dbName.c_str());
 }
 
 bool RdbDataManager::InsertData(const std::string &key, const std::string &value)
