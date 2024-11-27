@@ -97,24 +97,6 @@ int SystemAbilityHelper::UpgradeApp(const std::string &bundleName, int32_t uid, 
 #endif
 }
 
-int SystemAbilityHelper::StartAbility(const Want &want)
-{
-#ifdef ABILITY_RUNTIME_ENABLE
-    sptr<AAFwk::IAbilityManager> abilityMgrProxy =
-        iface_cast<AAFwk::IAbilityManager>(SystemAbilityHelper::GetSystemAbility(ABILITY_MGR_SERVICE_ID));
-    if (abilityMgrProxy == nullptr) {
-        APP_LOGE("fail to find the app mgr service to kill application");
-        return -1;
-    }
-    std::string identity = IPCSkeleton::ResetCallingIdentity();
-    auto ret = abilityMgrProxy->StartAbility(want);
-    IPCSkeleton::SetCallingIdentity(identity);
-    return ret;
-#else
-    return 0;
-#endif
-}
-
 bool SystemAbilityHelper::UnloadSystemAbility(const int32_t systemAbilityId)
 {
     sptr<ISystemAbilityManager> systemAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();

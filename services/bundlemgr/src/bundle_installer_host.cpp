@@ -15,16 +15,16 @@
 
 #include "bundle_installer_host.h"
 
+#include "ability_manager_client.h"
+#include "app_control_manager.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_clone_installer.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
+#include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
 #include "bundle_permission_mgr.h"
 #include "ipc_skeleton.h"
-#include "ability_manager_helper.h"
-#include "bundle_mgr_service.h"
-#include "app_control_manager.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -947,8 +947,12 @@ bool BundleInstallerHost::CheckUninstallDisposedRule(const std::string &bundleNa
     rule.want->SetParam(BMS_PARA_USER_ID, userId);
     rule.want->SetParam(BMS_PARA_APP_INDEX, appIndex);
     rule.want->SetParam(BMS_PARA_IS_KEEP_DATA, isKeepData);
-    if (!AbilityManagerHelper::StartAbility(*rule.want)) {
-        LOG_E(BMS_TAG_INSTALLER, "StartAbility failed");
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->StartExtensionAbility(
+        *rule.want, nullptr, userId, AppExecFwk::ExtensionAbilityType::SERVICE);
+    IPCSkeleton::SetCallingIdentity(identity);
+    if (err != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "StartExtensionAbility failed code:%{public}d", err);
     }
 
     return true;

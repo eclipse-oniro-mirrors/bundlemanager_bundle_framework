@@ -17,13 +17,11 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_ABILITY_MANAGER_HELPER_H
 
 #include <string>
-#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class AbilityManagerHelper {
 public:
-    using Want = OHOS::AAFwk::Want;
     enum IsRunningResult : int8_t {
         FAILED = -1,
         NOT_RUNNING = 0,
@@ -34,7 +32,6 @@ public:
         const std::string &bundleName, const int uid, bool isUpgradeApp = false, int32_t appIndex = 0);
     static int32_t IsRunning(const std::string &bundleName, const int bundleUid);
     static int32_t IsRunning(const std::string &bundleName);
-    static bool StartAbility(const Want &want);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
