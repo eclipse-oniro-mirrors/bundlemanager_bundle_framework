@@ -3147,8 +3147,7 @@ bool BundleDataMgr::GetBundleList(
     return find;
 }
 
-bool BundleDataMgr::GetDebugBundleList(
-    std::vector<std::string> &bundleNames, int32_t userId) const
+bool BundleDataMgr::GetDebugBundleList(std::vector<std::string> &bundleNames, int32_t userId) const
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
