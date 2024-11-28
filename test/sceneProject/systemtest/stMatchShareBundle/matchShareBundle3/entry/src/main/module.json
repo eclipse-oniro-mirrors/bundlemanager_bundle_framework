@@ -1,0 +1,106 @@
+{
+    "module":{
+        "name":"entry_phone",
+        "type":"entry",
+        "mainElement":"MainAbility",
+        "srcEntry":"./ets/Application/AbilityStage.ts",
+        "description":"$string:phone_entry_dsc",
+        "descriptionId":16777220,
+        "deviceTypes":[
+            "2in1",
+            "tablet",
+            "default",
+            "phone"
+        ],
+        "deliveryWithInstall":true,
+        "installationFree":false,
+        "pages":"@profile:main_pages",
+        "metadata": [
+            {
+              "name": "meta_info",
+              "resource": "$profile:main_pages"
+            }
+          ],
+        "abilities":[
+            {
+                "name":"MainAbility",
+                "srcEntry":"./ets/MainAbility/MainAbility.ts",
+                "description":"$string:phone_entry_main",
+                "descriptionId":16777221,
+                "icon":"$media:icon",
+                "iconId":16777225,
+                "label":"$string:entry_label",
+                "labelId":16777218,
+                "exported":true,
+                "orientation":"portrait",
+                "metadata":[
+                    {
+                        "name":"ohos.ability.shortcuts",
+                        "resource":"$profile:shortcuts_config"
+                    }
+                ],
+                "skills":[
+                    {
+                        "actions":[
+                            "action.system.home"
+                        ],
+                        "entities":[
+                            "entity.system.home"
+                        ]
+                    },
+                    {
+                        "actions": [
+                            "ohos.want.action.sendData"
+                        ],
+                        "uris": [
+                            {
+                                "scheme": "file",
+                                "utd": "general.audio",
+                                "maxFileSupported": 50
+                            },
+                            {
+                                "scheme": "file",
+                                "utd": "general.media",
+                                "maxFileSupported": 60
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "startWindowIcon": "$media:icon",
+                "name": "BROWSER",
+                "icon": "$media:icon",
+                "visible": true,
+                "skills": [
+                  {
+                    "actions": [
+                      "ohos.want.action.viewData"
+                    ],
+                    "entities": [
+                      "entity.system.browsable"
+                    ],
+                    "uris": [
+                      {
+                        "scheme": "http"
+                      }      
+                    ]
+                  }
+                ],
+                "srcEntrance": ""
+            }
+        ],
+        "extensionAbilities":[],
+        "requestPermissions": [],
+        "querySchemes": [
+            "http",
+            "welink"
+        ],
+        "appEnvironments": [
+            {
+                "name": "name",
+                "value": "value"
+            }
+        ]
+    }
+}

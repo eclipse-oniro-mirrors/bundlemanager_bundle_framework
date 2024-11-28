@@ -84,6 +84,7 @@ group("systemtest_bms") {
     "bms_default_app_host_test:systemtest",
     "bms_install_system_test:systemtest",
     "bms_launcher_service_system_test:systemtest",
+    "bms_match_share_test:systemtest",
     "bms_overlay_install_test:systemtest",
     "bms_permission_grant_system_test:systemtest",
     "bms_sandbox_app_system_test:systemtest",
