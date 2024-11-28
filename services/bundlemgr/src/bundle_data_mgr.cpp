@@ -7943,7 +7943,7 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSav
 ErrCode BundleDataMgr::CanOpenLink(
     const std::string &link, bool &canOpen) const
 {
-    APP_LOGI("CanOpenLink link: %{public}s", link.c_str());
+    APP_LOGI("link: %{public}s", link.c_str());
     auto uid = IPCSkeleton::GetCallingUid();
     InnerBundleInfo innerBundleInfo;
     if (GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
@@ -8004,7 +8004,7 @@ void BundleDataMgr::GenerateOdid(const std::string &developerId, std::string &od
         }
     }
     odid = BundleUtil::GenerateUuid();
-    APP_LOGI("developerId:%{public}s is not existed local, need to generate an odid %{private}s",
+    APP_LOGI_NOFUNC("developerId:%{public}s not existed generate odid %{private}s",
         developerId.c_str(), odid.c_str());
 }
 
@@ -8029,7 +8029,7 @@ ErrCode BundleDataMgr::GetOdid(std::string &odid) const
 
 ErrCode BundleDataMgr::GetOdidByBundleName(const std::string &bundleName, std::string &odid) const
 {
-    APP_LOGI("start GetOdidByBundleName, bundleName %{public}s", bundleName.c_str());
+    APP_LOGI_NOFUNC("start GetOdidByBundleName -n %{public}s", bundleName.c_str());
     InnerBundleInfo innerBundleInfo;
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     const auto &item = bundleInfos_.find(bundleName);

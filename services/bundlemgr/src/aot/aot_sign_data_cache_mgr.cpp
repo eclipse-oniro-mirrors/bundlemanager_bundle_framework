@@ -48,7 +48,6 @@ void AOTSignDataCacheMgr::AddPendSignData(const AOTArgs &aotArgs, const uint32_t
 
 void AOTSignDataCacheMgr::RegisterScreenUnlockListener()
 {
-    APP_LOGI("register screen unlock event start");
     EventFwk::MatchingSkills matchingSkill;
     // use COMMON_EVENT_USER_UNLOCKED if only for device with PIN
     matchingSkill.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED);
@@ -56,21 +55,20 @@ void AOTSignDataCacheMgr::RegisterScreenUnlockListener()
     unlockEventSubscriber_ = std::make_shared<UnlockEventSubscriber>(eventInfo);
     const bool result = EventFwk::CommonEventManager::SubscribeCommonEvent(unlockEventSubscriber_);
     if (!result) {
-        APP_LOGE("register screen unlock event for pending sign AOT error");
+        APP_LOGE_NOFUNC("register screen unlock event for pending sign AOT error");
         return;
     }
-    APP_LOGI("register screen unlock event for pending sign AOT success");
+    APP_LOGI_NOFUNC("AOT register screen unlock event success");
 }
 
 void AOTSignDataCacheMgr::UnregisterScreenUnlockEvent()
 {
-    APP_LOGI("unregister screen unlock event start");
     const bool result = EventFwk::CommonEventManager::UnSubscribeCommonEvent(unlockEventSubscriber_);
     if (!result) {
-        APP_LOGE("unregister screen unlock event error");
+        APP_LOGE_NOFUNC("unregister screen unlock event error");
         return;
     }
-    APP_LOGI("unregister screen unlock event success");
+    APP_LOGI_NOFUNC("unregister screen unlock event success");
 }
 
 void AOTSignDataCacheMgr::UnlockEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &event)
@@ -88,7 +86,7 @@ void AOTSignDataCacheMgr::UnlockEventSubscriber::OnReceiveEvent(const EventFwk::
 
 void AOTSignDataCacheMgr::HandleUnlockEvent()
 {
-    APP_LOGI("pending sign thread is wake up");
+    APP_LOGI_NOFUNC("pending sign thread is wake up");
     UnregisterScreenUnlockEvent();
 
     sleep(SLEEP_TIME_FOR_WAIT_SIGN_ENABLE);
@@ -96,7 +94,7 @@ void AOTSignDataCacheMgr::HandleUnlockEvent()
     int32_t loopTimes = 0;
     while (ExecutePendSign() != ERR_OK) {
         if (++loopTimes > LOOP_TIMES_FOR_WAIT_SIGN_ENABLE) {
-            APP_LOGE("wait for enforce sign enable time out");
+            APP_LOGE_NOFUNC("wait for enforce sign enable time out");
             return;
         }
         sleep(SLEEP_TIME_FOR_WAIT_SIGN_ENABLE);
@@ -105,7 +103,7 @@ void AOTSignDataCacheMgr::HandleUnlockEvent()
         std::lock_guard<std::mutex> lock(mutex_);
         std::unordered_map<std::string, std::unordered_map<std::string, PendingData>>().swap(pendingSignData_);
     }
-    APP_LOGI("pending enforce sign success");
+    APP_LOGI_NOFUNC("pending enforce sign success");
 }
 
 ErrCode AOTSignDataCacheMgr::ExecutePendSign()
