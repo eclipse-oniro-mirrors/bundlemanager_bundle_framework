@@ -333,13 +333,13 @@ ErrCode ParamsProcessQueryExtensionInfosSync(napi_env env, napi_callback_info in
                     (extensionParamInfo.isExtensionTypeName ? TYPE_STRING : TYPE_NUMBER));
                 return ERROR_PARAM_CHECK_ERROR;
             }
-        } else if (i == ARGS_POS_TWO) {
+        } else if (i == ARGS_POS_TWO && (valueType == napi_number)) {
             if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.flags)) {
                 APP_LOGE("invalid flags");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, FLAGS, TYPE_NUMBER);
                 return ERROR_PARAM_CHECK_ERROR;
             }
-        } else if (i == ARGS_POS_THREE) {
+        } else if (i == ARGS_POS_THREE && (valueType == napi_number)) {
             if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.userId)) {
                 APP_LOGW("Parse userId failed, set this parameter to the caller userId");
             }

@@ -95,32 +95,6 @@ HWTEST_F(BmsAbilityManagerHelperTest, UninstallApplicationProcesses_0200, Functi
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
- * @tc.number: IsRunning_bundleUid_0100
- * @tc.name: IsRunning
- * @tc.desc: Return NOT_RUNNING
- */
-HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_bundleUid_0100, Function | SmallTest | Level0)
-{
-    std::string bundleName = BUNDLE_NAME;
-    int uid = 1;
-    int ret = abilityManagerHelper_->IsRunning(bundleName, uid);
-    EXPECT_EQ(ret, 0);
-}
-
-/**
- * @tc.number: IsRunning_bundleUid_0200
- * @tc.name: IsRunning
- * @tc.desc: Return FAILED
- */
-HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_bundleUid_0200, Function | SmallTest | Level0)
-{
-    std::string bundleName = BUNDLE_NAME;
-    int uid = -1;
-    int ret = abilityManagerHelper_->IsRunning(bundleName, uid);
-    EXPECT_EQ(ret, -1);
-}
-
-/**
  * @tc.number: IsRunning_moduleName_0100
  * @tc.name: IsRunning
  * @tc.desc: Return NOT_RUNNING

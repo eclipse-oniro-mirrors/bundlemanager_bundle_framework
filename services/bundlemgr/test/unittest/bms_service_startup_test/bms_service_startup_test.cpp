@@ -1026,22 +1026,6 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3700, Function | SmallTest |
 }
 
 /**
- * @tc.number: AbilityManagerHelper_0100
- * @tc.name: test IsRunning
- * @tc.desc: 1.test IsRunning of AbilityManagerHelper
- */
-HWTEST_F(BmsServiceStartupTest, AbilityManagerHelper_0100, Function | SmallTest | Level0)
-{
-    AbilityManagerHelper helper;
-    int bundleUid = -1;
-    int ret = helper.IsRunning("com.ohos.tes1", bundleUid);
-    EXPECT_EQ(ret, -1);
-    bundleUid = 100;
-    ret = helper.IsRunning("com.ohos.tes1", bundleUid);
-    EXPECT_EQ(ret, -1);
-}
-
-/**
  * @tc.number: BundleStateStorage_0100
  * @tc.name: test SaveBundleStateStorage
  * @tc.desc: 1.test SaveBundleStateStorage of BundleStateStorage
