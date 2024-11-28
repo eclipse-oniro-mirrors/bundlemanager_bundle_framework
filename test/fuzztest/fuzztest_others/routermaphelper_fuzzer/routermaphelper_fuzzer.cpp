@@ -28,6 +28,7 @@ constexpr uint8_t CODE_MAX = 22;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     BundleInfo info;
+    info.appId = std::string(data, size);
     std::vector<RouterItem> routerArrayList;
     std::vector<RouterItem> routerArray;
     std::set<std::string> moduleNameSet;

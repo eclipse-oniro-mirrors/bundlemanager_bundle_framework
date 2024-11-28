@@ -29,6 +29,8 @@ namespace OHOS {
         VerifyManagerHostImpl impl;
         std::string bundleName;
         std::vector<std::string> paths;
+        std::string dir(data, size);
+        impl.MkdirIfNotExist(dir);
         impl.RemoveTempFiles(bundleName);
         impl.RemoveTempFiles(paths);
         return true;

@@ -29,6 +29,7 @@ namespace OHOS {
         BaseBundleInstaller basebundleinstall;
         std::vector<std::string> bundlePaths;
         InstallParam installParam;
+        installParam.additionalInfo = std::string(data, size);
         Constants::AppType appType = Constants::AppType::SYSTEM_APP;
         int32_t uid = 0;
         auto ret1 = basebundleinstall.ProcessBundleInstall(bundlePaths, installParam, appType, uid);
