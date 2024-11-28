@@ -2451,7 +2451,7 @@ void BaseBundleInstaller::ProcessHqfInfo(
     const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    LOG_I(BMS_TAG_INSTALLER, "bundleName: %{public}s, moduleName: %{public}s", bundleName_.c_str(),
+    LOG_D(BMS_TAG_INSTALLER, "bundleName: %{public}s, moduleName: %{public}s", bundleName_.c_str(),
         modulePackage_.c_str());
     std::string cpuAbi;
     std::string nativeLibraryPath;
@@ -2478,7 +2478,7 @@ void BaseBundleInstaller::ProcessHqfInfo(
         return;
     }
 
-    LOG_I(BMS_TAG_INSTALLER, "ProcessHqfInfo end");
+    LOG_D(BMS_TAG_INSTALLER, "ProcessHqfInfo end");
 #endif
 }
 
@@ -2486,7 +2486,7 @@ ErrCode BaseBundleInstaller::ProcessDeployedHqfInfo(const std::string &nativeLib
     const std::string &cpuAbi, const InnerBundleInfo &newInfo, const AppQuickFix &oldAppQuickFix) const
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    LOG_I(BMS_TAG_INSTALLER, "ProcessDeployedHqfInfo");
+    LOG_D(BMS_TAG_INSTALLER, "ProcessDeployedHqfInfo");
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
@@ -2538,7 +2538,7 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
     const std::string &nativeLibraryPath, const std::string &cpuAbi, const InnerBundleInfo &newInfo) const
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    LOG_I(BMS_TAG_INSTALLER, "ProcessDeployingHqfInfo");
+    LOG_D(BMS_TAG_INSTALLER, "ProcessDeployingHqfInfo");
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
     if (quickFixDataMgr == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "quick fix data mgr is nullptr");
@@ -2554,7 +2554,7 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
     AppqfInfo &appQfInfo = appQuickFix.deployingAppqfInfo;
     ErrCode ret = ProcessDiffFiles(appQfInfo, nativeLibraryPath, cpuAbi);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "ProcessDeployingHqfInfo failed, errcode: %{public}d", ret);
+        LOG_E(BMS_TAG_INSTALLER, "failed errcode: %{public}d path: %{public}s", ret, nativeLibraryPath.c_str());
         return ret;
     }
 

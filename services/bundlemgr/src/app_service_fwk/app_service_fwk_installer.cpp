@@ -545,7 +545,7 @@ ErrCode AppServiceFwkInstaller::InnerProcessInstall(
     std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     InstallParam &installParam)
 {
-    APP_LOGI("InnerProcessInstall start bundleName: %{public}s, size: %{public}zu",
+    APP_LOGI("start -n %{public}s, size: %{public}zu",
         bundleName_.c_str(), newInfos.size());
     ErrCode result = ERR_OK;
     for (auto it = newInfos.begin(); it != newInfos.end(); ++it) {

@@ -2545,7 +2545,7 @@ OverlayMsg ModuleProfile::ObtainOverlayType(const nlohmann::json &jsonObject) co
     auto isModulePriorityExisted = moduleJson.contains(Profile::MODULE_TARGET_PRIORITY);
     if (!isTargetBundleExisted && !isAppPriorityExisted && !isTargetModuleNameExisted &&
         !isModulePriorityExisted) {
-        APP_LOGW_NOFUNC("not overlayed hap");
+        APP_LOGD("not overlayed hap");
         return overlayMsg;
     }
     if (!isTargetModuleNameExisted) {

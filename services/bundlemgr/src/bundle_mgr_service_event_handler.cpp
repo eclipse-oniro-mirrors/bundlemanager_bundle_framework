@@ -219,7 +219,7 @@ void BMSEventHandler::BeforeBmsStart()
 
 void BMSEventHandler::OnBmsStarting()
 {
-    LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler OnBmsStarting start");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BMSEventHandler OnBmsStarting start");
     // Judge whether there is install info in the persistent Db
     if (LoadInstallInfosFromDb()) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OnBmsStarting Load install info from db success");
@@ -230,7 +230,7 @@ void BMSEventHandler::OnBmsStarting()
     // If the preInstall infos does not exist in preInstall db,
     // all preInstall directory applications will be reinstalled.
     if (!LoadAllPreInstallBundleInfos()) {
-        LOG_E(BMS_TAG_DEFAULT, "OnBmsStarting Load all preInstall bundleInfos failed");
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "OnBmsStarting Load all preInstall bundleInfos failed");
         needRebootOta_ = true;
     }
 
@@ -248,7 +248,7 @@ void BMSEventHandler::OnBmsStarting()
     ResultCode resultCode = GuardAgainstInstallInfosLossedStrategy();
     switch (resultCode) {
         case ResultCode::RECOVER_OK: {
-            LOG_I(BMS_TAG_DEFAULT, "OnBmsStarting Guard against install infos lossed strategy take effect");
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OnBmsStarting Guard against install infos lossed strategy take effect");
             if (needRebootOta_) {
                 BundleRebootStartEvent();
             } else {
@@ -258,23 +258,23 @@ void BMSEventHandler::OnBmsStarting()
             break;
         }
         case ResultCode::REINSTALL_OK: {
-            LOG_I(BMS_TAG_DEFAULT, "OnBmsStarting ReInstall all haps");
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OnBmsStarting ReInstall all haps");
             needNotifyBundleScanStatus_ = true;
             break;
         }
         case ResultCode::NO_INSTALLED_DATA: {
             // First boot
-            LOG_I(BMS_TAG_DEFAULT, "OnBmsStarting first boot");
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OnBmsStarting first boot");
             BundleBootStartEvent();
             break;
         }
         default:
-            LOG_E(BMS_TAG_DEFAULT, "System internal error, install informations missing");
+            LOG_NOFUNC_E(BMS_TAG_DEFAULT, "System internal error, install informations missing");
             break;
     }
 
     SaveSystemFingerprint();
-    LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler OnBmsStarting end");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BMSEventHandler OnBmsStarting end");
 }
 
 void BMSEventHandler::AfterBmsStart()
@@ -607,6 +607,7 @@ std::vector<std::string> BMSEventHandler::CheckHapPaths(
 void BMSEventHandler::GetPreInstallRootDirList(std::vector<std::string> &rootDirList)
 {
 #ifdef CONFIG_POLOCY_ENABLE
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "print GetPreInstallRootDirList");
     auto cfgDirList = GetCfgDirList();
     if (cfgDirList != nullptr) {
         for (const auto &cfgDir : cfgDirList->paths) {
@@ -614,7 +615,7 @@ void BMSEventHandler::GetPreInstallRootDirList(std::vector<std::string> &rootDir
                 continue;
             }
 
-            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "GetPreInstallRootDirList cfgDir: %{public}s", cfgDir);
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s", cfgDir);
             rootDirList.emplace_back(cfgDir);
         }
 
@@ -672,7 +673,7 @@ bool BMSEventHandler::HasPreInstallProfile()
 void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
 {
     if (!BundleUtil::IsExistDirNoLog(dir)) {
-        LOG_W(BMS_TAG_DEFAULT, "parse dir %{public}s not exist", dir.c_str());
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "parse dir %{public}s not exist", dir.c_str());
         return;
     }
     BundleParser bundleParser;
@@ -946,7 +947,6 @@ void BMSEventHandler::InnerProcessBootSystemHspInstall()
 
 void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
 {
-    LOG_I(BMS_TAG_DEFAULT, "Install systemHsp by bundleDir(%{public}s)", preScanInfo.bundleDir.c_str());
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.removable = false;
@@ -2893,7 +2893,6 @@ void BMSEventHandler::SavePreInstallException(const std::string &bundleDir)
         return;
     }
 
-    LOG_I(BMS_TAG_DEFAULT, "Starting to save pre-install exception for bundle: %{public}s", bundleDir.c_str());
     preInstallExceptionMgr->SavePreInstallExceptionPath(bundleDir);
 }
 
@@ -2906,7 +2905,6 @@ void BMSEventHandler::SavePreInstallExceptionAppService(const std::string &bundl
         return;
     }
 
-    LOG_I(BMS_TAG_DEFAULT, "save pre-install exception for app service: %{public}s", bundleDir.c_str());
     preInstallExceptionMgr->SavePreInstallExceptionAppServicePath(bundleDir);
 }
 
@@ -2919,7 +2917,6 @@ void BMSEventHandler::DeletePreInstallExceptionAppService(const std::string &bun
         return;
     }
 
-    LOG_I(BMS_TAG_DEFAULT, "save pre-install exception for app service: %{public}s", bundleDir.c_str());
     preInstallExceptionMgr->DeletePreInstallExceptionAppServicePath(bundleDir);
 }
 
@@ -2974,7 +2971,6 @@ void BMSEventHandler::HandlePreInstallAppServicePathsException(
         }
 
         preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Del pre-install exception path:%{public}s", pathIter.c_str());
     }
 }
 
@@ -2994,7 +2990,6 @@ void BMSEventHandler::HandlePreInstallAppPathsException(
         }
 
         preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Del pre-install exception path:%{public}s", pathIter.c_str());
     }
 }
 
@@ -3019,7 +3014,6 @@ void BMSEventHandler::HandlePreInstallAppServiceBundleNamesException(
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "ota install fwk(%{public}s) error", bundleNameIter.c_str());
         }
 
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Deleting %{public}s from pre-install exception list", bundleNameIter.c_str());
         preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
     }
 }
@@ -3047,7 +3041,6 @@ void BMSEventHandler::HandlePreInstallBundleNamesException(
                 bundleNameIter.c_str());
         }
 
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Deleting %{public}s from pre-install exception list", bundleNameIter.c_str());
         preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
     }
 }

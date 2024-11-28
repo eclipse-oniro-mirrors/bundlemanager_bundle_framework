@@ -189,8 +189,8 @@ void PreInstallExceptionMgr::DeletePreInstallExceptionPath(const std::string &bu
     }
 
     exceptionPaths_.erase(bundleDir);
+    APP_LOGI_NOFUNC("exceptionPaths erase dir:%{public}s", bundleDir.c_str());
     DeletePreInstallExceptionInfosFromDb();
-    APP_LOGI_NOFUNC("Pre-install exception delete success bundleDir:%{public}s", bundleDir.c_str());
 }
 
 void PreInstallExceptionMgr::SavePreInstallExceptionBundleName(const std::string &bundleName)
@@ -225,8 +225,8 @@ void PreInstallExceptionMgr::DeletePreInstallExceptionBundleName(const std::stri
     }
 
     exceptionBundleNames_.erase(bundleName);
+    APP_LOGI_NOFUNC("exceptionBundleNames erase -n %{public}s", bundleName.c_str());
     DeletePreInstallExceptionInfosFromDb();
-    APP_LOGI_NOFUNC("Pre-install exception delete success -n %{public}s", bundleName.c_str());
 }
 
 void PreInstallExceptionMgr::SavePreInstallExceptionAppServiceBundleName(const std::string &bundleName)
@@ -261,8 +261,8 @@ void PreInstallExceptionMgr::DeletePreInstallExceptionAppServiceBundleName(const
     }
 
     exceptionAppServiceBundleNames_.erase(bundleName);
+    APP_LOGI_NOFUNC("exceptionAppServiceBundleNames erase -n %{public}s", bundleName.c_str());
     DeletePreInstallExceptionInfosFromDb();
-    APP_LOGI_NOFUNC("Pre-install exception app service delete success -n %{public}s", bundleName.c_str());
 }
 
 void PreInstallExceptionMgr::SavePreInstallExceptionAppServicePath(
@@ -304,8 +304,8 @@ void PreInstallExceptionMgr::DeletePreInstallExceptionAppServicePath(const std::
     }
 
     exceptionAppServicePaths_.erase(bundleDir);
+    APP_LOGI_NOFUNC("exceptionAppServicePaths erase dir:%{public}s", bundleDir.c_str());
     DeletePreInstallExceptionInfosFromDb();
-    APP_LOGI_NOFUNC("Pre-install exception app service delete success bundleDir:%{public}s", bundleDir.c_str());
 }
 
 void PreInstallExceptionMgr::ClearAll()

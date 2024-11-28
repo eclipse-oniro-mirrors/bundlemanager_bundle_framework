@@ -82,7 +82,7 @@ BundleMgrService::~BundleMgrService()
 
 void BundleMgrService::OnStart()
 {
-    APP_LOGI("BundleMgrService OnStart start");
+    APP_LOGI_NOFUNC("BundleMgrService OnStart start");
     if (!Init()) {
         APP_LOGE("BundleMgrService init fail");
         return;
@@ -91,7 +91,7 @@ void BundleMgrService::OnStart()
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
     AddSystemAbilityListener(BUNDLE_BROKER_SERVICE_ABILITY_ID);
     AddSystemAbilityListener(EL5_FILEKEY_SERVICE_ABILITY_ID);
-    APP_LOGI("BundleMgrService OnStart end");
+    APP_LOGI_NOFUNC("BundleMgrService OnStart end");
 }
 
 void BundleMgrService::OnStop()
@@ -123,7 +123,7 @@ bool BundleMgrService::Init()
         return false;
     }
 
-    APP_LOGI("BundleMgrService Init begin");
+    APP_LOGI_NOFUNC("BundleMgrService Init begin");
     CreateBmsServiceDir();
     InitBmsParam();
     InitPreInstallExceptionMgr();
@@ -143,7 +143,7 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitBundleResourceMgr(), "Init BundleResourceMgr fail");
     BundleResourceHelper::BundleSystemStateInit();
     ready_ = true;
-    APP_LOGI("BundleMgrService Init success");
+    APP_LOGI_NOFUNC("BundleMgrService Init success");
     return true;
 }
 
