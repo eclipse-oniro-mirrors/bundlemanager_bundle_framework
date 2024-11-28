@@ -145,6 +145,8 @@ constexpr const char* ERR_MSG_NATIVE_UNINSTALL_FAILED =
     "Failed to uninstall the HAP because uninstalling the native package failed.";
 constexpr const char* ERR_MSG_INVALID_APPINDEX =
     "The appIndex is invalid.";
+constexpr const char* ERROR_MSG_LOCKED_APPLICATION_UNINSTALL =
+    "Failed to uninstall the app because the app is locked.";
 constexpr const char* ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE =
     "The app does not support the creation of an appClone instance.";
 constexpr const char* ERR_MSG_SHORTCUT_ID_ILLEGAL =
@@ -230,6 +232,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INSTALL_NATIVE_FAILED, ERR_MSG_NATIVE_INSTALL_FAILED },
     { ERROR_UNINSTALL_NATIVE_FAILED, ERR_MSG_NATIVE_UNINSTALL_FAILED },
     { ERROR_INVALID_APPINDEX, ERR_MSG_INVALID_APPINDEX },
+    { ERROR_APPLICATION_UNINSTALL, ERROR_MSG_LOCKED_APPLICATION_UNINSTALL },
     { ERROR_APP_NOT_SUPPORTED_MULTI_TYPE, ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE },
     { ERROR_SHORTCUT_ID_ILLEGAL_ERROR, ERR_MSG_SHORTCUT_ID_ILLEGAL },
     { ERROR_INSTALL_FAILED_INCONSISTENT_SIGNATURE, ERR_MSG_INSTALL_FAILED_INCONSISTENT_SIGNATURE }

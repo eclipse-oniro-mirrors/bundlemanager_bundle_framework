@@ -15,10 +15,13 @@
 
 #include "bundle_installer_host.h"
 
+#include "ability_manager_client.h"
+#include "app_control_manager.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_clone_installer.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
+#include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
 #include "bundle_permission_mgr.h"
 #include "ipc_skeleton.h"
@@ -28,6 +31,10 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* GET_MANAGER_FAIL = "fail to get bundle installer manager";
 constexpr const char* MODULE_UPDATE_DIR = "/module_update/";
+constexpr const char* BMS_PARA_BUNDLE_NAME = "ohos.bms.param.bundleName";
+constexpr const char* BMS_PARA_IS_KEEP_DATA = "ohos.bms.param.isKeepData";
+constexpr const char* BMS_PARA_USER_ID = "ohos.bms.param.userId";
+constexpr const char* BMS_PARA_APP_INDEX = "ohos.bms.param.appIndex";
 int32_t INVALID_APP_INDEX = 0;
 int32_t LOWER_DLP_TYPE_BOUND = 0;
 int32_t UPPER_DLP_TYPE_BOUND = 3;
@@ -451,6 +458,13 @@ bool BundleInstallerHost::Uninstall(
         statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED, "");
         return false;
     }
+    if (installParam.IsVerifyUninstallRule() &&
+        CheckUninstallDisposedRule(bundleName, installParam.userId, Constants::MAIN_APP_INDEX,
+                                   installParam.isKeepData)) {
+        LOG_W(BMS_TAG_INSTALLER, "CheckUninstallDisposedRule failed");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED, "");
+        return false;
+    }
     manager_->CreateUninstallTask(bundleName, CheckInstallParam(installParam), statusReceiver);
     return true;
 }
@@ -471,6 +485,13 @@ bool BundleInstallerHost::Uninstall(const std::string &bundleName, const std::st
     if (!BundlePermissionMgr::VerifyUninstallPermission()) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
+    if (installParam.IsVerifyUninstallRule() &&
+        CheckUninstallDisposedRule(bundleName, installParam.userId, Constants::MAIN_APP_INDEX,
+                                   installParam.isKeepData)) {
+        LOG_W(BMS_TAG_INSTALLER, "CheckUninstallDisposedRule failed");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED, "");
         return false;
     }
     manager_->CreateUninstallTask(
@@ -888,6 +909,53 @@ void BundleInstallerHost::HandleInstallExisted(MessageParcel &data, MessageParce
         LOG_E(BMS_TAG_INSTALLER, "write failed");
     }
     LOG_D(BMS_TAG_INSTALLER, "handle installExisted message finished");
+}
+
+bool BundleInstallerHost::CheckUninstallDisposedRule(const std::string &bundleName, int32_t userId,
+                                                     int32_t appIndex, bool isKeepData)
+{
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "null dataMgr");
+        return false;
+    }
+
+    InnerBundleInfo bundleInfo;
+    bool isBundleExist = dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo);
+    if (!isBundleExist) {
+        LOG_E(BMS_TAG_INSTALLER, "the bundle: %{public}s is not install", bundleName.c_str());
+        return false;
+    }
+    std::string appId = bundleInfo.GetAppIdentifier();
+    if (appId.empty()) {
+        appId = bundleInfo.GetAppId();
+    }
+
+    UninstallDisposedRule rule;
+    auto ret = DelayedSingleton<AppControlManager>::GetInstance()
+                   ->GetUninstallDisposedRule(appId, appIndex, userId, rule);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "GetUninstallDisposedRule failed code:%{public}d", ret);
+        return false;
+    }
+
+    if (rule.want == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "null rule.want");
+        return false;
+    }
+    rule.want->SetParam(BMS_PARA_BUNDLE_NAME, bundleName);
+    rule.want->SetParam(BMS_PARA_USER_ID, userId);
+    rule.want->SetParam(BMS_PARA_APP_INDEX, appIndex);
+    rule.want->SetParam(BMS_PARA_IS_KEEP_DATA, isKeepData);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->StartExtensionAbility(
+        *rule.want, nullptr, userId, AppExecFwk::ExtensionAbilityType::SERVICE);
+    IPCSkeleton::SetCallingIdentity(identity);
+    if (err != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "StartExtensionAbility failed code:%{public}d", err);
+    }
+
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
