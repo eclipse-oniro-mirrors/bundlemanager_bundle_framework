@@ -258,6 +258,7 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
     createDirParam.isDlpSandbox = (appIndex > DLP_SANDBOX_APP_INDEX);
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
+        // if user is not activated, access el2-el4 may return ok but dir cannot be created
         if (AccountHelper::IsOsAccountVerified(userId_)) {
             APP_LOGE("fail to create sandbox data dir, error is %{public}d", result);
             return result;

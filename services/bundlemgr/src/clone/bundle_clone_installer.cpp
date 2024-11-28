@@ -410,6 +410,7 @@ ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
+        // if user is not activated, access el2-el4 may return ok but dir cannot be created
         if (AccountHelper::IsOsAccountVerified(userId)) {
             APP_LOGE("fail to create data dir, error is %{public}d", result);
             return result;
