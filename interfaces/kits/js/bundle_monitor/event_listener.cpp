@@ -38,15 +38,17 @@ void HandleEnvCleanup(void *data)
 
 void JsCallback(napi_env env, napi_value jsCb, void *context, void *data)
 {
-    APP_LOGD("JsCallback");
+    APP_LOGI("JsCallback");
     AsyncCallbackInfo *asyncCallbackInfo = static_cast<AsyncCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("call back is null");
         return;
     }
     std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_handle_scope scope = nullptr;
     napi_open_handle_scope(env, &scope);
     if (scope == nullptr) {
+        APP_LOGE("scope is null");
         return;
     }
     napi_value result[ARGS_SIZE_ONE] = { 0 };
