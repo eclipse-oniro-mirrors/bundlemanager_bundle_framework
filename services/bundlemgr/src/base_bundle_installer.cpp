@@ -3635,8 +3635,6 @@ ErrCode BaseBundleInstaller::RemoveBundleDataDir(
             installParam,
             sysEventInfo_.preBundleScene,
             ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED);
-    } else {
-        CHECK_RESULT(result, "RemoveBundleDataDir failed %{public}d");
     }
 
     if (forException) {
