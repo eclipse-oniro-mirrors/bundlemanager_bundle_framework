@@ -395,9 +395,9 @@ static void CreateCloudDir(const std::string &bundleName, const int32_t userid, 
 ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &createDirParam)
 {
     std::string bundleName = createDirParam.bundleName;
-    LOG_I(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 begin for %{public}s", bundleName.c_str());
+    LOG_D(BMS_TAG_INSTALLD, "begin for %{public}s", bundleName.c_str());
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 installd permission denied, only used for foundation");
+        LOG_W(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     ErrCode res = ERR_OK;
@@ -409,21 +409,21 @@ ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &creat
     shareFilesDataDir.replace(shareFilesDataDir.find("%"), 1, std::to_string(createDirParam.userId));
     // check /data/app/el2/userid/sharefiles exist or not
     if (access(shareFilesDataDir.c_str(), F_OK) != 0) {
-        LOG_W(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 No %{public}s, bundleName:%{public}s",
+        LOG_W(BMS_TAG_INSTALLD, "No %{public}s, bundleName:%{public}s",
             shareFilesDataDir.c_str(), bundleName.c_str());
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
     isExist = true;
     std::string bundleShareFilesDataDir = shareFilesDataDir + bundleName;
     if (!InstalldOperator::MkOwnerDir(bundleShareFilesDataDir, S_IRWXU, uid, gid)) {
-        LOG_E(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 MkOwnerDir %{public}s failed: %{public}d",
+        LOG_W(BMS_TAG_INSTALLD, "MkOwnerDir %{public}s failed: %{public}d",
             bundleShareFilesDataDir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
     for (const auto &dir : BUNDLE_DATA_DIR) {
         std::string childBundleDataDir = bundleShareFilesDataDir + dir;
         if (!InstalldOperator::MkOwnerDir(childBundleDataDir, S_IRWXU, uid, gid)) {
-            LOG_W(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 MkOwnerDir [%{public}s] failed: %{public}d",
+            LOG_W(BMS_TAG_INSTALLD, "MkOwnerDir [%{public}s] failed: %{public}d",
                 childBundleDataDir.c_str(), errno);
         }
     }
@@ -431,11 +431,11 @@ ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &creat
         createDirParam.isDlpSandbox);
     res = SetDirApl(bundleShareFilesDataDir, bundleName, createDirParam.apl, hapFlags);
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 SetDirApl failed: %{public}s, errno: %{public}d",
+        LOG_W(BMS_TAG_INSTALLD, "SetDirApl failed: %{public}s, errno: %{public}d",
             bundleShareFilesDataDir.c_str(), res);
         return res;
     }
-    LOG_I(BMS_TAG_INSTALLD, "CreateSharefilesDataDirEl2 succeed for %{public}s", bundleName.c_str());
+    LOG_D(BMS_TAG_INSTALLD, "succeed for %{public}s", bundleName.c_str());
     return res;
 }
 
@@ -1059,13 +1059,13 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
                 ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir +
                 ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
             cachePaths.push_back(moduleCachePath);
-            LOG_D(BMS_TAG_INSTALLD, "GetBundleStats, add module cache path: %{public}s", moduleCachePath.c_str());
+            LOG_D(BMS_TAG_INSTALLD, "add module cache path: %{public}s", moduleCachePath.c_str());
             moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
                 ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES +
                 bundleNameDir + ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR +
                 Constants::CACHE_DIR;
             cachePaths.push_back(moduleCachePath);
-            LOG_D(BMS_TAG_INSTALLD, "GetBundleStats, add module cache path: %{public}s", moduleCachePath.c_str());
+            LOG_D(BMS_TAG_INSTALLD, "add module cache path: %{public}s", moduleCachePath.c_str());
         }
     }
     return InstalldOperator::GetDiskUsageFromPath(cachePaths);
@@ -1076,10 +1076,10 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     LOG_D(BMS_TAG_INSTALLD,
-        "GetBundleStats, bundleName = %{public}s, userId = %{public}d, uid = %{public}d, appIndex = %{public}d",
+        "bundleName = %{public}s, userId = %{public}d, uid = %{public}d, appIndex = %{public}d",
         bundleName.c_str(), userId, uid, appIndex);
     LOG_D(BMS_TAG_INSTALLD,
-        "GetBundleStats, statFlag = %{public}d", statFlag);
+        "statFlag = %{public}d", statFlag);
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
