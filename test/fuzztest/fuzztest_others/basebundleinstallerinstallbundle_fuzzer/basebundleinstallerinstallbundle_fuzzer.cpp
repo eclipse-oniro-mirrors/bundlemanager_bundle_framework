@@ -29,6 +29,7 @@ namespace OHOS {
         BaseBundleInstaller basebundleinstall;
         std::string bundlePath = "/data/app/el1/bundle";
         InstallParam installParam;
+        installParam.additionalInfo = std::string(data, size);
         Constants::AppType appType = Constants::AppType::SYSTEM_APP;
         auto ret1 = basebundleinstall.InstallBundle(bundlePath, installParam, appType);
         return true;

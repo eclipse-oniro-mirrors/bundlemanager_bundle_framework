@@ -43,6 +43,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     bool enable = true;
     quickFixSwitcher.InnerSwitchQuickFix(bundleName, innerAppQuickFix, enable);
     InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBundleInstallTime(reinterpret_cast<uintptr_t>(data));
     quickFixSwitcher.CreateInnerAppqf(innerBundleInfo, enable, innerAppQuickFix);
     quickFixSwitcher.GetDataMgr();
     quickFixSwitcher.GetQuickFixDataMgr();

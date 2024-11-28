@@ -31,7 +31,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string bundleFilePath;
     bundleFilePaths.push_back(bundleFilePath);
     bool isDebug = false;
-    std::string targetPath;
+    std::string targetPath = std::string(reinterpret_cast<const char*>(data), size);
     std::string bundleName;
     bool enable = false;
     sptr<IQuickFixStatusCallback> statusCallback;

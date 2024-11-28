@@ -28,7 +28,7 @@ namespace OHOS {
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     std::vector<std::string> bundleFilePaths;
-    std::string bundleFilePath;
+    std::string bundleFilePath = std::string(reinterpret_cast<const char*>(data), size);
     bundleFilePaths.push_back(bundleFilePath);
     sptr<IQuickFixStatusCallback> statusCallback;
     bool isDebug = false;
