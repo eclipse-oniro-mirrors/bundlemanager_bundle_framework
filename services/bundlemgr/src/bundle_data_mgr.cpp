@@ -3471,13 +3471,13 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
         APP_LOGE("bundleName %{public}s is not existed in bundleInfos_", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
-
-    if (bundleInfoIter->second.GetUid(userId, appIndex) == uid) {
+    int32_t oriUid = bundleInfoIter->second.GetUid(userId, appIndex);
+    if (oriUid == uid) {
         innerBundleInfo = bundleInfoIter->second;
         return ERR_OK;
     }
 
-    APP_LOGW("the uid(%{public}d) is not exists", uid);
+    APP_LOGW("bn %{public}s uid %{public}d oriUid %{public}d ", bundleName.c_str(), uid, oriUid);
     return ERR_BUNDLE_MANAGER_INVALID_UID;
 }
 
