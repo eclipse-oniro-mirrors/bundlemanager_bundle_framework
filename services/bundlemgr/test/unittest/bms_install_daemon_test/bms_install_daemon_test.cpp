@@ -47,10 +47,19 @@ const std::string HAP_FILE_PATH =
     "/data/app/el1/bundle/public/com.example.test/entry.hap";
 const std::string TEST_PATH = "/data/app/el1/bundle/public/com.example.test/";
 const std::string BUNDLE_NAME_STATS = "com.example.stats";
-const std::string BUNDLE_EL1_BUNDLE_PUBLIC = "/data/app/el1/bundle/public/com.example.stats";
-const std::string BUNDLE_EL1_DATA_CACHE = "/data/app/el1/100/base/com.example.stats/cache";
-const std::string BUNDLE_EL2_DATA_MODULE_CACHE = "/data/app/el2/100/base/com.example.stats/haps/entry2/cache";
-const std::string BUNDLE_EL5_DATA_MODULE_CACHE = "/data/app/el5/100/base/com.example.stats/haps/entry5/cache";
+const std::string BUNDLE_EL1_BUNDLE_PUBLIC = "/data/app/el1/bundle/public/%/";
+const std::string BUNDLE_EL1_DATA_CACHE = "/data/app/el1/100/base/%/cache";
+const std::string BUNDLE_EL1_DATA_HAPS = "/data/app/el1/100/base/%/haps";
+const std::string BUNDLE_EL2_DATA_MODULE_CACHE = "/data/app/el2/100/base/%/haps/entry2/cache";
+const std::string BUNDLE_EL5_DATA_MODULE_CACHE = "/data/app/el5/100/base/%/haps/entry5/cache";
+const std::string BUNDLE_EL2_SHARE_FILES = "/data/app/el2/100/sharefiles/%/";
+const std::vector<std::string> BUNDLE_DATA_SUB_DIRS = {
+    "/cache",
+    "/files",
+    "/temp",
+    "/preferences",
+    "/haps"
+};
 const int32_t USERID = 100;
 const int32_t UID = 1000;
 const int32_t GID = 1000;
@@ -85,6 +94,11 @@ public:
         std::vector<std::string> &fileNames) const;
     void CreateFile(const std::string &filePath, const std::string &content) const;
     void DeleteFile(const std::string &filePath) const;
+    void CreateBundleTempDataDirs(const std::string &bundleName) const;
+    void DeleteBundleTempDataDirs(const std::string &bundleName) const;
+    void CreateShareFilesTempDataDirs(const std::string &bundleName) const;
+    void DeleteShareFilesTempDataDirs(const std::string &bundleName) const;
+
 private:
     std::shared_ptr<InstalldService> service_ = std::make_shared<InstalldService>();
 };
@@ -241,6 +255,78 @@ void BmsInstallDaemonTest::CreateFile(const std::string &filePath, const std::st
 void BmsInstallDaemonTest::DeleteFile(const std::string &filePath) const
 {
     RemoveFile(filePath);
+}
+
+void BmsInstallDaemonTest::CreateBundleTempDataDirs(const std::string &bundleName) const
+{
+    std::string el1BundlePublic = BUNDLE_EL1_BUNDLE_PUBLIC;
+    el1BundlePublic.replace(el1BundlePublic.find("%"), 1, bundleName);
+    OHOS::ForceCreateDirectory(el1BundlePublic);
+    CreateFile(el1BundlePublic + "/test1.ap", "hello world!");
+
+    std::string el1DataCache = BUNDLE_EL1_DATA_CACHE;
+    el1DataCache.replace(el1DataCache.find("%"), 1, bundleName);
+    OHOS::ForceCreateDirectory(el1DataCache);
+    CreateFile(el1DataCache + "/test2.ap", "hello world!");
+
+    std::string el1DataHaps = BUNDLE_EL1_DATA_HAPS;
+    el1DataHaps.replace(el1DataHaps.find("%"), 1, bundleName);
+    OHOS::ForceCreateDirectory(el1DataHaps);
+    CreateFile(el1DataHaps + "/test3.ap", "hello world!");
+
+    std::string el2DataModuleCache = BUNDLE_EL2_DATA_MODULE_CACHE;
+    el2DataModuleCache.replace(el2DataModuleCache.find("%"), 1, bundleName);
+    OHOS::ForceCreateDirectory(el2DataModuleCache);
+    CreateFile(el2DataModuleCache + "/test4.ap", "hello world!");
+
+    std::string el5DataModuleCache = BUNDLE_EL5_DATA_MODULE_CACHE;
+    el5DataModuleCache.replace(el5DataModuleCache.find("%"), 1, bundleName);
+    OHOS::ForceCreateDirectory(el5DataModuleCache);
+    CreateFile(el5DataModuleCache + "/test5.ap", "hello world!");
+}
+
+void BmsInstallDaemonTest::DeleteBundleTempDataDirs(const std::string &bundleName) const
+{
+    std::string el1BundlePublic = BUNDLE_EL1_BUNDLE_PUBLIC;
+    el1BundlePublic.replace(el1BundlePublic.find("%"), 1, bundleName);
+    OHOS::ForceRemoveDirectory(el1BundlePublic);
+
+    std::string el1DataCache = BUNDLE_EL1_DATA_CACHE;
+    el1DataCache.replace(el1DataCache.find("%"), 1, bundleName);
+    OHOS::ForceRemoveDirectory(el1DataCache);
+
+    std::string el1DataHaps = BUNDLE_EL1_DATA_HAPS;
+    el1DataHaps.replace(el1DataHaps.find("%"), 1, bundleName);
+    OHOS::ForceRemoveDirectory(el1DataHaps);
+
+    std::string el2DataModuleCache = BUNDLE_EL2_DATA_MODULE_CACHE;
+    el2DataModuleCache.replace(el2DataModuleCache.find("%"), 1, bundleName);
+    OHOS::ForceRemoveDirectory(el2DataModuleCache);
+
+    std::string el5DataModuleCache = BUNDLE_EL5_DATA_MODULE_CACHE;
+    el5DataModuleCache.replace(el5DataModuleCache.find("%"), 1, bundleName);
+    OHOS::ForceRemoveDirectory(el5DataModuleCache);
+}
+
+void BmsInstallDaemonTest::CreateShareFilesTempDataDirs(const std::string &bundleName) const
+{
+    std::string el2ShareFilesData = BUNDLE_EL2_SHARE_FILES;
+    el2ShareFilesData.replace(el2ShareFilesData.find("%"), 1, bundleName);
+    for (const auto &dir : BUNDLE_DATA_SUB_DIRS) {
+        std::string childBundleDataDir = el2ShareFilesData + dir;
+        OHOS::ForceCreateDirectory(childBundleDataDir);
+        CreateFile(childBundleDataDir + "/test_sharefiles.ap", "hello world!");
+    }
+}
+
+void BmsInstallDaemonTest::DeleteShareFilesTempDataDirs(const std::string &bundleName) const
+{
+    std::string el2ShareFilesData = BUNDLE_EL2_SHARE_FILES;
+    el2ShareFilesData.replace(el2ShareFilesData.find("%"), 1, bundleName);
+    for (const auto &dir : BUNDLE_DATA_SUB_DIRS) {
+        std::string childBundleDataDir = el2ShareFilesData + dir;
+        OHOS::ForceRemoveDirectory(childBundleDataDir);
+    }
 }
 
 /**
@@ -901,20 +987,21 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0400, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0500, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
-    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
-    std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE);
     EXPECT_EQ(result, true);
+    EXPECT_EQ(stats[0], 0);
+    EXPECT_NE(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_NE(stats[4], 0);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
+    DeleteBundleTempDataDirs(bunaleName1);
 }
 
 /**
@@ -924,20 +1011,21 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0500, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0600, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
-    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
-    std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE);
     EXPECT_EQ(result, true);
+    EXPECT_NE(stats[0], 0);
+    EXPECT_EQ(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_NE(stats[4], 0);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
+    DeleteBundleTempDataDirs(bunaleName1);
 }
 
 /**
@@ -947,20 +1035,21 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0600, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0700, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
-    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
-    std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE);
     EXPECT_EQ(result, true);
+    EXPECT_NE(stats[0], 0);
+    EXPECT_NE(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_EQ(stats[4], 0);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
+    DeleteBundleTempDataDirs(bunaleName1);
 }
 
 /**
@@ -970,21 +1059,22 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0700, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0800, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
-    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
-    std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE |
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE);
     EXPECT_EQ(result, true);
+    EXPECT_NE(stats[0], 0);
+    EXPECT_EQ(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_EQ(stats[4], 0);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
+    DeleteBundleTempDataDirs(bunaleName1);
 }
 
 /**
@@ -994,21 +1084,22 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0800, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0900, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
-    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
-    std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE |
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE);
     EXPECT_EQ(result, true);
+    EXPECT_EQ(stats[0], 0);
+    EXPECT_EQ(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_NE(stats[4], 0);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
+    DeleteBundleTempDataDirs(bunaleName1);
 }
 
 /**
@@ -1018,22 +1109,23 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0900, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1000, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
-    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
-    std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE |
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE |
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE);
     EXPECT_EQ(result, true);
+    EXPECT_EQ(stats[0], 0);
+    EXPECT_EQ(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_EQ(stats[4], 0);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
+    DeleteBundleTempDataDirs(bunaleName1);
 }
 
 /**
@@ -1043,20 +1135,21 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1000, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1100, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
-    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
-    std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITH_ALL_SIZE);
     EXPECT_EQ(result, true);
+    EXPECT_NE(stats[0], 0);
+    EXPECT_NE(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_NE(stats[4], 0);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
+    DeleteBundleTempDataDirs(bunaleName1);
 }
 
 /**
@@ -1066,21 +1159,22 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1100, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1200, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
-    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
-    std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITH_ALL_SIZE |
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE);
     EXPECT_EQ(result, true);
+    EXPECT_EQ(stats[0], 0);
+    EXPECT_NE(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_NE(stats[4], 0);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
+    DeleteBundleTempDataDirs(bunaleName1);
 }
 
 /**
@@ -1090,19 +1184,22 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1200, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1300, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
-    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
-    std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
-    bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0, 0);
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
+    bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITH_ALL_SIZE |
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE);
     EXPECT_EQ(result, true);
+    EXPECT_NE(stats[0], 0);
+    EXPECT_EQ(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_NE(stats[4], 0);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
+    DeleteBundleTempDataDirs(bunaleName1);
 }
 
 /**
@@ -1112,25 +1209,23 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1300, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1400, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
-    OHOS::ForceCreateDirectory(BUNDLE_EL2_DATA_MODULE_CACHE);
-    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL2_DATA_MODULE_CACHE + "/test.ap", "hello world!");
-    std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
     std::vector<std::string> moduleNameList = {"entry2"};
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITH_ALL_SIZE,
         moduleNameList);
     EXPECT_EQ(result, true);
+    EXPECT_NE(stats[0], 0);
+    EXPECT_NE(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_NE(stats[4], 0);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL2_DATA_MODULE_CACHE);
+    DeleteBundleTempDataDirs(bunaleName1);
 }
 
 /**
@@ -1140,28 +1235,173 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1400, Function | SmallTest | Level
 */
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1500, Function | SmallTest | Level0)
 {
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceCreateDirectory(BUNDLE_EL1_DATA_CACHE);
-    OHOS::ForceCreateDirectory(BUNDLE_EL2_DATA_MODULE_CACHE);
-    OHOS::ForceCreateDirectory(BUNDLE_EL5_DATA_MODULE_CACHE);
-    CreateFile(BUNDLE_EL1_BUNDLE_PUBLIC + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL1_DATA_CACHE + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL2_DATA_MODULE_CACHE + "/test.ap", "hello world!");
-    CreateFile(BUNDLE_EL5_DATA_MODULE_CACHE + "/test.ap", "hello world!");
-    std::vector<int64_t> stats;
     std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
+    std::vector<std::string> moduleNameList = {"entry5"};
+    bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITH_ALL_SIZE,
+        moduleNameList);
+    EXPECT_EQ(result, true);
+    EXPECT_NE(stats[0], 0);
+    EXPECT_NE(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_NE(stats[4], 0);
+    APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
+    APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
+    APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    DeleteBundleTempDataDirs(bunaleName1);
+}
+
+/**
+ * @tc.number: GetBundleStats_1600
+ * @tc.name: test the GetBundleStats function of installd service
+ * @tc.desc: 1. the bundle exists,
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1600, Function | SmallTest | Level0)
+{
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
     std::vector<std::string> moduleNameList = {"entry5", "entry2"};
     bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITH_ALL_SIZE,
         moduleNameList);
     EXPECT_EQ(result, true);
+    EXPECT_NE(stats[0], 0);
+    EXPECT_NE(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_NE(stats[4], 0);
     APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
     APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
     APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_BUNDLE_PUBLIC);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL1_DATA_CACHE);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL2_DATA_MODULE_CACHE);
-    OHOS::ForceRemoveDirectory(BUNDLE_EL5_DATA_MODULE_CACHE);
+    DeleteBundleTempDataDirs(bunaleName1);
+}
+
+/**
+ * @tc.number: GetBundleStats_1700
+ * @tc.name: test the GetBundleStats function of installd service
+ * @tc.desc: 1. the bundle exists,
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1700, Function | SmallTest | Level0)
+{
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
+    bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE |
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE);
+    EXPECT_EQ(result, true);
+    EXPECT_EQ(stats[0], 0);
+    EXPECT_NE(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_EQ(stats[4], 0);
+    APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
+    APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
+    APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    DeleteBundleTempDataDirs(bunaleName1);
+}
+
+/**
+ * @tc.number: GetBundleStats_1800
+ * @tc.name: test the GetBundleStats function of installd service
+ * @tc.desc: 1. the bundle exists,
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1800, Function | SmallTest | Level0)
+{
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateBundleTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
+    bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITH_ALL_SIZE |
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE |
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE |
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE);
+    EXPECT_EQ(result, true);
+    EXPECT_EQ(stats[0], 0);
+    EXPECT_EQ(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_EQ(stats[4], 0);
+    APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
+    APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
+    APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    DeleteBundleTempDataDirs(bunaleName1);
+}
+
+/**
+ * @tc.number: GetBundleStats_1900
+ * @tc.name: test the GetBundleStats function of installd service
+ * @tc.desc: 1. the bundle exists,
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleStats_1900, Function | SmallTest | Level0)
+{
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateShareFilesTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
+    bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITH_ALL_SIZE);
+    EXPECT_EQ(result, true);
+    EXPECT_EQ(stats[0], 0);
+    EXPECT_NE(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_NE(stats[4], 0);
+    APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
+    APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
+    APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    DeleteShareFilesTempDataDirs(bunaleName1);
+}
+
+/**
+ * @tc.number: GetBundleStats_2000
+ * @tc.name: test the GetBundleStats function of installd service
+ * @tc.desc: 1. the bundle exists,
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleStats_2000, Function | SmallTest | Level0)
+{
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateShareFilesTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
+    bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE);
+    EXPECT_EQ(result, true);
+    EXPECT_EQ(stats[0], 0);
+    EXPECT_NE(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_EQ(stats[4], 0);
+    APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
+    APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
+    APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    DeleteShareFilesTempDataDirs(bunaleName1);
+}
+
+/**
+ * @tc.number: GetBundleStats_2100
+ * @tc.name: test the GetBundleStats function of installd service
+ * @tc.desc: 1. the bundle exists,
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleStats_2100, Function | SmallTest | Level0)
+{
+    std::string bunaleName1 = BUNDLE_NAME_STATS;
+    CreateShareFilesTempDataDirs(bunaleName1);
+    std::vector<int64_t> stats;
+    bool result = GetBundleStats(bunaleName1, USERID, stats, 0, 0,
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE);
+    EXPECT_EQ(result, true);
+    EXPECT_EQ(stats[0], 0);
+    EXPECT_EQ(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_NE(stats[4], 0);
+    APP_LOGI("GetBundleStats appDataSize: %{public}" PRId64, stats[0]);
+    APP_LOGI("GetBundleStats bundleDataSize: %{public}" PRId64, stats[1]);
+    APP_LOGI("GetBundleStats bundleCacheSize: %{public}" PRId64, stats[4]);
+    DeleteShareFilesTempDataDirs(bunaleName1);
 }
 
 /**
