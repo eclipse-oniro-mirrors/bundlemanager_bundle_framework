@@ -2323,6 +2323,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.appEnvironments = moduleJson.module.appEnvironments;
     innerModuleInfo.packageName = moduleJson.module.packageName;
     innerModuleInfo.appStartup = moduleJson.module.appStartup;
+    innerModuleInfo.debug = moduleJson.app.debug;
     return true;
 }
 
