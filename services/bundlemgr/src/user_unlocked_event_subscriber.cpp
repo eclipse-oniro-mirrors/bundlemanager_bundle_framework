@@ -15,9 +15,11 @@
 
 #include "user_unlocked_event_subscriber.h"
 
+#include <filesystem>
 #include <sys/stat.h>
 
 #include "account_helper.h"
+#include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
 #include "dlp_permission_kit.h"
@@ -63,6 +65,7 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
             userId_ = userId;
             std::thread updateDataDirThread(UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel, userId);
             updateDataDirThread.detach();
+            std::thread(UpdateAppDataMgr::DeleteUninstallTmpDirs, userId).detach();
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
             DelayedSingleton<AppControlManager>::GetInstance()->SetAppInstallControlStatus();
 #endif
@@ -77,6 +80,7 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
             userId_ = userId;
             std::thread updateDataDirThread(UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel, userId);
             updateDataDirThread.detach();
+            std::thread(UpdateAppDataMgr::DeleteUninstallTmpDirs, userId).detach();
         }
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
         APP_LOGI("RemoveUnreservedSandbox call ClearUnreservedSandbox");
@@ -146,6 +150,34 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
     }
     CreateDataGroupDir(bundleInfo, userId);
     return true;
+}
+
+void UpdateAppDataMgr::DeleteUninstallTmpDirs(const int32_t userId)
+{
+    std::vector<std::string> dirs = GetBundleDataDirs(userId);
+    if (dirs.empty()) {
+        LOG_I(BMS_TAG_DEFAULT, "dirs empty");
+        return;
+    }
+    ErrCode ret = InstalldClient::GetInstance()->DeleteUninstallTmpDirs(dirs);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "delete tmp dirs failed:%{public}d", ret);
+    }
+}
+
+std::vector<std::string> UpdateAppDataMgr::GetBundleDataDirs(const int32_t userId)
+{
+    std::vector<std::string> dirs;
+    std::vector<std::string> dataVector = { "base", "database" };
+    for (const std::string &el : ServiceConstants::BUNDLE_EL) {
+        std::filesystem::path userPath =
+            std::filesystem::path(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) / el / std::to_string(userId);
+        for (const std::string &data : dataVector) {
+            std::filesystem::path dataPath = userPath / data;
+            dirs.emplace_back(dataPath.string());
+        }
+    }
+    return dirs;
 }
 
 void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t userId)

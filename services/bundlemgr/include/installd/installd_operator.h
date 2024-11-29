@@ -82,6 +82,10 @@ public:
     static bool DeleteDir(const std::string &path);
 
     static bool DeleteDirFast(const std::string &path);
+
+    static bool DeleteDirFlexible(const std::string &path, const bool async);
+
+    static bool DeleteUninstallTmpDir(const std::string &path);
     /**
      * @brief Extract the files of a compressed package to a specific directory.
      * @param srcModulePath Indicates the package file path.

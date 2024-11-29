@@ -71,6 +71,8 @@ public:
     virtual ErrCode PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData) override;
 
     virtual ErrCode StopAOT() override;
+
+    virtual ErrCode DeleteUninstallTmpDirs(const std::vector<std::string> &dirs) override;
     /**
      * @brief Rename the module directory from temporaily path to the real path through a proxy object.
      * @param oldPath Indicates the old path name.
@@ -93,7 +95,7 @@ public:
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
     virtual ErrCode RemoveBundleDataDir(const std::string &bundleDir, const int32_t userId,
-        bool isAtomicService = false) override;
+        bool isAtomicService = false, const bool async = false) override;
     /**
      * @brief Remove a module data directory through a proxy object.
      * @param ModuleDir Indicates the module data directory path that to be created.
