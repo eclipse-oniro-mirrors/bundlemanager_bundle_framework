@@ -186,6 +186,12 @@
                       ]
                     },
                     "name": "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common:bundle_napi_common"
+                  },
+                  {
+                    "name": "//foundation/bundlemanager/bundle_framework/services/bundlemgr:bundle_tool_libs",
+                    "visibility": [
+                      "bundle_tool"
+                    ]
                   }
             ],
             "test": [
