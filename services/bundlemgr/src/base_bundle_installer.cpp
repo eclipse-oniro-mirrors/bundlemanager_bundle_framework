@@ -2961,7 +2961,9 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         LOG_W(BMS_TAG_INSTALLER, "fail to create shader cache, error is %{public}d", result);
     }
 
-    CreateCloudShader(info.GetBundleName(), createDirParam.uid, createDirParam.gid);
+    if (userId_ == Constants::START_USERID) {
+        CreateCloudShader(info.GetBundleName(), createDirParam.uid, createDirParam.gid);
+    }
 
     // create asan log directory when asanEnabled is true
     // In update condition, delete asan log directory when asanEnabled is false if directory is exist
