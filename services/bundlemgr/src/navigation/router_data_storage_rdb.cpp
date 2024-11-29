@@ -97,16 +97,16 @@ bool RouterDataStorageRdb::GetRouterInfo(const std::string &bundleName, const st
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
         APP_LOGW("GetRowCount failed, ret: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return false;
     }
     if (count == 0) {
         APP_LOGI("GetRouterInfo size 0");
-        return ERR_OK;
+        return false;
     }
     ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         APP_LOGW("GoToFirstRow failed, ret: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return false;
     }
     do {
         std::string value;
