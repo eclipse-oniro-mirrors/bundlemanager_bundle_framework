@@ -78,6 +78,13 @@ ohos_unittest("BmsBundleInstallerTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest1:versionTest1",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest2:versionTest2",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest3:versionTest3",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionUpdateTest1:versionUpdateTest1",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionUpdateTest2:versionUpdateTest2",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionUpdateTest3:versionUpdateTest3",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionUpdateTest4:versionUpdateTest4",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionUpdateTest5:versionUpdateTest5",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionUpdateTest6:versionUpdateTest6",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionUpdateTest7:versionUpdateTest7",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
     "${core_path}:appexecfwk_core",
   ]
