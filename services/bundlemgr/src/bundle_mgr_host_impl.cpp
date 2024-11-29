@@ -2495,7 +2495,7 @@ bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, c
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("Non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        return false;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
@@ -3078,7 +3078,7 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
     bool ret = dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), bundleName);
     if (!ret) {
         APP_LOGE("query calling bundle name failed");
-        return false;
+        return ret;
     }
     APP_LOGD("calling bundleName is : %{public}s", bundleName.c_str());
     return ret;

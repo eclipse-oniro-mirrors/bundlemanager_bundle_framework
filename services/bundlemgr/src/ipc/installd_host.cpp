@@ -265,7 +265,7 @@ bool InstalldHost::HandleExtractFiles(MessageParcel &data, MessageParcel &reply)
     std::unique_ptr<ExtractParam> info(data.ReadParcelable<ExtractParam>());
     if (info == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
-        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+        return false;
     }
 
     ErrCode result = ExtractFiles(*info);
@@ -279,7 +279,7 @@ bool InstalldHost::HandleExtractHnpFiles(MessageParcel &data, MessageParcel &rep
     std::unique_ptr<ExtractParam> info(data.ReadParcelable<ExtractParam>());
     if (info == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
-        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+        return false;
     }
 
     ErrCode result = ExtractHnpFiles(hnpPackageInfo, *info);
@@ -385,7 +385,7 @@ bool InstalldHost::HandleCreateBundleDataDir(MessageParcel &data, MessageParcel 
     std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
     if (info == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
-        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+        return false;
     }
     ErrCode result = CreateBundleDataDir(*info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
@@ -716,7 +716,7 @@ bool InstalldHost::HandVerifyCodeSignature(MessageParcel &data, MessageParcel &r
     std::unique_ptr<CodeSignatureParam> info(data.ReadParcelable<CodeSignatureParam>());
     if (info == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
-        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+        return false;
     }
 
     ErrCode result = VerifyCodeSignature(*info);
@@ -729,7 +729,7 @@ bool InstalldHost::HandleCheckEncryption(MessageParcel &data, MessageParcel &rep
     std::unique_ptr<CheckEncryptionParam> info(data.ReadParcelable<CheckEncryptionParam>());
     if (info == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
-        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+        return false;
     }
 
     bool isEncryption = false;
@@ -788,7 +788,7 @@ bool InstalldHost::HandVerifyCodeSignatureForHap(MessageParcel &data, MessagePar
     std::unique_ptr<CodeSignatureParam> info(data.ReadParcelable<CodeSignatureParam>());
     if (info == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
-        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+        return false;
     }
 
     ErrCode result = VerifyCodeSignatureForHap(*info);
@@ -922,7 +922,7 @@ bool InstalldHost::HandleCreateExtensionDataDir(MessageParcel &data, MessageParc
     std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
     if (info == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
-        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+        return false;
     }
     ErrCode result = CreateExtensionDataDir(*info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
