@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H
 
 #include "base_cb_info.h"
+#include "clone_param.h"
 #include "install_param.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"

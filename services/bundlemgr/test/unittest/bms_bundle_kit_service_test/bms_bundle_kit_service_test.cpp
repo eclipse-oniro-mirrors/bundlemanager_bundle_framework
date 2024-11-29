@@ -37,6 +37,7 @@
 #include "bundle_status_callback_proxy.h"
 #include "bundle_stream_installer_host_impl.h"
 #include "clean_cache_callback_proxy.h"
+#include "clone_param.h"
 #include "directory_ex.h"
 #include "hidump_helper.h"
 #include "install_param.h"
