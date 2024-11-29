@@ -13649,7 +13649,8 @@ HWTEST_F(BmsBundleKitServiceTest, UninstallCloneApp_0100, Function | SmallTest |
 {
     std::shared_ptr<IBundleInstaller> bundleInstaller = std::make_shared<IBundleInstallerTest>();
     ASSERT_NE(bundleInstaller, nullptr);
-    auto ret = bundleInstaller->UninstallCloneApp("", DEFAULT_USERID, APP_INDEX);
+    DestroyAppCloneParam destroyAppCloneParam;
+    auto ret = bundleInstaller->UninstallCloneApp("", DEFAULT_USERID, APP_INDEX, destroyAppCloneParam);
     EXPECT_EQ(ret, ERR_OK);
 }
 
