@@ -2331,6 +2331,48 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_6200, Function | SmallTest 
     EXPECT_EQ(res, ERR_OK);
 }
 
+
+/**
+ * @tc.number: baseBundleInstaller_7100
+ * @tc.name: test baseBundleInstaller
+ * @tc.desc: 1.Test the dataMgr_ is nullptr
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_7100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = nullptr;
+    ClearDataMgr();
+    std::vector<std::string> inBundlePaths;
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    int32_t uid = 0;
+    bool recoverMode = true;
+    ErrCode ret = installer.ProcessBundleInstall(
+        inBundlePaths, installParam, appType, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    ret = installer.ProcessBundleUninstall(
+        "bundleName", installParam, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    ret = installer.ProcessBundleUninstall(
+        "bundleName", "modulePackage", installParam, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    ret = installer.InnerProcessInstallByPreInstallInfo(
+        "bundleName", installParam, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    InnerBundleInfo info;
+    bool res = installer.FetchInnerBundleInfo(info);
+    EXPECT_EQ(res, false);
+    ResetDataMgr();
+
+    installParam.userId = Constants::INVALID_USERID;
+    ret = installer.ProcessBundleUninstall(
+        "bundleName", installParam, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    ret = installer.ProcessBundleUninstall(
+        "bundleName", "modulePackage", installParam, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
 /**
  * @tc.number: InstalldHostImpl_0100
  * @tc.name: test CheckArkNativeFileWithOldInfo

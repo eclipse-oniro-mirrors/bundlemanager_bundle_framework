@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #define private public
 #define protected public
 
@@ -4713,6 +4714,27 @@ HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0400, Function | SmallTes
 }
 
 /**
+ * @tc.number: RegisterBundleStatus_0500
+ * @tc.name: test can register the bundle status by bundle name
+ * @tc.desc: 1.system run normally
+ *           2.bundle status callback failed by no exist bundle name
+ */
+HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0500, Function | SmallTest | Level1)
+{
+    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
+    bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
+    bundleStatusCallback->SetUserId(DEFAULT_USERID);
+    bool result = GetBundleDataMgr()->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_TRUE(result);
+    installRes_.bundleName = ERROR_HAP_FILE_PATH;
+    EXPECT_NE(commonEventMgr_, nullptr);
+    commonEventMgr_->NotifyBundleStatus(installRes_, GetBundleDataMgr());
+
+    int32_t callbackResult = bundleStatusCallback->GetResultCode();
+    EXPECT_EQ(callbackResult, ERR_TIMED_OUT);
+}
+
+/**
  * @tc.number: RegisterBundleStatus_0600
  * @tc.name: test can not register, the bundle status dataMgr is nullptr
  * @tc.desc: 1.system run normally
@@ -9107,6 +9129,24 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoV9_0200, Function | SmallTest | L
     BundleInfo result_extension;
     ErrCode ret_extension = hostImpl->GetBundleInfoV9(BUNDLE_NAME_DEMO, flags, result_extension, DEFAULT_USERID);
     EXPECT_EQ(ret_extension, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
+
+
+/**
+ * @tc.number: GetUidByBundleName
+ * @tc.name: Test GetUidByBundleName
+ * @tc.desc: 1.Test the GetUidByBundleName by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetUidByBundleName_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo result;
+    ErrCode ret = hostImpl->GetBundleInfoV9(BUNDLE_NAME_DEMO, GET_BUNDLE_WITH_ABILITIES |
+        GET_BUNDLE_WITH_REQUESTED_PERMISSION, result, DEFAULT_USERID);
+    int32_t uid = hostImpl->GetUidByBundleName(BUNDLE_NAME_DEMO, DEFAULT_USERID);
+    EXPECT_EQ(uid, result.uid);
     MockUninstallBundle(BUNDLE_NAME_DEMO);
 }
 
