@@ -35,6 +35,7 @@ constexpr const char* BMS_PARA_BUNDLE_NAME = "ohos.bms.param.bundleName";
 constexpr const char* BMS_PARA_IS_KEEP_DATA = "ohos.bms.param.isKeepData";
 constexpr const char* BMS_PARA_USER_ID = "ohos.bms.param.userId";
 constexpr const char* BMS_PARA_APP_INDEX = "ohos.bms.param.appIndex";
+constexpr bool IS_KEEP_DATA = false;
 int32_t INVALID_APP_INDEX = 0;
 int32_t LOWER_DLP_TYPE_BOUND = 0;
 int32_t UPPER_DLP_TYPE_BOUND = 3;
@@ -839,7 +840,8 @@ void BundleInstallerHost::HandleInstallCloneApp(MessageParcel &data, MessageParc
     LOG_D(BMS_TAG_INSTALLER, "handle install clone app message finished");
 }
 
-ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex)
+ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex,
+                                               const DestroyAppCloneParam &destroyAppCloneParam)
 {
     LOG_D(BMS_TAG_INSTALLER, "params[bundleName: %{public}s, user_id: %{public}d, appIndex: %{public}d]",
         bundleName.c_str(), userId, appIndex);
@@ -855,6 +857,11 @@ ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, in
         LOG_E(BMS_TAG_INSTALLER, "UninstallCloneApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+    if (destroyAppCloneParam.IsVerifyUninstallRule() &&
+        CheckUninstallDisposedRule(bundleName, userId, appIndex, IS_KEEP_DATA)) {
+        LOG_W(BMS_TAG_INSTALLER, "CheckUninstallDisposedRule failed");
+        return ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED;
+    }
     std::shared_ptr<BundleCloneInstaller> installer = std::make_shared<BundleCloneInstaller>();
     return installer->UninstallCloneApp(bundleName, userId, appIndex);
 }
@@ -865,10 +872,15 @@ void BundleInstallerHost::HandleUninstallCloneApp(MessageParcel &data, MessagePa
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
+    std::unique_ptr<DestroyAppCloneParam> destroyAppCloneParam(data.ReadParcelable<DestroyAppCloneParam>());
+    if (destroyAppCloneParam == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "ReadParcelable<DestroyAppCloneParam> failed");
+        return;
+    }
 
     LOG_I(BMS_TAG_INSTALLER, "receive Uninstall CLone App Request");
 
-    auto ret = UninstallCloneApp(bundleName, userId, appIndex);
+    auto ret = UninstallCloneApp(bundleName, userId, appIndex, *destroyAppCloneParam);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_INSTALLER, "write failed");
     }

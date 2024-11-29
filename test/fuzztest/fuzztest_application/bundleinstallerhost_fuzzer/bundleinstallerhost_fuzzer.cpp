@@ -81,7 +81,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     bundleInstallerHost->GetCurTaskNum();
     bundleInstallerHost->GetThreadsNum();
     bundleInstallerHost->InstallCloneApp(bundleName, userId, appIndex);
-    bundleInstallerHost->UninstallCloneApp(bundleName, userId, appIndex);
+    bundleInstallerHost->UninstallCloneApp(bundleName, userId, appIndex, DestroyAppCloneParam());
     bundleInstallerHost->InstallExisted(bundleName, userId);
     bundleInstallerHost->CheckInstallParam(installParam);
     InstallParam installParam2;

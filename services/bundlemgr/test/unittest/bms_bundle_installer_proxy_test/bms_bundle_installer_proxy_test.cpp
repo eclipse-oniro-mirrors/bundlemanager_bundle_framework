@@ -847,7 +847,8 @@ HWTEST_F(BmsBundleInstallerProxyTest, UninstallCloneApp_0100, Function | MediumT
     std::string bundleName = "bundleName";
     int32_t userId = 100;
     int32_t appIndex = 1;
-    auto res = bundleInstallerProxy.UninstallCloneApp(bundleName, userId, appIndex);
+    DestroyAppCloneParam destroyAppCloneParam;
+    auto res = bundleInstallerProxy.UninstallCloneApp(bundleName, userId, appIndex, destroyAppCloneParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_CLONE_UNINSTALL_SEND_REQUEST_ERROR);
 }
 

@@ -734,7 +734,8 @@ ErrCode BundleInstallerProxy::InstallCloneApp(const std::string &bundleName, int
     return res;
 }
 
-ErrCode BundleInstallerProxy::UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex)
+ErrCode BundleInstallerProxy::UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex,
+                                                const DestroyAppCloneParam &destroyAppCloneParam)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
@@ -757,6 +758,8 @@ ErrCode BundleInstallerProxy::UninstallCloneApp(const std::string &bundleName, i
         LOG_E(BMS_TAG_INSTALLER, "failed to UninstallCloneApp due to write appIndex fail");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_WRITE_PARCEL_ERROR;
     }
+
+    PARCEL_WRITE(data, Parcelable, &destroyAppCloneParam);
 
     auto ret =
         SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL_CLONE_APP, data, reply, option);

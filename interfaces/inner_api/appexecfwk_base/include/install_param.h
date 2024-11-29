@@ -176,6 +176,21 @@ struct UninstallParam : public Parcelable {
     virtual bool Marshalling(Parcel &parcel) const override;
     static UninstallParam *Unmarshalling(Parcel &parcel);
 };
+
+struct DestroyAppCloneParam : public Parcelable {
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::map<std::string, std::string> parameters;
+
+    bool IsVerifyUninstallRule() const
+    {
+        return parameters.find(Constants::VERIFY_UNINSTALL_RULE_KEY) != parameters.end() &&
+               parameters.at(Constants::VERIFY_UNINSTALL_RULE_KEY) == Constants::VERIFY_UNINSTALL_RULE_VALUE;
+    }
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static DestroyAppCloneParam *Unmarshalling(Parcel &parcel);
+};
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALL_PARAM_H

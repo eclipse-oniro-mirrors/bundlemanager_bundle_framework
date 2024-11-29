@@ -138,7 +138,8 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex)
+    virtual ErrCode UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex,
+        const DestroyAppCloneParam &destroyAppCloneParam)
     {
         return ERR_OK;
     }

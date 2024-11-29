@@ -81,6 +81,7 @@ struct CreateAppCloneCallbackInfo : public BaseCallbackInfo {
     std::string bundleName;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     int32_t appIndex = Constants::INITIAL_APP_INDEX;
+    OHOS::AppExecFwk::DestroyAppCloneParam destroyAppCloneParam;
 };
 
 struct InstallPreexistingAppCallbackInfo : public BaseCallbackInfo {
