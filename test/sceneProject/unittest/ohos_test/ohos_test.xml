@@ -152,6 +152,22 @@
               src="res"/>
     </preparer>
   </target>
+    <target name="BmsBundleUpdateDebugTest">
+    <preparer>
+      <option name="push" value="bundle_update_debug/entry_v1debug.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_update_debug/entry_v2debug.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_update_debug/entry_v1release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_update_debug/entry_v2release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_update_debug/feature_v1debug.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_update_debug/feature_v2debug.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_update_debug/feature_v1release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_update_debug/feature_v2release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_update_debug/library_v1debug.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_update_debug/library_v2debug.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_update_debug/library_v1release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_update_debug/library_v2release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+    </preparer>
+  </target>
   <target name="BmsBundleUpdaterTest">
     <preparer>
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
