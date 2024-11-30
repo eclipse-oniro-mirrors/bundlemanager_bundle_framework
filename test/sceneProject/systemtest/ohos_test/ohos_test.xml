@@ -275,4 +275,11 @@
       <option name="push" value="extensionDirTest/version2_twoExtension_feature_hap.hap -> /data/test/bms_bundle/" src="res" />
     </preparer>
   </target>
+  <target name="BmsMatchShareTest">
+    <preparer>
+      <option name="push" value="matchShare/matchShareBundle1.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="matchShare/matchShareBundle2.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="matchShare/matchShareBundle3.hap -> /data/test/bms_bundle/" src="res" />
+    </preparer>
+  </target>
 </configuration>
