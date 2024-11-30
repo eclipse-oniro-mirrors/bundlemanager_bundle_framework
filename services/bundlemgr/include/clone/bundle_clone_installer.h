@@ -20,6 +20,7 @@
 
 #include "bundle_data_mgr.h"
 #include "inner_bundle_info.h"
+#include "event_report.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -59,11 +60,18 @@ private:
 
     ErrCode ProcessCloneBundleInstall(const std::string &bundleName, const int32_t userId, int32_t &appIndex);
     ErrCode ProcessCloneBundleUninstall(const std::string &bundleName, int32_t userId, int32_t appIndex);
+
+    void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
+        int32_t userId, int32_t appIndex, bool isPreInstallApp, bool isFreeInstallMode,
+        InstallScene preBundleScene, ErrCode errCode);
+    void GetCallingEventInfo(EventInfo &eventInfo);
+
     void ResetInstallProperties();
 
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     int32_t uid_ = 0;
     uint32_t accessTokenId_ = 0;
+    uint32_t versionCode_ = 0;
 };
 } // AppExecFwk
 } // OHOS
