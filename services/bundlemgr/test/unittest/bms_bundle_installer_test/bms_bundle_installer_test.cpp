@@ -85,6 +85,7 @@ const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
 const std::string MODULE_NAME = "entry";
 const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
 const std::string TEST_STRING = "test.string";
+const std::string TEST_APL = "normal";
 const std::string TEST_PACK_AGE = "entry";
 const std::string NOEXIST = "noExist";
 const std::string CURRENT_PATH = "/data/service/el2/100/hmdfs/account/data/test_max";
@@ -112,6 +113,14 @@ const std::string DEVICE_ID = "PHONE-001";
 const std::string TEST_CPU_ABI = "arm64";
 constexpr const char* BMS_SERVICE_PATH = "/data/service";
 const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
+const std::string DATA_EL2_SHAREFILES_PATH = "/data/app/el2/100/sharefiles/";
+const std::vector<std::string> BUNDLE_DATA_SUB_DIRS = {
+    "/cache",
+    "/files",
+    "/temp",
+    "/preferences",
+    "/haps"
+};
 }  // namespace
 
 class BmsBundleInstallerTest : public testing::Test {
@@ -129,6 +138,8 @@ public:
     ErrCode UnInstallBundle(const std::string &bundleName) const;
     void CheckFileExist() const;
     void CheckFileNonExist() const;
+    void CheckShareFilesDataDirsExist(const std::string &bundleName) const;
+    void CheckShareFilesDataDirsNonExist(const std::string &bundleName) const;
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     const std::shared_ptr<BundleInstallerManager> GetBundleInstallerManager() const;
     void StopInstalldService() const;
@@ -301,6 +312,37 @@ void BmsBundleInstallerTest::CheckFileNonExist() const
 
     int bundleDataExist = access(BUNDLE_DATA_DIR.c_str(), F_OK);
     EXPECT_NE(bundleDataExist, 0) << "the bundle data dir exists: " << BUNDLE_DATA_DIR;
+}
+
+void BmsBundleInstallerTest::CheckShareFilesDataDirsExist(const std::string &bundleName) const
+{
+    bool isExist = true;
+    if (access(DATA_EL2_SHAREFILES_PATH.c_str(), F_OK) != 0) {
+        isExist = false;
+        std::cout << "the sharefiles dir doesn't exist:" << DATA_EL2_SHAREFILES_PATH << std::endl;
+    }
+    if (isExist) {
+        auto dataPath = DATA_EL2_SHAREFILES_PATH + bundleName;
+        int32_t ret = access(dataPath.c_str(), F_OK);
+        EXPECT_EQ(ret, 0);
+        for (const auto &dir : BUNDLE_DATA_SUB_DIRS) {
+            std::string childBundleDataDir = dataPath + dir;
+            ret = access(childBundleDataDir.c_str(), F_OK);
+            EXPECT_EQ(ret, 0);
+        }
+    }
+}
+
+void BmsBundleInstallerTest::CheckShareFilesDataDirsNonExist(const std::string &bundleName) const
+{
+    auto dataPath = DATA_EL2_SHAREFILES_PATH + bundleName;
+    int result1 = access(dataPath.c_str(), F_OK);
+    EXPECT_NE(result1, 0) << "the dir exist: " << dataPath;
+    for (const auto &dir : BUNDLE_DATA_SUB_DIRS) {
+        std::string childBundleDataDir = dataPath + dir;
+        int32_t ret = access(childBundleDataDir.c_str(), F_OK);
+        EXPECT_NE(ret, 0) << "the dir exist: " << childBundleDataDir;
+    }
 }
 
 const std::shared_ptr<BundleDataMgr> BmsBundleInstallerTest::GetBundleDataMgr() const
@@ -6457,6 +6499,194 @@ HWTEST_F(BmsBundleInstallerTest, DeleteEncryptionKeyId_0100, Function | SmallTes
     bundleName = BUNDLE_NAME;
     ret = hostImpl.DeleteEncryptionKeyId(bundleName, userId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED);
+}
+
+/**
+ * @tc.number: CreateSharefilesDataDirEl2_0100
+ * @tc.name: test CreateSharefilesDataDirEl2
+ * @tc.desc: test CreateSharefilesDataDirEl2 of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "";
+    createDirParam.userId = INVAILD_CODE;
+    createDirParam.uid = INVAILD_CODE;
+    createDirParam.gid = INVAILD_CODE;
+    createDirParam.apl = TEST_STRING;
+    createDirParam.isPreInstallApp = false;
+    auto ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    CreateDirParam createDirParam2;
+    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.userId = 100;
+    createDirParam2.uid = ZERO_CODE;
+    createDirParam2.gid = ZERO_CODE;
+    createDirParam2.apl = TEST_APL;
+    createDirParam2.isPreInstallApp = false;
+    ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
+    EXPECT_EQ(ret, ERR_OK);
+    CheckShareFilesDataDirsExist(TEST_STRING);
+}
+
+/**
+ * @tc.number: CreateSharefilesDataDirEl2_0101
+ * @tc.name: test CreateSharefilesDataDirEl2
+ * @tc.desc: test CreateSharefilesDataDirEl2 of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0101, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam2;
+    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.userId = INVAILD_CODE;
+    createDirParam2.uid = INVAILD_CODE;
+    createDirParam2.gid = INVAILD_CODE;
+    createDirParam2.apl = TEST_APL;
+    createDirParam2.isPreInstallApp = false;
+    ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    CheckShareFilesDataDirsNonExist(TEST_STRING);
+}
+
+/**
+ * @tc.number: CreateSharefilesDataDirEl2_0102
+ * @tc.name: test CreateSharefilesDataDirEl2
+ * @tc.desc: test CreateSharefilesDataDirEl2 of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0102, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam2;
+    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.userId = INVAILD_CODE;
+    createDirParam2.uid = INVAILD_CODE;
+    createDirParam2.gid = ZERO_CODE;
+    createDirParam2.apl = TEST_APL;
+    createDirParam2.isPreInstallApp = false;
+    ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    CheckShareFilesDataDirsNonExist(TEST_STRING);
+}
+
+/**
+ * @tc.number: CreateSharefilesDataDirEl2_0103
+ * @tc.name: test CreateSharefilesDataDirEl2
+ * @tc.desc: test CreateSharefilesDataDirEl2 of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0103, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam2;
+    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.userId = INVAILD_CODE;
+    createDirParam2.uid = ZERO_CODE;
+    createDirParam2.gid = INVAILD_CODE;
+    createDirParam2.apl = TEST_APL;
+    createDirParam2.isPreInstallApp = false;
+    ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    CheckShareFilesDataDirsNonExist(TEST_STRING);
+}
+
+/**
+ * @tc.number: CreateSharefilesDataDirEl2_0104
+ * @tc.name: test CreateSharefilesDataDirEl2
+ * @tc.desc: test CreateSharefilesDataDirEl2 of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0104, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam2;
+    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.userId = 100;
+    createDirParam2.uid = INVAILD_CODE;
+    createDirParam2.gid = INVAILD_CODE;
+    createDirParam2.apl = TEST_APL;
+    createDirParam2.isPreInstallApp = false;
+    ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    CheckShareFilesDataDirsNonExist(TEST_STRING);
+}
+
+/**
+ * @tc.number: CreateSharefilesDataDirEl2_0105
+ * @tc.name: test CreateSharefilesDataDirEl2
+ * @tc.desc: test CreateSharefilesDataDirEl2 of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0105, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam2;
+    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.userId = INVAILD_CODE;
+    createDirParam2.uid = ZERO_CODE;
+    createDirParam2.gid = ZERO_CODE;
+    createDirParam2.apl = TEST_APL;
+    createDirParam2.isPreInstallApp = false;
+    ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    CheckShareFilesDataDirsNonExist(TEST_STRING);
+}
+
+/**
+ * @tc.number: CreateSharefilesDataDirEl2_0106
+ * @tc.name: test CreateSharefilesDataDirEl2
+ * @tc.desc: test CreateSharefilesDataDirEl2 of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0106, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam2;
+    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.userId = 100;
+    createDirParam2.uid = ZERO_CODE;
+    createDirParam2.gid = INVAILD_CODE;
+    createDirParam2.apl = TEST_APL;
+    createDirParam2.isPreInstallApp = false;
+    ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    CheckShareFilesDataDirsNonExist(TEST_STRING);
+}
+
+/**
+ * @tc.number: CreateSharefilesDataDirEl2_0107
+ * @tc.name: test CreateSharefilesDataDirEl2
+ * @tc.desc: test CreateSharefilesDataDirEl2 of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0107, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam2;
+    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.userId = 100;
+    createDirParam2.uid = INVAILD_CODE;
+    createDirParam2.gid = ZERO_CODE;
+    createDirParam2.apl = TEST_APL;
+    createDirParam2.isPreInstallApp = false;
+    ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    CheckShareFilesDataDirsNonExist(TEST_STRING);
+}
+
+/**
+ * @tc.number: CreateSharefilesDataDirEl2_0108
+ * @tc.name: test CreateSharefilesDataDirEl2
+ * @tc.desc: test CreateSharefilesDataDirEl2 of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0108, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam2;
+    createDirParam2.bundleName = "";
+    createDirParam2.userId = 100;
+    createDirParam2.uid = ZERO_CODE;
+    createDirParam2.gid = ZERO_CODE;
+    createDirParam2.apl = TEST_APL;
+    createDirParam2.isPreInstallApp = false;
+    auto ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
