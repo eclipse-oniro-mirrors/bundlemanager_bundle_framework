@@ -250,6 +250,22 @@ ErrCode InstalldHostImpl::StopAOT()
     return AOTExecutor::GetInstance().StopAOT();
 }
 
+ErrCode InstalldHostImpl::DeleteUninstallTmpDirs(const std::vector<std::string> &dirs)
+{
+    LOG_I(BMS_TAG_INSTALLD, "DeleteUninstallTmpDirs begin");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "verify permission failed");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    ErrCode ret = ERR_OK;
+    for (const std::string &dir : dirs) {
+        if (!InstalldOperator::DeleteUninstallTmpDir(dir)) {
+            ret = ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+        }
+    }
+    return ret;
+}
+
 ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     LOG_D(BMS_TAG_INSTALLD, "rename %{public}s to %{public}s", oldPath.c_str(), newPath.c_str());
@@ -712,7 +728,7 @@ static void CleanBundleDataForEl2(const std::string &bundleName, const int useri
 }
 
 ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int32_t userId,
-    bool isAtomicService)
+    bool isAtomicService, const bool async)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldHostImpl::RemoveBundleDataDir bundleName:%{public}s", bundleName.c_str());
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
@@ -725,12 +741,12 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
     }
     if (isAtomicService) {
         LOG_I(BMS_TAG_INSTALLD, "bundleName:%{public}s is atomic service, need process", bundleName.c_str());
-        return InnerRemoveAtomicServiceBundleDataDir(bundleName, userId);
+        return InnerRemoveAtomicServiceBundleDataDir(bundleName, userId, async);
     }
 
-    ErrCode result = InnerRemoveBundleDataDir(bundleName, userId);
+    ErrCode result = InnerRemoveBundleDataDir(bundleName, userId, async);
     if (result != ERR_OK) {
-        return InnerRemoveBundleDataDir(bundleName, userId);
+        return InnerRemoveBundleDataDir(bundleName, userId, async);
     }
     return ERR_OK;
 }
@@ -1788,7 +1804,8 @@ bool InstalldHostImpl::ReadFileIntoJson(const std::string &filePath, nlohmann::j
     return true;
 }
 
-ErrCode InstalldHostImpl::InnerRemoveAtomicServiceBundleDataDir(const std::string &bundleName, const int32_t userId)
+ErrCode InstalldHostImpl::InnerRemoveAtomicServiceBundleDataDir(
+    const std::string &bundleName, const int32_t userId, const bool async)
 {
     LOG_I(BMS_TAG_INSTALLD, "process atomic service bundleName:%{public}s", bundleName.c_str());
     std::vector<std::string> pathName;
@@ -1799,7 +1816,7 @@ ErrCode InstalldHostImpl::InnerRemoveAtomicServiceBundleDataDir(const std::strin
     LOG_I(BMS_TAG_INSTALLD, "bundle %{public}s need delete path size:%{public}zu", bundleName.c_str(), pathName.size());
     ErrCode result = ERR_OK;
     for (const auto &name : pathName) {
-        ErrCode tmpResult = InnerRemoveBundleDataDir(name, userId);
+        ErrCode tmpResult = InnerRemoveBundleDataDir(name, userId, async);
         if (tmpResult != ERR_OK) {
             result = tmpResult;
         }
@@ -1807,16 +1824,17 @@ ErrCode InstalldHostImpl::InnerRemoveAtomicServiceBundleDataDir(const std::strin
     return result;
 }
 
-ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(const std::string &bundleName, const int32_t userId)
+ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(
+    const std::string &bundleName, const int32_t userId, const bool async)
 {
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
         std::string bundleDataDir = GetBundleDataDir(el, userId) + ServiceConstants::BASE + bundleName;
-        if (!InstalldOperator::DeleteDirFast(bundleDataDir)) {
+        if (!InstalldOperator::DeleteDirFlexible(bundleDataDir, async)) {
             LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
         std::string databaseDir = GetBundleDataDir(el, userId) + ServiceConstants::DATABASE + bundleName;
-        if (!InstalldOperator::DeleteDirFast(databaseDir)) {
+        if (!InstalldOperator::DeleteDirFlexible(databaseDir, async)) {
             LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }

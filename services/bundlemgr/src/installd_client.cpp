@@ -92,6 +92,15 @@ ErrCode InstalldClient::StopAOT()
     return CallService(&IInstalld::StopAOT);
 }
 
+ErrCode InstalldClient::DeleteUninstallTmpDirs(const std::vector<std::string> &dirs)
+{
+    if (dirs.empty()) {
+        APP_LOGE("dirs empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::DeleteUninstallTmpDirs, dirs);
+}
+
 ErrCode InstalldClient::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     if (oldPath.empty() || newPath.empty()) {
@@ -119,14 +128,14 @@ ErrCode InstalldClient::CreateBundleDataDirWithVector(const std::vector<CreateDi
 }
 
 ErrCode InstalldClient::RemoveBundleDataDir(
-    const std::string &bundleName, const int32_t userId, bool isAtomicService)
+    const std::string &bundleName, const int32_t userId, bool isAtomicService, const bool async)
 {
     if (bundleName.empty() || userId < 0) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::RemoveBundleDataDir, bundleName, userId, isAtomicService);
+    return CallService(&IInstalld::RemoveBundleDataDir, bundleName, userId, isAtomicService, async);
 }
 
 ErrCode InstalldClient::RemoveModuleDataDir(const std::string &ModuleName, const int userid)

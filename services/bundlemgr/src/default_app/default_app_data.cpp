@@ -96,7 +96,7 @@ void DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObj
         }
         for (const std::string& normalizedType : normalizedTypeVector) {
             element.type = normalizedType;
-            infos.try_emplace(normalizedType, element);
+            infos[normalizedType] = element;
         }
     }
 }

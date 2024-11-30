@@ -72,6 +72,8 @@ private:
     bool HandlePendSignAOT(MessageParcel &data, MessageParcel &reply);
 
     bool HandleStopAOT(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleDeleteUninstallTmpDirs(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the RenameModuleDir function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.

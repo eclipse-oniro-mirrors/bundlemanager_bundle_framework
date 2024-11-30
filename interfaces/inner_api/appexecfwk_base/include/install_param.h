@@ -83,6 +83,7 @@ struct InstallParam : public Parcelable {
     // for AOT
     bool isOTA = false;
     bool concentrateSendEvent = false;
+    bool isRemoveUser = false;
     bool allUser = false;
     // utilizing for code-signature
     std::map<std::string, std::string> verifyCodeParams;

@@ -247,6 +247,50 @@ bool InstalldOperator::DeleteDirFast(const std::string &path)
     return true;
 }
 
+bool InstalldOperator::DeleteDirFlexible(const std::string &path, const bool async)
+{
+    if (async) {
+        return DeleteDirFast(path);
+    }
+    return DeleteDir(path);
+}
+
+bool InstalldOperator::DeleteUninstallTmpDir(const std::string &path)
+{
+    std::vector<std::string> deleteDirs;
+    std::error_code ec;
+    if (!std::filesystem::exists(path, ec) || !std::filesystem::is_directory(path, ec)) {
+        LOG_W(BMS_TAG_INSTALLD, "invalid path:%{public}s,err:%{public}s", path.c_str(), ec.message().c_str());
+        return false;
+    }
+    std::filesystem::directory_iterator dirIter(path, std::filesystem::directory_options::skip_permission_denied, ec);
+    std::filesystem::directory_iterator endIter;
+    if (ec) {
+        LOG_W(BMS_TAG_INSTALLD, "create iterator failed,%{public}s,err:%{public}s", path.c_str(), ec.message().c_str());
+        return false;
+    }
+    for (; dirIter != endIter; dirIter.increment(ec)) {
+        if (ec) {
+            LOG_W(BMS_TAG_INSTALLD, "iteration failed,%{public}s,err:%{public}s", path.c_str(), ec.message().c_str());
+            return false;
+        }
+        const std::filesystem::directory_entry &entry = *dirIter;
+        std::string fileName = entry.path().filename().string();
+        if (fileName.rfind(ServiceConstants::UNINSTALL_TMP_PREFIX, 0) == 0) {
+            deleteDirs.emplace_back(entry.path().string());
+        }
+    }
+    bool ret = true;
+    for (const std::string &dir : deleteDirs) {
+        LOG_W(BMS_TAG_INSTALLD, "begin to delete dir %{public}s", dir.c_str());
+        if (!DeleteDir(dir)) {
+            ret = false;
+            LOG_W(BMS_TAG_INSTALLD, "delete dir failed:%{public}s", dir.c_str());
+        }
+    }
+    return ret;
+}
+
 std::string InstalldOperator::GetSameLevelTmpPath(const std::string &path)
 {
     if (path.empty()) {

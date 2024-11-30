@@ -266,6 +266,7 @@ void BMSEventHandler::AfterBmsStart()
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
     SetAllInstallFlag();
     HandleSceneBoard();
+    UpdateAppDataMgr::DeleteUninstallTmpDirs(Constants::DEFAULT_USERID);
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
     ClearCache();

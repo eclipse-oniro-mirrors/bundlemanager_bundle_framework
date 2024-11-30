@@ -167,6 +167,20 @@ ErrCode InstalldProxy::StopAOT()
     return TransactInstalldCmd(InstalldInterfaceCode::STOP_AOT, data, reply, option);
 }
 
+ErrCode InstalldProxy::DeleteUninstallTmpDirs(const std::vector<std::string> &dirs)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Uint32, dirs.size());
+    for (const std::string &dir : dirs) {
+        INSTALLD_PARCEL_WRITE(data, String, dir);
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::DELETE_UNINSTALL_TMP_DIRS, data, reply, option);
+}
+
 ErrCode InstalldProxy::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     MessageParcel data;
@@ -214,13 +228,15 @@ ErrCode InstalldProxy::CreateBundleDataDirWithVector(const std::vector<CreateDir
     return TransactInstalldCmd(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_VECTOR, data, reply, option);
 }
 
-ErrCode InstalldProxy::RemoveBundleDataDir(const std::string &bundleName, const int userId, bool isAtomicService)
+ErrCode InstalldProxy::RemoveBundleDataDir(
+    const std::string &bundleName, const int userId, bool isAtomicService, const bool async)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
     INSTALLD_PARCEL_WRITE(data, Int32, userId);
     INSTALLD_PARCEL_WRITE(data, Bool, isAtomicService);
+    INSTALLD_PARCEL_WRITE(data, Bool, async);
 
     MessageParcel reply;
     MessageOption option;
