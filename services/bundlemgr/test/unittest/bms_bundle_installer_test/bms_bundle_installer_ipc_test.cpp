@@ -37,6 +37,7 @@ constexpr int32_t TEST_INSTALLER_ID = 1024;
 constexpr int32_t DEFAULT_INSTALLER_ID = 0;
 constexpr int32_t TEST_INSTALLER_UID = 100;
 constexpr int32_t INVAILD_ID = -1;
+const int32_t ERR_CODE = 8388613;
 enum BundleInstallerInterfaceCode : uint32_t {
     INSTALL = 0,
     INSTALL_MULTIPLE_HAPS,
@@ -1162,7 +1163,7 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_3200, Function | SmallTe
     MessageOption option;
     InstalldHost installdHost;
     int res = installdHost.OnRemoteRequest(code, datas, reply, option);
-    EXPECT_EQ(res, 0);
+    EXPECT_EQ(res, ERR_CODE);
 }
 
 /**

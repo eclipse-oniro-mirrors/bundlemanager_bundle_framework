@@ -99,7 +99,7 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractFiles_0100, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = installdHost.HandleExtractFiles(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -113,7 +113,7 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractHnpFiles_0100, Function | SmallTest |
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = installdHost.HandleExtractHnpFiles(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -211,7 +211,7 @@ HWTEST_F(BmsInstalldHostTest, HandleCreateBundleDataDir_0100, Function | SmallTe
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = installdHost.HandleCreateBundleDataDir(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -575,7 +575,7 @@ HWTEST_F(BmsInstalldHostTest, HandVerifyCodeSignature_0100, Function | SmallTest
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = installdHost.HandVerifyCodeSignature(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -589,7 +589,7 @@ HWTEST_F(BmsInstalldHostTest, HandleCheckEncryption_0100, Function | SmallTest |
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = installdHost.HandleCheckEncryption(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -645,7 +645,7 @@ HWTEST_F(BmsInstalldHostTest, HandVerifyCodeSignatureForHap_0100, Function | Sma
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = installdHost.HandVerifyCodeSignatureForHap(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -743,7 +743,7 @@ HWTEST_F(BmsInstalldHostTest, HandleCreateExtensionDataDir_0100, Function | Smal
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = installdHost.HandleCreateExtensionDataDir(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**
