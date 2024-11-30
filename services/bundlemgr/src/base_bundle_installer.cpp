@@ -1322,7 +1322,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     ProcessAddResourceInfo(installParam, bundleName_, userId_);
     VerifyDomain();
-    MarkInstallFinish();
+    // check mark install finish
+    result = MarkInstallFinish();
+    CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
     return result;
 }
 
@@ -5977,22 +5979,26 @@ void BaseBundleInstaller::CheckBundleNameAndStratAbility(const std::string &bund
     bmsExtensionDataMgr.CheckBundleNameAndStratAbility(bundleName, appIdentifier);
 }
 
-void BaseBundleInstaller::MarkInstallFinish()
+ErrCode BaseBundleInstaller::MarkInstallFinish()
 {
     InnerBundleInfo info;
     bool isExist = false;
     if (!GetInnerBundleInfo(info, isExist) || !isExist) {
         LOG_W(BMS_TAG_INSTALLER, "mark finish failed");
-        return;
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!InitDataMgr()) {
-        return;
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
-        LOG_W(BMS_TAG_INSTALLER, "save mark failed");
+        if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
+            LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
     }
+    return ERR_OK;
 }
 
 bool BaseBundleInstaller::SetDisposedRuleWhenBundleUpdateStart(
