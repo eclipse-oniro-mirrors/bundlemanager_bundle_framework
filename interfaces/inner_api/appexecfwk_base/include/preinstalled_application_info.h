@@ -23,10 +23,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct PreinstalledApplicationInfo : public Parcelable {
-    std::string bundleName;
-    std::string moduleName;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
+    std::string bundleName;
+    std::string moduleName;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

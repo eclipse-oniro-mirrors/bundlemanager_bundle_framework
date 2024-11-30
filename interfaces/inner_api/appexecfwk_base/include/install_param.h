@@ -46,17 +46,11 @@ enum class PermissionStatus : int8_t {
 
 // provides parameters required for installing or uninstalling an application
 struct InstallParam : public Parcelable {
-    InstallFlag installFlag = InstallFlag::NORMAL;
-    InstallLocation installLocation = InstallLocation::INTERNAL_ONLY;
-    int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE; // for crowdtesting type hap
-    int32_t userId = Constants::UNSPECIFIED_USERID;
     // is keep user data while uninstall.
     bool isKeepData = false;
     bool needSavePreInstallInfo = false;
     bool isPreInstallApp = false;
     bool removable = true;
-    // the profile-guided optimization(PGO) file path
-    std::map<std::string, std::string> pgoParams;
     // whether need copy hap to install path
     bool copyHapToInstallPath = true;
     // is aging Cause uninstall.
@@ -65,9 +59,17 @@ struct InstallParam : public Parcelable {
     bool withCopyHaps = false;
     // for MDM self update
     bool isSelfUpdate = false;
-    std::map<std::string, std::string> hashParams;
-    // shared bundle directory paths
-    std::vector<std::string> sharedBundleDirPaths;
+    // is shell token
+    bool isCallByShell = false;
+    // for AOT
+    bool isOTA = false;
+    bool concentrateSendEvent = false;
+    bool isRemoveUser = false;
+    bool allUser = false;
+    bool isDataPreloadHap = false;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    InstallFlag installFlag = InstallFlag::NORMAL;
+    InstallLocation installLocation = InstallLocation::INTERNAL_ONLY;
     // status of install bundle permission
     PermissionStatus installBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of install enterprise bundle permission
@@ -80,23 +82,21 @@ struct InstallParam : public Parcelable {
     PermissionStatus installInternaltestingBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of mdm update bundle for self
     PermissionStatus installUpdateSelfBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
-    // is shell token
-    bool isCallByShell = false;
-    // for AOT
-    bool isOTA = false;
-    bool concentrateSendEvent = false;
-    bool isRemoveUser = false;
-    bool allUser = false;
+    ApplicationInfoFlag preinstallSourceFlag = ApplicationInfoFlag::FLAG_INSTALLED;
+    int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE; // for crowdtesting type hap
     // Indicates the distribution type
     std::string specifiedDistributionType = "";
     // Indicates the additional Info
     std::string additionalInfo = "";
-    bool isDataPreloadHap = false;
     std::string appIdentifier;
+    // shared bundle directory paths
+    std::vector<std::string> sharedBundleDirPaths;
+    std::map<std::string, std::string> parameters;
+    // the profile-guided optimization(PGO) file path
+    std::map<std::string, std::string> pgoParams;
+    std::map<std::string, std::string> hashParams;
     // utilizing for code-signature
     std::map<std::string, std::string> verifyCodeParams;
-    ApplicationInfoFlag preinstallSourceFlag = ApplicationInfoFlag::FLAG_INSTALLED;
-    std::map<std::string, std::string> parameters;
     // the parcel object function is not const.
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
@@ -167,10 +167,10 @@ private:
 };
 
 struct UninstallParam : public Parcelable {
-    std::string bundleName;
-    std::string moduleName;
     int32_t versionCode = Constants::ALL_VERSIONCODE;
     int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName;
+    std::string moduleName;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

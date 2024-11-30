@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,27 +43,27 @@ struct PackageApp {
 };
 
 struct AbilityFormInfo {
-    std::string name;
-    std::string type;
     bool updateEnabled = false;
     uint32_t updateDuration = 0;
+    std::string name;
+    std::string type;
     std::string scheduledUpdateTime;
-    std::vector<std::string> supportDimensions;
     std::string defaultDimension;
+    std::vector<std::string> supportDimensions;
 };
 
 struct ModuleAbilityInfo {
+    bool visible = false;
     std::string name;
     std::string label;
-    bool visible = false;
     std::vector<AbilityFormInfo> forms;
 };
 
 struct ModuleDistro {
-    std::string moduleType;
-    std::string moduleName;
     bool installationFree = false;
     bool deliveryWithInstall = false;
+    std::string moduleType;
+    std::string moduleName;
 };
 
 struct ApiVersion {
@@ -87,20 +87,20 @@ struct PackageModule {
 };
 
 struct Summary {
-    PackageApp app;
     std::vector<PackageModule> modules;
+    PackageApp app;
 };
 
 struct Packages {
-    std::vector<std::string> deviceType;
-    std::string moduleType;
     bool deliveryWithInstall = false;
+    std::string moduleType;
     std::string name;
+    std::vector<std::string> deviceType;
 };
 
 struct BundlePackInfo : public Parcelable {
-    Summary summary;
     std::vector<Packages> packages;
+    Summary summary;
 
     bool GetValid() const
     {
