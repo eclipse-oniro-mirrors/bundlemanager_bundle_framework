@@ -46,21 +46,30 @@ void JsCallback(napi_env env, napi_value jsCb, void *context, void *data)
     }
     std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(env, &scope);
-    if (scope == nullptr) {
-        APP_LOGE("scope is null");
-        return;
-    }
-    napi_value result[ARGS_SIZE_ONE] = { 0 };
-    napi_value placeHolder = nullptr;
-    CHKRV_SCOPE(env, napi_create_object(env, &result[ARGS_POS_ZERO]), scope);
-    CommonFunc::ConvertBundleChangeInfo(env, asyncCallbackInfo->bundleName,
-        asyncCallbackInfo->userId, asyncCallbackInfo->appIndex, result[0]);
-    napi_status status = napi_call_function(env, nullptr,
-        jsCb, sizeof(result) / sizeof(result[0]), result, &placeHolder);
-    if (status != napi_ok) {
-        APP_LOGE("napi call %{public}d", status);
-    }
+    napi_status status = napi_open_handle_scope(env, &scope);
+    do {
+        if (status != napi_ok || scope == nullptr) {
+            APP_LOGE("napi open scope %{public}d", status);
+            break;
+        }
+        napi_value result[ARGS_SIZE_ONE] = { 0 };
+        napi_value placeHolder = nullptr;
+        status = napi_create_object(env, &result[ARGS_POS_ZERO]);
+        if (status != napi_ok) {
+            APP_LOGE("napi create obj %{public}d", status);
+            break;
+        }
+        CommonFunc::ConvertBundleChangeInfo(env, asyncCallbackInfo->bundleName,
+            asyncCallbackInfo->userId, asyncCallbackInfo->appIndex, result[0]);
+        status = napi_call_function(env, nullptr,
+            jsCb, sizeof(result) / sizeof(result[0]), result, &placeHolder);
+        if (status != napi_ok) {
+            APP_LOGE("napi call %{public}d", status);
+            break;
+        }
+    } while (false);
+    napi_release_threadsafe_function(asyncCallbackInfo->tsfn,
+        napi_threadsafe_function_release_mode::napi_tsfn_release);
     napi_close_handle_scope(env, scope);
     APP_LOGD("JsCallback OK");
 }
@@ -91,6 +100,7 @@ void EventListener::Add(napi_env env, napi_value handler)
     NAPI_CALL_RETURN_VOID(env, napi_create_threadsafe_function(env, handler,
         nullptr, resName, 0, 1, nullptr, nullptr, nullptr, JsCallback, &tsfn));
 
+    std::lock_guard<std::mutex> refsLock(callbackRefsMutex_);
     callbackRefs_.push_back(std::make_pair(callbackRef, tsfn));
 }
 
@@ -100,6 +110,7 @@ void EventListener::Delete(napi_env env, napi_value handler)
     if (!HasSameEnv(env)) {
         return;
     }
+    std::lock_guard<std::mutex> refsLock(callbackRefsMutex_);
     for (auto it = callbackRefs_.begin(); it != callbackRefs_.end();) {
         napi_value callback = nullptr;
         napi_get_reference_value(env_, (*it).first, &callback);
@@ -117,11 +128,17 @@ void EventListener::Delete(napi_env env, napi_value handler)
 
 void EventListener::DeleteAll()
 {
+    std::lock_guard<std::mutex> refsLock(callbackRefsMutex_);
+    for (const auto &item : callbackRefs_) {
+        napi_delete_reference(env_, item.first);
+        napi_release_threadsafe_function(item.second, napi_threadsafe_function_release_mode::napi_tsfn_release);
+    }
     callbackRefs_.clear();
 }
 
 bool EventListener::Find(napi_value handler)
 {
+    std::lock_guard<std::mutex> refsLock(callbackRefsMutex_);
     for (const auto &callbackRef : callbackRefs_) {
         napi_value callback = nullptr;
         napi_get_reference_value(env_, callbackRef.first, &callback);
@@ -144,6 +161,7 @@ void EventListener::Emit(std::string &bundleName, int32_t userId, int32_t appInd
         APP_LOGE("env is invalid");
         return;
     }
+    std::lock_guard<std::mutex> refsLock(callbackRefsMutex_);
     for (const auto &callbackRef : callbackRefs_) {
         EmitOnUV(bundleName, userId, appIndex, callbackRef);
     }
@@ -157,12 +175,20 @@ void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, int3
         .bundleName = bundleName,
         .userId = userId,
         .appIndex = appIndex,
+        .tsfn = callbackRef.second,
     };
+    if (asyncCallbackInfo == nullptr) {
+        napi_release_threadsafe_function(callbackRef.second,
+            napi_threadsafe_function_release_mode::napi_tsfn_release);
+        return;
+    }
     napi_status status = napi_call_threadsafe_function(callbackRef.second, asyncCallbackInfo,
         napi_threadsafe_function_call_mode::napi_tsfn_nonblocking);
     if (status != napi_ok) {
         APP_LOGE("napi call safe %{public}d", status);
         delete asyncCallbackInfo;
+        napi_release_threadsafe_function(callbackRef.second,
+            napi_threadsafe_function_release_mode::napi_tsfn_release);
     }
 }
 
