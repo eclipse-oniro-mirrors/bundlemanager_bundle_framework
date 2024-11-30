@@ -24,7 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 void El5FilekeyCallback::OnRegenerateAppKey(std::vector<Security::AccessToken::AppKeyInfo> &infos)
 {
-    APP_LOGI("OnRegenerateAppKey start");
+    APP_LOGI("el5 callback");
     if (infos.empty()) {
         APP_LOGE("OnRegenerateAppKey infos is empty");
         return;
