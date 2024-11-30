@@ -42,6 +42,11 @@ using OHOS::DelayedSingleton;
 namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
+const std::string BUNDLE_NAME_2 = "com.example.bmstest.demo";
+const std::string ABILITY_NAME_TEST = "EntryAbility";
+const std::string PROCESS_NAME_1 = ":A";
+const std::string PROCESS_NAME_2 = ":B";
+const std::string PROCESS_NAME_3 = ":C";
 const std::string SERVICE_BUNDLE_NAME = "com.example.myapplication.hmservice";
 const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/install_bundle/";
 const std::string RESOURCE_TEST_PATH = "/data/test/resource/bms/install_bundle/test/";
@@ -77,6 +82,9 @@ const std::string RIGHT_DIFFERENT_COMPATIBLE_VERSION_CODE = "first_diff_minCompC
 const std::string RIGHT_DIFFERENT_MODULE_NAME = "first_right_with_diff_moduleName.hap";
 const std::string RIGHT_DIFFERENT_MODULE_TYPE = "first_right_with_diff_moduleType.hap";
 const std::string SECOND_SAME_WITH_MODULE_NAME = "second_right_with_same_moduleName.hap";
+const std::string TEST_HAP_DEMO = "testhapdemo.hap";
+const std::string TEST_HAP_DEMO_2 = "testhapdemo2.hap";
+const std::string TEST_HAP_DEMO_3 = "testhapdemo3.hap";
 
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
@@ -103,6 +111,7 @@ public:
     void SetUp();
     void TearDown();
     ErrCode InstallThirdPartyBundle(const std::string &filePath) const;
+    ErrCode UnInstallBundle(const std::string &bundleName, int32_t userId) const;
     ErrCode UpdateThirdPartyBundle(const std::string &filePath) const;
     ErrCode InstallThirdPartyMultipleBundles(const std::vector<std::string> &filePaths, bool &&flag) const;
     void CheckFileExist() const;
@@ -149,6 +158,26 @@ ErrCode BmsMultipleInstallerTest::InstallThirdPartyBundle(const std::string &fil
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.withCopyHaps = true;
     bool result = installer->Install(filePath, installParam, receiver);
+    EXPECT_TRUE(result);
+    return receiver->GetResultCode();
+}
+
+ErrCode BmsMultipleInstallerTest::UnInstallBundle(const std::string &bundleName, int32_t userId) const
+{
+    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    if (!installer) {
+        EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    if (!receiver) {
+        EXPECT_FALSE(true) << "the receiver is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    InstallParam installParam;
+    installParam.userId = userId;
+    installParam.installFlag = InstallFlag::NORMAL;
+    bool result = installer->Uninstall(bundleName, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
 }
@@ -1911,5 +1940,42 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2700, Function | Small
     EXPECT_FALSE(result);
 
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_FAIL);
+}
+
+/**
+ * @tc.number: MultipleHapsUpdateData_2800
+ * @tc.name: test get ability.prcess
+ * @tc.desc: 1.install test hap and compare ability.prcess
+ */
+HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2800, Function | SmallTest | Level1)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + TEST_HAP_DEMO;
+    ErrCode result = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(result, ERR_OK);
+    // prepare already install information.
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AbilityInfo abilityInfo;
+    Want want;
+    ElementName name;
+    name.SetAbilityName(ABILITY_NAME_TEST);
+    name.SetBundleName(BUNDLE_NAME_2);
+    want.SetElement(name);
+    bool ret = dataMgr->QueryAbilityInfo(want, 0, USERID, abilityInfo, 0);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(abilityInfo.process, PROCESS_NAME_1);
+
+    bundleFile = RESOURCE_ROOT_PATH + TEST_HAP_DEMO_2;
+    UpdateThirdPartyBundle(bundleFile);
+    ret = dataMgr->QueryAbilityInfo(want, 0, USERID, abilityInfo, 0);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(abilityInfo.process, PROCESS_NAME_2);
+
+    bundleFile = RESOURCE_ROOT_PATH + TEST_HAP_DEMO_3;
+    UpdateThirdPartyBundle(bundleFile);
+    ret = dataMgr->QueryAbilityInfo(want, 0, USERID, abilityInfo, 0);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(abilityInfo.process, PROCESS_NAME_3);
+    UnInstallBundle(BUNDLE_NAME_2, USERID);
 }
 } // OHOS

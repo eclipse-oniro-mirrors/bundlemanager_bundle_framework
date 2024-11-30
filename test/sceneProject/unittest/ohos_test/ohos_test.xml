@@ -250,6 +250,12 @@
               src="res"/>
       <option name="push" value="test_bundle/second_right_with_same_moduleName.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
+      <option name="push"
+        value="test_bundle/testhapdemo/testhapdemo.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push"
+        value="test_bundle/testhapdemo2/testhapdemo2.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push"
+        value="test_bundle/testhapdemo3/testhapdemo3.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
   <target name="BmsInstallDaemonTest">
