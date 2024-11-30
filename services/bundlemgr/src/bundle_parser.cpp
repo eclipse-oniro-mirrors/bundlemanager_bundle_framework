@@ -223,7 +223,6 @@ ErrCode BundleParser::ParsePreInstallConfig(
     APP_LOGD("Parse preInstallConfig from %{public}s", configFile.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
-        APP_LOGE_NOFUNC("Parse file %{public}s failed", configFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 
@@ -238,7 +237,6 @@ ErrCode BundleParser::ParsePreUnInstallConfig(
     APP_LOGD("Parse PreUnInstallConfig from %{public}s", configFile.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
-        APP_LOGE_NOFUNC("Parse file %{public}s failed", configFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 
@@ -252,7 +250,6 @@ ErrCode BundleParser::ParsePreInstallAbilityConfig(
     APP_LOGD("Parse PreInstallAbilityConfig from %{public}s", configFile.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
-        APP_LOGE("Parse file %{public}s failed", configFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 
@@ -266,7 +263,6 @@ ErrCode BundleParser::ParseDefaultPermission(
     APP_LOGD("Parse DefaultPermission from %{private}s", permissionFile.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(permissionFile, jsonBuf)) {
-        APP_LOGE_NOFUNC("Parse file %{public}s failed", permissionFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 
@@ -279,7 +275,6 @@ ErrCode BundleParser::ParseExtTypeConfig(
 {
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
-        APP_LOGE_NOFUNC("Parse file %{public}s failed", configFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 
@@ -356,7 +351,6 @@ ErrCode BundleParser::ParseNoDisablingList(const std::string &configPath, std::v
 {
     nlohmann::json object;
     if (!ReadFileIntoJson(configPath, object)) {
-        APP_LOGI("Parse file %{public}s failed", configPath.c_str());
         return ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL;
     }
     if (!object.contains(NO_DISABLING_CONFIG_KEY) || !object.at(NO_DISABLING_CONFIG_KEY).is_array()) {

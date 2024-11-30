@@ -191,7 +191,7 @@ void BundleInstaller::Uninstall(
 
 void BundleInstaller::UpdateInstallerState(const InstallerState state)
 {
-    LOG_I(BMS_TAG_INSTALLER, "state: %{public}d", state);
+    LOG_D(BMS_TAG_INSTALLER, "state: %{public}d", state);
     SetInstallerState(state);
     if (statusReceiver_) {
         statusReceiver_->OnStatusNotify(static_cast<int>(state));

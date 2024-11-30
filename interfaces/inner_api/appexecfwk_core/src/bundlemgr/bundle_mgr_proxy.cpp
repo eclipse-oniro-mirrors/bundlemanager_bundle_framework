@@ -365,32 +365,32 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoV9 due to params empty");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoV9 fail params empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoV9 due to write InterfaceToken fail");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoV9 write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoV9 due to write bundleName fail");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoV9 write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoV9 due to write flag fail");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoV9 write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoV9 due to write userId fail");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoV9 write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     auto res = GetParcelInfoIntelligent<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoV9 from server, error code: %{public}d", res);
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoV9 fail error: %{public}d", res);
         return res;
     }
     return ERR_OK;
