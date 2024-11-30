@@ -9121,8 +9121,8 @@ HWTEST_F(ActsBmsKitSystemTest, SwitchUninstallState_0001, Function | MediumTest 
 {
     std::cout << "START SwitchUninstallState_0001" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
-    std::string appName = "com.example.ohosproject.hmservice";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient4.hap";
+    std::string appName = "com.example.myapplication3";
     Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -9704,8 +9704,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetCompatibleDeviceType_0001, Function | MediumTe
 {
     std::cout << "START GetCompatibleDeviceType_0001" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
-    std::string appName = "com.example.ohosproject.hmservice";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient3.hap";
+    std::string appName = "com.example.myapplication2";
     Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -9813,6 +9813,38 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleDirs_0001, Function | MediumTest | Le
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
     }
     std::cout << "END GetAllBundleDirs_0001" << std::endl;
+}
+
+
+/**
+ * @tc.number: GetAllBundleDirs_0002
+ * @tc.name: test GetAllBundleDirs interface
+ * @tc.desc: 1. call GetAllBundleDirs
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleDirs_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllBundleDirs_0002" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient2.hap";
+    std::string appName = "com.example.myapplication1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::vector<BundleDir> bundleDirs;
+    ErrCode ret = bundleMgrProxy->GetAllBundleDirs(100, bundleDirs);
+    EXPECT_EQ(ret, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetAllBundleDirs_0002" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

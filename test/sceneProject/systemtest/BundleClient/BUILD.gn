@@ -18,5 +18,8 @@ group("BundleClient") {
   deps += [
     # deps file
     "bundleClient1:bundleClient1",
+    "bundleClient2:bundleClient2",
+    "bundleClient3:bundleClient3",
+    "bundleClient4:bundleClient4",
   ]
 }

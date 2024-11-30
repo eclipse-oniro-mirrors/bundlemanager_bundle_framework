@@ -108,6 +108,9 @@
       <option name="push" value="stThirdBundle/bmsThirdBundle26.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundle28.rpk -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="BundleClient/bundleClient1.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="BundleClient/bundleClient2.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="BundleClient/bundleClient3.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="BundleClient/bundleClient4.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="testHapSo/hapIncludeso1.hap -> /data/test/bms_bundle/" src="res" />
     </preparer>
   </target>
