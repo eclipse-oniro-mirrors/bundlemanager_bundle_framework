@@ -7155,4 +7155,167 @@ HWTEST_F(BmsBundleInstallerTest, FinalProcessHapAndSoForBundleUpdate_0010, Funct
     ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, false, true);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: StreamInstall_0100
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the StreamInstall of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, StreamInstall_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver;
+    std::vector<std::string> bundleFilePaths;
+    bundleFilePaths.push_back(TEST_CREATE_FILE_PATH);
+    ErrCode result = bundleInstallerHost.StreamInstall(bundleFilePaths, installParam, statusReceiver);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: InstallCloneApp_0100
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the InstallCloneApp of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallCloneApp_0100, Function | SmallTest | Level0)
+{
+    int32_t index = 0;
+    BundleInstallerHost bundleInstallerHost;
+    ErrCode result = bundleInstallerHost.InstallCloneApp(BUNDLE_NAME, USERID, index);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: HandleInstallCloneApp_0100
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the HandleInstallCloneApp of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallCloneApp_0100, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName;
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: UninstallCloneApp_0100
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the UninstallCloneApp of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallCloneApp_0100, Function | SmallTest | Level0)
+{
+    int32_t index = 0;
+    DestroyAppCloneParam destroyAppCloneParam;
+    BundleInstallerHost bundleInstallerHost;
+    ErrCode result = bundleInstallerHost.UninstallCloneApp(BUNDLE_NAME, USERID, index, destroyAppCloneParam);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX);
+}
+
+/**
+ * @tc.number: HandleUninstallCloneApp_0100
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the HandleUninstallCloneApp of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleUninstallCloneApp_0100, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName;
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+    DestroyAppCloneParam destroyAppCloneParam;
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+    data.WriteInt32(appIndex);
+    data.WriteParcelable(&destroyAppCloneParam);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleUninstallCloneApp(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: InstallExisted_0100
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the InstallExisted of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallExisted_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    ErrCode result = bundleInstallerHost.InstallExisted(BUNDLE_NAME, USERID);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: HandleInstallExisted_0100
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the HandleInstallExisted of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallExisted_0100, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string bundleName;
+    int32_t userId = 100;
+
+    data.WriteString16(Str8ToStr16(bundleName));
+    data.WriteInt32(userId);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallExisted(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: ProcessEncryptedKeyExisted_0100
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the ProcessEncryptedKeyExisted of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessEncryptedKeyExisted_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    std::vector<CodeProtectBundleInfo> infos;
+    int32_t res = ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    uint32_t type = CodeOperation::ADD;
+
+    installer.ProcessEncryptedKeyExisted(res, type, infos);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: GetAllConeCodeProtectBundleInfos_0100
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the GetAllConeCodeProtectBundleInfos of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, GetAllConeCodeProtectBundleInfos_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    std::vector<CodeProtectBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    installer.CreateEl5AndSetPolicy(innerBundleInfo);
+    installer.GetAllConeCodeProtectBundleInfos(infos, innerBundleInfo);
+
+    EXPECT_TRUE(infos.empty());
+}
 } // OHOS
