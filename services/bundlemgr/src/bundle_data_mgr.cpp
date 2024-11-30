@@ -2745,7 +2745,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId, appIndex);
-    PostProcessAnyUserFlags(flags, responseUserId, originalUserId, bundleInfo);
+    PostProcessAnyUserFlags(flags, responseUserId, originalUserId, bundleInfo, innerBundleInfo);
 
     ProcessBundleMenu(bundleInfo, flags, true);
     ProcessBundleRouterMap(bundleInfo, flags);
@@ -2924,7 +2924,8 @@ void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t
 }
 
 void BundleDataMgr::PostProcessAnyUserFlags(
-    int32_t flags, int32_t userId, int32_t originalUserId, BundleInfo &bundleInfo) const
+    int32_t flags, int32_t userId, int32_t originalUserId, BundleInfo &bundleInfo,
+    const InnerBundleInfo &innerBundleInfo) const
 {
     bool withApplicationFlag =
         (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION))
@@ -2936,6 +2937,15 @@ void BundleDataMgr::PostProcessAnyUserFlags(
             if ((applicationFlags & flagInstalled) != 0) {
                 bundleInfo.applicationInfo.applicationFlags = static_cast<int32_t>(applicationFlags ^ flagInstalled);
             }
+        }
+
+        const std::map<std::string, InnerBundleUserInfo>& innerUserInfos = innerBundleInfo.GetInnerBundleUserInfos();
+        if (!innerBundleInfo.HasInnerBundleUserInfo(originalUserId)) {
+            bundleInfo.applicationInfo.applicationFlags |=
+                static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+        } else if (innerUserInfos.size() > 1) {
+            bundleInfo.applicationInfo.applicationFlags |=
+                static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
         }
     }
 }
@@ -3356,7 +3366,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         }
         ProcessBundleMenu(bundleInfo, flags, true);
         ProcessBundleRouterMap(bundleInfo, flags);
-        PostProcessAnyUserFlags(flags, responseUserId, requestUserId, bundleInfo);
+        PostProcessAnyUserFlags(flags, responseUserId, requestUserId, bundleInfo, innerBundleInfo);
         bundleInfos.emplace_back(bundleInfo);
         if (!ofAnyUserFlag && ((static_cast<uint32_t>(flags) &
             static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE)) !=

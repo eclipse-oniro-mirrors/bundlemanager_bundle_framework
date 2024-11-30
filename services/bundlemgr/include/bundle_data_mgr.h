@@ -1200,7 +1200,7 @@ private:
 
     void PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const;
     void PostProcessAnyUserFlags(int32_t flags, int32_t userId,
-        int32_t originalUserId, BundleInfo &bundleInfo) const;
+        int32_t originalUserId, BundleInfo &bundleInfo, const InnerBundleInfo &innerBundleInfo) const;
     void GetExtensionAbilityInfoByTypeName(uint32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, const std::string &typeName) const;
     bool GetShortcutInfosByInnerBundleInfo(
