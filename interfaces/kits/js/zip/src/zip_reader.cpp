@@ -171,6 +171,7 @@ bool ZipReader::OpenCurrentEntryInZip()
         NULL,  // szComment.
         0);    // commentBufferSize.
     if (result != UNZ_OK) {
+        APP_LOGE("unzGetCurrentFileInfo %{public}d", result);
         return false;
     }
     if (raw_file_name_in_zip[0] == '\0') {
@@ -202,18 +203,22 @@ bool ZipReader::ExtractCurrentEntry(WriterDelegate *delegate, uint64_t numBytesT
         const int numBytesRead = unzReadCurrentFile(zipFile_, buf.get(), kZipBufSize);
         if (numBytesRead == 0) {
             entirefileextracted = true;
+            APP_LOGI("extract entry");
             break;
         } else if (numBytesRead < 0) {
             // If numBytesRead < 0, then it's a specific UNZ_* error code.
+            APP_LOGE("unzReadCurrentFile < 0 %{public}d", numBytesRead);
             break;
         } else {
             uint64_t numBytesToWrite = std::min<uint64_t>(remainingCapacity, checked_cast<uint64_t>(numBytesRead));
             if (!delegate->WriteBytes(buf.get(), numBytesToWrite)) {
+                APP_LOGE("WriteBytes %{public}llu", numBytesToWrite);
                 break;
             }
             if (remainingCapacity == checked_cast<uint64_t>(numBytesRead)) {
                 // Ensures function returns true if the entire file has been read.
                 entirefileextracted = (unzReadCurrentFile(zipFile_, buf.get(), 1) == 0);
+                APP_LOGI("extract entry %{public}d", entirefileextracted);
             }
             if (remainingCapacity >= numBytesToWrite) {
                 remainingCapacity -= numBytesToWrite;
@@ -290,7 +295,11 @@ bool FilePathWriterDelegate::WriteBytes(const char *data, int numBytes)
         return false;
     }
     int writebytes = fwrite(data, 1, numBytes, file_);
-    return numBytes == writebytes;
+    bool ret = (numBytes == writebytes);
+    if (!ret) {
+        APP_LOGE("fwrite %{public}d %{public}d", numBytes, writebytes);
+    }
+    return ret;
 }
 
 void FilePathWriterDelegate::SetTimeModified(const struct tm *time)

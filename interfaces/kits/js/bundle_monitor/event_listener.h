@@ -43,6 +43,7 @@ private:
     napi_env env_;
     std::string type_;
     std::list<std::pair<napi_ref, napi_threadsafe_function>> callbackRefs_;
+    std::mutex callbackRefsMutex_;
     bool valid_ = true;
     std::mutex validMutex_;
 };
@@ -51,6 +52,7 @@ struct AsyncCallbackInfo {
     std::string bundleName;
     int32_t userId;
     int32_t appIndex;
+    napi_threadsafe_function tsfn;
 };
 }
 }
