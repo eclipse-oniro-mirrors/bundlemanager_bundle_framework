@@ -2939,13 +2939,19 @@ void BundleDataMgr::PostProcessAnyUserFlags(
             }
         }
 
-        const std::map<std::string, InnerBundleUserInfo>& innerUserInfos = innerBundleInfo.GetInnerBundleUserInfos();
-        if (!innerBundleInfo.HasInnerBundleUserInfo(originalUserId)) {
-            bundleInfo.applicationInfo.applicationFlags |=
-                static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
-        } else if (innerUserInfos.size() > 1) {
-            bundleInfo.applicationInfo.applicationFlags |=
-                static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+        bool withAnyUser =
+            (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER))
+                == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
+        if (withAnyUser) {
+            const std::map<std::string, InnerBundleUserInfo>& innerUserInfos
+                = innerBundleInfo.GetInnerBundleUserInfos();
+            if (!innerBundleInfo.HasInnerBundleUserInfo(originalUserId)) {
+                bundleInfo.applicationInfo.applicationFlags |=
+                    static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+            } else if (innerUserInfos.size() > 1) {
+                bundleInfo.applicationInfo.applicationFlags |=
+                    static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+            }
         }
     }
 }

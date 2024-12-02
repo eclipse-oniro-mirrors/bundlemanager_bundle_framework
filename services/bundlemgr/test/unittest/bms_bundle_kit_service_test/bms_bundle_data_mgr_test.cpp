@@ -7758,4 +7758,71 @@ HWTEST_F(BmsBundleDataMgrTest, IBundleStatusCallback_0001, Function | SmallTest 
     iBundleStatusCallbackTest.SetUserId(Constants::DEFAULT_USERID);
     EXPECT_EQ(iBundleStatusCallbackTest.GetUserId(), Constants::DEFAULT_USERID);
 }
+
+/**
+ * @tc.number: PostProcessAnyUser_0001
+ * @tc.name: SetUserId
+ * @tc.desc: test SetUserId
+ */
+HWTEST_F(BmsBundleDataMgrTest, PostProcessAnyUser_0001, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    int32_t flags = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)
+        | static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
+    int32_t userId = 100;
+    int32_t originUserId = 100;
+    BundleInfo bundleInfo;
+    InnerBundleInfo innerBundleInfo;
+
+    InnerBundleUserInfo userInfo1;
+    userInfo1.bundleUserInfo.userId = 100;
+    InnerBundleUserInfo userInfo2;
+    userInfo2.bundleUserInfo.userId = 101;
+
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo1);
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo2);
+
+    bundleDataMgr->PostProcessAnyUserFlags(flags, userId, originUserId, bundleInfo, innerBundleInfo);
+    uint32_t flagsRet = static_cast<uint32_t>(bundleInfo.applicationInfo.applicationFlags);
+    bool r1 = (flagsRet & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED))
+         == static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+    bool r2 = (flagsRet & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED))
+        == static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+    EXPECT_EQ(r1, true);
+    EXPECT_EQ(r2, true);
+}
+
+/**
+ * @tc.number: PostProcessAnyUser_0002
+ * @tc.name: SetUserId
+ * @tc.desc: test SetUserId
+ */
+HWTEST_F(BmsBundleDataMgrTest, PostProcessAnyUser_0002, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    int32_t flags = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)
+        | static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
+    int32_t userId = 100;
+    int32_t originUserId = 100;
+    BundleInfo bundleInfo;
+    InnerBundleInfo innerBundleInfo;
+
+    InnerBundleUserInfo userInfo1;
+    userInfo1.bundleUserInfo.userId = 100;
+
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo1);
+
+    bundleDataMgr->PostProcessAnyUserFlags(flags, userId, originUserId, bundleInfo, innerBundleInfo);
+    uint32_t flagsRet = static_cast<uint32_t>(bundleInfo.applicationInfo.applicationFlags);
+    bool r1 = (flagsRet & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED))
+         == static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+    bool r2 = (flagsRet & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED))
+        != static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+    EXPECT_EQ(r1, true);
+    EXPECT_EQ(r2, true);
+}
 } // OHOS
