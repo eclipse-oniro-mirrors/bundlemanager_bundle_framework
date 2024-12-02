@@ -1267,6 +1267,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
 
+#ifdef WEBVIEW_ENABLE
+    result = VerifyArkWebInstall(bundleName_);
+    CHECK_RESULT_WITH_ROLLBACK(result, "web verify failed %{public}d", newInfos, oldInfo);
+#endif
+
+    // Roolback is unavailable below this line
     // copy hap or hsp to real install dir
     SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
     if (installParam.copyHapToInstallPath) {
@@ -1287,11 +1293,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT_WITH_ROLLBACK(result, "move so file to install path failed %{public}d", newInfos, oldInfo);
     result = FinalProcessHapAndSoForBundleUpdate(newInfos, installParam.copyHapToInstallPath, needDeleteOldLibraryPath);
     CHECK_RESULT_WITH_ROLLBACK(result, "final process hap and so failed %{public}d", newInfos, oldInfo);
-
-#ifdef WEBVIEW_ENABLE
-    result = VerifyArkWebInstall(bundleName_);
-    CHECK_RESULT_WITH_ROLLBACK(result, "web verify failed %{public}d", newInfos, oldInfo);
-#endif
 
     // attention pls, rename operation shoule be almost the last operation to guarantee the rollback operation
     // when someone failure occurs in the installation flow
