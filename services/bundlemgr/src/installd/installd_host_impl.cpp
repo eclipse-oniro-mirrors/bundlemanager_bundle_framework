@@ -80,7 +80,7 @@ constexpr const char* EXTENSION_CONFIG_FILE_PATH = "/etc/ams_extension_config.js
 constexpr const char* EXTENSION_CONFIG_NAME = "ams_extension_config";
 constexpr const char* EXTENSION_TYPE_NAME = "extension_type_name";
 constexpr const char* EXTENSION_SERVICE_NEED_CREATE_SANDBOX = "need_create_sandbox";
-constexpr const char* SHELL_ENTRY_TXT = "g:2000:rx";
+constexpr const char* SHELL_ENTRY_TXT = "g:2000:rwx";
 constexpr int32_t INSTALLS_UID = 3060;
 enum class DirType : uint8_t {
     DIR_EL1,
