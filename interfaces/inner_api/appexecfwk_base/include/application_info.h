@@ -90,6 +90,7 @@ enum class ApplicationInfoFlag {
     FLAG_BOOT_INSTALLED = 0x00000002,
     FLAG_OTA_INSTALLED = 0x00000004,
     FLAG_RECOVER_INSTALLED = 0x00000008,
+    FLAG_OTHER_INSTALLED = 0x00000010,
 };
 
 struct MultiAppModeData : public Parcelable {
