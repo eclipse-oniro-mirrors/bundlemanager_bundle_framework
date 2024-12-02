@@ -1267,4 +1267,19 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6800, Function | SmallTest |
     auto ret = proxy->SetDirApl(TEST_STRING, TEST_STRING, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
+
+/**
+ * @tc.number: InstalldProxyTest_6900
+ * @tc.name: test Marshalling function of AddUserDirDeleteDfx
+ * @tc.desc: 1. calling AddUserDirDeleteDfx of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6900, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> proxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(proxy, nullptr);
+
+    int32_t userId = 10;
+    auto ret = proxy->AddUserDirDeleteDfx(userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
 } // OHOS
