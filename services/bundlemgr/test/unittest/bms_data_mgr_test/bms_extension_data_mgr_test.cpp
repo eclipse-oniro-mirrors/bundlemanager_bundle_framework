@@ -1199,7 +1199,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0032, Function | Small
 {
     BmsExtensionDataMgr bmsExtensionDataMgrTest;
     bool res = bmsExtensionDataMgrTest.IsRdDevice();
+#ifdef USE_EXTENSION_DATA
+    EXPECT_TRUE(res);
+#else
     EXPECT_FALSE(res);
+#endif
 }
 
 /**
@@ -1226,6 +1230,10 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0034, Function | Small
     BmsExtensionDataMgr bmsExtensionDataMgrTest;
     std::string bundleName = "bundleNameTest";
     std::string res = bmsExtensionDataMgrTest.GetCompatibleDeviceType(bundleName);
+#ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, "");
+#else
     EXPECT_EQ(res, "default");
+#endif
 }
 } // OHOS
