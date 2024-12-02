@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,15 +24,15 @@ struct CheckPackageHasInstalledResponse {
     bool result = false;
 };
 struct CheckPackageHasInstalledOptions {
+    bool isString = false;
+    int32_t errCode = 0;
+    std::string bundleName;
     napi_env env = nullptr;
     napi_async_work asyncWork = nullptr;
     napi_ref successRef = nullptr;
     napi_ref failRef = nullptr;
     napi_ref completeRef = nullptr;
-    std::string bundleName;
-    bool isString = false;
     CheckPackageHasInstalledResponse response;
-    int32_t errCode = 0;
     ~CheckPackageHasInstalledOptions();
 };
 napi_value HasInstalled(napi_env env, napi_callback_info info);

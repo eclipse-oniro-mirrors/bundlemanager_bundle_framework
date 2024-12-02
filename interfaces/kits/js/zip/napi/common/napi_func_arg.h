@@ -57,12 +57,12 @@ public:
     napi_value GetArg(size_t argPos) const;
 
 private:
+    size_t argc_ = 0;
     napi_env env_ = nullptr;
     napi_callback_info info_ = nullptr;
-
-    size_t argc_ = 0;
-    std::unique_ptr<napi_value[]> argv_ = {nullptr};
     napi_value thisVar_ = nullptr;
+
+    std::unique_ptr<napi_value[]> argv_ = {nullptr};
 
     bool InitArgs(std::function<bool()> argcChecker);
 

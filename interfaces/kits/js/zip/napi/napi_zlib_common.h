@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,16 +34,16 @@ namespace LIBZIP {
 
 struct CallZipUnzipParam {
     std::string src;
-    std::vector<std::string> srcFiles;
     std::string dest;
+    std::vector<std::string> srcFiles;
     OPTIONS options;
 };
 
 struct AsyncZipCallbackInfo {
-    napi_async_work asyncWork;
-    CallZipUnzipParam param;
-    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo;
     int executeResult = 0;
+    napi_async_work asyncWork;
+    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo;
+    CallZipUnzipParam param;
 };
 bool UnwrapIntValue(napi_env env, napi_value jsValue, int &result);
 bool IsTypeForNapiValue(napi_env env, napi_value param, napi_valuetype expectType);
