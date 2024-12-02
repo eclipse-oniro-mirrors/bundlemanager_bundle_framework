@@ -562,6 +562,7 @@ private:
     void SaveHapPathToRecords(
         bool isPreInstallApp, const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void OnSingletonChange(bool killProcess);
+    void RestoreHaps(const std::vector<std::string> &bundlePaths, const InstallParam &installParam);
     bool AllowSingletonChange(const std::string &bundleName);
     void MarkPreInstallState(const std::string &bundleName, bool isUninstalled);
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
@@ -640,6 +641,8 @@ private:
     void RemoveOldHapIfOTA(const InstallParam &installParam,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
     ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
+    ErrCode ParseHapPaths(const InstallParam &installParam, const std::vector<std::string> &inBundlePaths,
+        std::vector<std::string> &parsedPaths);
     ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
     ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);
     ErrCode MoveFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);

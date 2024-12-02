@@ -96,6 +96,7 @@ struct InstallParam : public Parcelable {
     // utilizing for code-signature
     std::map<std::string, std::string> verifyCodeParams;
     ApplicationInfoFlag preinstallSourceFlag = ApplicationInfoFlag::FLAG_INSTALLED;
+    std::map<std::string, std::string> parameters;
     // the parcel object function is not const.
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
@@ -110,6 +111,9 @@ private:
     bool isUninstallAndRecover = false;
 
 public:
+    static constexpr const char* RENAME_INSTALL_KEY = "ohos.bms.param.renameInstall";
+    static constexpr const char* RENAME_INSTALL_ENABLE_VALUE = "true";
+
     bool GetForceExecuted() const
     {
         return forceExecuted;
@@ -144,6 +148,12 @@ public:
         if (CheckPermission()) {
             isUninstallAndRecover = value;
         }
+    }
+
+    bool IsRenameInstall() const
+    {
+        return parameters.find(RENAME_INSTALL_KEY) != parameters.end() &&
+            parameters.at(RENAME_INSTALL_KEY) == RENAME_INSTALL_ENABLE_VALUE;
     }
 
 private:

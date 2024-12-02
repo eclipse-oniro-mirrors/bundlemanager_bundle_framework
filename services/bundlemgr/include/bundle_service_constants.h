@@ -83,6 +83,7 @@ constexpr const char* QUICK_FIX_PATH = "quick_fix";
 constexpr const char* SECURITY_QUICK_FIX_PATH = "security_quick_fix";
 constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
 constexpr const char* SCREEN_LOCK_FILE_DATA_PATH = "/data/app/el5";
+constexpr const char* GALLERY_DOWNLOAD_PATH = "/app_install/";
 constexpr int NOT_EXIST_USERID = -5;
 constexpr int PATH_MAX_SIZE = 256;
 constexpr int32_t API_VERSION_NINE = 9;
@@ -109,6 +110,7 @@ constexpr int32_t BMS_GID = 1000;
 constexpr int32_t DATABASE_DIR_GID = 3012;
 constexpr int32_t DFS_GID = 1009;
 constexpr int32_t LOG_DIR_GID = 1007;
+constexpr int32_t APP_INSTALL_GID = 2002;
 // permissions
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_BUNDLE";
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_NORMAL_BUNDLE";

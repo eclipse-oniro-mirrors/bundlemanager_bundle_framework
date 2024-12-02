@@ -356,7 +356,8 @@ HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0100, Function | Sm
     InstallParam installParam;
     sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
     EXPECT_NE(statusReceiver, nullptr);
-    bool ret = impl.Init(installParam, statusReceiver);
+    const std::vector<std::string> originHapPaths;
+    bool ret = impl.Init(installParam, statusReceiver, originHapPaths);
     EXPECT_EQ(ret, true);
 }
 
