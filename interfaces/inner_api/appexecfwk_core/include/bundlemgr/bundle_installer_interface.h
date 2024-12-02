@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "bundle_stream_installer_interface.h"
+#include "clone_param.h"
 #include "status_receiver_interface.h"
 #include "install_param.h"
 

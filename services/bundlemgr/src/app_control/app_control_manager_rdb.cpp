@@ -722,6 +722,7 @@ ErrCode AppControlManagerRdb::SetUninstallDisposedRule(const std::string &callin
 {
     LOG_D(BMS_TAG_DEFAULT, "begin");
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(CALLING_NAME, callingName);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, UNINSTALL_DISPOSED_RULE);
     absRdbPredicates.EqualTo(APP_ID, appIdentifier);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
