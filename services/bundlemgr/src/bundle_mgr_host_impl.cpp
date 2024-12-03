@@ -4120,13 +4120,15 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    auto resCode = dataMgr->SwitchUninstallState(bundleName, state, isNeedSendNotify);
+    bool stateChange = false;
+    auto resCode = dataMgr->SwitchUninstallState(bundleName, state, isNeedSendNotify, stateChange);
     if (resCode != ERR_OK) {
         APP_LOGE("set status fail");
         return resCode;
     }
-    if (!isNeedSendNotify) {
-        APP_LOGI("no need notify %{public}s", bundleName.c_str());
+    if (!isNeedSendNotify || !stateChange) {
+        APP_LOGI("no need notify %{public}s %{public}d %{public}d",
+            bundleName.c_str(), isNeedSendNotify, stateChange);
         return resCode;
     }
     InnerBundleInfo innerBundleInfo;

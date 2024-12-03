@@ -8160,7 +8160,7 @@ ErrCode BundleDataMgr::GetDeveloperIds(const std::string &appDistributionType,
 }
 
 ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const bool &state,
-    const bool isNeedSendNotify)
+    const bool isNeedSendNotify, bool &stateChange)
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
@@ -8174,6 +8174,7 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
         return ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED;
     }
     if (innerBundleInfo.GetUninstallState() == state) {
+        stateChange = false;
         return ERR_OK;
     }
     innerBundleInfo.SetUninstallState(state);
@@ -8182,6 +8183,7 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
         APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+    stateChange = true;
     return ERR_OK;
 }
 
