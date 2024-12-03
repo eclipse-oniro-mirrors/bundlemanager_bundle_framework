@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,8 +33,8 @@ public:
     void ReScheduleDelayTask(const std::string &taskName, uint64_t ms, std::function<void()> func);
 private:
     std::shared_mutex mutex_;
-    std::map<std::string, ffrt::task_handle> taskMap_;
     std::shared_ptr<ffrt::queue> queue_;
+    std::map<std::string, ffrt::task_handle> taskMap_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

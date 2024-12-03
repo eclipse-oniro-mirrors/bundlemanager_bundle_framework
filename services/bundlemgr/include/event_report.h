@@ -99,27 +99,6 @@ enum class OPERATION_TYPE_ENUM : uint8_t {
 };
 
 struct EventInfo {
-    int32_t userId = Constants::INVALID_USERID;
-    uint32_t versionCode = 0;
-    std::string bundleName;
-    std::string moduleName;
-    std::string abilityName;
-    std::string packageName;
-    std::string applicationVersion;
-    int64_t timeStamp = 0;
-
-    // for quick fix
-    int32_t applyQuickFixFrequency = 0;
-
-    // for install and uninstall
-    int32_t callingUid = 0;
-    std::string callingAppId;
-    std::string callingBundleName;
-    std::vector<std::string> filePath;
-    std::vector<std::string> hashValue;
-    // only for install
-    std::string fingerprint;
-    std::string appDistributionType;
     bool hideDesktopIcon = false;
 
     // only used for clean cache
@@ -136,34 +115,55 @@ struct EventInfo {
 
     // only used for preBundle
     bool isPreInstallApp = false;
-    InstallScene preBundleScene = InstallScene::NORMAL;
-
-    // only used in fault event
-    ErrCode errCode = ERR_OK;
-
-    // only used in user event
-    UserEventType userEventType = UserEventType::UNKNOW;
 
     // AOT
     bool compileResult = false;
-    uint32_t successCnt = 0;
+    InstallScene preBundleScene = InstallScene::NORMAL;
+
+    // only used in user event
+    UserEventType userEventType = UserEventType::UNKNOW;
+    int32_t userId = Constants::INVALID_USERID;
+
+    // for quick fix
+    int32_t applyQuickFixFrequency = 0;
+
+    // for install and uninstall
+    int32_t callingUid = 0;
     int32_t appIndex = 0;
     int32_t sceneId = 0;
+    int32_t operationType = 0;
+    int32_t actionType = 0;
+    uint32_t versionCode = 0;
+    uint32_t successCnt = 0;
+
+    // only used in fault event
+    ErrCode errCode = ERR_OK;
     int64_t costTimeSeconds = 0;
+    int64_t timeStamp = 0;
+    int64_t freeSize = 0;
+    std::string bundleName;
+    std::string moduleName;
+    std::string abilityName;
+    std::string packageName;
+    std::string applicationVersion;
+    std::string callingAppId;
+    std::string callingBundleName;
+    // only for install
+    std::string fingerprint;
+    std::string appDistributionType;
     std::string compileMode;
     std::string failureReason;
     std::string processName;
-    std::vector<std::string> totalBundleNames;
 
     //for query of continue type
     std::string continueType;
     std::string fileName;
-    int64_t freeSize = 0;
-    int32_t operationType = 0;
-    std::vector<std::string> appIds;
     std::string callingName;
-    int32_t actionType = 0;
     std::string rule;
+    std::vector<std::string> filePath;
+    std::vector<std::string> hashValue;
+    std::vector<std::string> totalBundleNames;
+    std::vector<std::string> appIds;
 
     void Reset()
     {

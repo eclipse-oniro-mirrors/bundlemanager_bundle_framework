@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,18 +38,20 @@ public:
      */
     std::string GetKey() const;
     void ParseKey(const std::string &key);
+    bool labelNeedParse_ = true;
+    bool iconNeedParse_ = true;
+    // label resource
+    uint32_t labelId_ = 0;
+    // icon resource
+    uint32_t iconId_ = 0;
+    // for app clone
+    int32_t appIndex_ = 0;
     // key
     std::string bundleName_;
     std::string moduleName_;
     std::string abilityName_;
-    // label resource
-    uint32_t labelId_ = 0;
     std::string label_;
-    bool labelNeedParse_ = true;
-    // icon resource
-    uint32_t iconId_ = 0;
     std::string icon_;
-    bool iconNeedParse_ = true;
     // used for parse label and icon
     std::string hapPath_;
     // used for parse overlay label and icon
@@ -57,8 +59,6 @@ public:
     // used for layer icons
     std::vector<uint8_t> foreground_;
     std::vector<uint8_t> background_;
-    // for app clone
-    int32_t appIndex_ = 0;
     std::vector<int32_t> appIndexes_;
 
 private:
