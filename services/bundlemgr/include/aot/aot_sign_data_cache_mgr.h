@@ -57,8 +57,8 @@ private:
         uint32_t versionCode {0};
         std::vector<uint8_t> signData;
     };
-    mutable std::mutex mutex_;
     std::atomic<bool> isLocked_ { true };
+    mutable std::mutex mutex_;
     std::shared_ptr<UnlockEventSubscriber> unlockEventSubscriber_;
     std::unordered_map<std::string, std::unordered_map<std::string, PendingData>> pendingSignData_;
 };

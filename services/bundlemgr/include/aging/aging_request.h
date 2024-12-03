@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -85,13 +85,13 @@ private:
     void InitAgingDatasizeThreshold();
     void InitAgingOneDayTimeMs();
 
-    mutable std::mutex mutex_;
-    std::vector<AgingBundleInfo> agingBundles_;
-    int64_t totalDataBytes_ = 0;
     AgingCleanType agingCleanType_ = AgingCleanType::CLEAN_CACHE;
+    int64_t totalDataBytes_ = 0;
 
     static int64_t totalDataBytesThreshold_;
     static int64_t oneDayTimeMs_;
+    mutable std::mutex mutex_;
+    std::vector<AgingBundleInfo> agingBundles_;
 };
 }  //  namespace AppExecFwk
 }  //  namespace OHOS
