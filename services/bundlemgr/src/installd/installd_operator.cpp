@@ -2271,7 +2271,7 @@ void InstalldOperator::RmvDeleteDfx(const std::string &path)
             close(fd);
             return;
         }
-        LOG_I(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is Rmv succeed", path.c_str());
+        LOG_D(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is Rmv succeed", path.c_str());
     }
     close(fd);
     return;

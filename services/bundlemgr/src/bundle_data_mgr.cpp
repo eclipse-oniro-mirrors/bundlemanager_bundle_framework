@@ -1511,7 +1511,6 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfosV9(const Want &want, int32_t fla
             InnerBundleInfo innerBundleInfo;
             ErrCode ret = GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId);
             if (ret != ERR_OK) {
-                LOG_NOFUNC_W(BMS_TAG_QUERY, "GetInnerBundleInfoWithFlagsV9 failed -n %{public}s", item.first.c_str());
                 continue;
             }
 
@@ -4054,7 +4053,6 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
 {
     bool res = GetInnerBundleInfoWithFlags(bundleName, flags, userId, appIndex);
     if (!res) {
-        APP_LOGW("get with flag failed");
         return false;
     }
     auto item = bundleInfos_.find(bundleName);
