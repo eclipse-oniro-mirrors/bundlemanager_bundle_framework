@@ -58,6 +58,8 @@ public:
 private:
     void InnerHandleInvalidBundle(InnerBundleInfo &info, bool &isBundleValid);
 
+    void InnerCheckSystemHspPath(const InnerBundleInfo &info);
+
     std::weak_ptr<IBundleDataStorage> dataStorage_;
 };
 }  // namespace AppExecFwk

@@ -42,6 +42,20 @@ void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &is
         return;
     }
     InnerHandleInvalidBundle(info, isBundleValid);
+    if (isBundleValid && (info.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK)) {
+        InnerCheckSystemHspPath(info);
+    }
+}
+
+void BundleExceptionHandler::InnerCheckSystemHspPath(const InnerBundleInfo &info)
+{
+    auto innerModuleInfos = info.GetInnerModuleInfos();
+    for (const auto &item : innerModuleInfos) {
+        if (access(item.second.hapPath.c_str(), F_OK) != 0) {
+            APP_LOGE("-n %{public}s system hsp path %{public}s not exist", info.GetBundleName().c_str(),
+                item.second.hapPath.c_str());
+        }
+    }
 }
 
 bool BundleExceptionHandler::RemoveBundleAndDataDir(const std::string &bundleDir,
@@ -94,7 +108,8 @@ bool BundleExceptionHandler::IsBundleHapPathExist(const InnerBundleInfo &info)
         if (!item.second.hapPath.empty()) {
             bool isExist = false;
             if (InstalldClient::GetInstance()->IsExistFile(item.second.hapPath, isExist) != ERR_OK) {
-                APP_LOGW("bundleName:%{public}s check hap path failed", info.GetBundleName().c_str());
+                APP_LOGW("bundleName:%{public}s check hap %{public}s path failed", info.GetBundleName().c_str(),
+                    item.second.hapPath.c_str());
                 continue;
             }
             if (!isExist) {
