@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,11 +21,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct FileStat : public Parcelable {
+    bool isDir = false;
     int32_t uid = -1;
     int32_t gid = -1;
-    int64_t lastModifyTime = -1;
-    bool isDir = false;
     int32_t mode = -1;
+    int64_t lastModifyTime = -1;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
