@@ -3158,14 +3158,13 @@ bool BundleDataMgr::GetDebugBundleList(std::vector<std::string> &bundleNames, in
             continue;
         }
 
-        ApplicationInfo appInfo;
-        innerBundleInfo.GetApplicationInfo(ApplicationFlag::GET_BASIC_APPLICATION_INFO, responseUserId, appInfo);
+        ApplicationInfo appInfo = innerBundleInfo.GetBaseApplicationInfo();
         if (appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG) {
             bundleNames.emplace_back(infoItem.first);
         }
     }
 
-    bool find = bundleNames.size() > 0;
+    bool find = !bundleNames.empty();
     APP_LOGD("user(%{public}d) get installed debug bundles list result(%{public}d)", userId, find);
     return find;
 }

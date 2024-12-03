@@ -3174,12 +3174,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetDebugBundleList_0100, Function | SmallTest 
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
 
-    int32_t requestUserId = GetBundleDataMgr()->GetUserId(DEFAULT_USERID);
     for (auto &infoItem : GetBundleDataMgr()->bundleInfos_) {
         InnerBundleInfo &innerBundleInfo = infoItem.second;
-        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-        ApplicationInfo appInfo;
-        innerBundleInfo.GetApplicationInfo(ApplicationFlag::GET_BASIC_APPLICATION_INFO, responseUserId, appInfo);
+        ApplicationInfo appInfo = innerBundleInfo.GetBaseApplicationInfo();
         if (appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_RELEASE) {
             appInfo.appProvisionType = Constants::APP_PROVISION_TYPE_DEBUG;
             innerBundleInfo.SetBaseApplicationInfo(appInfo);
@@ -3187,7 +3184,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetDebugBundleList_0100, Function | SmallTest 
     }
 
     std::vector<std::string> testResult;
-    bool testRet = GetBundleDataMgr()->GetDebugBundleList(testResult);
+    bool testRet = GetBundleDataMgr()->GetDebugBundleList(testResult, DEFAULT_USERID);
     EXPECT_TRUE(testRet);
     CheckBundleList(BUNDLE_NAME_TEST, testResult);
     CheckBundleList(BUNDLE_NAME_DEMO, testResult);
