@@ -765,7 +765,7 @@ private:
     void DeleteUninstallBundleInfo(const std::string &bundleName);
     ErrCode MarkInstallFinish();
     bool IsArkWeb(const std::string &bundleName) const;
-    void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid, int32_t userId,
+    void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
         const InnerBundleInfo& innerBundleInfo);
 #ifdef WEBVIEW_ENABLE
     ErrCode VerifyArkWebInstall(const std::string &bundleName);
