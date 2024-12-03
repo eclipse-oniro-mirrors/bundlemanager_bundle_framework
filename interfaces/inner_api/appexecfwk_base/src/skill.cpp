@@ -55,6 +55,7 @@ const char WILDCARD = '*';
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const char* LINK_FEATURE = "linkFeature";
 const char* GENERAL_OBJECT = "general.object";
+const uint32_t PROTOCOL_OFFSET = 3;
 }; // namespace
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
@@ -340,6 +341,36 @@ std::string Skill::GetOptParamUri(const std::string &uriString)
     return uriString.substr(0, pos);
 }
 
+std::string Skill::ConvertUriToLower(const std::string& uri) const
+{
+    size_t protocolEnd = uri.find(SCHEME_SEPARATOR);
+    if (protocolEnd == std::string::npos) {
+        std::string protocol = ConvertToLower(uri);
+        return protocol;
+    }
+    std::string protocol = uri.substr(0, protocolEnd);
+    size_t hostEnd = uri.find(PATH_SEPARATOR, protocolEnd + PROTOCOL_OFFSET);
+    std::string host;
+
+    if (hostEnd == std::string::npos) {
+        host = uri.substr(protocolEnd + PROTOCOL_OFFSET);
+    } else {
+        host = uri.substr(protocolEnd + PROTOCOL_OFFSET, hostEnd - protocolEnd - PROTOCOL_OFFSET);
+    }
+
+    std::string path = (hostEnd == std::string::npos) ? "" : uri.substr(hostEnd);
+    std::transform(protocol.begin(), protocol.end(), protocol.begin(), [](unsigned char c) { return std::tolower(c); });
+    std::transform(host.begin(), host.end(), host.begin(), [](unsigned char c) { return std::tolower(c); });
+    return protocol + SCHEME_SEPARATOR + host + path;
+}
+
+std::string Skill::ConvertToLower(const std::string &str) const
+{
+    std::string copy_str = str;
+    std::transform(copy_str.begin(), copy_str.end(), copy_str.begin(), [](unsigned char c) { return std::tolower(c); });
+    return copy_str;
+}
+
 bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) const
 {
     if (uriString.empty() && skillUri.scheme.empty()) {
@@ -355,11 +386,16 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // 2.scheme:
         // 3.scheme:/
         // 4.scheme://
-        return uriString == skillUri.scheme || StartsWith(uriString, skillUri.scheme + PORT_SEPARATOR);
+        std::string uriStr = ConvertUriToLower(GetOptParamUri(uriString));
+        std::string skillScheme = ConvertToLower(skillUri.scheme);
+        return uriStr == skillScheme || StartsWith(uriStr, skillScheme + PORT_SEPARATOR);
     }
-    std::string optParamUri = GetOptParamUri(uriString);
+    std::string optParamUri = ConvertUriToLower(GetOptParamUri(uriString));
     std::string skillUriString;
-    skillUriString.append(skillUri.scheme).append(SCHEME_SEPARATOR).append(skillUri.host);
+    std::string skillScheme = ConvertToLower(skillUri.scheme);
+    std::string skillHost = ConvertToLower(skillUri.host);
+    skillUriString.append(skillScheme).append(SCHEME_SEPARATOR).append(skillHost);
+
     if (!skillUri.port.empty()) {
         skillUriString.append(PORT_SEPARATOR).append(skillUri.port);
     }
