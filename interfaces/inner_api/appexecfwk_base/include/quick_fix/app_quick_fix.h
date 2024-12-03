@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,8 +24,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct AppQuickFix : public Parcelable {
-    std::string bundleName; // original bundle name
     uint32_t versionCode = 0; // original bundle version code
+    std::string bundleName; // original bundle name
     std::string versionName; // original bundle version name
 
     AppqfInfo deployedAppqfInfo; // deployed quick fix patch
