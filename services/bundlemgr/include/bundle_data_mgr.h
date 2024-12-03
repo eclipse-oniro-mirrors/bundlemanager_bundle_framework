@@ -433,7 +433,7 @@ public:
      * @return Returns true if have debug bundle installed; returns false otherwise.
      */
     bool GetDebugBundleList(
-        std::vector<std::string> &bundleNames, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+        std::vector<std::string> &bundleNames, int32_t userId) const;
     /**
      * @brief Set the bundle status disable.
      * @param bundleName Indicates the bundle name.
