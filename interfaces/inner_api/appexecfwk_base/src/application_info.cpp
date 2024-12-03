@@ -172,7 +172,7 @@ Metadata::Metadata(const std::string &paramName, const std::string &paramValue, 
 
 bool Metadata::ReadFromParcel(Parcel &parcel)
 {
-    valueId = parcel.ReadInt32();
+    valueId = parcel.ReadUint32();
     name = Str16ToStr8(parcel.ReadString16());
     value = Str16ToStr8(parcel.ReadString16());
     resource = Str16ToStr8(parcel.ReadString16());
