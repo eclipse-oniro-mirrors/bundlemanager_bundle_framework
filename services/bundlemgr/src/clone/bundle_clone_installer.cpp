@@ -25,6 +25,7 @@
 #include "inner_bundle_clone_common.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -63,6 +64,9 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
 
+    SendBundleSystemEvent(bundleName, BundleEventType::INSTALL, userId, appIndex,
+        false, false, InstallScene::NORMAL, result);
+
     ResetInstallProperties();
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
     return result;
@@ -89,7 +93,11 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
 
+    SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, userId, appIndex,
+        false, false, InstallScene::NORMAL, result);
+
     ResetInstallProperties();
+
     PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
     return result;
 }
@@ -204,6 +212,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     };
     uid_ = uid;
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
+    versionCode_ = info.GetVersionCode();
 
     ErrCode result = CreateCloneDataDir(info, userId, uid, appIndex);
     if (result != ERR_OK) {
@@ -274,6 +283,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     }
     uid_ = it->second.uid;
     accessTokenId_ = it->second.accessTokenId;
+    versionCode_ = info.GetVersionCode();
     if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete AT failed clone");
@@ -353,10 +363,50 @@ ErrCode BundleCloneInstaller::GetDataMgr()
     return ERR_OK;
 }
 
+void BundleCloneInstaller::SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
+    int32_t userId, int32_t appIndex, bool isPreInstallApp, bool isFreeInstallMode,
+    InstallScene preBundleScene, ErrCode errCode)
+{
+    EventInfo sysEventInfo;
+    sysEventInfo.bundleName = bundleName;
+    sysEventInfo.isPreInstallApp = isPreInstallApp;
+    sysEventInfo.errCode = errCode;
+    sysEventInfo.isFreeInstallMode = isFreeInstallMode;
+    sysEventInfo.userId = userId;
+    sysEventInfo.appIndex = appIndex;
+    sysEventInfo.callingUid = IPCSkeleton::GetCallingUid();
+    sysEventInfo.versionCode = versionCode_;
+    sysEventInfo.preBundleScene = preBundleScene;
+    GetCallingEventInfo(sysEventInfo);
+    EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
+}
+
+void BundleCloneInstaller::GetCallingEventInfo(EventInfo &eventInfo)
+{
+    APP_LOGD("GetCallingEventInfo start, bundleName:%{public}s", eventInfo.callingBundleName.c_str());
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+    if (!dataMgr_->GetBundleNameForUid(eventInfo.callingUid, eventInfo.callingBundleName)) {
+        APP_LOGE("CallingUid %{public}d is not hap, no bundleName", eventInfo.callingUid);
+        eventInfo.callingBundleName = Constants::EMPTY_STRING;
+        return;
+    }
+    BundleInfo bundleInfo;
+    if (!dataMgr_->GetBundleInfo(eventInfo.callingBundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo,
+        eventInfo.callingUid / Constants::BASE_USER_RANGE)) {
+        APP_LOGE("GetBundleInfo failed, bundleName: %{public}s", eventInfo.callingBundleName.c_str());
+        return;
+    }
+    eventInfo.callingAppId = bundleInfo.appId;
+}
+
 void BundleCloneInstaller::ResetInstallProperties()
 {
     uid_ = 0;
     accessTokenId_ = 0;
+    versionCode_ = 0;
 }
 } // AppExecFwk
 } // OHOS
