@@ -1278,7 +1278,7 @@ napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info)
     APP_LOGI("UpdateBundleForSelf called");
     // obtain arguments of install interface
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("init param failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
