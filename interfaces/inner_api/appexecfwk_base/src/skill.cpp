@@ -352,7 +352,7 @@ std::string Skill::ConvertUriToLower(const std::string& uri) const
     size_t startHost = protocolEnd + PROTOCOL_OFFSET;
     size_t endHost = uri.find(PATH_SEPARATOR, startHost);
     std::string host;
-    if(startHost > uri.size()){
+    if (startHost > uri.size()) {
         APP_LOGE("Invalid uri");
         return uri;
     }
