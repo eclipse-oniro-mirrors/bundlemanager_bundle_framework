@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "bms_param.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
@@ -1039,5 +1040,41 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_1026
     DeleteQuickFileDir();
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
+}
+
+/**
+ * @tc.number: SaveBmsParam_0100
+ * @tc.name: test SaveBmsParam
+ * @tc.desc: 1.test SaveBmsParam of BmsParam
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, SaveBmsParam_0100, Function | SmallTest | Level0)
+{
+    BmsParam param;
+    bool ret = param.SaveBmsParam("", "bms_value");
+    EXPECT_FALSE(ret);
+    ret = param.SaveBmsParam("bms_param", "");
+    EXPECT_FALSE(ret);
+    ret = param.SaveBmsParam("bms_param", "bms_value");
+    EXPECT_TRUE(ret);
+    param.rdbDataManager_ = nullptr;
+    ret = param.SaveBmsParam("bms_param", "bms_value");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DeleteBmsParam_0100
+ * @tc.name: test DeleteBmsParam
+ * @tc.desc: 1.test DeleteBmsParam of BmsParam
+ */
+HWTEST_F(BmsBundleQuickFixBootScannerTest, DeleteBmsParam_0100, Function | SmallTest | Level0)
+{
+    BmsParam param;
+    bool ret = param.DeleteBmsParam("");
+    EXPECT_FALSE(ret);
+    ret = param.DeleteBmsParam("bms_param");
+    EXPECT_TRUE(ret);
+    param.rdbDataManager_ = nullptr;
+    ret = param.DeleteBmsParam("bms_param");
+    EXPECT_FALSE(ret);
 }
 } // OHOS

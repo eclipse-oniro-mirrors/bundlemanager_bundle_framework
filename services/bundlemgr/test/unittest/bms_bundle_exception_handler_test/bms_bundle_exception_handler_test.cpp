@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,10 +15,10 @@
 
 #include <gtest/gtest.h>
 
+#define private public
 #include "installd_client.h"
 #include "bundle_data_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
-#define private public
 #include "bundle_exception_handler.h"
 #include "inner_bundle_info.h"
 #undef public
@@ -34,6 +34,7 @@ const std::string Package_NAME = "launcher_settings";
 const std::string BUNDLE_DIR_NAME = "/data/app/el1/bundle/public/com.ohos.nweb/libs/arm/libnweb_adapter.so";
 const std::string BUNDLE_OR_MOUDLE_DIR = "/data/app/el1/bundle/public/";
 const std::string EMPTY_STRING = "";
+const int32_t USERID = 100;
 }  // namespace
 
 class BmsBundleExceptionHandlerTest : public testing::Test {
@@ -311,5 +312,74 @@ HWTEST_F(BmsBundleExceptionHandlerTest, DeleteBundleInfoFromStorageTest_1100, Te
     EXPECT_EQ(data.status, InstallExceptionStatus::UPDATING_FINISH);
     BundleExceptionHandler.DeleteBundleInfoFromStorage(info);
     GTEST_LOG_(INFO) << "DeleteBundleInfoFromStorageTest_1100 end";
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0100
+ * @tc.name: SetNeedSendNotify
+ * @tc.desc: test SetNeedSendNotify
+ */
+HWTEST_F(BmsBundleExceptionHandlerTest, InnerBundleInfo_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    info.SetNeedSendNotify(true);
+    EXPECT_TRUE(info.isNeedSendNotify_);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0100
+ * @tc.name: GetOdid
+ * @tc.desc: test GetOdid
+ */
+HWTEST_F(BmsBundleExceptionHandlerTest, InnerBundleInfo_0200, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    std::string odid;
+    std::string developerId;
+    info.UpdateOdid(developerId, BUNDLE_NAME);
+    info.GetOdid(odid);
+    EXPECT_EQ(odid, BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0300
+ * @tc.name: SetResourcesApply
+ * @tc.desc: test SetResourcesApply
+ */
+HWTEST_F(BmsBundleExceptionHandlerTest, InnerBundleInfo_0300, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    std::vector<int32_t> resourcesApply;
+    resourcesApply.push_back(USERID);
+    info.SetResourcesApply(resourcesApply);
+    EXPECT_FALSE(info.baseApplicationInfo_->resourcesApply.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0400
+ * @tc.name: GetLastInstallationTime
+ * @tc.desc: test GetLastInstallationTime
+ */
+HWTEST_F(BmsBundleExceptionHandlerTest, InnerBundleInfo_0400, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    auto ret = info.GetLastInstallationTime();
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0500
+ * @tc.name: SetkeyId
+ * @tc.desc: test SetkeyId
+ */
+HWTEST_F(BmsBundleExceptionHandlerTest, InnerBundleInfo_0500, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    InnerBundleUserInfo userInfo;
+    std::string key = Constants::FILE_UNDERLINE + std::to_string(USERID);
+    info.innerBundleUserInfos_[key] = userInfo;
+    info.SetkeyId(USERID, BUNDLE_NAME);
+    auto infoItem = info.innerBundleUserInfos_.find(key);
+    EXPECT_EQ(infoItem->second.keyId, BUNDLE_NAME);
 }
 }  // namespace OHOS

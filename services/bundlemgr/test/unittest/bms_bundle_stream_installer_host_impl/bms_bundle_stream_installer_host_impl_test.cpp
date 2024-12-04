@@ -22,6 +22,9 @@ using namespace AppExecFwk;
 
 namespace OHOS {
 namespace {
+const std::string BUNDLE_NAME = "bundlename";
+const std::string FILE_NAME = "fileName";
+
 class bundle_stream_installer_host_impl_test : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -72,6 +75,22 @@ HWTEST_F(bundle_stream_installer_host_impl_test, test_CreateStream_0100, Functio
     bundleStreamInstaller_ = std::make_shared<BundleStreamInstallerHostImpl>(0, 0);
     int32_t state = bundleStreamInstaller_->CreateStream(fileName);
     EXPECT_TRUE(state > 0);
+}
+
+/**
+ * @tc.number: test_CreatePgoFileStream_0100
+ * @tc.name: test BundleStreamInstallerHostImpl
+ * @tc.desc: 1. test CreatePgoFileStream_0100
+ */
+HWTEST_F(bundle_stream_installer_host_impl_test, test_CreatePgoFileStream_0100, Function | SmallTest | Level0)
+{
+    bundleStreamInstaller_ = std::make_shared<BundleStreamInstallerHostImpl>(0, 0);
+    auto state = bundleStreamInstaller_->CreatePgoFileStream("", FILE_NAME);
+    EXPECT_EQ(state, Constants::DEFAULT_STREAM_FD);
+    state = bundleStreamInstaller_->CreatePgoFileStream(BUNDLE_NAME, "");
+    EXPECT_EQ(state, Constants::DEFAULT_STREAM_FD);
+    state = bundleStreamInstaller_->CreatePgoFileStream(BUNDLE_NAME, FILE_NAME);
+    EXPECT_EQ(state, Constants::DEFAULT_STREAM_FD);
 }
 }
 }

@@ -1369,6 +1369,19 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_2000, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: AOTExecutor_2100
+ * @tc.name: test StartAOTCompiler
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_2100, Function | SmallTest | Level0)
+{
+    AOTArgs aotArgs;
+    std::vector<uint8_t> signData;
+    auto res = AOTExecutor::GetInstance().StartAOTCompiler(aotArgs, signData);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+}
+
+/**
  * @tc.number: AOTHandler_3200
  * @tc.name: test MkApDestDirIfNotExist
  * @tc.desc: test MkApDestDirIfNotExist function running

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -701,6 +701,62 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixManagerHostImplTest_0013,
 
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
+}
+
+/*
+ * @tc.number: BmsBundleQuickFixManagerHostImplTest_0014
+ * @tc.name: HandleCreateFd
+ * @tc.desc: 1. test HandleCreateFd
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixManagerHostImplTest_0014, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl impl;
+    MessageParcel data;
+    MessageParcel reply;
+    auto result = impl.HandleCreateFd(data, reply);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/*
+ * @tc.number: BmsBundleQuickFixManagerHostImplTest_0015
+ * @tc.name: HandleDeployQuickFix
+ * @tc.desc: 1. test HandleDeployQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixManagerHostImplTest_0015, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl impl;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = impl.HandleDeployQuickFix(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/*
+ * @tc.number: BmsBundleQuickFixManagerHostImplTest_0016
+ * @tc.name: HandleSwitchQuickFix
+ * @tc.desc: 1. test HandleSwitchQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixManagerHostImplTest_0016, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl impl;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = impl.HandleSwitchQuickFix(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/*
+ * @tc.number: BmsBundleQuickFixManagerHostImplTest_0017
+ * @tc.name: HandleDeleteQuickFix
+ * @tc.desc: 1. test HandleDeleteQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixManagerHostImplTest_0017, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl impl;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = impl.HandleDeleteQuickFix(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**

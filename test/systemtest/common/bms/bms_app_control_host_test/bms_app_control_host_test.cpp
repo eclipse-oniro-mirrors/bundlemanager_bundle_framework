@@ -18,6 +18,7 @@
 #include <future>
 #include <gtest/gtest.h>
 #include "app_control_host.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 
 using namespace testing::ext;
 
@@ -401,6 +402,68 @@ HWTEST_F(BmsAppControlHostTest, HandleDeleteUninstallDisposedRule_0100, Function
     MessageParcel data;
     MessageParcel reply;
     auto res = appControlHost->HandleDeleteUninstallDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0100
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsAppControlHostTest, OnRemoteRequest_0100, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE_FOR_CLONE_APP), data, reply, option);
+    EXPECT_EQ(res, OBJECT_NULL);
+}
+
+/**
+ * @tc.number: HandleDeleteDisposedRuleForCloneApp_0100
+ * @tc.name: test the HandleDeleteDisposedRuleForCloneApp
+ * @tc.desc: 1. system running normally
+ *           2. test HandleDeleteDisposedRuleForCloneApp
+ */
+HWTEST_F(BmsAppControlHostTest, HandleDeleteDisposedRuleForCloneApp_0100, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = appControlHost.HandleDeleteDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: WriteStringVector_0100
+ * @tc.name: test the WriteStringVector
+ * @tc.desc: 1. system running normally
+ *           2. test WriteStringVector
+ */
+HWTEST_F(BmsAppControlHostTest, WriteStringVector_0100, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    std::vector<std::string> stringVector;
+    MessageParcel reply;
+    ErrCode res = appControlHost.WriteStringVector(stringVector, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleGetDisposedRuleForCloneApp_0100
+ * @tc.name: test the HandleGetDisposedRuleForCloneApp
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetDisposedRuleForCloneApp
+ */
+HWTEST_F(BmsAppControlHostTest, HandleGetDisposedRuleForCloneApp_0100, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = appControlHost.HandleGetDisposedRuleForCloneApp(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
 } // AppExecFwk

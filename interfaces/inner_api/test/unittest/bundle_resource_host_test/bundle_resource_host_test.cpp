@@ -995,5 +995,23 @@ HWTEST_F(BundleResourceHostTest, MimeTypeMgr_GetUriSuffix_0001, Function | Small
     auto ret = localMimeTypeMgr->GetMimeTypeByUri(uri, suffix);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: ClearAshmem_0100
+ * @tc.name: test the ClearAshmem
+ * @tc.desc: 1. system running normally
+ *           2. test ClearAshmem
+ */
+HWTEST_F(BundleResourceHostTest, ClearAshmem_0100, Function | SmallTest | Level0)
+{
+    BundleResourceHost bundleResourceHost;
+    int fd = 1;
+    int32_t size = 1;
+    sptr<Ashmem> ashMem = new Ashmem(fd, size);
+    ashMem->flag_ = fd;
+    ASSERT_NE(ashMem, nullptr);
+    bundleResourceHost.ClearAshmem(ashMem);
+    EXPECT_EQ(ashMem->flag_, 0);
+}
 }
 }

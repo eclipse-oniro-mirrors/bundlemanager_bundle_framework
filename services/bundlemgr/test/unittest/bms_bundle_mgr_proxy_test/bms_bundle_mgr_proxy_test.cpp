@@ -106,6 +106,8 @@ void BmsBundleMgrProxyTest::SetUp()
 void BmsBundleMgrProxyTest::TearDown()
 {}
 
+bool ParseStr(const char *buf, const int itemLen, int index, std::string &result);
+
 /**
  * @tc.number: GetApplicationInfo_0100
  * @tc.name: test the GetApplicationInfo
@@ -1033,6 +1035,22 @@ HWTEST_F(BmsBundleMgrProxyTest, IsBundleInstalled_0100, Function | MediumTest | 
     ErrCode res = bundleMgrProxy.IsBundleInstalled("", 100, 0, isBundleInstalled);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
     EXPECT_FALSE(isBundleInstalled);
+}
+
+/**
+ * @tc.number: ParseStr_0100
+ * @tc.name: test the ParseStr
+ * @tc.desc: 1. system running normally
+ *           2. test ParseStr
+ */
+HWTEST_F(BmsBundleMgrProxyTest, ParseStr_0100, Function | MediumTest | Level0)
+{
+    const char *buf = "hello";
+    int itemLen = 1;
+    int index = 2;
+    std::string result;
+    auto res = ParseStr(buf, itemLen, index, result);
+    EXPECT_TRUE(res);
 }
 }
 }

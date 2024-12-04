@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -5162,6 +5162,20 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHost_0200, Function | SmallTest |
     code = -1;
     ret = quickFixMgrHost.OnRemoteRequest(code, data, reply, option);
     EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: QuickFixManagerHost_0300
+ * @tc.name: test HandleCreateFd by QuickFixManagerHost
+ * @tc.desc: HandleCreateFd
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHost_0300, Function | SmallTest | Level0)
+{
+    QuickFixManagerHost quickFixManagerHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = quickFixManagerHost.HandleCreateFd(data, reply);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

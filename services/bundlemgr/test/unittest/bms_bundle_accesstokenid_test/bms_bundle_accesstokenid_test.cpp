@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
 #include <sstream>
 #include <string>
 
+#define private public
 #include "application_info.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
@@ -1000,5 +1001,46 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0005, Function |
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
     EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetRouterInfo_0001
+ * @tc.name: test GetRouterInfo
+ * @tc.desc: 1.GetRouterInfo test
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, GetRouterInfo_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    ASSERT_NE(dataMgr->routerStorage_, nullptr);
+    std::vector<RouterItem> routerInfos;
+    auto ret = dataMgr->routerStorage_->GetRouterInfo(BUNDLE_NAME, WRONG_BUNDLE_NAME, routerInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: Marshalling_0100
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.Marshalling test
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, Marshalling_0100, Function | SmallTest | Level0)
+{
+    RpcIdResult rpcIdResult;
+    Parcel parcel;
+    auto ret = rpcIdResult.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: ReadFromParcel_0100
+ * @tc.name: test ReadFromParcel
+ * @tc.desc: 1.ReadFromParcel test
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, ReadFromParcel_0100, Function | SmallTest | Level0)
+{
+    RpcIdResult rpcIdResult;
+    Parcel parcel;
+    auto ret = rpcIdResult.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

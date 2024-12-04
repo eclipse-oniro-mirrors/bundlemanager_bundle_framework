@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
 #define private public
 #define protected public
 #include "installd_client.h"
+#include "installd_death_recipient.h"
 #undef private
 #undef protected
 
@@ -1618,6 +1619,85 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveSignProfile_0200, Te
     ASSERT_NE(installClient_, nullptr);
     ErrCode result = installClient_->RemoveSignProfile(bundleName);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldDeathRecipientTest_OnRemoteDied_0100
+ * @tc.name: OnRemoteDied
+ * @tc.desc: call OnRemoteDied.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldDeathRecipientTest_OnRemoteDied_0100, TestSize.Level0)
+{
+    ASSERT_NE(installClient_, nullptr);
+    InstalldDeathRecipient install;
+    installClient_->installdProxy_ = nullptr;
+    install.OnRemoteDied(nullptr);
+    EXPECT_EQ(nullptr, installClient_->installdProxy_);
+}
+
+/**
+ * @tc.number: BmsInstalldDeathRecipientTest_MoveHapToCodeDir_0100
+ * @tc.name: MoveHapToCodeDir
+ * @tc.desc: call MoveHapToCodeDir.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldDeathRecipientTest_MoveHapToCodeDir_0100, TestSize.Level0)
+{
+    ASSERT_NE(installClient_, nullptr);
+    std::string originPath;
+    std::string targetPath;
+    auto result = installClient_->MoveHapToCodeDir(originPath, targetPath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldDeathRecipientTest_AddUserDirDeleteDfx_0100
+ * @tc.name: AddUserDirDeleteDfx
+ * @tc.desc: call AddUserDirDeleteDfx.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldDeathRecipientTest_AddUserDirDeleteDfx_0100, TestSize.Level0)
+{
+    ASSERT_NE(installClient_, nullptr);
+    auto result = installClient_->AddUserDirDeleteDfx(USERID);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldDeathRecipientTest_OnLoadSystemAbilityFail_0100
+ * @tc.name: OnLoadSystemAbilityFail
+ * @tc.desc: call OnLoadSystemAbilityFail.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldDeathRecipientTest_OnLoadSystemAbilityFail_0100, TestSize.Level0)
+{
+    ASSERT_NE(installClient_, nullptr);
+    installClient_->OnLoadSystemAbilityFail();
+    EXPECT_EQ(installClient_->installdProxy_, nullptr);
+}
+
+/**
+ * @tc.number: BmsInstalldDeathRecipientTest_MoveFiles_0100
+ * @tc.name: MoveFiles
+ * @tc.desc: call MoveFiles.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldDeathRecipientTest_MoveFiles_0100, TestSize.Level0)
+{
+    ASSERT_NE(installClient_, nullptr);
+    std::string srcDir;
+    std::string desDir;
+    auto result = installClient_->MoveFiles(srcDir, desDir);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldDeathRecipientTest_CleanBundleDataDirByName_0100
+ * @tc.name: CleanBundleDataDirByName
+ * @tc.desc: call CleanBundleDataDirByName.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldDeathRecipientTest_CleanBundleDataDirByName_0100, TestSize.Level0)
+{
+    ASSERT_NE(installClient_, nullptr);
+    std::string bundleName;
+    auto result = installClient_->CleanBundleDataDirByName(bundleName, USERID, GID);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 } // namespace AppExecFwk
 } // namespace OHOS
