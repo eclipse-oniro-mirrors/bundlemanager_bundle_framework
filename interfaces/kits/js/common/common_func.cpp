@@ -855,7 +855,7 @@ void CommonFunc::ConvertWindowSize(napi_env env, const AbilityInfo &abilityInfo,
 void CommonFunc::ConvertMetadata(napi_env env, const Metadata &metadata, napi_value value)
 {
     napi_value nValueId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, metadata.valueId, &nValueId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, metadata.valueId, &nValueId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "valueId", nValueId));
 
     napi_value nName;
