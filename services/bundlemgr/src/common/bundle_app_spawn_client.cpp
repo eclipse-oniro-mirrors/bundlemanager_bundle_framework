@@ -14,13 +14,9 @@
  */
 #include "bundle_app_spawn_client.h"
 
-#include <unordered_set>
-
 #include "app_log_tag_wrapper.h"
 #include "bundle_constants.h"
 #include "hitrace_meter.h"
-#include "parameters.h"
-#include "securec.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -108,12 +104,12 @@ bool BundleAppSpawnClient::VerifyMsg(const AppSpawnRemoveSandboxDirMsg &removeSa
 {
     if (removeSandboxDirMsg.code == MSG_UNINSTALL_DEBUG_HAP) {
         if (removeSandboxDirMsg.bundleName.empty() || removeSandboxDirMsg.bundleName.size() >= MAX_PROC_NAME_LEN) {
-            LOG_E(BMS_TAG_INSTALLER, "invalid bundleName");
+            LOG_E(BMS_TAG_INSTALLER, "invalid bundleName! [%{public}s]", removeSandboxDirMsg.bundleName.c_str());
             return false;
         }
         if (removeSandboxDirMsg.bundleIndex < 0 ||
             removeSandboxDirMsg.bundleIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
-            LOG_E(BMS_TAG_INSTALLER, "invalid bundleIndex");
+            LOG_E(BMS_TAG_INSTALLER, "invalid bundleIndex! [%{public}d]", removeSandboxDirMsg.bundleIndex);
             return false;
         }
         if (removeSandboxDirMsg.uid < 0) {
@@ -121,7 +117,7 @@ bool BundleAppSpawnClient::VerifyMsg(const AppSpawnRemoveSandboxDirMsg &removeSa
             return false;
         }
     } else {
-        LOG_E(BMS_TAG_INSTALLER, "invalid code");
+        LOG_E(BMS_TAG_INSTALLER, "invalid code! [%{public}d]", removeSandboxDirMsg.code);
         return false;
     }
     return true;
