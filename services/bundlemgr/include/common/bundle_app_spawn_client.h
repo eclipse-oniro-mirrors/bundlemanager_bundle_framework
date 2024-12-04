@@ -16,11 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_COMMON_BUNDLE_APP_SPAWN_CLIENT_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_COMMON_BUNDLE_APP_SPAWN_CLIENT_H
 
-#include <array>
-#include <memory>
 #include <mutex>
 #include <string>
-#include <unistd.h>
 
 #include "appexecfwk_errors.h"
 #include "appspawn.h"
