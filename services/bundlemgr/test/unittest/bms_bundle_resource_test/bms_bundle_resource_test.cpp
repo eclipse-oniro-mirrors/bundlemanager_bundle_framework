@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -4034,6 +4034,22 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0187, Function | SmallTest
     resourceInfos.emplace_back(resourceInfo);
     parse.ProcessSpecialBundleResource(100, resourceInfos);
     EXPECT_EQ(resourceInfos[0].icon_, resourceInfo.icon_);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0188
+ * Function: ChangeDynamicIcon
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test ChangeDynamicIcon
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0188, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    std::vector<ResourceInfo> resourceInfos;
+    resourceInfos.push_back(resourceInfo);
+    BundleResourceProcess::ChangeDynamicIcon(resourceInfos, resourceInfo);
+    EXPECT_FALSE(resourceInfos[0].iconNeedParse_);
 }
 #endif
 

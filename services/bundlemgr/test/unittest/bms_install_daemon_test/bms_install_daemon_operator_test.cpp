@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1975,5 +1975,17 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12300, Function | Sm
 #else
     EXPECT_TRUE(ret);
 #endif
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_12400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling CheckAndDeleteLinkFile of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12400, Function | SmallTest | Level0)
+{
+    std::string path;
+    auto ret = InstalldOperator::CheckAndDeleteLinkFile(path);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

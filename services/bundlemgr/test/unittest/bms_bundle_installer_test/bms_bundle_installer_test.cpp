@@ -49,6 +49,8 @@
 #include "system_bundle_installer.h"
 #include "utd_handler.h"
 #include "want.h"
+#include "uninstall_bundle_info.h"
+#include "installd/installd_permission_mgr.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -6739,6 +6741,21 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModule_0100, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: ExtractModule_0200
+ * @tc.name: test ExtractModule
+ * @tc.desc: 1.Test the ExtractModule
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractModule_0200, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    std::string bundlePath;
+    auto ret = appServiceFwkInstaller.ExtractModule(oldInfo, newInfo, bundlePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: AddNotifyBundleEvents_0100
  * @tc.name: test AddNotifyBundleEvents
  * @tc.desc: test AddNotifyBundleEvents of BaseBundleInstaller
@@ -7566,5 +7583,54 @@ HWTEST_F(BmsBundleInstallerTest, GetAllConeCodeProtectBundleInfos_0100, Function
     installer.GetAllConeCodeProtectBundleInfos(infos, innerBundleInfo);
 
     EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: UnInstall_0100
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.Test the UnInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, UnInstall_0100, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    std::string bundleName;
+    auto ret = appServiceFwkInstaller.UnInstall(bundleName, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: IsHapChecked_0100
+ * @tc.name: test IsHapChecked
+ * @tc.desc: 1.Test the IsHapChecked
+ */
+HWTEST_F(BmsBundleInstallerTest, IsHapChecked_0100, Function | SmallTest | Level0)
+{
+    CodeSignHelper helper;
+    EXPECT_FALSE(helper.IsHapChecked());
+}
+
+/**
+ * @tc.number: SetHapChecked_0100
+ * @tc.name: test SetHapChecked
+ * @tc.desc: 1.Test the SetHapChecked
+ */
+HWTEST_F(BmsBundleInstallerTest, SetHapChecked_0100, Function | SmallTest | Level0)
+{
+    CodeSignHelper helper;
+    helper.SetHapChecked(true);
+    EXPECT_TRUE(helper.isHapChecked);
+}
+
+/**
+ * @tc.number: Init_0100
+ * @tc.name: test Init
+ * @tc.desc: 1.Test the Init
+ */
+HWTEST_F(BmsBundleInstallerTest, Init_0100, Function | SmallTest | Level0)
+{
+    UninstallBundleInfo info;
+    info.extensionDirs.push_back(BUNDLE_NAME);
+    info.Init();
+    EXPECT_TRUE(info.extensionDirs.empty());
 }
 } // OHOS

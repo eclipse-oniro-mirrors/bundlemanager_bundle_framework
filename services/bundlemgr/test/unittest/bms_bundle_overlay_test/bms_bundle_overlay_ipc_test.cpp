@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -968,6 +968,20 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3600, Function | SmallTest | Le
 
     errCode = overlayProxy->SetOverlayEnabledForSelf(TEST_MODULE_NAME,
         isEnabled, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_3700
+ * @tc.name: GetOverlayModuleInfo by OverlayManagerProxy
+ * @tc.desc: test GetOverlayModuleInfo
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3700, Function | SmallTest | Level0)
+{
+    auto overlayProxy = GetOverlayProxy();
+    ASSERT_NE(overlayProxy, nullptr);
+    OverlayModuleInfo info;
+    auto errCode = overlayProxy->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, info, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 } // OHOS

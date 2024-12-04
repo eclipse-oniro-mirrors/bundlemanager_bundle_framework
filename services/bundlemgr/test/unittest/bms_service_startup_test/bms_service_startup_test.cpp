@@ -24,6 +24,8 @@
 #include "bms_extension_client.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "status_receiver_proxy.h"
+#include "installd/installd_permission_mgr.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -35,6 +37,7 @@ namespace {
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t TOKENID = 100;
 const int32_t FLAG = 0;
+const uint32_t INSTALLERID = 1;
 const std::string BUNDLE_TEMP_NAME = "temp_bundle_name";
 const std::string AVAILABLE_TYPE_NORMAL = "normal";
 const std::string AVAILABLE_TYPE_MDM = "MDM";
@@ -1364,6 +1367,21 @@ HWTEST_F(BmsServiceStartupTest, QueryFreeInstallExperience_0100, Function | Smal
 }
 
 /**
+ * @tc.number: QueryFreeInstallExperience_0200
+ * @tc.name: QueryFreeInstallExperience
+ * @tc.desc: test QueryFreeInstallExperience of BmsEcologicalRuleMgrServiceProxy
+ */
+HWTEST_F(BmsServiceStartupTest, QueryFreeInstallExperience_0200, Function | SmallTest | Level1)
+{
+    BmsEcologicalRuleMgrServiceProxy proxy(nullptr);
+    Want want;
+    BmsCallerInfo callerInfo;
+    BmsExperienceRule rule;
+    auto ret = proxy.QueryFreeInstallExperience(want, callerInfo, rule);
+    EXPECT_EQ(AppExecFwk::BmsEcologicalRuleMgrServiceProxy::ERR_FAILED, ret);
+}
+
+/**
  * @tc.number: BatchQueryAbilityInfosTest
  * @tc.name: BatchQueryAbilityInfos
  * @tc.desc: test BatchQueryAbilityInfos of BmsExtensionClient
@@ -1631,6 +1649,162 @@ HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0006, Function | SmallTes
     std::set<std::string> exceptionAppServiceBundleNames;
     bool ret = preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames,
         exceptionAppServicePaths, exceptionAppServiceBundleNames);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: OnRemoteSaDied_0100
+ * @tc.name: OnRemoteSaDied
+ * @tc.desc: test OnRemoteSaDied of BmsEcologicalRuleMgrServiceClient
+ */
+HWTEST_F(BmsServiceStartupTest, OnRemoteSaDied_0100, Function | SmallTest | Level0)
+{
+    auto client = BmsEcologicalRuleMgrServiceClient::GetInstance();
+    ASSERT_NE(client, nullptr);
+    client->bmsEcologicalRuleMgrServiceProxy_ = nullptr;
+    client->OnRemoteSaDied(nullptr);
+    ASSERT_NE(client->bmsEcologicalRuleMgrServiceProxy_, nullptr);
+}
+
+/**
+ * @tc.number: OnRemoteDied_0100
+ * @tc.name: OnRemoteDied
+ * @tc.desc: test OnRemoteSaDied of BmsEcologicalRuleMgrServiceClient
+ */
+HWTEST_F(BmsServiceStartupTest, OnRemoteDied_0100, Function | SmallTest | Level0)
+{
+    BmsEcologicalRuleMgrServiceDeathRecipient recipient;
+    auto client = BmsEcologicalRuleMgrServiceClient::GetInstance();
+    ASSERT_NE(client, nullptr);
+    client->bmsEcologicalRuleMgrServiceProxy_ = nullptr;
+    recipient.OnRemoteDied(nullptr);
+    ASSERT_NE(client->bmsEcologicalRuleMgrServiceProxy_, nullptr);
+}
+
+/**
+ * @tc.number: ReadFromParcel_0100
+ * @tc.name: ReadFromParcel
+ * @tc.desc: test ReadFromParcel of BmsCallerInfo
+ */
+HWTEST_F(BmsServiceStartupTest, ReadFromParcel_0100, Function | SmallTest | Level0)
+{
+    BmsCallerInfo info;
+    Parcel parcel;
+    bool res = info.ReadFromParcel(parcel);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: OnFinished_0100
+ * @tc.name: OnFinished
+ * @tc.desc: test OnFinished of StatusReceiverProxy
+ */
+HWTEST_F(BmsServiceStartupTest, OnFinished_0100, Function | SmallTest | Level0)
+{
+    StatusReceiverProxy proxy(nullptr);
+    std::string resultMsg;
+    proxy.OnFinished(INSTALLERID, resultMsg);
+    EXPECT_EQ(AppExecFwk::IStatusReceiver::ERR_UNKNOWN, proxy.resultCode_);
+}
+
+/**
+ * @tc.number: CloseStreamInstaller_0100
+ * @tc.name: CloseStreamInstaller
+ * @tc.desc: test CloseStreamInstaller of StatusReceiverProxy
+ */
+HWTEST_F(BmsServiceStartupTest, CloseStreamInstaller_0100, Function | SmallTest | Level0)
+{
+    StatusReceiverProxy proxy(nullptr);
+    proxy.streamInstallerId_ = 1;
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleInstaller();
+    proxy.CloseStreamInstaller(INSTALLERID);
+    EXPECT_EQ(0, proxy.streamInstallerId_);
+}
+
+/**
+ * @tc.number: SetStreamInstallId_0100
+ * @tc.name: SetStreamInstallId
+ * @tc.desc: test SetStreamInstallId of StatusReceiverProxy
+ */
+HWTEST_F(BmsServiceStartupTest, SetStreamInstallId_0100, Function | SmallTest | Level0)
+{
+    StatusReceiverProxy proxy(nullptr);
+    proxy.SetStreamInstallId(INSTALLERID);
+    EXPECT_EQ(INSTALLERID, proxy.streamInstallerId_);
+}
+
+/**
+ * @tc.number: SavePreInstallExceptionAppServiceBundleName_0100
+ * @tc.name: test PreInstallExceptionMgr
+ * @tc.desc: 1. test SavePreInstallExceptionAppServiceBundleName
+ */
+HWTEST_F(BmsServiceStartupTest, SavePreInstallExceptionAppServiceBundleName_0100, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleMgrService_, nullptr);
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    ASSERT_NE(bundleMgrService_, nullptr);
+    preInstallExceptionMgr->exceptionAppServiceBundleNames_.clear();
+    preInstallExceptionMgr->SavePreInstallExceptionAppServiceBundleName(BUNDLE_TEMP_NAME);
+    EXPECT_NE(preInstallExceptionMgr->exceptionAppServiceBundleNames_.find(BUNDLE_TEMP_NAME),
+              preInstallExceptionMgr->exceptionAppServiceBundleNames_.end());
+}
+
+/**
+ * @tc.number: DeletePreInstallExceptionAppServiceBundleName_0100
+ * @tc.name: test PreInstallExceptionMgr
+ * @tc.desc: 1. test DeletePreInstallExceptionAppServiceBundleName
+ */
+HWTEST_F(BmsServiceStartupTest, DeletePreInstallExceptionAppServiceBundleName_0100, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleMgrService_, nullptr);
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    ASSERT_NE(bundleMgrService_, nullptr);
+    preInstallExceptionMgr->DeletePreInstallExceptionAppServiceBundleName(BUNDLE_TEMP_NAME);
+    EXPECT_EQ(preInstallExceptionMgr->exceptionAppServiceBundleNames_.find(BUNDLE_TEMP_NAME),
+              preInstallExceptionMgr->exceptionAppServiceBundleNames_.end());
+}
+
+/**
+ * @tc.number: SavePreInstallExceptionAppServicePath_0100
+ * @tc.name: test PreInstallExceptionMgr
+ * @tc.desc: 1. test SavePreInstallExceptionAppServicePath
+ */
+HWTEST_F(BmsServiceStartupTest, SavePreInstallExceptionAppServicePath_0100, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleMgrService_, nullptr);
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    ASSERT_NE(bundleMgrService_, nullptr);
+    preInstallExceptionMgr->exceptionAppServicePaths_.clear();
+    preInstallExceptionMgr->SavePreInstallExceptionAppServicePath(BUNDLE_TEMP_NAME);
+    EXPECT_NE(preInstallExceptionMgr->exceptionAppServicePaths_.find(BUNDLE_TEMP_NAME),
+              preInstallExceptionMgr->exceptionAppServicePaths_.end());
+}
+
+/**
+ * @tc.number: DeletePreInstallExceptionAppServicePath_0100
+ * @tc.name: test PreInstallExceptionMgr
+ * @tc.desc: 1. test DeletePreInstallExceptionAppServicePath
+ */
+HWTEST_F(BmsServiceStartupTest, DeletePreInstallExceptionAppServicePath_0100, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleMgrService_, nullptr);
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    ASSERT_NE(bundleMgrService_, nullptr);
+    preInstallExceptionMgr->DeletePreInstallExceptionAppServiceBundleName(BUNDLE_TEMP_NAME);
+    EXPECT_EQ(preInstallExceptionMgr->exceptionAppServicePaths_.find(BUNDLE_TEMP_NAME),
+              preInstallExceptionMgr->exceptionAppServicePaths_.end());
+}
+
+/**
+ * @tc.number: VerifyCallingPermission_0100
+ * @tc.name: test InstalldPermissionMgr
+ * @tc.desc: 1.Test the VerifyCallingPermission
+ */
+HWTEST_F(BmsServiceStartupTest, VerifyCallingPermission_0100, Function | SmallTest | Level0)
+{
+    InstalldPermissionMgr mgr;
+    int32_t uid = 2465;
+    auto ret = mgr.VerifyCallingPermission(uid);
     EXPECT_FALSE(ret);
 }
 } // OHOS

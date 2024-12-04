@@ -7825,4 +7825,70 @@ HWTEST_F(BmsBundleDataMgrTest, PostProcessAnyUser_0002, Function | SmallTest | L
     EXPECT_EQ(r1, true);
     EXPECT_EQ(r2, true);
 }
+
+/**
+ * @tc.number: GetMediaDataFromAshMem_0100
+ * @tc.name: test GetMediaDataFromAshMem
+ * @tc.desc: test GetMediaDataFromAshMem
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetMediaDataFromAshMem_0100, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    MessageParcel replystd;
+    size_t len = 1;
+    auto mediaDataPtr = std::make_unique<uint8_t[]>(len);
+    ASSERT_NE(mediaDataPtr, nullptr);
+    auto ret = bundleMgrProxy->GetMediaDataFromAshMem(replystd, mediaDataPtr, len);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: InnerGetBigString_0100
+ * @tc.name: test InnerGetBigString
+ * @tc.desc: test InnerGetBigString
+ */
+HWTEST_F(BmsBundleDataMgrTest, InnerGetBigString_0100, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    MessageParcel reply;
+    std::string result;
+    auto ret = bundleMgrProxy->InnerGetBigString(reply, result);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetAllDriverBundleInfos_0100
+ * @tc.name: test GetAllDriverBundleInfos
+ * @tc.desc: test GetAllDriverBundleInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllDriverBundleInfos_0100, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleUserMgrHostImpl_, nullptr);
+    auto dataMgr = bundleUserMgrHostImpl_->GetDataMgrFromService();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ExtensionAbilityInfo info;
+    info.type = ExtensionAbilityType::DRIVER;
+    innerBundleInfo.baseExtensionInfos_.emplace(BUNDLE_TEST2, info);
+    dataMgr->bundleInfos_[BUNDLE_TEST1] = innerBundleInfo;
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    bundleUserMgrHostImpl_->GetAllDriverBundleInfos(preInstallBundleInfos);
+    EXPECT_FALSE(preInstallBundleInfos.empty());
+}
+
+/**
+ * @tc.number: CreateNewUser_0100
+ * @tc.name: test CreateNewUser
+ * @tc.desc: test CreateNewUser
+ */
+HWTEST_F(BmsBundleDataMgrTest, CreateNewUser_0100, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleUserMgrHostImpl_, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    std::vector<std::string> disallowList;
+    auto res = bundleUserMgrHostImpl_->CreateNewUser(TEST_UID, disallowList);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
 } // OHOS

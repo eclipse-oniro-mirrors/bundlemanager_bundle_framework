@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,8 @@
 #define protected public
 #include "ability_manager_helper.h"
 #include "bundle_mgr_service.h"
+#include "system_ability_helper.h"
+#include "ability_manager_proxy.h"
 #undef private
 #undef protected
 using namespace testing::ext;
@@ -106,4 +108,55 @@ HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_moduleName_0100, Function | Smal
     EXPECT_EQ(ret, 0);
 }
 #endif
+
+/**
+ * @tc.number: RemoveSystemAbility
+ * @tc.name: test RemoveSystemAbility
+ * @tc.desc: test the RemoveSystemAbility of SystemAbilityHelper
+ */
+HWTEST_F(BmsAbilityManagerHelperTest, RemoveSystemAbility_0001, Function | SmallTest | Level0)
+{
+    SystemAbilityHelper helper;
+    int32_t systemAbilityId = 0;
+    bool res = helper.RemoveSystemAbility(systemAbilityId);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: UninstallApp_0100
+ * @tc.name: test UninstallApp
+ * @tc.desc: test the UninstallApp of SystemAbilityHelper
+ */
+HWTEST_F(BmsAbilityManagerHelperTest, UninstallApp_0100, Function | SmallTest | Level0)
+{
+    SystemAbilityHelper helper;
+    std::string bundleName;
+    int32_t uid = 100;
+    int32_t appIndex = 1;
+    auto ret = helper.UninstallApp(bundleName, uid, appIndex);
+#ifdef ABILITY_RUNTIME_ENABLE
+    EXPECT_NE(ret, 0);
+#else
+    EXPECT_EQ(ret, 0);
+#endif
+}
+
+/**
+ * @tc.number: UpgradeApp_0100
+ * @tc.name: test UpgradeApp
+ * @tc.desc: test the UpgradeApp of SystemAbilityHelper
+ */
+HWTEST_F(BmsAbilityManagerHelperTest, UpgradeApp_0100, Function | SmallTest | Level0)
+{
+    SystemAbilityHelper helper;
+    std::string bundleName = "com.ohos.settings";
+    int32_t uid = 1;
+    int32_t appIndex = 100;
+    auto ret = helper.UpgradeApp(bundleName, uid, appIndex);
+#ifdef ABILITY_RUNTIME_ENABLE
+    EXPECT_NE(ret, 0);
+#else
+    EXPECT_EQ(ret, 0);
+#endif
+}
 }

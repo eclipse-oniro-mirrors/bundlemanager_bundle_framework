@@ -1978,5 +1978,109 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleNameByAppId_0001, Function | Mediu
     ErrCode res = bundleMgrHost.HandleGetBundleNameByAppId(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: AllocatAshmemNum_0001
+ * @tc.name: test the AllocatAshmemNum
+ * @tc.desc: 1. system running normally
+ *           2. test AllocatAshmemNum
+ */
+HWTEST_F(BmsBundleMgrHostTest, AllocatAshmemNum_0001, Function | MediumTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    bundleMgrHost.ashmemNum_ = 0;
+    bundleMgrHost.AllocatAshmemNum();
+    EXPECT_EQ(bundleMgrHost.ashmemNum_, 1);
+}
+
+/**
+ * @tc.number: WriteBigString_0001
+ * @tc.name: test the WriteBigString
+ * @tc.desc: 1. system running normally
+ *           2. test WriteBigString
+ */
+HWTEST_F(BmsBundleMgrHostTest, WriteBigString_0001, Function | MediumTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    std::string str;
+    MessageParcel reply;
+    auto ret = bundleMgrHost.WriteBigString(str, reply);
+    EXPECT_EQ(ERR_OK, ret);
+}
+
+/**
+ * @tc.number: HandleGetOdidByBundleName_0001
+ * @tc.name: test the HandleGetOdidByBundleName
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetOdidByBundleName
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetOdidByBundleName_0001, Function | MediumTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleMgrHost.HandleGetOdidByBundleName(data, reply);
+    EXPECT_EQ(ERR_OK, ret);
+}
+
+/**
+ * @tc.number: HandleGetSignatureInfoByBundleName_0001
+ * @tc.name: test the HandleGetSignatureInfoByBundleName
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetSignatureInfoByBundleName
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetSignatureInfoByBundleName_0001, Function | MediumTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleMgrHost.HandleGetSignatureInfoByBundleName(data, reply);
+    EXPECT_EQ(ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR, ret);
+}
+
+/**
+ * @tc.number: HandleUpdateAppEncryptedStatus_0001
+ * @tc.name: test the HandleUpdateAppEncryptedStatus
+ * @tc.desc: 1. system running normally
+ *           2. test HandleUpdateAppEncryptedStatus
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleUpdateAppEncryptedStatus_0001, Function | MediumTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleMgrHost.HandleUpdateAppEncryptedStatus(data, reply);
+    EXPECT_EQ(ERR_OK, ret);
+}
+
+/**
+ * @tc.number: HandleGetBundleInfosForContinuation_0001
+ * @tc.name: test the HandleGetBundleInfosForContinuation
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetBundleInfosForContinuation
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleInfosForContinuation_0001, Function | MediumTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleMgrHost.HandleGetBundleInfosForContinuation(data, reply);
+    EXPECT_EQ(ERR_OK, ret);
+}
+
+/**
+ * @tc.number: HandleGetContinueBundleNames_0001
+ * @tc.name: test the HandleGetContinueBundleNames
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetContinueBundleNames
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetContinueBundleNames_0001, Function | MediumTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleMgrHost.HandleGetContinueBundleNames(data, reply);
+    EXPECT_EQ(ERR_OK, ret);
+}
 } // AppExecFwk
 } // OHOS
