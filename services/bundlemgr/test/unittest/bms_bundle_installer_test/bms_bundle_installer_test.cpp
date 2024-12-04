@@ -7546,25 +7546,9 @@ HWTEST_F(BmsBundleInstallerTest, ProcessEncryptedKeyExisted_0100, Function | Sma
     std::vector<CodeProtectBundleInfo> infos;
     int32_t res = ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     uint32_t type = CodeOperation::ADD;
-
-    installer.ProcessEncryptedKeyExisted(res, type, infos);
-    EXPECT_TRUE(infos.empty());
-}
-
-/**
- * @tc.number: GetAllConeCodeProtectBundleInfos_0100
- * @tc.name: test Install
- * @tc.desc: 1.Test the GetAllConeCodeProtectBundleInfos of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, GetAllConeCodeProtectBundleInfos_0100, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    installer.dataMgr_ = GetBundleDataMgr();
-    std::vector<CodeProtectBundleInfo> infos;
     InnerBundleInfo innerBundleInfo;
     installer.CreateEl5AndSetPolicy(innerBundleInfo);
-    installer.GetAllConeCodeProtectBundleInfos(infos, innerBundleInfo);
-
+    installer.ProcessEncryptedKeyExisted(res, type, infos);
     EXPECT_TRUE(infos.empty());
 }
 } // OHOS
