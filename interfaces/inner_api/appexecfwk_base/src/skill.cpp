@@ -349,16 +349,20 @@ std::string Skill::ConvertUriToLower(const std::string& uri) const
         return protocol;
     }
     std::string protocol = uri.substr(0, protocolEnd);
-    size_t hostEnd = uri.find(PATH_SEPARATOR, protocolEnd + PROTOCOL_OFFSET);
+    size_t startHost = protocolEnd + PROTOCOL_OFFSET;
+    size_t endHost = uri.find(PATH_SEPARATOR, startHost);
     std::string host;
-
-    if (hostEnd == std::string::npos) {
-        host = uri.substr(protocolEnd + PROTOCOL_OFFSET);
+    if(startHost > uri.size()){
+        APP_LOGE("Invalid uri");
+        return uri;
+    }
+    if (endHost == std::string::npos) {
+        host = uri.substr(startHost);
     } else {
-        host = uri.substr(protocolEnd + PROTOCOL_OFFSET, hostEnd - protocolEnd - PROTOCOL_OFFSET);
+        host = uri.substr(startHost, endHost - startHost);
     }
 
-    std::string path = (hostEnd == std::string::npos) ? "" : uri.substr(hostEnd);
+    std::string path = (endHost == std::string::npos) ? "" : uri.substr(endHost);
     std::transform(protocol.begin(), protocol.end(), protocol.begin(), [](unsigned char c) { return std::tolower(c); });
     std::transform(host.begin(), host.end(), host.begin(), [](unsigned char c) { return std::tolower(c); });
     return protocol + SCHEME_SEPARATOR + host + path;
