@@ -341,7 +341,7 @@ std::string Skill::GetOptParamUri(const std::string &uriString)
     return uriString.substr(0, pos);
 }
 
-inline std::string Skill::ConvertUriToLower(const std::string& uri) const
+std::string Skill::ConvertUriToLower(const std::string& uri) const
 {
     size_t protocolEnd = uri.find(SCHEME_SEPARATOR);
     size_t startHost = protocolEnd + PROTOCOL_OFFSET;
@@ -363,7 +363,7 @@ inline std::string Skill::ConvertUriToLower(const std::string& uri) const
     return protocol + SCHEME_SEPARATOR + host + path;
 }
 
-std::string Skill::ConvertToLower(const std::string &str) const
+inline std::string Skill::ConvertToLower(const std::string &str) const
 {
     std::string lowerCaseStr = str;
     std::transform(lowerCaseStr.begin(), lowerCaseStr.end(), lowerCaseStr.begin(), [](unsigned char c) { return std::tolower(c); });
