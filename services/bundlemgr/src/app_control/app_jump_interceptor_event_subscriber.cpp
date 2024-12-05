@@ -66,6 +66,7 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
                 db->DeleteRuleByTargetBundleName(bundleName, userId);
             }
         };
+        LOG_I(BMS_TAG_DEFAULT, "submit jump task");
         ffrt::submit(task);
     } else {
         LOG_W(BMS_TAG_DEFAULT, "invalid action");
