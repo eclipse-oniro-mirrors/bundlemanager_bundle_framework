@@ -5553,7 +5553,7 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
         auto destination = BundleUtil::CopyFileToSecurityDir(bundlePaths[index], DirType::STREAM_INSTALL_DIR,
             toDeleteTempHapPath_, installParam.IsRenameInstall());
         if (destination.empty()) {
-            LOG_E(BMS_TAG_INSTALLER, "copy file %{public}s to security dir failed", bundlePaths[index].c_str());
+            LOG_E(BMS_TAG_INSTALLER, "copy file %{private}s to security dir failed", bundlePaths[index].c_str());
             return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
         }
         if (bundlePaths[index].find(ServiceConstants::STREAM_INSTALL_PATH) != std::string::npos) {
@@ -5643,7 +5643,7 @@ ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName,
     std::string destinationStr =
         BundleUtil::CopyFileToSecurityDir(signatureFileDir, DirType::SIG_FILE_DIR, toDeleteTempHapPath_);
     if (destinationStr.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "copy file %{public}s to security dir failed", signatureFileDir.c_str());
+        LOG_E(BMS_TAG_INSTALLER, "copy file %{private}s to security dir failed", signatureFileDir.c_str());
         return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
     }
     if (signatureFileDir.find(ServiceConstants::SIGNATURE_FILE_PATH) != std::string::npos) {

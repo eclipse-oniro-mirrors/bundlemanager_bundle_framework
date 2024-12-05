@@ -1243,7 +1243,7 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (!InstalldOperator::CopyFileFast(oldPath, newPath)) {
-        LOG_E(BMS_TAG_INSTALLD, "Copy file %{public}s to %{public}s failed errno:%{public}d",
+        LOG_E(BMS_TAG_INSTALLD, "Copy file %{private}s to %{private}s failed errno:%{public}d",
             oldPath.c_str(), newPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
     }
