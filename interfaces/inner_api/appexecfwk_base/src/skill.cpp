@@ -344,11 +344,11 @@ std::string Skill::GetOptParamUri(const std::string &uriString)
 std::string Skill::ConvertUriToLower(const std::string& uri) const
 {
     size_t protocolEnd = uri.find(SCHEME_SEPARATOR);
-    size_t startHost = protocolEnd + PROTOCOL_OFFSET;
-    if (protocolEnd == std::string::npos || startHost == uri.size()) {
+    if (protocolEnd == std::string::npos || protocolEnd + PROTOCOL_OFFSET == uri.size()) {
         return ConvertToLower(uri);
     }
     std::string protocol = uri.substr(0, protocolEnd);
+    size_t startHost = protocolEnd + PROTOCOL_OFFSET;
     size_t endHost = uri.find(PATH_SEPARATOR, startHost);
     std::string host;
     if (endHost == std::string::npos) {
