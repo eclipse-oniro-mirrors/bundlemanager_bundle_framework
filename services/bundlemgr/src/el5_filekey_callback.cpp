@@ -14,6 +14,7 @@
  */
 
 #include "el5_filekey_callback.h"
+#include "inner_bundle_clone_common.h"
 #include "installd_client.h"
 #include "bundle_service_constants.h"
 #include "bundle_constants.h"
@@ -35,21 +36,37 @@ void El5FilekeyCallback::OnRegenerateAppKey(std::vector<Security::AccessToken::A
         return;
     }
     for (auto &info : infos) {
-        InnerBundleInfo bundleInfo;
-        bool isAppExist = dataMgr->FetchInnerBundleInfo(info.bundleName, bundleInfo);
-        if (!isAppExist) {
-            APP_LOGE("OnRegenerateAppKey bundleInfo is not exist");
+        int32_t appIndex = 0;
+        std::string bundleName = info.bundleName;
+        if (info.bundleName.find("+clone-") == 0 &&
+            !BundleCloneCommonHelper::ParseCloneDataDir(info.bundleName, bundleName, appIndex)) {
+            APP_LOGE("parse clone name failed %{public}s", info.bundleName.c_str());
             continue;
         }
-        CheckEl5Dir(info, bundleInfo);
+        InnerBundleInfo bundleInfo;
+        bool isAppExist = dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo);
+        if (!isAppExist || !bundleInfo.HasInnerBundleUserInfo(info.userId)) {
+            APP_LOGE("%{public}s is not exist %{public}d", bundleName.c_str(), info.userId);
+            continue;
+        }
+        if (appIndex != 0) {
+            bool isAppIndexExisted = false;
+            ErrCode res = bundleInfo.IsCloneAppIndexExisted(info.userId, appIndex, isAppIndexExisted);
+            if (res != ERR_OK || !isAppIndexExisted) {
+                APP_LOGE("appIndex is not existed");
+                continue;
+            }
+        }
+        CheckEl5Dir(info, bundleInfo, bundleName);
         std::string keyId = "";
         auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(
             info.uid, info.bundleName, info.userId, keyId);
         if (result != ERR_OK) {
             APP_LOGE("SetEncryptionPolicy failed for %{public}s", info.bundleName.c_str());
+            continue;
         }
         // update the keyId to the bundleInfo
-        bundleInfo.SetkeyId(info.userId, keyId);
+        bundleInfo.SetkeyId(info.userId, keyId, appIndex);
         if (!dataMgr->UpdateInnerBundleInfo(bundleInfo)) {
             APP_LOGE("save keyId failed");
             continue;
@@ -58,7 +75,8 @@ void El5FilekeyCallback::OnRegenerateAppKey(std::vector<Security::AccessToken::A
     }
 }
 
-void El5FilekeyCallback::CheckEl5Dir(Security::AccessToken::AppKeyInfo &info, const InnerBundleInfo &bundleInfo)
+void El5FilekeyCallback::CheckEl5Dir(Security::AccessToken::AppKeyInfo &info, const InnerBundleInfo &bundleInfo,
+    const std::string &bundleName)
 {
     std::string parentDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
         ServiceConstants::PATH_SEPARATOR + std::to_string(info.userId) + ServiceConstants::BASE;
@@ -78,7 +96,7 @@ void El5FilekeyCallback::CheckEl5Dir(Security::AccessToken::AppKeyInfo &info, co
         APP_LOGW("create Screen Lock Protection dir %{public}s failed", baseDir.c_str());
     }
     result = InstalldClient::GetInstance()->SetDirApl(
-        baseDir, info.bundleName, bundleInfo.GetAppPrivilegeLevel(), bundleInfo.IsPreInstallApp(),
+        baseDir, bundleName, bundleInfo.GetAppPrivilegeLevel(), bundleInfo.IsPreInstallApp(),
         bundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
     if (result != ERR_OK) {
         APP_LOGW("fail to SetDirApl dir %{public}s, error is %{public}d", baseDir.c_str(), result);
@@ -92,7 +110,7 @@ void El5FilekeyCallback::CheckEl5Dir(Security::AccessToken::AppKeyInfo &info, co
         APP_LOGW("create Screen Lock Protection dir %{public}s failed", databaseDir.c_str());
     }
     result = InstalldClient::GetInstance()->SetDirApl(
-        databaseDir, info.bundleName, bundleInfo.GetAppPrivilegeLevel(), bundleInfo.IsPreInstallApp(),
+        databaseDir, bundleName, bundleInfo.GetAppPrivilegeLevel(), bundleInfo.IsPreInstallApp(),
         bundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
     if (result != ERR_OK) {
         APP_LOGW("fail to SetDirApl dir %{public}s, error is %{public}d", databaseDir.c_str(), result);

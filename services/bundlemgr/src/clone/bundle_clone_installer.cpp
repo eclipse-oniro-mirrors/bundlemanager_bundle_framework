@@ -34,9 +34,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
-}
 using namespace OHOS::Security;
 
 std::mutex gCloneInstallerMutex;
@@ -471,10 +468,10 @@ void BundleCloneInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t use
 {
     std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
     auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
-        return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
     });
     if (it == reqPermissions.end()) {
-        APP_LOGI("no el5 permission");
+        APP_LOGD("no el5 permission");
         return;
     }
     APP_LOGI("el5 -n %{public}s -i %{public}d", info.GetBundleName().c_str(), appIndex);

@@ -84,7 +84,6 @@ constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install/";
 const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
-constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr const char* LIBS_TMP = "libs_tmp";
 
@@ -3094,7 +3093,7 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
     bool hasPermission = false;
     std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
     auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
-        return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
     });
     if (it != reqPermissions.end()) {
         hasPermission = true;
@@ -3118,6 +3117,7 @@ void BaseBundleInstaller::CreateEl5AndSetPolicy(const InnerBundleInfo &info)
         LOG_E(BMS_TAG_INSTALLER, "init failed");
         return;
     }
+    std::vector<CreateDirParam> params;
     CreateDirParam el5Param;
     el5Param.bundleName = info.GetBundleName();
     el5Param.userId = userId_;
@@ -3125,7 +3125,20 @@ void BaseBundleInstaller::CreateEl5AndSetPolicy(const InnerBundleInfo &info)
     el5Param.apl = info.GetAppPrivilegeLevel();
     el5Param.isPreInstallApp = info.IsPreInstallApp();
     el5Param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
-    dataMgr_->CreateEl5Dir(std::vector<CreateDirParam> {el5Param});
+    params.emplace_back(el5Param);
+    InnerBundleUserInfo userInfo;
+    if (!info.GetInnerBundleUserInfo(userId_, userInfo)) {
+        APP_LOGE("get user info failed");
+        return;
+    }
+    for (const auto &cloneInfo : userInfo.cloneInfos) {
+        CreateDirParam cloneParam = el5Param;
+        cloneParam.uid = cloneInfo.second.uid;
+        cloneParam.gid = cloneInfo.second.uid;
+        cloneParam.appIndex = cloneInfo.second.appIndex;
+        params.emplace_back(cloneParam);
+    }
+    dataMgr_->CreateEl5Dir(params);
 }
 
 void BaseBundleInstaller::GetUninstallBundleInfo(bool isKeepData, int32_t userId,
@@ -3203,7 +3216,7 @@ void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, 
     }
     std::vector<RequestPermission> reqPermissions = oldInfo.GetAllRequestPermissions();
     auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
-        return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
     });
     if (it == reqPermissions.end()) {
         LOG_D(BMS_TAG_INSTALLER, "no need to delete el5 -n %{public}s", oldInfo.GetBundleName().c_str());

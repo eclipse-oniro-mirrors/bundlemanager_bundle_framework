@@ -98,7 +98,6 @@ constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 constexpr const char* ENTRY = "entry";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
-constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -7855,7 +7854,7 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
 
         std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
         auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
-            return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+            return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
         });
         if (it != reqPermissions.end()) {
             el5Params.emplace_back(createDirParam);

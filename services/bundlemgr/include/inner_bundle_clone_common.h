@@ -18,6 +18,7 @@
 
 #include <string>
 #include "bundle_constants.h"
+#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -25,6 +26,7 @@ namespace {
 constexpr const char* CLONE_DIR_PATH_PREFIX = "clone";
 constexpr const char* PLUS_SIGN = "+";
 constexpr const char* MINUS_SIGN = "-";
+constexpr const char* CLONE_PREFIX = "+clone-";
 }
 
 class BundleCloneCommonHelper {
@@ -38,6 +40,23 @@ public:
     static std::string GetCloneBundleIdKey(const std::string &bundleName, const int32_t appIndex)
     {
         return std::to_string(appIndex) + CLONE_DIR_PATH_PREFIX + Constants::FILE_UNDERLINE + bundleName;
+    }
+
+    static bool ParseCloneDataDir(const std::string &cloneDirName, std::string &bundleName, int32_t &appIndex)
+    {
+        if (cloneDirName.find(CLONE_PREFIX) != 0) {
+            return false;
+        }
+        std::string tempStr = cloneDirName.substr(strlen(CLONE_PREFIX));
+        size_t plusPos = tempStr.find(PLUS_SIGN);
+        if (plusPos == std::string::npos) {
+            return false;
+        }
+        if (!OHOS::StrToInt(tempStr.substr(0, plusPos), appIndex)) {
+            return false;
+        }
+        bundleName = tempStr.substr(plusPos + 1);
+        return true;
     }
 };
 } // namespace AppExecFwk
