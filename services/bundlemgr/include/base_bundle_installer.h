@@ -390,6 +390,8 @@ private:
 
     ErrCode CheckShellInstall(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
+    ErrCode CheckShellInstallInOobe();
+
     ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, InnerBundleInfo> &infos, bool isSysCapValid);
 
@@ -719,6 +721,7 @@ private:
     ErrCode CleanShaderCache(const std::string &bundleName) const;
     void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     bool VerifyActivationLock() const;
+    bool VerifyActivationLockToken() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
     void CreateScreenLockProtectionDir();
     void CreateEl5AndSetPolicy(const InnerBundleInfo &info);
