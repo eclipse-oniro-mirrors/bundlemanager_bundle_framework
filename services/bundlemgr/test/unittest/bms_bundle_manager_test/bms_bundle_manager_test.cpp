@@ -3521,7 +3521,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0027, Function | SmallTest | Leve
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     testRet = GetBundleDataMgr()->CheckInnerBundleInfoWithFlags(
         innerBundleInfo, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, USERID);
-    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
 }
 
 /**
