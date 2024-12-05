@@ -341,13 +341,12 @@ std::string Skill::GetOptParamUri(const std::string &uriString)
     return uriString.substr(0, pos);
 }
 
-std::string Skill::ConvertUriToLower(const std::string& uri) const
+inline std::string Skill::ConvertUriToLower(const std::string& uri) const
 {
     size_t protocolEnd = uri.find(SCHEME_SEPARATOR);
     size_t startHost = protocolEnd + PROTOCOL_OFFSET;
     if (protocolEnd == std::string::npos || startHost == uri.size()) {
-        std::string protocol = ConvertToLower(uri);
-        return protocol;
+        return ConvertToLower(uri);
     }
     std::string protocol = uri.substr(0, protocolEnd);
     size_t endHost = uri.find(PATH_SEPARATOR, startHost);
@@ -366,9 +365,9 @@ std::string Skill::ConvertUriToLower(const std::string& uri) const
 
 std::string Skill::ConvertToLower(const std::string &str) const
 {
-    std::string copy_str = str;
-    std::transform(copy_str.begin(), copy_str.end(), copy_str.begin(), [](unsigned char c) { return std::tolower(c); });
-    return copy_str;
+    std::string lowerCaseStr = str;
+    std::transform(lowerCaseStr.begin(), lowerCaseStr.end(), lowerCaseStr.begin(), [](unsigned char c) { return std::tolower(c); });
+    return lowerCaseStr;
 }
 
 bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) const
