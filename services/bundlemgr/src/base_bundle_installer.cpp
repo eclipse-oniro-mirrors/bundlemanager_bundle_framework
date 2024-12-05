@@ -5547,7 +5547,7 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
     }
     for (size_t index = 0; index < bundlePaths.size(); ++index) {
         if (!BundleUtil::CheckSystemSize(bundlePaths[index], APP_INSTALL_PATH)) {
-            LOG_E(BMS_TAG_INSTALLER, "install %{public}s failed insufficient disk memory", bundlePaths[index].c_str());
+            LOG_E(BMS_TAG_INSTALLER, "install %{private}s failed insufficient disk memory", bundlePaths[index].c_str());
             return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
         }
         auto destination = BundleUtil::CopyFileToSecurityDir(bundlePaths[index], DirType::STREAM_INSTALL_DIR,
@@ -5635,7 +5635,7 @@ ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName,
     // check validity of the signature file
     auto ret = bundleInstallChecker_->CheckSignatureFileDir(signatureFileDir);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "checkout signature file dir %{public}s failed", signatureFileDir.c_str());
+        LOG_E(BMS_TAG_INSTALLER, "checkout signature file dir %{private}s failed", signatureFileDir.c_str());
         return ret;
     }
 
