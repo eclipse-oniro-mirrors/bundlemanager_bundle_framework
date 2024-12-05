@@ -366,7 +366,9 @@ std::string Skill::ConvertUriToLower(const std::string& uri) const
 inline std::string Skill::ConvertToLower(const std::string &str) const
 {
     std::string lowerCaseStr = str;
-    std::transform(lowerCaseStr.begin(), lowerCaseStr.end(), lowerCaseStr.begin(), [](unsigned char c) { return std::tolower(c); });
+    std::transform(lowerCaseStr.begin(), lowerCaseStr.end(), lowerCaseStr.begin(), [](unsigned char c) {
+        return std::tolower(c);
+    });
     return lowerCaseStr;
 }
 
