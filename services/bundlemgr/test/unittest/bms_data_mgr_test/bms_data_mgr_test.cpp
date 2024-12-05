@@ -2936,4 +2936,77 @@ HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0002, Function | MediumTest |
     shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
     EXPECT_EQ(shortcutDataStorageRdb->rdbDataManager_, nullptr);
 }
+
+/**
+ * @tc.number: GetSignatureInfoByBundleName_0001
+ * @tc.name: GetSignatureInfoByBundleName
+ * @tc.desc: test GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo)
+ */
+HWTEST_F(BmsDataMgrTest, GetSignatureInfoByBundleName_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    SignatureInfo signatureInfo;
+    auto ret = bundleDataMgr.GetSignatureInfoByBundleName(bundleName, signatureInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetOdidByBundleName_0001
+ * @tc.name: GetOdidByBundleName
+ * @tc.desc: test GetOdidByBundleName(const std::string &bundleName, std::string &odid)
+ */
+HWTEST_F(BmsDataMgrTest, GetOdidByBundleName_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    std::string odid = "odid";
+    auto ret = bundleDataMgr.GetOdidByBundleName(bundleName, odid);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0001
+ * @tc.name: CreateBundleDataDir
+ * @tc.desc: test CreateBundleDataDir(int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, CreateBundleDataDir_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = Constants::INVALID_USERID;
+    auto ret = bundleDataMgr.CreateBundleDataDir(userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_0001
+ * @tc.name: QueryExtensionAbilityInfos
+ * @tc.desc: test QueryExtensionAbilityInfos(uint32_t flags, int32_t userId,
+ *  std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfos_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    uint32_t flags = 20;
+    int32_t userId = Constants::INVALID_USERID;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t appIndex = 30;
+    auto ret = bundleDataMgr.QueryExtensionAbilityInfos(flags, userId, extensionInfos, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: TryGetRawDataByExtractor_0001
+ * @tc.name: TryGetRawDataByExtractor
+ * @tc.desc: test TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,
+ *  const AbilityInfo &abilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, TryGetRawDataByExtractor_0001, Function | MediumTest | Level1)
+{
+    std::string hapPath;
+    std::string profileName;
+    AbilityInfo abilityInfo = GetDefaultAbilityInfo();
+    std::string result = dataMgr_->TryGetRawDataByExtractor(hapPath, profileName, abilityInfo);
+    EXPECT_TRUE(result.empty());
+}
 } // OHOS
