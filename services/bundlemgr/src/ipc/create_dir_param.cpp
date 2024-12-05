@@ -34,6 +34,7 @@ bool CreateDirParam::ReadFromParcel(Parcel &parcel)
     userId = parcel.ReadInt32();
     uid = parcel.ReadInt32();
     gid = parcel.ReadInt32();
+    appIndex = parcel.ReadInt32();
     isPreInstallApp = parcel.ReadBool();
     debug = parcel.ReadBool();
     isDlpSandbox = parcel.ReadBool();
@@ -52,6 +53,7 @@ bool CreateDirParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, userId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, gid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPreInstallApp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, debug);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDlpSandbox);

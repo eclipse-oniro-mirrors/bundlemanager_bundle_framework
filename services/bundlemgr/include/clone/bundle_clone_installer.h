@@ -59,6 +59,8 @@ private:
     ErrCode RemoveCloneDataDir(const std::string bundleName, int32_t userId, int32_t appIndex);
     bool AddKeyOperation(const std::string &bundleName, int32_t appIndex, int32_t userId, int32_t uid);
     void DeleteKeyOperation(const std::string &bundleName, int32_t appIndex, int32_t userId, int32_t uid);
+    void CreateEl5Dir(InnerBundleInfo &info, const int32_t userId, const int32_t uid, const int32_t appIndex);
+    void RemoveEl5Dir(InnerBundleUserInfo &userInfo, const int32_t uid, int32_t userId, const int32_t appIndex);
     ErrCode GetDataMgr();
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid, int32_t appIndex,
         int32_t userId, const InnerBundleInfo& innerBundleInfo);

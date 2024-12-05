@@ -29,6 +29,7 @@ const std::string BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID_EX = "accessTokenIdEx";
 const std::string BUNDLE_CLONE_INFO_INSTALL_TIME = "installTime";
 const std::string BUNDLE_CLONE_INFO_ENCRYPTED_KEY_EXISTED = "encryptedKeyExisted";
 const std::string BUNDLE_CLONE_INFO_INFO_SET_ENABLED_CALLER = "setEnabledCaller";
+const std::string BUNDLE_CLONE_INFO_KEY_ID = "keyId";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const InnerBundleCloneInfo& bundleCloneInfo)
@@ -44,7 +45,8 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleCloneInfo& bundleClone
         {BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID_EX, bundleCloneInfo.accessTokenIdEx},
         {BUNDLE_CLONE_INFO_INSTALL_TIME, bundleCloneInfo.installTime},
         {BUNDLE_CLONE_INFO_ENCRYPTED_KEY_EXISTED, bundleCloneInfo.encryptedKeyExisted},
-        {BUNDLE_CLONE_INFO_INFO_SET_ENABLED_CALLER, bundleCloneInfo.setEnabledCaller}
+        {BUNDLE_CLONE_INFO_INFO_SET_ENABLED_CALLER, bundleCloneInfo.setEnabledCaller},
+        {BUNDLE_CLONE_INFO_KEY_ID, bundleCloneInfo.keyId}
     };
 }
 
@@ -74,6 +76,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleClo
         bundleCloneInfo.encryptedKeyExisted, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_INFO_SET_ENABLED_CALLER,
         bundleCloneInfo.setEnabledCaller, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_KEY_ID,
+        bundleCloneInfo.keyId, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read module bundleCloneInfo from jsonObject error, error code : %{public}d", parseResult);
     }

@@ -34,6 +34,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
+}
 using namespace OHOS::Security;
 
 std::mutex gCloneInstallerMutex;
@@ -218,12 +221,12 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
     versionCode_ = info.GetVersionCode();
 
+    ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex); });
     ErrCode result = CreateCloneDataDir(info, userId, uid, appIndex);
     if (result != ERR_OK) {
         APP_LOGE("InstallCloneApp create clone dir failed");
         return result;
     }
-    ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex); });
 
     ScopeGuard addCloneBundleGuard([&] { dataMgr->RemoveCloneBundle(bundleName, userId, appIndex); });
     ErrCode addRes = dataMgr->AddCloneBundle(bundleName, attr);
@@ -232,6 +235,9 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
             bundleName.c_str(), userId, appIndex);
         return addRes;
     }
+
+    ScopeGuard createEl5DirGuard([&] { RemoveEl5Dir(userInfo, uid, userId, appIndex); });
+    CreateEl5Dir(info, userId, uid, appIndex);
 
     // process icon and label
     {
@@ -247,6 +253,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     applyAccessTokenGuard.Dismiss();
     createCloneDataDirGuard.Dismiss();
     addCloneBundleGuard.Dismiss();
+    createEl5DirGuard.Dismiss();
     APP_LOGI("InstallCloneApp %{public}s appIndex:%{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
 }
@@ -304,6 +311,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     if (RemoveCloneDataDir(bundleName, userId, appIndex) != ERR_OK) {
         APP_LOGW("RemoveCloneDataDir failed");
     }
+    RemoveEl5Dir(userInfo, uid_, userId, appIndex);
     // process icon and label
     {
         InnerBundleInfo info;
@@ -456,6 +464,61 @@ ErrCode BundleCloneInstaller::RemoveCloneDataDir(const std::string bundleName, i
         return ERR_APPEXECFWK_CLONE_INSTALL_INTERNAL_ERROR;
     }
     return ERR_OK;
+}
+
+void BundleCloneInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t userId,
+    const int32_t uid, const int32_t appIndex)
+{
+    std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
+    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
+        return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    });
+    if (it == reqPermissions.end()) {
+        APP_LOGI("no el5 permission");
+        return;
+    }
+    APP_LOGI("el5 -n %{public}s -i %{public}d", info.GetBundleName().c_str(), appIndex);
+    CreateDirParam el5Param;
+    el5Param.bundleName = info.GetBundleName();
+    el5Param.userId = userId;
+    el5Param.uid = uid;
+    el5Param.gid = uid;
+    el5Param.apl = info.GetAppPrivilegeLevel();
+    el5Param.isPreInstallApp = info.IsPreInstallApp();
+    el5Param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    el5Param.appIndex = appIndex;
+    if (GetDataMgr() != ERR_OK) {
+        return;
+    }
+    dataMgr_->CreateEl5Dir(std::vector<CreateDirParam> {el5Param}, true);
+}
+
+void BundleCloneInstaller::RemoveEl5Dir(InnerBundleUserInfo &userInfo, const int32_t uid,
+    int32_t userId, const int32_t appIndex)
+{
+    APP_LOGI("el5 -n %{public}s -i %{public}d", userInfo.bundleName.c_str(), appIndex);
+    std::string key = BundleCloneCommonHelper::GetCloneDataDir(userInfo.bundleName, appIndex);
+    std::vector<std::string> dirs;
+    dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
+        std::to_string(userId) + ServiceConstants::BASE + key);
+    dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
+        std::to_string(userId) + ServiceConstants::DATABASE + key);
+    for (const std::string &dir : dirs) {
+        if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
+            APP_LOGW("remove el5 dir %{public}s failed", dir.c_str());
+        }
+    }
+    auto it = userInfo.cloneInfos.find(std::to_string(appIndex));
+    if (it == userInfo.cloneInfos.end()) {
+        APP_LOGE("find cloneInfo failed");
+        return;
+    }
+    if (it->second.keyId.empty()) {
+        return;
+    }
+    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(key, userId) != ERR_OK) {
+        APP_LOGW("delete encryption key id failed");
+    }
 }
 
 ErrCode BundleCloneInstaller::GetDataMgr()

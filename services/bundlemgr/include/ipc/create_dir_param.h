@@ -33,9 +33,10 @@ struct CreateDirParam : public Parcelable {
     bool isPreInstallApp = false;
     bool debug = false;
     bool isDlpSandbox = false;
-    int32_t userId;
-    int32_t uid;
-    int32_t gid;
+    int32_t userId = -1;
+    int32_t uid = -1;
+    int32_t gid = -1;
+    int32_t appIndex = 0;
     std::string bundleName;
     std::vector<std::string> extensionDirs;
     std::string apl;
