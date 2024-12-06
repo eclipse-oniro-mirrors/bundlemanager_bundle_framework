@@ -1588,6 +1588,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return res;
         }
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+        UninstallDebugAppSandbox(bundleName, uid, oldInfo);
         return ERR_OK;
     }
     dataMgr_->DisableBundle(bundleName);
@@ -1674,19 +1675,17 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     RemoveProfileFromCodeSign(bundleName);
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
     SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
-    UninstallDebugAppSandbox(bundleName, uid, userId_, oldInfo);
+    UninstallDebugAppSandbox(bundleName, uid, oldInfo);
     return ERR_OK;
 }
 
-void BaseBundleInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid, int32_t userId,
+void BaseBundleInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
     const InnerBundleInfo& innerBundleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_INSTALLER, "call UninstallDebugAppSandbox start");
-    ApplicationInfo appInfo;
-    innerBundleInfo.GetApplicationInfo(ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
     bool isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
-    bool isDebugApp = appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    bool isDebugApp = innerBundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     if (isDeveloperMode && isDebugApp) {
         int32_t flagIndex = 0;
         AppSpawnRemoveSandboxDirMsg removeSandboxDirMsg;
