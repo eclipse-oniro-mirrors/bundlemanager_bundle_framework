@@ -334,7 +334,8 @@ HWTEST_F(BmsBundleInstallerProxyTest, CreateStreamInstaller_0100, Function | Med
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = 100;
     sptr<IStatusReceiver> statusReceiver = nullptr;
-    auto res = bundleInstallerProxy.CreateStreamInstaller(installParam, statusReceiver);
+    std::vector<std::string> originHapPaths;
+    auto res = bundleInstallerProxy.CreateStreamInstaller(installParam, statusReceiver, originHapPaths);
     ASSERT_EQ(res, nullptr);
 }
 
@@ -352,7 +353,8 @@ HWTEST_F(BmsBundleInstallerProxyTest, CreateStreamInstaller_0200, Function | Med
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = 100;
     sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
-    auto res = bundleInstallerProxy.CreateStreamInstaller(installParam, statusReceiver);
+    std::vector<std::string> originHapPaths;
+    auto res = bundleInstallerProxy.CreateStreamInstaller(installParam, statusReceiver, originHapPaths);
     ASSERT_EQ(res, nullptr);
 }
 

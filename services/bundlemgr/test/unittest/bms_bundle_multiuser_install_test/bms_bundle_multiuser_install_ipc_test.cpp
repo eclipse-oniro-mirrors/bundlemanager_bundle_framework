@@ -157,7 +157,7 @@ public:
         return ERR_OK;
     }
     sptr<IBundleStreamInstaller> CreateStreamInstaller(const InstallParam &installParam,
-        const sptr<IStatusReceiver> &statusReceiver)
+        const sptr<IStatusReceiver> &statusReceiver, const std::vector<std::string>& originHapPaths)
     {
         return nullptr;
     }

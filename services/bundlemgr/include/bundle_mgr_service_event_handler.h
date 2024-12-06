@@ -397,6 +397,7 @@ private:
      * @brief Set the flag indicates that all system and vendor applications installed.
      * @return
      */
+    void CreateAppInstallDir() const;
     void SetAllInstallFlag() const;
     /**
      * @brief Check and parse hap.

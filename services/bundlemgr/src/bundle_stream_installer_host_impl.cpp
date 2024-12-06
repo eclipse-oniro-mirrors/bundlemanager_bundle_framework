@@ -37,10 +37,12 @@ BundleStreamInstallerHostImpl::~BundleStreamInstallerHostImpl()
     UnInit();
 }
 
-bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
+bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam,
+    const sptr<IStatusReceiver> &statusReceiver, const std::vector<std::string> &originHapPaths)
 {
     installParam_ = installParam;
     receiver_ = statusReceiver;
+    originHapPaths_ = originHapPaths;
     std::string tempDir = BundleUtil::CreateInstallTempDir(installerId_, DirType::STREAM_INSTALL_DIR);
     if (tempDir.empty()) {
         APP_LOGE("tempDir is empty");
@@ -315,7 +317,9 @@ bool BundleStreamInstallerHostImpl::Install()
         return false;
     }
     std::vector<std::string> pathVec;
-    if (!isInstallSharedBundlesOnly_) {
+    if (installParam_.IsRenameInstall()) {
+        pathVec = originHapPaths_;
+    } else if (!isInstallSharedBundlesOnly_) {
         pathVec.emplace_back(tempDir_);
     }
     installParam_.withCopyHaps = true;

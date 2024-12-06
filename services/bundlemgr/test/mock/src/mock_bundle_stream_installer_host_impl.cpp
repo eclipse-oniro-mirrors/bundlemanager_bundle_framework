@@ -35,7 +35,8 @@ BundleStreamInstallerHostImpl::~BundleStreamInstallerHostImpl()
     UnInit();
 }
 
-bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
+bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver,
+    const std::vector<std::string> &originHapPaths)
 {
     return true;
 }
