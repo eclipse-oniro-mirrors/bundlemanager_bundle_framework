@@ -104,20 +104,20 @@ bool BundleAppSpawnClient::VerifyMsg(const AppSpawnRemoveSandboxDirMsg &removeSa
 {
     if (removeSandboxDirMsg.code == MSG_UNINSTALL_DEBUG_HAP) {
         if (removeSandboxDirMsg.bundleName.empty() || removeSandboxDirMsg.bundleName.size() >= MAX_PROC_NAME_LEN) {
-            LOG_E(BMS_TAG_INSTALLER, "invalid bundleName! [%{public}s]", removeSandboxDirMsg.bundleName.c_str());
+            LOG_E(BMS_TAG_INSTALLER, "invalid bundleName, name:%{public}s", removeSandboxDirMsg.bundleName.c_str());
             return false;
         }
         if (removeSandboxDirMsg.bundleIndex < 0 ||
             removeSandboxDirMsg.bundleIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
-            LOG_E(BMS_TAG_INSTALLER, "invalid bundleIndex! [%{public}d]", removeSandboxDirMsg.bundleIndex);
+            LOG_E(BMS_TAG_INSTALLER, "invalid bundleIndex %{public}d.", removeSandboxDirMsg.bundleIndex);
             return false;
         }
         if (removeSandboxDirMsg.uid < 0) {
-            LOG_E(BMS_TAG_INSTALLER, "invalid uid! [%{public}d]", removeSandboxDirMsg.uid);
+            LOG_E(BMS_TAG_INSTALLER, "invalid uid %{public}d.", removeSandboxDirMsg.uid);
             return false;
         }
     } else {
-        LOG_E(BMS_TAG_INSTALLER, "invalid code! [%{public}d]", removeSandboxDirMsg.code);
+        LOG_E(BMS_TAG_INSTALLER, "invalid code %{public}d.", removeSandboxDirMsg.code);
         return false;
     }
     return true;

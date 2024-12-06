@@ -311,19 +311,17 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     }
 #endif
     DeleteKeyOperation(bundleName, appIndex, userId, uid_);
-    UninstallDebugAppSandbox(bundleName, uid_, appIndex, userId, info);
+    UninstallDebugAppSandbox(bundleName, uid_, appIndex, info);
     APP_LOGI("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
 }
 
 void BundleCloneInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
-    int32_t appIndex, int32_t userId, const InnerBundleInfo& innerBundleInfo)
+    int32_t appIndex, const InnerBundleInfo& innerBundleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("call UninstallDebugAppSandbox start");
-    ApplicationInfo appInfo;
-    innerBundleInfo.GetApplicationInfo(ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
-    bool isDebugApp = appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    bool isDebugApp = innerBundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     bool isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
     if (isDeveloperMode && isDebugApp) {
         AppSpawnRemoveSandboxDirMsg removeSandboxDirMsg;
