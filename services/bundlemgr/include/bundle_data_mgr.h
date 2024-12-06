@@ -907,11 +907,19 @@ public:
     bool GetGroupDir(const std::string &dataGroupId, std::string &dir,
         int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
-        std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
-    void GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
-        const std::vector<std::string> &dataGroupIdList, int32_t userId) const;
-    void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
-    bool IsShareDataGroupId(const std::string &dataGroupId, int32_t userId) const;
+        std::unordered_set<int32_t> &uniqueIdSet) const;
+    void GenerateDataGroupInfos(const std::string &bundleName,
+        const std::unordered_set<std::string> &dataGroupIdList, int32_t userId);
+    void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
+        std::unordered_set<int32_t> &uniqueIdSet) const;
+    bool IsShareDataGroupIdNoLock(const std::string &dataGroupId, int32_t userId) const;
+    void GenerateDataGroupInfoForNewUser(const std::string &bundleName, int32_t userId);
+    void DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData);
+    bool IsDataGroupIdExistNoLock(const std::string &dataGroupId, int32_t userId) const;
+    void ProcessAllUserDataGroupInfosWhenBundleUpdate(InnerBundleInfo &innerBundleInfo);
+    void RemoveOldGroupDirs(const InnerBundleInfo &oldInfo) const;
+    void DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId) const;
+    void CreateGroupDirIfNotExist(const DataGroupInfo &dataGroupInfo);
     ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName, const std::string &moduleName,
         std::string &profile, int32_t userId) const;
     ErrCode GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
@@ -1198,6 +1206,8 @@ private:
     void GetMultiLauncherAbilityInfo(const Want& want,
         const InnerBundleInfo& info, const InnerBundleUserInfo &bundleUserInfo,
         int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const;
+    void CreateNewDataGroupInfo(const std::string &groupId, const int32_t userId,
+        const DataGroupInfo &oldDataGroupInfo, DataGroupInfo &newDataGroupInfo);
 
     void PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const;
     void PostProcessAnyUserFlags(int32_t flags, int32_t userId,

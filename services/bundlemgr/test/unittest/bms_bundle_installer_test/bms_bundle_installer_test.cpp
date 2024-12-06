@@ -6292,7 +6292,7 @@ HWTEST_F(BmsBundleInstallerTest, RollbackHmpCommonInfo_0100, Function | SmallTes
     std::vector<std::string> validGroupIds;
     installer.GetValidDataGroupIds(extensionDataGroupIds, bundleDataGroupIds, validGroupIds);
 
-    installer.CreateDataGroupDir(info);
+    installer.GenerateDataGroupInfoForNewUser(info);
 
     std::unordered_map<std::string, InnerBundleInfo> infos;
     installer.SetAppDistributionType(infos);
@@ -6979,7 +6979,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateExtensionDataDir_0100, Function | SmallTe
     std::vector<std::string> createExtensionDirs;
     installer.createExtensionDirs_.push_back("test.extension.dir");
     installer.CreateExtensionDataDir(info);
-    installer.CreateDataGroupDir(info);
+    installer.GenerateDataGroupInfoForNewUser(info);
     EXPECT_FALSE(installer.createExtensionDirs_.empty());
 }
 

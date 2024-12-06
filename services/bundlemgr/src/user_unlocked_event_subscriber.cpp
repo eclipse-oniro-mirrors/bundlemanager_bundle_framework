@@ -226,11 +226,15 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
     }
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
         std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        APP_LOGD("create group dir: %{public}s", dir.c_str());
+        if (BundleUtil::IsExistDir(dir)) {
+            APP_LOGD("group is exist dir %{private}s", dir.c_str());
+            return;
+        }
+        APP_LOGI("create group dir: %{private}s uid:%{public}d -u %{public}d", dir.c_str(), dataGroupInfo.uid, userId);
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
             DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
-            APP_LOGW("create data group dir %{public}s userId %{public}d failed", dataGroupInfo.uuid.c_str(), userId);
+            APP_LOGW("create data group dir %{private}s userId %{public}d failed", dataGroupInfo.uuid.c_str(), userId);
         }
     }
 }
