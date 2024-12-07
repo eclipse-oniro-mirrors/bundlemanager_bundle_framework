@@ -14,6 +14,16 @@ import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
 ohos_shared_library("app_detail_ability") {
+  branch_protector_ret = "pac_ret"
+
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
   include_dirs = [ "include" ]
   defines = [
     "APP_LOG_TAG = \"BMS\"",
@@ -22,8 +32,15 @@ ohos_shared_library("app_detail_ability") {
   sources = [ "src/app_detail_ability.cpp" ]
   deps = [ "${common_path}:libappexecfwk_common" ]
 
-  cflags = [ "-Os" ]
-  cflags_cc = [ "-Os" ]
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
 
   external_deps = [
     "ability_base:want",
