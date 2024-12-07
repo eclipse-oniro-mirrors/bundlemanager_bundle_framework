@@ -88,6 +88,14 @@ const std::string TEST_STRING = "test.string";
 const std::string TEST_PACK_AGE = "entry";
 const std::string NOEXIST = "noExist";
 const std::string CURRENT_PATH = "/data/service/el2/100/hmdfs/account/data/test_max";
+const std::string APP_ENTRY_V1_HAP = "versionUpdateTest1.hap";
+const std::string APP_ENTRY_V2_HAP = "versionUpdateTest2.hap";
+const std::string APP_FEATURE_V1_HAP = "versionUpdateTest3.hap";
+const std::string APP_FEATURE_V2_HAP = "versionUpdateTest4.hap";
+const std::string ATOMIC_ENTRY_V1_HAP = "versionUpdateTest5.hap";
+const std::string ATOMIC_FEATURE_V1_HAP = "versionUpdateTest6.hap";
+const std::string ATOMIC_FEATURE_V2_HAP = "versionUpdateTest7.hap";
+const std::string VERSION_UPDATE_BUNDLE_NAME = "com.example.versiontest";
 const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
 const int32_t ZERO_CODE = 0;
@@ -6988,6 +6996,205 @@ HWTEST_F(BmsBundleInstallerTest, UtdHandler_0200, Function | SmallTest | Level0)
 
     utdProfile = UtdHandler::GetUtdProfileFromHap(EMPTY_STRING);
     EXPECT_EQ(utdProfile, EMPTY_STRING);
+}
+
+/**
+ * @tc.number: VersionUpdateTest_0010
+ * @tc.name: test updateVersion
+ * @tc.desc: atomic: install v1 entry, update v2 feature, versionName update
+ */
+HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0010, Function | SmallTest | Level0)
+{
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + ATOMIC_ENTRY_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "atom_entry_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + ATOMIC_FEATURE_V2_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "atom_feature_v2");
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: VersionUpdateTest_0020
+ * @tc.name: test updateVersion
+ * @tc.desc: atomic: install v1 entry+feature, update v2 feature, versionName update
+ */
+HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0020, Function | SmallTest | Level0)
+{
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + ATOMIC_ENTRY_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bundlePath = RESOURCE_ROOT_PATH + ATOMIC_FEATURE_V1_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "atom_entry_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + ATOMIC_FEATURE_V2_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "atom_feature_v2");
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: VersionUpdateTest_0030
+ * @tc.name: test updateVersion
+ * @tc.desc: app: install v1 feature, update v2 entry, versionName update
+ */
+HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0030, Function | SmallTest | Level0)
+{
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + APP_FEATURE_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "feature_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V2_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v2");
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: VersionUpdateTest_0040
+ * @tc.name: test updateVersion
+ * @tc.desc: app: install v1 entry, update v2 entry, versionName update
+ */
+HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0040, Function | SmallTest | Level0)
+{
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V2_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v2");
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: VersionUpdateTest_0050
+ * @tc.name: test updateVersion
+ * @tc.desc: app: install v1 entry, update v1 feature, update v2 entry, versionName update
+ */
+HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0050, Function | SmallTest | Level0)
+{
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + APP_FEATURE_V1_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V2_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v2");
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: VersionUpdateTest_0060
+ * @tc.name: test updateVersion
+ * @tc.desc: app: install v1 feature, update v1 entry, versionName update
+ */
+HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0060, Function | SmallTest | Level0)
+{
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + APP_FEATURE_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "feature_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V1_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v1");
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
 }
 
 /**
