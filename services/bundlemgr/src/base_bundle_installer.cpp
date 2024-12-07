@@ -2002,7 +2002,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             std::vector<std::string> extensionDirs = oldInfo.GetAllExtensionDirs();
             createExtensionDirs_.assign(extensionDirs.begin(), extensionDirs.end());
             CreateExtensionDataDir(oldInfo);
-            GenerateDataGroupInfoForNewUser(oldInfo);
+            GenerateNewUserDataGroupInfos(oldInfo);
             bundleName_ = bundleName;
             CreateScreenLockProtectionDir();
             // extract ap file
@@ -3825,13 +3825,13 @@ void BaseBundleInstaller::CreateExtensionDataDir(InnerBundleInfo &info) const
     }
 }
 
-void BaseBundleInstaller::GenerateDataGroupInfoForNewUser(InnerBundleInfo &info) const
+void BaseBundleInstaller::GenerateNewUserDataGroupInfos(InnerBundleInfo &info) const
 {
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
         return;
     }
-    dataMgr_->GenerateDataGroupInfoForNewUser(info.GetBundleName(), userId_);
+    dataMgr_->GenerateNewUserDataGroupInfos(info.GetBundleName(), userId_);
 }
 
 void BaseBundleInstaller::GetCreateExtensionDirs(std::unordered_map<std::string, InnerBundleInfo> &newInfos)

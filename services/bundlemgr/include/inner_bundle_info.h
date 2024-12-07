@@ -1939,17 +1939,17 @@ public:
         return true;
     }
 
-    void DeleteDataGroupInfos(const std::string &dataGroupId)
+    const std::unordered_map<std::string, std::vector<DataGroupInfo>> GetDataGroupInfos() const
+    {
+        return dataGroupInfos_;
+    }
+
+    void DeleteDataGroupInfo(const std::string &dataGroupId)
     {
         if (dataGroupInfos_.find(dataGroupId) == dataGroupInfos_.end()) {
             return;
         }
         dataGroupInfos_.erase(dataGroupId);
-    }
-
-    const std::unordered_map<std::string, std::vector<DataGroupInfo>> GetDataGroupInfos() const
-    {
-        return dataGroupInfos_;
     }
 
     void AddDataGroupInfo(const std::string &dataGroupId, const DataGroupInfo &info)

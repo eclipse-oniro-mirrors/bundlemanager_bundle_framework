@@ -913,7 +913,7 @@ public:
     void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
         std::unordered_set<int32_t> &uniqueIdSet) const;
     bool IsShareDataGroupIdNoLock(const std::string &dataGroupId, int32_t userId) const;
-    void GenerateDataGroupInfoForNewUser(const std::string &bundleName, int32_t userId);
+    void GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId);
     void DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData);
     bool IsDataGroupIdExistNoLock(const std::string &dataGroupId, int32_t userId) const;
     void ProcessAllUserDataGroupInfosWhenBundleUpdate(InnerBundleInfo &innerBundleInfo);

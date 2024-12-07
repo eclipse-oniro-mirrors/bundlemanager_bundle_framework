@@ -7422,7 +7422,90 @@ void BundleDataMgr::ProcessAllUserDataGroupInfosWhenBundleUpdate(InnerBundleInfo
     }
 }
 
-void BundleDataMgr::GenerateDataGroupInfoForNewUser(const std::string &bundleName, int32_t userId)
+void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
+    std::unordered_set<int32_t> &uniqueIdSet) const
+{
+    int32_t uniqueId = DATA_GROUP_INDEX_START;
+    for (int32_t i = DATA_GROUP_INDEX_START; i < DATA_GROUP_UID_OFFSET; i++) {
+        if (uniqueIdSet.find(i) == uniqueIdSet.end()) {
+            uniqueId = i;
+            break;
+        }
+    }
+
+    int32_t uid = userId * Constants::BASE_USER_RANGE + uniqueId + DATA_GROUP_UID_OFFSET;
+    dataGroupInfo.uid = uid;
+    dataGroupInfo.gid = uid;
+
+    std::string str = BundleUtil::GenerateUuidByKey(dataGroupInfo.dataGroupId);
+    dataGroupInfo.uuid = str;
+    uniqueIdSet.insert(uniqueId);
+}
+
+void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
+    const std::unordered_set<std::string> &dataGroupIdList, int32_t userId)
+{
+    APP_LOGD("called for user: %{public}d", userId);
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto bundleInfoItem = bundleInfos_.find(bundleName);
+    if (bundleInfoItem == bundleInfos_.end()) {
+        APP_LOGW("%{public}s not found", bundleName.c_str());
+        return;
+    }
+    auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
+    for (const auto &dataItem : dataGroupInfos) {
+        std::string oldGroupId = dataItem.first;
+        if (dataGroupIdList.find(oldGroupId) == dataGroupIdList.end()) {
+            bundleInfoItem->second.DeleteDataGroupInfo(oldGroupId);
+        }
+    }
+    if (dataGroupIdList.empty()) {
+        APP_LOGD("dataGroupIdList is empty");
+        return;
+    }
+    std::map<std::string, std::pair<int32_t, std::string>> dataGroupIndexMap;
+    std::unordered_set<int32_t> uniqueIdSet;
+    GetDataGroupIndexMap(dataGroupIndexMap, uniqueIdSet);
+    for (const std::string &groupId : dataGroupIdList) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = groupId;
+        dataGroupInfo.userId = userId;
+        auto iter = dataGroupIndexMap.find(groupId);
+        if (iter != dataGroupIndexMap.end()) {
+            dataGroupInfo.uuid = iter->second.second;
+            int32_t uid = iter->second.first + userId * Constants::BASE_USER_RANGE + DATA_GROUP_UID_OFFSET;
+            dataGroupInfo.uid = uid;
+            dataGroupInfo.gid = uid;
+        } else {
+            // need to generate a valid uniqueId
+            GenerateDataGroupUuidAndUid(dataGroupInfo, userId, uniqueIdSet);
+        }
+        bundleInfoItem->second.AddDataGroupInfo(groupId, dataGroupInfo);
+        CreateGroupDirIfNotExist(dataGroupInfo);
+    }
+    ProcessAllUserDataGroupInfosWhenBundleUpdate(bundleInfoItem->second);
+}
+
+void BundleDataMgr::CreateGroupDirIfNotExist(const DataGroupInfo &dataGroupInfo)
+{
+    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+        + std::to_string(dataGroupInfo.userId);
+    if (!BundleUtil::IsExistDirNoLog(parentDir)) {
+        APP_LOGE("group parent dir %{public}s not exist", parentDir.c_str());
+        return;
+    }
+    std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+    if (BundleUtil::IsExistDirNoLog(dir)) {
+        APP_LOGI("group dir exist, no need to create");
+        return;
+    }
+    auto result = InstalldClient::GetInstance()->Mkdir(dir, DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+    if (result != ERR_OK) {
+        APP_LOGE("mkdir group dir failed, uid %{public}d err %{public}d", dataGroupInfo.uid, result);
+    }
+}
+
+void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId)
 {
     APP_LOGD("called for -b %{public}s, -u %{public}d", bundleName.c_str(), userId);
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -7484,111 +7567,6 @@ void BundleDataMgr::DeleteUserDataGroupInfos(const std::string &bundleName, int3
     }
 }
 
-bool BundleDataMgr::IsDataGroupIdExistNoLock(const std::string &dataGroupId, int32_t userId) const
-{
-    APP_LOGD("dataGroupId is %{public}s, user %{public}d", dataGroupId.c_str(), userId);
-    for (const auto &info : bundleInfos_) {
-        auto dataGroupInfos = info.second.GetDataGroupInfos();
-        auto iter = dataGroupInfos.find(dataGroupId);
-        if (iter == dataGroupInfos.end()) {
-            continue;
-        }
-
-        auto dataGroupIter = std::find_if(std::begin(iter->second), std::end(iter->second),
-            [userId](const DataGroupInfo &dataGroupInfo) {
-            return dataGroupInfo.userId == userId;
-        });
-        if (dataGroupIter == std::end(iter->second)) {
-            continue;
-        }
-        return true;
-    }
-    return false;
-}
-
-void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
-    std::unordered_set<int32_t> &uniqueIdSet) const
-{
-    int32_t uniqueId = DATA_GROUP_INDEX_START;
-    for (int32_t i = DATA_GROUP_INDEX_START; i < DATA_GROUP_UID_OFFSET; i++) {
-        if (uniqueIdSet.find(i) == uniqueIdSet.end()) {
-            uniqueId = i;
-            break;
-        }
-    }
-
-    int32_t uid = userId * Constants::BASE_USER_RANGE + uniqueId + DATA_GROUP_UID_OFFSET;
-    dataGroupInfo.uid = uid;
-    dataGroupInfo.gid = uid;
-
-    std::string str = BundleUtil::GenerateUuidByKey(dataGroupInfo.dataGroupId);
-    dataGroupInfo.uuid = str;
-    uniqueIdSet.insert(uniqueId);
-}
-
-void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
-    const std::unordered_set<std::string> &dataGroupIdList, int32_t userId)
-{
-    APP_LOGD("called for user: %{public}d", userId);
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto bundleInfoItem = bundleInfos_.find(bundleName);
-    if (bundleInfoItem == bundleInfos_.end()) {
-        APP_LOGW("%{public}s not found", bundleName.c_str());
-        return;
-    }
-    auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
-    for (const auto &dataItem : dataGroupInfos) {
-        std::string oldGroupId = dataItem.first;
-        if (dataGroupIdList.find(oldGroupId) == dataGroupIdList.end()) {
-            bundleInfoItem->second.DeleteDataGroupInfos(oldGroupId);
-        }
-    }
-    if (dataGroupIdList.empty()) {
-        APP_LOGD("dataGroupIdList is empty");
-        return;
-    }
-    std::map<std::string, std::pair<int32_t, std::string>> dataGroupIndexMap;
-    std::unordered_set<int32_t> uniqueIdSet;
-    GetDataGroupIndexMap(dataGroupIndexMap, uniqueIdSet);
-    for (const std::string &groupId : dataGroupIdList) {
-        DataGroupInfo dataGroupInfo;
-        dataGroupInfo.dataGroupId = groupId;
-        dataGroupInfo.userId = userId;
-        auto iter = dataGroupIndexMap.find(groupId);
-        if (iter != dataGroupIndexMap.end()) {
-            dataGroupInfo.uuid = iter->second.second;
-            int32_t uid = iter->second.first + userId * Constants::BASE_USER_RANGE + DATA_GROUP_UID_OFFSET;
-            dataGroupInfo.uid = uid;
-            dataGroupInfo.gid = uid;
-        } else {
-            // need to generate a valid uniqueId
-            GenerateDataGroupUuidAndUid(dataGroupInfo, userId, uniqueIdSet);
-        }
-        bundleInfoItem->second.AddDataGroupInfo(groupId, dataGroupInfo);
-        CreateGroupDirIfNotExist(dataGroupInfo);
-    }
-    ProcessAllUserDataGroupInfosWhenBundleUpdate(bundleInfoItem->second);
-}
-
-void BundleDataMgr::CreateGroupDirIfNotExist(const DataGroupInfo &dataGroupInfo)
-{
-    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-        + std::to_string(dataGroupInfo.userId);
-    if (!BundleUtil::IsExistDirNoLog(parentDir)) {
-        APP_LOGE("group parent dir %{public}s not exist", parentDir.c_str());
-        return;
-    }
-    std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-    if (!BundleUtil::IsExistDirNoLog(dir)) {
-        APP_LOGI("group dir exist, no need to create");
-        return;
-    }
-    auto result = InstalldClient::GetInstance()->Mkdir(dir, DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
-    if (result != ERR_OK) {
-        APP_LOGE("mkdir group dir failed, uid %{public}d err %{public}d", dataGroupInfo.uid, result);
-    }
-}
-
 void BundleDataMgr::GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
     std::unordered_set<int32_t> &uniqueIdSet) const
 {
@@ -7632,6 +7610,28 @@ bool BundleDataMgr::IsShareDataGroupIdNoLock(const std::string &dataGroupId, int
     return false;
 }
 
+bool BundleDataMgr::IsDataGroupIdExistNoLock(const std::string &dataGroupId, int32_t userId) const
+{
+    APP_LOGD("dataGroupId is %{public}s, user %{public}d", dataGroupId.c_str(), userId);
+    for (const auto &info : bundleInfos_) {
+        auto dataGroupInfos = info.second.GetDataGroupInfos();
+        auto iter = dataGroupInfos.find(dataGroupId);
+        if (iter == dataGroupInfos.end()) {
+            continue;
+        }
+
+        auto dataGroupIter = std::find_if(std::begin(iter->second), std::end(iter->second),
+            [userId](const DataGroupInfo &dataGroupInfo) {
+            return dataGroupInfo.userId == userId;
+        });
+        if (dataGroupIter == std::end(iter->second)) {
+            continue;
+        }
+        return true;
+    }
+    return false;
+}
+
 void BundleDataMgr::RemoveOldGroupDirs(const InnerBundleInfo &oldInfo) const
 {
     //find ids existed in oldInfo, but not in newInfo when there is no others share this id
@@ -7660,9 +7660,9 @@ void BundleDataMgr::RemoveOldGroupDirs(const InnerBundleInfo &oldInfo) const
         for (int32_t userId : userIds) {
             std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
                 std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + uuid;
-            if (!IsDataGroupIdExistNoLock(oldGroupId, userId) &&
-                InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
-                APP_LOGE("remove group dir %{private}s failed", dir.c_str());
+            if (!IsDataGroupIdExistNoLock(oldGroupId, userId)) {
+                APP_LOGI("-u %{public}d remove group dir %{private}s", userId, oldGroupId.c_str());
+                (void)InstalldClient::GetInstance()->RemoveDir(dir);
             }
         }
     }

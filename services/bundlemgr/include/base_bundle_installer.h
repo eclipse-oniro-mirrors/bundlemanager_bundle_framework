@@ -667,7 +667,7 @@ private:
         bool needCopyHapToInstallPath, bool needDeleteOldLibraryPath);
     void GetDataGroupIds(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_set<std::string> &groupIds);
-    void GenerateDataGroupInfoForNewUser(InnerBundleInfo &info) const;
+    void GenerateNewUserDataGroupInfos(InnerBundleInfo &info) const;
     void RemoveOldGroupDirs(const InnerBundleInfo &oldInfo);
     ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId, bool isKeepData = false) const;
     void DeleteGroupDirsForException(const InnerBundleInfo &oldInfo) const;
