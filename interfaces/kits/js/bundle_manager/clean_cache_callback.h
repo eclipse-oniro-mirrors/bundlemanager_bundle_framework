@@ -38,10 +38,14 @@ public:
         return err_;
     }
 
-    uv_sem_t uvSem_;
+    bool WaitForCompletion();
 
 private:
     bool err_ = false;
+    std::mutex mutex_;
+    bool complete_ = false;
+    std::promise<void> promise_;
+    std::future<void> future_ = promise_.get_future();
     DISALLOW_COPY_AND_MOVE(CleanCacheCallback);
 };
 } // AppExecFwk
