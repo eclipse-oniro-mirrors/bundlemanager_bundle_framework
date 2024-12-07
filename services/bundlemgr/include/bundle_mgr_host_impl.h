@@ -1065,6 +1065,8 @@ private:
     bool VerifyDependency(const std::string &sharedBundleName);
     void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId, int32_t appIndex = 0);
+    void GetAppCachePaths(const std::string &suffixName,
+        const int32_t userId, const std::vector<std::string> &moduleNameList, std::vector<std::string> &cachePaths);
     ErrCode CleanBundleCacheFilesGetCleanSize(const std::string &bundleName,
         int32_t userId, uint64_t &cleanCacheSize);
     void CleanBundleCacheTaskGetCleanSize(const std::string &bundleName,
