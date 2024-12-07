@@ -53,6 +53,7 @@ ohos_unittest("BmsBundleRdbDataManagerTest") {
   ]
 
   external_deps = [
+    "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "relational_store:native_rdb",

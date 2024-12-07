@@ -35,6 +35,7 @@ ohos_unittest("BmsBundleInstallerProxyTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "//third_party/googletest:gtest_main",

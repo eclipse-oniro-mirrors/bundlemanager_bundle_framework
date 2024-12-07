@@ -40,6 +40,7 @@ ohos_shared_library("bundlemanager") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:napi_common",
+    "ability_runtime:runtime",
     "c_utils:utils",
     "common_event_service:cesfwk_core",
     "common_event_service:cesfwk_innerkits",

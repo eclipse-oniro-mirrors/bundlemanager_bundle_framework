@@ -183,7 +183,10 @@ ohos_unittest("BmsBundleOverlayInfoTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = [ "${common_path}:libappexecfwk_common" ]
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+  ]
 
   external_deps = [
     "ability_base:want",
