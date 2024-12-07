@@ -20,17 +20,30 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-CleanCacheCallback::CleanCacheCallback()
-{
-    uv_sem_init(&uvSem_, 0);
+namespace {
+constexpr int32_t TIMEOUT = 60;
 }
+
+CleanCacheCallback::CleanCacheCallback() {}
 
 CleanCacheCallback::~CleanCacheCallback() {}
 
 void CleanCacheCallback::OnCleanCacheFinished(bool err)
 {
-    err_ = err;
-    uv_sem_post(&uvSem_);
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!complete_) {
+        complete_ = true;
+        err_ = err;
+        promise_.set_value();
+    }
+}
+
+bool CleanCacheCallback::WaitForCompletion()
+{
+    if (future_.wait_for(std::chrono::seconds(TIMEOUT)) == std::future_status::ready) {
+        return true;
+    }
+    return false;
 }
 } // AppExecFwk
 } // OHOS
