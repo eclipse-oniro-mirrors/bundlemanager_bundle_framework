@@ -6973,6 +6973,7 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_003, Function | SmallTest | Level1
 HWTEST_F(BmsBundleKitServiceTest, Marshalling_004, Function | SmallTest | Level1)
 {
     Metadata metadata;
+    metadata.valueId = 0;
     metadata.name = "ohos.global.systemres";
     metadata.value = "1";
     metadata.resource = "/data/accounts/account_0/applications/ohos.global.systemres";

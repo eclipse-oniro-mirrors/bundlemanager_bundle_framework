@@ -710,6 +710,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(metadata.name, "a01");
         EXPECT_EQ(metadata.value, "v01");
         EXPECT_EQ(metadata.resource, "hello");
+        EXPECT_EQ(metadata.valueId, 0);
 
         auto extensionInfos = hapModuleInfo.extensionInfos.front();
         EXPECT_EQ(extensionInfos.name, "FormName");
