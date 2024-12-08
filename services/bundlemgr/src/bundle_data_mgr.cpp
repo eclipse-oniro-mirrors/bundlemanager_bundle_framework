@@ -7720,6 +7720,97 @@ ErrCode BundleDataMgr::FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerB
     return ret;
 }
 
+void BundleDataMgr::ScanAllBundleGroupInfo()
+{
+    // valid info, key: dataGroupId, value: index
+    std::map<std::string, int32_t> groupIdMap;
+    // invalid infos, key: bundleNames, value: dataGroupId
+    std::map<std::string, std::set<std::string>> needProcessGroupInfoBundleNames;
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &info : bundleInfos_) {
+        std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos = info.second.GetDataGroupInfos();
+        if (dataGroupInfos.empty()) {
+            continue;
+        }
+        for (const auto &dataGroupItem : dataGroupInfos) {
+            std::string dataGroupId = dataGroupItem.first;
+            if (dataGroupItem.second.empty()) {
+                APP_LOGW("dataGroupInfos is empty in %{public}s", dataGroupId.c_str());
+                continue;
+            }
+            int32_t groupUidIndex = dataGroupItem.second[0].uid -
+                dataGroupItem.second[0].userId * Constants::BASE_USER_RANGE - DATA_GROUP_UID_OFFSET;
+            if (groupUidIndex < 0) {
+                APP_LOGW("groupUidIndex %{public}d is invaild", groupUidIndex);
+                continue;
+            }
+            if (groupIdMap.find(dataGroupId) == groupIdMap.end()) {
+                groupIdMap[dataGroupId] = groupUidIndex;
+                continue;
+            }
+            if (groupIdMap[dataGroupId] != groupUidIndex) {
+                // invalid index
+                APP_LOGW("error index %{public}d groudId %{public}s -n %{public}s",
+                    groupUidIndex, dataGroupId.c_str(), info.first.c_str());
+                needProcessGroupInfoBundleNames[info.first].insert(dataGroupId);
+            }
+        }
+    }
+    if (!HandleErrorDataGroupInfos(groupIdMap, needProcessGroupInfoBundleNames)) {
+        APP_LOGE("process bundle data group failed");
+    }
+}
+
+bool BundleDataMgr::HandleErrorDataGroupInfos(
+    const std::map<std::string, int32_t> &groupIdMap,
+    const std::map<std::string, std::set<std::string>> &needProcessGroupInfoBundleNames)
+{
+    if (groupIdMap.empty() || needProcessGroupInfoBundleNames.empty()) {
+        return true;
+    }
+    bool ret = true;
+    for (const auto &item : needProcessGroupInfoBundleNames) {
+        auto bundleInfoIter = bundleInfos_.find(item.first);
+        if (bundleInfoIter == bundleInfos_.end()) {
+            ret = false;
+            continue;
+        }
+        std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos =
+            bundleInfoIter->second.GetDataGroupInfos();
+        if (dataGroupInfos.empty()) {
+            continue;
+        }
+        auto userIds = bundleInfoIter->second.GetUsers();
+        for (const auto &groudId : item.second) {
+            auto groupIndexIter = groupIdMap.find(groudId);
+            if (groupIndexIter == groupIdMap.end()) {
+                APP_LOGW("id map not found group %{public}s", groudId.c_str());
+                ret = false;
+                continue;
+            }
+            auto dataGroupInfoIter = dataGroupInfos.find(groudId);
+            if ((dataGroupInfoIter == dataGroupInfos.end()) || dataGroupInfoIter->second.empty()) {
+                continue;
+            }
+            for (int32_t userId : userIds) {
+                DataGroupInfo dataGroupInfo;
+                dataGroupInfo.dataGroupId = groudId;
+                dataGroupInfo.userId = userId;
+                dataGroupInfo.uuid = dataGroupInfoIter->second[0].uuid;
+                int32_t uid = userId * Constants::BASE_USER_RANGE + groupIndexIter->second + DATA_GROUP_UID_OFFSET;
+                dataGroupInfo.uid = uid;
+                dataGroupInfo.gid = uid;
+                bundleInfoIter->second.AddDataGroupInfo(groudId, dataGroupInfo);
+            }
+        }
+        if (!dataStorage_->SaveStorageBundleInfo(bundleInfoIter->second)) {
+            APP_LOGE("SaveStorageBundleInfo bundle %{public}s failed", item.first.c_str());
+            ret = false;
+        }
+    }
+    return ret;
+}
+
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 bool BundleDataMgr::UpdateOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {

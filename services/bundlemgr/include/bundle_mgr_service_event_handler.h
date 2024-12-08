@@ -627,6 +627,8 @@ private:
     void CheckALLResourceInfo();
     // Used to add bundle resource Info that does not exist in rdb when OTA.
     void static ProcessBundleResourceInfo();
+    // scan all bundle data group info
+    void ProcessAllBundleDataGroupInfo();
     // Used to send update failed event
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo);
     void UpdatePreinstallDB(const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap);
