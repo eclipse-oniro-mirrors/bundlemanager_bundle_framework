@@ -1544,6 +1544,15 @@ protected:
             "preloads": []
         }
     )"_json;
+
+    nlohmann::json metadataJson_ = R"(
+        {
+            "name": "test_metadata",
+            "resource": "$profile:backup_config",
+            "value": "$string: test_metadata_value",
+            "valueId": 218104525
+        }
+    )"_json;
     const std::string BASE_ABILITY_INFO = "baseAbilityInfos";
     // need modify with innerBundleInfoJson_
     const std::string abilityName = "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility";
@@ -1775,6 +1784,60 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ModuleInfoJsonSerializer_0100, Functi
     nlohmann::json toJsonObject = fromJsonInfo;
 
     EXPECT_TRUE(toJsonObject.dump() == sourceInfoJson.dump());
+}
+
+/**
+ * @tc.number: MetadataJsonSerializer_0100
+ * @tc.name: save bundle installation information to persist storage
+ * @tc.desc: 1.system running normally
+ *           2.successfully serialize and deserialize all right props in Metadata
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, MetadataJsonSerializer_0100, Function | SmallTest | Level1)
+{
+    nlohmann::json sourceInfoJson = metadataJson_;
+    // deserialize Metadata from json
+    Metadata fromJsonInfo = sourceInfoJson;
+    // serialize fromJsonInfo to json
+    nlohmann::json toJsonObject = fromJsonInfo;
+    EXPECT_TRUE(toJsonObject.dump() == sourceInfoJson.dump());
+}
+
+/**
+ * @tc.number: SaveMetadata_0100
+ * @tc.name: save bundle installation information to persist storage
+ * @tc.desc: 1.system running normally and no saved any bundle data
+ *           2.successfully save a new bundle installation information for the first time
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveMetadata_0100, Function | SmallTest | Level0)
+{
+    Metadata metadata;
+    nlohmann::json jsonObject = metadataJson_;
+    from_json(jsonObject, metadata);
+    EXPECT_EQ(metadata.name, "test_metadata");
+    EXPECT_EQ(metadata.resource, "$profile:backup_config");
+    EXPECT_EQ(metadata.value, "$string: test_metadata_value");
+    EXPECT_EQ(metadata.valueId, 218104525);
+}
+
+/**
+ * @tc.number: SaveMetadata_0200
+ * @tc.name: save bundle installation information to persist storage
+ * @tc.desc: 1.system running normally and no saved any bundle data
+ *           2.successfully save a new bundle installation information for the first time
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveMetadata_0200, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject;
+    Metadata metadata;
+    metadata.name = "test_metadata";
+    metadata.resource = "$profile:backup_config";
+    metadata.value = "$string: test_metadata_value";
+    metadata.valueId = 218104525;
+    to_json(jsonObject, metadata);
+    EXPECT_EQ(jsonObject["name"], "test_metadata");
+    EXPECT_EQ(jsonObject["resource"], "$profile:backup_config");
+    EXPECT_EQ(jsonObject["value"], "$string: test_metadata_value");
+    EXPECT_EQ(jsonObject["valueId"], 218104525);
 }
 
 /**
