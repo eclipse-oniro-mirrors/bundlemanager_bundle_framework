@@ -7722,10 +7722,14 @@ ErrCode BundleDataMgr::FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerB
 
 void BundleDataMgr::ScanAllBundleGroupInfo()
 {
+    // valid info, key: index, value: dataGroupId
+    std::map<int32_t, std::string> indexMap;
     // valid info, key: dataGroupId, value: index
     std::map<std::string, int32_t> groupIdMap;
     // invalid infos, key: bundleNames, value: dataGroupId
     std::map<std::string, std::set<std::string>> needProcessGroupInfoBundleNames;
+    // invalid GroupId
+    std::set<std::string> errorGroupIds;
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &info : bundleInfos_) {
         std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos = info.second.GetDataGroupInfos();
@@ -7740,24 +7744,48 @@ void BundleDataMgr::ScanAllBundleGroupInfo()
             }
             int32_t groupUidIndex = dataGroupItem.second[0].uid -
                 dataGroupItem.second[0].userId * Constants::BASE_USER_RANGE - DATA_GROUP_UID_OFFSET;
-            if (groupUidIndex < 0) {
-                APP_LOGW("groupUidIndex %{public}d is invaild", groupUidIndex);
-                continue;
+            if (indexMap.find(groupUidIndex) == indexMap.end()) {
+                indexMap[groupUidIndex] = dataGroupId;
             }
             if (groupIdMap.find(dataGroupId) == groupIdMap.end()) {
                 groupIdMap[dataGroupId] = groupUidIndex;
+            }
+            if ((indexMap[groupUidIndex] == dataGroupId) && (groupIdMap[dataGroupId] == groupUidIndex)) {
                 continue;
             }
-            if (groupIdMap[dataGroupId] != groupUidIndex) {
-                // invalid index
-                APP_LOGW("error index %{public}d groudId %{public}s -n %{public}s",
-                    groupUidIndex, dataGroupId.c_str(), info.first.c_str());
-                needProcessGroupInfoBundleNames[info.first].insert(dataGroupId);
+            if (indexMap[groupUidIndex] != dataGroupId) {
+                errorGroupIds.insert(dataGroupId);
             }
+            // invalid index or groupId
+            APP_LOGW("error index %{public}d groudId %{public}s -n %{public}s",
+                groupUidIndex, dataGroupId.c_str(), info.first.c_str());
+            needProcessGroupInfoBundleNames[info.first].insert(dataGroupId);
         }
     }
+    HandleGroupIdAndIndex(errorGroupIds, indexMap, groupIdMap);
     if (!HandleErrorDataGroupInfos(groupIdMap, needProcessGroupInfoBundleNames)) {
         APP_LOGE("process bundle data group failed");
+    }
+}
+
+void BundleDataMgr::HandleGroupIdAndIndex(
+    const std::set<std::string> errorGroupIds,
+    std::map<int32_t, std::string> &indexMap,
+    std::map<std::string, int32_t> &groupIdMap)
+{
+    if (errorGroupIds.empty() || indexMap.empty() || groupIdMap.empty()) {
+        return;
+    }
+    for (const auto &groupId : errorGroupIds) {
+        int32_t groupIndex = DATA_GROUP_INDEX_START;
+        for (int32_t index = DATA_GROUP_INDEX_START; index < DATA_GROUP_UID_OFFSET; ++index) {
+            if (indexMap.find(index) == indexMap.end()) {
+                groupIndex = index;
+                break;
+            }
+        }
+        groupIdMap[groupId] = groupIndex;
+        indexMap[groupIndex] = groupId;
     }
 }
 
