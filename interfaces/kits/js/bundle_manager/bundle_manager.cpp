@@ -2110,6 +2110,18 @@ void CleanBundleCacheFilesExec(napi_env env, void *data)
     }
     asyncCallbackInfo->err =
         InnerCleanBundleCacheCallback(asyncCallbackInfo->bundleName, asyncCallbackInfo->cleanCacheCallback);
+    if ((asyncCallbackInfo->err == NO_ERROR) && (asyncCallbackInfo->cleanCacheCallback != nullptr)) {
+        // wait for OnCleanCacheFinished
+        APP_LOGI("clean exec wait");
+        if (asyncCallbackInfo->cleanCacheCallback->WaitForCompletion()) {
+            asyncCallbackInfo->err = asyncCallbackInfo->cleanCacheCallback->GetErr() ?
+                NO_ERROR : ERROR_BUNDLE_SERVICE_EXCEPTION;
+        } else {
+            APP_LOGI("clean exec timeout");
+            asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
+        }
+    }
+    APP_LOGI("clean exec end");
 }
 
 void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
@@ -2117,12 +2129,6 @@ void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
     CleanBundleCacheCallbackInfo* asyncCallbackInfo = reinterpret_cast<CleanBundleCacheCallbackInfo*>(data);
     std::unique_ptr<CleanBundleCacheCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[1] = { 0 };
-    if ((asyncCallbackInfo->err == NO_ERROR) && (asyncCallbackInfo->cleanCacheCallback != nullptr)) {
-        // wait for OnCleanCacheFinished
-        uv_sem_wait(&(asyncCallbackInfo->cleanCacheCallback->uvSem_));
-        asyncCallbackInfo->err = asyncCallbackInfo->cleanCacheCallback->GetErr() ?
-            NO_ERROR : ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
     // implement callback or promise
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
