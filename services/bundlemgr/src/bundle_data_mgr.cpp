@@ -3588,6 +3588,18 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     return true;
 }
 
+void BundleDataMgr::GetBundleModuleNames(const std::string &bundleName,
+    std::vector<std::string> &moduleNameList) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("No modules of: %{public}s", bundleName.c_str());
+        return;
+    }
+    infoItem->second.GetModuleNames(moduleNameList);
+}
+
 bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const
 {
     std::vector<std::string> bundleNames;
