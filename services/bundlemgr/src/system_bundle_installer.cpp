@@ -99,6 +99,9 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
     const std::string &bundleName,
     Constants::AppType appType)
 {
+    if (!installParam.removable) {
+        return OTAInstallSystemBundle(filePaths, installParam, appType);
+    }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
