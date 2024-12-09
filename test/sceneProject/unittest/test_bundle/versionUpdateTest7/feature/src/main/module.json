@@ -1,0 +1,38 @@
+{
+  "module": {
+    "name": "feature",
+    "type": "feature",
+    "description": "$string:module_desc",
+    "mainElement": "FeatureAbility",
+    "deviceTypes": [
+      "2in1",
+      "default",
+      "tablet"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": true,
+    "pages": "$profile:main_pages",
+    "abilities": [
+      {
+        "name": "FeatureAbility",
+        "srcEntrance": "./ets/featureability/FeatureAbility.ts",
+        "description": "$string:FeatureAbility_desc",
+        "icon": "$media:icon",
+        "label": "$string:FeatureAbility_label",
+        "startWindowIcon": "$media:icon",
+        "startWindowBackground": "$color:start_window_background",
+        "visible": true,
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "action.system.home"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

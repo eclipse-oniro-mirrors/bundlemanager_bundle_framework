@@ -1,0 +1,16 @@
+{
+  "app": {
+    "bundleName": "com.example.versiontest",
+    "debug": true,
+    "icon": "$media:app_icon",
+    "iconId": 16777217,
+    "label": "$string:app_name",
+    "labelId": 16777216,
+    "apiReleaseType": "Release",
+    "minAPIVersion": 9,
+    "targetAPIVersion": 9,
+    "vendor": "example",
+    "versionCode": 2000000,
+    "versionName": "entry_v2"
+  }
+}
