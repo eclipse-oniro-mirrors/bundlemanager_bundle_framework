@@ -7789,6 +7789,9 @@ void BundleDataMgr::HandleGroupIdAndIndex(
         return;
     }
     for (const auto &groupId : errorGroupIds) {
+        if (groupIdMap.find(groupId) != groupIdMap.end()) {
+            continue;
+        }
         int32_t groupIndex = DATA_GROUP_INDEX_START;
         for (int32_t index = DATA_GROUP_INDEX_START; index < DATA_GROUP_UID_OFFSET; ++index) {
             if (indexMap.find(index) == indexMap.end()) {
