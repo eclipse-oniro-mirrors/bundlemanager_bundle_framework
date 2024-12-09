@@ -3067,9 +3067,12 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0400, Function | SmallTest | Leve
 HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0500, Function | SmallTest | Level1)
 {
     BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
-
     bool ret = extractor.Init();
+#ifdef USE_BUNDLE_EXTENSION
+    EXPECT_FALSE(ret);
+#else
     EXPECT_TRUE(ret);
+#endif
 }
 
 /**
