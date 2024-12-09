@@ -22,10 +22,12 @@
 #include "app_control_manager.h"
 #endif
 #include "app_log_tag_wrapper.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "free_install_params.h"
+#include "installd_client.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -147,6 +149,7 @@ constexpr const char* MODULE_HWASAN_ENABLED = "hwasanEnabled";
 constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
 constexpr const char* MODULE_DEBUG = "debug";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
+constexpr int32_t CPM_KEY_NOT_EXIST = 0x7A000005;
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -2395,7 +2398,6 @@ void InnerBundleInfo::ProcessBundleFlags(
             GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId,
                 bundleInfo.applicationInfo, appIndex);
         }
-        GetApplicationReservedFlagAdaptClone(bundleInfo.applicationInfo, appIndex);
     }
     bundleInfo.applicationInfo.appIndex = appIndex;
     GetBundleWithReqPermissionsV9(flags, userId, bundleInfo, appIndex);
@@ -2405,35 +2407,6 @@ void InnerBundleInfo::ProcessBundleFlags(
         bundleInfo.signatureInfo.appId = baseBundleInfo_->appId;
         bundleInfo.signatureInfo.fingerprint = baseApplicationInfo_->fingerprint;
         bundleInfo.signatureInfo.certificate = baseBundleInfo_->signatureInfo.certificate;
-    }
-}
-
-void InnerBundleInfo::GetApplicationReservedFlagAdaptClone(ApplicationInfo &appInfo, int32_t appIndex) const
-{
-    if (appIndex == 0) {
-        return;
-    }
-    bool encryptedKeyExisted = false;
-    bool hasFoundAppIndex = false;
-    for (auto &innerUserInfo : innerBundleUserInfos_) {
-        auto cloneIter = innerUserInfo.second.cloneInfos.find(std::to_string(appIndex));
-        if (cloneIter == innerUserInfo.second.cloneInfos.end()) {
-            continue;
-        }
-        hasFoundAppIndex = true;
-        encryptedKeyExisted = cloneIter->second.encryptedKeyExisted;
-        break;
-    }
-    if (!hasFoundAppIndex) {
-        APP_LOGE("index %{public}d not found", appIndex);
-        return;
-    }
-    if (encryptedKeyExisted) {
-        // Set the second bit to 1
-        appInfo.applicationReservedFlag |= static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED);
-    } else {
-        // Set the second bit to 0
-        appInfo.applicationReservedFlag &= ~(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED));
     }
 }
 
@@ -3488,26 +3461,14 @@ bool InnerBundleInfo::SetModuleRemovable(const std::string &moduleName, bool isE
 ErrCode InnerBundleInfo::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)
 {
     APP_LOGI("update encrypted key %{public}s %{public}d %{public}d", bundleName.c_str(), isExisted, appIndex);
-    if (appIndex == 0) {
-        if (isExisted) {
-            // Set the second bit to 1
-            SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED));
-        } else {
-            // Set the second bit to 0
-            ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED));
-        }
-        return ERR_OK;
+    if (isExisted) {
+        // Set the second bit to 1
+        SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED));
+    } else {
+        // Set the second bit to 0
+        ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED));
     }
-    bool hasFoundAppIndex = false;
-    for (auto &innerUserInfo : innerBundleUserInfos_) {
-        auto cloneIter = innerUserInfo.second.cloneInfos.find(std::to_string(appIndex));
-        if (cloneIter == innerUserInfo.second.cloneInfos.end()) {
-            continue;
-        }
-        hasFoundAppIndex = true;
-        cloneIter->second.encryptedKeyExisted = isExisted;
-    }
-    return hasFoundAppIndex ? ERR_OK : ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP;
+    return ERR_OK;
 }
 
 void InnerBundleInfo::DeleteModuleRemovableInfo(InnerModuleInfo &info, const std::string &stringUserId)
@@ -4054,6 +4015,94 @@ ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
     return ERR_OK;
+}
+
+void InnerBundleInfo::HandleOTACodeEncryption(bool &needResetFlag) const
+{
+    BundleType bundleType = GetApplicationBundleType();
+    if (bundleType != BundleType::APP && bundleType != BundleType::ATOMIC_SERVICE) {
+        return;
+    }
+    if ((GetApplicationReservedFlag() & static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION))
+        != static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION)) {
+        return;
+    }
+    if (innerBundleUserInfos_.empty()) {
+        APP_LOGE("user empty");
+        return;
+    }
+    CodeProtectBundleInfo codeProtectBundleInfo;
+    codeProtectBundleInfo.bundleName = GetBundleName();
+    codeProtectBundleInfo.versionCode = GetVersionCode();
+    codeProtectBundleInfo.applicationReservedFlag = GetApplicationReservedFlag();
+    codeProtectBundleInfo.uid = innerBundleUserInfos_.begin()->second.uid;
+    codeProtectBundleInfo.appIdentifier = GetAppIdentifier();
+    std::vector<CodeProtectBundleInfo> codeProtectBundleInfos { codeProtectBundleInfo };
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    auto res = bmsExtensionDataMgr.KeyOperation(codeProtectBundleInfos, CodeOperation::OTA_CHECK);
+    if (res != ERR_OK) {
+        APP_LOGE("ota check for %{public}s failed", GetBundleName().c_str());
+        if (res != CPM_KEY_NOT_EXIST) {
+            return;
+        }
+        needResetFlag = true;
+    }
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.bundleId = innerBundleUserInfos_.begin()->second.uid -
+        innerBundleUserInfos_.begin()->second.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
+    checkEncryptionParam.appIdentifier = GetAppIdentifier();
+    checkEncryptionParam.versionCode = GetVersionCode();
+    for (const auto &item : innerModuleInfos_) {
+        CheckHapEncryption(checkEncryptionParam, item.second);
+        CheckSoEncryption(checkEncryptionParam, item.first, item.second);
+    }
+}
+
+void InnerBundleInfo::CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam,
+    const InnerModuleInfo &moduleInfo) const
+{
+    CheckEncryptionParam param { checkEncryptionParam };
+    param.modulePath = moduleInfo.hapPath;
+    param.isCompressNativeLibrary = moduleInfo.compressNativeLibs;
+    param.installBundleType =
+        moduleInfo.distro.moduleType == Profile::MODULE_TYPE_SHARED ?
+        InstallBundleType::INTER_APP_HSP : InstallBundleType::HAP;
+    bool isEncrypted = false;
+    ErrCode result = InstalldClient::GetInstance()->CheckEncryption(param, isEncrypted);
+    if (result != ERR_OK) {
+        APP_LOGE("fail, error: %{public}d", result);
+    }
+}
+
+void InnerBundleInfo::CheckSoEncryption(const CheckEncryptionParam &checkEncryptionParam,
+    const std::string &requestPackage, const InnerModuleInfo &moduleInfo) const
+{
+    bool isCompressNativeLibrary = moduleInfo.compressNativeLibs;
+    if (!isCompressNativeLibrary) {
+        return;
+    }
+    std::string cpuAbi;
+    std::string nativeLibraryPath;
+    if (!FetchNativeSoAttrs(requestPackage, cpuAbi, nativeLibraryPath)) {
+        APP_LOGE("fetch %{public}s failed", requestPackage.c_str());
+        return;
+    }
+    std::string targetSoPath;
+    targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR).append(GetBundleName())
+        .append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath).append(ServiceConstants::PATH_SEPARATOR);
+    CheckEncryptionParam param { checkEncryptionParam };
+    param.modulePath = moduleInfo.hapPath;
+    param.cpuAbi = cpuAbi;
+    param.isCompressNativeLibrary = isCompressNativeLibrary;
+    param.installBundleType =
+        moduleInfo.distro.moduleType == Profile::MODULE_TYPE_SHARED ?
+        InstallBundleType::INTER_APP_HSP : InstallBundleType::HAP;
+    param.targetSoPath = targetSoPath;
+    bool isEncrypted = false;
+    ErrCode result = InstalldClient::GetInstance()->CheckEncryption(param, isEncrypted);
+    if (result != ERR_OK) {
+        APP_LOGE("fail, error: %{public}d", result);
+    }
 }
 
 void InnerBundleInfo::UpdateIsCompressNativeLibs()

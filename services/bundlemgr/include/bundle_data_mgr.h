@@ -1009,6 +1009,7 @@ public:
      */
     ErrCode GetContinueBundleNames(
         const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId);
+    void HandleOTACodeEncryption();
 
     ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled);
     void CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage = false);

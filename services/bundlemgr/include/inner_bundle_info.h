@@ -34,6 +34,7 @@
 #include "inner_app_quick_fix.h"
 #include "inner_bundle_clone_info.h"
 #include "inner_bundle_user_info.h"
+#include "ipc/check_encryption_param.h"
 #include "json_util.h"
 #include "preinstalled_application_info.h"
 #include "quick_fix/app_quick_fix.h"
@@ -2224,6 +2225,11 @@ public:
     std::set<int32_t> GetCloneBundleAppIndexes() const;
     static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
     void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
+    void HandleOTACodeEncryption(bool &needResetFlag) const;
+    void CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam,
+        const InnerModuleInfo &moduleInfo) const;
+    void CheckSoEncryption(const CheckEncryptionParam &checkEncryptionParam, const std::string &requestPackage,
+        const InnerModuleInfo &moduleInfo) const;
 
 private:
     bool IsExistLauncherAbility() const;
@@ -2247,7 +2253,6 @@ private:
     void InnerProcessRequestPermissions(
         const std::unordered_map<std::string, std::string> &moduleNameMap,
         std::vector<RequestPermission> &requestPermissions) const;
-    void GetApplicationReservedFlagAdaptClone(ApplicationInfo &appInfo, int32_t appIndex) const;
     void PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_t appIndex,
         const std::string &bundleName, const std::string &caller) const;
 

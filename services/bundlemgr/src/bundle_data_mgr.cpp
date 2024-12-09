@@ -52,6 +52,7 @@
 #include "bundle_overlay_data_manager.h"
 #endif
 #include "bundle_extractor.h"
+#include "scope_guard.h"
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
 #include "type_descriptor.h"
 #include "utd_client.h"
@@ -64,6 +65,7 @@
 #include "router_data_storage_rdb.h"
 #include "shortcut_data_storage_rdb.h"
 #include "ohos_account_kits.h"
+#include "xcollie_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -120,6 +122,8 @@ constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 constexpr int32_t MAX_APP_UID = 65535;
 constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr int8_t ONLY_ONE_USER = 1;
+constexpr unsigned int OTA_CODE_ENCRYPTION_TIMEOUT = 4 * 60;
+const std::string FUNCATION_HANDLE_OTA_CODE_ENCRYPTION = "BundleDataMgr::HandleOTACodeEncryption()";
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -8407,6 +8411,29 @@ ErrCode BundleDataMgr::GetOdidByBundleName(const std::string &bundleName, std::s
     return ERR_OK;
 }
 
+void BundleDataMgr::HandleOTACodeEncryption()
+{
+    int32_t timerId =
+        XCollieHelper::SetRecoveryTimer(FUNCATION_HANDLE_OTA_CODE_ENCRYPTION, OTA_CODE_ENCRYPTION_TIMEOUT);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+    APP_LOGI("begin");
+    std::vector<std::string> noEncrytedKeyBundles;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (const auto &item : bundleInfos_) {
+            bool needResetFlag = false;
+            item.second.HandleOTACodeEncryption(needResetFlag);
+            if (needResetFlag) {
+                noEncrytedKeyBundles.emplace_back(item.first);
+            }
+        }
+    }
+    for (const std::string &bundleName : noEncrytedKeyBundles) {
+        UpdateAppEncryptedStatus(bundleName, false, 0, true);
+    }
+    APP_LOGI("end");
+}
+
 void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
 {
     if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
@@ -9066,7 +9093,6 @@ ErrCode BundleDataMgr::UpdateAppEncryptedStatus(
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        LOG_E(BMS_TAG_DEFAULT, "%{public}s not exist", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto res = item->second.UpdateAppEncryptedStatus(bundleName, isExisted, appIndex);

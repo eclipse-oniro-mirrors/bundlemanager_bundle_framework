@@ -689,8 +689,6 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool ExtractEncryptedSoFiles(const InnerBundleInfo &info, const std::string &tmpSoPath, int32_t uid) const;
     void SetOldAppIsEncrypted(const InnerBundleInfo &oldInfo);
-    void GetAllConeCodeProtectBundleInfos(std::vector<CodeProtectBundleInfo> &infos,
-        const InnerBundleInfo &innerBundleInfo);
     bool UpdateEncryptedStatus();
     bool DeleteEncryptedStatus(const std::string &bundleName, int32_t uid);
     void ProcessEncryptedKeyExisted(int32_t res, uint32_t type,
