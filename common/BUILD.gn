@@ -30,6 +30,13 @@ config("bundle_all_dependent_config") {
 
 ohos_shared_library("libappexecfwk_common") {
   branch_protector_ret = "pac_ret"
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
   sources = [
     "log/src/app_log_wrapper.cpp",
     "utils/src/bundle_file_util.cpp",
@@ -40,8 +47,16 @@ ohos_shared_library("libappexecfwk_common") {
     "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
   ]
-  cflags = [ "-Os" ]
-  cflags_cc = [ "-Os" ]
+
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
   if (use_musl) {
     if (musl_use_jemalloc && musl_use_jemalloc_dfx_intf) {
       defines += [ "CONFIG_USE_JEMALLOC_DFX_INTF" ]

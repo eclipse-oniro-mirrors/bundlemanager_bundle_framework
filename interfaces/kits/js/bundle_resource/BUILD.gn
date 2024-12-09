@@ -15,6 +15,16 @@ import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
 ohos_shared_library("bundleresourcemanager") {
+  branch_protector_ret = "pac_ret"
+
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
   include_dirs = [
     "${inner_api_path}/bundlemgr_resource/include",
     "${kits_path}/js/common",
@@ -32,8 +42,15 @@ ohos_shared_library("bundleresourcemanager") {
     "../common:bundle_napi_common",
   ]
 
-  cflags = [ "-Os" ]
-  cflags_cc = [ "-Os" ]
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
 
   external_deps = [
     "c_utils:utils",

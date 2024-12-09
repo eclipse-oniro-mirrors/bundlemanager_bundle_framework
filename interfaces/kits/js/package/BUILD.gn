@@ -15,13 +15,30 @@ import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
 ohos_shared_library("package") {
+  branch_protector_ret = "pac_ret"
+
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
   defines = [
     "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
   ]
 
-  cflags = [ "-Os" ]
-  cflags_cc = [ "-Os" ]
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
 
   sources = [
     "native_module.cpp",
