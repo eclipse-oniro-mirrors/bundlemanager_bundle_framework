@@ -631,8 +631,14 @@ private:
     ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);
     ErrCode MoveFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     std::string GetTempHapPath(const InnerBundleInfo &info);
-    ErrCode SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    ErrCode CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const InnerBundleInfo &oldInfo);
+    ErrCode CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const InnerBundleInfo &oldInfo);
+    void UpdateEncryptionStatus(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo);
+    bool IsBundleEncrypted(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
     void UpdateAppInstallControlled(int32_t userId);
     ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
