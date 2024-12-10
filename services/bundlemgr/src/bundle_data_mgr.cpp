@@ -9315,33 +9315,42 @@ ErrCode BundleDataMgr::GetBundleNameByAppId(const std::string &appId, std::strin
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
-ErrCode BundleDataMgr::GetDirForAtomicService(const std::string &bundleName, AccountSA::OhosAccountInfo &accountInfo,
-    std::string &dataDir) const
+ErrCode BundleDataMgr::GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const
 {
+    APP_LOGD("start GetDirForAtomicService name: %{public}s", bundleName.c_str());
+    AccountSA::OhosAccountInfo accountInfo;
+    auto ret = AccountSA::OhosAccountKits::GetInstance().GetOhosAccountInfo(accountInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetOhosAccountInfo failed, errCode: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED;
+    }
+    dataDir = ATOMIC_SERVICE_DIR_PREFIX + accountInfo.uid_ + PLUS + bundleName;
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetDirForAtomicServiceByUserId(const std::string &bundleName, int32_t userId,
+    AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const
+{
+    APP_LOGD("start GetDirForAtomicServiceByUserId name: %{public}s userId: %{public}d", bundleName.c_str(), userId);
     if (accountInfo.uid_.empty()) {
-        auto ret = AccountSA::OhosAccountKits::GetInstance().GetOhosAccountInfo(accountInfo);
+        auto ret = AccountSA::OhosAccountKits::GetInstance().GetOsAccountDistributedInfo(userId, accountInfo);
         if (ret != ERR_OK) {
-            APP_LOGE("GetOhosAccountInfo failed, errCode: %{public}d", ret);
-            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+            APP_LOGE("GetOsAccountDistributedInfo failed, errCode: %{public}d", ret);
+            return ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED;
         }
     }
     dataDir = ATOMIC_SERVICE_DIR_PREFIX + accountInfo.uid_ + PLUS + bundleName;
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndexAndType(const std::string &bundleName, const int32_t appIndex,
-    const BundleType type, AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const
+std::string BundleDataMgr::GetDirForApp(const std::string &bundleName, const int32_t appIndex) const
 {
-    if (type == BundleType::ATOMIC_SERVICE) {
-        return GetDirForAtomicService(bundleName, accountInfo, dataDir);
-    }
-
+    APP_LOGD("start GetDirForApp name: %{public}s appIndex: %{public}d", bundleName.c_str(), appIndex);
     if (appIndex == 0) {
-        dataDir = bundleName;
+        return bundleName;
     } else {
-        dataDir = CLONE_APP_DIR_PREFIX + std::to_string(appIndex) + PLUS + bundleName;
+        return CLONE_APP_DIR_PREFIX + std::to_string(appIndex) + PLUS + bundleName;
     }
-    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
@@ -9351,10 +9360,13 @@ ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleNa
     if (appIndex < 0) {
         return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
     }
-    AccountSA::OhosAccountInfo accountInfo;
-    BundleType type;
+    BundleType type = BundleType::APP;
     GetBundleType(bundleName, type);
-    return GetDirByBundleNameAndAppIndexAndType(bundleName, appIndex, type, accountInfo, dataDir);
+    if (type == BundleType::ATOMIC_SERVICE) {
+        return GetDirForAtomicService(bundleName, dataDir);
+    }
+    dataDir = GetDirForApp(bundleName, appIndex);
+    return ERR_OK;
 }
 
 std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
@@ -9374,6 +9386,23 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesByInnerBundleInfo(const In
         cloneAppIndexes.emplace_back(cloneInfo.second.appIndex);
     }
     return cloneAppIndexes;
+}
+
+ErrCode BundleDataMgr::GetBundleDir(int32_t userId, BundleType type, AccountSA::OhosAccountInfo &accountInfo,
+    BundleDir &bundleDir) const
+{
+    APP_LOGD("start GetBundleDir");
+    if (type == BundleType::ATOMIC_SERVICE) {
+        std::string dataDir;
+        auto ret = GetDirForAtomicServiceByUserId(bundleDir.bundleName, userId, accountInfo, dataDir);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+        bundleDir.dir = dataDir;
+    } else {
+        bundleDir.dir = GetDirForApp(bundleDir.bundleName, bundleDir.appIndex);
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) const
@@ -9405,14 +9434,13 @@ ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &
             allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
         }
         for (int32_t appIndex: allAppIndexes) {
-            std::string dataDir;
-            if (GetDirByBundleNameAndAppIndexAndType(bundleName, appIndex, type, accountInfo, dataDir) != ERR_OK) {
-                return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-            }
             BundleDir bundleDir;
             bundleDir.bundleName = bundleName;
             bundleDir.appIndex = appIndex;
-            bundleDir.dir = dataDir;
+            auto ret = GetBundleDir(responseUserId, type, accountInfo, bundleDir);
+            if (ret != ERR_OK) {
+                return ret;
+            }
             bundleDirs.emplace_back(bundleDir);
         }
     }
