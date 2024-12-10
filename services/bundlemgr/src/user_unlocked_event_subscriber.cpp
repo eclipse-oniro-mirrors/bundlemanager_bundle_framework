@@ -152,7 +152,9 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
             APP_LOGW("failed to CreateBundleDataDir");
         }
     }
-    CreateDataGroupDir(bundleInfo, userId);
+    if (elDir == ServiceConstants::BUNDLE_EL[1]) {
+        CreateDataGroupDir(bundleInfo, userId);
+    }
     return true;
 }
 
@@ -219,7 +221,7 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
     }
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
         std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        if (BundleUtil::IsExistDir(dir)) {
+        if (BundleUtil::IsPathInformationConsistent(dir, dataGroupInfo.uid, dataGroupInfo.gid)) {
             continue;
         }
         APP_LOGI("create group dir -n %{public}s uid %{public}d -u %{public}d", bundleInfo.name.c_str(),

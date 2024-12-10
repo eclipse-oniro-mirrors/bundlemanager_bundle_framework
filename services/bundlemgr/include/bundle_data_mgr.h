@@ -894,6 +894,12 @@ public:
     ErrCode DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const std::string &extName, const std::string &mimeType);
     bool QueryAppGalleryAbilityName(std::string &bundleName, std::string &abilityName);
+    void ScanAllBundleGroupInfo();
+    void HandleGroupIdAndIndex(const std::set<std::string> errorGroupIds,
+        std::map<int32_t, std::string> &indexMap, std::map<std::string, int32_t> &groupIdMap);
+    bool HandleErrorDataGroupInfos(
+        const std::map<std::string, int32_t> &groupIdMap,
+        const std::map<std::string, std::set<std::string>> &needProcessGroupInfoBundleNames);
     bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId, std::vector<DataGroupInfo> &infos) const;
     bool GetGroupDir(const std::string &dataGroupId, std::string &dir,
         int32_t userId = Constants::UNSPECIFIED_USERID) const;

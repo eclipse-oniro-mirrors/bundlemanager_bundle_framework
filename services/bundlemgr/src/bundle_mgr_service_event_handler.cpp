@@ -1098,6 +1098,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
     ProcessBundleResourceInfo();
+    ProcessAllBundleDataGroupInfo();
 #ifdef CHECK_ELDIR_ENABLED
     ProcessCheckAppDataDir();
 #endif
@@ -3086,6 +3087,18 @@ void BMSEventHandler::ProcessBundleResourceInfo()
         BundleResourceHelper::AddResourceInfoByBundleName(bundleName, Constants::START_USERID);
     }
     LOG_I(BMS_TAG_DEFAULT, "ProcessBundleResourceInfo end");
+}
+
+void BMSEventHandler::ProcessAllBundleDataGroupInfo()
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
+        return;
+    }
+    dataMgr->ScanAllBundleGroupInfo();
+    LOG_I(BMS_TAG_DEFAULT, "end");
 }
 
 void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)

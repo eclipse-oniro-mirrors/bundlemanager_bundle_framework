@@ -2906,7 +2906,7 @@ ErrCode BaseBundleInstaller::CreateDataGroupDirs(
     if (hapVerifyRes.empty()) {
         LOG_W(BMS_TAG_INSTALLER, "hapVerifyRes empty");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
-     }
+    }
     std::unordered_set<std::string> groupIds;
     GetDataGroupIds(hapVerifyRes, groupIds);
     dataMgr_->GenerateDataGroupInfos(bundleName_, groupIds, userId_);
