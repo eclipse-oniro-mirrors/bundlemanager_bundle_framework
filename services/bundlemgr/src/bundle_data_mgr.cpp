@@ -2945,12 +2945,14 @@ void BundleDataMgr::PostProcessAnyUserFlags(
         if (withAnyUser) {
             const std::map<std::string, InnerBundleUserInfo>& innerUserInfos
                 = innerBundleInfo.GetInnerBundleUserInfos();
+            uint32_t flagOtherInstalled = static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+            uint32_t applicationFlags = static_cast<uint32_t>(bundleInfo.applicationInfo.applicationFlags);
             if (!innerBundleInfo.HasInnerBundleUserInfo(originalUserId)) {
-                bundleInfo.applicationInfo.applicationFlags |=
-                    static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+                bundleInfo.applicationInfo.applicationFlags =
+                    static_cast<int32_t>(applicationFlags | flagOtherInstalled);
             } else if (innerUserInfos.size() > 1) {
-                bundleInfo.applicationInfo.applicationFlags |=
-                    static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+                bundleInfo.applicationInfo.applicationFlags =
+                    static_cast<int32_t>(applicationFlags | flagOtherInstalled);
             }
         }
     }
