@@ -274,8 +274,10 @@ private:
 
     mutable std::atomic<int> transactId_ = 0;
     std::condition_variable cv_;
-    std::mutex mapMutex_;
+    // maintain the order of using locks. mutex_ >> remoteObejctMutex_ >> mapMutex_
     std::mutex mutex_;
+    std::mutex remoteObejctMutex_;
+    std::mutex mapMutex_;
     sptr<ServiceCenterConnection> serviceCenterConnection_;
     std::map<std::string, FreeInstallParams> freeInstallParamsMap_;
     sptr<IRemoteObject> serviceCenterRemoteObject_;

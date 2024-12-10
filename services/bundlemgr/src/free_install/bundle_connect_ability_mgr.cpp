@@ -168,6 +168,8 @@ void BundleConnectAbilityMgr::PreloadRequest(int32_t flag, const TargetAbilityIn
         LOG_E(BMS_TAG_DEFAULT, "failed to WriteRemoteObject callbcak");
         return;
     }
+    std::unique_lock<std::mutex> mutexLock(mutex_);
+    std::lock_guard<std::mutex> remoteObejctMutexLock(remoteObejctMutex_);
     serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject_ == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "failed to get remote object");
@@ -440,6 +442,7 @@ void BundleConnectAbilityMgr::LoadDownloadService() const
 
 void BundleConnectAbilityMgr::DisconnectAbility()
 {
+    std::unique_lock<std::mutex> mutexLock(mutex_);
     if (serviceCenterConnection_ != nullptr) {
         LOG_I(BMS_TAG_DEFAULT, "DisconnectAbility");
         int result = AbilityManagerClient::GetInstance()->DisconnectAbility(serviceCenterConnection_);
@@ -493,6 +496,7 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
             if (connectState_ != ServiceCenterConnectState::CONNECTED) {
                 WaitFromConnected(lock);
             }
+            std::lock_guard<std::mutex> remoteObejctMutexLock(remoteObejctMutex_);
             serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
         } else {
             LOG_E(BMS_TAG_DEFAULT, "ConnectAbility fail result = %{public}d", result);
@@ -607,6 +611,12 @@ void BundleConnectAbilityMgr::SendCallBack(const std::string &transactId, const 
 void BundleConnectAbilityMgr::DeathRecipientSendCallback()
 {
     LOG_I(BMS_TAG_DEFAULT, "DeathRecipientSendCallback start");
+    std::unique_lock<std::mutex> mutexLock(mutex_);
+    connectState_ = ServiceCenterConnectState::DISCONNECTED;
+    {
+        std::lock_guard<std::mutex> remoteObejctMutexLock(remoteObejctMutex_);
+        serviceCenterRemoteObject_ = nullptr;
+    }
     std::unique_lock<std::mutex> lock(mapMutex_);
     LOG_I(BMS_TAG_DEFAULT, "freeInstallParamsMap size = %{public}zu", freeInstallParamsMap_.size());
     for (auto &it : freeInstallParamsMap_) {
@@ -614,9 +624,6 @@ void BundleConnectAbilityMgr::DeathRecipientSendCallback()
     }
     freeInstallParamsMap_.clear();
     lock.unlock();
-
-    connectState_ = ServiceCenterConnectState::DISCONNECTED;
-    serviceCenterRemoteObject_ = nullptr;
     cv_.notify_all();
 
     LOG_I(BMS_TAG_DEFAULT, "DeathRecipientSendCallback end");
@@ -762,6 +769,8 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
         SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
         return;
     }
+    std::unique_lock<std::mutex> mutexLock(mutex_);
+    std::lock_guard<std::mutex> remoteObejctMutexLock(remoteObejctMutex_);
     serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject_ == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "failed to get remote object");
@@ -792,6 +801,7 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
 bool BundleConnectAbilityMgr::SendRequest(int32_t code, MessageParcel &data, MessageParcel &reply)
 {
     LOG_I(BMS_TAG_DEFAULT, "BundleConnectAbilityMgr::SendRequest to service center");
+    std::unique_lock<std::mutex> mutexLock(mutex_);
     serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject_ == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "failed to get remote object");
