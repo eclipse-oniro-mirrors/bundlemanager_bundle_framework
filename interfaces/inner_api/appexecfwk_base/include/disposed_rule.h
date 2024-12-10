@@ -30,6 +30,10 @@ enum class ComponentType {
     UI_EXTENSION = 2,
 };
 
+enum class UninstallComponentType {
+    EXTENSION = 1,
+};
+
 enum class DisposedType {
     BLOCK_APPLICATION = 1,
     BLOCK_ABILITY = 2,
@@ -62,7 +66,7 @@ public:
 struct UninstallDisposedRule : public Parcelable {
 public:
     std::shared_ptr<AAFwk::Want> want = nullptr;
-    ComponentType componentType = ComponentType::UI_ABILITY;
+    UninstallComponentType uninstallComponentType = UninstallComponentType::EXTENSION;
     int32_t priority = 0;
 
     bool ReadFromParcel(Parcel &parcel);

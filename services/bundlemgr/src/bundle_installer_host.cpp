@@ -15,8 +15,12 @@
 
 #include "bundle_installer_host.h"
 
+#ifdef ABILITY_RUNTIME_ENABLE
 #include "ability_manager_client.h"
+#endif
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_manager.h"
+#endif
 #include "app_log_tag_wrapper.h"
 #include "bundle_clone_installer.h"
 #include "bundle_framework_core_ipc_interface_code.h"
@@ -926,6 +930,7 @@ void BundleInstallerHost::HandleInstallExisted(MessageParcel &data, MessageParce
 bool BundleInstallerHost::CheckUninstallDisposedRule(const std::string &bundleName, int32_t userId,
                                                      int32_t appIndex, bool isKeepData)
 {
+#if defined (BUNDLE_FRAMEWORK_APP_CONTROL) && defined (ABILITY_RUNTIME_ENABLE)
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "null dataMgr");
@@ -959,15 +964,24 @@ bool BundleInstallerHost::CheckUninstallDisposedRule(const std::string &bundleNa
     rule.want->SetParam(BMS_PARA_USER_ID, userId);
     rule.want->SetParam(BMS_PARA_APP_INDEX, appIndex);
     rule.want->SetParam(BMS_PARA_IS_KEEP_DATA, isKeepData);
-    std::string identity = IPCSkeleton::ResetCallingIdentity();
-    ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->StartExtensionAbility(
-        *rule.want, nullptr, userId, AppExecFwk::ExtensionAbilityType::SERVICE);
-    IPCSkeleton::SetCallingIdentity(identity);
-    if (err != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "StartExtensionAbility failed code:%{public}d", err);
+
+    if (rule.uninstallComponentType == UninstallComponentType::EXTENSION) {
+        std::string identity = IPCSkeleton::ResetCallingIdentity();
+        ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->StartExtensionAbility(
+            *rule.want, nullptr, userId, AppExecFwk::ExtensionAbilityType::SERVICE);
+        IPCSkeleton::SetCallingIdentity(identity);
+        if (err != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "start extension ability failed code:%{public}d", err);
+        }
+    } else {
+        LOG_E(BMS_TAG_INSTALLER, "uninstallComponentType wrong type:%{public}d", rule.uninstallComponentType);
     }
 
     return true;
+#else
+    LOG_I(BMS_TAG_INSTALLER, "BUNDLE_FRAMEWORK_APP_CONTROL or ABILITY_RUNTIME_ENABLE is false");
+    return false;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
