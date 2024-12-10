@@ -17,7 +17,9 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_CLONE_COMMON_H
 
 #include <string>
+#include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 #include "string_ex.h"
 
 namespace OHOS {
@@ -26,7 +28,6 @@ namespace {
 constexpr const char* CLONE_DIR_PATH_PREFIX = "clone";
 constexpr const char* PLUS_SIGN = "+";
 constexpr const char* MINUS_SIGN = "-";
-constexpr const char* CLONE_PREFIX = "+clone-";
 }
 
 class BundleCloneCommonHelper {
@@ -44,15 +45,18 @@ public:
 
     static bool ParseCloneDataDir(const std::string &cloneDirName, std::string &bundleName, int32_t &appIndex)
     {
-        if (cloneDirName.find(CLONE_PREFIX) != 0) {
+        if (cloneDirName.find(ServiceConstants::CLONE_PREFIX) != 0) {
+            APP_LOGE("prefix invalid %{public}s", cloneDirName.c_str());
             return false;
         }
-        std::string tempStr = cloneDirName.substr(strlen(CLONE_PREFIX));
+        std::string tempStr = cloneDirName.substr(strlen(ServiceConstants::CLONE_PREFIX));
         size_t plusPos = tempStr.find(PLUS_SIGN);
         if (plusPos == std::string::npos) {
+            APP_LOGE("plus sign not found %{public}s", cloneDirName.c_str());
             return false;
         }
         if (!OHOS::StrToInt(tempStr.substr(0, plusPos), appIndex)) {
+            APP_LOGE("StrToInt failed %{public}s", cloneDirName.c_str());
             return false;
         }
         bundleName = tempStr.substr(plusPos + 1);

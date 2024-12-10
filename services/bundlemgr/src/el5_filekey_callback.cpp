@@ -38,7 +38,7 @@ void El5FilekeyCallback::OnRegenerateAppKey(std::vector<Security::AccessToken::A
     for (auto &info : infos) {
         int32_t appIndex = 0;
         std::string bundleName = info.bundleName;
-        if (info.bundleName.find("+clone-") == 0 &&
+        if (info.bundleName.find(ServiceConstants::CLONE_PREFIX) == 0 &&
             !BundleCloneCommonHelper::ParseCloneDataDir(info.bundleName, bundleName, appIndex)) {
             APP_LOGE("parse clone name failed %{public}s", info.bundleName.c_str());
             continue;
@@ -67,6 +67,7 @@ void El5FilekeyCallback::OnRegenerateAppKey(std::vector<Security::AccessToken::A
         }
         // update the keyId to the bundleInfo
         bundleInfo.SetkeyId(info.userId, keyId, appIndex);
+        bundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         if (!dataMgr->UpdateInnerBundleInfo(bundleInfo)) {
             APP_LOGE("save keyId failed");
             continue;
