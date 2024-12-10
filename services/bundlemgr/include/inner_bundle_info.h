@@ -858,6 +858,15 @@ public:
         userId_ = userId;
     }
 
+    const std::unordered_set<int32_t> GetUsers() const
+    {
+        std::unordered_set<int32_t> userIds;
+        for (const auto &userInfoItem : innerBundleUserInfos_) {
+            userIds.insert(userInfoItem.second.bundleUserInfo.userId);
+        }
+        return userIds;
+    }
+
     // only used in install progress with newInfo
     std::string GetCurrentModulePackage() const
     {
@@ -1943,6 +1952,14 @@ public:
     const std::unordered_map<std::string, std::vector<DataGroupInfo>> GetDataGroupInfos() const
     {
         return dataGroupInfos_;
+    }
+
+    void DeleteDataGroupInfo(const std::string &dataGroupId)
+    {
+        if (dataGroupInfos_.find(dataGroupId) == dataGroupInfos_.end()) {
+            return;
+        }
+        dataGroupInfos_.erase(dataGroupId);
     }
 
     void AddDataGroupInfo(const std::string &dataGroupId, const DataGroupInfo &info)
