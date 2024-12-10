@@ -240,14 +240,15 @@ ErrCode BaseBundleInstaller::InstallBundle(
             result);
     }
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
-    LOG_D(BMS_TAG_INSTALLER, "finish to process bundle install");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallBundle finished -n %{public}s -u %{public}d",
+        bundleName_.c_str(), installParam.userId);
     return result;
 }
 
 ErrCode BaseBundleInstaller::InstallBundleByBundleName(
     const std::string &bundleName, const InstallParam &installParam)
 {
-    LOG_I(BMS_TAG_INSTALLER, "begin to process bundle install by bundleName, which is %{public}s", bundleName.c_str());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallBundleByBundleName -n %{public}s", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
 
     int32_t uid = Constants::INVALID_UID;
@@ -751,12 +752,11 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_I(BMS_TAG_INSTALLER, "-n %{public}s -u %{public}d -f %{public}hhd",
-        bundleName_.c_str(), userId_, installParam.installFlag);
+    LOG_I(BMS_TAG_INSTALLER, "-n %{public}s -u %{public}d -f %{public}hhd isAppExist:%{public}d",
+        bundleName_.c_str(), userId_, installParam.installFlag, isAppExist_);
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    LOG_I(BMS_TAG_INSTALLER, "isAppExist:%{public}d", isAppExist_);
     SetOldAppIsEncrypted(oldInfo);
 
     KillRelatedProcessIfArkWeb(bundleName_, isAppExist_, installParam.isOTA);
@@ -869,7 +869,6 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
     auto it = newInfos.begin();
     if (!isAppExist_) {
-        LOG_I(BMS_TAG_INSTALLER, "app is not exist");
         if (!CheckInstallOnKeepData(bundleName_, installParam.isOTA, newInfos)) {
             LOG_E(BMS_TAG_INSTALLER, "check failed");
             return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
@@ -880,8 +879,6 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         newInnerBundleUserInfo.bundleUserInfo.userId = userId_;
         newInnerBundleUserInfo.bundleName = bundleName_;
         newInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
-        LOG_I(BMS_TAG_INSTALLER, "SetIsFreeInstallApp(%{public}d)",
-            InstallFlag::FREE_INSTALL == installParam.installFlag);
         newInfo.SetIsFreeInstallApp(InstallFlag::FREE_INSTALL == installParam.installFlag);
         SetApplicationFlagsForPreinstallSource(newInfos, installParam);
         result = ProcessBundleInstallStatus(newInfo, uid);
@@ -5893,7 +5890,7 @@ ErrCode BaseBundleInstaller::CheckBundleInBmsExtension(const std::string &bundle
 {
     LOG_D(BMS_TAG_INSTALLER, "start to check bundle(%{public}s) from bms extension", bundleName.c_str());
     if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
-        LOG_W(BMS_TAG_INSTALLER, "broker is not started");
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "broker is not started");
         return ERR_OK;
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
