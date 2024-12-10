@@ -26,6 +26,8 @@ enum CodeOperation {
     ADD = 1,
     UPDATE = 2,
     DELETE = 3,
+    OTA_CHECK = 4,
+    OTA_CHECK_FINISHED = 5,
 };
 
 struct CodeProtectBundleInfo : public Parcelable {
@@ -34,6 +36,7 @@ struct CodeProtectBundleInfo : public Parcelable {
     int32_t appIndex = 0;
     uint32_t versionCode = 0;
     uint32_t applicationReservedFlag = 0;
+    std::string appIdentifier;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

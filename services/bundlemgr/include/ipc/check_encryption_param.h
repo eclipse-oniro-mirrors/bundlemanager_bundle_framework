@@ -28,6 +28,13 @@ enum class InstallBundleType : uint8_t {
     HQF = 3,
 };
 
+struct CodeCryptoHapInfo {
+    std::string appIdentifier;
+    uint32_t versionCode;
+    InstallBundleType type;
+    bool libCompressed;
+};
+
 struct CheckEncryptionParam : public Parcelable {
     std::string modulePath;
     std::string cpuAbi;
@@ -35,6 +42,8 @@ struct CheckEncryptionParam : public Parcelable {
     bool isCompressNativeLibrary = false;
     int32_t bundleId = -1;
     InstallBundleType installBundleType = InstallBundleType::HAP;
+    std::string appIdentifier;
+    uint32_t versionCode;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

@@ -33,7 +33,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
-    uint32_t, bool &, const int32_t, const bool &);
+    const CodeCryptoHapInfo &, bool &);
 
 class InstalldOperator {
 public:
@@ -265,8 +265,8 @@ public:
     static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
 
 #if defined(CODE_ENCRYPTION_ENABLE)
-    static bool EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap, int32_t bundleId,
-        bool &isEncryption, InstallBundleType installBundleType, bool isCompressNativeLibrary);
+    static bool EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap,
+        const CodeCryptoHapInfo &hapInfo, bool &isEncryption);
 #endif
 
     static bool CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);

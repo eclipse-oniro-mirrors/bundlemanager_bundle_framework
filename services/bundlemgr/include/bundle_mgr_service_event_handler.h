@@ -567,6 +567,8 @@ private:
     static bool GetValueFromJson(nlohmann::json &jsonObject);
     static void PatchSystemHspInstall(const std::string &path, bool isOta);
     static void PatchSystemBundleInstall(const std::string &path, bool isOta);
+    void HandleOTACodeEncryption();
+    void SaveCodeProtectFlag();
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();

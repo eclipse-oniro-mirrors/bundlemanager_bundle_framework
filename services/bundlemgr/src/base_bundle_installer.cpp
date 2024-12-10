@@ -3735,6 +3735,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     if (!infos.empty()) {
         bundleType_ = infos.begin()->second.GetApplicationBundleType();
     }
+    dataMgr_->UpdateAppEncryptedStatus(infos.begin()->second.GetBundleName(), false, 0, true);
     GenerateOdid(infos, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
     /* At this place, hapVerifyRes cannot be empty and unnecessary to check it */
@@ -4544,6 +4545,7 @@ bool BaseBundleInstaller::UpdateEncryptedStatus()
     info.versionCode = innerBundleInfo.GetVersionCode();
     info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
     info.uid = innerBundleInfo.GetUid(userId_);
+    info.appIdentifier = innerBundleInfo.GetAppIdentifier();
     std::vector<CodeProtectBundleInfo> infos { info };
     bool oldAppEncrypted = oldApplicationReservedFlag_ &
         static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
@@ -4564,7 +4566,6 @@ bool BaseBundleInstaller::UpdateEncryptedStatus()
     }
     if (isAppExist_ && newAppEncrypted) {
         // update a new encrypted app, need to update operation
-        GetAllConeCodeProtectBundleInfos(infos, innerBundleInfo);
         auto res = bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::UPDATE);
         ProcessEncryptedKeyExisted(res, CodeOperation::UPDATE, infos);
         return res == ERR_OK;
@@ -4609,32 +4610,6 @@ void BaseBundleInstaller::ProcessEncryptedKeyExisted(int32_t res, uint32_t type,
     }
 }
 
-void BaseBundleInstaller::GetAllConeCodeProtectBundleInfos(std::vector<CodeProtectBundleInfo> &infos,
-    const InnerBundleInfo &innerBundleInfo)
-{
-    if (!InitDataMgr()) {
-        LOG_E(BMS_TAG_INSTALLER, "init failed");
-        return;
-    }
-    auto innerBundleUserInfos = innerBundleInfo.GetInnerBundleUserInfos();
-    std::set<int32_t> appIndexSet;
-    for (const auto &item : innerBundleUserInfos) {
-        for (const auto &cloneInfo : item.second.cloneInfos) {
-            if (appIndexSet.find(cloneInfo.second.appIndex) != appIndexSet.end()) {
-                continue;
-            }
-            appIndexSet.insert(cloneInfo.second.appIndex);
-            CodeProtectBundleInfo info;
-            info.bundleName = bundleName_;
-            info.appIndex = cloneInfo.second.appIndex;
-            info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
-            info.uid = cloneInfo.second.uid;
-            info.versionCode = innerBundleInfo.GetVersionCode();
-            infos.emplace_back(info);
-        }
-    }
-}
-
 bool BaseBundleInstaller::DeleteEncryptedStatus(const std::string &bundleName, int32_t uid)
 {
     bool oldAppEncrypted = oldApplicationReservedFlag_ &
@@ -4647,6 +4622,7 @@ bool BaseBundleInstaller::DeleteEncryptedStatus(const std::string &bundleName, i
     info.applicationReservedFlag = oldApplicationReservedFlag_;
     info.versionCode = versionCode_;
     info.uid = uid;
+    info.appIdentifier = appIdentifier_;
     std::vector<CodeProtectBundleInfo> infos { info };
     BmsExtensionDataMgr bmsExtensionDataMgr;
     return bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::DELETE) == ERR_OK;
@@ -5344,6 +5320,8 @@ ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std:
     int uid = info.GetUid(userId_);
     param.bundleId = uid - userId_ * Constants::BASE_USER_RANGE;
     param.isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
+    param.appIdentifier = info.GetAppIdentifier();
+    param.versionCode = info.GetVersionCode();
     if (info.GetModuleTypeByPackage(modulePackage_) == Profile::MODULE_TYPE_SHARED) {
         param.installBundleType = InstallBundleType::INTER_APP_HSP;
     }
@@ -5587,6 +5565,8 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         int uid = info.second.GetUid(userId_);
         param.bundleId = uid - userId_ * Constants::BASE_USER_RANGE;
         param.isCompressNativeLibrary = info.second.IsCompressNativeLibs(info.second.GetCurModuleName());
+        param.appIdentifier = info.second.GetAppIdentifier();
+        param.versionCode = info.second.GetVersionCode();
         if (info.second.GetModuleTypeByPackage(modulePackage_) == Profile::MODULE_TYPE_SHARED) {
             param.installBundleType = InstallBundleType::INTER_APP_HSP;
         }
