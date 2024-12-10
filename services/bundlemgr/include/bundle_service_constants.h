@@ -89,7 +89,7 @@ constexpr int NOT_EXIST_USERID = -5;
 constexpr int PATH_MAX_SIZE = 256;
 constexpr int32_t API_VERSION_NINE = 9;
 constexpr int32_t API_VERSION_TWELVE = 12;
-constexpr int32_t API_VERSION_THIRTEEN = 13;
+constexpr int32_t API_VERSION_FIFTEEN = 15;
 constexpr int32_t API_VERSION_MOD = 1000;
 constexpr int32_t BACKUP_DEFAULT_APP_KEY = -2;
 // native so

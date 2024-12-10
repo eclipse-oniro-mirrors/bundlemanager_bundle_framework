@@ -2386,8 +2386,8 @@ bool ToInnerBundleInfo(
         APP_LOGE("To innerModuleInfo failed");
         return false;
     }
-    if (moduleJson.app.targetAPIVersion % ServiceConstants::API_VERSION_MOD <= ServiceConstants::API_VERSION_THIRTEEN) {
-        APP_LOGD("targetAPIVersion is less than 14, set isCompressNativeLibs flag to true");
+    if (moduleJson.app.targetAPIVersion % ServiceConstants::API_VERSION_MOD <= ServiceConstants::API_VERSION_FIFTEEN) {
+        APP_LOGD("targetAPIVersion is less than 16, set isCompressNativeLibs flag to true");
         applicationInfo.isCompressNativeLibs = true;
         innerModuleInfo.compressNativeLibs = true;
     }
