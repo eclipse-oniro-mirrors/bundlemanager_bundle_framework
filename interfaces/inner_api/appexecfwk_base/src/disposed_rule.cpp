@@ -26,6 +26,7 @@ namespace AppExecFwk {
 namespace {
 const char* WANT = "want";
 const char* COMPONENT_TYPE = "componentType";
+const char* UNINSTALL_COMPONENT_TYPE = "uninstallComponentType";
 const char* DISPOSED_TYPE = "disposedType";
 const char* CONTROL_TYPE = "controlType";
 const char* ELEMENT_LIST = "elementList";
@@ -235,7 +236,7 @@ bool DisposedRule::FromString(const std::string &ruleString, DisposedRule &rule)
 bool UninstallDisposedRule::ReadFromParcel(Parcel &parcel)
 {
     want.reset(parcel.ReadParcelable<AAFwk::Want>());
-    componentType = static_cast<ComponentType>(parcel.ReadInt32());
+    uninstallComponentType = static_cast<UninstallComponentType>(parcel.ReadInt32());
     priority = parcel.ReadInt32();
     return true;
 }
@@ -243,7 +244,7 @@ bool UninstallDisposedRule::ReadFromParcel(Parcel &parcel)
 bool UninstallDisposedRule::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, want.get());
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(componentType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(uninstallComponentType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, priority);
 
     return true;
@@ -268,7 +269,7 @@ void to_json(nlohmann::json &jsonObject, const UninstallDisposedRule &uninstallD
     }
     jsonObject = nlohmann::json {
         {WANT, wantString},
-        {COMPONENT_TYPE, uninstallDisposedRule.componentType},
+        {UNINSTALL_COMPONENT_TYPE, uninstallDisposedRule.uninstallComponentType},
         {PRIORITY, uninstallDisposedRule.priority},
     };
 }
@@ -285,10 +286,10 @@ void from_json(const nlohmann::json &jsonObject, UninstallDisposedRule &uninstal
         false,
         parseResult);
     uninstallDisposedRule.want.reset(AAFwk::Want::FromString(wantString));
-    GetValueIfFindKey<ComponentType>(jsonObject,
+    GetValueIfFindKey<UninstallComponentType>(jsonObject,
         jsonObjectEnd,
-        COMPONENT_TYPE,
-        uninstallDisposedRule.componentType,
+        UNINSTALL_COMPONENT_TYPE,
+        uninstallDisposedRule.uninstallComponentType,
         JsonType::NUMBER,
         false,
         parseResult,

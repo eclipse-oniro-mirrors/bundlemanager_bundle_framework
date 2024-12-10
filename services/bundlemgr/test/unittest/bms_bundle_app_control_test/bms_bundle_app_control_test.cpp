@@ -2323,13 +2323,13 @@ HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0900, Function | SmallTe
     auto rdb = std::make_shared<AppControlManagerRdb>();
     ASSERT_NE(rdb, nullptr);
     UninstallDisposedRule rule;
-    rule.componentType = ComponentType::UI_ABILITY;
+    rule.uninstallComponentType = UninstallComponentType::EXTENSION;
     rule.priority = 0;
     rdb->SetUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, APP_INDEX, USERID);
     UninstallDisposedRule uninstallDisposedRule;
     auto res = rdb->GetUninstallDisposedRule(APPID, APP_INDEX, USERID, uninstallDisposedRule);
     EXPECT_EQ(res, ERR_OK);
-    EXPECT_EQ(rule.componentType, uninstallDisposedRule.componentType);
+    EXPECT_EQ(rule.uninstallComponentType, uninstallDisposedRule.uninstallComponentType);
     EXPECT_EQ(rule.priority, uninstallDisposedRule.priority);
 }
 
