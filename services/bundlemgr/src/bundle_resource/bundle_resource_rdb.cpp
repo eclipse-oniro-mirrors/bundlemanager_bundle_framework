@@ -26,7 +26,7 @@ namespace {
 constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 constexpr const char* QUEUE_NAME = "BackupResourceDbQueue";
 constexpr const char* TASK_NAME = "BackUpResourceDbTask";
-constexpr uint64_t DELAY_TIME_MILLI_SECONDS = 6 * 60 * 1000; // 6min
+constexpr uint64_t DELAY_TIME_MILLI_SECONDS = 8 * 60 * 1000; // 8min
 }
 
 BundleResourceRdb::BundleResourceRdb()
