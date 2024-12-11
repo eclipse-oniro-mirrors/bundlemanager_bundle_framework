@@ -759,4 +759,32 @@ HWTEST_F(BmsInstalldHostTest, HandleGetExtensionSandboxTypeList_0100, Function |
     ErrCode res = installdHost.HandleGetExtensionSandboxTypeList(data, reply);
     EXPECT_TRUE(res);
 }
+
+/**
+ * @tc.number: HandleAddUserDirDeleteDfx
+ * @tc.name: test HandleAddUserDirDeleteDfx
+ * @tc.desc: 1.HandleAddUserDirDeleteDfx test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleAddUserDirDeleteDfx_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleAddUserDirDeleteDfx(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleMoveHapToCodeDir
+ * @tc.name: test HandleMoveHapToCodeDir
+ * @tc.desc: 1.HandleMoveHapToCodeDir test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleMoveHapToCodeDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleMoveHapToCodeDir(data, reply);
+    EXPECT_TRUE(res);
+}
 } // OHOS

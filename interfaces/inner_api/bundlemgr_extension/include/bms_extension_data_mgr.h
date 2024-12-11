@@ -77,6 +77,7 @@ public:
 
     bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum);
     std::string GetCompatibleDeviceType(const std::string &bundleName);
+    ErrCode VerifyActivationLockToken(bool &res);
 private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;

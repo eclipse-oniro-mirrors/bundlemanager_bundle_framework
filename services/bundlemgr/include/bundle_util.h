@@ -160,6 +160,9 @@ public:
      * @return Returns result.
      */
     static bool IsExistDirNoLog(const std::string &path);
+
+    static bool IsPathInformationConsistent(const std::string &path, int32_t uid, int32_t gid);
+
     /**
      * @brief Rename file from oldPath to newPath.
      * @param oldPath Indicates oldPath.

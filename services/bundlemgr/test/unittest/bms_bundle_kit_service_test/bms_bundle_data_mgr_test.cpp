@@ -2510,7 +2510,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoWithFlagsV9_0100, Function | Sm
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     ErrCode res = GetBundleDataMgr()->GetInnerBundleInfoWithFlagsV9(
         BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
 }
 
@@ -2531,7 +2531,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoWithBundleFlagsV9_0100, Functio
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     ErrCode res = GetBundleDataMgr()->GetInnerBundleInfoWithBundleFlagsV9(
         BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
 }
 
@@ -7526,7 +7526,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleDataMgr_0400, Function | SmallTest | Level1
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.bundleStatus_ = AppExecFwk::InnerBundleInfo::BundleStatus::DISABLED;
     ErrCode ret = bundleDataMgr->CheckInnerBundleInfoWithFlagsV9(innerBundleInfo, 0, 100, 1);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
 }
 
 /**

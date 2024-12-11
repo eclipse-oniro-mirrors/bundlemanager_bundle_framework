@@ -23,6 +23,7 @@
 #include "launcher_ability_resource_info.h"
 #include "rdb_data_manager.h"
 #include "resource_info.h"
+#include "serial_queue.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -83,7 +84,7 @@ private:
 
     std::shared_ptr<RdbDataManager> rdbDataManager_;
 
-    std::atomic_bool isBackingUp_ = false;
+    std::unique_ptr<SerialQueue> serialQueue_ = nullptr;
 
 #define CHECK_RDB_RESULT_RETURN_IF_FAIL(errcode, errmsg)                           \
     do {                                                                           \

@@ -161,6 +161,10 @@ public:
     {
         return "";
     }
+    virtual ErrCode VerifyActivationLockToken(bool &res)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
 };
 
 } // AppExecFwk
