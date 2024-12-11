@@ -1343,7 +1343,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 #endif
     DeleteUninstallBundleInfo(bundleName_);
-    UpdateEncryptedStatus();
+    UpdateEncryptedStatus(oldInfo);
     GetInstallEventInfo(sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     UpdateRouterInfo();
@@ -4529,7 +4529,7 @@ void BaseBundleInstaller::SetOldAppIsEncrypted(const InnerBundleInfo &oldInfo)
     oldApplicationReservedFlag_ = oldInfo.GetApplicationReservedFlag();
 }
 
-bool BaseBundleInstaller::UpdateEncryptedStatus()
+bool BaseBundleInstaller::UpdateEncryptedStatus(const InnerBundleInfo &oldInfo)
 {
     if (!InitDataMgr()) {
         LOG_E(BMS_TAG_INSTALLER, "init failed");
@@ -4560,6 +4560,7 @@ bool BaseBundleInstaller::UpdateEncryptedStatus()
     }
     if (isAppExist_ && oldAppEncrypted && !newAppEncrypted) {
         // new app is not a encrypted app, need to delete operation on main app & all clone app
+        infos[0].versionCode = oldInfo.GetVersionCode();
         auto res = bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::DELETE);
         ProcessEncryptedKeyExisted(res, CodeOperation::DELETE, infos);
         return res == ERR_OK;
