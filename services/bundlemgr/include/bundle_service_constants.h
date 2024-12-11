@@ -127,6 +127,7 @@ constexpr const char* PERMISSION_UNINSTALL_SANDBOX_BUNDLE = "ohos.permission.UNI
 constexpr const char* PERMISSION_INSTALL_QUICK_FIX_BUNDLE = "ohos.permission.INSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE = "ohos.permission.UNINSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
+constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 // max number of haps under one direction
