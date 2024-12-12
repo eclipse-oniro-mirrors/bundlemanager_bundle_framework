@@ -2185,7 +2185,7 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
 
 bool InstalldOperator::DeleteKeyId(const std::string &bundleName, const int32_t userId)
 {
-    LOG_D(BMS_TAG_INSTALLD, "DeleteKeyId bundleName is %{public}s", bundleName.c_str());
+    LOG_I(BMS_TAG_INSTALLD, "DeleteKeyId %{public}s %{public}d", bundleName.c_str(), userId);
     auto ret = Security::AccessToken::El5FilekeyManagerKit::DeleteAppKey(bundleName, userId);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "Call DeleteAppKey failed ret = %{public}d", ret);

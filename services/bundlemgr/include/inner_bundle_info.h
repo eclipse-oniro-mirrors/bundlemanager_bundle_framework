@@ -2212,7 +2212,7 @@ public:
     ErrCode RemoveCloneBundle(const int32_t userId, const int32_t appIndex);
     ErrCode GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex);
     ErrCode IsCloneAppIndexExisted(const int32_t userId, const int32_t appIndex, bool &res);
-    void SetkeyId(const int32_t userId, const std::string &keyId);
+    void SetkeyId(const int32_t userId, const std::string &keyId, const int32_t appIndex = 0);
     bool GetApplicationInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
         ApplicationInfo &appInfo) const;
     bool GetBundleInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,

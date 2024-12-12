@@ -100,7 +100,6 @@ constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 constexpr const char* ENTRY = "entry";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
-constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -8212,7 +8211,7 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
 
         std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
         auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
-            return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+            return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
         });
         if (it != reqPermissions.end()) {
             el5Params.emplace_back(createDirParam);
@@ -8230,7 +8229,8 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
 void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage)
 {
     for (const auto &el5Param : el5Params) {
-        APP_LOGI("-n %{public}s -u %{public}d", el5Param.bundleName.c_str(), el5Param.userId);
+        APP_LOGI("-n %{public}s -u %{public}d -i %{public}d",
+            el5Param.bundleName.c_str(), el5Param.userId, el5Param.appIndex);
         InnerCreateEl5Dir(el5Param);
         SetEl5DirPolicy(el5Param, needSaveStorage);
     }
@@ -8266,8 +8266,12 @@ void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
         return;
     }
     std::vector<std::string> dirs;
-    dirs.emplace_back(parentDir + ServiceConstants::BASE + el5Param.bundleName);
-    dirs.emplace_back(parentDir + ServiceConstants::DATABASE + el5Param.bundleName);
+    std::string bundleNameDir = el5Param.bundleName;
+    if (el5Param.appIndex > 0) {
+        bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(el5Param.bundleName, el5Param.appIndex);
+    }
+    dirs.emplace_back(parentDir + ServiceConstants::BASE + bundleNameDir);
+    dirs.emplace_back(parentDir + ServiceConstants::DATABASE + bundleNameDir);
     for (const std::string &dir : dirs) {
         uint32_t mode = S_IRWXU;
         int32_t gid = el5Param.uid;
@@ -8293,20 +8297,18 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSav
         LOG_E(BMS_TAG_INSTALLER, "get bundle %{public}s failed", el5Param.bundleName.c_str());
         return;
     }
-    InnerBundleUserInfo userInfo;
-    if (!info.GetInnerBundleUserInfo(el5Param.userId, userInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "%{public}s get user %{public}d failed",
-            info.GetBundleName().c_str(), el5Param.userId);
-        return;
-    }
-    int32_t uid = userInfo.uid;
+    int32_t uid = el5Param.uid;
+    std::string bundleName = info.GetBundleName();
     std::string keyId = "";
-    auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(uid, info.GetBundleName(), el5Param.userId, keyId);
+    if (el5Param.appIndex > 0) {
+        bundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, el5Param.appIndex);
+    }
+    auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(uid, bundleName, el5Param.userId, keyId);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "SetEncryptionPolicy failed");
     }
-    LOG_D(BMS_TAG_INSTALLER, "%{public}s, keyId: %{public}s", info.GetBundleName().c_str(), keyId.c_str());
-    info.SetkeyId(el5Param.userId, keyId);
+    LOG_D(BMS_TAG_INSTALLER, "%{public}s, keyId: %{public}s", bundleName.c_str(), keyId.c_str());
+    info.SetkeyId(el5Param.userId, keyId, el5Param.appIndex);
     if (!UpdateInnerBundleInfo(info, needSaveStorage)) {
         LOG_E(BMS_TAG_INSTALLER, "save keyId failed");
     }
