@@ -195,6 +195,7 @@ struct AbilityInfo : public Parcelable {
     ExtensionAbilityType extensionAbilityType = ExtensionAbilityType::UNSPECIFIED;
     std::string extensionTypeName;
     DisplayOrientation orientation = DisplayOrientation::UNSPECIFIED;
+    uint32_t orientationId = 0;
     LaunchMode launchMode = LaunchMode::SINGLETON;
     std::string srcPath;
     std::string srcLanguage = "js";
