@@ -70,9 +70,12 @@ ohos_source_set("parser_common") {
   branch_protector_ret = "pac_ret"
 
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
 
   sources = [
@@ -106,9 +109,12 @@ ohos_source_set("rpcid_decode") {
   branch_protector_ret = "pac_ret"
 
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
 
   include_dirs = [ "include/rpcid_decode" ]
@@ -127,9 +133,12 @@ ohos_source_set("bundle_parser") {
   branch_protector_ret = "pac_ret"
 
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
 
   sources = [
@@ -515,10 +524,7 @@ ohos_shared_library("installs") {
     "-fstack-protector-strong",
   ]
 
-  cflags_cc = [
-    "-fstack-protector-strong",
-    "-Os",
-  ]
+  cflags_cc = cflags
 
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
