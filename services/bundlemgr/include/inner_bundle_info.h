@@ -2225,6 +2225,11 @@ public:
     static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
     void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
 
+    void SetMultiAppMode(MultiAppModeData multiAppMode)
+    {
+        baseApplicationInfo_->multiAppMode = multiAppMode;
+    }
+
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(
