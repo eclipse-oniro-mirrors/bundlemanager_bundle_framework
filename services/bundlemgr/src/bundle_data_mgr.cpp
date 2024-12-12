@@ -705,7 +705,7 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
     if (!bundleName.empty() && !abilityName.empty()) {
         bool ret = ExplicitQueryAbilityInfo(want, flags, requestUserId, abilityInfo, appIndex);
         if (!ret) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility error -n %{public}s -a %{public}s -u %{public}d"
+            LOG_NOFUNC_D(BMS_TAG_QUERY, "ExplicitQueryAbility error -n %{public}s -a %{public}s -u %{public}d"
                 " -i %{public}d", bundleName.c_str(), abilityName.c_str(), userId, appIndex);
             return false;
         }
@@ -951,7 +951,7 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
     auto ability = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, responseUserId);
     if (!ability) {
         LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility not found UIAbility -n %{public}s -m %{public}s "
-            "-a %{public}s", bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+            "-a %{public}s -u %{public}d", bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), responseUserId);
         return false;
     }
     return QueryAbilityInfoWithFlags(ability, flags, responseUserId, innerBundleInfo, abilityInfo);
@@ -4026,8 +4026,8 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     if (appIndex == 0) {
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
             && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
-            APP_LOGD("bundleName: %{public}s userId: %{public}d incorrect",
-                innerBundleInfo.GetBundleName().c_str(), requestUserId);
+            LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+                bundleName.c_str(), responseUserId, appIndex, flags);
             return false;
         }
     } else if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
@@ -4038,8 +4038,8 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
             return false;
         }
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE) && !isEnabled) {
-            APP_LOGW("bundleName: %{public}s userId: %{public}d, appIndex: %{public}d incorrect",
-                innerBundleInfo.GetBundleName().c_str(), requestUserId, appIndex);
+            LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+                bundleName.c_str(), responseUserId, appIndex, flags);
             return false;
         }
     } else {
@@ -4113,7 +4113,8 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     }
     if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))
         && !isEnabled) {
-        APP_LOGD("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
+        LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+            bundleName.c_str(), responseUserId, appIndex, flags);
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
     info = innerBundleInfo;

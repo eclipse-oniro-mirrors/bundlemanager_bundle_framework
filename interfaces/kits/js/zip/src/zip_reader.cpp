@@ -203,7 +203,7 @@ bool ZipReader::ExtractCurrentEntry(WriterDelegate *delegate, uint64_t numBytesT
         const int numBytesRead = unzReadCurrentFile(zipFile_, buf.get(), kZipBufSize);
         if (numBytesRead == 0) {
             entirefileextracted = true;
-            APP_LOGI("extract entry");
+            APP_LOGD("extract entry");
             break;
         } else if (numBytesRead < 0) {
             // If numBytesRead < 0, then it's a specific UNZ_* error code.
