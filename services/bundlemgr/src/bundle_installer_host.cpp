@@ -948,6 +948,11 @@ bool BundleInstallerHost::CheckUninstallDisposedRule(const std::string &bundleNa
         appId = bundleInfo.GetAppId();
     }
 
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        LOG_I(BMS_TAG_INSTALLER, "installParam userId is unspecified and get calling userId by callingUid");
+        userId = BundleUtil::GetUserIdByCallingUid();
+    }
+
     UninstallDisposedRule rule;
     auto ret = DelayedSingleton<AppControlManager>::GetInstance()
                    ->GetUninstallDisposedRule(appId, appIndex, userId, rule);
