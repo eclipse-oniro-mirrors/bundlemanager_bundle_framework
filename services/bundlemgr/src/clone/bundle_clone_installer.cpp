@@ -241,7 +241,6 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
             BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, appIndex, userId);
         }
     }
-    AddKeyOperation(bundleName, appIndex, userId, uid);
 
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
@@ -321,7 +320,6 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         appControlMgr->DeleteAllDisposedRuleByBundle(info, appIndex, userId);
     }
 #endif
-    DeleteKeyOperation(bundleName, appIndex, userId, uid_);
     UninstallDebugAppSandbox(bundleName, uid_, appIndex, info);
     APP_LOGI("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
@@ -348,76 +346,6 @@ void BundleCloneInstaller::UninstallDebugAppSandbox(const std::string &bundleNam
     APP_LOGD("call UninstallDebugAppSandbox end");
 }
 
-bool BundleCloneInstaller::AddKeyOperation(
-    const std::string &bundleName, int32_t appIndex, int32_t userId, int32_t uid)
-{
-    if (GetDataMgr() != ERR_OK) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return false;
-    }
-    InnerBundleInfo innerBundleInfo;
-    if (!dataMgr_->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        APP_LOGE("get failed");
-        return false;
-    }
-    bool appEncrypted = innerBundleInfo.GetApplicationReservedFlag() &
-        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
-    if (!appEncrypted) {
-        return true;
-    }
-    CodeProtectBundleInfo info;
-    info.bundleName = innerBundleInfo.GetBundleName();
-    info.versionCode = innerBundleInfo.GetVersionCode();
-    info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
-    info.uid = uid;
-    info.appIndex = appIndex;
-
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    auto res = bmsExtensionDataMgr.KeyOperation(std::vector<CodeProtectBundleInfo> { info }, CodeOperation::ADD);
-    if (res == ERR_OK) {
-        dataMgr_->UpdateAppEncryptedStatus(bundleName, true, appIndex);
-    } else {
-        dataMgr_->UpdateAppEncryptedStatus(bundleName, false, appIndex);
-    }
-    return res == ERR_OK;
-}
-
-void BundleCloneInstaller::DeleteKeyOperation(const std::string &bundleName,
-    int32_t appIndex, int32_t userId, int32_t uid)
-{
-    if (GetDataMgr() != ERR_OK) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return;
-    }
-    InnerBundleInfo innerBundleInfo;
-    if (!dataMgr_->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        APP_LOGE("get failed");
-        return;
-    }
-    auto appIndexSet = innerBundleInfo.GetCloneBundleAppIndexes();
-    if (appIndexSet.find(appIndex) != appIndexSet.end()) {
-        return;
-    }
-    bool appEncrypted = innerBundleInfo.GetApplicationReservedFlag() &
-        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
-    if (!appEncrypted) {
-        return;
-    }
-    CodeProtectBundleInfo info;
-    info.bundleName = innerBundleInfo.GetBundleName();
-    info.versionCode = innerBundleInfo.GetVersionCode();
-    info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
-    info.uid = uid;
-    info.appIndex = appIndex;
-
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    auto res = bmsExtensionDataMgr.KeyOperation(std::vector<CodeProtectBundleInfo> { info }, CodeOperation::DELETE);
-    if (res == ERR_OK) {
-        dataMgr_->UpdateAppEncryptedStatus(bundleName, false, appIndex);
-    } else {
-        dataMgr_->UpdateAppEncryptedStatus(bundleName, true, appIndex);
-    }
-}
 
 ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,
     const int32_t userId, const int32_t &uid, const int32_t &appIndex) const

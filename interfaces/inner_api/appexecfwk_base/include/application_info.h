@@ -102,6 +102,7 @@ struct MultiAppModeData : public Parcelable {
 };
 
 struct Metadata : public Parcelable {
+    uint32_t valueId = 0;
     std::string name;
     std::string value;
     std::string resource;

@@ -1567,36 +1567,17 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     if (appIndex > 0) {
         suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
     }
-
+    std::vector<std::string> moduleNameList;
+    dataMgr->GetBundleModuleNames(bundleName, moduleNameList);
     std::vector<std::string> bundleEls = ServiceConstants::BUNDLE_EL;
     bundleEls.push_back(ServiceConstants::DIR_EL5);
-    for (const auto &el : bundleEls) {
-        std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el +
-            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + suffixName;
-        rootDir.emplace_back(dataDir);
-
-        // add el2 sharefiles dir to be cleaned
-        if (el == ServiceConstants::BUNDLE_EL[1]) {
-            std::string shareFilesDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el +
-            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES + suffixName;
-            rootDir.emplace_back(shareFilesDataDir);
-        }
-    }
+    GetAppCachePaths(suffixName, userId, moduleNameList, rootDir);
 
     auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, appIndex, this]() {
-        std::vector<std::string> caches;
-        for (const auto &st : rootDir) {
-            std::vector<std::string> cache;
-            if (InstalldClient::GetInstance()->GetBundleCachePath(st, cache) != ERR_OK) {
-                APP_LOGW("GetBundleCachePath failed, path: %{public}s", st.c_str());
-            }
-            std::copy(cache.begin(), cache.end(), std::back_inserter(caches));
-        }
-
+        std::vector<std::string> caches = rootDir;
         std::string shaderCachePath;
         shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
         caches.push_back(shaderCachePath);
-
         bool succeed = true;
         if (!caches.empty()) {
             for (const auto& cache : caches) {
@@ -1607,6 +1588,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
                 }
             }
         }
+        
         EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed);
         APP_LOGD("CleanBundleCacheFiles with succeed %{public}d", succeed);
         cleanCacheCallback->OnCleanCacheFinished(succeed);
@@ -1646,6 +1628,38 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
         NotifyBundleStatus(installRes);
     };
     ffrt::submit(cleanCache);
+}
+
+void BundleMgrHostImpl::GetAppCachePaths(const std::string &suffixName,
+    const int32_t userId, const std::vector<std::string> &moduleNameList, std::vector<std::string> &cachePaths)
+{
+    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
+    elPath.push_back(ServiceConstants::DIR_EL5);
+    for (const auto &el : elPath) {
+        cachePaths.push_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE +
+            suffixName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
+        if (ServiceConstants::BUNDLE_EL[1] == el) {
+            cachePaths.push_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES +
+                suffixName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
+        }
+        for (const auto &moduleName : moduleNameList) {
+            std::string moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + suffixName +
+                ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
+            cachePaths.push_back(moduleCachePath);
+            APP_LOGD("add module cache path: %{public}s", moduleCachePath.c_str());
+            if (ServiceConstants::BUNDLE_EL[1] == el) {
+                moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES +
+                    suffixName + ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR +
+                    Constants::CACHE_DIR;
+                cachePaths.push_back(moduleCachePath);
+            }
+            APP_LOGD("add module cache path: %{public}s", moduleCachePath.c_str());
+        }
+    }
 }
 
 bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId, const int appIndex)
@@ -2130,7 +2144,6 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
     }
 
     NotifyBundleEvents installRes = {
-        .isApplicationEnabled = isEnable,
         .type = NotifyType::APPLICATION_ENABLE,
         .resultCode = ERR_OK,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
@@ -2138,7 +2151,8 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         .bundleName = bundleName
     };
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    NotifyBundleStatus(installRes);
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
     IPCSkeleton::SetCallingIdentity(identity);
     return ERR_OK;
 }

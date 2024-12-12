@@ -89,7 +89,7 @@ constexpr int NOT_EXIST_USERID = -5;
 constexpr int PATH_MAX_SIZE = 256;
 constexpr int32_t API_VERSION_NINE = 9;
 constexpr int32_t API_VERSION_TWELVE = 12;
-constexpr int32_t API_VERSION_THIRTEEN = 13;
+constexpr int32_t API_VERSION_FIFTEEN = 15;
 constexpr int32_t API_VERSION_MOD = 1000;
 constexpr int32_t BACKUP_DEFAULT_APP_KEY = -2;
 // native so
@@ -127,6 +127,7 @@ constexpr const char* PERMISSION_UNINSTALL_SANDBOX_BUNDLE = "ohos.permission.UNI
 constexpr const char* PERMISSION_INSTALL_QUICK_FIX_BUNDLE = "ohos.permission.INSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE = "ohos.permission.UNINSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
+constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 // max number of haps under one direction

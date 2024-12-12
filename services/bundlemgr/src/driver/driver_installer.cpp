@@ -162,8 +162,10 @@ void DriverInstaller::RemoveDriverSoFile(const InnerBundleInfo &info, const std:
             std::string destinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), extModuleName, fileName,
                 meta.value, isModuleExisted);
             APP_LOGD("Remove driver so file path is %{public}s", destinedDir.c_str());
-            std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;
-            InstalldClient::GetInstance()->RemoveDir(systemServiceDir + destinedDir);
+            if (!destinedDir.empty()) {
+                std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;
+                InstalldClient::GetInstance()->RemoveDir(systemServiceDir + destinedDir);
+            }
         }
     }
     APP_LOGD("end");
@@ -176,6 +178,10 @@ std::string DriverInstaller::CreateDriverSoDestinedDir(const std::string &bundle
         bundleName.c_str(), moduleName.c_str(), fileName.c_str(), destinedDir.c_str());
     if (bundleName.empty() || moduleName.empty() || fileName.empty() || destinedDir.empty()) {
         APP_LOGW("parameters are invalid");
+        return "";
+    }
+    if (destinedDir.find("..") != std::string::npos) {
+        APP_LOGW("destinedDir %{public}s invalid", destinedDir.c_str());
         return "";
     }
     std::string resStr = destinedDir;

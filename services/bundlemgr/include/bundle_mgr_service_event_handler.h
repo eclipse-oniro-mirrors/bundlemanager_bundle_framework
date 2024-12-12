@@ -567,6 +567,8 @@ private:
     static bool GetValueFromJson(nlohmann::json &jsonObject);
     static void PatchSystemHspInstall(const std::string &path, bool isOta);
     static void PatchSystemBundleInstall(const std::string &path, bool isOta);
+    void HandleOTACodeEncryption();
+    void SaveCodeProtectFlag();
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();
@@ -627,6 +629,8 @@ private:
     void CheckALLResourceInfo();
     // Used to add bundle resource Info that does not exist in rdb when OTA.
     void static ProcessBundleResourceInfo();
+    // scan all bundle data group info
+    void ProcessAllBundleDataGroupInfo();
     // Used to send update failed event
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo);
     void UpdatePreinstallDB(const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap);

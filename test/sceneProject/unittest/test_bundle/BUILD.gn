@@ -79,6 +79,13 @@ group("test_bundle") {
     "versionTest1:versionTest1",
     "versionTest2:versionTest2",
     "versionTest3:versionTest3",
+    "versionUpdateTest1:versionUpdateTest1",
+    "versionUpdateTest2:versionUpdateTest2",
+    "versionUpdateTest3:versionUpdateTest3",
+    "versionUpdateTest4:versionUpdateTest4",
+    "versionUpdateTest5:versionUpdateTest5",
+    "versionUpdateTest6:versionUpdateTest6",
+    "versionUpdateTest7:versionUpdateTest7",
     "wrong_bundle_name:wrong_bundle_name",
   ]
 }

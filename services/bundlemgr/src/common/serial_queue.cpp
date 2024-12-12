@@ -70,5 +70,32 @@ void SerialQueue::CancelDelayTask(const std::string &taskName)
     taskMap_.erase(taskName);
     APP_LOGI("CancelDelayTask success");
 }
+
+void SerialQueue::ReScheduleDelayTask(const std::string &taskName, uint64_t ms, std::function<void()> func)
+{
+    if (ms > std::numeric_limits<uint64_t>::max() / CONVERSION_FACTOR) {
+        APP_LOGE("invalid ms, ReScheduleDelayTask failed");
+        return;
+    }
+    std::unique_lock<std::shared_mutex> lock(mutex_);
+    // cancel old task
+    auto item = taskMap_.find(taskName);
+    if (item != taskMap_.end()) {
+        if (item->second != nullptr) {
+            int32_t ret = queue_->cancel(item->second);
+            if (ret != 0) {
+                APP_LOGW("cancel failed, err %{public}d", ret);
+            }
+        }
+        taskMap_.erase(taskName);
+    }
+    // submit new task
+    task_handle handle = queue_->submit_h(func, task_attr().delay(ms * CONVERSION_FACTOR));
+    if (handle == nullptr) {
+        APP_LOGE("submit_h return null, ReScheduleDelayTask failed");
+        return;
+    }
+    taskMap_[taskName] = std::move(handle);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

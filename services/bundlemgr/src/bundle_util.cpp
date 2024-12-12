@@ -552,6 +552,22 @@ bool BundleUtil::IsExistDirNoLog(const std::string &path)
     return S_ISDIR(buf.st_mode);
 }
 
+bool BundleUtil::IsPathInformationConsistent(const std::string &path, int32_t uid, int32_t gid)
+{
+    if (path.empty()) {
+        return false;
+    }
+    struct stat buf = {};
+    if (stat(path.c_str(), &buf) != 0) {
+        return false;
+    }
+    if ((static_cast<int32_t>(buf.st_uid) != uid) || ((static_cast<int32_t>(buf.st_gid) != gid))) {
+        APP_LOGE("path uid or gid is not same");
+        return false;
+    }
+    return true;
+}
+
 int64_t BundleUtil::CalculateFileSize(const std::string &bundlePath)
 {
     struct stat fileInfo = { 0 };
@@ -669,7 +685,7 @@ bool BundleUtil::CopyFile(
 
 bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &destPath)
 {
-    APP_LOGI("sourcePath : %{public}s, destPath : %{public}s", sourcePath.c_str(), destPath.c_str());
+    APP_LOGI("sourcePath : %{private}s, destPath : %{private}s", sourcePath.c_str(), destPath.c_str());
     if (sourcePath.empty() || destPath.empty()) {
         APP_LOGE("invalid path");
         return false;
@@ -862,12 +878,12 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
     if (rename) {
         APP_LOGD("rename file from %{public}s to %{public}s", filePath.c_str(), destination.c_str());
         if (!RenameFile(filePath, destination)) {
-            APP_LOGE("rename file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
+            APP_LOGE("rename file from %{private}s to %{private}s failed", filePath.c_str(), destination.c_str());
             return "";
         }
     } else {
         if (!CopyFileFast(filePath, destination)) {
-            APP_LOGE("copy file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
+            APP_LOGE("copy file from %{private}s to %{private}s failed", filePath.c_str(), destination.c_str());
             return "";
         }
     }

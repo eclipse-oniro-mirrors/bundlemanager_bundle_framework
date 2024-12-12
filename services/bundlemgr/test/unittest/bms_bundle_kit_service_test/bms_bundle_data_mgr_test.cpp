@@ -2510,7 +2510,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoWithFlagsV9_0100, Function | Sm
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     ErrCode res = GetBundleDataMgr()->GetInnerBundleInfoWithFlagsV9(
         BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
 }
 
@@ -2531,7 +2531,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoWithBundleFlagsV9_0100, Functio
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     ErrCode res = GetBundleDataMgr()->GetInnerBundleInfoWithBundleFlagsV9(
         BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
 }
 
@@ -7526,7 +7526,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleDataMgr_0400, Function | SmallTest | Level1
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.bundleStatus_ = AppExecFwk::InnerBundleInfo::BundleStatus::DISABLED;
     ErrCode ret = bundleDataMgr->CheckInnerBundleInfoWithFlagsV9(innerBundleInfo, 0, 100, 1);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
 }
 
 /**
@@ -7757,5 +7757,138 @@ HWTEST_F(BmsBundleDataMgrTest, IBundleStatusCallback_0001, Function | SmallTest 
     IBundleStatusCallbackTest iBundleStatusCallbackTest;
     iBundleStatusCallbackTest.SetUserId(Constants::DEFAULT_USERID);
     EXPECT_EQ(iBundleStatusCallbackTest.GetUserId(), Constants::DEFAULT_USERID);
+}
+
+/**
+ * @tc.number: PostProcessAnyUser_0001
+ * @tc.name: SetUserId
+ * @tc.desc: test SetUserId
+ */
+HWTEST_F(BmsBundleDataMgrTest, PostProcessAnyUser_0001, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    int32_t flags = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)
+        | static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
+    int32_t userId = 100;
+    int32_t originUserId = 100;
+    BundleInfo bundleInfo;
+    InnerBundleInfo innerBundleInfo;
+
+    InnerBundleUserInfo userInfo1;
+    userInfo1.bundleUserInfo.userId = 100;
+    InnerBundleUserInfo userInfo2;
+    userInfo2.bundleUserInfo.userId = 101;
+
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo1);
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo2);
+
+    bundleDataMgr->PostProcessAnyUserFlags(flags, userId, originUserId, bundleInfo, innerBundleInfo);
+    uint32_t flagsRet = static_cast<uint32_t>(bundleInfo.applicationInfo.applicationFlags);
+    bool r1 = (flagsRet & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED))
+         == static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+    bool r2 = (flagsRet & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED))
+        == static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+    EXPECT_EQ(r1, true);
+    EXPECT_EQ(r2, true);
+}
+
+/**
+ * @tc.number: PostProcessAnyUser_0002
+ * @tc.name: SetUserId
+ * @tc.desc: test SetUserId
+ */
+HWTEST_F(BmsBundleDataMgrTest, PostProcessAnyUser_0002, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    int32_t flags = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)
+        | static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
+    int32_t userId = 100;
+    int32_t originUserId = 100;
+    BundleInfo bundleInfo;
+    InnerBundleInfo innerBundleInfo;
+
+    InnerBundleUserInfo userInfo1;
+    userInfo1.bundleUserInfo.userId = 100;
+
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo1);
+
+    bundleDataMgr->PostProcessAnyUserFlags(flags, userId, originUserId, bundleInfo, innerBundleInfo);
+    uint32_t flagsRet = static_cast<uint32_t>(bundleInfo.applicationInfo.applicationFlags);
+    bool r1 = (flagsRet & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED))
+         == static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+    bool r2 = (flagsRet & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED))
+        != static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+    EXPECT_EQ(r1, true);
+    EXPECT_EQ(r2, true);
+}
+
+/**
+ * @tc.number: GetMediaDataFromAshMem_0100
+ * @tc.name: test GetMediaDataFromAshMem
+ * @tc.desc: test GetMediaDataFromAshMem
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetMediaDataFromAshMem_0100, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    MessageParcel replystd;
+    size_t len = 1;
+    auto mediaDataPtr = std::make_unique<uint8_t[]>(len);
+    ASSERT_NE(mediaDataPtr, nullptr);
+    auto ret = bundleMgrProxy->GetMediaDataFromAshMem(replystd, mediaDataPtr, len);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: InnerGetBigString_0100
+ * @tc.name: test InnerGetBigString
+ * @tc.desc: test InnerGetBigString
+ */
+HWTEST_F(BmsBundleDataMgrTest, InnerGetBigString_0100, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    MessageParcel reply;
+    std::string result;
+    auto ret = bundleMgrProxy->InnerGetBigString(reply, result);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetAllDriverBundleInfos_0100
+ * @tc.name: test GetAllDriverBundleInfos
+ * @tc.desc: test GetAllDriverBundleInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllDriverBundleInfos_0100, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleUserMgrHostImpl_, nullptr);
+    auto dataMgr = bundleUserMgrHostImpl_->GetDataMgrFromService();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ExtensionAbilityInfo info;
+    info.type = ExtensionAbilityType::DRIVER;
+    innerBundleInfo.baseExtensionInfos_.emplace(BUNDLE_TEST2, info);
+    dataMgr->bundleInfos_[BUNDLE_TEST1] = innerBundleInfo;
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    bundleUserMgrHostImpl_->GetAllDriverBundleInfos(preInstallBundleInfos);
+    EXPECT_FALSE(preInstallBundleInfos.empty());
+}
+
+/**
+ * @tc.number: CreateNewUser_0100
+ * @tc.name: test CreateNewUser
+ * @tc.desc: test CreateNewUser
+ */
+HWTEST_F(BmsBundleDataMgrTest, CreateNewUser_0100, Function | SmallTest | Level0)
+{
+    ASSERT_NE(bundleUserMgrHostImpl_, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    std::vector<std::string> disallowList;
+    auto res = bundleUserMgrHostImpl_->CreateNewUser(TEST_UID, disallowList);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 } // OHOS

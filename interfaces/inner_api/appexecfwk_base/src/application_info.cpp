@@ -172,6 +172,7 @@ Metadata::Metadata(const std::string &paramName, const std::string &paramValue, 
 
 bool Metadata::ReadFromParcel(Parcel &parcel)
 {
+    valueId = parcel.ReadUint32();
     name = Str16ToStr8(parcel.ReadString16());
     value = Str16ToStr8(parcel.ReadString16());
     resource = Str16ToStr8(parcel.ReadString16());
@@ -180,6 +181,7 @@ bool Metadata::ReadFromParcel(Parcel &parcel)
 
 bool Metadata::Marshalling(Parcel &parcel) const
 {
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, valueId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(value));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(resource));

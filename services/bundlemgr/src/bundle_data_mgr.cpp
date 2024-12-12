@@ -52,6 +52,7 @@
 #include "bundle_overlay_data_manager.h"
 #endif
 #include "bundle_extractor.h"
+#include "scope_guard.h"
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
 #include "type_descriptor.h"
 #include "utd_client.h"
@@ -64,6 +65,7 @@
 #include "router_data_storage_rdb.h"
 #include "shortcut_data_storage_rdb.h"
 #include "ohos_account_kits.h"
+#include "xcollie_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -120,6 +122,8 @@ constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 constexpr int32_t MAX_APP_UID = 65535;
 constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr int8_t ONLY_ONE_USER = 1;
+constexpr unsigned int OTA_CODE_ENCRYPTION_TIMEOUT = 4 * 60;
+const std::string FUNCATION_HANDLE_OTA_CODE_ENCRYPTION = "BundleDataMgr::HandleOTACodeEncryption()";
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -1511,7 +1515,6 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfosV9(const Want &want, int32_t fla
             InnerBundleInfo innerBundleInfo;
             ErrCode ret = GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId);
             if (ret != ERR_OK) {
-                LOG_NOFUNC_W(BMS_TAG_QUERY, "GetInnerBundleInfoWithFlagsV9 failed -n %{public}s", item.first.c_str());
                 continue;
             }
 
@@ -2939,13 +2942,21 @@ void BundleDataMgr::PostProcessAnyUserFlags(
             }
         }
 
-        const std::map<std::string, InnerBundleUserInfo>& innerUserInfos = innerBundleInfo.GetInnerBundleUserInfos();
-        if (!innerBundleInfo.HasInnerBundleUserInfo(originalUserId)) {
-            bundleInfo.applicationInfo.applicationFlags |=
-                static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
-        } else if (innerUserInfos.size() > 1) {
-            bundleInfo.applicationInfo.applicationFlags |=
-                static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+        bool withAnyUser =
+            (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER))
+                == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
+        if (withAnyUser) {
+            const std::map<std::string, InnerBundleUserInfo>& innerUserInfos
+                = innerBundleInfo.GetInnerBundleUserInfos();
+            uint32_t flagOtherInstalled = static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+            uint32_t applicationFlags = static_cast<uint32_t>(bundleInfo.applicationInfo.applicationFlags);
+            if (!innerBundleInfo.HasInnerBundleUserInfo(originalUserId)) {
+                bundleInfo.applicationInfo.applicationFlags =
+                    static_cast<int32_t>(applicationFlags | flagOtherInstalled);
+            } else if (innerUserInfos.size() > 1) {
+                bundleInfo.applicationInfo.applicationFlags =
+                    static_cast<int32_t>(applicationFlags | flagOtherInstalled);
+            }
         }
     }
 }
@@ -3202,7 +3213,7 @@ ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlags(
     }
     if (innerBundleInfo.IsDisabled()) {
         APP_LOGW("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
 
     if (appIndex == 0) {
@@ -3243,7 +3254,7 @@ ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlagsV9(
     }
     if (innerBundleInfo.IsDisabled()) {
         APP_LOGW("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
 
     if (appIndex == 0) {
@@ -3580,6 +3591,18 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     }
 
     return true;
+}
+
+void BundleDataMgr::GetBundleModuleNames(const std::string &bundleName,
+    std::vector<std::string> &moduleNameList) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("No modules of: %{public}s", bundleName.c_str());
+        return;
+    }
+    infoItem->second.GetModuleNames(moduleNameList);
 }
 
 bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const
@@ -4036,7 +4059,6 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
 {
     bool res = GetInnerBundleInfoWithFlags(bundleName, flags, userId, appIndex);
     if (!res) {
-        APP_LOGW("get with flag failed");
         return false;
     }
     auto item = bundleInfos_.find(bundleName);
@@ -4085,7 +4107,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     if (innerBundleInfo.IsDisabled()) {
         LOG_NOFUNC_E(BMS_TAG_COMMON, "bundle disabled -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
             bundleName.c_str(), userId, appIndex, flags);
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
@@ -4128,7 +4150,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bu
     const InnerBundleInfo &innerBundleInfo = item->second;
     if (innerBundleInfo.IsDisabled()) {
         APP_LOGW("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
@@ -7380,40 +7402,86 @@ bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir
     return true;
 }
 
-void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
-    std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const
+void BundleDataMgr::CreateNewDataGroupInfo(const std::string &groupId, const int32_t userId,
+    const DataGroupInfo &oldDataGroupInfo, DataGroupInfo &newDataGroupInfo)
 {
-    std::set<int32_t> indexList;
-    for (auto iter = dataGroupIndexMap.begin(); iter != dataGroupIndexMap.end(); iter++) {
-        indexList.emplace(iter->second.first);
+    newDataGroupInfo.dataGroupId = groupId;
+    newDataGroupInfo.userId = userId;
+
+    newDataGroupInfo.uuid = oldDataGroupInfo.uuid;
+    int32_t uniqueId = oldDataGroupInfo.uid - oldDataGroupInfo.userId * Constants::BASE_USER_RANGE -
+        DATA_GROUP_UID_OFFSET;
+    int32_t uid = uniqueId + userId * Constants::BASE_USER_RANGE + DATA_GROUP_UID_OFFSET;
+    newDataGroupInfo.uid = uid;
+    newDataGroupInfo.gid = uid;
+}
+
+void BundleDataMgr::ProcessAllUserDataGroupInfosWhenBundleUpdate(InnerBundleInfo &innerBundleInfo)
+{
+    auto dataGroupInfos = innerBundleInfo.GetDataGroupInfos();
+    if (dataGroupInfos.empty()) {
+        return;
     }
-    int32_t index = DATA_GROUP_INDEX_START;
+    for (int32_t userId : innerBundleInfo.GetUsers()) {
+        for (const auto &dataItem : dataGroupInfos) {
+            std::string groupId = dataItem.first;
+            if (dataItem.second.empty()) {
+                APP_LOGW("id infos %{public}s empty in -n %{public}s", groupId.c_str(),
+                    innerBundleInfo.GetBundleName().c_str());
+                continue;
+            }
+            DataGroupInfo dataGroupInfo;
+            CreateNewDataGroupInfo(groupId, userId, dataItem.second[0], dataGroupInfo);
+            innerBundleInfo.AddDataGroupInfo(groupId, dataGroupInfo);
+            // user path can not access, need create group dir when user unlocked
+        }
+    }
+}
+
+void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
+    std::unordered_set<int32_t> &uniqueIdSet) const
+{
+    int32_t uniqueId = DATA_GROUP_INDEX_START;
     for (int32_t i = DATA_GROUP_INDEX_START; i < DATA_GROUP_UID_OFFSET; i++) {
-        if (indexList.find(i) == indexList.end()) {
-            index = i;
+        if (uniqueIdSet.find(i) == uniqueIdSet.end()) {
+            uniqueId = i;
             break;
         }
     }
 
-    int32_t uid = userId * Constants::BASE_USER_RANGE + index + DATA_GROUP_UID_OFFSET;
+    int32_t uid = userId * Constants::BASE_USER_RANGE + uniqueId + DATA_GROUP_UID_OFFSET;
     dataGroupInfo.uid = uid;
     dataGroupInfo.gid = uid;
 
     std::string str = BundleUtil::GenerateUuidByKey(dataGroupInfo.dataGroupId);
     dataGroupInfo.uuid = str;
-    dataGroupIndexMap[dataGroupInfo.dataGroupId] = std::pair<int32_t, std::string>(index, str);
+    uniqueIdSet.insert(uniqueId);
 }
 
-void BundleDataMgr::GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
-    const std::vector<std::string> &dataGroupIdList, int32_t userId) const
+void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
+    const std::unordered_set<std::string> &dataGroupIdList, int32_t userId)
 {
-    APP_LOGD("GenerateDataGroupInfos called for user: %{public}d", userId);
-    if (dataGroupIdList.empty() || bundleInfos_.empty()) {
-        APP_LOGW("dataGroupIdList or bundleInfos_ data is empty");
+    APP_LOGD("called for user: %{public}d", userId);
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto bundleInfoItem = bundleInfos_.find(bundleName);
+    if (bundleInfoItem == bundleInfos_.end()) {
+        APP_LOGW("%{public}s not found", bundleName.c_str());
+        return;
+    }
+    auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
+    for (const auto &dataItem : dataGroupInfos) {
+        std::string oldGroupId = dataItem.first;
+        if (dataGroupIdList.find(oldGroupId) == dataGroupIdList.end()) {
+            bundleInfoItem->second.DeleteDataGroupInfo(oldGroupId);
+        }
+    }
+    if (dataGroupIdList.empty()) {
+        APP_LOGD("dataGroupIdList is empty");
         return;
     }
     std::map<std::string, std::pair<int32_t, std::string>> dataGroupIndexMap;
-    GetDataGroupIndexMap(dataGroupIndexMap);
+    std::unordered_set<int32_t> uniqueIdSet;
+    GetDataGroupIndexMap(dataGroupIndexMap, uniqueIdSet);
     for (const std::string &groupId : dataGroupIdList) {
         DataGroupInfo dataGroupInfo;
         dataGroupInfo.dataGroupId = groupId;
@@ -7424,18 +7492,100 @@ void BundleDataMgr::GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
             int32_t uid = iter->second.first + userId * Constants::BASE_USER_RANGE + DATA_GROUP_UID_OFFSET;
             dataGroupInfo.uid = uid;
             dataGroupInfo.gid = uid;
-            innerBundleInfo.AddDataGroupInfo(groupId, dataGroupInfo);
-            continue;
+        } else {
+            // need to generate a valid uniqueId
+            GenerateDataGroupUuidAndUid(dataGroupInfo, userId, uniqueIdSet);
         }
-        GenerateDataGroupUuidAndUid(dataGroupInfo, userId, dataGroupIndexMap);
-        innerBundleInfo.AddDataGroupInfo(groupId, dataGroupInfo);
+        bundleInfoItem->second.AddDataGroupInfo(groupId, dataGroupInfo);
+        CreateGroupDirIfNotExist(dataGroupInfo);
+    }
+    ProcessAllUserDataGroupInfosWhenBundleUpdate(bundleInfoItem->second);
+}
+
+void BundleDataMgr::CreateGroupDirIfNotExist(const DataGroupInfo &dataGroupInfo)
+{
+    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+        + std::to_string(dataGroupInfo.userId);
+    if (!BundleUtil::IsExistDirNoLog(parentDir)) {
+        APP_LOGE("group parent dir %{public}s not exist", parentDir.c_str());
+        return;
+    }
+    std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+    if (BundleUtil::IsExistDirNoLog(dir)) {
+        APP_LOGI("group dir exist, no need to create");
+        return;
+    }
+    auto result = InstalldClient::GetInstance()->Mkdir(dir, DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+    if (result != ERR_OK) {
+        APP_LOGE("mkdir group dir failed, uid %{public}d err %{public}d", dataGroupInfo.uid, result);
     }
 }
 
-void BundleDataMgr::GetDataGroupIndexMap(
-    std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const
+void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId)
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    APP_LOGD("called for -b %{public}s, -u %{public}d", bundleName.c_str(), userId);
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto bundleInfoItem = bundleInfos_.find(bundleName);
+    if (bundleInfoItem == bundleInfos_.end()) {
+        APP_LOGW("%{public}s not found", bundleName.c_str());
+        return;
+    }
+    auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
+    if (dataGroupInfos.empty()) {
+        return;
+    }
+    for (const auto &dataItem : dataGroupInfos) {
+        std::string groupId = dataItem.first;
+        if (dataItem.second.empty()) {
+            APP_LOGW("id infos %{public}s empty in %{public}s", groupId.c_str(), bundleName.c_str());
+            continue;
+        }
+        DataGroupInfo dataGroupInfo;
+        CreateNewDataGroupInfo(groupId, userId, dataItem.second[0], dataGroupInfo);
+        bundleInfoItem->second.AddDataGroupInfo(groupId, dataGroupInfo);
+        // group dir not create
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(bundleInfoItem->second)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+    }
+}
+
+void BundleDataMgr::DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData)
+{
+    APP_LOGD("called for -b %{public}s, -u %{public}d", bundleName.c_str(), userId);
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto bundleInfoItem = bundleInfos_.find(bundleName);
+    if (bundleInfoItem == bundleInfos_.end()) {
+        APP_LOGW("%{public}s not found", bundleName.c_str());
+        return;
+    }
+    auto dataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
+    if (dataGroupInfos.empty()) {
+        return;
+    }
+    for (const auto &dataItem : dataGroupInfos) {
+        std::string groupId = dataItem.first;
+        if (dataItem.second.empty()) {
+            APP_LOGW("id infos %{public}s empty in %{public}s", groupId.c_str(), bundleName.c_str());
+            continue;
+        }
+        bundleInfoItem->second.RemoveGroupInfos(userId, groupId);
+        if (!keepData && !IsDataGroupIdExistNoLock(groupId, userId)) {
+            std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+                + std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + dataItem.second[0].uuid;
+            if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
+                APP_LOGE("remove group dir %{private}s failed", dir.c_str());
+            }
+        }
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(bundleInfoItem->second)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+    }
+}
+
+void BundleDataMgr::GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
+    std::unordered_set<int32_t> &uniqueIdSet) const
+{
     for (const auto &bundleInfo : bundleInfos_) {
         for (const auto &infoItem : bundleInfo.second.GetDataGroupInfos()) {
             for_each(std::begin(infoItem.second), std::end(infoItem.second), [&](const DataGroupInfo &dataGroupInfo) {
@@ -7443,15 +7593,15 @@ void BundleDataMgr::GetDataGroupIndexMap(
                     - DATA_GROUP_UID_OFFSET;
                 dataGroupIndexMap[dataGroupInfo.dataGroupId] =
                     std::pair<int32_t, std::string>(index, dataGroupInfo.uuid);
+                uniqueIdSet.insert(index);
             });
         }
     }
 }
 
-bool BundleDataMgr::IsShareDataGroupId(const std::string &dataGroupId, int32_t userId) const
+bool BundleDataMgr::IsShareDataGroupIdNoLock(const std::string &dataGroupId, int32_t userId) const
 {
-    APP_LOGD("IsShareDataGroupId, dataGroupId is %{public}s", dataGroupId.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    APP_LOGD("IsShareDataGroupIdNoLock, dataGroupId is %{public}s", dataGroupId.c_str());
     int32_t count = 0;
     for (const auto &info : bundleInfos_) {
         auto dataGroupInfos = info.second.GetDataGroupInfos();
@@ -7476,6 +7626,97 @@ bool BundleDataMgr::IsShareDataGroupId(const std::string &dataGroupId, int32_t u
     return false;
 }
 
+bool BundleDataMgr::IsDataGroupIdExistNoLock(const std::string &dataGroupId, int32_t userId) const
+{
+    APP_LOGD("dataGroupId is %{public}s, user %{public}d", dataGroupId.c_str(), userId);
+    for (const auto &info : bundleInfos_) {
+        auto dataGroupInfos = info.second.GetDataGroupInfos();
+        auto iter = dataGroupInfos.find(dataGroupId);
+        if (iter == dataGroupInfos.end()) {
+            continue;
+        }
+
+        auto dataGroupIter = std::find_if(std::begin(iter->second), std::end(iter->second),
+            [userId](const DataGroupInfo &dataGroupInfo) {
+            return dataGroupInfo.userId == userId;
+        });
+        if (dataGroupIter == std::end(iter->second)) {
+            continue;
+        }
+        return true;
+    }
+    return false;
+}
+
+void BundleDataMgr::RemoveOldGroupDirs(const InnerBundleInfo &oldInfo) const
+{
+    //find ids existed in oldInfo, but not in newInfo when there is no others share this id
+    auto oldDatagroupInfos = oldInfo.GetDataGroupInfos();
+    if (oldDatagroupInfos.empty()) {
+        return;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto bundleInfoItem = bundleInfos_.find(oldInfo.GetBundleName());
+    if (bundleInfoItem == bundleInfos_.end()) {
+        APP_LOGE("find bundle %{public}s failed", oldInfo.GetBundleName().c_str());
+        return;
+    }
+    auto newDataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
+    std::unordered_set<int32_t> userIds = bundleInfoItem->second.GetUsers();
+    for (const auto &oldDataItem : oldDatagroupInfos) {
+        std::string oldGroupId = oldDataItem.first;
+        if (oldDataItem.second.empty()) {
+            APP_LOGE("infos empty in %{public}s %{public}s", oldInfo.GetBundleName().c_str(), oldGroupId.c_str());
+            continue;
+        }
+        if (newDataGroupInfos.find(oldGroupId) != newDataGroupInfos.end()) {
+            continue;
+        }
+        std::string uuid = oldDataItem.second[0].uuid;
+        for (int32_t userId : userIds) {
+            std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
+                std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + uuid;
+            if (!IsDataGroupIdExistNoLock(oldGroupId, userId)) {
+                APP_LOGI("-u %{public}d remove group dir %{private}s", userId, oldGroupId.c_str());
+                (void)InstalldClient::GetInstance()->RemoveDir(dir);
+            }
+        }
+    }
+}
+
+void BundleDataMgr::DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId) const
+{
+    //find ids existed in newInfo, but not in oldInfo when there is no others share this id
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto bundleInfoItem = bundleInfos_.find(oldInfo.GetBundleName());
+    if (bundleInfoItem == bundleInfos_.end()) {
+        APP_LOGE("find bundle %{public}s failed", oldInfo.GetBundleName().c_str());
+        return;
+    }
+    auto newDataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
+    if (newDataGroupInfos.empty()) {
+        return;
+    }
+    auto oldDatagroupInfos = oldInfo.GetDataGroupInfos();
+    for (const auto &newDataItem : newDataGroupInfos) {
+        std::string newGroupId = newDataItem.first;
+        if (newDataItem.second.empty()) {
+            APP_LOGE("infos empty in %{public}s %{public}s", oldInfo.GetBundleName().c_str(), newGroupId.c_str());
+            continue;
+        }
+        if (oldDatagroupInfos.find(newGroupId) != oldDatagroupInfos.end() ||
+            IsShareDataGroupIdNoLock(newGroupId, userId)) {
+            continue;
+        }
+        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
+            std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + newDataItem.second[0].uuid;
+        APP_LOGI("remove group dir %{private}s", dir.c_str());
+        if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
+            APP_LOGE("remove group dir %{private}s failed", dir.c_str());
+        }
+    }
+}
+
 ErrCode BundleDataMgr::FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerBundleInfo,
     const std::string &moduleName, const std::string &abilityName, AbilityInfo &abilityInfo) const
 {
@@ -7491,6 +7732,128 @@ ErrCode BundleDataMgr::FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerB
     ErrCode ret = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, abilityInfo);
     if (ret != ERR_OK) {
         APP_LOGD("%{public}s:FindAbilityInfo failed: %{public}d", innerBundleInfo.GetBundleName().c_str(), ret);
+    }
+    return ret;
+}
+
+void BundleDataMgr::ScanAllBundleGroupInfo()
+{
+    // valid info, key: index, value: dataGroupId
+    std::map<int32_t, std::string> indexMap;
+    // valid info, key: dataGroupId, value: index
+    std::map<std::string, int32_t> groupIdMap;
+    // invalid infos, key: bundleNames, value: dataGroupId
+    std::map<std::string, std::set<std::string>> needProcessGroupInfoBundleNames;
+    // invalid GroupId
+    std::set<std::string> errorGroupIds;
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &info : bundleInfos_) {
+        std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos = info.second.GetDataGroupInfos();
+        if (dataGroupInfos.empty()) {
+            continue;
+        }
+        for (const auto &dataGroupItem : dataGroupInfos) {
+            std::string dataGroupId = dataGroupItem.first;
+            if (dataGroupItem.second.empty()) {
+                APP_LOGW("dataGroupInfos is empty in %{public}s", dataGroupId.c_str());
+                continue;
+            }
+            int32_t groupUidIndex = dataGroupItem.second[0].uid -
+                dataGroupItem.second[0].userId * Constants::BASE_USER_RANGE - DATA_GROUP_UID_OFFSET;
+            if (indexMap.find(groupUidIndex) == indexMap.end()) {
+                indexMap[groupUidIndex] = dataGroupId;
+            }
+            if (groupIdMap.find(dataGroupId) == groupIdMap.end()) {
+                groupIdMap[dataGroupId] = groupUidIndex;
+            }
+            if ((indexMap[groupUidIndex] == dataGroupId) && (groupIdMap[dataGroupId] == groupUidIndex)) {
+                continue;
+            }
+            if (indexMap[groupUidIndex] != dataGroupId) {
+                errorGroupIds.insert(dataGroupId);
+            }
+            // invalid index or groupId
+            APP_LOGW("error index %{public}d groudId %{public}s -n %{public}s",
+                groupUidIndex, dataGroupId.c_str(), info.first.c_str());
+            needProcessGroupInfoBundleNames[info.first].insert(dataGroupId);
+        }
+    }
+    HandleGroupIdAndIndex(errorGroupIds, indexMap, groupIdMap);
+    if (!HandleErrorDataGroupInfos(groupIdMap, needProcessGroupInfoBundleNames)) {
+        APP_LOGE("process bundle data group failed");
+    }
+}
+
+void BundleDataMgr::HandleGroupIdAndIndex(
+    const std::set<std::string> errorGroupIds,
+    std::map<int32_t, std::string> &indexMap,
+    std::map<std::string, int32_t> &groupIdMap)
+{
+    if (errorGroupIds.empty() || indexMap.empty() || groupIdMap.empty()) {
+        return;
+    }
+    for (const auto &groupId : errorGroupIds) {
+        if (groupIdMap.find(groupId) != groupIdMap.end()) {
+            continue;
+        }
+        int32_t groupIndex = DATA_GROUP_INDEX_START;
+        for (int32_t index = DATA_GROUP_INDEX_START; index < DATA_GROUP_UID_OFFSET; ++index) {
+            if (indexMap.find(index) == indexMap.end()) {
+                groupIndex = index;
+                break;
+            }
+        }
+        groupIdMap[groupId] = groupIndex;
+        indexMap[groupIndex] = groupId;
+    }
+}
+
+bool BundleDataMgr::HandleErrorDataGroupInfos(
+    const std::map<std::string, int32_t> &groupIdMap,
+    const std::map<std::string, std::set<std::string>> &needProcessGroupInfoBundleNames)
+{
+    if (groupIdMap.empty() || needProcessGroupInfoBundleNames.empty()) {
+        return true;
+    }
+    bool ret = true;
+    for (const auto &item : needProcessGroupInfoBundleNames) {
+        auto bundleInfoIter = bundleInfos_.find(item.first);
+        if (bundleInfoIter == bundleInfos_.end()) {
+            ret = false;
+            continue;
+        }
+        std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos =
+            bundleInfoIter->second.GetDataGroupInfos();
+        if (dataGroupInfos.empty()) {
+            continue;
+        }
+        auto userIds = bundleInfoIter->second.GetUsers();
+        for (const auto &groudId : item.second) {
+            auto groupIndexIter = groupIdMap.find(groudId);
+            if (groupIndexIter == groupIdMap.end()) {
+                APP_LOGW("id map not found group %{public}s", groudId.c_str());
+                ret = false;
+                continue;
+            }
+            auto dataGroupInfoIter = dataGroupInfos.find(groudId);
+            if ((dataGroupInfoIter == dataGroupInfos.end()) || dataGroupInfoIter->second.empty()) {
+                continue;
+            }
+            for (int32_t userId : userIds) {
+                DataGroupInfo dataGroupInfo;
+                dataGroupInfo.dataGroupId = groudId;
+                dataGroupInfo.userId = userId;
+                dataGroupInfo.uuid = dataGroupInfoIter->second[0].uuid;
+                int32_t uid = userId * Constants::BASE_USER_RANGE + groupIndexIter->second + DATA_GROUP_UID_OFFSET;
+                dataGroupInfo.uid = uid;
+                dataGroupInfo.gid = uid;
+                bundleInfoIter->second.AddDataGroupInfo(groudId, dataGroupInfo);
+            }
+        }
+        if (!dataStorage_->SaveStorageBundleInfo(bundleInfoIter->second)) {
+            APP_LOGE("SaveStorageBundleInfo bundle %{public}s failed", item.first.c_str());
+            ret = false;
+        }
     }
     return ret;
 }
@@ -8049,6 +8412,29 @@ ErrCode BundleDataMgr::GetOdidByBundleName(const std::string &bundleName, std::s
     const InnerBundleInfo &bundleInfo = item->second;
     bundleInfo.GetOdid(odid);
     return ERR_OK;
+}
+
+void BundleDataMgr::HandleOTACodeEncryption()
+{
+    int32_t timerId =
+        XCollieHelper::SetRecoveryTimer(FUNCATION_HANDLE_OTA_CODE_ENCRYPTION, OTA_CODE_ENCRYPTION_TIMEOUT);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+    APP_LOGI("begin");
+    std::vector<std::string> noEncrytedKeyBundles;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (const auto &item : bundleInfos_) {
+            bool needResetFlag = false;
+            item.second.HandleOTACodeEncryption(needResetFlag);
+            if (needResetFlag) {
+                noEncrytedKeyBundles.emplace_back(item.first);
+            }
+        }
+    }
+    for (const std::string &bundleName : noEncrytedKeyBundles) {
+        UpdateAppEncryptedStatus(bundleName, false, 0, true);
+    }
+    APP_LOGI("end");
 }
 
 void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
@@ -8710,7 +9096,6 @@ ErrCode BundleDataMgr::UpdateAppEncryptedStatus(
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        LOG_E(BMS_TAG_DEFAULT, "%{public}s not exist", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto res = item->second.UpdateAppEncryptedStatus(bundleName, isExisted, appIndex);
@@ -8954,33 +9339,42 @@ ErrCode BundleDataMgr::GetBundleNameByAppId(const std::string &appId, std::strin
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
-ErrCode BundleDataMgr::GetDirForAtomicService(const std::string &bundleName, AccountSA::OhosAccountInfo &accountInfo,
-    std::string &dataDir) const
+ErrCode BundleDataMgr::GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const
 {
+    APP_LOGD("start GetDirForAtomicService name: %{public}s", bundleName.c_str());
+    AccountSA::OhosAccountInfo accountInfo;
+    auto ret = AccountSA::OhosAccountKits::GetInstance().GetOhosAccountInfo(accountInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetOhosAccountInfo failed, errCode: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED;
+    }
+    dataDir = ATOMIC_SERVICE_DIR_PREFIX + accountInfo.uid_ + PLUS + bundleName;
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetDirForAtomicServiceByUserId(const std::string &bundleName, int32_t userId,
+    AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const
+{
+    APP_LOGD("start GetDirForAtomicServiceByUserId name: %{public}s userId: %{public}d", bundleName.c_str(), userId);
     if (accountInfo.uid_.empty()) {
-        auto ret = AccountSA::OhosAccountKits::GetInstance().GetOhosAccountInfo(accountInfo);
+        auto ret = AccountSA::OhosAccountKits::GetInstance().GetOsAccountDistributedInfo(userId, accountInfo);
         if (ret != ERR_OK) {
-            APP_LOGE("GetOhosAccountInfo failed, errCode: %{public}d", ret);
-            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+            APP_LOGE("GetOsAccountDistributedInfo failed, errCode: %{public}d", ret);
+            return ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED;
         }
     }
     dataDir = ATOMIC_SERVICE_DIR_PREFIX + accountInfo.uid_ + PLUS + bundleName;
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndexAndType(const std::string &bundleName, const int32_t appIndex,
-    const BundleType type, AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const
+std::string BundleDataMgr::GetDirForApp(const std::string &bundleName, const int32_t appIndex) const
 {
-    if (type == BundleType::ATOMIC_SERVICE) {
-        return GetDirForAtomicService(bundleName, accountInfo, dataDir);
-    }
-
+    APP_LOGD("start GetDirForApp name: %{public}s appIndex: %{public}d", bundleName.c_str(), appIndex);
     if (appIndex == 0) {
-        dataDir = bundleName;
+        return bundleName;
     } else {
-        dataDir = CLONE_APP_DIR_PREFIX + std::to_string(appIndex) + PLUS + bundleName;
+        return CLONE_APP_DIR_PREFIX + std::to_string(appIndex) + PLUS + bundleName;
     }
-    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
@@ -8990,10 +9384,13 @@ ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleNa
     if (appIndex < 0) {
         return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
     }
-    AccountSA::OhosAccountInfo accountInfo;
-    BundleType type;
+    BundleType type = BundleType::APP;
     GetBundleType(bundleName, type);
-    return GetDirByBundleNameAndAppIndexAndType(bundleName, appIndex, type, accountInfo, dataDir);
+    if (type == BundleType::ATOMIC_SERVICE) {
+        return GetDirForAtomicService(bundleName, dataDir);
+    }
+    dataDir = GetDirForApp(bundleName, appIndex);
+    return ERR_OK;
 }
 
 std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
@@ -9013,6 +9410,23 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesByInnerBundleInfo(const In
         cloneAppIndexes.emplace_back(cloneInfo.second.appIndex);
     }
     return cloneAppIndexes;
+}
+
+ErrCode BundleDataMgr::GetBundleDir(int32_t userId, BundleType type, AccountSA::OhosAccountInfo &accountInfo,
+    BundleDir &bundleDir) const
+{
+    APP_LOGD("start GetBundleDir");
+    if (type == BundleType::ATOMIC_SERVICE) {
+        std::string dataDir;
+        auto ret = GetDirForAtomicServiceByUserId(bundleDir.bundleName, userId, accountInfo, dataDir);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+        bundleDir.dir = dataDir;
+    } else {
+        bundleDir.dir = GetDirForApp(bundleDir.bundleName, bundleDir.appIndex);
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) const
@@ -9044,14 +9458,13 @@ ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &
             allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
         }
         for (int32_t appIndex: allAppIndexes) {
-            std::string dataDir;
-            if (GetDirByBundleNameAndAppIndexAndType(bundleName, appIndex, type, accountInfo, dataDir) != ERR_OK) {
-                return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-            }
             BundleDir bundleDir;
             bundleDir.bundleName = bundleName;
             bundleDir.appIndex = appIndex;
-            bundleDir.dir = dataDir;
+            auto ret = GetBundleDir(responseUserId, type, accountInfo, bundleDir);
+            if (ret != ERR_OK) {
+                return ret;
+            }
             bundleDirs.emplace_back(bundleDir);
         }
     }

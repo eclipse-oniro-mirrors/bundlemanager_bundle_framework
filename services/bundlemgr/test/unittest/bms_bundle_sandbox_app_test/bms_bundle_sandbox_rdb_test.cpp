@@ -161,4 +161,19 @@ HWTEST_F(BmsSandboxRdbTest, BmsSandboxRdbTest_0500, Function | SmallTest | Level
     bool ret = sundleSandboxDataMgr.RestoreSandboxPersistentInnerBundleInfo();
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: BmsSandboxRdbTest_0600
+ * @tc.name: test anormal input parameters
+ * @tc.desc: 1.the rdbDataManager_ is empty
+ *           2.the QuerySandboxInnerBundleInfo failed
+ */
+HWTEST_F(BmsSandboxRdbTest, BmsSandboxRdbTest_0600, Function | SmallTest | Level0)
+{
+    SandboxManagerRdb sandboxManagerRdb;
+    InnerBundleInfo innerBundleInfos;
+    sandboxManagerRdb.rdbDataManager_ = nullptr;
+    bool ret = sandboxManagerRdb.QuerySandboxInnerBundleInfo(BUNDLE_NAME, innerBundleInfos);
+    EXPECT_FALSE(ret);
+}
 }

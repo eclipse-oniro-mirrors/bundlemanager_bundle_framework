@@ -179,6 +179,7 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED, ERROR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED },
     { ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED,
         ERROR_INSTALL_EXISTED_ENTERPRISE_NOT_ALLOWED_ERROR },
+    {ERR_BUNDLE_MANAGER_INVALID_UNINSTALL_RULE, ERROR_INVALID_UNINSTALL_RULE},
 };
 }
 using Want = OHOS::AAFwk::Want;
@@ -854,6 +855,10 @@ void CommonFunc::ConvertWindowSize(napi_env env, const AbilityInfo &abilityInfo,
 
 void CommonFunc::ConvertMetadata(napi_env env, const Metadata &metadata, napi_value value)
 {
+    napi_value nValueId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, metadata.valueId, &nValueId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "valueId", nValueId));
+
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, metadata.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, NAME, nName));

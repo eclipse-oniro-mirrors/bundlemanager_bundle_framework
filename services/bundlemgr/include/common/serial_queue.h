@@ -30,6 +30,7 @@ public:
     ~SerialQueue();
     void ScheduleDelayTask(const std::string &taskName, uint64_t ms, std::function<void()> func);
     void CancelDelayTask(const std::string &taskName);
+    void ReScheduleDelayTask(const std::string &taskName, uint64_t ms, std::function<void()> func);
 private:
     std::shared_mutex mutex_;
     std::map<std::string, ffrt::task_handle> taskMap_;

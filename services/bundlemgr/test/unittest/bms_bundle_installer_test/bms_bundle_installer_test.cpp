@@ -49,6 +49,8 @@
 #include "system_bundle_installer.h"
 #include "utd_handler.h"
 #include "want.h"
+#include "uninstall_bundle_info.h"
+#include "installd/installd_permission_mgr.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -85,10 +87,21 @@ const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
 const std::string MODULE_NAME = "entry";
 const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
 const std::string TEST_STRING = "test.string";
-const std::string TEST_APL = "normal";
+const std::string TEST_APL_NORMAL = "normal";
+const std::string TEST_APL_SYSTEM_CORE = "system_core";
+const std::string TEST_APL_SYSTEM_BASIC = "system_basic";
+const std::string TEST_APL_INVALID = "invalid";
 const std::string TEST_PACK_AGE = "entry";
 const std::string NOEXIST = "noExist";
 const std::string CURRENT_PATH = "/data/service/el2/100/hmdfs/account/data/test_max";
+const std::string APP_ENTRY_V1_HAP = "versionUpdateTest1.hap";
+const std::string APP_ENTRY_V2_HAP = "versionUpdateTest2.hap";
+const std::string APP_FEATURE_V1_HAP = "versionUpdateTest3.hap";
+const std::string APP_FEATURE_V2_HAP = "versionUpdateTest4.hap";
+const std::string ATOMIC_ENTRY_V1_HAP = "versionUpdateTest5.hap";
+const std::string ATOMIC_FEATURE_V1_HAP = "versionUpdateTest6.hap";
+const std::string ATOMIC_FEATURE_V2_HAP = "versionUpdateTest7.hap";
+const std::string VERSION_UPDATE_BUNDLE_NAME = "com.example.versiontest";
 const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
 const int32_t ZERO_CODE = 0;
@@ -114,6 +127,7 @@ const std::string TEST_CPU_ABI = "arm64";
 constexpr const char* BMS_SERVICE_PATH = "/data/service";
 const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 const std::string DATA_EL2_SHAREFILES_PATH = "/data/app/el2/100/sharefiles/";
+const std::string TEST_SHARE_FILES = "test.sharefiles";
 const std::vector<std::string> BUNDLE_DATA_SUB_DIRS = {
     "/cache",
     "/files",
@@ -140,6 +154,7 @@ public:
     void CheckFileNonExist() const;
     void CheckShareFilesDataDirsExist(const std::string &bundleName) const;
     void CheckShareFilesDataDirsNonExist(const std::string &bundleName) const;
+    void DeleteShareFilesDataDirs(const std::string &bundleName) const;
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     const std::shared_ptr<BundleInstallerManager> GetBundleInstallerManager() const;
     void StopInstalldService() const;
@@ -328,7 +343,7 @@ void BmsBundleInstallerTest::CheckShareFilesDataDirsExist(const std::string &bun
         for (const auto &dir : BUNDLE_DATA_SUB_DIRS) {
             std::string childBundleDataDir = dataPath + dir;
             ret = access(childBundleDataDir.c_str(), F_OK);
-            EXPECT_EQ(ret, 0);
+            EXPECT_EQ(ret, 0) << "the dir doesn't exist: " << childBundleDataDir;
         }
     }
 }
@@ -343,6 +358,15 @@ void BmsBundleInstallerTest::CheckShareFilesDataDirsNonExist(const std::string &
         int32_t ret = access(childBundleDataDir.c_str(), F_OK);
         EXPECT_NE(ret, 0) << "the dir exist: " << childBundleDataDir;
     }
+}
+
+void BmsBundleInstallerTest::DeleteShareFilesDataDirs(const std::string &bundleName) const
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> shareFilesDirs;
+    auto dataPath = DATA_EL2_SHAREFILES_PATH + bundleName;
+    shareFilesDirs.emplace_back(dataPath);
+    bundleUtil.DeleteTempDirs(shareFilesDirs);
 }
 
 const std::shared_ptr<BundleDataMgr> BmsBundleInstallerTest::GetBundleDataMgr() const
@@ -3043,9 +3067,12 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0400, Function | SmallTest | Leve
 HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0500, Function | SmallTest | Level1)
 {
     BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
-
     bool ret = extractor.Init();
+#ifdef USE_BUNDLE_EXTENSION
+    EXPECT_FALSE(ret);
+#else
     EXPECT_TRUE(ret);
+#endif
 }
 
 /**
@@ -6276,7 +6303,7 @@ HWTEST_F(BmsBundleInstallerTest, RollbackHmpCommonInfo_0100, Function | SmallTes
     std::vector<std::string> validGroupIds;
     installer.GetValidDataGroupIds(extensionDataGroupIds, bundleDataGroupIds, validGroupIds);
 
-    installer.CreateDataGroupDir(info);
+    installer.GenerateNewUserDataGroupInfos(info);
 
     std::unordered_map<std::string, InnerBundleInfo> infos;
     installer.SetAppDistributionType(infos);
@@ -6514,20 +6541,22 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0100, Function | Sma
     createDirParam.userId = INVAILD_CODE;
     createDirParam.uid = INVAILD_CODE;
     createDirParam.gid = INVAILD_CODE;
-    createDirParam.apl = TEST_STRING;
+    createDirParam.apl = TEST_APL_NORMAL;
     createDirParam.isPreInstallApp = false;
     auto ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
     CreateDirParam createDirParam2;
-    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.bundleName = TEST_SHARE_FILES;
     createDirParam2.userId = 100;
     createDirParam2.uid = ZERO_CODE;
     createDirParam2.gid = ZERO_CODE;
-    createDirParam2.apl = TEST_APL;
+    createDirParam2.apl = TEST_APL_NORMAL;
     createDirParam2.isPreInstallApp = false;
     ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
     EXPECT_EQ(ret, ERR_OK);
-    CheckShareFilesDataDirsExist(TEST_STRING);
+    CheckShareFilesDataDirsExist(TEST_SHARE_FILES);
+    DeleteShareFilesDataDirs(TEST_SHARE_FILES);
+    CheckShareFilesDataDirsNonExist(TEST_SHARE_FILES);
 }
 
 /**
@@ -6539,15 +6568,15 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0101, Function | Sma
 {
     InstalldHostImpl hostImpl;
     CreateDirParam createDirParam2;
-    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.bundleName = TEST_SHARE_FILES;
     createDirParam2.userId = INVAILD_CODE;
     createDirParam2.uid = INVAILD_CODE;
     createDirParam2.gid = INVAILD_CODE;
-    createDirParam2.apl = TEST_APL;
+    createDirParam2.apl = TEST_APL_NORMAL;
     createDirParam2.isPreInstallApp = false;
     ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
-    CheckShareFilesDataDirsNonExist(TEST_STRING);
+    CheckShareFilesDataDirsNonExist(TEST_SHARE_FILES);
 }
 
 /**
@@ -6559,15 +6588,15 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0102, Function | Sma
 {
     InstalldHostImpl hostImpl;
     CreateDirParam createDirParam2;
-    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.bundleName = TEST_SHARE_FILES;
     createDirParam2.userId = INVAILD_CODE;
     createDirParam2.uid = INVAILD_CODE;
     createDirParam2.gid = ZERO_CODE;
-    createDirParam2.apl = TEST_APL;
+    createDirParam2.apl = TEST_APL_NORMAL;
     createDirParam2.isPreInstallApp = false;
     ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
-    CheckShareFilesDataDirsNonExist(TEST_STRING);
+    CheckShareFilesDataDirsNonExist(TEST_SHARE_FILES);
 }
 
 /**
@@ -6579,15 +6608,15 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0103, Function | Sma
 {
     InstalldHostImpl hostImpl;
     CreateDirParam createDirParam2;
-    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.bundleName = TEST_SHARE_FILES;
     createDirParam2.userId = INVAILD_CODE;
     createDirParam2.uid = ZERO_CODE;
     createDirParam2.gid = INVAILD_CODE;
-    createDirParam2.apl = TEST_APL;
+    createDirParam2.apl = TEST_APL_NORMAL;
     createDirParam2.isPreInstallApp = false;
     ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
-    CheckShareFilesDataDirsNonExist(TEST_STRING);
+    CheckShareFilesDataDirsNonExist(TEST_SHARE_FILES);
 }
 
 /**
@@ -6599,15 +6628,15 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0104, Function | Sma
 {
     InstalldHostImpl hostImpl;
     CreateDirParam createDirParam2;
-    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.bundleName = TEST_SHARE_FILES;
     createDirParam2.userId = 100;
     createDirParam2.uid = INVAILD_CODE;
     createDirParam2.gid = INVAILD_CODE;
-    createDirParam2.apl = TEST_APL;
+    createDirParam2.apl = TEST_APL_INVALID;
     createDirParam2.isPreInstallApp = false;
     ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
-    CheckShareFilesDataDirsNonExist(TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
+    DeleteShareFilesDataDirs(TEST_SHARE_FILES);
 }
 
 /**
@@ -6619,15 +6648,15 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0105, Function | Sma
 {
     InstalldHostImpl hostImpl;
     CreateDirParam createDirParam2;
-    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.bundleName = TEST_SHARE_FILES;
     createDirParam2.userId = INVAILD_CODE;
     createDirParam2.uid = ZERO_CODE;
     createDirParam2.gid = ZERO_CODE;
-    createDirParam2.apl = TEST_APL;
+    createDirParam2.apl = TEST_APL_NORMAL;
     createDirParam2.isPreInstallApp = false;
     ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
-    CheckShareFilesDataDirsNonExist(TEST_STRING);
+    CheckShareFilesDataDirsNonExist(TEST_SHARE_FILES);
 }
 
 /**
@@ -6639,15 +6668,15 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0106, Function | Sma
 {
     InstalldHostImpl hostImpl;
     CreateDirParam createDirParam2;
-    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.bundleName = TEST_SHARE_FILES;
     createDirParam2.userId = 100;
     createDirParam2.uid = ZERO_CODE;
     createDirParam2.gid = INVAILD_CODE;
-    createDirParam2.apl = TEST_APL;
+    createDirParam2.apl = TEST_APL_INVALID;
     createDirParam2.isPreInstallApp = false;
     ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
-    CheckShareFilesDataDirsNonExist(TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
+    DeleteShareFilesDataDirs(TEST_SHARE_FILES);
 }
 
 /**
@@ -6659,15 +6688,16 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0107, Function | Sma
 {
     InstalldHostImpl hostImpl;
     CreateDirParam createDirParam2;
-    createDirParam2.bundleName = TEST_STRING;
+    createDirParam2.bundleName = TEST_SHARE_FILES;
     createDirParam2.userId = 100;
     createDirParam2.uid = INVAILD_CODE;
     createDirParam2.gid = ZERO_CODE;
-    createDirParam2.apl = TEST_APL;
+    createDirParam2.apl = TEST_APL_INVALID;
     createDirParam2.isPreInstallApp = false;
     ErrCode ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
-    CheckShareFilesDataDirsNonExist(TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
+    CheckShareFilesDataDirsExist(TEST_SHARE_FILES);
+    DeleteShareFilesDataDirs(TEST_SHARE_FILES);
 }
 
 /**
@@ -6683,10 +6713,12 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0108, Function | Sma
     createDirParam2.userId = 100;
     createDirParam2.uid = ZERO_CODE;
     createDirParam2.gid = ZERO_CODE;
-    createDirParam2.apl = TEST_APL;
+    createDirParam2.apl = TEST_APL_INVALID;
     createDirParam2.isPreInstallApp = false;
     auto ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    CheckShareFilesDataDirsNonExist(TEST_SHARE_FILES);
+    DeleteShareFilesDataDirs("");
 }
 
 /**
@@ -6716,6 +6748,21 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModule_0100, Function | SmallTest | Leve
     appServiceFwkInstaller.GenerateOdid(infos, hapVerifyRes);
 
     ErrCode ret = appServiceFwkInstaller.ExtractModule(newInfo, bundlePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractModule_0200
+ * @tc.name: test ExtractModule
+ * @tc.desc: 1.Test the ExtractModule
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractModule_0200, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    std::string bundlePath;
+    auto ret = appServiceFwkInstaller.ExtractModule(oldInfo, newInfo, bundlePath);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -6943,7 +6990,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateExtensionDataDir_0100, Function | SmallTe
     std::vector<std::string> createExtensionDirs;
     installer.createExtensionDirs_.push_back("test.extension.dir");
     installer.CreateExtensionDataDir(info);
-    installer.CreateDataGroupDir(info);
+    installer.GenerateNewUserDataGroupInfos(info);
     EXPECT_FALSE(installer.createExtensionDirs_.empty());
 }
 
@@ -7263,6 +7310,205 @@ HWTEST_F(BmsBundleInstallerTest, UtdHandler_0200, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: VersionUpdateTest_0010
+ * @tc.name: test updateVersion
+ * @tc.desc: atomic: install v1 entry, update v2 feature, versionName update
+ */
+HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0010, Function | SmallTest | Level0)
+{
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + ATOMIC_ENTRY_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "atom_entry_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + ATOMIC_FEATURE_V2_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "atom_feature_v2");
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: VersionUpdateTest_0020
+ * @tc.name: test updateVersion
+ * @tc.desc: atomic: install v1 entry+feature, update v2 feature, versionName update
+ */
+HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0020, Function | SmallTest | Level0)
+{
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + ATOMIC_ENTRY_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bundlePath = RESOURCE_ROOT_PATH + ATOMIC_FEATURE_V1_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "atom_entry_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + ATOMIC_FEATURE_V2_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "atom_feature_v2");
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: VersionUpdateTest_0030
+ * @tc.name: test updateVersion
+ * @tc.desc: app: install v1 feature, update v2 entry, versionName update
+ */
+HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0030, Function | SmallTest | Level0)
+{
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + APP_FEATURE_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "feature_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V2_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v2");
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: VersionUpdateTest_0040
+ * @tc.name: test updateVersion
+ * @tc.desc: app: install v1 entry, update v2 entry, versionName update
+ */
+HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0040, Function | SmallTest | Level0)
+{
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V2_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v2");
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: VersionUpdateTest_0050
+ * @tc.name: test updateVersion
+ * @tc.desc: app: install v1 entry, update v1 feature, update v2 entry, versionName update
+ */
+HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0050, Function | SmallTest | Level0)
+{
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + APP_FEATURE_V1_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V2_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v2");
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: VersionUpdateTest_0060
+ * @tc.name: test updateVersion
+ * @tc.desc: app: install v1 feature, update v1 entry, versionName update
+ */
+HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0060, Function | SmallTest | Level0)
+{
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + APP_FEATURE_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "feature_v1");
+
+    bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V1_HAP;
+    installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(info.versionName, "entry_v1");
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
+}
+
+/**
  * @tc.number: SetDisposedRuleWhenBundleUpdateStart_0010
  * @tc.name: test SetDisposedRuleWhenBundleUpdateStart
  * @tc.desc: 1.SetDisposedRuleWhenBundleUpdateStart
@@ -7527,25 +7773,58 @@ HWTEST_F(BmsBundleInstallerTest, ProcessEncryptedKeyExisted_0100, Function | Sma
     std::vector<CodeProtectBundleInfo> infos;
     int32_t res = ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     uint32_t type = CodeOperation::ADD;
-
+    InnerBundleInfo innerBundleInfo;
+    installer.CreateEl5AndSetPolicy(innerBundleInfo);
     installer.ProcessEncryptedKeyExisted(res, type, infos);
     EXPECT_TRUE(infos.empty());
 }
 
 /**
- * @tc.number: GetAllConeCodeProtectBundleInfos_0100
- * @tc.name: test Install
- * @tc.desc: 1.Test the GetAllConeCodeProtectBundleInfos of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, GetAllConeCodeProtectBundleInfos_0100, Function | SmallTest | Level0)
+ * @tc.number: UnInstall_0100
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.Test the UnInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, UnInstall_0100, Function | SmallTest | Level0)
 {
-    BaseBundleInstaller installer;
-    installer.dataMgr_ = GetBundleDataMgr();
-    std::vector<CodeProtectBundleInfo> infos;
-    InnerBundleInfo innerBundleInfo;
-    installer.CreateEl5AndSetPolicy(innerBundleInfo);
-    installer.GetAllConeCodeProtectBundleInfos(infos, innerBundleInfo);
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    std::string bundleName;
+    auto ret = appServiceFwkInstaller.UnInstall(bundleName, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR);
+}
 
-    EXPECT_TRUE(infos.empty());
+/**
+ * @tc.number: IsHapChecked_0100
+ * @tc.name: test IsHapChecked
+ * @tc.desc: 1.Test the IsHapChecked
+ */
+HWTEST_F(BmsBundleInstallerTest, IsHapChecked_0100, Function | SmallTest | Level0)
+{
+    CodeSignHelper helper;
+    EXPECT_FALSE(helper.IsHapChecked());
+}
+
+/**
+ * @tc.number: SetHapChecked_0100
+ * @tc.name: test SetHapChecked
+ * @tc.desc: 1.Test the SetHapChecked
+ */
+HWTEST_F(BmsBundleInstallerTest, SetHapChecked_0100, Function | SmallTest | Level0)
+{
+    CodeSignHelper helper;
+    helper.SetHapChecked(true);
+    EXPECT_TRUE(helper.isHapChecked);
+}
+
+/**
+ * @tc.number: Init_0100
+ * @tc.name: test Init
+ * @tc.desc: 1.Test the Init
+ */
+HWTEST_F(BmsBundleInstallerTest, Init_0100, Function | SmallTest | Level0)
+{
+    UninstallBundleInfo info;
+    info.extensionDirs.push_back(BUNDLE_NAME);
+    info.Init();
+    EXPECT_TRUE(info.extensionDirs.empty());
 }
 } // OHOS

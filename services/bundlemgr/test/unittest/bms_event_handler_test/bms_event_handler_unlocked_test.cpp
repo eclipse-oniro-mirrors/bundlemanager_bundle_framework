@@ -142,4 +142,18 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0400, Function
     bool res = OnReceiveEvent(commonData);
     EXPECT_EQ(res, false);
 }
+
+/**
+ * @tc.number: UserUnlockedEventSubscriber_0500
+ * @tc.name: UserUnlockedEventSubscriber
+ * @tc.desc: test CreateEl5Dir false
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0500, Function | SmallTest | Level0)
+{
+    UpdateAppDataMgr updateAppDataMgr;
+    CreateDirParam createDirParam;
+    createDirParam.userId = 10;
+    bool res = updateAppDataMgr.CreateEl5Dir(createDirParam);
+    EXPECT_EQ(res, false);
+}
 } // OHOS

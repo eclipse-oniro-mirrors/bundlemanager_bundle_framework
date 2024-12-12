@@ -1334,7 +1334,7 @@ napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info)
     APP_LOGI("UpdateBundleForSelf called");
     // obtain arguments of install interface
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("init param failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -1818,8 +1818,15 @@ static bool ParseDestroyAppCloneParam(napi_env env, napi_value args, napi_valuet
 {
     if (valueType == napi_number && !CommonFunc::ParseInt(env, args, userId)) {
         APP_LOGW("parse userId failed,set this parameter to the caller userId");
-    } else if (valueType == napi_object && !ParseParameters(env, args, destroyAppCloneParam.parameters)) {
-        APP_LOGW("Parse parameters failed,using default value");
+    } else if (valueType == napi_object) {
+        if (!ParseUserId(env, args, destroyAppCloneParam.userId)) {
+            APP_LOGW("parse userId failed,using default value");
+        } else {
+            userId = destroyAppCloneParam.userId;
+        }
+        if (!ParseParameters(env, args, destroyAppCloneParam.parameters)) {
+            APP_LOGW("parse parameters failed,using default value");
+        }
     }
     return true;
 }

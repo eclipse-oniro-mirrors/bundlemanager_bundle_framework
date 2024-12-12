@@ -102,7 +102,7 @@ public:
         return nullptr;
     };
     virtual std::shared_ptr<NativeRdb::ResultSet> QueryByStep(
-        const std::string &sql, const std::vector<ValueObject> &bindArgs = {})
+        const std::string &sql, const std::vector<ValueObject> &bindArgs = {}, bool preCount = true)
     {
         return nullptr;
     };
@@ -153,7 +153,7 @@ public:
         return sharedResultSet;
     };
     virtual std::shared_ptr<NativeRdb::ResultSet> QueryByStep(
-        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns)
+        const AbsRdbPredicates &predicates, const std::vector<std::string> &columns, bool preCount = true)
     {
         return nullptr;
     };

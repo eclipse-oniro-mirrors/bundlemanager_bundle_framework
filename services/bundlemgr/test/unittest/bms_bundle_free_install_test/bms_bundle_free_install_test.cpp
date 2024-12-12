@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2081,5 +2081,47 @@ HWTEST_F(BmsBundleFreeInstallTest, OnDelayedHeartbeat_0001, Function | SmallTest
     if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
         connectAbilityMgr->freeInstallParamsMap_.erase("1");
     }
+}
+
+/*
+ * @tc.number: OnDelayedHeartbeat_0100
+ * @tc.name: test OnDelayedHeartbeat
+ * @tc.desc: 1.test OnDelayedHeartbeat of ServiceCenterStatusCallback
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnDelayedHeartbeat_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(server, nullptr);
+    ServiceCenterStatusCallback callback(server);
+    auto ret = callback.OnDelayedHeartbeat(DEVICE_ID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/*
+ * @tc.number: OnServiceCenterReceived_0100
+ * @tc.name: test OnServiceCenterReceived
+ * @tc.desc: 1.test OnServiceCenterReceived of ServiceCenterStatusCallback
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnServiceCenterReceived_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleConnectAbilityMgr> server = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(server, nullptr);
+    ServiceCenterStatusCallback callback(server);
+    auto ret = callback.OnServiceCenterReceived(DEVICE_ID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/*
+ * @tc.number: CheckSubPackageName_0100
+ * @tc.name: test CheckSubPackageName
+ * @tc.desc: 1.test CheckSubPackageName of BundleConnectAbilityMgr
+ */
+HWTEST_F(BmsBundleFreeInstallTest, CheckSubPackageName_0100, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    InnerBundleInfo innerBundleInfo;
+    Want want;
+    auto ret = connectAbilityMgr->CheckSubPackageName(innerBundleInfo, want);
+    EXPECT_TRUE(ret);
 }
 } // OHOS

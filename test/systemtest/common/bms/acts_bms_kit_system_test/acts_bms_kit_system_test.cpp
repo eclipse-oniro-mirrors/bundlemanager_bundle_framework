@@ -9121,8 +9121,8 @@ HWTEST_F(ActsBmsKitSystemTest, SwitchUninstallState_0001, Function | MediumTest 
 {
     std::cout << "START SwitchUninstallState_0001" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient4.hap";
-    std::string appName = "com.example.myapplication3";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -9704,8 +9704,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetCompatibleDeviceType_0001, Function | MediumTe
 {
     std::cout << "START GetCompatibleDeviceType_0001" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient3.hap";
-    std::string appName = "com.example.myapplication2";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -9825,8 +9825,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleDirs_0002, Function | MediumTest | Le
 {
     std::cout << "START GetAllBundleDirs_0002" << std::endl;
     std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient2.hap";
-    std::string appName = "com.example.myapplication1";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
     Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);

@@ -87,6 +87,8 @@ const uint32_t BUNDLE_BACKUP_VERSION = 1000000;
 const uint32_t BUNDLE_BACKUP_LABEL_ID = 16777218;
 const uint32_t BUNDLE_BACKUP_ICON_ID = 16777221;
 const std::string CALLER_NAME_UT = "ut";
+const std::string DEVICETYPE = "deviceType";
+const int32_t APPINDEX = 10;
 }  // namespace
 
 class BmsBundleManagerTest : public testing::Test {
@@ -3519,7 +3521,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0027, Function | SmallTest | Leve
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     testRet = GetBundleDataMgr()->CheckInnerBundleInfoWithFlags(
         innerBundleInfo, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, USERID);
-    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
 }
 
 /**
@@ -6020,5 +6022,227 @@ HWTEST_F(BmsBundleManagerTest, PreInstallDataStorageRdb_0100, Function | SmallTe
 
     ret = preInstallDataStorage->LoadPreInstallBundleInfo(bundleName, preInstallBundleInfo);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3400
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetCompatibleDeviceType
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3400, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    std::string bundleName = BUNDLE_NAME;
+    std::string deviceType = DEVICETYPE;
+    ErrCode retCode = hostImpl->GetCompatibleDeviceType(bundleName, deviceType);
+    EXPECT_EQ(retCode, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3500
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetCompatibleDeviceTypeNative
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3500, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    std::string deviceType = DEVICETYPE;
+    ErrCode retCode = hostImpl->GetCompatibleDeviceTypeNative(deviceType);
+    EXPECT_EQ(retCode, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3600
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleInfosForContinuation
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3600, Function | MediumTest | Level1)
+{
+    BundleInfo bundleInfo;
+    std::vector<BundleInfo> bundleInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    ErrCode retCode = hostImpl->GetBundleInfosForContinuation(FLAG, bundleInfos, USERID);
+    EXPECT_FALSE(retCode);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3700
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetOdidByBundleName
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3700, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    std::string odid = "odid";
+    ErrCode retCode = hostImpl->GetOdidByBundleName(BUNDLE_NAME, odid);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3800
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test SetProvisionInfoToInnerBundleInfo
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3800, Function | MediumTest | Level1)
+{
+    std::string hapPath;
+    InnerBundleInfo info;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    hostImpl->SetProvisionInfoToInnerBundleInfo(hapPath, info);
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    ErrCode verifyRes = BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult);
+    EXPECT_EQ(verifyRes, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3900
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetOdid
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3900, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    std::string odid = "odid";
+    ErrCode retCode = hostImpl->GetOdid(odid);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_4000
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetPreferableBundleInfoFromHapPaths
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_4000, Function | MediumTest | Level1)
+{
+    std::vector<std::string> hapPaths;
+    hapPaths.emplace_back(BUNDLE_NAME);
+    BundleInfo bundleInfo;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    ErrCode retCode = hostImpl->GetPreferableBundleInfoFromHapPaths(hapPaths, bundleInfo);
+    EXPECT_FALSE(retCode);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_4100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test UpdateAppEncryptedStatus
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_4100, Function | MediumTest | Level1)
+{
+    std::string bundleName = BUNDLE_NAME;
+    bool isExisted = false;
+    int32_t appIndex = APPINDEX;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    ErrCode retCode = hostImpl->UpdateAppEncryptedStatus(bundleName, isExisted, appIndex);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_4200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test UpdateAppEncryptedStatus
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_4200, Function | MediumTest | Level1)
+{
+    std::string bundleName = BUNDLE_NAME;
+    bool isExisted = false;
+    int32_t appIndex = APPINDEX;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    ErrCode retCode = hostImpl->UpdateAppEncryptedStatus(bundleName, isExisted, appIndex);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_4300
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetAppControlProxy
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_4300, Function | MediumTest | Level1)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->appControlManagerHostImpl_ = nullptr;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    EXPECT_EQ(hostImpl->GetAppControlProxy(), nullptr);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_4400
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetAllBundleStats
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_4400, Function | MediumTest | Level1)
+{
+    std::vector<int64_t> bundleStats;
+    bundleStats.emplace_back(WAIT_TIME);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    auto result = hostImpl->GetAllBundleStats(USERID, bundleStats);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_4500
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetExtendResourceManager
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_4500, Function | MediumTest | Level1)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->extendResourceManager_ = nullptr;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    EXPECT_EQ(hostImpl->GetExtendResourceManager(), nullptr);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_4600
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetVerifyManager
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_4600, Function | MediumTest | Level1)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->verifyManager_ = nullptr;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    EXPECT_EQ(hostImpl->GetVerifyManager(), nullptr);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_4700
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test SetCloneApplicationEnabled
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_4700, Function | MediumTest | Level1)
+{
+    std::string bundleName = BUNDLE_NAME;
+    bool isEnable = false;
+    int32_t appIndex = APPINDEX;
+    int userId = USERID;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    ErrCode retCode = hostImpl->SetCloneApplicationEnabled(bundleName, appIndex, isEnable, userId);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_4800
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleNameByAppId
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_4800, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string appId;
+    std::string bundleName;
+    ErrCode retCode = hostImpl->GetBundleNameByAppId(appId, bundleName);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
 } // OHOS

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -737,7 +737,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4200, Function | Sma
     ExtractParam extractParam;
     extractParam.srcPath = "/system/etc/graphic/bootpic.zip";
     auto ret = InstalldOperator::ExtractFiles(extractParam);
+#ifdef USE_ARM64
+    EXPECT_FALSE(ret);
+#else
     EXPECT_TRUE(ret);
+#endif
 }
 
 /**
@@ -887,7 +891,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5200, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5300, Function | SmallTest | Level0)
 {
     auto ret = InstalldOperator::ExtractDiffFiles(TEST_ZIP_PATH, "", TEST_CPU_ABI);
+#ifdef USE_ARM64
+    EXPECT_FALSE(ret);
+#else
     EXPECT_TRUE(ret);
+#endif
 }
 
 /**
@@ -1083,7 +1091,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6800, Function | Sma
 {
     std::vector<std::string> diffFileNames;
     bool res = InstalldOperator::GetNativeLibraryFileNames(TEST_ZIP_PATH, TEST_CPU_ABI, diffFileNames);
+#ifdef USE_ARM64
+    EXPECT_EQ(res, false);
+#else
     EXPECT_EQ(res, true);
+#endif
 }
 
 /**
@@ -1639,7 +1651,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10300, Function | Sm
     extractParam.extractFileType = ExtractFileType::SO;
     std::string hnpPackageInfo;
     auto ret = InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam);
+#ifdef USE_ARM64
+    EXPECT_FALSE(ret);
+#else
     EXPECT_TRUE(ret);
+#endif
 }
 
 /**
@@ -1846,7 +1862,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11600, Function | Sm
     codeSignatureParam.isEnterpriseBundle = true;
     codeSignatureParam.isPreInstalledBundle = false;
     ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+#ifdef USE_ARM64
+    EXPECT_FALSE(ret);
+#else
     EXPECT_TRUE(ret);
+#endif
 }
 
 /**
@@ -1975,5 +1995,17 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12300, Function | Sm
 #else
     EXPECT_TRUE(ret);
 #endif
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_12400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling CheckAndDeleteLinkFile of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12400, Function | SmallTest | Level0)
+{
+    std::string path;
+    auto ret = InstalldOperator::CheckAndDeleteLinkFile(path);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

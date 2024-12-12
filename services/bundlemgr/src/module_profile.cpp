@@ -150,6 +150,7 @@ struct DeviceConfig {
 };
 
 struct Metadata {
+    uint32_t valueId = 0;
     std::string name;
     std::string value;
     std::string resource;
@@ -317,6 +318,14 @@ void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
 {
     APP_LOGD("read metadata tag from module.json");
     const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        META_DATA_VALUEID,
+        metadata.valueId,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         META_DATA_NAME,
@@ -1535,6 +1544,7 @@ void GetMetadata(std::vector<Metadata> &metadata, const std::vector<Profile::Met
 {
     for (const Profile::Metadata &item : profileMetadata) {
         Metadata tmpMetadata;
+        tmpMetadata.valueId = item.valueId;
         tmpMetadata.name = item.name;
         tmpMetadata.value = item.value;
         tmpMetadata.resource = item.resource;
@@ -2376,8 +2386,8 @@ bool ToInnerBundleInfo(
         APP_LOGE("To innerModuleInfo failed");
         return false;
     }
-    if (moduleJson.app.targetAPIVersion % ServiceConstants::API_VERSION_MOD <= ServiceConstants::API_VERSION_THIRTEEN) {
-        APP_LOGD("targetAPIVersion is less than 14, set isCompressNativeLibs flag to true");
+    if (moduleJson.app.targetAPIVersion % ServiceConstants::API_VERSION_MOD <= ServiceConstants::API_VERSION_FIFTEEN) {
+        APP_LOGD("targetAPIVersion is less than 16, set isCompressNativeLibs flag to true");
         applicationInfo.isCompressNativeLibs = true;
         innerModuleInfo.compressNativeLibs = true;
     }

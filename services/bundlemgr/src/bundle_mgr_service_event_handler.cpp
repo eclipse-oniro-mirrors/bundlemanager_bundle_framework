@@ -23,6 +23,7 @@
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "app_service_fwk_installer.h"
+#include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
@@ -112,6 +113,8 @@ constexpr const char* PGO_FILE_PATH = "pgo_files";
 constexpr const char* BUNDLE_SCAN_PARAM = "bms.scanning_apps.status";
 constexpr const char* BUNDLE_SCAN_START = "0";
 constexpr const char* BUNDLE_SCAN_FINISH = "1";
+constexpr const char* CODE_PROTECT_FLAG = "codeProtectFlag";
+constexpr const char* CODE_PROTECT_FLAG_CHECKED = "checked";
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> systemHspList_;
@@ -354,6 +357,7 @@ void BMSEventHandler::BundleRebootStartEvent()
     if (IsSystemUpgrade()) {
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
         OnBundleRebootStart();
+        HandleOTACodeEncryption();
         SaveSystemFingerprint();
         AOTHandler::GetInstance().HandleOTA();
     } else {
@@ -1176,6 +1180,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
     ProcessBundleResourceInfo();
+    ProcessAllBundleDataGroupInfo();
 #ifdef CHECK_ELDIR_ENABLED
     ProcessCheckAppDataDir();
 #endif
@@ -2254,6 +2259,43 @@ void BMSEventHandler::SaveSystemFingerprint()
     }
 
     bmsPara->SaveBmsParam(FINGERPRINT, curSystemFingerprint);
+}
+
+void BMSEventHandler::HandleOTACodeEncryption()
+{
+    std::string codeProtectFlag;
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsParam != nullptr) {
+        bmsParam->GetBmsParam(CODE_PROTECT_FLAG, codeProtectFlag);
+        if (codeProtectFlag == std::string{ CODE_PROTECT_FLAG_CHECKED }) {
+            LOG_I(BMS_TAG_DEFAULT, "checked");
+            return;
+        }
+    }
+    LOG_I(BMS_TAG_DEFAULT, "begin");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
+        return;
+    }
+    dataMgr->HandleOTACodeEncryption();
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<CodeProtectBundleInfo> infos;
+    auto res = bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::OTA_CHECK_FINISHED);
+    LOG_I(BMS_TAG_DEFAULT, "keyOperation result %{public}d", res);
+    SaveCodeProtectFlag();
+}
+
+void BMSEventHandler::SaveCodeProtectFlag()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
+        return;
+    }
+    if (!bmsPara->SaveBmsParam(CODE_PROTECT_FLAG, std::string{ CODE_PROTECT_FLAG_CHECKED })) {
+        LOG_E(BMS_TAG_DEFAULT, "save failed");
+    }
 }
 
 bool BMSEventHandler::IsModuleUpdate()
@@ -3827,6 +3869,18 @@ void BMSEventHandler::ProcessBundleResourceInfo()
         BundleResourceHelper::AddResourceInfoByBundleName(bundleName, Constants::START_USERID);
     }
     LOG_I(BMS_TAG_DEFAULT, "ProcessBundleResourceInfo end");
+}
+
+void BMSEventHandler::ProcessAllBundleDataGroupInfo()
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
+        return;
+    }
+    dataMgr->ScanAllBundleGroupInfo();
+    LOG_I(BMS_TAG_DEFAULT, "end");
 }
 
 void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
