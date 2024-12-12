@@ -1579,7 +1579,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("remove group dir failed for %{public}s", oldInfo.GetBundleName().c_str());
     }
 
-    DeleteEncryptionKeyId(oldInfo, installParam.isKeepData);
+    DeleteEncryptionKeyId(curInnerBundleUserInfo, installParam.isKeepData);
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
@@ -3057,25 +3057,13 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
     }
 
     std::vector<std::string> dirs = GenerateScreenLockProtectionDir(bundleName_);
-    bool hasPermission = false;
     std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
     auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
         return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
     });
     if (it != reqPermissions.end()) {
-        hasPermission = true;
+        CreateEl5AndSetPolicy(info);
     }
-
-    if (!hasPermission) {
-        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "no protection permission found, remove dirs");
-        for (const std::string &dir : dirs) {
-            if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
-                LOG_NOFUNC_W(BMS_TAG_INSTALLER, "remove Screen Lock Protection dir %{public}s failed", dir.c_str());
-            }
-        }
-        return;
-    }
-    CreateEl5AndSetPolicy(info);
 }
 
 void BaseBundleInstaller::CreateEl5AndSetPolicy(const InnerBundleInfo &info)
@@ -3175,33 +3163,28 @@ bool BaseBundleInstaller::CheckInstallOnKeepData(const std::string &bundleName, 
     return true;
 }
 
-void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, bool isKeepData) const
+void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleUserInfo &userInfo, bool isKeepData) const
 {
-    if (oldInfo.GetBundleName().empty()) {
+    if (userInfo.bundleName.empty()) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName is empty");
         return;
     }
-    std::vector<RequestPermission> reqPermissions = oldInfo.GetAllRequestPermissions();
-    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
-        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
-    });
-    if (it == reqPermissions.end()) {
-        LOG_D(BMS_TAG_INSTALLER, "no need to delete el5 -n %{public}s", oldInfo.GetBundleName().c_str());
-        return;
-    }
     if (isKeepData) {
-        LOG_I(BMS_TAG_INSTALLER, "keep el5 dir -n %{public}s", oldInfo.GetBundleName().c_str());
+        LOG_I(BMS_TAG_INSTALLER, "keep el5 dir -n %{public}s", userInfo.bundleName.c_str());
         return;
     }
-    LOG_I(BMS_TAG_INSTALLER, "delete el5 dir -n %{public}s", oldInfo.GetBundleName().c_str());
-    std::vector<std::string> dirs = GenerateScreenLockProtectionDir(oldInfo.GetBundleName());
+    LOG_D(BMS_TAG_INSTALLER, "delete el5 dir -n %{public}s", userInfo.bundleName.c_str());
+    std::vector<std::string> dirs = GenerateScreenLockProtectionDir(userInfo.bundleName);
     for (const std::string &dir : dirs) {
         if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "remove Screen Lock Protection dir %{public}s failed", dir.c_str());
         }
     }
 
-    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(oldInfo.GetBundleName(), userId_) != ERR_OK) {
+    if (userInfo.keyId.empty()) {
+        return;
+    }
+    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(userInfo.bundleName, userId_) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "delete encryption key id failed");
     }
 }
