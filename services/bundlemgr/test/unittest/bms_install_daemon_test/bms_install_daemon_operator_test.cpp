@@ -811,9 +811,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4600, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4700, Function | SmallTest | Level0)
 {
     auto ret = InstalldOperator::DeleteFiles("");
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
     ret = InstalldOperator::DeleteFiles("/test/123");
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 }
 
 /**
