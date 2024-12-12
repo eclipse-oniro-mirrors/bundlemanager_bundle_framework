@@ -1872,6 +1872,9 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     SetAllowAppRunWhenDeviceFirstLocked(applicationInfo.allowAppRunWhenDeviceFirstLocked);
     baseApplicationInfo_->resourcesApply = applicationInfo.resourcesApply;
     baseApplicationInfo_->allowEnableNotification = applicationInfo.allowEnableNotification;
+    if (applicationInfo.hideDesktopIcon) {
+        SetHideDesktopIcon(true);
+    }
 }
 
 void InnerBundleInfo::UpdateRemovable(bool isPreInstall, bool removable)
