@@ -38,6 +38,7 @@ ohos_shared_library("appexecfwk_core") {
   sanitize = {
     boundary_sanitize = true
     cfi = true
+    cfi_cross_dso = true
     debug = false
     integer_overflow = true
     ubsan = true
@@ -174,6 +175,7 @@ ohos_shared_library("appexecfwk_core") {
 
 ohos_shared_library("bundlemgr_mini") {
   branch_protector_ret = "pac_ret"
+
   sanitize = {
     boundary_sanitize = true
     cfi = true
@@ -182,6 +184,7 @@ ohos_shared_library("bundlemgr_mini") {
     integer_overflow = true
     ubsan = true
   }
+
   sources = [ "src/bundlemgr/bundle_mgr_mini_proxy.cpp" ]
 
   public_configs = [
