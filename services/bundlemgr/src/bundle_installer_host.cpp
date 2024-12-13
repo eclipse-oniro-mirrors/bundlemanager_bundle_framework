@@ -493,8 +493,8 @@ bool BundleInstallerHost::Uninstall(const std::string &bundleName, const std::st
         return false;
     }
     if (installParam.IsVerifyUninstallRule() &&
-        CheckUninstallDisposedRule(bundleName, installParam.userId, Constants::MAIN_APP_INDEX,
-                                   installParam.isKeepData)) {
+        CheckUninstallDisposedRule(
+            bundleName, installParam.userId, Constants::MAIN_APP_INDEX, installParam.isKeepData, modulePackage)) {
         LOG_W(BMS_TAG_INSTALLER, "CheckUninstallDisposedRule failed");
         statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED, "");
         return false;
@@ -927,8 +927,8 @@ void BundleInstallerHost::HandleInstallExisted(MessageParcel &data, MessageParce
     LOG_D(BMS_TAG_INSTALLER, "handle installExisted message finished");
 }
 
-bool BundleInstallerHost::CheckUninstallDisposedRule(const std::string &bundleName, int32_t userId,
-                                                     int32_t appIndex, bool isKeepData)
+bool BundleInstallerHost::CheckUninstallDisposedRule(
+    const std::string &bundleName, int32_t userId, int32_t appIndex, bool isKeepData, const std::string &modulePackage)
 {
 #if defined (BUNDLE_FRAMEWORK_APP_CONTROL) && defined (ABILITY_RUNTIME_ENABLE)
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -941,6 +941,9 @@ bool BundleInstallerHost::CheckUninstallDisposedRule(const std::string &bundleNa
     bool isBundleExist = dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo);
     if (!isBundleExist) {
         LOG_E(BMS_TAG_INSTALLER, "the bundle: %{public}s is not install", bundleName.c_str());
+        return false;
+    }
+    if (!modulePackage.empty() && !bundleInfo.IsOnlyModule(modulePackage)) {
         return false;
     }
     std::string appId = bundleInfo.GetAppIdentifier();

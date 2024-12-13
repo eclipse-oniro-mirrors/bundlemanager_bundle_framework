@@ -1816,6 +1816,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_I(BMS_TAG_INSTALLER, "%{public}s is only module", modulePackage.c_str());
         enableGuard.Dismiss();
         stateGuard.Dismiss();
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+        std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
+        if (appControlMgr != nullptr) {
+            LOG_D(BMS_TAG_INSTALLER, "Delete disposed rule when bundleName :%{public}s uninstall", bundleName.c_str());
+            appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo, Constants::MAIN_APP_INDEX, userId_);
+        }
+#endif
         if (onlyInstallInUser) {
             result = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
             if (result != ERR_OK) {
