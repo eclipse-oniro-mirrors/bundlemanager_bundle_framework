@@ -1,0 +1,60 @@
+/*
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <string>
+
+#include "nocopyable.h"
+
+#include "inner_bundle_info.h"
+#include "installer_bundle_tmp_info.h"
+
+
+namespace OHOS {
+namespace AppExecFwk {
+
+bool InstallerBundleTempInfo::FetchTempBundleInfo(InnerBundleInfo &info) const
+{
+    if (!bundleInit_) {
+        return bundleInit_;
+    }
+    info = tempBundleInfo_;
+    return true;
+}
+
+InnerBundleInfo &InstallerBundleTempInfo::GetCurrentBundleInfo()
+{
+    return tempBundleInfo_;
+}
+
+bool InstallerBundleTempInfo::InitTempBundle(InnerBundleInfo &info, bool isAppExist)
+{
+    if (isAppExist) {
+        bundleInit_ = isAppExist;
+        tempBundleInfo_ = info;
+    }
+}
+
+bool InstallerBundleTempInfo::UpdateInnerBundleInfo(const InnerBundleInfo &info)
+{
+    if (innerBundleInfo.GetBundleName().empty()) {
+        APP_LOGW("UpdateInnerBundleInfo failed, empty bundleName");
+        return false;
+    }
+    bundleInit_ = true;
+    tempBundleInfo_ = info;
+}
+
+}  // namespace AppExecFwk
+}  // namespace OHOS
