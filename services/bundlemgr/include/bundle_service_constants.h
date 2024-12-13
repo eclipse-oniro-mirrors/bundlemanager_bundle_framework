@@ -195,6 +195,8 @@ const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.mms",
     "com.ohos.FusionSearch"
 };
+// group
+constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -84,7 +84,6 @@ constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install/";
 const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
-constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr const char* LIBS_TMP = "libs_tmp";
 
 #ifdef STORAGE_SERVICE_ENABLE
