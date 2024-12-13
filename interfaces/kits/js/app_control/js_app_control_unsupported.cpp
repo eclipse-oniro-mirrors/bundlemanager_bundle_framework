@@ -128,6 +128,11 @@ void CreateComponentType(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &value));
 }
 
+void CreateUninstallComponentType(napi_env env, napi_value value)
+{
+    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &value));
+}
+
 void CreateDisposedType(napi_env env, napi_value value)
 {
     NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &value));
