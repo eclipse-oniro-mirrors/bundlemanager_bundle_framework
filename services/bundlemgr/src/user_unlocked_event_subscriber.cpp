@@ -30,7 +30,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 static constexpr int16_t MODE_BASE = 07777;
-static constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
 constexpr const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
@@ -248,7 +247,7 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
         APP_LOGI("create group dir -n %{public}s uid %{public}d -u %{public}d", bundleInfo.name.c_str(),
             dataGroupInfo.uid, userId);
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
-            DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+            ServiceConstants::DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
             APP_LOGW("create data group dir %{private}s userId %{public}d failed", dataGroupInfo.uuid.c_str(), userId);
         }

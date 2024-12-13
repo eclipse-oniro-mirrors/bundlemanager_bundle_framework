@@ -119,7 +119,6 @@ constexpr uint8_t PARAM_URI_SEPARATOR_LEN = 4;
 constexpr int8_t INVALID_BUNDLEID = -1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 constexpr int32_t MAX_APP_UID = 65535;
-constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr int8_t ONLY_ONE_USER = 1;
 constexpr unsigned int OTA_CODE_ENCRYPTION_TIMEOUT = 4 * 60;
 const std::string FUNCATION_HANDLE_OTA_CODE_ENCRYPTION = "BundleDataMgr::HandleOTACodeEncryption()";
@@ -7514,7 +7513,8 @@ void BundleDataMgr::CreateGroupDirIfNotExist(const DataGroupInfo &dataGroupInfo)
         APP_LOGI("group dir exist, no need to create");
         return;
     }
-    auto result = InstalldClient::GetInstance()->Mkdir(dir, DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+    auto result = InstalldClient::GetInstance()->Mkdir(dir, ServiceConstants::DATA_GROUP_DIR_MODE,
+        dataGroupInfo.uid, dataGroupInfo.gid);
     if (result != ERR_OK) {
         APP_LOGE("mkdir group dir failed, uid %{public}d err %{public}d", dataGroupInfo.uid, result);
     }
@@ -8180,7 +8180,7 @@ void BundleDataMgr::CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32
         std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         APP_LOGD("create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
-            DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+            ServiceConstants::DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
             APP_LOGW("%{public}s group dir %{public}s userId %{public}d failed",
                 innerBundleInfo.GetBundleName().c_str(), dataGroupInfo.uuid.c_str(), userId);
