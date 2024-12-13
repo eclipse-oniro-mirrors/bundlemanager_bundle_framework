@@ -7827,4 +7827,53 @@ HWTEST_F(BmsBundleInstallerTest, Init_0100, Function | SmallTest | Level0)
     info.Init();
     EXPECT_TRUE(info.extensionDirs.empty());
 }
+
+/**
+ * @tc.number: RecoverHapToken_0100
+ * @tc.name: test RecoverHapToken
+ * @tc.desc: RecoverHapToken
+ */
+HWTEST_F(BmsBundleInstallerTest, RecoverHapToken_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, USERID);
+
+    BaseBundleInstaller installer;
+    int32_t userId = USERID;
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    InnerBundleInfo info;
+    installer.InitDataMgr();
+    bool ret = installer.RecoverHapToken(BUNDLE_NAME, userId, accessTokenIdEx, info);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RecoverHapToken_0200
+ * @tc.name: test RecoverHapToken
+ * @tc.desc: RecoverHapToken
+ */
+HWTEST_F(BmsBundleInstallerTest, RecoverHapToken_0200, Function | SmallTest | Level0)
+{
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+
+    UninstallDataUserInfo uninstallDataUserInfo;
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo));
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto ret = dataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+
+    BaseBundleInstaller installer;
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    InnerBundleInfo info;
+    installer.InitDataMgr();
+    ret = installer.RecoverHapToken(BUNDLE_NAME, USERID, accessTokenIdEx, info);
+    ASSERT_TRUE(ret);
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, USERID);
+}
 } // OHOS
