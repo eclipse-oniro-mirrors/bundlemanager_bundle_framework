@@ -265,7 +265,7 @@ public:
         const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec);
     static void Install(
         const std::string &bundleFilePath, const InstallParam &installParam, std::vector<std::string> &resvec);
-    static void Uninstall(const std::string &bundleName, std::vector<std::string> &resvec);
+    static void Uninstall(const std::string &bundleName, std::vector<std::string> &resvec, bool isKeepData = false);
     static void HapUninstall(
         const std::string &bundleName, const std::string &modulePackage, std::vector<std::string> &resvec);
     static sptr<BundleMgrProxy> GetBundleMgrProxy();
@@ -363,7 +363,7 @@ void ActsBmsKitSystemTest::Install(
     resvec.push_back(statusReceiver->GetResultMsg());
 }
 
-void ActsBmsKitSystemTest::Uninstall(const std::string &bundleName, std::vector<std::string> &resvec)
+void ActsBmsKitSystemTest::Uninstall(const std::string &bundleName, std::vector<std::string> &resvec, bool isKeepData)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
     if (!installerProxy) {
@@ -378,6 +378,7 @@ void ActsBmsKitSystemTest::Uninstall(const std::string &bundleName, std::vector<
     } else {
         InstallParam installParam;
         installParam.userId = USERID;
+        installParam.isKeepData = isKeepData;
         sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
         EXPECT_NE(statusReceiver, nullptr);
         installerProxy->Uninstall(bundleName, installParam, statusReceiver);
@@ -5000,6 +5001,71 @@ HWTEST_F(ActsBmsKitSystemTest, Uninstall_KeepData_0400, Function | MediumTest | 
     uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END Uninstall_KeepData_0400" << std::endl;
+}
+
+/**
+ * @tc.number: Uninstall_KeepData_0500
+ * @tc.name: test whether to restore uid and accesstokenId when the app is uninstalled and installed again
+ * @tc.desc: 1.install the hap
+ *           2.uninstall the hap
+ *           3.install the hap again
+ *           4.check the uid and accesstokenId
+ */
+HWTEST_F(ActsBmsKitSystemTest, Uninstall_KeepData_0500, Function | MediumTest | Level2)
+{
+    std::cout << "START Uninstall_KeepData_0500" << std::endl;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
+
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer failed.");
+        EXPECT_EQ(installerProxy, nullptr);
+    }
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.userId = USERID;
+    sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
+    EXPECT_NE(statusReceiver, nullptr);
+    installerProxy->Install(bundleFilePath, installParam, statusReceiver);
+    std::string installMsg = statusReceiver->GetResultMsg();
+    EXPECT_EQ(installMsg, "Success") << "install fail!";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    ApplicationInfo appInfo;
+    bool getInfoResult =
+        bundleMgrProxy->GetApplicationInfo(appName, 0, USERID, appInfo);
+    EXPECT_TRUE(getInfoResult);
+    EXPECT_EQ(appInfo.name, appName);
+
+    std::vector<std::string> resvec;
+    Uninstall(appName, resvec, true);
+    CommonTool commonTool;
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    resvec.clear();
+
+    sptr<StatusReceiverImpl> statusReceiver2 = (new (std::nothrow) StatusReceiverImpl());
+    EXPECT_NE(statusReceiver2, nullptr);
+    installerProxy->Install(bundleFilePath, installParam, statusReceiver2);
+    std::string installMsg2 = statusReceiver2->GetResultMsg();
+    EXPECT_EQ(installMsg2, "Success") << "install fail!";
+
+    ApplicationInfo appInfo2;
+    bool getInfoResult2 =
+        bundleMgrProxy->GetApplicationInfo(appName, 0, USERID, appInfo2);
+    EXPECT_TRUE(getInfoResult2);
+    EXPECT_EQ(appInfo2.name, appName);
+    EXPECT_EQ(appInfo2.uid, appInfo.uid);
+    EXPECT_EQ(appInfo2.accessTokenId, appInfo.accessTokenId);
+    EXPECT_EQ(appInfo2.accessTokenIdEx, appInfo.accessTokenIdEx);
+
+    Uninstall(appName, resvec);
+    CommonTool commonTool2;
+    std::string uninstallResult2 = commonTool2.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult2, "Success") << "uninstall fail!";
+    std::cout << "END Uninstall_KeepData_0500" << std::endl;
 }
 
 /**
