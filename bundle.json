@@ -2,7 +2,7 @@
     "name": "@ohos/bundle_framework",
     "description": "提供OpenHarmony应用和服务安装包的安装、更新、卸载以及信息查询等能力，包含包管理接口和包管理服务",
     "version": "4.0",
-    "license": "Apache 2.0",
+    "license": "Apache License 2.0",
     "segment": {
         "destPath": "foundation/bundlemanager/bundle_framework"
     },
@@ -26,7 +26,9 @@
             "bundle_framework_default_app",
             "bundle_framework_launcher",
             "bundle_framework_sandbox_app",
-            "bundle_framework_quick_fix"
+            "bundle_framework_quick_fix",
+            "bundle_framework_form_dimension_2_3",
+            "bundle_framework_form_dimension_3_3"
         ],
         "hisysevent_config": [
             "//foundation/bundlemanager/bundle_framework/hisysevent.yaml"
@@ -83,11 +85,11 @@
                 "json",
                 "zlib",
                 "appspawn",
-                "bounds_checking_function"
+                "bounds_checking_function",
+                "webview"
             ],
             "third_party": [
                 "libuv",
-                "node",
                 "jsoncpp"
             ]
         },
@@ -131,6 +133,15 @@
                   },
                   {
                     "header": {
+                      "header_base": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core/include",
+                      "header_files": [
+                        "bundlemgr/bundle_mgr_mini_proxy.h"
+                      ]
+                    },
+                    "name": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core:bundlemgr_mini"
+                  },
+                  {
+                    "header": {
                       "header_base": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/bundlemgr_extension/include",
                       "header_files": [
                         "bms_extension_data_mgr.h",
@@ -150,6 +161,17 @@
                       ]
                     },
                     "name": "//foundation/bundlemanager/bundle_framework/common:libappexecfwk_common"
+                  },
+                  {
+                    "header": {
+                      "header_base": "//foundation/bundlemanager/bundle_framework/interfaces/kits/cj/src",
+                      "header_files": [
+                        "bundle_manager_convert.h",
+                        "bundle_manager_utils.h",
+                        "bundle_manager_ffi.h"
+                      ]
+                    },
+                    "name": "//foundation/bundlemanager/bundle_framework/interfaces/kits/cj:cj_bundle_manager_ffi"
                   },
                   {
                     "header": {

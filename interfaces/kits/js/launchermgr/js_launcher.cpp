@@ -95,7 +95,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref addCallback = nullptr;
     napi_value addValue = nullptr;
     napi_status status = napi_get_named_property(env, args, "add", &addValue);
-    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect", false);
+    NAPI_CALL_BASE(env, status, false);
     napi_typeof(env, addValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("add param type mismatch");
@@ -107,7 +107,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref updateCallback = nullptr;
     napi_value updateValue = nullptr;
     status = napi_get_named_property(env, args, "update", &updateValue);
-    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect", false);
+    NAPI_CALL_BASE(env, status, false);
     napi_typeof(env, updateValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("update param type mismatch");
@@ -119,7 +119,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref removeCallback = nullptr;
     napi_value removeValue = nullptr;
     status = napi_get_named_property(env, args, "remove", &removeValue);
-    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect", false);
+    NAPI_CALL_BASE(env, status, false);
     napi_typeof(env, removeValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("remove param type mismatch");
@@ -154,7 +154,7 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo,
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "description", nDescription));
 
     napi_value nDescriptionId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.descriptionId, &nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appInfo.descriptionId, &nDescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "descriptionId", nDescriptionId));
 
     napi_value nIsSystemApp;
@@ -174,7 +174,7 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo,
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "label", nLabel));
 
     napi_value nLabelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appInfo.labelId, &nLabelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "labelId", nLabelId));
 
     napi_value nIconPath;
@@ -182,7 +182,7 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo,
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "icon", nIconPath));
 
     napi_value nIconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appInfo.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "iconId", nIconId));
 
     napi_value nSupportedModes;
@@ -280,12 +280,12 @@ static void ConvertLauncherAbilityInfo(napi_env env, napi_value objAbilityInfo,
 {
     // wrap labelId
     napi_value labelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, launcherAbilityInfo.labelId, &labelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, launcherAbilityInfo.labelId, &labelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "labelId", labelId));
 
     // wrap iconId
     napi_value iconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, launcherAbilityInfo.iconId, &iconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, launcherAbilityInfo.iconId, &iconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "iconId", iconId));
 
     // wrap userId
@@ -410,7 +410,7 @@ static void ConvertShortcutInfo(
 
     // wrap iconId
     napi_value iconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.iconId, &iconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, shortcutInfo.iconId, &iconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "iconId", iconId));
 
     // wrap label
@@ -420,7 +420,7 @@ static void ConvertShortcutInfo(
 
     // wrap labelId
     napi_value labelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.labelId, &labelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, shortcutInfo.labelId, &labelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "labelId", labelId));
 
     // wrap disableMessage
@@ -503,7 +503,7 @@ static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
     void *data = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    NAPI_ASSERT(env, argc >= requireArgc, "requires 2 parameter");
+    NAPI_CALL(env, (argc >= requireArgc) ? napi_ok : napi_invalid_arg);
     std::string command;
 
     AsyncHandleBundleContext *asyncCallbackInfo = new (std::nothrow) AsyncHandleBundleContext();
@@ -534,6 +534,7 @@ static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
     napi_value promise = nullptr;
     if (command != REGISTERCALLBACK) {
         APP_LOGE("Input wrong command");
+        napi_delete_reference(env, asyncCallbackInfo->callbackRef);
         delete asyncCallbackInfo;
         asyncCallbackInfo = nullptr;
         return promise;
@@ -653,7 +654,7 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
     void *data = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    NAPI_ASSERT(env, argc >= requireArgc, "requires 1 parameter");
+    NAPI_CALL(env, (argc >= requireArgc) ? napi_ok : napi_invalid_arg);
     std::string command;
     AsyncHandleBundleContext *asyncCallbackInfo = new (std::nothrow) AsyncHandleBundleContext();
     if (asyncCallbackInfo == nullptr) {
@@ -675,6 +676,7 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
     napi_value promise = nullptr;
     if (command != UNREGISTERCALLBACK) {
         APP_LOGE("Input wrong command");
+        napi_delete_reference(env, asyncCallbackInfo->callbackRef);
         delete asyncCallbackInfo;
         asyncCallbackInfo = nullptr;
         return promise;
@@ -687,11 +689,9 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JSLauncherServiceOn", NAPI_AUTO_LENGTH, &resource);
     napi_create_async_work(
-        env, nullptr, resource,
-        [](napi_env env, void* data) {
+        env, nullptr, resource, [](napi_env env, void* data) {
             APP_LOGI("JSLauncherServiceOn asyn work done");
-        }, LauncherServiceOffComplete,
-        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
+        }, LauncherServiceOffComplete, reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
     return promise;
 }
@@ -822,7 +822,7 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
     std::string bundleName;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    NAPI_ASSERT(env, argc >= requireArgc, "requires 2 parameter");
+    NAPI_CALL(env, (argc >= requireArgc) ? napi_ok : napi_invalid_arg);
     AsyncHandleBundleContext *asyncCallbackInfo = new (std::nothrow) AsyncHandleBundleContext();
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("failed to get callback info");
@@ -930,7 +930,7 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
     void *data = nullptr;
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    NAPI_ASSERT(env, argc >= requireArgc, "requires 1 parameter");
+    NAPI_CALL(env, (argc >= requireArgc) ? napi_ok : napi_invalid_arg);
     AsyncHandleBundleContext *asyncCallbackInfo = new (std::nothrow) AsyncHandleBundleContext();
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("failed to get callback info");

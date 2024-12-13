@@ -115,9 +115,11 @@ public:
      * @return Returns ERR_OK if get stats successfully; returns error code otherwise.
      */
     ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
-        std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID, const int32_t appIndex = 0);
-
-    ErrCode GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+        std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID,
+        const int32_t appIndex = 0, const uint32_t statFlag = 0,
+        const std::vector<std::string> &moduleNameList = {});
+        
+    ErrCode GetAllBundleStats(const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids);
 
     /**
@@ -235,12 +237,10 @@ public:
 
     ErrCode AddUserDirDeleteDfx(int32_t userId);
 
+    ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath);
+
 private:
-    /**
-     * @brief Get the installd proxy object.
-     * @return Returns true if the installd proxy object got successfully; returns false otherwise.
-     */
-    bool GetInstalldProxy();
+    sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();
 
     template<typename F, typename... Args>
@@ -249,12 +249,11 @@ private:
         int32_t maxRetryTimes = 2;
         ErrCode errCode = ERR_APPEXECFWK_INSTALLD_SERVICE_DIED;
         for (int32_t retryTimes = 0; retryTimes < maxRetryTimes; retryTimes++) {
-            if (!GetInstalldProxy()) {
+            auto proxy = GetInstalldProxy();
+            if (proxy == nullptr) {
                 return ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR;
             }
-            if (installdProxy_ != nullptr) {
-                errCode = (installdProxy_->*func)(std::forward<Args>(args)...);
-            }
+            errCode = (proxy->*func)(std::forward<Args>(args)...);
             if (errCode == ERR_APPEXECFWK_INSTALLD_SERVICE_DIED) {
                 APP_LOGE("CallService failed, retry times: %{public}d", retryTimes + 1);
                 ResetInstalldProxy();

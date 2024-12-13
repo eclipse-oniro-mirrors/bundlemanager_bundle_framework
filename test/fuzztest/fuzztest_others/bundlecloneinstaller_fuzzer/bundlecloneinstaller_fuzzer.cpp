@@ -27,54 +27,58 @@ using namespace OHOS::AppExecFwk;
 using OHOS::DelayedSingleton;
 
 namespace OHOS {
-    namespace {
-        constexpr int INPUT_ZERO = 0;
-        constexpr int INPUT_ONE = 1;
-        constexpr int INPUT_TWO = 2;
-        constexpr int INPUT_THREE = 3;
-        constexpr size_t FOO_MAX_LEN = 1024;
-        constexpr size_t U32_AT_SIZE = 4;
-        constexpr size_t OFFSET_ZERO = 24;
-        constexpr size_t OFFSET_ONE = 16;
-        constexpr size_t OFFSET_TWO = 8;
-        constexpr int32_t UID = 3024;
+namespace {
+constexpr int INPUT_ZERO = 0;
+constexpr int INPUT_ONE = 1;
+constexpr int INPUT_TWO = 2;
+constexpr int INPUT_THREE = 3;
+constexpr size_t U32_AT_SIZE = 4;
+constexpr size_t OFFSET_ZERO = 24;
+constexpr size_t OFFSET_ONE = 16;
+constexpr size_t OFFSET_TWO = 8;
+constexpr int32_t UID = 3024;
+static std::shared_ptr<BundleCloneInstaller> bundleCloneInstall = nullptr;
+}
+
+void SetBundleDataMgr()
+{
+    bundleCloneInstall = std::make_shared<BundleCloneInstaller>();
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<AppExecFwk::BundleDataMgr>();
+}
+
+uint32_t GetU32Data(const char* ptr)
+{
+    // convert fuzz input data to an integer
+    return (ptr[INPUT_ZERO] << OFFSET_ZERO) | (ptr[INPUT_ONE] << OFFSET_ONE) | (ptr[INPUT_TWO] << OFFSET_TWO) |
+    ptr[INPUT_THREE];
+}
+
+bool Init()
+{
+    static std::once_flag flag;
+    std::call_once(flag, SetBundleDataMgr);
+    if (!bundleCloneInstall || !DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_) {
+        return false;
     }
+    return true;
+}
 
-    void SetBundleDataMgr()
-    {
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<AppExecFwk::BundleDataMgr>();
+bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
+{
+    if (!Init()) {
+        return false;
     }
-
-    uint32_t GetU32Data(const char* ptr)
-    {
-        // convert fuzz input data to an integer
-        return (ptr[INPUT_ZERO] << OFFSET_ZERO) | (ptr[INPUT_ONE] << OFFSET_ONE) | (ptr[INPUT_TWO] << OFFSET_TWO) |
-        ptr[INPUT_THREE];
-    }
-
-    bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
-    {
-        BundleCloneInstaller bundleCloneInstall;
-
-        std::string bundleName(data, size);
-        InnerBundleInfo info;
-        int32_t userId = static_cast<int32_t>(GetU32Data(data));
-        int32_t appIndex = static_cast<int32_t>(GetU32Data(data));
-
-        SetBundleDataMgr();
-        bundleCloneInstall.InstallCloneApp(bundleName, userId, appIndex);
-        bundleCloneInstall.UninstallCloneApp(bundleName, userId, appIndex);
-        bundleCloneInstall.UninstallAllCloneApps(bundleName, userId);
-
-        bundleCloneInstall.ProcessCloneBundleInstall(bundleName, userId, appIndex);
-        bundleCloneInstall.ProcessCloneBundleUninstall(bundleName, userId, appIndex);
-        bundleCloneInstall.ResetInstallProperties();
-
-        bundleCloneInstall.CreateCloneDataDir(info, userId, UID, appIndex);
-        bundleCloneInstall.RemoveCloneDataDir(bundleName, userId, appIndex);
-        bundleCloneInstall.GetDataMgr();
-        return true;
-    }
+    std::string bundleName(data, size);
+    int32_t userId = static_cast<int32_t>(GetU32Data(data));
+    int32_t appIndex = static_cast<int32_t>(GetU32Data(data));
+    bundleCloneInstall->InstallCloneApp(bundleName, userId, appIndex);
+    bundleCloneInstall->UninstallCloneApp(bundleName, userId, appIndex);
+    bundleCloneInstall->UninstallAllCloneApps(bundleName, userId);
+    InnerBundleInfo info;
+    bundleCloneInstall->CreateCloneDataDir(info, userId, UID, appIndex);
+    bundleCloneInstall->RemoveCloneDataDir(bundleName, userId, appIndex);
+    return true;
+}
 }
 
 /* Fuzzer entry point */
@@ -86,7 +90,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
 
     /* Validate the length of size */
-    if (size < OHOS::U32_AT_SIZE || size > OHOS::FOO_MAX_LEN) {
+    if (size < OHOS::U32_AT_SIZE) {
         return 0;
     }
 

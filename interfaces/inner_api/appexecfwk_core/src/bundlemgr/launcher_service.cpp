@@ -40,10 +40,10 @@ void LauncherService::LauncherServiceDeathRecipient::OnRemoteDied([[maybe_unused
 
 LauncherService::LauncherService()
 {
-    init();
+    Init();
 }
 
-void LauncherService::init()
+void LauncherService::Init()
 {
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
@@ -76,12 +76,11 @@ OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::GetBundleMgr()
                 APP_LOGE("GetBundleMgr GetSystemAbility is null");
                 return nullptr;
             }
-            auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
-            if (bundleMgr == nullptr) {
+            bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
+            if (bundleMgr_ == nullptr) {
                 APP_LOGE("GetBundleMgr iface_cast get null");
                 return nullptr;
             }
-            bundleMgr_ = bundleMgr;
             bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
         }
     }
@@ -266,7 +265,7 @@ ErrCode LauncherService::GetShortcutInfos(
         APP_LOGE("GetShortcutInfos is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    if (infos.size() == 0) {
+    if (infos.empty()) {
         APP_LOGE("infos size is empty");
         return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
     }
@@ -370,7 +369,7 @@ ErrCode LauncherService::GetAllLauncherAbility(const int32_t userId,
 }
 
 ErrCode LauncherService::GetShortcutInfoV9(
-    const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
+    const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
 {
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -378,7 +377,7 @@ ErrCode LauncherService::GetShortcutInfoV9(
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
     std::vector<ShortcutInfo> infos;
-    ErrCode errCode = iBundleMgr->GetShortcutInfoV9(bundleName, infos);
+    ErrCode errCode = iBundleMgr->GetShortcutInfoV9(bundleName, infos, userId);
     if (errCode != ERR_OK) {
         APP_LOGE("GetShortcutInfoV9 is failed");
         return errCode;

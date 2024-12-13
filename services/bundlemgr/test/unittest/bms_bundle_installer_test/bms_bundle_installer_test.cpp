@@ -38,6 +38,7 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
+#include "file_ex.h"
 #include "hmp_bundle_installer.h"
 #include "install_param.h"
 #include "installd/installd_service.h"
@@ -46,8 +47,8 @@
 #include "scope_guard.h"
 #include "shared/shared_bundle_installer.h"
 #include "system_bundle_installer.h"
+#include "utd_handler.h"
 #include "want.h"
-#include "file_ex.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -95,6 +96,7 @@ const std::string LOG = "log";
 const int32_t EDM_UID = 3057;
 const uint32_t INSTALLER_ID = 1;
 const uint32_t INDEX = 1;
+const uint32_t TARGET_VERSION_FOURTEEN = 14;
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 const std::string EMPTY_STRING = "";
 const std::string APPID_INPUT = "com.third.hiworld.example1";
@@ -161,7 +163,9 @@ bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) co
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    setuid(Constants::FOUNDATION_UID);
+    installParam.SetKillProcess(false);
+    setuid(Constants::ROOT_UID);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -178,7 +182,9 @@ bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath)
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    setuid(Constants::FOUNDATION_UID);
+    installParam.SetKillProcess(false);
+    setuid(Constants::ROOT_UID);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -202,6 +208,7 @@ ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &fileP
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::NORMAL;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(filePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -223,6 +230,7 @@ ErrCode BmsBundleInstallerTest::UpdateThirdPartyBundle(const std::string &filePa
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(filePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -368,20 +376,6 @@ void BmsBundleInstallerTest::ClearBundleInfo()
     EXPECT_TRUE(result) << "the bundle info in db clear fail: " << BUNDLE_NAME;
 }
 
-
-/**
- * @tc.number: SetEncryptionDirPolicy_0100
- * @tc.name: test SetEncryptionDirPolicy
- * @tc.desc: test SetEncryptionDirPolicy of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, SetEncryptionDirPolicy_0100, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo info;
-    bool ret = installer.SetEncryptionDirPolicy(info);
-    EXPECT_FALSE(ret);
-}
-
 /**
  * @tc.number: PrepareSkillUri_0100
  * @tc.name: test PrepareSkillUri
@@ -503,7 +497,7 @@ HWTEST_F(BmsBundleInstallerTest, ThirdPartyInstall_0100, Function | SmallTest | 
     StopInstalldService();
     std::string bundleFile = RESOURCE_ROOT_PATH + TYPE_BUNDLE;
     auto result = InstallThirdPartyBundle(bundleFile);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR);
 }
 
 /**
@@ -605,6 +599,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0100, Function | SmallTest | 
     EXPECT_NE(receiver, nullptr);
     InstallParam installParam;
     installParam.userId = USERID;
+    installParam.withCopyHaps = true;
     std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
     GetBundleInstallerManager()->CreateInstallTask(bundleFile, installParam, receiver);
     ErrCode result = receiver->GetResultCode();
@@ -625,6 +620,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0200, Function | SmallTest | 
     EXPECT_NE(receiver, nullptr);
     InstallParam installParam;
     installParam.userId = USERID;
+    installParam.withCopyHaps = true;
     std::string bundleFile = RESOURCE_ROOT_PATH + INVALID_BUNDLE;
     GetBundleInstallerManager()->CreateInstallTask(bundleFile, installParam, receiver);
     ErrCode result = receiver->GetResultCode();
@@ -695,7 +691,6 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(hapModuleInfo.description, "$string:description_application");
         EXPECT_EQ(hapModuleInfo.mainAbility, "MainAbility");
         EXPECT_EQ(hapModuleInfo.process, "bba");
-        EXPECT_EQ(hapModuleInfo.virtualMachine, "");
         EXPECT_EQ(hapModuleInfo.uiSyntax, "hml");
         EXPECT_EQ(hapModuleInfo.pages, "$profile:page_config");
         EXPECT_EQ(hapModuleInfo.deliveryWithInstall, true);
@@ -1755,6 +1750,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1000, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1100, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
     std::string nativeLibraryPath = "X86";
     std::string cpuAbi = "armeabi";
     InnerBundleInfo newInfo;
@@ -1913,71 +1909,31 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1800, Function | SmallTest 
 
 /**
  * @tc.number: baseBundleInstaller_1900
- * @tc.name: test CheckArkNativeFileWithOldInfo
- * @tc.desc: 1.Test the CheckArkNativeFileWithOldInfo of BaseBundleInstaller
+ * @tc.name: test RemoveDataPreloadHapFiles
+ * @tc.desc: 1.Test the RemoveDataPreloadHapFiles of BaseBundleInstaller
 */
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1900, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
-    InnerBundleInfo oldInfo;
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
-    ApplicationInfo applicationInfo;
-    oldInfo.SetBaseApplicationInfo(applicationInfo);
-    oldInfo.SetArkNativeFileAbi("x86");
-    InnerBundleInfo info;
-    info.SetBaseApplicationInfo(applicationInfo);
-    info.SetArkNativeFileAbi("");
-    newInfos.try_emplace("so", info);
-    ErrCode ret = installer.CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_OK);
+    installer.dataMgr_ = nullptr;
+    bool ret = installer.RemoveDataPreloadHapFiles(BUNDLE_NAME);
+    EXPECT_EQ(ret, false);
 
-    newInfos.clear();
-    info.SetArkNativeFileAbi("arm");
-    newInfos.try_emplace("so", info);
-    ret = installer.CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_AN_INCOMPATIBLE);
-
-    newInfos.clear();
-    info.SetArkNativeFileAbi("x86");
-    newInfos.try_emplace("so", info);
-    ret = installer.CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_OK);
+    installer.dataMgr_ = GetBundleDataMgr();
+    ret = installer.RemoveDataPreloadHapFiles(BUNDLE_NAME);
+    EXPECT_EQ(ret, true);
 }
 
 /**
  * @tc.number: baseBundleInstaller_2000
- * @tc.name: test CheckNativeSoWithOldInfo
- * @tc.desc: 1.Test the CheckNativeSoWithOldInfo of BaseBundleInstaller
+ * @tc.name: test IsDataPreloadHap
+ * @tc.desc: 1.Test the IsDataPreloadHap of BaseBundleInstaller
 */
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2000, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
-    InnerBundleInfo oldInfo;
-    ApplicationInfo applicationInfo;
-    oldInfo.SetBaseApplicationInfo(applicationInfo);
-    oldInfo.SetNativeLibraryPath("/an/x86/x86.so");
-    InnerBundleInfo info;
-    info.SetBaseApplicationInfo(applicationInfo);
-    info.SetNativeLibraryPath("/an/arm/arm.so");
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
-    newInfos.try_emplace("so", info);
-    ErrCode ret = installer.CheckNativeSoWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE);
-
-    newInfos.clear();
-    info.SetNativeLibraryPath("/an/x86/x86.so");
-    oldInfo.SetCpuAbi("arm");
-    info.SetCpuAbi("x86");
-    newInfos.try_emplace("so", info);
-    ret = installer.CheckNativeSoWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE);
-
-    newInfos.clear();
-    info.SetNativeLibraryPath("");
-    oldInfo.SetCpuAbi("x86");
-    newInfos.try_emplace("so", info);
-    ret = installer.CheckNativeSoWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_OK);
+    bool ret = installer.IsDataPreloadHap(SYSTEMFIEID_HAP_PATH);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -2008,7 +1964,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2100, Function | SmallTest 
         "bundleName", installParam, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
     InnerBundleInfo info;
-    bool res = installer.GetInnerBundleInfo(info, recoverMode);
+    bool res = installer.GetInnerBundleInfoWithDisable(info, recoverMode);
     EXPECT_EQ(res, false);
     ResetDataMgr();
 
@@ -2061,6 +2017,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2300, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2400, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
     installer.userId_ = USERID;
     InnerBundleInfo info;
     ErrCode res = installer.CreateBundleDataDir(info);
@@ -2106,9 +2063,9 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2700, Function | SmallTest 
     InnerBundleInfo newInfo;
     newInfo.currentPackage_ = "";
     bool isReplace = false;
-    bool noSkipsKill = false;
+    bool killProcess = false;
 
-    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
 
@@ -2125,9 +2082,9 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2800, Function | SmallTest 
     InnerBundleInfo newInfo;
     newInfo.currentPackage_ = MODULE_NAME;
     bool isReplace = false;
-    bool noSkipsKill = false;
+    bool killProcess = false;
 
-    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
 }
 
@@ -2144,9 +2101,9 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2900, Function | SmallTest 
     newInfo.currentPackage_ = MODULE_NAME;
     newInfo.baseApplicationInfo_->singleton = true;
     bool isReplace = false;
-    bool noSkipsKill = false;
+    bool killProcess = false;
 
-    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
+    auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
 
     installer.modulePackage_ = MODULE_NAME;
@@ -2166,6 +2123,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2900, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3000, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
     installer.isFeatureNeedUninstall_ = false;
     std::string nativeLibraryPath = "/data/test";
     std::string cpuAbi = "123";
@@ -2309,6 +2267,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3900, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4000, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
     installer.userId_ = USERID;
     InnerBundleInfo info;
     ErrCode res = installer.CreateBundleDataDir(info);
@@ -3122,7 +3081,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0100, Function | SmallTest | Lev
     bundlePaths.push_back(bundlePath);
     BundleInstallChecker installChecker;
     auto ret = installChecker.CheckSysCap(bundlePaths);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_RPCID_FAILED);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
@@ -4000,6 +3959,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5000, Function | SmallTest 
     inBundlePaths.emplace_back(bundleFile);
     InstallParam installParam;
     installParam.isPreInstallApp = false;
+    installParam.withCopyHaps = true;
     auto appType = Constants::AppType::THIRD_PARTY_APP;
     int32_t uid = 0;
     ErrCode ret = installer.ProcessBundleInstall(
@@ -4423,6 +4383,36 @@ HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0010, TestSize.Level1)
 }
 
 /**
+ * @tc.number: InnerProcessNativeLibs_0100
+ * @tc.name: InnerProcessNativeLibs
+ * @tc.desc: test InnerProcessNativeLibs of BaseBundleInstaller with api13
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerProcessNativeLibs_0100, TestSize.Level1)
+{
+    InnerBundleInfo info;
+    info.currentPackage_ = MODULE_NAME_TEST;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = MODULE_NAME_TEST;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.modulePackage = MODULE_NAME_TEST;
+    moduleInfo.cpuAbi = "libs/arm";
+    moduleInfo.nativeLibraryPath = "libs/arm";
+    moduleInfo.isLibIsolated = true;
+    moduleInfo.compressNativeLibs = false;
+    info.baseBundleInfo_->targetVersion = TARGET_VERSION_FOURTEEN;
+    info.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
+    info.baseApplicationInfo_->cpuAbi = "";
+    info.baseApplicationInfo_->nativeLibraryPath = "";
+
+    BaseBundleInstaller installer;
+    installer.modulePackage_ = MODULE_NAME_TEST;
+    std::string modulePath = "/data/test/bms_bundle_installer";
+    installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    ErrCode ret = installer.InnerProcessNativeLibs(info, modulePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: BmsBundleInstallerTest_0020
  * @tc.name: InnerProcessNativeLibs
  * @tc.desc: test InnerProcessNativeLibs isLibIsolated true
@@ -4705,7 +4695,7 @@ HWTEST_F(BmsBundleInstallerTest, InnerProcessBundleInstall_0020, TestSize.Level1
     installer.isAppExist_ = true;
     oldInfo.SetApplicationBundleType(BundleType::SHARED);
     auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME);
 }
 
 /**
@@ -4719,9 +4709,9 @@ HWTEST_F(BmsBundleInstallerTest, ProcessModuleUpdate_0020, Function | SmallTest 
     InnerBundleInfo innerBundleInfo;
     InnerBundleInfo oldInfo;
     bool isReplace = true;
-    bool noSkipsKill = false;
+    bool killProcess = false;
     innerBundleInfo.userId_ = USERID;
-    ErrCode res = installer.ProcessModuleUpdate(innerBundleInfo, oldInfo, isReplace, noSkipsKill);
+    ErrCode res = installer.ProcessModuleUpdate(innerBundleInfo, oldInfo, isReplace, killProcess);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INCONSISTENT_MODULE_NAME);
 }
 
@@ -4843,11 +4833,11 @@ HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0010, Function | SmallTest | Level
 {
     BaseBundleInstaller installer;
     installer.singletonState_ = AppExecFwk::BaseBundleInstaller::SingletonState::SINGLETON_TO_NON;
-    bool noSkipsKill = false;
+    bool killProcess = false;
     std::unordered_map<std::string, InnerBundleInfo> info;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->compileSdkType = "OpenHarmony";
-    installer.OnSingletonChange(noSkipsKill);
+    installer.OnSingletonChange(killProcess);
     info.try_emplace("OpenHarmony", innerBundleInfo);
 
     bool res = installer.CheckApiInfo(info);
@@ -4863,12 +4853,12 @@ HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0030, Function | SmallTest | Level
 {
     BaseBundleInstaller installer;
     installer.singletonState_ = AppExecFwk::BaseBundleInstaller::SingletonState::NON_TO_SINGLETON;
-    bool noSkipsKill = false;
+    bool killProcess = false;
     std::unordered_map<std::string, InnerBundleInfo> info;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->compileSdkType = "OpenHarmony1";
     innerBundleInfo.baseBundleInfo_->compatibleVersion = COMPATIBLE_VERSION;
-    installer.OnSingletonChange(noSkipsKill);
+    installer.OnSingletonChange(killProcess);
     info.try_emplace("OpenHarmony2", innerBundleInfo);
 
     bool res = installer.CheckApiInfo(info);
@@ -4883,6 +4873,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0030, Function | SmallTest | Level
 HWTEST_F(BmsBundleInstallerTest, UninstallLowerVersionFeature_0010, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
     std::vector<std::string> packageVec;
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
@@ -5415,7 +5406,7 @@ HWTEST_F(BmsBundleInstallerTest, BeforeInstall_0100, Function | SmallTest | Leve
     installParam.isPreInstallApp = false;
 
     auto res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
-    EXPECT_EQ(res, ERR_APP_SERVICE_FWK_INSTALL_NOT_PREINSTALL);
+    EXPECT_EQ(res, ERR_OK);
 
     installParam.isPreInstallApp = true;
     res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
@@ -5877,7 +5868,7 @@ HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0030, Function | SmallTest | 
     BaseBundleInstaller installer;
     installer.RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
-    EXPECT_EQ(exist, -1);
+    EXPECT_EQ(exist, 0);
     UnInstallBundle(SYSTEMFIEID_NAME);
 }
 
@@ -6006,6 +5997,25 @@ HWTEST_F(BmsBundleInstallerTest, ExtractEncryptedSoFiles_0100, Function | SmallT
     int32_t uid = -1;
     bool ret = installer.ExtractEncryptedSoFiles(info, tmpSoPath, uid);
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ExtractEncryptedSoFiles_0200
+ * @tc.name: test ExtractEncryptedSoFiles
+ * @tc.desc: test ExtractEncryptedSoFiles of BaseBundleInstaller with api13
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractEncryptedSoFiles_0200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.compressNativeLibs = true;
+    innerBundleInfo.innerModuleInfos_["aaa"] = moduleInfo;
+    innerBundleInfo.baseBundleInfo_->targetVersion = TARGET_VERSION_FOURTEEN;
+    std::string tmpSoPath = "";
+    int32_t uid = -1;
+    bool ret = installer.ExtractEncryptedSoFiles(innerBundleInfo, tmpSoPath, uid);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -6159,12 +6169,10 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDirWithVector_0100, Function | 
 HWTEST_F(BmsBundleInstallerTest, GetAllBundleStats_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl hostImpl;
-    std::vector<std::string> bundleNames;
     std::vector<int64_t> bundleStats = { 0 };
     std::vector<int32_t> uids;
-    bundleNames.push_back(TEST_STRING);
     uids.push_back(EDM_UID);
-    auto ret = hostImpl.GetAllBundleStats(bundleNames, EDM_UID, bundleStats, uids);
+    auto ret = hostImpl.GetAllBundleStats(EDM_UID, bundleStats, uids);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -6178,8 +6186,6 @@ HWTEST_F(BmsBundleInstallerTest, RollbackHmpCommonInfo_0100, Function | SmallTes
     BaseBundleInstaller installer;
 
     InnerBundleInfo info;
-    std::string dir;
-    installer.CreateScreenLockProtectionExistDirs(info, dir);
 
     std::vector<std::string> extensionDataGroupIds;
     std::vector<std::string> bundleDataGroupIds;
@@ -6514,23 +6520,6 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallEventInfo_0100, Function | SmallTest 
 }
 
 /**
- * @tc.number: CheckArkNativeFileWithOldInfo_0100
- * @tc.name: test CheckArkNativeFileWithOldInfo
- * @tc.desc: test CheckArkNativeFileWithOldInfo of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, CheckArkNativeFileWithOldInfo_0100, Function | SmallTest | Level1)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo oldInfo;
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
-    ApplicationInfo applicationInfo;
-    oldInfo.SetBaseApplicationInfo(applicationInfo);
-    oldInfo.SetArkNativeFileAbi("x86");
-    ErrCode ret = installer.CheckArkNativeFileWithOldInfo(oldInfo, newInfos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_AN_INCOMPATIBLE);
-}
-
-/**
  * @tc.number: SetAppDistributionType_0100
  * @tc.name: test SetAppDistributionType
  * @tc.desc: test SetAppDistributionType of BaseBundleInstaller
@@ -6602,7 +6591,6 @@ HWTEST_F(BmsBundleInstallerTest, SendStartInstallNotify_0100, Function | SmallTe
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = true;
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -6952,5 +6940,176 @@ HWTEST_F(BmsBundleInstallerTest, PreInstallBundleInfo_0100, Function | MediumTes
     nlohmann::json jsonObject;
     preInstallBundleInfo.ToJson(jsonObject);
     EXPECT_EQ(jsonObject["bundleName"], "com.acts.example");
+}
+
+/**
+ * @tc.number: UtdHandler_0100
+ * @tc.name: test UtdHandler
+ * @tc.desc: 1.call GetEntryHapPath, if exist entry then return entry path, otherwise return empty string
+ */
+HWTEST_F(BmsBundleInstallerTest, UtdHandler_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::string entryHapPath;
+    entryHapPath = UtdHandler::GetEntryHapPath(BUNDLE_BACKUP_NAME, USERID);
+    EXPECT_NE(entryHapPath, EMPTY_STRING);
+
+    entryHapPath = UtdHandler::GetEntryHapPath(EMPTY_STRING, USERID);
+    EXPECT_EQ(entryHapPath, EMPTY_STRING);
+
+    int32_t invalidUserId = -200;
+    entryHapPath = UtdHandler::GetEntryHapPath(BUNDLE_BACKUP_NAME, invalidUserId);
+    EXPECT_EQ(entryHapPath, EMPTY_STRING);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: UtdHandler_0200
+ * @tc.name: test UtdHandler
+ * @tc.desc: 1.call GetUtdProfileFromHap, if exist utd.json5 then return content, otherwise return empty string
+ */
+HWTEST_F(BmsBundleInstallerTest, UtdHandler_0200, Function | SmallTest | Level0)
+{
+    std::string utdProfile;
+    std::string withUtdHapPath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    utdProfile = UtdHandler::GetUtdProfileFromHap(withUtdHapPath);
+    EXPECT_NE(utdProfile, EMPTY_STRING);
+
+    std::string noUtdHapPath = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    utdProfile = UtdHandler::GetUtdProfileFromHap(noUtdHapPath);
+    EXPECT_EQ(utdProfile, EMPTY_STRING);
+
+    utdProfile = UtdHandler::GetUtdProfileFromHap(EMPTY_STRING);
+    EXPECT_EQ(utdProfile, EMPTY_STRING);
+}
+
+/**
+ * @tc.number: SetDisposedRuleWhenBundleUpdateStart_0010
+ * @tc.name: test SetDisposedRuleWhenBundleUpdateStart
+ * @tc.desc: 1.SetDisposedRuleWhenBundleUpdateStart
+ */
+HWTEST_F(BmsBundleInstallerTest, SetDisposedRuleWhenBundleUpdateStart_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo oldBundleInfo;
+    bool ret = installer.SetDisposedRuleWhenBundleUpdateStart(infos, oldBundleInfo, true);
+    EXPECT_FALSE(ret);
+    installer.isAppExist_ = false;
+    ret = installer.SetDisposedRuleWhenBundleUpdateStart(infos, oldBundleInfo, false);
+    EXPECT_FALSE(ret);
+    installer.isAppExist_ = true;
+    ret = installer.SetDisposedRuleWhenBundleUpdateStart(infos, oldBundleInfo, false);
+    EXPECT_FALSE(ret);
+    EXPECT_FALSE(installer.needSetDisposeRule_);
+    ret = installer.DeleteDisposedRuleWhenBundleUpdateEnd(oldBundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SetDisposedRuleWhenBundleUpdateStart_0020
+ * @tc.name: test SetDisposedRuleWhenBundleUpdateStart
+ * @tc.desc: 1.SetDisposedRuleWhenBundleUpdateStart
+ */
+HWTEST_F(BmsBundleInstallerTest, SetDisposedRuleWhenBundleUpdateStart_0020, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    oldBundleInfo.innerModuleInfos_[BUNDLE_NAME] = innerModuleInfo;
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos[BUNDLE_NAME] = oldBundleInfo;
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    bool ret = installer.SetDisposedRuleWhenBundleUpdateStart(infos, oldBundleInfo, false);
+    EXPECT_TRUE(ret);
+    EXPECT_TRUE(installer.needSetDisposeRule_);
+    ret = installer.DeleteDisposedRuleWhenBundleUpdateEnd(oldBundleInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: SetDisposedRuleWhenBundleUpdateStart_0030
+ * @tc.name: test SetDisposedRuleWhenBundleUpdateStart
+ * @tc.desc: 1.SetDisposedRuleWhenBundleUpdateStart
+ */
+HWTEST_F(BmsBundleInstallerTest, SetDisposedRuleWhenBundleUpdateStart_0030, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    oldBundleInfo.innerModuleInfos_[BUNDLE_NAME] = innerModuleInfo;
+
+    InnerBundleInfo newBundleInfo;
+    InnerModuleInfo newInnerModuleInfo;
+    newInnerModuleInfo.moduleName = BUNDLE_NAME;
+    newBundleInfo.innerModuleInfos_[BUNDLE_NAME] = newInnerModuleInfo;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos[BUNDLE_NAME] = newBundleInfo;
+
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    bool ret = installer.SetDisposedRuleWhenBundleUpdateStart(infos, oldBundleInfo, false);
+    EXPECT_FALSE(ret);
+    EXPECT_FALSE(installer.needSetDisposeRule_);
+    ret = installer.DeleteDisposedRuleWhenBundleUpdateEnd(oldBundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RecoverHapToken_0100
+ * @tc.name: test RecoverHapToken
+ * @tc.desc: RecoverHapToken
+ */
+HWTEST_F(BmsBundleInstallerTest, RecoverHapToken_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, USERID);
+
+    BaseBundleInstaller installer;
+    int32_t userId = USERID;
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    InnerBundleInfo info;
+    installer.InitDataMgr();
+    bool ret = installer.RecoverHapToken(BUNDLE_NAME, userId, accessTokenIdEx, info);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RecoverHapToken_0200
+ * @tc.name: test RecoverHapToken
+ * @tc.desc: RecoverHapToken
+ */
+HWTEST_F(BmsBundleInstallerTest, RecoverHapToken_0200, Function | SmallTest | Level0)
+{
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+
+    UninstallDataUserInfo uninstallDataUserInfo;
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo));
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto ret = dataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+
+    BaseBundleInstaller installer;
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    InnerBundleInfo info;
+    installer.InitDataMgr();
+    ret = installer.RecoverHapToken(BUNDLE_NAME, USERID, accessTokenIdEx, info);
+    ASSERT_TRUE(ret);
+    dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, USERID);
 }
 } // OHOS

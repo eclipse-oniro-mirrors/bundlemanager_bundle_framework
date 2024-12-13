@@ -97,7 +97,7 @@ private:
 
     void InnerProcessResourceInfoByResourceUpdateType(
         std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap, const uint32_t type,
-        const int32_t userId, const int32_t oldUserId, bool &needDeleteAllResource);
+        const int32_t userId, const int32_t oldUserId);
 
     void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);
 
@@ -110,16 +110,15 @@ private:
     void SendBundleResourcesChangedEvent(const int32_t userId, const uint32_t type);
 
     void InnerProcessResourceInfoBySystemLanguageChanged(
-        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-        bool &needDeleteAllResource);
+        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap);
 
     void InnerProcessResourceInfoBySystemThemeChanged(
         std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-        const int32_t userId, bool &needDeleteAllResource);
+        const int32_t userId);
 
     void InnerProcessResourceInfoByUserIdChanged(
         std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-        const int32_t userId, const int32_t oldUserId, bool &needDeleteAllResource);
+        const int32_t userId, const int32_t oldUserId);
 
     void DeleteNotExistResourceInfo(const std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
         const std::vector<std::string> &existResourceNames);

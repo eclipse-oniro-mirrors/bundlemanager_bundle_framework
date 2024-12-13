@@ -3136,4 +3136,118 @@ HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0400, Function | Sm
     EXPECT_EQ(userInfo.bundleUserInfo.userId, USERID);
     dataMgr->RemoveUserId(userIdNew);
 }
+
+/**
+ * @tc.number: BaseBundleInstaller_0100
+ * @tc.name: test CheckAppService
+ * @tc.desc: 1.Test CheckAppService the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BaseBundleInstaller> installer = std::make_shared<BaseBundleInstaller>();
+    ASSERT_NE(installer, nullptr);
+
+    InnerBundleInfo newInfo;
+    newInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
+    InnerBundleInfo oldInfo;
+    bool isAppExist = false;
+    ErrCode ret = installer->CheckAppService(newInfo, oldInfo, isAppExist);
+    EXPECT_EQ(ret, ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0200
+ * @tc.name: test CheckSingleton
+ * @tc.desc: 1.Test CheckSingleton the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BaseBundleInstaller> installer = std::make_shared<BaseBundleInstaller>();
+    ASSERT_NE(installer, nullptr);
+
+    InnerBundleInfo info;
+    int32_t userId = 100;
+    installer->isAppService_ = true;
+    ErrCode ret = installer->CheckSingleton(info, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0300
+ * @tc.name: test CheckInstallCondition
+ * @tc.desc: 1.Test CheckInstallCondition the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BaseBundleInstaller> installer = std::make_shared<BaseBundleInstaller>();
+    ASSERT_NE(installer, nullptr);
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::string bundleName;
+    bool isUninstalled = false;
+    bool isKeepData = false;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    std::vector<std::string> extensionDataGroupIds;
+    std::vector<std::string> bundleDataGroupIds;
+    std::vector<std::string> validGroupIds;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo oldInfo;
+
+
+    innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+    newInfos.emplace("key", innerBundleInfo);
+    installer->isAppExist_ = false;
+
+    installer->dataMgr_ = nullptr;
+    installer->MarkPreInstallState(bundleName, isUninstalled);
+
+    installer->DeleteEncryptionKeyId(oldInfo, isKeepData);
+
+    installer->UpdateExtensionSandboxInfo(newInfos, hapVerifyRes);
+
+    extensionDataGroupIds.push_back("test1");
+    extensionDataGroupIds.push_back("test2");
+    extensionDataGroupIds.push_back("test3");
+    bundleDataGroupIds.push_back("test");
+    installer->GetValidDataGroupIds(extensionDataGroupIds, bundleDataGroupIds, validGroupIds);
+
+    installer->GetRemoveExtensionDirs(newInfos, oldInfo);
+
+    installer->GenerateOdid(infos, hapVerifyRes);
+
+    bool isSysCapValid = false;
+    ErrCode ret = installer->CheckInstallCondition(hapVerifyRes, infos, isSysCapValid);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0400
+ * @tc.name: test NeedDeleteOldNativeLib
+ * @tc.desc: 1.Test NeedDeleteOldNativeLib the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0400, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BaseBundleInstaller> installer = std::make_shared<BaseBundleInstaller>();
+    ASSERT_NE(installer, nullptr);
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    newInfos.emplace("key", innerBundleInfo);
+    InnerBundleInfo oldInfo;
+    oldInfo.SetNativeLibraryPath("test/path");
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = 0;
+    oldInfo.SetBaseBundleInfo(bundleInfo);
+    installer->isAppExist_ = true;
+    installer->versionCode_ = 100;
+    bool ret = installer->NeedDeleteOldNativeLib(newInfos, oldInfo);
+    EXPECT_TRUE(ret);
+
+    bundleInfo.versionCode = 200;
+    oldInfo.SetBaseBundleInfo(bundleInfo);
+    oldInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
+    ret = installer->NeedDeleteOldNativeLib(newInfos, oldInfo);
+    EXPECT_FALSE(ret);
+}
 } // OHOS

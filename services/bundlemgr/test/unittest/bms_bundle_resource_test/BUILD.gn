@@ -87,9 +87,13 @@ ohos_unittest("BmsBundleResourceTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_EXTENSION_DATA" ]
+  }
   if (code_signature_enable) {
     sources += [
       "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",

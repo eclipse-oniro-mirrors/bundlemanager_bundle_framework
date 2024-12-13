@@ -73,6 +73,8 @@ ErrCode HmpBundleInstaller::InstallSystemHspInHmp(const std::string &bundleDir) 
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.removable = false;
+    installParam.copyHapToInstallPath = false;
+    installParam.needSavePreInstallInfo = true;
     ErrCode ret = installer.Install({ bundleDir }, installParam);
     if (ret != ERR_OK) {
         APP_LOGE("install hmp system hsp %{public}s error with code: %{public}d", bundleDir.c_str(), ret);
@@ -91,13 +93,15 @@ ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir, 
     }
     InstallParam installParam;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    installParam.SetKillProcess(false);
     installParam.needSendEvent = true;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
     installParam.userId = Constants::DEFAULT_USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.isOTA = true;
     installParam.removable = removable;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
     ErrCode ret = InstallBundle(bundleDir, installParam, Constants::AppType::SYSTEM_APP);
     ResetInstallProperties();
     if (ret == ERR_OK) {
@@ -311,7 +315,7 @@ bool HmpBundleInstaller::UninstallSystemBundle(const std::string &bundleName, co
         installParam.userId = userId;
         installParam.needSavePreInstallInfo = true;
         installParam.isPreInstallApp = true;
-        installParam.noSkipsKill = false;
+        installParam.SetKillProcess(false);
         installParam.needSendEvent = false;
         MarkPreBundleSyeEventBootTag(false);
         ErrCode result = UninstallBundle(bundleName, modulePackage, installParam);
@@ -355,7 +359,7 @@ void HmpBundleInstaller::CheckUninstallSystemHsp(const std::string &bundleName)
         installParam.userId = Constants::DEFAULT_USERID;
         installParam.needSavePreInstallInfo = true;
         installParam.isPreInstallApp = true;
-        installParam.noSkipsKill = false;
+        installParam.SetKillProcess(false);
         installParam.needSendEvent = false;
         installParam.isKeepData = true;
         MarkPreBundleSyeEventBootTag(false);

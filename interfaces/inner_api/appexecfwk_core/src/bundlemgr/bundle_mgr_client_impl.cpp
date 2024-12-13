@@ -51,7 +51,7 @@ BundleMgrClientImpl::BundleMgrClientImpl()
 BundleMgrClientImpl::~BundleMgrClientImpl()
 {
     APP_LOGD("destroy bundleMgrClientImpl");
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     if (bundleMgr_ != nullptr && deathRecipient_ != nullptr) {
         bundleMgr_->AsObject()->RemoveDeathRecipient(deathRecipient_);
     }
@@ -63,7 +63,7 @@ ErrCode BundleMgrClientImpl::GetNameForUid(const int uid, std::string &name)
         APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return bundleMgr_->GetNameForUid(uid, name);
 }
 
@@ -78,7 +78,7 @@ bool BundleMgrClientImpl::GetBundleInfo(const std::string &bundleName, const Bun
         return false;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return bundleMgr_->GetBundleInfo(bundleName, flag, bundleInfo, userId);
 }
 
@@ -91,7 +91,7 @@ ErrCode BundleMgrClientImpl::GetBundlePackInfo(
         APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return bundleMgr_->GetBundlePackInfo(bundleName, flag, bundlePackInfo, userId);
 }
 
@@ -103,7 +103,7 @@ ErrCode BundleMgrClientImpl::CreateBundleDataDir(int32_t userId)
         APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return bundleMgr_->CreateBundleDataDir(userId);
 }
 
@@ -119,7 +119,7 @@ bool BundleMgrClientImpl::GetHapModuleInfo(const std::string &bundleName, const 
     AbilityInfo info;
     info.bundleName = bundleName;
     info.package = hapName;
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return bundleMgr_->GetHapModuleInfo(info, hapModuleInfo);
 }
 
@@ -136,8 +136,7 @@ bool BundleMgrClientImpl::GetResConfigFile(const HapModuleInfo &hapModuleInfo, c
         APP_LOGE("no valid file can be obtained");
         return false;
     }
-    int32_t InfoSize = static_cast<int32_t>(profileInfos.size());
-    APP_LOGD("The size of the profile info is : %{public}d", InfoSize);
+    APP_LOGD("The size of the profile info is : %{public}zu", profileInfos.size());
     return true;
 }
 
@@ -154,8 +153,7 @@ bool BundleMgrClientImpl::GetResConfigFile(const ExtensionAbilityInfo &extension
         APP_LOGE("no valid file can be obtained");
         return false;
     }
-    int32_t InfoSize = static_cast<int32_t>(profileInfos.size());
-    APP_LOGD("The size of the profile info is : %{public}d", InfoSize);
+    APP_LOGD("The size of the profile info is : %{public}zu", profileInfos.size());
     return true;
 }
 
@@ -439,7 +437,7 @@ ErrCode BundleMgrClientImpl::InstallSandboxApp(const std::string &bundleName, in
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return bundleInstaller_->InstallSandboxApp(bundleName, dlpType, userId, appIndex);
 }
 
@@ -456,7 +454,7 @@ ErrCode BundleMgrClientImpl::UninstallSandboxApp(const std::string &bundleName, 
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return bundleInstaller_->UninstallSandboxApp(bundleName, appIndex, userId);
 }
 
@@ -474,7 +472,7 @@ ErrCode BundleMgrClientImpl::GetSandboxBundleInfo(
         APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return bundleMgr_->GetSandboxBundleInfo(bundleName, appIndex, userId, info);
 }
 
@@ -492,7 +490,7 @@ ErrCode BundleMgrClientImpl::GetSandboxAbilityInfo(const Want &want, int32_t app
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return bundleMgr_->GetSandboxAbilityInfo(want, appIndex, flags, userId, abilityInfo);
 }
 
@@ -510,7 +508,7 @@ ErrCode BundleMgrClientImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return bundleMgr_->GetSandboxExtAbilityInfos(want, appIndex, flags, userId, extensionInfos);
 }
 
@@ -528,14 +526,39 @@ ErrCode BundleMgrClientImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityI
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     return bundleMgr_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
+}
+
+ErrCode BundleMgrClientImpl::GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
+    std::string &dataDir)
+{
+    APP_LOGD("GetDir begin");
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE("connect fail");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    return bundleMgr_->GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
+}
+
+ErrCode BundleMgrClientImpl::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)
+{
+    APP_LOGD("GetAllBundleDirs begin");
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE("connect fail");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    return bundleMgr_->GetAllBundleDirs(userId, bundleDirs);
 }
 
 ErrCode BundleMgrClientImpl::Connect()
 {
     APP_LOGD("connect begin");
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     if (bundleMgr_ == nullptr) {
         sptr<ISystemAbilityManager> systemAbilityManager =
             SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -574,7 +597,7 @@ ErrCode BundleMgrClientImpl::Connect()
 void BundleMgrClientImpl::OnDeath()
 {
     APP_LOGD("BundleManagerService dead");
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> lock(mutex_);
     bundleMgr_ = nullptr;
     bundleInstaller_ = nullptr;
 }

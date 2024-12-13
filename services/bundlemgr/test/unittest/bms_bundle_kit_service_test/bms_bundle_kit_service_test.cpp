@@ -259,6 +259,7 @@ const std::string UTD_GENERAL_AVI = "general.avi";
 const std::string UTD_GENERAL_VIDEO = "general.video";
 constexpr const char* APP_LINKING = "applinking";
 const int32_t APP_INDEX = 1;
+const std::string CALLER_NAME_UT = "ut";
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -3105,6 +3106,43 @@ HWTEST_F(BmsBundleKitServiceTest, GetLaunchWantForBundle_0600, Function | SmallT
 }
 
 /**
+ * @tc.number: GetLaunchWant_0100
+ * @tc.name: test can not get the launch want
+ * @tc.desc: 1.system run normally
+ *           2.get launch want failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLaunchWant_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    Want want;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode testRet = bundleMgrProxy->GetLaunchWant(want);
+    EXPECT_NE(ERR_OK, testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetLaunchWant_0200
+ * @tc.name: test GetLaunchWant of BundleMgrHostImpl
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLaunchWant_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    AAFwk::Want want;
+    ErrCode testRet = hostImpl->GetLaunchWant(want);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetBundleList_0100
  * @tc.name: test can get all installed bundle names
  * @tc.desc: 1.system run normally
@@ -3963,7 +4001,8 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0200, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, CALLER_NAME_UT,
+        Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
@@ -3983,14 +4022,16 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0300, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, false, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, false, CALLER_NAME_UT,
+        Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
     EXPECT_EQ(0, ret);
     EXPECT_FALSE(isEnable);
 
-    int32_t testRet2 = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, Constants::DEFAULT_USERID);
+    int32_t testRet2 = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, CALLER_NAME_UT,
+        Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet2);
     ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
     EXPECT_EQ(0, ret);
@@ -4022,7 +4063,8 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0500, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled("", 0, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled("", 0, true, CALLER_NAME_UT,
+        Constants::DEFAULT_USERID);
     EXPECT_NE(0, testRet);
     bool isEnable = false;
     int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
@@ -4042,7 +4084,8 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0600, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, CALLER_NAME_UT,
+        Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
     int32_t testRet1 = GetBundleDataMgr()->IsApplicationEnabled("", 0, isEnable);
@@ -4104,7 +4147,8 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0800, Function | Small
  */
 HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0900, Function | SmallTest | Level1)
 {
-    ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled("", 0, true, Constants::INVALID_USERID);
+    ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled("", 0, true, CALLER_NAME_UT,
+        Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -9703,7 +9747,7 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0100, Function | SmallTes
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
-    ErrCode ret = hostImpl->SwitchUninstallState(BUNDLE_NAME_DEMO, true);
+    ErrCode ret = hostImpl->SwitchUninstallState(BUNDLE_NAME_DEMO, true, false);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -13115,7 +13159,7 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0001, Function | SmallTes
 {
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, false);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, false, false);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -13132,7 +13176,7 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0002, Function | SmallTes
     InnerBundleInfo info;
     info.SetRemovable(false);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_UNINSTALL_STATE, info);
-    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true, false);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED);
     dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
 }
@@ -13150,7 +13194,7 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0003, Function | SmallTes
     InnerBundleInfo info;
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_UNINSTALL_STATE, info);
     EXPECT_TRUE(info.uninstallState_);
-    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true, false);
     EXPECT_EQ(res, ERR_OK);
     EXPECT_TRUE(info.uninstallState_);
     dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
@@ -13606,5 +13650,19 @@ HWTEST_F(BmsBundleKitServiceTest, UninstallCloneApp_0100, Function | SmallTest |
     ASSERT_NE(bundleInstaller, nullptr);
     auto ret = bundleInstaller->UninstallCloneApp("", DEFAULT_USERID, APP_INDEX);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IsBundleInstalled_0001
+ * @tc.name: test IsBundleInstalled
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsBundleInstalled_0001, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool isInstalled = false;
+    auto testRet = hostImpl->IsBundleInstalled(BUNDLE_NAME_TEST, DEFAULT_USERID, 0, isInstalled);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_FALSE(isInstalled);
 }
 }

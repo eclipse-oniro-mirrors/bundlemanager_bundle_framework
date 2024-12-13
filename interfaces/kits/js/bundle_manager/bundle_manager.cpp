@@ -18,6 +18,7 @@
 #include <string>
 
 #include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "bundle_errors.h"
 #include "bundle_manager_sync.h"
 #include "bundle_mgr_client.h"
@@ -54,6 +55,7 @@ constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
 constexpr const char* VERIFY_ABC = "VerifyAbc";
 constexpr const char* DELETE_ABC = "DeleteAbc";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
+constexpr const char* ERR_MSG_LAUNCH_WANT_INVALID = "The launch want is not found.";
 constexpr const char* ADDITIONAL_INFO = "additionalInfo";
 constexpr const char* LINK = "link";
 constexpr const char* DEVELOPER_ID = "developerId";
@@ -118,6 +120,7 @@ constexpr const char* APP_CLONE = "APP_CLONE";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
+static std::mutex g_clearCacheListenerMutex;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
 static std::string g_ownBundleName;
 static std::mutex g_ownBundleNameMutex;
@@ -154,6 +157,7 @@ void ClearCacheListener::OnReceiveEvent(const EventFwk::CommonEventData &data)
 
 void RegisterClearCacheListener()
 {
+    std::lock_guard<std::mutex> lock(g_clearCacheListenerMutex);
     if (g_clearCacheListener != nullptr) {
         return;
     }
@@ -572,6 +576,35 @@ napi_value GetAppCloneIdentity(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("call GetAppCloneIdentity done");
     return promise;
+}
+
+napi_value GetLaunchWant(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetLaunchWant call");
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    OHOS::AAFwk::Want want;
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetLaunchWant(want));
+    if (ret != NO_ERROR) {
+        APP_LOGE("GetLaunchWant failed");
+        BusinessError::ThrowError(env, ERROR_GET_LAUNCH_WANT_INVALID, ERR_MSG_LAUNCH_WANT_INVALID);
+        return nullptr;
+    }
+    ElementName elementName = want.GetElement();
+    if (elementName.GetBundleName().empty() || elementName.GetAbilityName().empty()) {
+        APP_LOGE("bundleName or abilityName is empty");
+        BusinessError::ThrowError(env, ERROR_GET_LAUNCH_WANT_INVALID, ERR_MSG_LAUNCH_WANT_INVALID);
+        return nullptr;
+    }
+    napi_value nWant = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nWant));
+    CommonFunc::ConvertWantInfo(env, nWant, want);
+    APP_LOGD("call GetLaunchWant done");
+    return nWant;
 }
 
 napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
@@ -3128,6 +3161,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::EMBEDDED_UI), &nEmbeddedUI));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "EMBEDDED_UI", nEmbeddedUI));
 
+    napi_value nfence;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::FENCE), &nfence));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FENCE", nfence));
+
     napi_value nInsightIntentUI;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::INSIGHT_INTENT_UI), &nInsightIntentUI));
@@ -3252,6 +3290,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::PHOTO_EDITOR), &nPhotoEditor));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PHOTO_EDITOR", nPhotoEditor));
+
+    napi_value nCallerInfoQuery;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::CALLER_INFO_QUERY), &nCallerInfoQuery));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CALLER_INFO_QUERY", nCallerInfoQuery));
 }
 
 void CreateApplicationFlagObject(napi_env env, napi_value value)
@@ -3847,7 +3890,7 @@ void GetBundleInfoForSelfExec(napi_env env, void *data)
 
 napi_value GetBundleInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("NAPI_GetBundleInfo called");
+    LOG_NOFUNC_I(BMS_TAG_COMMON, "NAPI GetBundleInfo call");
     NapiArg args(env, info);
     BundleInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) BundleInfoCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -3903,7 +3946,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
         env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete);
     callbackPtr.release();
-    APP_LOGD("call NAPI_GetBundleInfo done");
+    LOG_NOFUNC_I(BMS_TAG_COMMON, "NAPI GetBundleInfo done");
     return promise;
 }
 
@@ -4897,11 +4940,11 @@ void ConvertPreinstalledApplicationInfo(napi_env env, const PreinstalledApplicat
         napi_set_named_property(env, objPreinstalledApplicationInfo, MODULE_NAME, nModuleName));
 
     napi_value nLabelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, preinstalledApplicationInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, preinstalledApplicationInfo.labelId, &nLabelId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, LABEL_ID, nLabelId));
 
     napi_value nIconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, preinstalledApplicationInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, preinstalledApplicationInfo.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, ICON_ID, nIconId));
 }
 
@@ -5157,7 +5200,6 @@ void GetAppCloneBundleInfoExec(napi_env env, void *data)
     CloneAppBundleInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<CloneAppBundleInfoCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("param: name=%{public}s,index=%{public}d,bundleFlags=%{public}d,userId=%{public}d",
@@ -5276,7 +5318,6 @@ void GetAllAppCloneBundleInfoExec(napi_env env, void *data)
     CloneAppBundleInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<CloneAppBundleInfosCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("param: name=%{public}s,bundleFlags=%{public}d,userId=%{public}d",

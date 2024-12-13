@@ -101,6 +101,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
     "storage_service:storage_manager_sa_proxy",
   ]
   external_deps += bundle_install_external_deps
@@ -279,6 +280,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -455,6 +457,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE" ]
@@ -637,6 +640,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
     "storage_service:storage_manager_sa_proxy",
   ]
   external_deps += bundle_install_external_deps
@@ -818,6 +822,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE" ]
@@ -997,6 +1002,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_NOT_IS_NAYIVE_TOKEN_TYPE" ]
@@ -1163,6 +1169,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
   defines = [

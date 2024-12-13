@@ -66,8 +66,10 @@ enum class CompatiblePolicy {
     BACKWARD_COMPATIBILITY = 1,
 };
 
+// Each bit of this ApplicationReservedFlag value identifies relevant information
 enum class ApplicationReservedFlag {
     ENCRYPTED_APPLICATION = 0x00000001,
+    ENCRYPTED_KEY_EXISTED = 0x00000002,
 };
 
 enum class MultiAppModeType : uint8_t {
@@ -78,6 +80,16 @@ enum class MultiAppModeType : uint8_t {
 
 enum class ApplicationInfoFlag {
     FLAG_INSTALLED = 0x00000001,
+    /**
+     * Indicates the installation source of pre-installed applications
+     * App upgrades will not change installation source
+     * FLAG_BOOT_INSTALLED App installed during first boot
+     * FLAG_OTA_INSTALLED App installed during OTA
+     * FLAG_RECOVER_INSTALLED App recover
+     */
+    FLAG_BOOT_INSTALLED = 0x00000002,
+    FLAG_OTA_INSTALLED = 0x00000004,
+    FLAG_RECOVER_INSTALLED = 0x00000008,
 };
 
 struct MultiAppModeData : public Parcelable {
@@ -131,7 +143,7 @@ struct Resource : public Parcelable {
     std::string moduleName;
 
     /** the resource id in hap */
-    int32_t id = 0;
+    uint32_t id = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
@@ -159,9 +171,9 @@ struct CompatibleApplicationInfo : public Parcelable {
     std::string process;
     bool isCompressNativeLibs = true;
 
-    int32_t iconId = 0;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
 
     bool systemApp = false;
 
@@ -192,15 +204,15 @@ struct ApplicationInfo : public Parcelable {
     int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE;
 
     std::string iconPath;
-    int32_t iconId = 0;
+    uint32_t iconId = 0;
     Resource iconResource;
 
     std::string label;
-    int32_t labelId = 0;
+    uint32_t labelId = 0;
     Resource labelResource;
 
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     Resource descriptionResource;
 
     bool keepAlive = false;
@@ -221,7 +233,7 @@ struct ApplicationInfo : public Parcelable {
     bool distributedNotificationEnabled = true;
     std::vector<int32_t> resourcesApply;
     std::vector<std::string> allowCommonEvent;
-    
+
     bool allowEnableNotification = false;
     bool gwpAsanEnabled = false;
     int32_t supportedModes = 0;  // returns 0 if the application does not support the driving mode
@@ -274,7 +286,6 @@ struct ApplicationInfo : public Parcelable {
     // switch
     bool multiProjects = false;
 
-    // unused
     bool isCompressNativeLibs = true;
     int32_t flags = 0;
     std::string icon;
@@ -315,7 +326,7 @@ struct ApplicationInfo : public Parcelable {
     bool ReadMetaDataFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static ApplicationInfo *Unmarshalling(Parcel &parcel);
-    void Dump(std::string prefix, int fd);
+    void Dump(const std::string &prefix, int fd);
     void ConvertToCompatibleApplicationInfo(CompatibleApplicationInfo& compatibleApplicationInfo) const;
     bool CheckNeedPreload(const std::string &moduleName) const;
 };

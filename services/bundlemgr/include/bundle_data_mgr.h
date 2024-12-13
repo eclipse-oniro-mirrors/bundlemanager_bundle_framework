@@ -25,6 +25,7 @@
 #include <shared_mutex>
 #include <string>
 
+#include "bundle_dir.h"
 #include "want.h"
 
 #include "ability_info.h"
@@ -42,8 +43,11 @@
 #include "inner_bundle_clone_info.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
+#include "ipc/create_dir_param.h"
+#include "uninstall_data_mgr_storage_rdb.h"
 #include "module_info.h"
 #include "preinstall_data_storage_interface.h"
+#include "router_data_storage_interface.h"
 #include "shortcut_data_storage_interface.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
@@ -51,6 +55,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "element.h"
 #endif
+#include "ohos_account_kits.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -87,7 +92,8 @@ public:
      * @param state Indicates the install state to be set.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool UpdateBundleInstallState(const std::string &bundleName, const InstallState state);
+    bool UpdateBundleInstallState(const std::string &bundleName,
+        const InstallState state, const bool isKeepData = false);
     /**
      * @brief Add new InnerBundleInfo.
      * @param bundleName Indicates the bundle name.
@@ -110,7 +116,8 @@ public:
      * @param oldInfo Indicates the old InnerBundleInfo object.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool RemoveModuleInfo(const std::string &bundleName, const std::string &modulePackage, InnerBundleInfo &oldInfo);
+    bool RemoveModuleInfo(const std::string &bundleName, const std::string &modulePackage, InnerBundleInfo &oldInfo,
+        bool needSaveStorage = true);
 
     bool RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundleInfo &info);
     /**
@@ -122,14 +129,14 @@ public:
      */
     bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
-    bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo);
+    bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
     /**
      * @brief Get an InnerBundleInfo if exist (will change the status to DISABLED).
      * @param bundleName Indicates the bundle name.
      * @param info Indicates the obtained InnerBundleInfo object.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool GetInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
+    bool GetInnerBundleInfoWithDisable(const std::string &bundleName, InnerBundleInfo &info);
     /**
      * @brief Generate UID and GID for a bundle.
      * @param innerBundleUserInfo Indicates the InnerBundleUserInfo object.
@@ -238,7 +245,8 @@ public:
      * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
      */
     ErrCode GetApplicationInfoV9(
-        const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) const;
+        const std::string &appName, int32_t flags, int32_t userId,
+        ApplicationInfo &appInfo, const int32_t appIndex = 0) const;
     /**
      * @brief Obtains the ApplicationInfo based on a given bundle name.
      * @param appName Indicates the application bundle name to be queried.
@@ -446,7 +454,7 @@ public:
      * @return Returns result of the operation.
      */
     ErrCode SetApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
-        int32_t userId = Constants::UNSPECIFIED_USERID);
+        const std::string &caller, int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability to check.
@@ -695,6 +703,9 @@ public:
      */
     ErrCode QueryExtensionAbilityInfos(uint32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
+
+    ErrCode QueryExtensionAbilityInfosByExtensionTypeName(const std::string &typeName, uint32_t flags,
+        int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     /**
      * @brief Obtains the PreInstallBundleInfo objects in Cache.
      * @return Returns PreInstallBundleInfos.
@@ -760,7 +771,8 @@ public:
 #endif
 
     bool GetBundleStats(const std::string &bundleName,
-        const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex = 0) const;
+        const int32_t userId, std::vector<int64_t> &bundleStats,
+        const int32_t appIndex = 0, const uint32_t statFlag = 0) const;
     bool GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const;
     bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
@@ -777,6 +789,8 @@ public:
      */
     bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
+    bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
+        int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     bool GetInnerBundleInfoWithBundleFlagsAndLock(const std::string &bundleName, int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, int32_t flags,
@@ -813,6 +827,11 @@ public:
         const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
     bool GetInnerBundleInfoUsers(const std::string &bundleName, std::set<int32_t> &userIds);
     bool IsSystemHsp(const std::string &bundleName);
+
+    bool UpdateUninstallBundleInfo(const std::string &bundleName, const UninstallBundleInfo &uninstallBundleInfo);
+    bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo);
+    bool DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
+    bool GetAllUninstallBundleInfo(std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos);
 
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
 
@@ -905,10 +924,16 @@ public:
     const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos();
     ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
     ErrCode GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
-    ErrCode CreateBundleDataDir(int32_t userId) const;
+    ErrCode CreateBundleDataDir(int32_t userId);
     void GenerateOdid(const std::string &developerId, std::string &odid) const;
     ErrCode GetOdid(std::string &odid) const;
     ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
+    void UpdateRouterInfo(const std::string &bundleName);
+    bool DeleteRouterInfo(const std::string &bundleName);
+    bool DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName);
+    void GetAllBundleNames(std::set<std::string> &bundleNames);
+
+    void UpdateIsPreInstallApp(const std::string &bundleName, bool isPreInstallApp);
 
     /**
      * @brief Check whether the link can be opened.
@@ -922,7 +947,7 @@ public:
         std::vector<BundleInfo> &bundleInfos, int32_t userId);
     ErrCode GetDeveloperIds(const std::string &appDistributionType,
         std::vector<std::string> &developerIdList, int32_t userId);
-    ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state);
+    ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state, const bool isNeedSendNotify);
 
     ErrCode AddCloneBundle(const std::string &bundleName, const InnerBundleCloneInfo &attr);
     ErrCode RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex);
@@ -948,6 +973,9 @@ public:
 
     ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) const;
 
+    ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted,
+        int32_t appIndex = 0, bool needSaveStorage = true);
+
     ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
     ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
     ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos);
@@ -965,6 +993,20 @@ public:
      */
     ErrCode GetContinueBundleNames(
         const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId);
+
+    ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled);
+    void CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage = false);
+    int32_t GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t appIndex) const;
+    ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName);
+    ErrCode GetDirForAtomicService(const std::string &bundleName, AccountSA::OhosAccountInfo &accountInfo,
+        std::string &dataDir) const;
+    ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
+        std::string &dataDir) const;
+    ErrCode GetDirByBundleNameAndAppIndexAndType(const std::string &bundleName, const int32_t appIndex,
+    const BundleType type, AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const;
+    std::vector<int32_t> GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
+        int32_t userId) const;
+    ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) const;
 
 private:
     /**
@@ -991,13 +1033,7 @@ private:
      * @param state Indicates the InstallState object.
      * @return Returns true if install state is UPDATING_START or UNINSTALL_START; returns false otherwise.
      */
-    void DeleteBundleInfo(const std::string &bundleName, const InstallState state);
-    /**
-     * @brief Determine whether app is installed.
-     * @param bundleName Indicates the bundle Names.
-     * @return Returns true if install state is INSTALL_SUCCESS; returns false otherwise.
-     */
-    bool IsAppOrAbilityInstalled(const std::string &bundleName) const;
+    void DeleteBundleInfo(const std::string &bundleName, const InstallState state, const bool isKeepData = false);
     /**
      * @brief Implicit query abilityInfos by the given Want.
      * @param want Indicates the information of the ability.
@@ -1039,7 +1075,9 @@ private:
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
     void GetAllExtensionInfos(uint32_t flags, int32_t userId, const InnerBundleInfo &info,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
-    bool MatchUtd(const Skill &skill, const std::string &utd, int32_t count) const;
+    void GetOneExtensionInfosByExtensionTypeName(const std::string &typeName, uint32_t flags, int32_t userId,
+        const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
+    bool MatchUtd(Skill &skill, const std::string &utd, int32_t count) const;
     bool MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const;
     bool MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const;
     std::vector<int32_t> GetCloneAppIndexesNoLock(const std::string &bundleName, int32_t userId) const;
@@ -1054,6 +1092,8 @@ private:
 
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;
     void CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32_t userId) const;
+    void InnerCreateEl5Dir(const CreateDirParam &el5Param);
+    void SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSaveStorage);
 
     void FilterExtensionAbilityInfosByModuleName(const std::string &moduleName,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
@@ -1081,7 +1121,7 @@ private:
     void ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
     ErrCode ImplicitQueryAllExtensionInfos(uint32_t flags, int32_t userId,
-        std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
+        std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex, const std::string &typeName = "") const;
     void GetMatchLauncherAbilityInfosForCloneInfos(const InnerBundleInfo& info, const AbilityInfo &abilityInfo,
         const InnerBundleUserInfo &bundleUserInfo, std::vector<AbilityInfo>& abilityInfos) const;
     void ModifyApplicationInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo,
@@ -1151,7 +1191,6 @@ private:
     void ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &innerBundleInfo,
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
     void ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const;
-    void updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
         std::vector<AbilityInfo> &abilityInfos) const;
@@ -1162,7 +1201,13 @@ private:
     void PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const;
     void PostProcessAnyUserFlags(int32_t flags, int32_t userId,
         int32_t originalUserId, BundleInfo &bundleInfo) const;
-
+    void GetExtensionAbilityInfoByTypeName(uint32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos, const std::string &typeName) const;
+    bool GetShortcutInfosByInnerBundleInfo(
+        const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const;
+    std::string TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,
+        const AbilityInfo &abilityInfo) const;
+    void RestoreUidAndGidFromUninstallInfo();
 private:
     mutable std::shared_mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;
@@ -1201,6 +1246,8 @@ private:
     mutable std::mutex hspBundleNameMutex_;
     std::set<std::string> appServiceHspBundleName_;
     std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
+    std::shared_ptr<IRouterDataStorage> routerStorage_;
+    std::shared_ptr<UninstallDataMgrStorageRdb> uninstallDataMgr_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

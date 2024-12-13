@@ -96,7 +96,7 @@ const char* APP_ENVIRONMENTS_NAME = "name";
 const char* APP_ENVIRONMENTS_VALUE = "value";
 const char* HAP_MODULE_INFO_PACKAGE_NAME = "packageName";
 const char* HAP_MODULE_INFO_APP_STARTUP = "appStartup";
-const uint16_t MODULE_CAPACITY = 10240; // 10K
+const uint32_t MODULE_CAPACITY = 204800; // 200K
 }
 
 bool PreloadItem::ReadFromParcel(Parcel &parcel)
@@ -133,14 +133,12 @@ void from_json(const nlohmann::json &jsonObject, PreloadItem &preloadItem)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         PRELOAD_ITEM_MODULE_NAME,
         preloadItem.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read PreloadItem database error : %{public}d", parseResult);
     }
@@ -186,22 +184,18 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         dependency.bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::MODULE_NAME,
         dependency.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_VERSION_CODE,
@@ -263,30 +257,24 @@ void from_json(const nlohmann::json &jsonObject, ProxyData &proxyData)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         PROXY_DATA_URI,
         proxyData.uri,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         PROXY_DATA_REQUIRED_READ_PERMISSION,
         proxyData.requiredReadPermission,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         PROXY_DATA_REQUIRED_WRITE_PERMISSION,
         proxyData.requiredWritePermission,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<Metadata>(jsonObject,
         jsonObjectEnd,
         PROXY_DATA_METADATA,
@@ -367,54 +355,42 @@ void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ROUTER_ITEM_KEY_NAME,
         routerItem.name,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ROUTER_ITEM_KEY_PAGE_SOURCE_FILE,
         routerItem.pageSourceFile,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ROUTER_ITEM_KEY_BUILD_FUNCTION,
         routerItem.buildFunction,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ROUTER_ITEM_KEY_OHMURL,
         routerItem.ohmurl,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ROUTER_ITEM_KEY_BUNDLE_NAME,
         routerItem.bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ROUTER_ITEM_KEY_MODULE_NAME,
         routerItem.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
         jsonObjectEnd,
         ROUTER_ITEM_KEY_DATA,
@@ -465,22 +441,18 @@ void from_json(const nlohmann::json &jsonObject, AppEnvironment &appEnvironment)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_ENVIRONMENTS_NAME,
         appEnvironment.name,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_ENVIRONMENTS_VALUE,
         appEnvironment.value,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read AppEnvironment error : %{public}d", parseResult);
     }
@@ -516,11 +488,11 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     package = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
     description = Str16ToStr8(parcel.ReadString16());
-    descriptionId = parcel.ReadInt32();
+    descriptionId = parcel.ReadUint32();
     iconPath = Str16ToStr8(parcel.ReadString16());
-    iconId = parcel.ReadInt32();
+    iconId = parcel.ReadUint32();
     label = Str16ToStr8(parcel.ReadString16());
-    labelId = parcel.ReadInt32();
+    labelId = parcel.ReadUint32();
     backgroundImg = Str16ToStr8(parcel.ReadString16());
     mainAbility = Str16ToStr8(parcel.ReadString16());
     srcPath = Str16ToStr8(parcel.ReadString16());
@@ -705,11 +677,11 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(package));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(iconPath));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, iconId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(backgroundImg));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(mainAbility));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcPath));
@@ -869,39 +841,31 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_NAME,
         hapModuleInfo.name,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_PACKAGE,
         hapModuleInfo.package,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::MODULE_NAME,
         hapModuleInfo.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_DESCRIPTION,
         hapModuleInfo.description,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
+        parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_DESCRIPTION_ID,
         hapModuleInfo.descriptionId,
@@ -909,15 +873,13 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_ICON_PATH,
         hapModuleInfo.iconPath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
+        parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_ICON_ID,
         hapModuleInfo.iconId,
@@ -925,15 +887,13 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_LABEL,
         hapModuleInfo.label,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
+        parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_LABEL_ID,
         hapModuleInfo.labelId,
@@ -941,46 +901,36 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_BACKGROUND_IMG,
         hapModuleInfo.backgroundImg,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_MAIN_ABILITY,
         hapModuleInfo.mainAbility,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_SRC_PATH,
         hapModuleInfo.srcPath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_HASH_VALUE,
         hapModuleInfo.hashValue,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_HAP_PATH,
         hapModuleInfo.hapPath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_SUPPORTED_MODES,
@@ -1021,102 +971,78 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         hapModuleInfo.bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_MAIN_ELEMENTNAME,
         hapModuleInfo.mainElementName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_PAGES,
         hapModuleInfo.pages,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_PROCESS,
         hapModuleInfo.process,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_RESOURCE_PATH,
         hapModuleInfo.resourcePath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_SRC_ENTRANCE,
         hapModuleInfo.srcEntrance,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_UI_SYNTAX,
         hapModuleInfo.uiSyntax,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_VIRTUAL_MACHINE,
         hapModuleInfo.virtualMachine,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_DELIVERY_WITH_INSTALL,
         hapModuleInfo.deliveryWithInstall,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_INSTALLATION_FREE,
         hapModuleInfo.installationFree,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_IS_MODULE_JSON,
         hapModuleInfo.isModuleJson,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_IS_STAGE_BASED_MODEL,
         hapModuleInfo.isStageBasedModel,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::map<std::string, bool>>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_IS_REMOVABLE,
@@ -1181,38 +1107,30 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_IS_LIB_ISOLATED,
         hapModuleInfo.isLibIsolated,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_NATIVE_LIBRARY_PATH,
         hapModuleInfo.nativeLibraryPath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_CPU_ABI,
         hapModuleInfo.cpuAbi,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_MODULE_SOURCE_DIR,
         hapModuleInfo.moduleSourceDir,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<OverlayModuleInfo>>(jsonObject,
         jsonObjectEnd,
         HAP_OVERLAY_MODULE_INFO,
@@ -1237,14 +1155,12 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_BUILD_HASH,
         hapModuleInfo.buildHash,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<IsolationMode>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_ISOLATION_MODE,
@@ -1261,14 +1177,12 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS,
         hapModuleInfo.compressNativeLibs,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES,
@@ -1277,22 +1191,18 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_FILE_CONTEXT_MENU,
         hapModuleInfo.fileContextMenu,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_ROUTER_MAP,
         hapModuleInfo.routerMap,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<RouterItem>>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_ROUTER_ARRAY,
@@ -1309,22 +1219,18 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_PACKAGE_NAME,
         hapModuleInfo.packageName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_APP_STARTUP,
         hapModuleInfo.appStartup,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGW("HapModuleInfo from_json error : %{public}d", parseResult);
     }

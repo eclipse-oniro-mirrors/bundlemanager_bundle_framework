@@ -40,9 +40,8 @@ ohos_shared_library("bundleresourcemanager") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "samgr:samgr_proxy",
   ]
-
-  public_external_deps = [ "node:node_header_notice" ]
 
   defines = []
 

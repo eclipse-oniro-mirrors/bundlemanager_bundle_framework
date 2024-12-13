@@ -53,7 +53,7 @@ bool IsHiddenFile(const FilePath &filePath)
 {
     FilePath localFilePath = filePath;
     if (!localFilePath.Value().empty()) {
-        return localFilePath.Value().c_str()[0] == HIDDEN_SEPARATOR;
+        return localFilePath.Value()[0] == HIDDEN_SEPARATOR;
     } else {
         return false;
     }
@@ -75,7 +75,7 @@ std::vector<FileAccessor::DirectoryContentEntry> ListDirectoryContent(const File
     std::vector<std::string> filelist;
     isSuccess = FilePath::GetZipAllDirFiles(curPath.Value(), filelist);
     if (isSuccess) {
-        APP_LOGD("ListDirectoryContent filelist =====filelist.size=%{public}zu====", filelist.size());
+        APP_LOGD("f.size=%{public}zu", filelist.size());
         for (size_t i = 0; i < filelist.size(); i++) {
             std::string str(filelist[i]);
             if (!str.empty()) {
@@ -326,11 +326,11 @@ bool Unzip(const std::string &srcFile, const std::string &destFile, OPTIONS opti
     }
     FilePath srcFileDir(srcFile);
     FilePath destDir(destFile);
-    if (destDir.Value().size() == 0) {
+    if ((destDir.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(destFile)) {
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
         return false;
     }
-    if (srcFileDir.Value().size() == 0) {
+    if ((srcFileDir.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(srcFile)) {
         APP_LOGI("srcFile isn't Exist");
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
         return false;
@@ -444,11 +444,11 @@ bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS 
     FilePath destFile(destPath);
     APP_LOGD("srcDir=%{private}s, destFile=%{private}s", srcDir.Value().c_str(), destFile.Value().c_str());
 
-    if (srcDir.Value().size() == 0) {
+    if ((srcDir.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(srcPath)) {
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
         return false;
     }
-    if (destFile.Value().size() == 0) {
+    if ((destFile.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(destPath)) {
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
         return false;
     }
@@ -473,8 +473,8 @@ bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS 
 
 bool ZipFileIsValid(const std::string &srcFile)
 {
-    if (srcFile.size() == 0) {
-        APP_LOGE("srcFile len is 0");
+    if ((srcFile.size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(srcFile)) {
+        APP_LOGE("srcFile len is 0 or ../");
         return false;
     }
     if (!FilePathCheckValid(srcFile)) {
@@ -543,7 +543,10 @@ bool Zips(const std::vector<std::string> &srcFiles, const std::string &destPath,
     if (zlibCallbackInfo == nullptr) {
         return false;
     }
-
+    if (FilePath::HasRelativePathBaseOnAPIVersion(srcFiles)) {
+        zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
+        return false;
+    }
     std::vector<FilePath> srcFilesPath;
     for (auto iter = srcFiles.begin(); iter != srcFiles.end(); ++iter) {
         FilePath srcFile(*iter);
@@ -554,7 +557,7 @@ bool Zips(const std::vector<std::string> &srcFiles, const std::string &destPath,
         srcFilesPath.push_back(srcFile);
     }
     FilePath destFile(destPath);
-    if (destFile.Value().size() == 0) {
+    if ((destFile.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(destPath)) {
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
         return false;
     }

@@ -14,7 +14,13 @@
 import("//build/ohos.gni")
 import("../../../appexecfwk.gni")
 
+config("cj_bundle_manager_ffi_config") {
+  visibility = [ ":*" ]
+  include_dirs = [ "src/" ]
+}
+
 ohos_shared_library("cj_bundle_manager_ffi") {
+  public_configs = [ ":cj_bundle_manager_ffi_config" ]
   sanitize = {
     cfi = true
     cfi_cross_dso = true

@@ -16,8 +16,11 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_CLIENT_IMPL_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_CLIENT_IMPL_H
 
+#include <shared_mutex>
+
 #include "appexecfwk_errors.h"
 #include "application_info.h"
+#include "bundle_dir.h"
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
 #include "bundle_mgr_interface.h"
@@ -63,6 +66,8 @@ public:
     ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
         HapModuleInfo &hapModuleInfo);
     ErrCode CreateBundleDataDir(int32_t userId);
+    ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex, std::string &dataDir);
+    ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs);
 
 private:
     ErrCode Connect();
@@ -79,7 +84,7 @@ private:
     bool TransformFileToJsonString(const std::string &resPath, std::string &profile) const;
 
 private:
-    std::mutex mutex_;
+    std::shared_mutex mutex_;
     sptr<IBundleMgr> bundleMgr_;
     sptr<IBundleInstaller> bundleInstaller_;
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;

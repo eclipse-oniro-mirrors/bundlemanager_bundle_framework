@@ -62,8 +62,8 @@ bool ShortcutInfo::ReadFromParcel(Parcel &parcel)
     hostAbility = Str16ToStr8(parcel.ReadString16());
     icon = Str16ToStr8(parcel.ReadString16());
     label = Str16ToStr8(parcel.ReadString16());
-    iconId = parcel.ReadInt32();
-    labelId = parcel.ReadInt32();
+    iconId = parcel.ReadUint32();
+    labelId = parcel.ReadUint32();
     disableMessage = Str16ToStr8(parcel.ReadString16());
     isStatic = parcel.ReadBool();
     isHomeShortcut = parcel.ReadBool();
@@ -110,8 +110,8 @@ bool ShortcutInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hostAbility));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(icon));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, iconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(disableMessage));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isStatic);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isHomeShortcut);
@@ -169,30 +169,24 @@ void from_json(const nlohmann::json &jsonObject, ShortcutIntent &shortcutIntent)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_TARGET_BUNDLE,
         shortcutIntent.targetBundle,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_TARGET_MODULE,
         shortcutIntent.targetModule,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_TARGET_CLASS,
         shortcutIntent.targetClass,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_PARAMETERS,
@@ -210,38 +204,30 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_ID,
         shortcutInfo.id,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         shortcutInfo.bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::MODULE_NAME,
         shortcutInfo.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_HOST_ABILITY,
         shortcutInfo.hostAbility,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetBigStringIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_ICON,
@@ -250,46 +236,36 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_LABEL,
         shortcutInfo.label,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_DISABLE_MESSAGE,
         shortcutInfo.disableMessage,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_IS_STATIC,
         shortcutInfo.isStatic,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_IS_HOME_SHORTCUT,
         shortcutInfo.isHomeShortcut,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_IS_ENABLES,
         shortcutInfo.isEnables,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<ShortcutIntent>>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_INTENTS,
@@ -298,7 +274,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_ICON_ID,
         shortcutInfo.iconId,
@@ -306,7 +282,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_LABEL_ID,
         shortcutInfo.labelId,
@@ -339,30 +315,24 @@ void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         shortcutWant.bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::MODULE_NAME,
         shortcutWant.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::ABILITY_NAME,
         shortcutWant.abilityName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_PARAMETERS,
@@ -380,23 +350,19 @@ void from_json(const nlohmann::json &jsonObject, Shortcut &shortcut)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         SHORTCUT_ID,
         shortcut.shortcutId,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ICON,
         shortcut.icon,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ICON_ID,
         shortcut.iconId,
@@ -404,15 +370,13 @@ void from_json(const nlohmann::json &jsonObject, Shortcut &shortcut)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         LABEL,
         shortcut.label,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         LABEL_ID,
         shortcut.labelId,

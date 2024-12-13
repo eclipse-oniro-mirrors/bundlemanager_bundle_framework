@@ -20,6 +20,7 @@
 #include "bms_extension_data_mgr.h"
 #include "bms_extension_profile.h"
 #include "bundle_mgr_ext_register.h"
+#include "parameter.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -112,6 +113,21 @@ ErrCode BmsExtensionDataMgr::HapVerify(const std::string &filePath, Security::Ve
     }
     APP_LOGW("access bms-extension failed");
     return ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED;
+}
+
+bool BmsExtensionDataMgr::IsRdDevice()
+{
+    if ((Init() != ERR_OK) || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return false;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return false;
+    }
+    return bundleMgrExtPtr->IsRdDevice();
 }
 
 ErrCode BmsExtensionDataMgr::QueryAbilityInfos(const Want &want, int32_t userId,
@@ -314,7 +330,7 @@ ErrCode BmsExtensionDataMgr::ClearBackupUninstallFile(int32_t userId)
     return bundleMgrExtPtr->ClearBackupUninstallFile(userId);
 }
 
-bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName)
+bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName, const int32_t userId)
 {
     if ((Init() != ERR_OK) || handler_ == nullptr) {
         APP_LOGW("link failed");
@@ -326,7 +342,7 @@ bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName)
         APP_LOGW("GetBundleMgrExt failed");
         return false;
     }
-    return bundleMgrExtPtr->IsAppInBlocklist(bundleName);
+    return bundleMgrExtPtr->IsAppInBlocklist(bundleName, userId);
 }
 
 bool BmsExtensionDataMgr::CheckWhetherCanBeUninstalled(const std::string &bundleName)
@@ -512,6 +528,61 @@ ErrCode BmsExtensionDataMgr::GetAllLauncherAbilityResourceInfo(const uint32_t fl
     ErrCode ret = bundleMgrExtPtr->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
     APP_LOGD("call bundle mgr ext GetAllLauncherAbilityResourceInfo, return %{public}d", ret);
     return ret;
+}
+
+void BmsExtensionDataMgr::CheckBundleNameAndStratAbility(const std::string &bundleName,
+    const std::string &appIdentifier)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return;
+    }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName empty");
+        return;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return;
+    }
+    bundleMgrExtPtr->CheckBundleNameAndStratAbility(bundleName, appIdentifier);
+}
+
+bool BmsExtensionDataMgr::DetermineCloneNum(
+    const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return false;
+    }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName empty");
+        return false;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return false;
+    }
+    return bundleMgrExtPtr->DetermineCloneNum(bundleName, appIdentifier, cloneNum);
+}
+
+std::string BmsExtensionDataMgr::GetCompatibleDeviceType(const std::string &bundleName)
+{
+    if ((Init() == ERR_OK) && handler_) {
+        auto bundleMgrExtPtr =
+            BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+        if (bundleMgrExtPtr) {
+            return bundleMgrExtPtr->GetCompatibleDeviceType(bundleName);
+        }
+        APP_LOGE("create class: %{public}s failed", bmsExtension_.bmsExtensionBundleMgr.extensionName.c_str());
+        return "";
+    }
+    APP_LOGW("access bms-extension failed");
+    return GetDeviceType();
 }
 } // AppExecFwk
 } // OHOS

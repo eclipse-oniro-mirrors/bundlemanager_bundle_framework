@@ -561,6 +561,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_APP_INDEXES):
             errCode = this->HandleGetCloneAppIndexes(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LAUNCH_WANT):
+            errCode = this->HandleGetLaunchWant(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX):
             errCode = this->HandleQueryCloneExtensionAbilityInfoWithAppIndex(data, reply);
             break;
@@ -596,6 +599,26 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CONTINUE_BUNDLE_NAMES):
             errCode = HandleGetContinueBundleNames(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::UPDATE_APP_ENCRYPTED_KEY_STATUS):
+            errCode = HandleUpdateAppEncryptedStatus(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_BUNDLE_INSTALLED):
+            errCode = HandleIsBundleInstalled(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_COMPATIBLED_DEVICE_TYPE_NATIVE):
+            errCode = HandleGetCompatibleDeviceTypeNative(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_COMPATIBLED_DEVICE_TYPE):
+            errCode = HandleGetCompatibleDeviceType(data, reply);
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_NAME_BY_APP_ID_OR_APP_IDENTIFIER):
+            errCode = HandleGetBundleNameByAppId(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DIR_BY_BUNDLENAME_AND_APPINDEX):
+            errCode = HandleGetDirByBundleNameAndAppIndex(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_DIRS):
+            errCode = HandleGetAllBundleDirs(data, reply);
             break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
@@ -686,7 +709,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfos(MessageParcel &data, MessagePar
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!WriteParcelableVector(infos, reply)) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -931,6 +954,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfos(MessageParcel &data, MessageParcel &
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
+    APP_LOGI("bundles %{public}zu, size %{public}zu", infos.size(), reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -953,6 +977,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlags(MessageParcel &data, Mes
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
+    APP_LOGI("bundles %{public}zu, size %{public}zu", infos.size(), reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -974,6 +999,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, M
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
+    APP_LOGI("bundles %{public}zu, size %{public}zu", infos.size(), reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -1663,6 +1689,7 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, M
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
@@ -1675,6 +1702,7 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, M
         APP_LOGE("Get BundleStatusCallback failed");
     } else {
         BundleStatusCallback->SetBundleName(bundleName);
+        BundleStatusCallback->SetUserId(userId);
         ret = RegisterBundleStatusCallback(BundleStatusCallback);
     }
     if (!reply.WriteBool(ret)) {
@@ -2179,8 +2207,9 @@ ErrCode BundleMgrHost::HandleGetShortcutInfoV9(MessageParcel &data, MessageParce
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundlename = data.ReadString();
+    int32_t userId = data.ReadInt32();
     std::vector<ShortcutInfo> infos;
-    ErrCode ret = GetShortcutInfoV9(bundlename, infos);
+    ErrCode ret = GetShortcutInfoV9(bundlename, infos, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -2954,8 +2983,9 @@ ErrCode BundleMgrHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
+    uint32_t statFlag = data.ReadUint32();
     std::vector<int64_t> bundleStats;
-    bool ret = GetBundleStats(bundleName, userId, bundleStats, appIndex);
+    bool ret = GetBundleStats(bundleName, userId, bundleStats, appIndex, statFlag);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -3808,7 +3838,8 @@ ErrCode BundleMgrHost::HandleSwitchUninstallState(MessageParcel &data, MessagePa
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     bool state = data.ReadBool();
-    ErrCode ret = SwitchUninstallState(bundleName, state);
+    bool isNeedSendNotify = data.ReadBool();
+    ErrCode ret = SwitchUninstallState(bundleName, state, isNeedSendNotify);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -3902,6 +3933,24 @@ ErrCode BundleMgrHost::HandleGetCloneAppIndexes(MessageParcel &data, MessageParc
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleGetLaunchWant(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    Want want;
+    ErrCode ret = GetLaunchWant(want);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteParcelable(&want)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply)
 {
     std::unique_ptr<ElementName> element(data.ReadParcelable<ElementName>());
@@ -3939,6 +3988,19 @@ ErrCode BundleMgrHost::HandleGetSignatureInfoByBundleName(MessageParcel &data, M
         return WriteParcelInfoIntelligent<SignatureInfo>(info, reply);
     }
     return ret;
+}
+
+ErrCode BundleMgrHost::HandleUpdateAppEncryptedStatus(MessageParcel &data, MessageParcel &reply)
+{
+    std::string name = data.ReadString();
+    bool isExisted = data.ReadBool();
+    int32_t appIndex = data.ReadInt32();
+    ErrCode ret = UpdateAppEncryptedStatus(name, isExisted, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleMgrHost::HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
@@ -4017,7 +4079,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosForContinuation(MessageParcel &data, 
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int flags = data.ReadInt32();
     int userId = data.ReadInt32();
- 
+
     std::vector<BundleInfo> infos;
     reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
     bool ret = GetBundleInfosForContinuation(flags, infos, userId);
@@ -4051,6 +4113,112 @@ ErrCode BundleMgrHost::HandleGetContinueBundleNames(MessageParcel &data, Message
     if (ret == ERR_OK && !reply.WriteStringVector(bundleNames)) {
         APP_LOGE("Write bundleNames results failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleIsBundleInstalled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t apppIndex = data.ReadInt32();
+    bool isBundleInstalled = false;
+    auto ret = IsBundleInstalled(bundleName, userId, apppIndex, isBundleInstalled);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("IsBundleInstalled write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteBool(isBundleInstalled)) {
+        APP_LOGE("Write isInstalled result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetCompatibleDeviceTypeNative(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string deviceType;
+    auto ret = GetCompatibleDeviceTypeNative(deviceType);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(deviceType)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetCompatibleDeviceType(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string deviceType;
+    auto ret = GetCompatibleDeviceType(bundleName, deviceType);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(deviceType)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleNameByAppId(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string appId = data.ReadString();
+    std::string bundleName;
+    auto ret = GetBundleNameByAppId(appId, bundleName);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(bundleName)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetDirByBundleNameAndAppIndex(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    int32_t appIndex = data.ReadInt32();
+    std::string dataDir;
+    auto ret = GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(dataDir)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllBundleDirs(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t userId = data.ReadInt32();
+    std::vector<BundleDir> bundleDirs;
+    auto ret = GetAllBundleDirs(userId, bundleDirs);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(bundleDirs, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }

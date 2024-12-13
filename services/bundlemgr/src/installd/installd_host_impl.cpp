@@ -24,6 +24,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/xattr.h>
 #include <unistd.h>
 
 #include "aot/aot_executor.h"
@@ -41,20 +42,21 @@
 #include "directory_ex.h"
 #ifdef WITH_SELINUX
 #include "hap_restorecon.h"
+#include "selinux/selinux.h"
 #ifndef SELINUX_HAP_DEBUGGABLE
 #define SELINUX_HAP_DEBUGGABLE 2
 #endif
 #endif // WITH_SELINUX
+#include "hitrace_meter.h"
 #include "installd/installd_operator.h"
 #include "installd/installd_permission_mgr.h"
 #include "parameters.h"
 #include "inner_bundle_clone_common.h"
+#include "storage_acl.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
-constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",
     "/files",
@@ -78,6 +80,8 @@ constexpr const char* EXTENSION_CONFIG_FILE_PATH = "/etc/ams_extension_config.js
 constexpr const char* EXTENSION_CONFIG_NAME = "ams_extension_config";
 constexpr const char* EXTENSION_TYPE_NAME = "extension_type_name";
 constexpr const char* EXTENSION_SERVICE_NEED_CREATE_SANDBOX = "need_create_sandbox";
+constexpr const char* SHELL_ENTRY_TXT = "g:2000:rx";
+constexpr int32_t INSTALLS_UID = 3060;
 enum class DirType : uint8_t {
     DIR_EL1,
     DIR_EL2,
@@ -372,6 +376,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<Create
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+    LOG_I(BMS_TAG_INSTALLD, "begin");
     ErrCode res = ERR_OK;
     for (const auto &item : createDirParams) {
         auto result = CreateBundleDataDir(item);
@@ -381,6 +386,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<Create
             res = result;
         }
     }
+    LOG_I(BMS_TAG_INSTALLD, "end");
     return res;
 }
 
@@ -391,7 +397,7 @@ ErrCode InstalldHostImpl::AddUserDirDeleteDfx(int32_t userId)
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
-    elPath.push_back("el5");
+    elPath.push_back(ServiceConstants::DIR_EL5);
     for (const auto &el : elPath) {
         std::string bundleDataDir = GetBundleDataDir(el, userId) + ServiceConstants::BASE;
         if (access(bundleDataDir.c_str(), F_OK) != 0) {
@@ -411,8 +417,41 @@ ErrCode InstalldHostImpl::AddUserDirDeleteDfx(int32_t userId)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::AclSetDir(bool debug, const std::string &dir, bool setAccess, bool setDefault)
+{
+    if (!debug) {
+        return ERR_OK;
+    }
+    if (setAccess) {
+        int status = StorageDaemon::AclSetAccess(dir, SHELL_ENTRY_TXT);
+        LOG_I(BMS_TAG_INSTALLD, "AclSetAccess: %{public}d, %{private}s", status, dir.c_str());
+    }
+    if (setDefault) {
+        int status = StorageDaemon::AclSetDefault(dir, SHELL_ENTRY_TXT);
+        LOG_I(BMS_TAG_INSTALLD, "AclSetDefault: %{public}d, %{private}s", status, dir.c_str());
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::AclSetExtensionDirs(bool debug, const std::string &parentDir,
+    const std::vector<std::string> &extensionDirs, bool setAccess, bool setDefault)
+{
+    if (!debug) {
+        return ERR_OK;
+    }
+    if (extensionDirs.empty()) {
+        return ERR_OK;
+    }
+    for (const auto &extension : extensionDirs) {
+        std::string extensionDir = parentDir + extension;
+        AclSetDir(debug, extensionDir, setAccess, setDefault);
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
@@ -439,18 +478,22 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             return ERR_OK;
         }
         // create base extension dir
-        if (CreateExtensionDir(createDirParam, bundleDataDir, S_IRWXU, createDirParam.gid) != ERR_OK) {
+        int mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : S_IRWXU;
+        if (CreateExtensionDir(createDirParam, bundleDataDir, mode, createDirParam.gid) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", bundleDataDir.c_str());
         }
+        AclSetExtensionDirs(createDirParam.debug, bundleDataDir, createDirParam.extensionDirs, true, true);
         bundleDataDir += createDirParam.bundleName;
-        if (!InstalldOperator::MkOwnerDir(bundleDataDir, S_IRWXU, createDirParam.uid, createDirParam.gid)) {
+        if (!InstalldOperator::MkOwnerDir(bundleDataDir, mode, createDirParam.uid, createDirParam.gid)) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundledatadir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
+        AclSetDir(createDirParam.debug, bundleDataDir, true, true);
         InstalldOperator::RmvDeleteDfx(bundleDataDir);
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             for (const auto &dir : BUNDLE_DATA_DIR) {
-                if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, S_IRWXU,
+                int mode = createDirParam.debug ? (S_IRWXU | S_IRGRP | S_IXGRP) : S_IRWXU;
+                if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, mode,
                     createDirParam.uid, createDirParam.gid)) {
                     LOG_E(BMS_TAG_INSTALLD, "CreateBundledatadir MkOwnerDir el2 failed errno:%{public}d", errno);
                     return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
@@ -476,11 +519,13 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         }
         std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
         std::string databaseDir = databaseParentDir + createDirParam.bundleName;
+        mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG | S_ISGID);
         if (!InstalldOperator::MkOwnerDir(
-            databaseDir, S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, ServiceConstants::DATABASE_DIR_GID)) {
+            databaseDir, mode, createDirParam.uid, ServiceConstants::DATABASE_DIR_GID)) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundle databaseDir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
+        AclSetDir(createDirParam.debug, databaseDir, false, true);
         InstalldOperator::RmvDeleteDfx(databaseDir);
         ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
         if (ret != ERR_OK) {
@@ -488,10 +533,11 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             return ret;
         }
         // create database extension dir
-        if (CreateExtensionDir(createDirParam, databaseParentDir, S_IRWXU | S_IRWXG | S_ISGID,
+        if (CreateExtensionDir(createDirParam, databaseParentDir, mode,
             ServiceConstants::DATABASE_DIR_GID) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
         }
+        AclSetExtensionDirs(createDirParam.debug, databaseParentDir, createDirParam.extensionDirs, false, true);
     }
     std::string distributedfile = DISTRIBUTED_FILE;
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
@@ -852,7 +898,9 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     std::string suffixName = bundleName;
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
+    elPath.push_back(ServiceConstants::DIR_EL5);
+    for (const auto &el : elPath) {
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             CleanBundleDataForEl2(bundleName, userid, appIndex);
             continue;
@@ -893,60 +941,48 @@ std::string InstalldHostImpl::GetAppDataPath(const std::string &bundleName, cons
 {
     if (appIndex == 0) {
         return ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
-                std::to_string(userId) + ServiceConstants::BASE + bundleName;
+            std::to_string(userId) + ServiceConstants::BASE + bundleName;
     } else {
         std::string innerDataDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
         return ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
-                std::to_string(userId) + ServiceConstants::BASE + innerDataDir;
+            std::to_string(userId) + ServiceConstants::BASE + innerDataDir;
     }
 }
 
-int64_t InstalldHostImpl::HandleAppDataSizeStats(const std::string &bundleName,
-    const int32_t userId, const int32_t appIndex, std::vector<std::string> &cachePath)
+int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex, const std::vector<std::string> &moduleNameList)
 {
-    std::vector<std::string> bundlePath;
-    bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) +
-        ServiceConstants::PATH_SEPARATOR + bundleName); // bundle code
-    bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
-    // ark profile
-    bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR + bundleName);
-    int64_t fileSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
-    bundlePath.clear();
-    int64_t allBundleLocalSize = 0;
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        std::string filePath = GetAppDataPath(bundleName, el, userId, appIndex);
-        LOG_D(BMS_TAG_INSTALLD, "filePath = %{public}s", filePath.c_str());
-        if (appIndex > 0) {
-            InstalldOperator::TraverseCacheDirectory(filePath, cachePath);
-            continue;
-        }
-        allBundleLocalSize += InstalldOperator::GetDiskUsage(filePath);
-        if (el == ServiceConstants::BUNDLE_EL[1]) {
-            for (const auto &dataDir : BUNDLE_DATA_DIR) {
-                bundlePath.push_back(filePath + dataDir);
-            }
-        } else {
-            bundlePath.push_back(filePath);
-        }
-        InstalldOperator::TraverseCacheDirectory(filePath, cachePath);
+    std::string bundleNameDir = bundleName;
+    if (appIndex > 0) {
+        bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
     }
-    int64_t bundleLocalSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
-    LOG_D(BMS_TAG_INSTALLD,
-        "GetBundleStats, allBundleLocalSize = %{public}" PRId64 ", bundleLocalSize = %{public}" PRId64,
-        allBundleLocalSize, bundleLocalSize);
-    int64_t systemFolderSize = allBundleLocalSize - bundleLocalSize;
-    if (appIndex == 0) {
-        return fileSize + systemFolderSize;
+    std::vector<std::string> cachePaths;
+    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
+    elPath.push_back(ServiceConstants::DIR_EL5);
+    for (const auto &el : elPath) {
+        cachePaths.push_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE +
+            bundleNameDir + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
+        for (const auto &moduleName : moduleNameList) {
+            std::string moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir +
+                ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
+            cachePaths.push_back(moduleCachePath);
+            LOG_D(BMS_TAG_INSTALLD, "GetBundleStats, add module cache path: %{public}s", moduleCachePath.c_str());
+        }
     }
-    return 0;
+    return InstalldOperator::GetDiskUsageFromPath(cachePaths);
 }
 
 ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const int32_t userId,
-    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex)
+    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
+    const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     LOG_D(BMS_TAG_INSTALLD,
         "GetBundleStats, bundleName = %{public}s, userId = %{public}d, uid = %{public}d, appIndex = %{public}d",
         bundleName.c_str(), userId, uid, appIndex);
+    LOG_D(BMS_TAG_INSTALLD,
+        "GetBundleStats, statFlag = %{public}d", statFlag);
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
@@ -954,47 +990,47 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     if (bundleName.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-
-    std::vector<std::string> cachePath;
-    int64_t appDataSize = HandleAppDataSizeStats(bundleName, userId, appIndex, cachePath);
-    LOG_D(BMS_TAG_INSTALLD, "cachePath.size() = %{public}zu", cachePath.size());
+    bundleStats = {0, 0, 0, 0, 0};
+    std::vector<std::string> bundlePath;
+    bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
+    int64_t appDataSize = 0;
+    int64_t bundleDataSize = 0;
+    int64_t bundleCacheSize = 0;
+    if ((statFlag & OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE) !=
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE) {
+        appDataSize = appIndex == 0 ? InstalldOperator::GetDiskUsageFromPath(bundlePath) : 0;
+    }
+    if ((statFlag & OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE) !=
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE) {
+        bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
+    }
+    if ((statFlag & OHOS::AppExecFwk::Constants::GET_BUNDLE_WITHOUT_CACHE_SIZE) !=
+        OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE) {
+        bundleCacheSize = GetAppCacheSize(bundleName, userId, appIndex, moduleNameList);
+    }
     // index 0 : bundle data size
-    bundleStats.push_back(appDataSize);
+    bundleStats[0] = appDataSize;
     // index 1 : local bundle data size
-    int64_t bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
-    bundleStats.push_back(bundleDataSize);
-    bundleStats.push_back(0);
-    bundleStats.push_back(0);
-    int64_t cacheSize = InstalldOperator::GetDiskUsageFromPath(cachePath);
+    bundleStats[1] = bundleDataSize;
     // index 4 : cache size
-    bundleStats.push_back(cacheSize);
+    bundleStats[4] = bundleCacheSize;
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (bundleNames.empty() || bundleNames.size() != uids.size()) {
+    if (uids.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    int64_t totalFileSize = 0;
+    int64_t totalFileSize = InstalldOperator::GetDiskUsageFromQuota(INSTALLS_UID);
     int64_t totalDataSize = 0;
-    for (size_t index = 0; index < bundleNames.size(); ++index) {
-        const auto &bundleName = bundleNames[index];
+    for (size_t index = 0; index < uids.size(); ++index) {
         const auto &uid = uids[index];
-        std::vector<std::string> bundlePath;
-        bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) +
-            ServiceConstants::PATH_SEPARATOR + bundleName); // bundle code
-        bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
-        // ark profile
-        bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR + bundleName);
-        int64_t fileSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
-        // index 0 : bundle data size
-        totalFileSize += fileSize;
         int64_t bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
         // index 1 : local bundle data size
         totalDataSize += bundleDataSize;
@@ -1476,10 +1512,6 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
         LOG_D(BMS_TAG_INSTALLD, "Verify code signature with: %{public}s", codeSignatureParam.signatureFileDir.c_str());
         ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
     }
-    if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
-        LOG_W(BMS_TAG_INSTALLD, "no code sign file in the bundle");
-        return ERR_OK;
-    }
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "hap or hsp code signature failed due to %{public}d", ret);
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
@@ -1714,10 +1746,12 @@ ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDir
                 bundleDataDir.c_str(), createDirParam.bundleName.c_str());
             return ERR_OK;
         }
-        if (CreateExtensionDir(createDirParam, bundleDataDir, S_IRWXU, createDirParam.gid) != ERR_OK) {
+        int mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : S_IRWXU;
+        if (CreateExtensionDir(createDirParam, bundleDataDir, mode, createDirParam.gid) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", bundleDataDir.c_str());
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
+        AclSetExtensionDirs(createDirParam.debug, bundleDataDir, createDirParam.extensionDirs, true, true);
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             std::string logParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::LOG;
             if (CreateExtensionDir(createDirParam, logParentDir, S_IRWXU | S_IRWXG,
@@ -1725,13 +1759,14 @@ ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDir
                 LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
             }
         }
-
+        mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG | S_ISGID);
         std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
-        if (CreateExtensionDir(createDirParam, databaseParentDir, S_IRWXU | S_IRWXG | S_ISGID,
+        if (CreateExtensionDir(createDirParam, databaseParentDir, mode,
             ServiceConstants::DATABASE_DIR_GID) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
+        AclSetExtensionDirs(createDirParam.debug, databaseParentDir, createDirParam.extensionDirs, false, true);
     }
     return ERR_OK;
 }
@@ -1866,12 +1901,12 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(const std::string &bundleName
 {
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
         std::string bundleDataDir = GetBundleDataDir(el, userId) + ServiceConstants::BASE + bundleName;
-        if (!InstalldOperator::DeleteDir(bundleDataDir)) {
+        if (!InstalldOperator::DeleteDirFast(bundleDataDir)) {
             LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
         std::string databaseDir = GetBundleDataDir(el, userId) + ServiceConstants::DATABASE + bundleName;
-        if (!InstalldOperator::DeleteDir(databaseDir)) {
+        if (!InstalldOperator::DeleteDirFast(databaseDir)) {
             LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
@@ -1905,6 +1940,37 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(const std::string &bundleName
         LOG_E(BMS_TAG_INSTALLD, "failed to remove distributed file dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::MoveFile(originPath, targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "move file %{public}s to %{public}s failed errno:%{public}d",
+            originPath.c_str(), targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(targetPath, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "change mode failed");
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    if (!InstalldOperator::ChangeFileAttr(targetPath, INSTALLS_UID, INSTALLS_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "ChangeAttr %{public}s failed errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+
+#ifdef WITH_SELINUX
+    const char *context = "u:object_r:data_app_el1_file:s0";
+    if (lsetfilecon(targetPath.c_str(), context) < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "setcon %{public}s failed errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+#endif
     return ERR_OK;
 }
 }  // namespace AppExecFwk

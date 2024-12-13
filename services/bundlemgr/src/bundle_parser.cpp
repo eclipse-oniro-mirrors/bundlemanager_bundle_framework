@@ -19,8 +19,11 @@
 #include <sstream>
 
 #include "bundle_profile.h"
+#include "bundle_service_constants.h"
 #include "default_permission_profile.h"
 #include "module_profile.h"
+#include "parameter.h"
+#include "parameters.h"
 #include "pre_bundle_profile.h"
 #include "rpcid_decode/syscap_tool.h"
 #include "securec.h"
@@ -181,8 +184,8 @@ ErrCode BundleParser::ParseSysCap(const std::string &pathName, std::vector<std::
     }
 
     if (!bundleExtractor.HasEntry(SYSCAP_NAME)) {
-        APP_LOGD("Rpcid.sc is not exist, and do not need verification sysCaps");
-        return ERR_OK;
+        APP_LOGI("Rpcid.sc is not exist, and do not need verification sysCaps");
+        return ERR_APPEXECFWK_PARSE_RPCID_FAILED;
     }
 
     std::stringstream rpcidStream;
@@ -228,6 +231,24 @@ ErrCode BundleParser::ParsePreInstallConfig(
 
     PreBundleProfile preBundleProfile;
     return preBundleProfile.TransformTo(jsonBuf, scanInfos);
+}
+
+ErrCode BundleParser::ParsePreAppListConfig(const std::string &configFile, std::set<PreScanInfo> &scanAppInfos) const
+{
+    APP_LOGD("parse preAppListInstallConfig from %{public}s", configFile.c_str());
+    nlohmann::json jsonBuf;
+    if (!ReadFileIntoJson(configFile, jsonBuf)) {
+        APP_LOGE_NOFUNC("parse file %{public}s failed", configFile.c_str());
+        return ERR_APPEXECFWK_PARSE_FILE_FAILED;
+    }
+
+    PreBundleProfile preBundleProfile;
+    ErrCode ret = preBundleProfile.TransformToAppList(jsonBuf, scanAppInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("set parameter BMS_DATA_PRELOAD false");
+        OHOS::system::SetParameter(ServiceConstants::BMS_DATA_PRELOAD, "false");
+    }
+    return ret;
 }
 
 ErrCode BundleParser::ParsePreUnInstallConfig(

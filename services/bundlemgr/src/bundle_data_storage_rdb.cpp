@@ -21,7 +21,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
-const int8_t CLOSE_TIME = 15; // delay 15s to backup
+const int8_t CLOSE_TIME = 60; // delay 60s to backup
 }
 BundleDataStorageRdb::BundleDataStorageRdb()
 {
@@ -127,9 +127,9 @@ bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBun
         return false;
     }
 
+    APP_LOGI("rdb SaveStorageBundleInfo -n %{public}s", innerBundleInfo.GetBundleName().c_str());
     bool ret = rdbDataManager_->InsertData(
         innerBundleInfo.GetBundleName(), innerBundleInfo.ToString());
-    APP_LOGD("SaveStorageBundleInfo %{public}d", ret);
     BackupRdb();
     return ret;
 }

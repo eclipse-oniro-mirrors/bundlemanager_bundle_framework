@@ -53,46 +53,36 @@ void from_json(const nlohmann::json &jsonObject, SummaryAbilityInfo &summaryAbil
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         summaryAbilityInfo.bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::MODULE_NAME,
         summaryAbilityInfo.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::ABILITY_NAME,
         summaryAbilityInfo.abilityName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_SUMMARY_ABILITY_INFO_LOGO_URL,
         summaryAbilityInfo.logoUrl,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_SUMMARY_ABILITY_INFO_LABEL,
         summaryAbilityInfo.label,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_SUMMARY_ABILITY_INFO_DEVICE_TYPE,
@@ -129,22 +119,18 @@ void from_json(const nlohmann::json &jsonObject, RpcIdResult &rpcIdResult)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_RESULT_VERSION,
         rpcIdResult.version,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_RESULT_TRANSACT_ID,
         rpcIdResult.transactId,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_RESULT_RETCODE,
@@ -153,14 +139,12 @@ void from_json(const nlohmann::json &jsonObject, RpcIdResult &rpcIdResult)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_RESULT_RESULT_MSG,
         rpcIdResult.resultMsg,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<SummaryAbilityInfo>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_SUMMARY_ABILITY_INFO,

@@ -41,6 +41,10 @@ enum class GetExtensionAbilityInfoFlag {
     GET_EXTENSION_ABILITY_INFO_WITH_METADATA = 0x00000004,
     GET_EXTENSION_ABILITY_INFO_WITH_SKILL_URI = 0x00000008,
     GET_EXTENSION_ABILITY_INFO_WITH_SKILL = 0x00000010,
+    // using this tag will only return the first system app, only for c++
+    // appIndex = 0,invalid input of other flag
+    // appIndex !=0,this flag is invalid
+    GET_EXTENSION_ABILITY_INFO_BY_TYPE_NAME = 0x80000000,
 };
 
 enum class ExtensionAbilityType {
@@ -68,6 +72,8 @@ enum class ExtensionAbilityType {
     EMBEDDED_UI = 21,
     INSIGHT_INTENT_UI = 22,
     PHOTO_EDITOR = 23,
+    FENCE = 24,
+    CALLER_INFO_QUERY = 25,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
@@ -140,11 +146,11 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::string name;
     std::string srcEntrance;
     std::string icon;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
     std::string label;
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     int32_t priority = 0;
     std::vector<std::string> permissions;
     std::string readPermission;
@@ -174,6 +180,7 @@ struct ExtensionAbilityInfo : public Parcelable {
     bool needCreateSandbox = false;
     std::vector<std::string> dataGroupIds;
     std::vector<std::string> validDataGroupIds;
+    std::string customProcess;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

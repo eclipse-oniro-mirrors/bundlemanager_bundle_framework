@@ -58,6 +58,29 @@ bool BundleMgrProxyNative::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
     return true;
 }
 
+bool BundleMgrProxyNative::GetCompatibleDeviceTypeNative(std::string &deviceType)
+{
+    LOG_I(BMS_TAG_QUERY, "begin to get compatible device type");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(BMS_PROXY_INTERFACE_TOKEN)) {
+        LOG_E(BMS_TAG_QUERY, "Write interfaceToken failed");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(GET_COMPATIBLED_DEVICE_TYPE_NATIVE, data, reply)) {
+        return false;
+    }
+    int32_t res = reply.ReadInt32();
+    if (res != NO_ERROR) {
+        APP_LOGE("reply result failed");
+        return false;
+    }
+    deviceType = reply.ReadString();
+    APP_LOGD("get compatible device type success");
+    return true;
+}
+
 bool BundleMgrProxyNative::SendTransactCmd(uint32_t code, MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);

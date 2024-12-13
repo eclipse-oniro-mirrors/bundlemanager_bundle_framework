@@ -51,10 +51,7 @@ ohos_shared_library("bundle") {
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
-  public_external_deps = [
-    "libuv:uv",
-    "node:node_header_notice",
-  ]
+  public_external_deps = [ "libuv:uv" ]
   if (bundle_framework_graphics) {
     defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
     deps += [ "${inner_api_path}/bundlemgr_graphics:bundlemgr_graphics" ]

@@ -97,7 +97,6 @@ constexpr const char* BUNDLE_EXTEND_RESOURCES = "extendResources";
 constexpr const char* CUR_DYNAMIC_ICON_MODULE = "curDynamicIconModule";
 constexpr const char* BUNDLE_PACK_INFO = "bundlePackInfo";
 constexpr const char* ALLOWED_ACLS = "allowedAcls";
-constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* BUNDLE_IS_SANDBOX_APP = "isSandboxApp";
 constexpr const char* MODULE_COMPILE_MODE = "compileMode";
@@ -141,10 +140,12 @@ constexpr const char* MODULE_QUERY_SCHEMES = "querySchemes";
 constexpr const char* MODULE_APP_ENVIRONMENTS = "appEnvironments";
 constexpr const char* MODULE_ASAN_ENABLED = "asanEnabled";
 constexpr const char* MODULE_GWP_ASAN_ENABLED = "gwpAsanEnabled";
+constexpr const char* MODULE_TSAN_ENABLED = "tsanEnabled";
 constexpr const char* MODULE_PACKAGE_NAME = "packageName";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
 constexpr const char* MODULE_HWASAN_ENABLED = "hwasanEnabled";
 constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
+constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -165,14 +166,12 @@ void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResou
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         EXT_RESOURCE_MODULE_NAME,
         extendResourceInfo.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         EXT_RESOURCE_ICON_ID,
@@ -181,14 +180,12 @@ void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResou
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         EXT_RESOURCE_FILE_PATH,
         extendResourceInfo.filePath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read ExtendResourceInfo from json error, error code : %{public}d", parseResult);
     }
@@ -442,11 +439,13 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_APP_ENVIRONMENTS, info.appEnvironments},
         {MODULE_ASAN_ENABLED, info.asanEnabled},
         {MODULE_GWP_ASAN_ENABLED, info.gwpAsanEnabled},
+        {MODULE_TSAN_ENABLED, info.tsanEnabled},
         {MODULE_PACKAGE_NAME, info.packageName},
         {MODULE_APP_STARTUP, info.appStartup},
         {MODULE_HWASAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
-            static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED))},
-        {MODULE_UBSAN_ENABLED, info.ubsanEnabled},
+            InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED))},
+        {MODULE_UBSAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
+            InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED))},
     };
 }
 
@@ -501,71 +500,57 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
     bool hwasanEnabled = static_cast<bool>(info.innerModuleInfoFlag &
-            static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
-    GetValueIfFindKey<std::string>(jsonObject,
+        InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
+    bool ubsanEnabled = static_cast<bool>(info.innerModuleInfoFlag &
+        InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED));
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         NAME,
         info.name,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_PACKAGE,
         info.modulePackage,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_NAME,
         info.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_PATH,
         info.modulePath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_DATA_DIR,
         info.moduleDataDir,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_HAP_PATH,
         info.hapPath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_RES_PATH,
         info.moduleResPath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_IS_ENTRY,
         info.isEntry,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<MetaData>(jsonObject,
         jsonObjectEnd,
         MODULE_METADATA,
@@ -590,14 +575,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_DESCRIPTION,
         info.description,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         MODULE_DESCRIPTION_ID,
@@ -606,14 +589,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_ICON,
         info.icon,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         MODULE_ICON_ID,
@@ -622,14 +603,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_LABEL,
         info.label,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         MODULE_LABEL_ID,
@@ -638,46 +617,36 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_MAIN_ABILITY,
         info.mainAbility,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_ENTRY_ABILITY_KEY,
         info.entryAbilityKey,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_SRC_PATH,
         info.srcPath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_HASH_VALUE,
         info.hashValue,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_DESCRIPTION_INSTALLATION_FREE,
         info.installationFree,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::map<std::string, bool>>(jsonObject,
         jsonObjectEnd,
         MODULE_IS_REMOVABLE,
@@ -718,22 +687,18 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_PROCESS,
         info.process,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_SRC_ENTRANCE,
         info.srcEntrance,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         MODULE_DEVICE_TYPES,
@@ -742,30 +707,24 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_VIRTUAL_MACHINE,
         info.virtualMachine,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_UI_SYNTAX,
         info.uiSyntax,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_PAGES,
         info.pages,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<Metadata>>(jsonObject,
         jsonObjectEnd,
         MODULE_META_DATA,
@@ -814,22 +773,18 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_IS_MODULE_JSON,
         info.isModuleJson,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_IS_STAGE_BASED_MODEL,
         info.isStageBasedModel,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<Dependency>>(jsonObject,
         jsonObjectEnd,
         MODULE_DEPENDENCIES,
@@ -838,46 +793,36 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_COMPILE_MODE,
         info.compileMode,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_IS_LIB_ISOLATED,
         info.isLibIsolated,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_NATIVE_LIBRARY_PATH,
         info.nativeLibraryPath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_CPU_ABI,
         info.cpuAbi,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_TARGET_MODULE_NAME,
         info.targetModuleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         MODULE_TARGET_PRIORITY,
@@ -918,14 +863,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_VERSION_NAME,
         info.versionName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<ProxyData>>(jsonObject,
         jsonObjectEnd,
         MODULE_PROXY_DATAS,
@@ -934,30 +877,24 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_BUILD_HASH,
         info.buildHash,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_ISOLATION_MODE,
         info.isolationMode,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_COMPRESS_NATIVE_LIBS,
         info.compressNativeLibs,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         MODULE_NATIVE_LIBRARY_FILE_NAMES,
@@ -974,22 +911,18 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_FILE_CONTEXT_MENU,
         info.fileContextMenu,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_IS_ENCRYPTED,
         info.isEncrypted,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         MODULE_QUERY_SCHEMES,
@@ -998,14 +931,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_ROUTER_MAP,
         info.routerMap,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<AppEnvironment>>(jsonObject,
         jsonObjectEnd,
         MODULE_APP_ENVIRONMENTS,
@@ -1014,56 +945,57 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_ASAN_ENABLED,
         info.asanEnabled,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_GWP_ASAN_ENABLED,
         info.gwpAsanEnabled,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_TSAN_ENABLED,
+        info.tsanEnabled,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_PACKAGE_NAME,
         info.packageName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_APP_STARTUP,
         info.appStartup,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_HWASAN_ENABLED,
         hwasanEnabled,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_UBSAN_ENABLED,
-        info.ubsanEnabled,
-        JsonType::BOOLEAN,
+        ubsanEnabled,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error code : %{public}d", parseResult);
+    } else {
+        info.innerModuleInfoFlag = hwasanEnabled ? info.innerModuleInfoFlag | InnerBundleInfo::GetSanitizerFlag(
+            GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED) : info.innerModuleInfoFlag &
+            (~InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
+        info.innerModuleInfoFlag = ubsanEnabled ? info.innerModuleInfoFlag | InnerBundleInfo::GetSanitizerFlag(
+            GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED) : info.innerModuleInfoFlag &
+            (~InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED));
     }
 }
 
@@ -1071,39 +1003,31 @@ void from_json(const nlohmann::json &jsonObject, Distro &distro)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ProfileReader::BUNDLE_MODULE_PROFILE_KEY_DELIVERY_WITH_INSTALL,
         distro.deliveryWithInstall,
-        JsonType::BOOLEAN,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ProfileReader::BUNDLE_MODULE_PROFILE_KEY_MODULE_NAME,
         distro.moduleName,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ProfileReader::BUNDLE_MODULE_PROFILE_KEY_MODULE_TYPE,
         distro.moduleType,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     // mustFlag decide by distro.moduleType
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ProfileReader::BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE,
         distro.installationFree,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("Distro from_json error, error code : %{public}d", parseResult);
     }
@@ -1113,22 +1037,18 @@ void from_json(const nlohmann::json &jsonObject, InstallMark &installMark)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ProfileReader::BUNDLE_INSTALL_MARK_BUNDLE,
         installMark.bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ProfileReader::BUNDLE_INSTALL_MARK_PACKAGE,
         installMark.packageName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         ProfileReader::BUNDLE_INSTALL_MARK_STATUS,
@@ -1146,54 +1066,42 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Profile::DEFINEPERMISSION_NAME,
         definePermission.name,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Profile::DEFINEPERMISSION_GRANT_MODE,
         definePermission.grantMode,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Profile::DEFINEPERMISSION_AVAILABLE_LEVEL,
         definePermission.availableLevel,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Profile::DEFINEPERMISSION_PROVISION_ENABLE,
         definePermission.provisionEnable,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Profile::DEFINEPERMISSION_DISTRIBUTED_SCENE_ENABLE,
         definePermission.distributedSceneEnable,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Profile::LABEL,
         definePermission.label,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         Profile::LABEL_ID,
@@ -1202,14 +1110,12 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Profile::DESCRIPTION,
         definePermission.description,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         Profile::DESCRIPTION_ID,
@@ -1218,14 +1124,12 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Profile::DEFINEPERMISSION_AVAILABLE_TYPE,
         definePermission.availableType,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("DefinePermission from_json error, error code : %{public}d", parseResult);
     }
@@ -1235,22 +1139,18 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Profile::DEPENDENCIES_MODULE_NAME,
         dependency.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Profile::DEPENDENCIES_BUNDLE_NAME,
         dependency.bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int>(jsonObject,
         jsonObjectEnd,
         Profile::APP_VERSION_CODE,
@@ -1348,14 +1248,12 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_FEATURE,
         appFeature_,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::map<std::string, std::vector<FormInfo>>>(jsonObject,
         jsonObjectEnd,
         MODULE_FORMS,
@@ -1403,14 +1301,12 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         // the default user information needs to be constructed.
         BuildDefaultUserInfo();
     }
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_IS_NEW_VERSION,
         isNewVersion_,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::map<std::string, ExtensionAbilityInfo>>(jsonObject,
         jsonObjectEnd,
         BUNDLE_BASE_EXTENSION_INFOS,
@@ -1435,14 +1331,12 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         CUR_DYNAMIC_ICON_MODULE,
         curDynamicIconModule_,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<BundlePackInfo>(jsonObject,
         jsonObjectEnd,
         BUNDLE_PACK_INFO,
@@ -1459,14 +1353,12 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_IS_SANDBOX_APP,
         isSandboxApp_,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<HqfInfo>>(jsonObject,
         jsonObjectEnd,
         BUNDLE_HQF_INFOS,
@@ -1507,30 +1399,24 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         DEVELOPER_ID,
         developerId_,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ODID,
         odid_,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         UNINSTALL_STATE,
         uninstallState_,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerBundleInfo from database error code : %{public}d", parseResult);
     }
@@ -1543,8 +1429,8 @@ void InnerBundleInfo::BuildDefaultUserInfo()
         baseApplicationInfo_->bundleName.c_str());
     InnerBundleUserInfo defaultInnerBundleUserInfo;
     defaultInnerBundleUserInfo.bundleUserInfo.userId = GetUserId();
-    defaultInnerBundleUserInfo.uid = uid_;
-    defaultInnerBundleUserInfo.gids.emplace_back(gid_);
+    defaultInnerBundleUserInfo.uid = Constants::INVALID_UID;
+    defaultInnerBundleUserInfo.gids.emplace_back(ServiceConstants::INVALID_GID);
     defaultInnerBundleUserInfo.installTime = baseBundleInfo_->installTime;
     defaultInnerBundleUserInfo.updateTime = baseBundleInfo_->updateTime;
     defaultInnerBundleUserInfo.bundleName = baseApplicationInfo_->bundleName;
@@ -1609,7 +1495,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     std::string key;
     key.append(".").append(modulePackage).append(".");
     for (const auto &extension : baseExtensionInfos_) {
-        if (extension.first.find(key) != std::string::npos) {
+        if ((extension.first.find(key) != std::string::npos) && (extension.second.moduleName == hapInfo.moduleName)) {
             hapInfo.extensionInfos.emplace_back(extension.second);
         }
     }
@@ -1618,7 +1504,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
             continue;
         }
-        if (ability.first.find(key) != std::string::npos) {
+        if ((ability.first.find(key) != std::string::npos) && (ability.second.moduleName == hapInfo.moduleName)) {
             auto &abilityInfo = hapInfo.abilityInfos.emplace_back(ability.second);
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
@@ -1895,6 +1781,8 @@ ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled
     }
     if (appIndex == 0) {
         isEnabled = innerBundleUserInfo.bundleUserInfo.enabled;
+        PrintSetEnabledInfo(isEnabled, userId, appIndex, innerBundleUserInfo.bundleName,
+            innerBundleUserInfo.bundleUserInfo.setEnabledCaller);
         return ERR_OK;
     } else if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
         const std::map<std::string, InnerBundleCloneInfo> mpCloneInfos = innerBundleUserInfo.cloneInfos;
@@ -1903,6 +1791,8 @@ ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled
             return ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP;
         }
         isEnabled = mpCloneInfos.at(key).enabled;
+        PrintSetEnabledInfo(isEnabled, userId, appIndex, innerBundleUserInfo.bundleName,
+            mpCloneInfos.at(key).setEnabledCaller);
         return ERR_OK;
     } else {
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
@@ -2494,6 +2384,7 @@ void InnerBundleInfo::ProcessBundleFlags(
             GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId,
                 bundleInfo.applicationInfo, appIndex);
         }
+        GetApplicationReservedFlagAdaptClone(bundleInfo.applicationInfo, appIndex);
     }
     bundleInfo.applicationInfo.appIndex = appIndex;
     GetBundleWithReqPermissionsV9(flags, userId, bundleInfo, appIndex);
@@ -2503,6 +2394,35 @@ void InnerBundleInfo::ProcessBundleFlags(
         bundleInfo.signatureInfo.appId = baseBundleInfo_->appId;
         bundleInfo.signatureInfo.fingerprint = baseApplicationInfo_->fingerprint;
         bundleInfo.signatureInfo.certificate = baseBundleInfo_->signatureInfo.certificate;
+    }
+}
+
+void InnerBundleInfo::GetApplicationReservedFlagAdaptClone(ApplicationInfo &appInfo, int32_t appIndex) const
+{
+    if (appIndex == 0) {
+        return;
+    }
+    bool encryptedKeyExisted = false;
+    bool hasFoundAppIndex = false;
+    for (auto &innerUserInfo : innerBundleUserInfos_) {
+        auto cloneIter = innerUserInfo.second.cloneInfos.find(std::to_string(appIndex));
+        if (cloneIter == innerUserInfo.second.cloneInfos.end()) {
+            continue;
+        }
+        hasFoundAppIndex = true;
+        encryptedKeyExisted = cloneIter->second.encryptedKeyExisted;
+        break;
+    }
+    if (!hasFoundAppIndex) {
+        APP_LOGE("index %{public}d not found", appIndex);
+        return;
+    }
+    if (encryptedKeyExisted) {
+        // Set the second bit to 1
+        appInfo.applicationReservedFlag |= static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED);
+    } else {
+        // Set the second bit to 0
+        appInfo.applicationReservedFlag &= ~(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED));
     }
 }
 
@@ -2619,7 +2539,6 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         bool isEnabled = IsAbilityEnabled(ability.second, userId, appIndex);
         if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
             && !isEnabled) {
-            APP_LOGW_NOFUNC("ability:%{public}s disabled,", ability.second.name.c_str());
             continue;
         }
         AbilityInfo abilityInfo = ability.second;
@@ -2681,7 +2600,6 @@ void InnerBundleInfo::GetBundleWithAbilities(
             bool isEnabled = IsAbilityEnabled(ability.second, userId);
             if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
                 && !isEnabled) {
-                APP_LOGW_NOFUNC("ability:%{public}s disabled,", ability.second.name.c_str());
                 continue;
             }
             AbilityInfo abilityInfo = ability.second;
@@ -2758,39 +2676,6 @@ void InnerBundleInfo::GetFormsInfoByApp(std::vector<FormInfo> &formInfos) const
 
 void InnerBundleInfo::GetShortcutInfos(std::vector<ShortcutInfo> &shortcutInfos) const
 {
-    if (isNewVersion_) {
-        AbilityInfo abilityInfo;
-        GetMainAbilityInfo(abilityInfo);
-        if ((!abilityInfo.resourcePath.empty() || !abilityInfo.hapPath.empty())
-            && abilityInfo.metadata.size() > 0) {
-            std::vector<std::string> rawJson;
-            BundleMgrClient bundleMgrClient;
-            bool ret = bundleMgrClient.GetResConfigFile(abilityInfo, META_DATA_SHORTCUTS_NAME, rawJson);
-            if (!ret) {
-                APP_LOGD("GetResConfigFile return false");
-                return;
-            }
-            if (rawJson.size() == 0) {
-                APP_LOGD("rawJson size 0. skip");
-                return;
-            }
-            nlohmann::json jsonObject = nlohmann::json::parse(rawJson[0], nullptr, false);
-            if (jsonObject.is_discarded()) {
-                APP_LOGE("shortcuts json invalid");
-                return;
-            }
-            ShortcutJson shortcutJson = jsonObject.get<ShortcutJson>();
-            for (const Shortcut &item : shortcutJson.shortcuts) {
-                ShortcutInfo shortcutInfo;
-                shortcutInfo.bundleName = abilityInfo.bundleName;
-                shortcutInfo.moduleName = abilityInfo.moduleName;
-                InnerProcessShortcut(item, shortcutInfo);
-                shortcutInfo.sourceType = 1;
-                shortcutInfos.emplace_back(shortcutInfo);
-            }
-        }
-        return;
-    }
     for (const auto &shortcut : shortcutInfos_) {
         shortcutInfos.emplace_back(shortcut.second);
     }
@@ -2978,8 +2863,34 @@ void InnerBundleInfo::SetAccessTokenIdEx(
     infoItem->second.accessTokenIdEx = accessTokenIdEx.tokenIDEx;
 }
 
+void InnerBundleInfo::SetAccessTokenIdExWithAppIndex(
+    const Security::AccessToken::AccessTokenIDEx accessTokenIdEx,
+    const int32_t userId, const int32_t appIndex)
+{
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        return;
+    }
+
+    auto& userInfo = infoItem->second;
+    std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+
+    auto cloneKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    auto cloneItem = cloneInfos.find(cloneKey);
+    if (cloneItem == cloneInfos.end()) {
+        return;
+    }
+    cloneItem->second.accessTokenId = accessTokenIdEx.tokenIdExStruct.tokenID;
+    cloneItem->second.accessTokenIdEx = accessTokenIdEx.tokenIDEx;
+}
+
 void InnerBundleInfo::SetkeyId(const int32_t userId, const std::string &keyId)
 {
+    if (keyId.empty()) {
+        APP_LOGE("SetkeyId failed, keyId is empty");
+        return;
+    }
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
@@ -3009,7 +2920,7 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
     auto& key = NameAndUserIdToKey(abilityInfo.bundleName, userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGD("innerBundleUserInfos find key:%{public}s, error", key.c_str());
+        APP_LOGW_NOFUNC("key:%{public}s not found", key.c_str());
         return false;
     }
 
@@ -3017,6 +2928,8 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
         auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
         if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
             != disabledAbilities.end()) {
+            APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+                abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
             return false;
         } else {
             return true;
@@ -3026,11 +2939,14 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
     const std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = infoItem->second.cloneInfos;
     std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
     if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
+        APP_LOGW_NOFUNC("key:%{public}s not found", key.c_str());
         return false;
     }
     auto disabledAbilities = mpCloneInfos.at(appIndexKey).disabledAbilities;
     if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
         != disabledAbilities.end()) {
+        APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+            abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
         return false;
     } else {
         return true;
@@ -3144,13 +3060,15 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
     auto& key = NameAndUserIdToKey(abilityInfo.bundleName, userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("innerBundleUserInfos find key:%{public}s, error", key.c_str());
+        APP_LOGW_NOFUNC("key:%{public}s not found", key.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (appIndex == 0) {
         auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
         if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
             != disabledAbilities.end()) {
+            APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+                abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
             isEnable = false;
         } else {
             isEnable = true;
@@ -3160,11 +3078,14 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
     const std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = infoItem->second.cloneInfos;
     std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
     if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
+        APP_LOGW_NOFUNC("key:%{public}s not found", key.c_str());
         return ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP;
     }
     auto disabledAbilities = mpCloneInfos.at(appIndexKey).disabledAbilities;
     if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
         != disabledAbilities.end()) {
+        APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+            abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
         isEnable = false;
     } else {
         isEnable = true;
@@ -3361,7 +3282,7 @@ void InnerBundleInfo::InnerProcessRequestPermissions(
     requestPermissions.erase(iter, requestPermissions.end());
 }
 
-ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
+ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, const std::string &caller, int32_t userId)
 {
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
@@ -3372,10 +3293,14 @@ ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
     }
 
     infoItem->second.bundleUserInfo.enabled = enabled;
+    if (!caller.empty()) {
+        infoItem->second.bundleUserInfo.setEnabledCaller = caller;
+    }
     return ERR_OK;
 }
 
-ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appIndex, int32_t userId)
+ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appIndex, const std::string &caller,
+    int32_t userId)
 {
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
@@ -3392,6 +3317,7 @@ ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appInd
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
     }
     iter->second.enabled = enabled;
+    iter->second.setEnabledCaller = caller;
     return ERR_OK;
 }
 
@@ -3546,6 +3472,31 @@ bool InnerBundleInfo::SetModuleRemovable(const std::string &moduleName, bool isE
     }
 
     return false;
+}
+
+ErrCode InnerBundleInfo::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)
+{
+    APP_LOGI("update encrypted key %{public}s %{public}d %{public}d", bundleName.c_str(), isExisted, appIndex);
+    if (appIndex == 0) {
+        if (isExisted) {
+            // Set the second bit to 1
+            SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED));
+        } else {
+            // Set the second bit to 0
+            ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED));
+        }
+        return ERR_OK;
+    }
+    bool hasFoundAppIndex = false;
+    for (auto &innerUserInfo : innerBundleUserInfos_) {
+        auto cloneIter = innerUserInfo.second.cloneInfos.find(std::to_string(appIndex));
+        if (cloneIter == innerUserInfo.second.cloneInfos.end()) {
+            continue;
+        }
+        hasFoundAppIndex = true;
+        cloneIter->second.encryptedKeyExisted = isExisted;
+    }
+    return hasFoundAppIndex ? ERR_OK : ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP;
 }
 
 void InnerBundleInfo::DeleteModuleRemovableInfo(InnerModuleInfo &info, const std::string &stringUserId)
@@ -4121,14 +4072,14 @@ void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, Shortcut
     if (shortcutInfo.iconId == 0) {
         auto iter = oldShortcut.icon.find(PORT_SEPARATOR);
         if (iter != std::string::npos) {
-            shortcutInfo.iconId = atoi(oldShortcut.icon.substr(iter + 1).c_str());
+            shortcutInfo.iconId = static_cast<uint32_t>(atoi(oldShortcut.icon.substr(iter + 1).c_str()));
         }
     }
     shortcutInfo.labelId = oldShortcut.labelId;
     if (shortcutInfo.labelId == 0) {
         auto iter = oldShortcut.label.find(PORT_SEPARATOR);
         if (iter != std::string::npos) {
-            shortcutInfo.labelId = atoi(oldShortcut.label.substr(iter + 1).c_str());
+            shortcutInfo.labelId = static_cast<uint32_t>(atoi(oldShortcut.label.substr(iter + 1).c_str()));
         }
     }
     for (const ShortcutWant &shortcutWant : oldShortcut.wants) {
@@ -4304,12 +4255,29 @@ bool InnerBundleInfo::IsGwpAsanEnabled() const
     return false;
 }
 
+bool InnerBundleInfo::IsTsanEnabled() const
+{
+    for (const auto &item : innerModuleInfos_) {
+        if (item.second.tsanEnabled) {
+            return true;
+        }
+    }
+    for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
+        for (const auto &module : modules) {
+            if (module.tsanEnabled) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool InnerBundleInfo::IsHwasanEnabled() const
 {
     bool hwasanEnabled = false;
     for (const auto &item : innerModuleInfos_) {
         hwasanEnabled = static_cast<bool>(item.second.innerModuleInfoFlag &
-            static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
+            GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
         if (hwasanEnabled) {
             return true;
         }
@@ -4317,7 +4285,7 @@ bool InnerBundleInfo::IsHwasanEnabled() const
     for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
         for (const auto &module : modules) {
             hwasanEnabled = static_cast<bool>(module.innerModuleInfoFlag &
-                static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
+                GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
             if (hwasanEnabled) {
                 return true;
             }
@@ -4328,14 +4296,19 @@ bool InnerBundleInfo::IsHwasanEnabled() const
 
 bool InnerBundleInfo::IsUbsanEnabled() const
 {
+    bool ubsanEnabled = false;
     for (const auto &item : innerModuleInfos_) {
-        if (item.second.ubsanEnabled) {
+        ubsanEnabled = static_cast<bool>(item.second.innerModuleInfoFlag &
+            GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED));
+        if (ubsanEnabled) {
             return true;
         }
     }
     for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
         for (const auto &module : modules) {
-            if (module.ubsanEnabled) {
+            ubsanEnabled = static_cast<bool>(module.innerModuleInfoFlag &
+                GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED));
+            if (ubsanEnabled) {
                 return true;
             }
         }
@@ -4351,6 +4324,16 @@ bool InnerBundleInfo::GetUninstallState() const
 void InnerBundleInfo::SetUninstallState(const bool &uninstallState)
 {
     uninstallState_ = uninstallState;
+}
+
+bool InnerBundleInfo::IsNeedSendNotify() const
+{
+    return isNeedSendNotify_;
+}
+
+void InnerBundleInfo::SetNeedSendNotify(const bool needStatus)
+{
+    isNeedSendNotify_ = needStatus;
 }
 
 std::vector<std::string> InnerBundleInfo::GetAllExtensionDirsInSpecifiedModule(const std::string &moduleName) const
@@ -4384,6 +4367,14 @@ std::vector<std::string> InnerBundleInfo::GetAllExtensionDirs() const
         dirVec.emplace_back(dir);
     }
     return dirVec;
+}
+
+void InnerBundleInfo::SetApplicationFlags(ApplicationInfoFlag flag)
+{
+    uint32_t applicationFlags = static_cast<uint32_t>(baseApplicationInfo_->applicationFlags);
+    uint32_t installSourceFlag = static_cast<uint32_t>(flag);
+    baseApplicationInfo_->applicationFlags =
+        static_cast<int32_t>((applicationFlags & PREINSTALL_SOURCE_CLEAN_MASK) | installSourceFlag);
 }
 
 void InnerBundleInfo::UpdateExtensionSandboxInfo(const std::vector<std::string> &typeList)
@@ -4589,7 +4580,7 @@ ErrCode InnerBundleInfo::VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appI
         if (isExistedRes != ERR_OK) {
             return isExistedRes;
         }
-        if (found == true) {
+        if (found) {
             APP_LOGE("AppIndex %{public}d existed in userId %{public}d", appIndex, userId);
             return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
         }
@@ -4651,6 +4642,20 @@ std::set<int32_t> InnerBundleInfo::GetCloneBundleAppIndexes() const
         }
     }
     return appIndexes;
+}
+
+uint8_t InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag flag)
+{
+    return 1 << (static_cast<uint8_t>(flag) - 1);
+}
+
+void InnerBundleInfo::PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_t appIndex,
+    const std::string &bundleName, const std::string &caller) const
+{
+    if (!isEnabled) {
+        APP_LOGW_NOFUNC("-n %{public}s -u %{public}d -i %{public}d disabled caller is %{public}s",
+            bundleName.c_str(), userId, appIndex, caller.c_str());
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

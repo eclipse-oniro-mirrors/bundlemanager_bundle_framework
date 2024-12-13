@@ -173,7 +173,7 @@ void BmsBundleQuickFixBootScannerTest::CheckQuickFixInfo(const std::string &bund
     EXPECT_NE(dataMgr, nullptr) << "the data mgr is nullptr";
 
     InnerBundleInfo innerBundleInfo;
-    bool result = dataMgr->GetInnerBundleInfo(bundleName, innerBundleInfo);
+    bool result = dataMgr->GetInnerBundleInfoWithDisable(bundleName, innerBundleInfo);
     EXPECT_TRUE(result);
     auto appqfInof = innerBundleInfo.GetAppQuickFix();
     size_t ret = appqfInof.deployedAppqfInfo.hqfInfos.size();
@@ -213,6 +213,7 @@ ErrCode BmsBundleQuickFixBootScannerTest::InstallBundle(const std::string &bundl
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::NORMAL;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -244,7 +245,7 @@ void BmsBundleQuickFixBootScannerTest::AddInnerBundleInfo(const std::string &bun
     EXPECT_NE(dataMgr, nullptr) << "the data mgr is nullptr";
 
     InnerBundleInfo innerBundleInfo;
-    bool result = dataMgr->GetInnerBundleInfo(bundleName, innerBundleInfo);
+    bool result = dataMgr->GetInnerBundleInfoWithDisable(bundleName, innerBundleInfo);
     EXPECT_TRUE(result);
 
     AppQuickFix appQuickFix;

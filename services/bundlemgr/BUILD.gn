@@ -31,12 +31,14 @@ config("bundlemgr_common_config") {
     "include/distributed_manager",
     "include/driver",
     "include/extend_resource",
+    "include/uninstall_data_mgr",
     "include/overlay",
     "include/quick_fix",
     "include/sandbox_app",
     "include/navigation",
     "include/shared",
     "include/quick_fix/state/include",
+    "include/utd",
     "include/verify",
     "../../interfaces/inner_api/appexecfwk_base/include",
     "../../interfaces/inner_api/bundlemgr_extension/include",
@@ -190,6 +192,10 @@ ohos_source_set("bundle_parser") {
   if (bundle_framework_overlay_install) {
     defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
   }
+
+  if (is_emulator) {
+    defines += [ "X86_EMULATOR_MODE" ]
+  }
   part_name = "bundle_framework"
 }
 
@@ -276,6 +282,7 @@ ohos_shared_library("libbms") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "os_account:libaccountkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "syscap_codec:syscap_interface_shared",
@@ -461,6 +468,11 @@ ohos_shared_library("libbms") {
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 
+  if (webview_enable) {
+    external_deps += [ "webview:app_fwk_update_service" ]
+    defines += [ "WEBVIEW_ENABLE" ]
+  }
+
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }
@@ -510,12 +522,15 @@ ohos_shared_library("installs") {
     "appspawn:hnpapi",
     "bounds_checking_function:libsec_shared",
     "eventhandler:libeventhandler",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
+    "storage_service:storage_manager_acl",
   ]
 
   if (code_signature_enable) {

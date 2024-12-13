@@ -414,7 +414,7 @@ int32_t BundlePermissionMgr::GetHapApiVersion()
         LOG_E(BMS_TAG_DEFAULT, "getApplicationInfo failed");
         return Constants::INVALID_API_VERSION;
     }
-    auto appApiVersion = applicationInfo.apiTargetVersion;
+    auto appApiVersion = applicationInfo.apiTargetVersion % BASE_API_VERSION;
     LOG_D(BMS_TAG_DEFAULT, "appApiVersion is %{public}d", appApiVersion);
     auto systemApiVersion = GetSdkApiVersion();
     // api version is the minimum value of {appApiVersion, systemApiVersion}
@@ -587,7 +587,11 @@ void BundlePermissionMgr::AddPermissionUsedRecord(
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
-        AccessToken::PrivacyKit::AddPermissionUsedRecord(callerToken, permission, successCount, failCount);
+        int32_t ret = AccessToken::PrivacyKit::AddPermissionUsedRecord(callerToken, permission,
+            successCount, failCount);
+        if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            APP_LOGE("AddPermissionUsedRecord failed, ret = %{public}d", ret);
+        }
     }
 }
 

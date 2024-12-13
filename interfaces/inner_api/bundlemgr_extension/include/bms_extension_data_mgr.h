@@ -40,6 +40,7 @@ public:
     bool CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sdkVersion);
     bool CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkVersion);
     ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
+    bool IsRdDevice();
     ErrCode QueryAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos);
     ErrCode QueryAbilityInfosWithFlag(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, bool isNewVersion = false);
@@ -62,7 +63,7 @@ public:
     ErrCode DeleteResourceInfo(const std::string &key);
     ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
-    bool IsAppInBlocklist(const std::string &bundleName);
+    bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId);
     ErrCode KeyOperation(const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type);
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName);
     ErrCode GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
@@ -72,6 +73,10 @@ public:
     ErrCode GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
     ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
+    void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier);
+
+    bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum);
+    std::string GetCompatibleDeviceType(const std::string &bundleName);
 private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;

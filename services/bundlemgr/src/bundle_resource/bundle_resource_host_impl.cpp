@@ -19,6 +19,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_manager.h"
 #include "bundle_mgr_service.h"
+#include "hitrace_meter.h"
 #include "xcollie_helper.h"
 #include "scope_guard.h"
 
@@ -29,6 +30,7 @@ const std::string FUNCATION_GET_BUNDLE_RESOURCE_INFO = "BundleResourceHostImpl::
 ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo, const int32_t appIndex)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start, bundleName: %{public}s, flags: %{public}u", bundleName.c_str(), flags);
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_BUNDLE_RESOURCE_INFO);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
@@ -122,7 +124,7 @@ ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
             APP_LOGD("need sort by label");
             std::sort(bundleResourceInfos.begin(), bundleResourceInfos.end(),
-                [](BundleResourceInfo &resourceA, BundleResourceInfo &resourceB) {
+                [](const BundleResourceInfo &resourceA, const BundleResourceInfo &resourceB) {
                     return resourceA.label < resourceB.label;
                 });
         }
@@ -168,7 +170,7 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
             APP_LOGD("need sort by label");
             std::sort(launcherAbilityResourceInfos.begin(), launcherAbilityResourceInfos.end(),
-                [](LauncherAbilityResourceInfo &resourceA, LauncherAbilityResourceInfo &resourceB) {
+                [](const LauncherAbilityResourceInfo &resourceA, const LauncherAbilityResourceInfo &resourceB) {
                     return resourceA.label < resourceB.label;
                 });
         }

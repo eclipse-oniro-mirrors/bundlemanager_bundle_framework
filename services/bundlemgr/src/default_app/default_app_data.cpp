@@ -35,9 +35,9 @@ namespace {
 std::string DefaultAppData::ToString() const
 {
     LOG_D(BMS_TAG_DEFAULT, "DefaultAppData ToString begin");
-    nlohmann::json j;
-    j[INFOS] = infos;
-    return j.dump();
+    nlohmann::json jsonObject;
+    jsonObject[INFOS] = infos;
+    return jsonObject.dump();
 }
 
 void DefaultAppData::ToJson(nlohmann::json& jsonObject) const
@@ -117,54 +117,42 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
 {
     LOG_D(BMS_TAG_DEFAULT, "Element from_json begin");
     const auto& jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_NAME,
         element.bundleName,
-        JsonType::STRING,
         false,
-        g_defaultAppJson,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_defaultAppJson);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_NAME,
         element.moduleName,
-        JsonType::STRING,
         false,
-        g_defaultAppJson,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_defaultAppJson);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_NAME,
         element.abilityName,
-        JsonType::STRING,
         false,
-        g_defaultAppJson,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_defaultAppJson);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         EXTENSION_NAME,
         element.extensionName,
-        JsonType::STRING,
         false,
-        g_defaultAppJson,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_defaultAppJson);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         TYPE,
         element.type,
-        JsonType::STRING,
         false,
-        g_defaultAppJson,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_defaultAppJson);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_TYPE,
         element.type,
-        JsonType::STRING,
         false,
-        g_defaultAppJson,
-        ArrayType::NOT_ARRAY);
+        g_defaultAppJson);
     if (g_defaultAppJson != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "Element from_json error, error code : %{public}d", g_defaultAppJson);
     }

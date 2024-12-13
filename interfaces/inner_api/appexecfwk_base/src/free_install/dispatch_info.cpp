@@ -39,14 +39,12 @@ void from_json(const nlohmann::json &jsonObject, DispatcherInfo &dispatcherInfo)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_VERSION,
         dispatcherInfo.version,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "read module dispatcherInfo from jsonObject error: %{public}d", parseResult);
     }

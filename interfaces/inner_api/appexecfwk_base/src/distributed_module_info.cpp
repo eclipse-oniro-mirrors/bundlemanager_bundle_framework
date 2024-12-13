@@ -106,14 +106,12 @@ void from_json(const nlohmann::json& jsonObject, DistributedModuleInfo& distribu
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::MODULE_NAME,
         distributedModuleInfo.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<DistributedAbilityInfo>>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_ABILITIES,

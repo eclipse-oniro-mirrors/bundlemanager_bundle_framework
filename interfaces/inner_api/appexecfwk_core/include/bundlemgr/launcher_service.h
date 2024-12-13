@@ -99,7 +99,8 @@ public:
      * @param launcherShortcutInfo List of LauncherShortcutInfo objects if obtained.
      * @return Returns err code of result.
      */
-    ErrCode GetShortcutInfoV9(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos);
+    ErrCode GetShortcutInfoV9(const std::string &bundleName,
+        std::vector<ShortcutInfo> &shortcutInfos, int32_t userId = Constants::UNSPECIFIED_USERID);
 
 private:
     void InitWant(Want &want, const std::string &bundleName);
@@ -107,7 +108,7 @@ private:
         const int32_t userId);
 
 private:
-    void init();
+    void Init();
     void OnDeath();
     static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr();
 

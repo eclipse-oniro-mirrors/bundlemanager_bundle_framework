@@ -15,6 +15,7 @@
 
 #define private public
 
+#include <dlfcn.h>
 #include <fstream>
 #include <gtest/gtest.h>
 
@@ -35,10 +36,16 @@
 #include "scope_guard.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
+#include "mock_installd_proxy.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 using OHOS::Parcel;
+
+void SetIsExistFileCode(OHOS::ErrCode isExistFileCode);
+void SetIsExistDirCode(OHOS::ErrCode isExistFileCode);
+void SetMkdirCode(OHOS::ErrCode mkdir);
+void SetPendSignAOTCode(OHOS::ErrCode pendSignAOT);
 
 namespace OHOS {
 namespace {
@@ -51,6 +58,7 @@ const std::string AOT_MODULE_NAME = "aotModuleName";
 const std::string STRING_TYPE_ONE = "string1";
 const std::string STRING_TYPE_TWO = "string2";
 const std::string STRING_EMPTY = "";
+const std::string AOT_VERSION = "aot_version";
 const int32_t USERID_ONE = 100;
 const int32_t USERID_TWO = -1;
 constexpr uint32_t VERSION_CODE = 3;
@@ -66,6 +74,9 @@ constexpr const char* UPDATE_TYPE = "persist.dupdate_engine.update_type";
 constexpr const char* INSTALL_COMPILE_MODE = "persist.bm.install.arkopt";
 constexpr const char* COMPILE_NONE = "none";
 constexpr const char* COMPILE_FULL = "full";
+constexpr const char* USER_STATUS_SO_NAME = "libuser_status_client.z.so";
+constexpr const char* FAILURE_REASON_BUNDLE_NOT_EXIST = "bundle not exist";
+constexpr const char* UPDATE_TYPE_NIGHT = "night";
 }  // namespace
 
 class BmsAOTMgrTest : public testing::Test {
@@ -1455,7 +1466,9 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3700, Function | SmallTest | Level0)
 HWTEST_F(BmsAOTMgrTest, AOTHandler_3800, Function | SmallTest | Level0)
 {
     system::SetParameter(OTA_COMPILE_SWITCH, "on");
+    system::SetParameter(OTA_COMPILE_TIME, "0");
     AOTHandler::GetInstance().HandleOTACompile();
+    sleep(1);
     EXPECT_EQ(AOTHandler::GetInstance().OTACompileDeadline_, true);
 }
 
@@ -1468,7 +1481,13 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3900, Function | SmallTest | Level0)
 {
     std::vector<std::string> bundleNames;
     bool result = AOTHandler::GetInstance().GetUserBehaviourAppList(bundleNames, 0);
-    EXPECT_FALSE(result);
+    void* handle = dlopen(USER_STATUS_SO_NAME, RTLD_NOW);
+    if (handle == nullptr) {
+        EXPECT_FALSE(result);
+    } else {
+        dlclose(handle);
+        EXPECT_TRUE(result);
+    }
 }
 
 /**
@@ -1520,6 +1539,160 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_4300, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: AOTHandler_4400
+ * @tc.name: Test HandleCompileWithBundle
+ * @tc.desc: 1.HandleCompileWithBundle
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_4400, Function | SmallTest | Level1)
+{
+    AOTHandler::GetInstance().OTACompileDeadline_ = false;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    auto result = AOTHandler::GetInstance().HandleCompileWithBundle(AOT_BUNDLE_NAME, AOT_MODULE_NAME, dataMgr);
+    EXPECT_EQ(result.failureReason, FAILURE_REASON_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: AOTHandler_4500
+ * @tc.name: Test HandleCompileWithBundle
+ * @tc.desc: 1.HandleCompileWithBundle
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_4500, Function | SmallTest | Level1)
+{
+    AOTHandler::GetInstance().OTACompileDeadline_ = false;
+    auto dataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.isNewVersion_ = true;
+    info.innerModuleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, info);
+    auto result = AOTHandler::GetInstance().HandleCompileWithBundle(AOT_BUNDLE_NAME, AOT_MODULE_NAME, dataMgr);
+    EXPECT_EQ(result.failureReason, "");
+}
+
+/**
+ * @tc.number: AOTHandler_4600
+ * @tc.name: Test HandleCompile
+ * @tc.desc: 1.HandleCompile
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_4600, Function | SmallTest | Level1)
+{
+    std::vector<std::string> compileResults;
+    auto result = AOTHandler::GetInstance().HandleCompile(AOT_BUNDLE_NAME, COMPILE_NONE, false, compileResults);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+}
+
+/**
+ * @tc.number: AOTHandler_4700
+ * @tc.name: Test HandleCompile
+ * @tc.desc: 1.HandleCompile
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_4700, Function | SmallTest | Level1)
+{
+    std::vector<std::string> compileResults;
+    system::SetParameter("BM_AOT_TEST", AOT_MODULE_NAME);
+    auto result = AOTHandler::GetInstance().HandleCompile(AOT_BUNDLE_NAME, AOT_MODULE_NAME, true, compileResults);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: AOTHandler_4800
+ * @tc.name: Test GetOldAOTVersion
+ * @tc.desc: 1.GetOldAOTVersion
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_4800, Function | SmallTest | Level1)
+{
+    std::string oldAOTVersion;
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBmsParam();
+    auto result = AOTHandler::GetInstance().GetOldAOTVersion(oldAOTVersion);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: AOTHandler_4900
+ * @tc.name: Test GetOldAOTVersion
+ * @tc.desc: 1.GetOldAOTVersion
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_4900, Function | SmallTest | Level1)
+{
+    std::string oldAOTVersion;
+    BmsParam bmsParam;
+    bmsParam.SaveBmsParam(AOT_VERSION, AOT_BUNDLE_NAME);
+    auto result = AOTHandler::GetInstance().GetOldAOTVersion(oldAOTVersion);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: AOTHandler_5000
+ * @tc.name: Test GetOTACompileList
+ * @tc.desc: 1.GetOTACompileList
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_5000, Function | SmallTest | Level1)
+{
+    system::SetParameter(UPDATE_TYPE, UPDATE_TYPE_NIGHT);
+    std::vector<std::string> bundleNames;
+    bool ret = AOTHandler::GetInstance().GetOTACompileList(bundleNames);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: AOTHandler_5100
+ * @tc.name: Test GetSouceAp
+ * @tc.desc: 1.GetSouceAp
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_5100, Function | SmallTest | Level1)
+{
+    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
+    SetIsExistFileCode(ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+    auto ret = AOTHandler::GetInstance().GetSouceAp(AOT_BUNDLE_NAME, AOT_MODULE_NAME);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: AOTHandler_5200
+ * @tc.name: Test MkApDestDirIfNotExist
+ * @tc.desc: 1.MkApDestDirIfNotExist
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_5200, Function | SmallTest | Level1)
+{
+    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
+    SetIsExistDirCode(ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+    SetMkdirCode(ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+    auto ret = AOTHandler::GetInstance().MkApDestDirIfNotExist();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+    InstalldClient::GetInstance()->installdProxy_ = nullptr;
+    InstalldClient::GetInstance()->GetInstalldProxy();
+}
+
+/**
+ * @tc.number: AOTHandler_5300
+ * @tc.name: Test SaveAOTVersion
+ * @tc.desc: 1.SaveAOTVersion
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_5300, Function | SmallTest | Level1)
+{
+    OHOS::AppExecFwk::BmsParam bmsParam;
+    AOTHandler::GetInstance().SaveAOTVersion(AOT_MODULE_NAME);
+    std::string value;
+    bmsParam.GetBmsParam(AOT_VERSION, value);
+    EXPECT_EQ(value, AOT_MODULE_NAME);
+}
+
+/**
+ * @tc.number: AOTHandler_5400
+ * @tc.name: Test SaveAOTVersion
+ * @tc.desc: 1.SaveAOTVersion
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_5400, Function | SmallTest | Level1)
+{
+    OHOS::AppExecFwk::BmsParam bmsParam;
+    AOTHandler::GetInstance().SaveAOTVersion(STRING_EMPTY);
+    std::string value;
+    bmsParam.GetBmsParam(AOT_VERSION, value);
+    EXPECT_NE(value, STRING_EMPTY);
+}
+
+/**
  * @tc.number: AOTArgs_0300
  * @tc.name: test Unmarshalling
  * @tc.desc: Marshalling and Unmarshalling false
@@ -1551,5 +1724,85 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0600, Function | SmallTest | Level0)
     AOTSignDataCacheMgr::GetInstance().AddPendSignData(*aotArgs, versionCode, pendSignData, ret);
     ret = signDataCacheMgr.ExecutePendSign();
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AOTSignDataCacheMgr_0700
+ * @tc.name: Test HandleUnlockEvent
+ * @tc.desc: 1.HandleUnlockEvent
+ */
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0700, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    signDataCacheMgr.isLocked_ = true;
+    std::string key = "key";
+    AppExecFwk::AOTSignDataCacheMgr::PendingData data;
+    std::unordered_map<std::string, AppExecFwk::AOTSignDataCacheMgr::PendingData> datas;
+    datas.emplace(key, data);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    signDataCacheMgr.pendingSignData_.emplace(key, datas);
+    signDataCacheMgr.HandleUnlockEvent();
+    EXPECT_FALSE(signDataCacheMgr.isLocked_);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = dataMgr;
+}
+
+/**
+ * @tc.number: AOTSignDataCacheMgr_0800
+ * @tc.name: Test ExecutePendSign
+ * @tc.desc: 1.ExecutePendSign
+ */
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0800, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    std::string key = "key";
+    AppExecFwk::AOTSignDataCacheMgr::PendingData data;
+    std::unordered_map<std::string, AppExecFwk::AOTSignDataCacheMgr::PendingData> datas;
+    datas.emplace(key, data);
+    signDataCacheMgr.pendingSignData_[key]= datas;
+    SetPendSignAOTCode(ERR_OK);
+    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
+    auto ret = signDataCacheMgr.ExecutePendSign();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AOTSignDataCacheMgr_0900
+ * @tc.name: Test ExecutePendSign
+ * @tc.desc: 1.ExecutePendSign
+ */
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0900, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    std::string key = "key";
+    AppExecFwk::AOTSignDataCacheMgr::PendingData data;
+    std::unordered_map<std::string, AppExecFwk::AOTSignDataCacheMgr::PendingData> datas;
+    datas.emplace(key, data);
+    signDataCacheMgr.pendingSignData_[key] = datas;
+    SetPendSignAOTCode(ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE);
+    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
+    auto ret = signDataCacheMgr.ExecutePendSign();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED);
+}
+
+/**
+ * @tc.number: AOTSignDataCacheMgr_1000
+ * @tc.name: Test ExecutePendSign
+ * @tc.desc: 1.ExecutePendSign
+ */
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_1000, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr &signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    std::string key = "key";
+    AppExecFwk::AOTSignDataCacheMgr::PendingData data;
+    std::unordered_map<std::string, AppExecFwk::AOTSignDataCacheMgr::PendingData> datas;
+    datas.emplace(key, data);
+    signDataCacheMgr.pendingSignData_[key] = datas;
+    SetPendSignAOTCode(ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
+    auto ret = signDataCacheMgr.ExecutePendSign();
+    EXPECT_EQ(ret, ERR_OK);
+    InstalldClient::GetInstance()->installdProxy_ = nullptr;
+    InstalldClient::GetInstance()->GetInstalldProxy();
 }
 } // OHOS

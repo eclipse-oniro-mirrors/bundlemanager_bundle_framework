@@ -172,7 +172,7 @@ public:
     }
 
     virtual sptr<IWantSender> GetWantSender(
-        const WantSenderInfo &wantSenderInfo, const sptr<IRemoteObject> &callerToken) override
+        const WantSenderInfo &wantSenderInfo, const sptr<IRemoteObject> &callerToken, int32_t uid) override
     {
         return nullptr;
     }
@@ -334,7 +334,7 @@ public:
         return 0;
     }
 
-    virtual int StartUser(int userId, sptr<IUserCallback> callback) override
+    virtual int StartUser(int userId, sptr<IUserCallback> callback, bool isAppRecovery) override
     {
         return 0;
     }

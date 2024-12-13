@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,6 +38,7 @@ constexpr const char* DIR_EL1 = "el1";
 constexpr const char* DIR_EL2 = "el2";
 constexpr const char* DIR_EL3 = "el3";
 constexpr const char* DIR_EL4 = "el4";
+constexpr const char* DIR_EL5 = "el5";
 const std::vector<std::string> BUNDLE_EL = {DIR_EL1, DIR_EL2, DIR_EL3, DIR_EL4};
 constexpr const char* ARM_EABI = "armeabi";
 constexpr const char* ARM_EABI_V7A = "armeabi-v7a";
@@ -53,6 +54,7 @@ const std::map<std::string, std::string> ABI_MAP = {
     {X86_64, "x86_64"},
 };
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
+constexpr const char* UNINSTALL_TMP_PREFIX = "=uninstall_tmp_";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
 constexpr const char* HSP_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
@@ -84,6 +86,9 @@ constexpr const char* SCREEN_LOCK_FILE_DATA_PATH = "/data/app/el5";
 constexpr int NOT_EXIST_USERID = -5;
 constexpr int PATH_MAX_SIZE = 256;
 constexpr int32_t API_VERSION_NINE = 9;
+constexpr int32_t API_VERSION_TWELVE = 12;
+constexpr int32_t API_VERSION_THIRTEEN = 13;
+constexpr int32_t API_VERSION_MOD = 1000;
 constexpr int32_t BACKUP_DEFAULT_APP_KEY = -2;
 // native so
 constexpr const char* ABI_DEFAULT = "default";
@@ -151,6 +156,7 @@ constexpr const char* PGO_FILE_SUFFIX = ".ap";
 constexpr const char* ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle";
 constexpr const char* IS_ENTERPRISE_DEVICE = "const.edm.is_enterprise_device";
 constexpr const char* DEVELOPERMODE_STATE = "const.security.developermode.state";
+constexpr const char* BMS_DATA_PRELOAD = "persist.bms.data.preload";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 // hmdfs and sharefs config
@@ -165,6 +171,7 @@ constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 // shader
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
+constexpr const char* CLOUD_SHADER_COMMON_PATH = "/data/local/shader_cache/cloud/common";
 constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlename";
 // apiReleaseType
 constexpr const char* API_RELEASE_TYPE_RELEASE = "Release";
@@ -173,6 +180,15 @@ constexpr const char* API_RELEASE_TYPE_CANARY = "Canary";
 // allow multi icon bundle
 const std::set<std::string> ALLOW_MULTI_ICON_BUNDLE = {
     "com.ohos.contacts"
+};
+constexpr const char* CALLER_NAME_BMS = "bms";
+// allow singleton change
+const std::set<std::string> SINGLETON_WHITE_LIST = {
+    "com.ohos.formrenderservice",
+    "com.ohos.sceneboard",
+    "com.ohos.callui",
+    "com.ohos.mms",
+    "com.ohos.FusionSearch"
 };
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk

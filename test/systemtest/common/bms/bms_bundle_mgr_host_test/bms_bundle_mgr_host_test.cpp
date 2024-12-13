@@ -1918,5 +1918,65 @@ HWTEST_F(BmsBundleMgrHostTest, HandleCanOpenLink_0100, Function | MediumTest | L
     ErrCode res = bundleMgrHost.HandleCanOpenLink(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: HandleIsBundleInstalled_0001
+ * @tc.name: test the HandleIsBundleInstalled
+ * @tc.desc: 1. system running normally
+ *           2. test HandleIsBundleInstalled
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleIsBundleInstalled_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleIsBundleInstalled(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetCompatibleDeviceTypeNative_0001
+ * @tc.name: test the HandleGetCompatibleDeviceTypeNative
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetCompatibleDeviceTypeNative
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetCompatibleDeviceTypeNative_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetCompatibleDeviceTypeNative(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetCompatibleDeviceType_0001
+ * @tc.name: test the HandleGetCompatibleDeviceType
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetCompatibleDeviceType
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetCompatibleDeviceType_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetCompatibleDeviceType(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetBundleNameByAppId_0001
+ * @tc.name: test the HandleGetBundleNameByAppId
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetBundleNameByAppId
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleNameByAppId_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetBundleNameByAppId(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // AppExecFwk
 } // OHOS

@@ -24,22 +24,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
-constexpr int8_t THRESHOLD_VAL_LEN = 40;
 constexpr uint8_t MAX_MODULE_NAME = 128;
-bool IsSupportCompressNativeLibs()
-{
-    char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS, "", compressNativeLibs, THRESHOLD_VAL_LEN);
-    if (ret <= 0) {
-        APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS);
-        return false;
-    }
-    if (std::strcmp(compressNativeLibs, "true") == 0) {
-        return true;
-    }
-    return false;
-}
 }
 
 namespace Profile {
@@ -184,17 +169,17 @@ struct Ability {
     bool unclearableMission = false;
     bool excludeFromDock = false;
     bool isolationProcess = false;
-    int32_t descriptionId = 0;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
+    uint32_t descriptionId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
     int32_t priority = 0;
-    int32_t startWindowIconId = 0;
-    int32_t startWindowBackgroundId = 0;
+    uint32_t startWindowIconId = 0;
+    uint32_t startWindowBackgroundId = 0;
     uint32_t maxWindowWidth = 0;
     uint32_t minWindowWidth = 0;
     uint32_t maxWindowHeight = 0;
     uint32_t minWindowHeight = 0;
-    int32_t orientationId = 0;
+    uint32_t orientationId = 0;
     double maxWindowRatio = 0;
     double minWindowRatio = 0;
     std::string name;
@@ -214,13 +199,14 @@ struct Ability {
     std::string preferMultiWindowOrientation = "default";
     std::vector<std::string> continueType;
     std::vector<std::string> continueBundleNames;
+    std::string process;
 };
 
 struct Extension {
     bool visible = false;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
     int32_t priority = 0;
     std::string name;
     std::string srcEntrance;
@@ -236,6 +222,7 @@ struct Extension {
     std::vector<Metadata> metadata;
     std::string extensionProcessMode;
     std::vector<std::string> dataGroupIds;
+    std::string customProcess;
 };
 
 struct MultiAppMode {
@@ -256,9 +243,9 @@ struct App {
     bool tsanEnabled = false;
     bool ubsanEnabled = false;
     bool cloudFileSyncEnabled = false;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
     int32_t versionCode = 0;
     int32_t minCompatibleVersionCode = -1;
     uint32_t minAPIVersion = 0;
@@ -289,7 +276,7 @@ struct Module {
     bool installationFree = false;
     bool isLibIsolated = false;
     bool compressNativeLibs = true;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
     int32_t targetPriority = 0;
     std::string name;
     std::string type;
@@ -330,103 +317,83 @@ void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
 {
     APP_LOGD("read metadata tag from module.json");
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         META_DATA_NAME,
         metadata.name,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         META_DATA_VALUE,
         metadata.value,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         META_DATA_RESOURCE,
         metadata.resource,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, HnpPackage &hnpPackage)
 {
     APP_LOGD("read hnppackage tag from module.json");
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HNP_PACKAGE,
         hnpPackage.package,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HNP_TYPE,
         hnpPackage.type,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, Ability &ability)
 {
     APP_LOGD("read ability tag from module.json");
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_NAME,
         ability.name,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
     if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
-        GetValueIfFindKey<std::string>(jsonObject,
+        BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
             jsonObjectEnd,
             SRC_ENTRY,
             ability.srcEntrance,
-            JsonType::STRING,
             true,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
+            g_parseResult);
     } else {
-        GetValueIfFindKey<std::string>(jsonObject,
+        BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
             jsonObjectEnd,
             SRC_ENTRANCE,
             ability.srcEntrance,
-            JsonType::STRING,
             true,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
+            g_parseResult);
     }
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_LAUNCH_TYPE,
         ability.launchType,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         DESCRIPTION,
         ability.description,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        g_parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         ability.descriptionId,
@@ -434,15 +401,13 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ICON,
         ability.icon,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        g_parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ICON_ID,
         ability.iconId,
@@ -450,15 +415,13 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         LABEL,
         ability.label,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        g_parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         LABEL_ID,
         ability.labelId,
@@ -491,30 +454,24 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         g_parseResult,
         ArrayType::OBJECT);
     // both exported and visible can be configured, but exported has higher priority
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         VISIBLE,
         ability.visible,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         EXPORTED,
         ability.visible,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_CONTINUABLE,
         ability.continuable,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<Skill>>(jsonObject,
         jsonObjectEnd,
         SKILLS,
@@ -531,15 +488,13 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_START_WINDOW_ICON,
         ability.startWindowIcon,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        g_parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ABILITY_START_WINDOW_ICON_ID,
         ability.startWindowIconId,
@@ -547,15 +502,13 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_START_WINDOW_BACKGROUND,
         ability.startWindowBackground,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        g_parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ABILITY_START_WINDOW_BACKGROUND_ID,
         ability.startWindowBackgroundId,
@@ -563,22 +516,18 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_REMOVE_MISSION_AFTER_TERMINATE,
         ability.removeMissionAfterTerminate,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_ORIENTATION,
         ability.orientation,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         ABILITY_SUPPORT_WINDOW_MODE,
@@ -635,54 +584,42 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_EXCLUDE_FROM_MISSIONS,
         ability.excludeFromMissions,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_RECOVERABLE,
         ability.recoverable,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_UNCLEARABLE_MISSION,
         ability.unclearableMission,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_EXCLUDEFROMDOCK_MISSION,
         ability.excludeFromDock,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_PREFER_MULTI_WINDOW_ORIENTATION_MISSION,
         ability.preferMultiWindowOrientation,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ABILITY_ISOLATION_PROCESS,
         ability.isolationProcess,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         ABILITY_CONTINUE_TYPE,
@@ -691,7 +628,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ABILITY_ORIENTATION_ID,
         ability.orientationId,
@@ -707,49 +644,47 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_PROCESS,
+        ability.process,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, Extension &extension)
 {
     APP_LOGD("read extension tag from module.json");
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         EXTENSION_ABILITY_NAME,
         extension.name,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
     if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
-        GetValueIfFindKey<std::string>(jsonObject,
+        BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
             jsonObjectEnd,
             SRC_ENTRY,
             extension.srcEntrance,
-            JsonType::STRING,
             true,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
+            g_parseResult);
     } else {
-        GetValueIfFindKey<std::string>(jsonObject,
+        BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
             jsonObjectEnd,
             SRC_ENTRANCE,
             extension.srcEntrance,
-            JsonType::STRING,
             true,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
+            g_parseResult);
     }
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ICON,
         extension.icon,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        g_parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ICON_ID,
         extension.iconId,
@@ -757,15 +692,13 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         LABEL,
         extension.label,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        g_parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         LABEL_ID,
         extension.labelId,
@@ -773,15 +706,13 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         DESCRIPTION,
         extension.description,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        g_parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         extension.descriptionId,
@@ -797,38 +728,30 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         EXTENSION_ABILITY_TYPE,
         extension.type,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         EXTENSION_ABILITY_READ_PERMISSION,
         extension.readPermission,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         EXTENSION_ABILITY_WRITE_PERMISSION,
         extension.writePermission,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         EXTENSION_URI,
         extension.uri,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         PERMISSIONS,
@@ -838,22 +761,18 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         g_parseResult,
         ArrayType::STRING);
     // both exported and visible can be configured, but exported has higher priority
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         VISIBLE,
         extension.visible,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         EXPORTED,
         extension.visible,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<Skill>>(jsonObject,
         jsonObjectEnd,
         SKILLS,
@@ -870,14 +789,12 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         EXTENSION_PROCESS_MODE,
         extension.extensionProcessMode,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         DATA_GROUP_IDS,
@@ -886,6 +803,12 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_PROCESS,
+        extension.customProcess,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
@@ -904,58 +827,48 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
     }
     if (jsonObject.find(DEVICE_CONFIG_KEEP_ALIVE) != jsonObjectEnd) {
         deviceConfig.keepAlive.first = true;
-        GetValueIfFindKey<bool>(jsonObject,
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
             jsonObjectEnd,
             DEVICE_CONFIG_KEEP_ALIVE,
             deviceConfig.keepAlive.second,
-            JsonType::BOOLEAN,
             false,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
+            g_parseResult);
     }
     if (jsonObject.find(DEVICE_CONFIG_REMOVABLE) != jsonObjectEnd) {
         deviceConfig.removable.first = true;
-        GetValueIfFindKey<bool>(jsonObject,
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
             jsonObjectEnd,
             DEVICE_CONFIG_REMOVABLE,
             deviceConfig.removable.second,
-            JsonType::BOOLEAN,
             false,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
+            g_parseResult);
     }
     if (jsonObject.find(DEVICE_CONFIG_SINGLETON) != jsonObjectEnd) {
         deviceConfig.singleton.first = true;
-        GetValueIfFindKey<bool>(jsonObject,
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
             jsonObjectEnd,
             DEVICE_CONFIG_SINGLETON,
             deviceConfig.singleton.second,
-            JsonType::BOOLEAN,
             false,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
+            g_parseResult);
     }
     if (jsonObject.find(DEVICE_CONFIG_USER_DATA_CLEARABLE) != jsonObjectEnd) {
         deviceConfig.userDataClearable.first = true;
-        GetValueIfFindKey<bool>(jsonObject,
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
             jsonObjectEnd,
             DEVICE_CONFIG_USER_DATA_CLEARABLE,
             deviceConfig.userDataClearable.second,
-            JsonType::BOOLEAN,
             false,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
+            g_parseResult);
     }
     if (jsonObject.find(DEVICE_CONFIG_ACCESSIBLE) != jsonObjectEnd) {
         deviceConfig.accessible.first = true;
-        GetValueIfFindKey<bool>(jsonObject,
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
             jsonObjectEnd,
             DEVICE_CONFIG_ACCESSIBLE,
             deviceConfig.accessible.second,
-            JsonType::BOOLEAN,
             false,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
+            g_parseResult);
     }
 }
 
@@ -963,14 +876,12 @@ void from_json(const nlohmann::json &jsonObject, MultiAppMode &multiAppMode)
 {
     // these are required fields.
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MULTI_APP_MODE_TYPE,
         multiAppMode.multiAppModeType,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER,
@@ -985,30 +896,24 @@ void from_json(const nlohmann::json &jsonObject, App &app)
 {
     APP_LOGD("read app tag from module.json");
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_BUNDLE_NAME,
         app.bundleName,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ICON,
         app.icon,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         LABEL,
         app.label,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         APP_VERSION_CODE,
@@ -1017,14 +922,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         true,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_VERSION_NAME,
         app.versionName,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         APP_MIN_API_VERSION,
@@ -1041,15 +944,13 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         true,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_DEBUG,
         app.debug,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        g_parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ICON_ID,
         app.iconId,
@@ -1057,7 +958,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         LABEL_ID,
         app.labelId,
@@ -1065,15 +966,13 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         DESCRIPTION,
         app.description,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        g_parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         app.descriptionId,
@@ -1081,14 +980,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_VENDOR,
         app.vendor,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         APP_MIN_COMPATIBLE_VERSION_CODE,
@@ -1097,22 +994,18 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_API_RELEASETYPE,
         app.apiReleaseType,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_KEEP_ALIVE,
         app.keepAlive,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         APP_TARGETBUNDLELIST,
@@ -1123,55 +1016,43 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         ArrayType::STRING);
     if (jsonObject.find(APP_REMOVABLE) != jsonObject.end()) {
         app.removable.first = true;
-        GetValueIfFindKey<bool>(jsonObject,
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
             jsonObjectEnd,
             APP_REMOVABLE,
             app.removable.second,
-            JsonType::BOOLEAN,
             false,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
+            g_parseResult);
     }
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_SINGLETON,
         app.singleton,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_USER_DATA_CLEARABLE,
         app.userDataClearable,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_ACCESSIBLE,
         app.accessible,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_ASAN_ENABLED,
         app.asanEnabled,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_TYPE,
         app.bundleType,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     if (jsonObject.find(APP_PHONE) != jsonObjectEnd) {
         DeviceConfig deviceConfig;
         GetValueIfFindKey<DeviceConfig>(jsonObject,
@@ -1280,22 +1161,18 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             ArrayType::NOT_ARRAY);
         app.deviceConfigs[APP_TWO_IN_ONE] = deviceConfig;
     }
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_MULTI_PROJECTS,
         app.multiProjects,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_TARGET_BUNDLE_NAME,
         app.targetBundle,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         APP_TARGET_PRIORITY,
@@ -1304,38 +1181,30 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         COMPILE_SDK_VERSION,
         app.compileSdkVersion,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         COMPILE_SDK_TYPE,
         app.compileSdkType,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_GWP_ASAN_ENABLED,
         app.gwpAsanEnabled,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_TSAN_ENABLED,
         app.tsanEnabled,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<ApplicationEnvironment>>(jsonObject,
         jsonObjectEnd,
         MODULE_APP_ENVIRONMENTS,
@@ -1360,60 +1229,48 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_HWASAN_ENABLED,
         app.hwasanEnabled,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_CONFIGURATION,
         app.configuration,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_CLOUD_FILE_SYNC_ENABLED,
         app.cloudFileSyncEnabled,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_UBSAN_ENABLED,
         app.ubsanEnabled,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
 {
     APP_LOGD("read module tag from module.json");
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_NAME,
         module.name,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_TYPE,
         module.type,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         MODULE_DEVICE_TYPES,
@@ -1422,51 +1279,41 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         true,
         g_parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_DELIVERY_WITH_INSTALL,
         module.deliveryWithInstall,
-        JsonType::BOOLEAN,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_PAGES,
         module.pages,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
     if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
-        GetValueIfFindKey<std::string>(jsonObject,
+        BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
             jsonObjectEnd,
             SRC_ENTRY,
             module.srcEntrance,
-            JsonType::STRING,
             false,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
+            g_parseResult);
     } else {
-        GetValueIfFindKey<std::string>(jsonObject,
+        BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
             jsonObjectEnd,
             SRC_ENTRANCE,
             module.srcEntrance,
-            JsonType::STRING,
             false,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
+            g_parseResult);
     }
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         DESCRIPTION,
         module.description,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        g_parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         module.descriptionId,
@@ -1474,38 +1321,30 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_PROCESS,
         module.process,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_MAIN_ELEMENT,
         module.mainElement,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_INSTALLATION_FREE,
         module.installationFree,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_VIRTUAL_MACHINE,
         module.virtualMachine,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<Metadata>>(jsonObject,
         jsonObjectEnd,
         META_DATA,
@@ -1562,30 +1401,24 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_COMPILE_MODE,
         module.compileMode,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_IS_LIB_ISOLATED,
         module.isLibIsolated,
-        JsonType::BOOLEAN,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_TARGET_MODULE_NAME,
         module.targetModule,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         MODULE_TARGET_PRIORITY,
@@ -1610,40 +1443,30 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_BUILD_HASH,
         module.buildHash,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_ISOLATION_MODE,
         module.isolationMode,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    if (IsSupportCompressNativeLibs()) {
-        GetValueIfFindKey<bool>(jsonObject,
-            jsonObjectEnd,
-            MODULE_COMPRESS_NATIVE_LIBS,
-            module.compressNativeLibs,
-            JsonType::BOOLEAN,
-            false,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
-    }
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_COMPRESS_NATIVE_LIBS,
+        module.compressNativeLibs,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_FILE_CONTEXT_MENU,
         module.fileContextMenu,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         MODULE_QUERY_SCHEMES,
@@ -1652,14 +1475,12 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_ROUTER_MAP,
         module.routerMap,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<AppEnvironment>>(jsonObject,
         jsonObjectEnd,
         MODULE_APP_ENVIRONMENTS,
@@ -1668,22 +1489,18 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_PACKAGE_NAME,
         module.packageName,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_APP_STARTUP,
         module.appStartup,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -1900,8 +1717,8 @@ bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo 
     nlohmann::json moduleJson = jsonObject.at(Profile::MODULE);
     std::vector<std::string> preloads;
     std::string moduleName = moduleJson.at(Profile::MODULE_NAME);
-    if (moduleJson.contains(Profile::MODULE_ATOMIC_SERVICE)) {
-        nlohmann::json moduleAtomicObj = moduleJson.at(Profile::MODULE_ATOMIC_SERVICE);
+    if (moduleJson.contains(Profile::ATOMIC_SERVICE)) {
+        nlohmann::json moduleAtomicObj = moduleJson.at(Profile::ATOMIC_SERVICE);
         if (moduleAtomicObj.contains(Profile::MODULE_ATOMIC_SERVICE_PRELOADS)) {
             nlohmann::json preloadObj = moduleAtomicObj.at(Profile::MODULE_ATOMIC_SERVICE_PRELOADS);
             if (preloadObj.empty()) {
@@ -2027,7 +1844,7 @@ MultiAppModeType ToMultiAppModeType(const std::string &type)
     return MultiAppModeType::UNSPECIFIED;
 }
 
-bool ToInnerProfileConfiguration(
+void ToInnerProfileConfiguration(
     const BundleExtractor &bundleExtractor,
     const std::string &configuration,
     std::string &result)
@@ -2037,23 +1854,22 @@ bool ToInnerProfileConfiguration(
     constexpr const char* JSON_SUFFIX = ".json";
     auto pos = configuration.find(PROFILE_PREFIX);
     if (pos == std::string::npos) {
-        APP_LOGD("invalid profile configuration");
-        return false;
+        APP_LOGE("invalid profile configuration");
+        return;
     }
     std::string profileConfiguration = configuration.substr(pos + strlen(PROFILE_PREFIX));
     std::string profilePath = PROFILE_PATH + profileConfiguration + JSON_SUFFIX;
 
     if (!bundleExtractor.HasEntry(profilePath)) {
-        APP_LOGE("profile not exist");
-        return false;
+        APP_LOGI("profile not exist");
+        return;
     }
     std::stringstream profileStream;
     if (!bundleExtractor.ExtractByName(profilePath, profileStream)) {
         APP_LOGE("extract profile failed");
-        return false;
+        return;
     }
     result = profileStream.str();
-    return true;
 }
 
 bool ToApplicationInfo(
@@ -2176,10 +1992,7 @@ bool ToApplicationInfo(
     }
     applicationInfo.maxChildProcess = app.maxChildProcess;
     if (app.configuration != "") {
-        if (!ToInnerProfileConfiguration(bundleExtractor, app.configuration, applicationInfo.configuration)) {
-            APP_LOGE("parse profile configuration fail %{public}s", app.configuration.c_str());
-            return false;
-        }
+        ToInnerProfileConfiguration(bundleExtractor, app.configuration, applicationInfo.configuration);
     }
     applicationInfo.cloudFileSyncEnabled = app.cloudFileSyncEnabled;
     return true;
@@ -2337,25 +2150,25 @@ bool ToAbilityInfo(
         abilityInfo.continueType = ability.continueType;
     }
     abilityInfo.orientationId = ability.orientationId;
+    abilityInfo.process = ability.process;
     return true;
 }
 
-bool ToAbilitySkills(std::vector<Skill> skills, AbilityInfo &abilityInfo)
+void ToAbilitySkills(const std::vector<Skill> &skills, AbilityInfo &abilityInfo)
 {
-    for (Skill &skill : skills) {
+    for (const Skill &skill : skills) {
         abilityInfo.skills.push_back(skill);
     }
-    return true;
 }
 
-bool ToExtensionAbilitySkills(std::vector<Skill> skills, ExtensionAbilityInfo &extensionInfo)
+void ToExtensionAbilitySkills(const std::vector<Skill> &skills, ExtensionAbilityInfo &extensionInfo)
 {
-    for (Skill &skill : skills) {
+    for (const Skill &skill : skills) {
         extensionInfo.skills.push_back(skill);
     }
-    return true;
 }
-bool ToExtensionInfo(
+
+void ToExtensionInfo(
     const Profile::ModuleJson &moduleJson,
     const Profile::Extension &extension,
     const TransformParam &transformParam,
@@ -2396,8 +2209,7 @@ bool ToExtensionInfo(
     for (const std::string &dataGroup : extension.dataGroupIds) {
         extensionInfo.dataGroupIds.emplace_back(dataGroup);
     }
-
-    return true;
+    extensionInfo.customProcess = extension.customProcess;
 }
 
 bool GetPermissions(
@@ -2563,13 +2375,22 @@ bool ToInnerBundleInfo(
         APP_LOGE("To innerModuleInfo failed");
         return false;
     }
+    if (moduleJson.app.targetAPIVersion % ServiceConstants::API_VERSION_MOD <= ServiceConstants::API_VERSION_THIRTEEN) {
+        APP_LOGD("targetAPIVersion is less than 14, set isCompressNativeLibs flag to true");
+        applicationInfo.isCompressNativeLibs = true;
+        innerModuleInfo.compressNativeLibs = true;
+    }
     innerModuleInfo.asanEnabled = applicationInfo.asanEnabled;
     innerModuleInfo.gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
+    innerModuleInfo.tsanEnabled = applicationInfo.tsanEnabled;
     innerModuleInfo.innerModuleInfoFlag = applicationInfo.hwasanEnabled ? innerModuleInfo.innerModuleInfoFlag |
-        static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED) :
+        innerBundleInfo.GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED) :
         innerModuleInfo.innerModuleInfoFlag &
-        (~static_cast<uint32_t>(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
-    innerModuleInfo.ubsanEnabled = applicationInfo.ubsanEnabled;
+        (~innerBundleInfo.GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED));
+    innerModuleInfo.innerModuleInfoFlag = applicationInfo.ubsanEnabled ? innerModuleInfo.innerModuleInfoFlag |
+        innerBundleInfo.GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED) :
+        innerModuleInfo.innerModuleInfoFlag &
+        (~innerBundleInfo.GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED));
     SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 
     BundleInfo bundleInfo;
@@ -2628,10 +2449,7 @@ bool ToInnerBundleInfo(
     // handle extensionAbilities
     for (const Profile::Extension &extension : moduleJson.module.extensionAbilities) {
         ExtensionAbilityInfo extensionInfo;
-        if (!ToExtensionInfo(moduleJson, extension, transformParam, extensionInfo)) {
-            APP_LOGE("To extensionInfo failed");
-            return false;
-        }
+        ToExtensionInfo(moduleJson, extension, transformParam, extensionInfo);
 
         if (innerModuleInfo.mainAbility == extensionInfo.name) {
             innerModuleInfo.icon = extensionInfo.icon;
@@ -2794,11 +2612,18 @@ ErrCode ModuleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserNativeSo(moduleJson, bundleExtractor, innerBundleInfo)) {
+#ifdef X86_EMULATOR_MODE
+        APP_LOGE("Parser native so failed");
+        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+#endif
         APP_LOGW("Parser native so failed");
     }
     if (!ParserArkNativeFilePath(moduleJson, bundleExtractor, innerBundleInfo)) {
+#ifdef X86_EMULATOR_MODE
         APP_LOGE("Parser ark native file failed");
         return ERR_APPEXECFWK_PARSE_AN_FAILED;
+#endif
+        APP_LOGW("Parser ark native file failed");
     }
     return ERR_OK;
 }

@@ -24,11 +24,13 @@
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
+#include "int_wrapper.h"
 #include "json_constants.h"
 #include "json_serializer.h"
 #include "mime_type_mgr.h"
 #include "parcel.h"
 #include "shortcut_data_storage_rdb.h"
+#include "want_params_wrapper.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -60,6 +62,9 @@ const std::string ACTION = "action.system.home";
 const std::string ENTITY = "entity.system.home";
 const std::string ISOLATION_ONLY = "isolationOnly";
 constexpr const char* SHARE_ACTION_VALUE = "ohos.want.action.sendData";
+constexpr const char* WANT_PARAM_PICKER_SUMMARY = "ability.picker.summary";
+constexpr const char* WANT_PARAM_SUMMARY = "summary";
+constexpr const char* SUMMARY_TOTAL_COUNT = "totalCount";
 }  // namespace
 
 class BmsDataMgrTest : public testing::Test {
@@ -77,6 +82,9 @@ public:
 private:
     std::shared_ptr<BundleDataMgr> dataMgr_ = std::make_shared<BundleDataMgr>();
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
+    std::vector<Skill> CreateSkillsForMatchShareTest();
+    AAFwk::Want CreateWantForMatchShareTest(std::map<std::string, int32_t> &utds);
+    bool MatchShare(std::map<std::string, int32_t> &utds, std::vector<Skill> &skills);
 };
 
 std::shared_ptr<BundleMgrService> BmsDataMgrTest::bundleMgrService_ =
@@ -145,6 +153,66 @@ ShortcutInfo BmsDataMgrTest::InitShortcutInfo()
     shortcutInfos.isHomeShortcut = true;
     shortcutInfos.isEnables = true;
     return shortcutInfos;
+}
+
+std::vector<Skill> BmsDataMgrTest::CreateSkillsForMatchShareTest()
+{
+    std::vector<Skill> skills;
+
+    Skill skill;
+    skill.actions.push_back(SHARE_ACTION_VALUE);
+
+    SkillUri uriPng;
+    uriPng.scheme = "file";
+    uriPng.utd = "general.png";
+    uriPng.maxFileSupported = 3;
+    skill.uris.push_back(uriPng);
+
+    SkillUri uriImage;
+    uriImage.scheme = "file";
+    uriImage.utd = "general.image";
+    uriImage.maxFileSupported = 6;
+    skill.uris.push_back(uriImage);
+
+    SkillUri uriMedia;
+    uriMedia.scheme = "file";
+    uriMedia.utd = "general.media";
+    uriMedia.maxFileSupported = 9;
+    skill.uris.push_back(uriMedia); 
+
+    skills.push_back(skill);
+
+    return skills;
+}
+
+AAFwk::Want BmsDataMgrTest::CreateWantForMatchShareTest(std::map<std::string, int32_t> &utds)
+{
+    AAFwk::WantParams summaryWp;
+    int32_t totalCount = 0;
+    for (const auto &pair : utds) {
+        totalCount += pair.second;
+        summaryWp.SetParam(pair.first, Integer::Box(pair.second));
+    }
+
+    AAFwk::WantParams pickerWp;
+    pickerWp.SetParam(WANT_PARAM_SUMMARY, AAFwk::WantParamWrapper::Box(summaryWp));
+    pickerWp.SetParam(SUMMARY_TOTAL_COUNT, Integer::Box(totalCount));
+
+    AAFwk::WantParams wp;
+    wp.SetParam(WANT_PARAM_PICKER_SUMMARY, AAFwk::WantParamWrapper::Box(pickerWp));
+
+    AAFwk::Want want;
+    want.SetAction(SHARE_ACTION_VALUE);
+    want.SetParams(wp);
+
+    return want;
+}
+
+bool BmsDataMgrTest::MatchShare(std::map<std::string, int32_t> &utds, std::vector<Skill> &skills)
+{
+    auto dataMgr = GetDataMgr();
+    AAFwk::Want want = CreateWantForMatchShareTest(utds);
+    return dataMgr->MatchShare(want, skills);
 }
 
 /**
@@ -541,7 +609,7 @@ HWTEST_F(BmsDataMgrTest, AddBundleInfo_0100, Function | SmallTest | Level0)
     InnerBundleInfo info1;
     bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
     bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
-    bool ret3 = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, info1);
+    bool ret3 = dataMgr->GetInnerBundleInfoWithDisable(BUNDLE_NAME, info1);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
     EXPECT_TRUE(ret3);
@@ -625,7 +693,7 @@ HWTEST_F(BmsDataMgrTest, AddBundleInfo_0300, Function | SmallTest | Level0)
     InnerBundleInfo info;
     InnerBundleInfo info1;
     bool ret = dataMgr->AddInnerBundleInfo("", info);
-    bool ret1 = dataMgr->GetInnerBundleInfo("", info1);
+    bool ret1 = dataMgr->GetInnerBundleInfoWithDisable("", info1);
     EXPECT_FALSE(ret);
     EXPECT_FALSE(ret1);
 }
@@ -706,11 +774,11 @@ HWTEST_F(BmsDataMgrTest, AddBundleInfo_0500, Function | SmallTest | Level0)
     bool ret3 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_START);
     bool ret4 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_SUCCESS);
     bool ret5 = dataMgr->AddNewModuleInfo(BUNDLE_NAME, info2, info1);
-    bool ret6 = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, info3);
+    bool ret6 = dataMgr->GetInnerBundleInfoWithDisable(BUNDLE_NAME, info3);
     bool ret7 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_SUCCESS);
     bool ret8 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_START);
     bool ret9 = dataMgr->RemoveModuleInfo(BUNDLE_NAME, PACKAGE_NAME, info1);
-    bool ret10 = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, info4);
+    bool ret10 = dataMgr->GetInnerBundleInfoWithDisable(BUNDLE_NAME, info4);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
     EXPECT_TRUE(ret3);
@@ -1920,6 +1988,85 @@ HWTEST_F(BmsDataMgrTest, MatchShare_0100, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: MatchShare_0200
+ * @tc.name: test MatchShare
+ * @tc.desc: 1.test match share based on want and skill
+ */
+HWTEST_F(BmsDataMgrTest, MatchShare_0200, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills = CreateSkillsForMatchShareTest();
+
+    std::map<std::string, int32_t> utds1 = {{"general.png", 2}};
+    EXPECT_EQ(MatchShare(utds1, skills), true);
+
+    std::map<std::string, int32_t> utds2 = {{"general.png", 3}};
+    EXPECT_EQ(MatchShare(utds2, skills), true);
+    
+    std::map<std::string, int32_t> utds3 = {{"general.png", 4}};
+    EXPECT_EQ(MatchShare(utds3, skills), false);
+
+    std::map<std::string, int32_t> utds4 = {{"general.jpeg", 5}};
+    EXPECT_EQ(MatchShare(utds4, skills), true);
+
+    std::map<std::string, int32_t> utds5 = {{"general.jpeg", 6}};
+    EXPECT_EQ(MatchShare(utds5, skills), true);
+
+    std::map<std::string, int32_t> utds6 = {{"general.jpeg", 7}};
+    EXPECT_EQ(MatchShare(utds6, skills), false);
+
+    std::map<std::string, int32_t> utds7 = {{"general.png", 3}, {"general.image", 2}};
+    EXPECT_EQ(MatchShare(utds7, skills), true);
+
+    std::map<std::string, int32_t> utds8 = {{"general.png", 3}, {"general.image", 3}};
+    EXPECT_EQ(MatchShare(utds8, skills), true);
+
+    std::map<std::string, int32_t> utds9 = {{"general.png", 3}, {"general.image", 4}};
+    EXPECT_EQ(MatchShare(utds9, skills), false);
+
+    std::map<std::string, int32_t> utds10 = {{"general.png", 2}, {"general.image", 4}};
+    EXPECT_EQ(MatchShare(utds10, skills), true);
+
+    std::map<std::string, int32_t> utds11 = {{"general.png", 1}, {"general.image", 6}};
+    EXPECT_EQ(MatchShare(utds11, skills), false);
+
+    std::map<std::string, int32_t> utds12 = {{"general.image", 6}};
+    EXPECT_EQ(MatchShare(utds12, skills), true);
+
+    std::map<std::string, int32_t> utds13 = {{"general.media", 8}};
+    EXPECT_EQ(MatchShare(utds13, skills), true);
+
+    std::map<std::string, int32_t> utds14 = {{"general.media", 9}};
+    EXPECT_EQ(MatchShare(utds14, skills), true);
+
+    std::map<std::string, int32_t> utds15 = {{"general.media", 10}};
+    EXPECT_EQ(MatchShare(utds15, skills), false);
+
+    std::map<std::string, int32_t> utds16 = {{"general.png", 1}, {"general.media", 9}};
+    EXPECT_EQ(MatchShare(utds16, skills), false);
+
+    std::map<std::string, int32_t> utds17 = {{"general.png", 1}, {"general.media", 8}};
+    EXPECT_EQ(MatchShare(utds17, skills), true);
+
+    std::map<std::string, int32_t> utds18 = {{"general.image", 1}, {"general.media", 8}};
+    EXPECT_EQ(MatchShare(utds18, skills), true);
+
+    std::map<std::string, int32_t> utds19 = {{"general.png", 2}, {"general.image", 1}, {"general.media", 7}};
+    EXPECT_EQ(MatchShare(utds19, skills), false);
+    
+    std::map<std::string, int32_t> utds20 = {{"general.png", 3}, {"general.image", 3}, {"general.media", 3}};
+    EXPECT_EQ(MatchShare(utds20, skills), true);
+
+    std::map<std::string, int32_t> utds21 = {{"general.png", 1}, {"general.image", 4}, {"general.media", 4}};
+    EXPECT_EQ(MatchShare(utds21, skills), true);
+
+    std::map<std::string, int32_t> utds22 = {{"general.jpeg", 9}};
+    EXPECT_EQ(MatchShare(utds22, skills), false);
+
+    std::map<std::string, int32_t> utds23 = {{"general.text", 3}};
+    EXPECT_EQ(MatchShare(utds23, skills), false);
+}
+
+/**
  * @tc.number: MatchUtd_0100
  * @tc.name: test MatchUtd
  * @tc.desc: 1.test match utd
@@ -2276,6 +2423,32 @@ HWTEST_F(BmsDataMgrTest, GetAllExtensionInfos_0100, Function | SmallTest | Level
     EXPECT_EQ(infos.empty(), false);
     flags = 1;
     dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.empty(), false);
+}
+
+/**
+ * @tc.number: GetOneExtensionInfosByExtensionTypeName_0100
+ * @tc.name: test GetAllExtensionInfosForAms
+ * @tc.desc: 1.test get all extended information
+ */
+HWTEST_F(BmsDataMgrTest, GetOneExtensionInfosByExtensionTypeName_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    uint32_t flags = 0;
+    int32_t userId = 0;
+    InnerBundleInfo info;
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t appIndex = 0;
+    std::string typeName = "";
+    dataMgr->GetOneExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.empty(), true);
+    ExtensionAbilityInfo extensionAbilityInfo;
+    info.InsertExtensionInfo("", extensionAbilityInfo);
+    dataMgr->GetOneExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.empty(), false);
+    flags = 1;
+    dataMgr->GetOneExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), false);
 }
 

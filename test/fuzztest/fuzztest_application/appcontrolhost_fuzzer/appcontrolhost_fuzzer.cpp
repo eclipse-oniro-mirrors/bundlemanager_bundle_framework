@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#define private public
 #include "appcontrolhost_fuzzer.h"
 
 #include <cstddef>
@@ -23,21 +24,22 @@
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr uint32_t CODE_MAX = 23;
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    for (uint32_t code = 0; code <= CODE_MAX; code++) {
-        MessageParcel datas;
+    AppControlHost appControlHost;
+    MessageParcel datas;
+    MessageParcel reply;
+    appControlHost.HandleAddAppInstallControlRule(datas, reply);
+    appControlHost.HandleDeleteAppInstallControlRule(datas, reply);
+    for (uint32_t code = 2; code <= CODE_MAX; code++) {
         std::u16string descriptor = AppControlHost::GetDescriptor();
         datas.WriteInterfaceToken(descriptor);
         datas.WriteBuffer(data, size);
         datas.RewindRead(0);
-        MessageParcel reply;
         MessageOption option;
-        AppControlHost appControlHost;
         appControlHost.OnRemoteRequest(code, datas, reply, option);
     }
     return true;
@@ -53,11 +55,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
 
     if (size < OHOS::U32_AT_SIZE) {
-        return 0;
-    }
-
-    /* Validate the length of size */
-    if (size > OHOS::FOO_MAX_LEN) {
         return 0;
     }
 

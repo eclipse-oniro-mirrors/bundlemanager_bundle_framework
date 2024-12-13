@@ -28,12 +28,12 @@ namespace OHOS {
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     std::vector<std::string> bundleFilePaths;
-    std::string bundleFilePath(reinterpret_cast<const char*>(data), size);
+    std::string bundleFilePath;
     bundleFilePaths.push_back(bundleFilePath);
     sptr<IQuickFixStatusCallback> statusCallback;
     bool isDebug = false;
     std::string targetPath;
-    std::string bundleName(reinterpret_cast<const char*>(data), size);
+    std::string bundleName;
     bool enable = false;
     auto quickFixMgr = std::make_shared<QuickFixMgr>();
     quickFixMgr->DeployQuickFix(bundleFilePaths, statusCallback, isDebug, targetPath);

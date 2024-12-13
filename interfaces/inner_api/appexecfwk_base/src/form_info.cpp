@@ -89,13 +89,15 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     src = formInfo.src;
     window.designWidth = formInfo.window.designWidth;
     window.autoDesignWidth = formInfo.window.autoDesignWidth;
-    std::size_t pos = formInfo.displayName.find(":");
+    std::size_t pos = formInfo.displayName.find(':');
     if (pos != std::string::npos) {
-        displayNameId = atoi(formInfo.displayName.substr(pos + 1, formInfo.displayName.length() - pos - 1).c_str());
+        displayNameId = static_cast<uint32_t>(
+            atoi(formInfo.displayName.substr(pos + 1, formInfo.displayName.length() - pos - 1).c_str()));
     }
-    pos = formInfo.description.find(":");
+    pos = formInfo.description.find(':');
     if (pos != std::string::npos) {
-        descriptionId = atoi(formInfo.description.substr(pos + 1, formInfo.description.length() - pos - 1).c_str());
+        descriptionId = static_cast<uint32_t>(
+            atoi(formInfo.description.substr(pos + 1, formInfo.description.length() - pos - 1).c_str()));
     }
     updateDuration = formInfo.updateDuration;
     defaultDimension = formInfo.defaultDimension;
@@ -157,8 +159,8 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     formVisibleNotify = parcel.ReadBool();
     isStatic = parcel.ReadBool();
     defaultDimension = parcel.ReadInt32();
-    displayNameId = parcel.ReadInt32();
-    descriptionId = parcel.ReadInt32();
+    displayNameId = parcel.ReadUint32();
+    descriptionId = parcel.ReadUint32();
     updateDuration = parcel.ReadInt32();
 
     int32_t typeData;
@@ -251,8 +253,8 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, formVisibleNotify);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isStatic);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, defaultDimension);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, displayNameId);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, displayNameId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, updateDuration);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(uiSyntax));
@@ -373,22 +375,18 @@ void from_json(const nlohmann::json &jsonObject, FormCustomizeData &customizeDat
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_NAME,
         customizeDatas.name,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_VALUE,
         customizeDatas.value,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read customizeDatas jsonObject error : %{public}d", parseResult);
     }
@@ -406,14 +404,12 @@ void from_json(const nlohmann::json &jsonObject, FormWindow &formWindow)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_AUTO_DESIGN_WIDTH,
         formWindow.autoDesignWidth,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formWindow jsonObject error : %{public}d", parseResult);
     }
@@ -423,119 +419,91 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
 {
     int32_t parseResult = ERR_OK;
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         formInfo.bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_PACKAGE,
         formInfo.package,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::MODULE_NAME,
         formInfo.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::ABILITY_NAME,
         formInfo.abilityName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_NAME,
         formInfo.name,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_DISPLAY_NAME,
         formInfo.displayName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_DESCRIPTION,
         formInfo.description,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_RELATED_BUNDLE_NAME,
         formInfo.relatedBundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_JS_COMPONENT_NAME,
         formInfo.jsComponentName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_DEEP_LINK,
         formInfo.deepLink,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_FORMCONFIG_ABILITY,
         formInfo.formConfigAbility,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_SCHEDULED_UPDATE_TIME,
         formInfo.scheduledUpdateTime,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_SRC,
         formInfo.src,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_ORIGINAL_BUNDLE_NAME,
         formInfo.originalBundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_DISPLAY_NAME_ID,
         formInfo.displayNameId,
@@ -543,7 +511,7 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_DESCRIPTION_ID,
         formInfo.descriptionId,
@@ -567,38 +535,30 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_DEFAULT_FLAG,
         formInfo.defaultFlag,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_FORM_VISIBLE_NOTIFY,
         formInfo.formVisibleNotify,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_UPDATE_ENABLED,
         formInfo.updateEnabled,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_IS_STATIC,
         formInfo.isStatic,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<FormType>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_TYPE,
@@ -663,30 +623,24 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_DATA_PROXY_ENABLED,
         formInfo.dataProxyEnabled,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_IS_DYNAMIC,
         formInfo.isDynamic,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_TRANSPARENCY_ENABLED,
         formInfo.transparencyEnabled,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_PRIVACY_LEVEL,
@@ -695,14 +649,12 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_FONT_SCALE_FOLLOW_SYSTEM,
         formInfo.fontScaleFollowSystem,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<int32_t>>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_SUPPORT_SHAPES,

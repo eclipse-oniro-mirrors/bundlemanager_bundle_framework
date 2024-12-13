@@ -159,11 +159,35 @@ void BundleConnectAbilityMgr::PreloadRequest(int32_t flag, const TargetAbilityIn
         LOG_E(BMS_TAG_DEFAULT, "failed to WriteParcelable targetAbilityInfo");
         return;
     }
+    sptr<ServiceCenterStatusCallback> callback = new(std::nothrow) ServiceCenterStatusCallback(weak_from_this());
+    if (callback == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "callback is nullptr");
+        return;
+    }
+    if (!data.WriteRemoteObject(callback)) {
+        LOG_E(BMS_TAG_DEFAULT, "failed to WriteRemoteObject callbcak");
+        return;
+    }
     serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject_ == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "failed to get remote object");
         return;
     }
+    sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
+    if (freeInstallParams == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "freeInstallParams is nullptr");
+        return;
+    }
+    freeInstallParams->serviceCenterFunction = ServiceCenterFunction::CONNECT_PRELOAD_INSTALL;
+    std::unique_lock<std::mutex> lock(mapMutex_);
+    auto emplaceResult = freeInstallParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, *freeInstallParams);
+    LOG_I(BMS_TAG_DEFAULT, "emplace map size = %{public}zu, transactId = %{public}s",
+        freeInstallParamsMap_.size(), targetAbilityInfo.targetInfo.transactId.c_str());
+    if (!emplaceResult.second) {
+        LOG_E(BMS_TAG_DEFAULT, "freeInstallParamsMap emplace error");
+        return;
+    }
+    lock.unlock();
     int32_t result = serviceCenterRemoteObject_->SendRequest(flag, data, reply, option);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "Failed to sendRequest, result = %{public}d", result);
@@ -655,6 +679,36 @@ void BundleConnectAbilityMgr::OnDelayedHeartbeat(std::string installResultStr)
     LOG_I(BMS_TAG_DEFAULT, "OnDelayedHeartbeat end");
 }
 
+void BundleConnectAbilityMgr::OnServiceCenterReceived(std::string installResultStr)
+{
+    LOG_I(BMS_TAG_DEFAULT, "installResultStr = %{public}s", installResultStr.c_str());
+    InstallResult installResult;
+    if (!ParseInfoFromJsonStr(installResultStr.c_str(), installResult)) {
+        LOG_E(BMS_TAG_DEFAULT, "Parse info from json fail");
+        return;
+    }
+    FreeInstallParams freeInstallParams;
+    std::unique_lock<std::mutex> lock(mapMutex_);
+    auto node = freeInstallParamsMap_.find(installResult.result.transactId);
+    if (node == freeInstallParamsMap_.end()) {
+        LOG_E(BMS_TAG_DEFAULT, "Can not find node");
+        return;
+    }
+    if (DISCONNECT_ABILITY_FUNC.find(node->second.serviceCenterFunction) == DISCONNECT_ABILITY_FUNC.end()) {
+        LOG_E(BMS_TAG_DEFAULT, "%{public}d not in DISCONNECT_ABILITY_FUNC", node->second.serviceCenterFunction);
+        return;
+    }
+    freeInstallParamsMap_.erase(installResult.result.transactId);
+    LOG_I(BMS_TAG_DEFAULT, "erase map size = %{public}zu, transactId = %{public}s",
+        freeInstallParamsMap_.size(), installResult.result.transactId.c_str());
+    if (freeInstallParamsMap_.size() == 0) {
+        if (connectState_ == ServiceCenterConnectState::CONNECTED) {
+            LOG_I(BMS_TAG_DEFAULT, "DisconnectDelay");
+            DisconnectDelay();
+        }
+    }
+}
+
 void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
 {
     LOG_I(BMS_TAG_DEFAULT, "BundleConnectAbilityMgr::OutTimeMonitor");
@@ -793,10 +847,8 @@ void BundleConnectAbilityMgr::GetCallingInfo(int32_t userId, int32_t callingUid,
 
 bool ExistBundleNameInCallingBundles(const std::string &bundleName, const std::vector<std::string> &callingBundleNames)
 {
-    for (const auto &bundleNameItem : callingBundleNames) {
-        if (bundleNameItem == bundleName) {
-            return true;
-        }
+    if (std::find(callingBundleNames.begin(), callingBundleNames.end(), bundleName) != callingBundleNames.end()) {
+        return true;
     }
     return false;
 }

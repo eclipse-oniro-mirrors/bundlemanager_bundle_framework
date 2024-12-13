@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 
 #include "app_log_wrapper.h"
 #include "parcel_macro.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -55,6 +56,8 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
     }
     specifiedDistributionType = Str16ToStr8(parcel.ReadString16());
     additionalInfo = Str16ToStr8(parcel.ReadString16());
+    isDataPreloadHap = parcel.ReadBool();
+    appIdentifier = Str16ToStr8(parcel.ReadString16());
 
     int32_t verifyCodeParamSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, verifyCodeParamSize);
@@ -74,7 +77,6 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         std::string pgoPath = Str16ToStr8(parcel.ReadString16());
         pgoParams.emplace(moduleName, pgoPath);
     }
-    isUninstallAndRecover = parcel.ReadBool();
     return true;
 }
 
@@ -110,6 +112,8 @@ bool InstallParam::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(specifiedDistributionType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(additionalInfo));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDataPreloadHap);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(verifyCodeParams.size()));
     for (const auto &verifyCodeParam : verifyCodeParams) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(verifyCodeParam.first));
@@ -122,7 +126,6 @@ bool InstallParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pgoParam.first));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pgoParam.second));
     }
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isUninstallAndRecover);
     return true;
 }
 
@@ -152,6 +155,16 @@ bool UninstallParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, versionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, userId);
+    return true;
+}
+
+bool InstallParam::CheckPermission() const
+{
+    const int32_t FOUNDATION_UID = 5523;
+    if (IPCSkeleton::GetCallingUid() != FOUNDATION_UID) {
+        APP_LOGE("set installParam failed");
+        return false;
+    }
     return true;
 }
 }  // namespace AppExecFwk

@@ -26,6 +26,7 @@
 #include "common_event_manager.h"
 #include "common_event_subscriber.h"
 #include "common_event_support.h"
+#include "pre_install_exception_mgr.h"
 #include "pre_scan_info.h"
 #include "nlohmann/json.hpp"
 
@@ -435,7 +436,7 @@ private:
      * @param removable Indicates whether it can be removed.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
-    bool OTAInstallSystemBundleNeedCheckUser(
+    static bool OTAInstallSystemBundleNeedCheckUser(
         const std::vector<std::string> &filePaths,
         const std::string &bundleName,
         Constants::AppType appType,
@@ -503,6 +504,10 @@ private:
     void AddTaskParallel(
         int32_t taskPriority, const std::vector<PreScanInfo> &tasks, int32_t userId);
 
+    bool InnerMultiProcessBundleInstall(
+        const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap,
+        Constants::AppType appType);
+
     bool CheckOtaFlag(OTAFlag flag, bool &result);
     bool UpdateOtaFlag(OTAFlag flag);
     void ProcessCheckAppDataDir();
@@ -518,13 +523,17 @@ private:
     void InnerProcessCheckShaderCacheDir();
     void ProcessCheckCloudShaderDir();
     void InnerProcessCheckCloudShaderDir();
+    void InnerProcessCheckCloudShaderCommonDir(const int32_t uid, const int32_t gid);
     void ProcessNewBackupDir();
     void ProcessCheckRecoverableApplicationInfo();
     void InnerProcessCheckRecoverableApplicationInfo();
 
+    bool InnerProcessUninstallForExistPreBundle(const BundleInfo &installedInfo);
+
     void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
     void RefreshQuotaForAllUid();
+    void InnerProcessStockBundleRouterInfo();
 
     bool InnerProcessUninstallModule(const BundleInfo &bundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos, bool &isDownGrade);
@@ -535,10 +544,12 @@ private:
     bool IsTestSystemUpgrade();
     bool IsSystemFingerprintChanged();
     std::string GetCurSystemFingerprint();
-    std::string GetOldSystemFingerprint();
+    static std::string GetOldSystemFingerprint();
     bool GetSystemParameter(const std::string &key, std::string &value);
     void SaveSystemFingerprint();
     void HandlePreInstallException();
+    static bool IsHapPathExist(const BundleInfo &bundleInfo);
+    static bool IsHspPathExist(const InnerBundleInfo &innerBundleInfo);
 
     bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);
@@ -553,6 +564,8 @@ private:
         bool isPreInstall, bool debug);
     static bool IsQuickfixFlagExsit(const BundleInfo &bundleInfo);
     static bool GetValueFromJson(nlohmann::json &jsonObject);
+    static void PatchSystemHspInstall(const std::string &path, bool isOta);
+    static void PatchSystemBundleInstall(const std::string &path, bool isOta);
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();
@@ -561,6 +574,16 @@ private:
     bool MatchOldSignatures(const PreBundleConfigInfo &configInfo, const std::vector<std::string> &appSignatures);
     void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
 #endif
+    void DeletePreInstallExceptionAppService(const std::string &bundleDir);
+    void SavePreInstallExceptionAppService(const std::string &bundleDir);
+    void HandlePreInstallAppServicePathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+        const std::set<std::string> &exceptionAppServicePaths);
+    void HandlePreInstallAppPathsException(
+        std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr, const std::set<std::string> &exceptionPaths);
+    void HandlePreInstallAppServiceBundleNamesException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+        const std::set<std::string> &exceptionAppServiceBundleNames);
+    void HandlePreInstallBundleNamesException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+        const std::set<std::string> &exceptionBundleNames);
     bool IsModuleUpdate();
     void HandleModuleUpdate();
     bool GetModuleUpdatePathList(
@@ -605,10 +628,15 @@ private:
     void static ProcessBundleResourceInfo();
     // Used to send update failed event
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo);
-    void UpdatePreinstallDBForUninstalledBundle(const std::string &bundleName,
+    void UpdatePreinstallDB(const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap);
+    void UpdatePreinstallDBForNotUpdatedBundle(const std::string &bundleName,
         const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos);
     void InnerProcessRebootUninstallWrongBundle();
+    bool InnerCheckSingletonBundleUserInfo(const InnerBundleInfo &bundleInfo);
     void ProcessCheckAppEl1Dir();
+    void static ProcessCheckAppEl1DirTask();
+    void CleanAllBundleShaderCache() const;
+    void CleanTempDir() const;
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.

@@ -697,7 +697,7 @@ public:
      * @return Returns errCode of result.
      */
     virtual ErrCode GetShortcutInfoV9(const std::string &bundleName,
-        std::vector<ShortcutInfo> &shortcutInfos) override;
+        std::vector<ShortcutInfo> &shortcutInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.
@@ -855,7 +855,7 @@ public:
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
-        std::vector<int64_t> &bundleStats, int32_t appIndex = 0) override;
+        std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
 
@@ -979,7 +979,8 @@ public:
     virtual ErrCode GetDeveloperIds(const std::string &appDistributionType,
         std::vector<std::string> &developerIdList, int32_t userId) override;
 
-    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state) override;
+    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state,
+        bool isNeedSendNotify) override;
 
     virtual ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
@@ -992,6 +993,8 @@ public:
 
     virtual ErrCode GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode GetLaunchWant(Want &want) override;
 
     virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName, int32_t flags,
         int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo,
@@ -1006,6 +1009,9 @@ public:
     virtual ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) override;
 
     virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) override;
+
+    virtual ErrCode UpdateAppEncryptedStatus(const std::string &bundleName,
+        bool isExisted, int32_t appIndex = 0) override;
 
     /**
      * @brief Obtains continuable BundleInfo of all bundles available in the system.
@@ -1026,6 +1032,16 @@ public:
      */
     virtual ErrCode GetContinueBundleNames(const std::string &continueBundleName, std::vector<std::string> &bundleNames,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, bool &isInstalled) override;
+
+    virtual ErrCode GetCompatibleDeviceTypeNative(std::string &deviceType) override;
+    virtual ErrCode GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType) override;
+    virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName) override;
+    virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
+        std::string &dataDir) override;
+    virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
@@ -1067,6 +1083,7 @@ private:
     bool CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex);
     bool CheckCanSetEnable(const std::string &bundleName);
     bool IsAppLinking(int32_t flags) const;
+    std::string GetCallerName();
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

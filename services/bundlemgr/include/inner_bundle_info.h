@@ -55,8 +55,8 @@ struct Distro {
 struct DefinePermission {
     bool provisionEnable = true;
     bool distributedSceneEnable = false;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
     std::string name;
     std::string grantMode = Profile::DEFINEPERMISSION_GRANT_MODE_SYSTEM_GRANT;
     std::string availableLevel = Profile::DEFINEPERMISSION_AVAILABLE_LEVEL_DEFAULT_VALUE;
@@ -75,12 +75,12 @@ struct InnerModuleInfo {
     bool isEncrypted = false;
     bool asanEnabled = false;
     bool gwpAsanEnabled = false;
+    bool tsanEnabled = false;
     bool needDelete = false;
     uint32_t innerModuleInfoFlag = 0;
-    bool ubsanEnabled = false;
-    int32_t labelId = 0;
-    int32_t descriptionId = 0;
-    int32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
+    uint32_t iconId = 0;
     int32_t upgradeFlag = 0;
     int32_t targetPriority;
     uint32_t versionCode = 0;
@@ -145,7 +145,7 @@ struct InnerModuleInfo {
 };
 
 struct ExtendResourceInfo {
-    int32_t iconId = 0;
+    uint32_t iconId = 0;
     std::string moduleName;
     std::string filePath;
 };
@@ -161,8 +161,9 @@ enum InstallExceptionStatus : uint8_t {
     UNKNOWN_STATUS,
 };
 
-enum class GetInnerModuleInfoFlag {
-    GET_INNER_MODULE_INFO_WITH_HWASANENABLED = 0x00000001,
+enum class GetInnerModuleInfoFlag : uint8_t {
+    GET_INNER_MODULE_INFO_WITH_HWASANENABLED = 1,
+    GET_INNER_MODULE_INFO_WITH_UBSANENABLED = 2,
 };
 
 struct InstallMark {
@@ -493,7 +494,8 @@ public:
             APP_LOGD("can not find userId %{public}d when GetApplicationEnabled", userId);
             return false;
         }
-
+        PrintSetEnabledInfo(innerBundleUserInfo.bundleUserInfo.enabled, userId, 0, innerBundleUserInfo.bundleName,
+            innerBundleUserInfo.bundleUserInfo.setEnabledCaller);
         return innerBundleUserInfo.bundleUserInfo.enabled;
     }
 
@@ -504,8 +506,9 @@ public:
      * @param userId Indicates the user ID.
      * @return Returns ERR_OK if the SetApplicationEnabled is successfully; returns error code otherwise.
      */
-    ErrCode SetApplicationEnabled(bool enabled, int32_t userId = Constants::UNSPECIFIED_USERID);
-    ErrCode SetCloneApplicationEnabled(bool enabled, int32_t appIndex, int32_t userId);
+    ErrCode SetApplicationEnabled(bool enabled, const std::string &caller,
+        int32_t userId = Constants::UNSPECIFIED_USERID);
+    ErrCode SetCloneApplicationEnabled(bool enabled, int32_t appIndex, const std::string &caller, int32_t userId);
     ErrCode SetCloneAbilityEnabled(const std::string &moduleName, const std::string &abilityName,
         bool isEnabled, int32_t userId, int32_t appIndex);
     /**
@@ -532,6 +535,16 @@ public:
     void InsertInnerModuleInfo(const std::string &modulePackage, const InnerModuleInfo &innerModuleInfo)
     {
         innerModuleInfos_.try_emplace(modulePackage, innerModuleInfo);
+    }
+
+      /**
+     * @brief replace innerModuleInfos.
+     * @param modulePackage Indicates the modulePackage object as key.
+     * @param innerModuleInfo Indicates the InnerModuleInfo object as value.
+     */
+    void ReplaceInnerModuleInfo(const std::string &modulePackage, const InnerModuleInfo &innerModuleInfo)
+    {
+        innerModuleInfos_[modulePackage] = innerModuleInfo;
     }
     /**
      * @brief Insert AbilityInfo.
@@ -763,11 +776,6 @@ public:
     {
         baseApplicationInfo_->cacheDir = cacheDir;
     }
-    /**
-     * @brief Set application uid.
-     * @param uid Indicates the uid to be set.
-     */
-    void SetUid(int uid) {}
 
     int32_t GetUid(int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const
     {
@@ -803,11 +811,6 @@ public:
 
         return innerBundleUserInfo.gids[0];
     }
-    /**
-     * @brief Set application gid.
-     * @param gid Indicates the gid to be set.
-     */
-    void SetGid(int gid) {}
     /**
      * @brief Get application AppType.
      * @return Returns the AppType.
@@ -1087,8 +1090,6 @@ public:
     void RestoreFromOldInfo(const InnerBundleInfo &oldInfo)
     {
         SetAppCodePath(oldInfo.GetAppCodePath());
-        SetUid(oldInfo.GetUid());
-        SetGid(oldInfo.GetGid());
     }
     void RestoreModuleInfo(const InnerBundleInfo &oldInfo)
     {
@@ -1219,12 +1220,12 @@ public:
         curDynamicIconModule_ = curDynamicIconModule;
     }
 
-    int32_t GetIconId() const
+    uint32_t GetIconId() const
     {
         return baseApplicationInfo_->iconId;
     }
 
-    void SetIconId(int32_t iconId)
+    void SetIconId(uint32_t iconId)
     {
         baseApplicationInfo_->iconId = iconId;
     }
@@ -1403,6 +1404,10 @@ public:
     }
 
     void SetAccessTokenIdEx(const Security::AccessToken::AccessTokenIDEx accessTokenIdEx, const int32_t userId);
+
+    void SetAccessTokenIdExWithAppIndex(
+        const Security::AccessToken::AccessTokenIDEx accessTokenIdEx,
+        const int32_t userId, const int32_t appIndex);
 
     void SetIsNewVersion(bool flag)
     {
@@ -2091,6 +2096,8 @@ public:
         baseApplicationInfo_->installSource = installSource;
     }
 
+    void SetApplicationFlags(ApplicationInfoFlag flag);
+
     void UpdateExtensionSandboxInfo(const std::vector<std::string> &typeList);
     std::vector<std::string> GetAllExtensionDirsInSpecifiedModule(const std::string &moduleName) const;
     std::vector<std::string> GetAllExtensionDirs() const;
@@ -2193,8 +2200,11 @@ public:
     void GetOdid(std::string &odid) const;
     bool IsAsanEnabled() const;
     bool IsGwpAsanEnabled() const;
+    bool IsTsanEnabled() const;
     bool GetUninstallState() const;
     void SetUninstallState(const bool &uninstallState);
+    bool IsNeedSendNotify() const;
+    void SetNeedSendNotify(const bool needStatus);
     void UpdateMultiAppMode(const InnerBundleInfo &newInfo);
     void UpdateReleaseType(const InnerBundleInfo &newInfo);
     ErrCode AddCloneBundle(const InnerBundleCloneInfo &attr);
@@ -2210,7 +2220,10 @@ public:
     void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
     bool IsHwasanEnabled() const;
     bool IsUbsanEnabled() const;
+    ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex);
     std::set<int32_t> GetCloneBundleAppIndexes() const;
+    static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
+    void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
 
 private:
     bool IsExistLauncherAbility() const;
@@ -2231,15 +2244,15 @@ private:
     void GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t appIndex = 0) const;
     IsolationMode GetIsolationMode(const std::string &isolationMode) const;
     void UpdateIsCompressNativeLibs();
-    void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
     void InnerProcessRequestPermissions(
         const std::unordered_map<std::string, std::string> &moduleNameMap,
         std::vector<RequestPermission> &requestPermissions) const;
+    void GetApplicationReservedFlagAdaptClone(ApplicationInfo &appInfo, int32_t appIndex) const;
+    void PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_t appIndex,
+        const std::string &bundleName, const std::string &caller) const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
-    int uid_ = Constants::INVALID_UID;
-    int gid_ = ServiceConstants::INVALID_GID;
     int userId_ = Constants::DEFAULT_USERID;
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     std::shared_ptr<ApplicationInfo> baseApplicationInfo_;
@@ -2302,6 +2315,9 @@ private:
 
     // use to control uninstalling
     bool uninstallState_ = true;
+
+    // need to send a notification when uninstallState_ change
+    bool isNeedSendNotify_ = false;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

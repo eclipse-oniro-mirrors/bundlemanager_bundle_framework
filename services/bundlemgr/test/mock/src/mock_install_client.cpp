@@ -119,12 +119,13 @@ ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, 
 }
 
 ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int32_t userId,
-    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex)
+    std::vector<int64_t> &bundleStats, const int32_t uid,
+    const int32_t appIndex, const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     return 0;
 }
 
-ErrCode InstalldClient::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
     return 0;
@@ -146,9 +147,9 @@ void InstalldClient::ResetInstalldProxy()
     return;
 }
 
-bool InstalldClient::GetInstalldProxy()
+sptr<IInstalld> InstalldClient::GetInstalldProxy()
 {
-    return true;
+    return nullptr;
 }
 
 ErrCode InstalldClient::ScanDir(
@@ -243,7 +244,7 @@ ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &
 
 bool InstalldClient::StartInstalldService()
 {
-    return GetInstalldProxy();
+    return GetInstalldProxy() != nullptr;
 }
 
 ErrCode InstalldClient::ExtractDriverSoFiles(const std::string &srcPath,
@@ -307,8 +308,12 @@ ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &ty
 
 ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
 {
-        return ERR_OK;
+    return ERR_OK;
 }
 
+ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

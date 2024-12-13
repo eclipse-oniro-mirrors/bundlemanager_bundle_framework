@@ -108,6 +108,7 @@ ErrCode BmsBundlePermissionGrantTest::InstallBundle(const std::string &bundlePat
     InstallParam installParam;
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();

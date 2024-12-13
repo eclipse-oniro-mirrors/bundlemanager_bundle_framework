@@ -47,20 +47,18 @@ void from_json(const nlohmann::json &jsonObject, AppQuickFix &appQuickFix)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         Constants::BUNDLE_NAME, appQuickFix.bundleName,
-        JsonType::STRING, false, parseResult,
-        ArrayType::NOT_ARRAY);
+        false, parseResult);
 
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
         APP_QUICK_FIX_VERSION_CODE, appQuickFix.versionCode,
         JsonType::NUMBER, false, parseResult,
         ArrayType::NOT_ARRAY);
 
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         APP_QUICK_FIX_VERSION_NAME, appQuickFix.versionName,
-        JsonType::STRING, false, parseResult,
-        ArrayType::NOT_ARRAY);
+        false, parseResult);
 
     GetValueIfFindKey<AppqfInfo>(jsonObject, jsonObjectEnd,
         APP_QUICK_FIX_DEPLOYED_APP_QF_INFO, appQuickFix.deployedAppqfInfo,

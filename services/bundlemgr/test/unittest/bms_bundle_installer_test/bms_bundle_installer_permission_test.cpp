@@ -114,7 +114,9 @@ bool BmsBundleInstallerPermissionTest::InstallSystemBundle(const std::string &fi
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    setuid(Constants::FOUNDATION_UID);
+    installParam.SetKillProcess(false);
+    setuid(Constants::ROOT_UID);
     installParam.copyHapToInstallPath = false;
     return installer->InstallSystemBundle(
         filePath, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
@@ -131,7 +133,9 @@ bool BmsBundleInstallerPermissionTest::OTAInstallSystemBundle(const std::string 
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    setuid(Constants::FOUNDATION_UID);
+    installParam.SetKillProcess(false);
+    setuid(Constants::ROOT_UID);
     installParam.copyHapToInstallPath = false;
     return installer->OTAInstallSystemBundle(
         filePaths, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
@@ -571,10 +575,9 @@ HWTEST_F(BmsBundleInstallerPermissionTest, CleanBundleDataDirByName_0100, Functi
 HWTEST_F(BmsBundleInstallerPermissionTest, GetAllBundleStats_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl hostImpl;
-    std::vector<std::string> bundleNames;
     std::vector<int64_t> bundleStats = { 0 };
     std::vector<int32_t> uids;
-    auto ret = hostImpl.GetAllBundleStats(bundleNames, 0, bundleStats, uids);
+    auto ret = hostImpl.GetAllBundleStats(0, bundleStats, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

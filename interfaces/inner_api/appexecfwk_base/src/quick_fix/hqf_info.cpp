@@ -48,30 +48,24 @@ void from_json(const nlohmann::json &jsonObject, HqfInfo &hqfInfo)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::MODULE_NAME,
         hqfInfo.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HQF_INFO_HAP_SHA256,
         hqfInfo.hapSha256,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HQF_INFO_HQF_FILE_PATH,
         hqfInfo.hqfFilePath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<QuickFixType>(jsonObject,
         jsonObjectEnd,
         HQF_INFO_TYPE,
@@ -80,22 +74,18 @@ void from_json(const nlohmann::json &jsonObject, HqfInfo &hqfInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HQF_INFO_CPU_ABI,
         hqfInfo.cpuAbi,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         HQF_INFO_NATIVE_LIBRARY_PATH,
         hqfInfo.nativeLibraryPath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     if (parseResult != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "read module hqfInfo from jsonObject error, error code : %{public}d", parseResult);
     }

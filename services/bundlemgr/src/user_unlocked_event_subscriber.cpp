@@ -32,6 +32,19 @@ static constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
 constexpr const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
+constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
+static std::mutex TASK_MUTEX;
+static std::atomic<uint32_t> CURRENT_TASK_NUM = 0;
+
+template<typename Func, typename...Args>
+inline void ReturnIfNewTask(Func func, uint32_t tempTask, Args&&... args)
+{
+    if (CURRENT_TASK_NUM != tempTask) {
+        APP_LOGI("need stop current task, new first");
+        return;
+    }
+    func(std::forward<Args>(args)...);
+}
 }
 UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)
@@ -76,6 +89,33 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
     }
 }
 
+void UpdateAppDataMgr::CheckPathAttribute(const std::string &path, const BundleInfo &bundleInfo, bool &isExist)
+{
+    if (!isExist) {
+        return;
+    }
+    FileStat fileStat;
+    if (InstalldClient::GetInstance()->GetFileStat(path, fileStat) != ERR_OK) {
+        APP_LOGE("GetFileStat path(%{public}s) failed", path.c_str());
+        return;
+    }
+    if (fileStat.uid != bundleInfo.uid) {
+        APP_LOGW("path: %{public}s uid is not same, fileStat.uid:%{public}d, bundleInfo.uid:%{public}d",
+            path.c_str(), static_cast<int32_t>(fileStat.uid), bundleInfo.uid);
+        isExist = false;
+    }
+    if (fileStat.gid != ServiceConstants::DATABASE_DIR_GID) {
+        APP_LOGW("path: %{public}s gid is not same, fileStat.gid:%{public}d, gid:%{public}d",
+            path.c_str(), static_cast<int32_t>(fileStat.gid), ServiceConstants::DATABASE_DIR_GID);
+        isExist = false;
+    }
+    uint32_t fileMode = static_cast<uint32_t>(fileStat.mode);
+    if ((fileMode & MODE_BASE) != (S_IRWXU | S_IRWXG | S_ISGID)) {
+        APP_LOGW("path: %{public}s mode is not same, fileStat.mode:%{public}d, mode:%{public}d",
+            path.c_str(), static_cast<int32_t>(fileStat.mode), static_cast<int32_t>((S_IRWXU | S_IRWXG | S_ISGID)));
+    }
+}
+
 bool UpdateAppDataMgr::CreateBundleDataDir(
     const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir)
 {
@@ -86,21 +126,7 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
         APP_LOGE("path: %{public}s IsExistDir failed", baseBundleDataDir.c_str());
         return false;
     }
-    if (isExist) {
-        FileStat fileStat;
-        if (InstalldClient::GetInstance()->GetFileStat(baseBundleDataDir, fileStat) != ERR_OK) {
-            APP_LOGE("GetFileStat path(%{public}s) failed", baseBundleDataDir.c_str());
-            return false;
-        }
-        uint32_t fileMode = static_cast<uint32_t>(fileStat.mode);
-        if ((fileStat.uid != bundleInfo.uid) || (fileStat.gid != ServiceConstants::DATABASE_DIR_GID) ||
-            ((fileMode & MODE_BASE) != (S_IRWXU | S_IRWXG | S_ISGID))) {
-            APP_LOGW("path: %{public}s uid or gid or mode not same: fileStat.uid:%{public}d,"
-                "bundleInfo.uid:%{public}d, fileStat.gid:%{public}d ", baseBundleDataDir.c_str(),
-                static_cast<int32_t>(fileStat.uid), bundleInfo.uid, static_cast<int32_t>(fileStat.mode));
-            isExist = false;
-        }
-    }
+    CheckPathAttribute(baseBundleDataDir, bundleInfo, isExist);
     if (!isExist) {
         APP_LOGI_NOFUNC("path: %{public}s need CreateBundleDataDir", baseBundleDataDir.c_str());
         CreateDirParam createDirParam;
@@ -114,12 +140,26 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
         if (elDir != ServiceConstants::BUNDLE_EL[0]) {
             createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
         }
+        if (elDir == ServiceConstants::DIR_EL5) {
+            return CreateEl5Dir(createDirParam);
+        }
         ProcessExtensionDir(bundleInfo, createDirParam.extensionDirs);
         if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam) != ERR_OK) {
             APP_LOGW("failed to CreateBundleDataDir");
         }
     }
     CreateDataGroupDir(bundleInfo, userId);
+    return true;
+}
+
+bool UpdateAppDataMgr::CreateEl5Dir(const CreateDirParam &createDirParam)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("CreateDataGroupDir failed for DataMgr is nullptr");
+        return false;
+    }
+    dataMgr->CreateEl5Dir(std::vector<CreateDirParam> {createDirParam});
     return true;
 }
 
@@ -138,9 +178,15 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
     if (dataGroupInfos.empty()) {
         return;
     }
+
+    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+        + std::to_string(userId);
+    if (!BundleUtil::IsExistDir(parentDir)) {
+        APP_LOGE("parent dir(%{public}s) missing: group", parentDir.c_str());
+        return;
+    }
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
-        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-            + std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         APP_LOGD("create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
             DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
@@ -152,6 +198,13 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
 
 void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
 {
+    uint32_t tempTaskNum = CURRENT_TASK_NUM.fetch_add(1) + 1;
+    std::lock_guard<std::mutex> guard(TASK_MUTEX);
+    APP_LOGI("UpdateAppDataDirSelinuxLabel hold task_mutex_");
+    if (tempTaskNum != CURRENT_TASK_NUM) {
+        APP_LOGI("need stop current task, new first, -u %{public}d", userId);
+        return;
+    }
     APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d start", userId);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -159,19 +212,21 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
         return;
     }
     std::vector<BundleInfo> bundleInfos;
-    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO, bundleInfos, userId)) {
+    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
+        BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION, bundleInfos, userId)) {
         APP_LOGE("UpdateAppDataDirSelinuxLabel GetAllBundleInfos failed");
         return;
     }
 
-    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::BUNDLE_EL[1]);
+    ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::BUNDLE_EL[1]);
 #ifdef CHECK_ELDIR_ENABLED
-    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL3);
-    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL4);
+    ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL3);
+    ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL4);
 #endif
-    ProcessUpdateAppLogDir(bundleInfos, userId);
-    ProcessFileManagerDir(bundleInfos, userId);
-    ProcessNewBackupDir(bundleInfos, userId);
+    ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL5);
+    ReturnIfNewTask(ProcessUpdateAppLogDir, tempTaskNum, bundleInfos, userId);
+    ReturnIfNewTask(ProcessFileManagerDir, tempTaskNum, bundleInfos, userId);
+    ReturnIfNewTask(ProcessNewBackupDir, tempTaskNum, bundleInfos, userId);
     APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d end", userId);
 }
 
@@ -185,6 +240,15 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
             APP_LOGI("bundleName:%{public}s appIndex:%{public}d clone app no need to change",
                 bundleInfo.name.c_str(), bundleInfo.appIndex);
             continue;
+        }
+        if (elDir == ServiceConstants::DIR_EL5) {
+            std::vector<std::string> reqPermissions = bundleInfo.reqPermissions;
+            auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const std::string &permission) {
+                return permission == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+            });
+            if (it == reqPermissions.end()) {
+                continue;
+            }
         }
         if ((userId != Constants::DEFAULT_USERID && bundleInfo.singleton) ||
             !CreateBundleDataDir(bundleInfo, userId, elDir)) {
@@ -253,12 +317,26 @@ void UpdateAppDataMgr::ProcessNewBackupDir(const std::vector<BundleInfo> &bundle
 
 void UpdateAppDataMgr::CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t userId)
 {
-    std::string backupDirEl1 = BUNDLE_BACKUP_HOME_PATH_EL1_NEW + bundleInfo.name + BUNDLE_BACKUP_INNER_DIR;
-    backupDirEl1 = backupDirEl1.replace(backupDirEl1.find("%"), 1, std::to_string(userId));
+    std::string parentEl1Dir = BUNDLE_BACKUP_HOME_PATH_EL1_NEW;
+    parentEl1Dir = parentEl1Dir.replace(parentEl1Dir.find("%"), 1, std::to_string(userId)) + bundleInfo.name;
+    std::string parentEl2Dir = BUNDLE_BACKUP_HOME_PATH_EL2_NEW;
+    parentEl2Dir = parentEl2Dir.replace(parentEl2Dir.find("%"), 1, std::to_string(userId)) + bundleInfo.name;
+    bool isEl1Existed = false;
+    auto result = InstalldClient::GetInstance()->IsExistDir(parentEl1Dir, isEl1Existed);
+    if (result == ERR_OK && !isEl1Existed) {
+        APP_LOGE("parent dir(%{public}s) missing: backup", parentEl1Dir.c_str());
+        return;
+    }
+    bool isEl2Existed = false;
+    result = InstalldClient::GetInstance()->IsExistDir(parentEl2Dir, isEl2Existed);
+    if (result == ERR_OK && !isEl2Existed) {
+        APP_LOGE("parent dir(%{public}s) missing: backup", parentEl2Dir.c_str());
+        return;
+    }
+    std::string backupDirEl1 = parentEl1Dir + BUNDLE_BACKUP_INNER_DIR;
+    std::string backupDirEl2 = parentEl2Dir + BUNDLE_BACKUP_INNER_DIR;
     std::vector<std::string> backupDirList;
     backupDirList.emplace_back(backupDirEl1);
-    std::string backupDirEl2 = BUNDLE_BACKUP_HOME_PATH_EL2_NEW + bundleInfo.name + BUNDLE_BACKUP_INNER_DIR;
-    backupDirEl2 = backupDirEl2.replace(backupDirEl2.find("%"), 1, std::to_string(userId));
     backupDirList.emplace_back(backupDirEl2);
 
     for (const std::string &dir : backupDirList) {
@@ -279,8 +357,13 @@ void UpdateAppDataMgr::CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t 
 
 bool UpdateAppDataMgr::CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t userId)
 {
-    std::string bundleLogDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::LOG + bundleInfo.name;
+    std::string parentDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::LOG;
+    if (!BundleUtil::IsExistDir(parentDir)) {
+        APP_LOGE("parent dir(%{public}s) missing: log", parentDir.c_str());
+        return false;
+    }
+    std::string bundleLogDir = parentDir + bundleInfo.name;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(bundleLogDir, isExist) != ERR_OK) {
         APP_LOGE("path: %{public}s IsExistDir failed", bundleLogDir.c_str());
@@ -310,9 +393,13 @@ void UpdateAppDataMgr::ProcessFileManagerDir(const std::vector<BundleInfo> &bund
 
 bool UpdateAppDataMgr::CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_t userId)
 {
-    const std::string CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
-    std::string bundleCloudDir = CLOUD_FILE_PATH + bundleInfo.name;
-    bundleCloudDir = bundleCloudDir.replace(bundleCloudDir.find("%"), 1, std::to_string(userId));
+    std::string parentDir = "/data/service/el2/%/hmdfs/cloud/data/";
+    parentDir = parentDir.replace(parentDir.find("%"), 1, std::to_string(userId));
+    if (!BundleUtil::IsExistDir(parentDir)) {
+        APP_LOGE("parent dir(%{public}s) missing: cloud", parentDir.c_str());
+        return false;
+    }
+    std::string bundleCloudDir = parentDir + bundleInfo.name;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(bundleCloudDir, isExist) != ERR_OK) {
         APP_LOGE("path: %{private}s IsExistDir failed", bundleCloudDir.c_str());

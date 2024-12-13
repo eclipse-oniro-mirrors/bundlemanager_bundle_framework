@@ -330,10 +330,7 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo& info)
     {
         auto& mtx = dataMgr->GetBundleMutex(bundleName);
         std::lock_guard lock { mtx };
-        bundleExist = dataMgr->GetInnerBundleInfo(bundleName, dbInfo);
-        if (bundleExist) {
-            dataMgr->EnableBundle(bundleName);
-        }
+        bundleExist = dataMgr->FetchInnerBundleInfo(bundleName, dbInfo);
     }
 
     if (!bundleExist) {
@@ -452,7 +449,7 @@ bool BMSEventHandler::LoadAllPreInstallBundleInfos()
     }
 
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
-    for (auto& iter : preInstallBundleInfos) {
+    for (auto const & iter : preInstallBundleInfos) {
     }
 
     hasLoadAllPreInstallBundleInfosFromDb_ = true;
@@ -710,6 +707,21 @@ void BMSEventHandler::CheckALLResourceInfo() {}
 
 void BMSEventHandler::ProcessBundleResourceInfo() {}
 
+bool InnerCheckSingletonBundleUserInfo(const InnerBundleInfo &bundleInfo)
+{
+    return true;
+}
+
+bool BMSEventHandler::IsHapPathExist(const BundleInfo &bundleInfo)
+{
+    return true;
+}
+
+bool BMSEventHandler::IsHspPathExist(const InnerBundleInfo &innerBundleInfo)
+{
+    return true;
+}
+
 void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo& bundleInfo) {}
 
 bool BMSEventHandler::IsQuickfixFlagExsit(const BundleInfo& bundleInfo)
@@ -724,8 +736,13 @@ bool BMSEventHandler::GetValueFromJson(nlohmann::json& jsonObject)
 
 void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string& path) {}
 
-void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(
+void BMSEventHandler::UpdatePreinstallDBForNotUpdatedBundle(
     const std::string& bundleName, const std::unordered_map<std::string, InnerBundleInfo>& innerBundleInfos)
 {}
+
+bool BMSEventHandler::InnerProcessUninstallForExistPreBundle(const BundleInfo &installedInfo)
+{
+    return false;
+}
 } // namespace AppExecFwk
 } // namespace OHOS

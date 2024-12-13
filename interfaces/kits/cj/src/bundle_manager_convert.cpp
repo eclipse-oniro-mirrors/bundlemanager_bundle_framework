@@ -57,6 +57,9 @@ void ClearCharPointer(char** ptr, int count)
 
 CArrString ConvertArrString(std::vector<std::string> vecStr)
 {
+    if (vecStr.size() == 0) {
+        return {nullptr, 0};
+    }
     char **retValue = static_cast<char **>(malloc(sizeof(char *) * vecStr.size()));
     if (retValue == nullptr) {
         return {nullptr, 0};
@@ -74,7 +77,7 @@ CArrString ConvertArrString(std::vector<std::string> vecStr)
     return {retValue, vecStr.size()};
 }
 
-RetUsedScene ConvertUsedScene(AppExecFwk::RequestPermissionUsedScene usedScence)
+RetUsedScene ConvertUsedScene(const AppExecFwk::RequestPermissionUsedScene& usedScence)
 {
     RetUsedScene uScene;
     uScene.abilities = ConvertArrString(usedScence.abilities);
@@ -82,34 +85,34 @@ RetUsedScene ConvertUsedScene(AppExecFwk::RequestPermissionUsedScene usedScence)
     return uScene;
 }
 
-RetMetadata ConvertMetadata(AppExecFwk::Metadata cdata)
+RetMetadata ConvertMetadata(const AppExecFwk::Metadata& cData)
 {
     RetMetadata data;
-    data.name = MallocCString(cdata.name);
-    data.value = MallocCString(cdata.value);
-    data.resource = MallocCString(cdata.resource);
+    data.name = MallocCString(cData.name);
+    data.value = MallocCString(cData.value);
+    data.resource = MallocCString(cData.resource);
     return data;
 }
 
-CResource ConvertResource(AppExecFwk::Resource cres)
+CResource ConvertResource(const AppExecFwk::Resource& cRes)
 {
     CResource res;
-    res.bundleName = MallocCString(cres.bundleName);
-    res.moduleName = MallocCString(cres.moduleName);
-    res.id = cres.id;
+    res.bundleName = MallocCString(cRes.bundleName);
+    res.moduleName = MallocCString(cRes.moduleName);
+    res.id = cRes.id;
     return res;
 }
 
-CArrMetadata ConvertArrMetadata(std::vector<AppExecFwk::Metadata> cdata)
+CArrMetadata ConvertArrMetadata(const std::vector<AppExecFwk::Metadata>& cData)
 {
     CArrMetadata data;
-    data.size = static_cast<int64_t>(cdata.size());
+    data.size = static_cast<int64_t>(cData.size());
     data.head = nullptr;
     if (data.size > 0) {
         RetMetadata *retValue = reinterpret_cast<RetMetadata *>(malloc(sizeof(RetMetadata) * data.size));
         if (retValue != nullptr) {
             for (int32_t i = 0; i < data.size; i++) {
-                retValue[i] = ConvertMetadata(cdata[i]);
+                retValue[i] = ConvertMetadata(cData[i]);
             }
             data.head = retValue;
         } else {
@@ -120,7 +123,7 @@ CArrMetadata ConvertArrMetadata(std::vector<AppExecFwk::Metadata> cdata)
     return data;
 }
 
-CArrMoMeta ConvertArrMoMeta(std::map<std::string, std::vector<AppExecFwk::Metadata>> metadata)
+CArrMoMeta ConvertArrMoMeta(const std::map<std::string, std::vector<AppExecFwk::Metadata>>& metadata)
 {
     CArrMoMeta arrMdata;
     arrMdata.size = static_cast<int64_t>(metadata.size());
@@ -143,7 +146,7 @@ CArrMoMeta ConvertArrMoMeta(std::map<std::string, std::vector<AppExecFwk::Metada
 }
 
 
-RetSkillUri ConvertSkillUri(AppExecFwk::SkillUri cUri)
+RetSkillUri ConvertSkillUri(const AppExecFwk::SkillUri& cUri)
 {
     RetSkillUri skillUri;
     skillUri.scheme = MallocCString(cUri.scheme);
@@ -159,12 +162,15 @@ RetSkillUri ConvertSkillUri(AppExecFwk::SkillUri cUri)
     return skillUri;
 }
 
-RetCArrSkillUri ConvertArrSkillUris(std::vector<AppExecFwk::SkillUri> cUris)
+RetCArrSkillUri ConvertArrSkillUris(const std::vector<AppExecFwk::SkillUri>& cUris)
 {
     RetCArrSkillUri skillUris;
-    skillUris.size = cUris.size();
+    skillUris.size = static_cast<int64_t>(cUris.size());
     skillUris.head = nullptr;
 
+    if (skillUris.size == 0) {
+        return skillUris;
+    }
     RetSkillUri *retValue = reinterpret_cast<RetSkillUri *>(malloc(sizeof(RetSkillUri) * skillUris.size));
     if (retValue != nullptr) {
         for (int32_t i = 0; i < skillUris.size; i++) {
@@ -178,7 +184,7 @@ RetCArrSkillUri ConvertArrSkillUris(std::vector<AppExecFwk::SkillUri> cUris)
     return skillUris;
 }
 
-RetSkill ConvertSkill(AppExecFwk::Skill cSkill)
+RetSkill ConvertSkill(const AppExecFwk::Skill& cSkill)
 {
     RetSkill skill;
     skill.actions = ConvertArrString(cSkill.actions);
@@ -188,11 +194,14 @@ RetSkill ConvertSkill(AppExecFwk::Skill cSkill)
     return skill;
 }
 
-RetCArrSkill ConvertSkills(std::vector<AppExecFwk::Skill> cSkills)
+RetCArrSkill ConvertSkills(const std::vector<AppExecFwk::Skill>& cSkills)
 {
     RetCArrSkill skills;
-    skills.size = cSkills.size();
+    skills.size = static_cast<int64_t>(cSkills.size());
     skills.head = nullptr;
+    if (skills.size == 0) {
+        return skills;
+    }
     RetSkill *retValue = reinterpret_cast<RetSkill *>(malloc(sizeof(RetSkill) * skills.size));
     if (retValue != nullptr) {
         for (int32_t i = 0; i < skills.size; i++) {
@@ -206,7 +215,7 @@ RetCArrSkill ConvertSkills(std::vector<AppExecFwk::Skill> cSkills)
     return skills;
 }
 
-RetReqPermissionDetail ConvertRequestPermission(AppExecFwk::RequestPermission requestPermission)
+RetReqPermissionDetail ConvertRequestPermission(const AppExecFwk::RequestPermission& requestPermission)
 {
     RetReqPermissionDetail reqPer;
     reqPer.name = MallocCString(requestPermission.name);
@@ -217,7 +226,7 @@ RetReqPermissionDetail ConvertRequestPermission(AppExecFwk::RequestPermission re
     return reqPer;
 }
 
-RetApplicationInfo ConvertApplicationInfo(AppExecFwk::ApplicationInfo cAppInfo)
+RetApplicationInfo ConvertApplicationInfo(const AppExecFwk::ApplicationInfo& cAppInfo)
 {
     RetApplicationInfo appInfo;
     appInfo.name = MallocCString(cAppInfo.name);
@@ -264,7 +273,7 @@ RetApplicationInfo ConvertApplicationInfo(AppExecFwk::ApplicationInfo cAppInfo)
     return appInfo;
 }
 
-RetExtensionAbilityInfo ConvertExtensionAbilityInfo(AppExecFwk::ExtensionAbilityInfo extensionInfos)
+RetExtensionAbilityInfo ConvertExtensionAbilityInfo(const AppExecFwk::ExtensionAbilityInfo& extensionInfos)
 {
     RetExtensionAbilityInfo exInfo;
     exInfo.bundleName = MallocCString(extensionInfos.bundleName);
@@ -288,7 +297,7 @@ RetExtensionAbilityInfo ConvertExtensionAbilityInfo(AppExecFwk::ExtensionAbility
 }
 
 CArrRetExtensionAbilityInfo ConvertArrExtensionAbilityInfo(
-    std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos)
+    const std::vector<AppExecFwk::ExtensionAbilityInfo>& extensionInfos)
 {
     CArrRetExtensionAbilityInfo exAbInfo;
     exAbInfo.size = static_cast<int64_t>(extensionInfos.size());
@@ -309,7 +318,7 @@ CArrRetExtensionAbilityInfo ConvertArrExtensionAbilityInfo(
     return exAbInfo;
 }
 
-RetSignatureInfo ConvertSignatureInfo(AppExecFwk::SignatureInfo cSignatureInfo)
+RetSignatureInfo ConvertSignatureInfo(const AppExecFwk::SignatureInfo& cSignatureInfo)
 {
     RetSignatureInfo signatureInfo;
     signatureInfo.appId = MallocCString(cSignatureInfo.appId);
@@ -318,7 +327,7 @@ RetSignatureInfo ConvertSignatureInfo(AppExecFwk::SignatureInfo cSignatureInfo)
     return signatureInfo;
 }
 
-RetAbilityInfo ConvertAbilityInfo(AppExecFwk::AbilityInfo cAbilityInfos)
+RetAbilityInfo ConvertAbilityInfo(const AppExecFwk::AbilityInfo& cAbilityInfos)
 {
     RetAbilityInfo abInfo;
     abInfo.bundleName = MallocCString(cAbilityInfos.bundleName);
@@ -367,7 +376,7 @@ RetAbilityInfo ConvertAbilityInfo(AppExecFwk::AbilityInfo cAbilityInfos)
     return abInfo;
 }
 
-CArrRetAbilityInfo ConvertArrAbilityInfo(std::vector<AppExecFwk::AbilityInfo> abilityInfos)
+CArrRetAbilityInfo ConvertArrAbilityInfo(const std::vector<AppExecFwk::AbilityInfo>& abilityInfos)
 {
     CArrRetAbilityInfo abInfo;
     abInfo.size = static_cast<int64_t>(abilityInfos.size());
@@ -387,7 +396,7 @@ CArrRetAbilityInfo ConvertArrAbilityInfo(std::vector<AppExecFwk::AbilityInfo> ab
     return abInfo;
 }
 
-CArrRetPreloadItem ConvertPreloadItem(std::vector<AppExecFwk::PreloadItem> preloads)
+CArrRetPreloadItem ConvertPreloadItem(const std::vector<AppExecFwk::PreloadItem>& preloads)
 {
     CArrRetPreloadItem pLoad;
     pLoad.size = static_cast<int64_t>(preloads.size());
@@ -407,7 +416,7 @@ CArrRetPreloadItem ConvertPreloadItem(std::vector<AppExecFwk::PreloadItem> prelo
     return pLoad;
 }
 
-CArrRetDependency ConvertDependency(std::vector<AppExecFwk::Dependency> dependencies)
+CArrRetDependency ConvertDependency(const std::vector<AppExecFwk::Dependency>& dependencies)
 {
     CArrRetDependency dep;
     dep.size = static_cast<int64_t>(dependencies.size());
@@ -429,12 +438,15 @@ CArrRetDependency ConvertDependency(std::vector<AppExecFwk::Dependency> dependen
     return dep;
 }
 
-CArrDataItem ConvertArrDataItem(std::map<std::string, std::string> data)
+CArrDataItem ConvertArrDataItem(const std::map<std::string, std::string>& data)
 {
     CArrDataItem dataItems;
     dataItems.size = static_cast<int64_t>(data.size());
     dataItems.head = nullptr;
 
+    if (dataItems.size == 0) {
+        return dataItems;
+    }
     CDataItem *retValue = reinterpret_cast<CDataItem *>
                                         (malloc(sizeof(CDataItem) * dataItems.size));
     if (retValue != nullptr) {
@@ -452,7 +464,7 @@ CArrDataItem ConvertArrDataItem(std::map<std::string, std::string> data)
     return dataItems;
 }
 
-CRouterItem ConvertRouterItem(AppExecFwk::RouterItem router)
+CRouterItem ConvertRouterItem(const AppExecFwk::RouterItem& router)
 {
     CRouterItem routerItem;
     routerItem.name = MallocCString(router.name);
@@ -463,11 +475,15 @@ CRouterItem ConvertRouterItem(AppExecFwk::RouterItem router)
     return routerItem;
 }
 
-CArrRouterItem ConvertRouterMap(std::vector<AppExecFwk::RouterItem> routerArray)
+CArrRouterItem ConvertRouterMap(const std::vector<AppExecFwk::RouterItem>& routerArray)
 {
     CArrRouterItem routerMap;
     routerMap.size = static_cast<int64_t>(routerArray.size());
     routerMap.head = nullptr;
+
+    if (routerMap.size == 0) {
+        return routerMap;
+    }
 
     CRouterItem *retValue = reinterpret_cast<CRouterItem *>
                                         (malloc(sizeof(CRouterItem) * routerMap.size));
@@ -483,7 +499,7 @@ CArrRouterItem ConvertRouterMap(std::vector<AppExecFwk::RouterItem> routerArray)
     return routerMap;
 }
 
-RetHapModuleInfo ConvertHapModuleInfo(AppExecFwk::HapModuleInfo hapModuleInfo)
+RetHapModuleInfo ConvertHapModuleInfo(const AppExecFwk::HapModuleInfo& hapModuleInfo)
 {
     RetHapModuleInfo hapInfo;
     hapInfo.name = MallocCString(hapModuleInfo.name);
@@ -538,14 +554,17 @@ RetHapModuleInfo ConvertHapModuleInfo(AppExecFwk::HapModuleInfo hapModuleInfo)
     return hapInfo;
 }
 
-CArrHapInfo ConvertArrHapInfo(std::vector<AppExecFwk::HapModuleInfo> hapModuleInfos)
+CArrHapInfo ConvertArrHapInfo(const std::vector<AppExecFwk::HapModuleInfo>& hapModuleInfos)
 {
     CArrHapInfo hapInfos;
     hapInfos.size = static_cast<int64_t>(hapModuleInfos.size());
+    hapInfos.head = nullptr;
+    if (hapInfos.size == 0) {
+        return hapInfos;
+    }
     RetHapModuleInfo *retValue = reinterpret_cast<RetHapModuleInfo *>(malloc(sizeof(RetHapModuleInfo) * hapInfos.size));
     if (retValue == nullptr) {
         APP_LOGE("ConvertArrHapInfo malloc failed");
-        hapInfos.head = nullptr;
         return hapInfos;
     }
     for (int32_t i = 0; i < hapInfos.size; i++) {
@@ -555,7 +574,7 @@ CArrHapInfo ConvertArrHapInfo(std::vector<AppExecFwk::HapModuleInfo> hapModuleIn
     return hapInfos;
 }
 
-CArrReqPerDetail ConvertArrReqPerDetail(std::vector<AppExecFwk::RequestPermission> reqPermissionDetails)
+CArrReqPerDetail ConvertArrReqPerDetail(const std::vector<AppExecFwk::RequestPermission>& reqPermissionDetails)
 {
     CArrReqPerDetail perDetail;
     perDetail.size = static_cast<int64_t>(reqPermissionDetails.size());
@@ -609,10 +628,17 @@ RetApplicationInfo InitApplicationInfo()
     appInfo.bundleType = 0;
     appInfo.debug = false;
     appInfo.dataUnclearable = false;
+    appInfo.cloudFileSyncEnabled = false;
+    appInfo.nativeLibraryPath = MallocCString("");
+    appInfo.multiAppMode.multiAppModeType = static_cast<uint8_t>(0);
+    appInfo.multiAppMode.count = 0;
+    appInfo.appIndex = 0;
+    appInfo.installSource = MallocCString("");
+    appInfo.releaseType = MallocCString("");
     return appInfo;
 }
 
-RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flags)
+RetBundleInfo ConvertBundleInfo(const AppExecFwk::BundleInfo& cBundleInfo, int32_t flags)
 {
     RetBundleInfo bundleInfo;
     bundleInfo.name = MallocCString(cBundleInfo.name);
@@ -633,6 +659,7 @@ RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flag
     bundleInfo.perDetail = ConvertArrReqPerDetail(cBundleInfo.reqPermissionDetails);
 
     bundleInfo.state.size = static_cast<int64_t>(cBundleInfo.reqPermissionStates.size());
+    bundleInfo.state.head = nullptr;
     if (bundleInfo.state.size > 0) {
         int32_t *retValue = static_cast<int32_t *>(malloc(sizeof(int32_t) * bundleInfo.state.size));
         if (retValue != nullptr) {
@@ -642,7 +669,6 @@ RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flag
             bundleInfo.state.head = retValue;
         } else {
             APP_LOGE("ConvertBundleInfo malloc failed");
-            bundleInfo.state.head = nullptr;
             return bundleInfo;
         }
     }

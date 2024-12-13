@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#define private public
 #include "ipc/file_stat.h"
 #include "installd/installd_host_impl.h"
 #include "installd/installd_operator.h"
@@ -616,6 +617,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3300, Function | Sma
     EXPECT_NE(ret, ERR_OK);
     ret = hostImpl->RemoveBundleDataDir("", -1);
     EXPECT_NE(ret, ERR_OK);
+    ret = hostImpl->RemoveBundleDataDir(TEST_STRING, 0, true);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -1199,5 +1202,86 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6700, Function | Sma
     Security::CodeSign::EntryMap entryMap;
     ErrCode res = hostImpl->PrepareEntryMap(codeSignatureParam, entryMap);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_6800
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling AddUserDirDeleteDfx of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6800, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode res = hostImpl->AddUserDirDeleteDfx(100);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7000
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling IsExistFile of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7000, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    bool isExist = false;
+    ErrCode res = hostImpl->IsExistFile("", isExist);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling VerifyCodeSignatureForHap of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    CodeSignatureParam codeSignatureParam;
+    ErrCode res = hostImpl->VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7200
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling DeliverySignProfile of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7200, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode res = hostImpl->DeliverySignProfile("", 0, nullptr);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7300
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling RemoveSignProfile of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7300, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode res = hostImpl->RemoveSignProfile("");
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7400
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetExtensionSandboxTypeList of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7400, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> typeList;
+    ErrCode res = hostImpl->GetExtensionSandboxTypeList(typeList);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

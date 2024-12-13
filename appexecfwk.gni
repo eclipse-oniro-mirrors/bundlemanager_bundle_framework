@@ -50,6 +50,8 @@ declare_args() {
   distributed_bundle_framework = true
   bundle_framework_overlay_install = true
   bundle_framework_bundle_resource = true
+  bundle_framework_form_dimension_2_3 = false
+  bundle_framework_form_dimension_3_3 = false
 
   ability_runtime_enable = true
   account_enable = true
@@ -71,6 +73,7 @@ declare_args() {
   app_domain_verify_enabled = true
   device_usage_statistics_enabled = true
   dfx_sigdump_handler_enabled = true
+  webview_enable = true
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.resourceschedule_device_usage_statistics)) {
@@ -187,6 +190,10 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.hiviewdfx_faultloggerd)) {
     dfx_sigdump_handler_enabled = false
+  }
+
+  if (defined(global_parts_info) && !defined(global_parts_info.web_webview)) {
+    webview_enable = false
   }
 }
 

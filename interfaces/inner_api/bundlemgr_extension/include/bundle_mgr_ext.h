@@ -39,6 +39,10 @@ public:
     {
         return ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED;
     }
+    virtual bool IsRdDevice()
+    {
+        return false;
+    }
     virtual ErrCode QueryAbilityInfos(const Want &want, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos)
     {
@@ -113,7 +117,7 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
-    virtual bool IsAppInBlocklist(const std::string &bundleName)
+    virtual bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId)
     {
         return false;
     }
@@ -143,6 +147,19 @@ public:
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier)
+    {
+        return;
+    }
+    
+    virtual bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum)
+    {
+        return false;
+    }
+    virtual std::string GetCompatibleDeviceType(const std::string &bundleName)
+    {
+        return "";
     }
 };
 

@@ -108,13 +108,14 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
 }
 
 ErrCode InstalldHostImpl::GetBundleStats(
-    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t uid,
-    const int32_t appIndex)
+    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats,
+    const int32_t uid, const int32_t appIndex, const uint32_t statFlag,
+    const std::vector<std::string> &moduleNameList)
 {
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
     return ERR_OK;
@@ -306,5 +307,9 @@ ErrCode InstalldHostImpl::AddUserDirDeleteDfx(int32_t userId)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -363,15 +363,6 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
     if (isDebug_ && (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG)) {
         return ExtractQuickFixSoFile(appQuickFix, patchPath, bundleInfo);
     }
-    std::string oldSoPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
-        appQuickFix.bundleName + ServiceConstants::TMP_SUFFIX + ServiceConstants::LIBS;
-    ScopeGuard guardRemoveOldSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
-
-    ret = ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "error: ExtractSoAndApplyDiff failed");
-        return ret;
-    }
     return ERR_OK;
 }
 
@@ -649,7 +640,7 @@ ErrCode QuickFixDeployer::SaveToInnerBundleInfo(const InnerAppQuickFix &newInner
     const std::string &bundleName = newInnerAppQuickFix.GetAppQuickFix().bundleName;
     InnerBundleInfo innerBundleInfo;
     // obtain innerBundleInfo and enableGuard used to enable bundle which is under disable status
-    if (!dataMgr->GetInnerBundleInfo(bundleName, innerBundleInfo)) {
+    if (!dataMgr->GetInnerBundleInfoWithDisable(bundleName, innerBundleInfo)) {
         LOG_E(BMS_TAG_DEFAULT, "cannot obtain the innerbundleInfo from data mgr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
     }

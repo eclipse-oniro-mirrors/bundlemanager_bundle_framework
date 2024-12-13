@@ -86,6 +86,7 @@ const size_t NUMBER_ONE = 1;
 const uint32_t BUNDLE_BACKUP_VERSION = 1000000;
 const uint32_t BUNDLE_BACKUP_LABEL_ID = 16777218;
 const uint32_t BUNDLE_BACKUP_ICON_ID = 16777221;
+const std::string CALLER_NAME_UT = "ut";
 }  // namespace
 
 class BmsBundleManagerTest : public testing::Test {
@@ -138,7 +139,9 @@ bool BmsBundleManagerTest::InstallSystemBundle(const std::string &filePath) cons
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.isPreInstallApp = true;
-    installParam.noSkipsKill = false;
+    setuid(Constants::FOUNDATION_UID);
+    installParam.SetKillProcess(false);
+    setuid(Constants::ROOT_UID);
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
@@ -162,6 +165,7 @@ ErrCode BmsBundleManagerTest::InstallThirdPartyBundle(const std::string &filePat
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(filePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -183,6 +187,7 @@ ErrCode BmsBundleManagerTest::UpdateThirdPartyBundle(const std::string &filePath
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(filePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -1693,6 +1698,34 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0017, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: GetInnerBundleInfoWithFlags2_0001
+ * @tc.name: test GetInnerBundleInfoWithFlags
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetInnerBundleInfoWithFlags2_0001, Function | SmallTest | Level1)
+{
+    bool testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlags(
+        TEST_BUNDLE_NAME, 0, USERID);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetInnerBundleInfoWithFlags2_0002
+ * @tc.name: test GetInnerBundleInfoWithFlagsForAms
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, GetInnerBundleInfoWithFlags2_0002, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->bundleInfos_.clear();
+    bool testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlags(
+        TEST_BUNDLE_NAME, 0, USERID);
+    EXPECT_EQ(testRet, false);
+    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
+}
+
+/**
  * @tc.number: bundleInfosFalse_0018
  * @tc.name: test GetInnerBundleInfoWithFlagsV9
  * @tc.desc: 1.system run normally
@@ -2101,7 +2134,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0010, Function | SmallTest |
     InnerBundleInfo info;
     info.innerBundleUserInfos_.clear();
     bool enabled = true;
-    ErrCode ret = info.SetApplicationEnabled(enabled, USERID);
+    ErrCode ret = info.SetApplicationEnabled(enabled, CALLER_NAME_UT, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -3117,27 +3150,6 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0003, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: TestMgrByUserId_0004
- * @tc.name: test IsAppOrAbilityInstalled
- * @tc.desc: 1.system run normally
-*/
-HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0004, Function | SmallTest | Level1)
-{
-    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
-    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    bool testRet = GetBundleDataMgr()->IsAppOrAbilityInstalled("");
-    EXPECT_EQ(testRet, false);
-    testRet = GetBundleDataMgr()->IsAppOrAbilityInstalled(BUNDLE_BACKUP_NAME);
-    EXPECT_EQ(testRet, true);
-    testRet = GetBundleDataMgr()->IsAppOrAbilityInstalled("bundlename");
-    EXPECT_EQ(testRet, false);
-
-    UnInstallBundle(BUNDLE_BACKUP_NAME);
-}
-
-/**
  * @tc.number: TestMgrByUserId_0007
  * @tc.name: test GetPreInstallBundleInfo
  * @tc.desc: 1.system run normally
@@ -3375,7 +3387,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0021, Function | SmallTest | Leve
 {
     InnerBundleInfo info;
     ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled(
-        TEST_BUNDLE_NAME, 0, false, Constants::INVALID_USERID);
+        TEST_BUNDLE_NAME, 0, false, CALLER_NAME_UT, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     AbilityInfo abilityInfo;
     testRet = GetBundleDataMgr()->SetAbilityEnabled(
@@ -3587,14 +3599,14 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0006, Function | SmallTest 
 
 /**
  * @tc.number: GetMgrFalseByNoBundle_0007
- * @tc.name: test GetInnerBundleInfo
+ * @tc.name: test GetInnerBundleInfoWithDisable
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
 */
 HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0007, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    bool testRet = GetBundleDataMgr()->GetInnerBundleInfo(
+    bool testRet = GetBundleDataMgr()->GetInnerBundleInfoWithDisable(
         TEST_BUNDLE_NAME, info);
     EXPECT_EQ(testRet, false);
 }
@@ -3623,7 +3635,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0009, Function | SmallTest 
 {
     bool isEnable = true;
     ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled(
-        TEST_BUNDLE_NAME, 0, isEnable, USERID);
+        TEST_BUNDLE_NAME, 0, isEnable, CALLER_NAME_UT, USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -5572,7 +5584,7 @@ HWTEST_F(BmsBundleManagerTest, GetJsonProfile_0004, Function | SmallTest | Level
     std::string wrongName = "wrong";
     std::string profile;
 
-    auto ret = dataMgr->SetApplicationEnabled(BUNDLE_BACKUP_NAME, 0, false, USERID);
+    auto ret = dataMgr->SetApplicationEnabled(BUNDLE_BACKUP_NAME, 0, false, CALLER_NAME_UT, USERID);
     EXPECT_EQ(ret, ERR_OK);
     ret = dataMgr->GetJsonProfile(profileType, BUNDLE_BACKUP_NAME, MODULE_NAME, profile, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
@@ -5976,5 +5988,36 @@ HWTEST_F(BmsBundleManagerTest, GetAllDriverBundleName_0200, Function | SmallTest
     std::vector<std::string> ret = dataMgr->GetAllDriverBundleName();
     EXPECT_EQ(ret.size(), 1);
     dataMgr->bundleInfos_.clear();
+}
+
+/**
+* @tc.number: PreInstallDataStorageRdb_0100
+* @tc.name: test LoadAllPreInstallBundleInfos
+* @tc.desc: 1.test LoadAllPreInstallBundleInfos the PreInstallDataStorageRdb
+*/
+HWTEST_F(BmsBundleManagerTest, PreInstallDataStorageRdb_0100, Function | SmallTest | Level1)
+{
+    std::unique_ptr<PreInstallDataStorageRdb> preInstallDataStorage =
+        std::make_unique<PreInstallDataStorageRdb>();
+    ASSERT_NE(preInstallDataStorage, nullptr);
+
+    preInstallDataStorage->rdbDataManager_ = nullptr;
+    std::string bundleName = "com.acts.example";
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos;
+    std::map<std::string, PreInstallBundleInfo> infos;
+    PreInstallBundleInfo preInstallBundleInfo;
+
+    bool ret = preInstallDataStorage->LoadAllPreInstallBundleInfos(preInstallBundleInfos);
+    EXPECT_FALSE(ret);
+
+    preInstallDataStorage->UpdateDataBase(infos);
+    ret = preInstallDataStorage->SavePreInstallStorageBundleInfo(preInstallBundleInfo);
+    EXPECT_FALSE(ret);
+
+    ret = preInstallDataStorage->DeletePreInstallStorageBundleInfo(preInstallBundleInfo);
+    EXPECT_FALSE(ret);
+
+    ret = preInstallDataStorage->LoadPreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

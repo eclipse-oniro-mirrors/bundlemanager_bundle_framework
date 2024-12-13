@@ -62,6 +62,7 @@ ohos_unittest("BmsInstallDaemonTest") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
 
   external_deps += bundle_install_external_deps
@@ -220,6 +221,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
 
   external_deps += bundle_install_external_deps
@@ -293,11 +295,18 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "selinux_adapter:librestorecon",
   ]
+
+  external_deps += bundle_install_external_deps
+
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
   if (build_selinux) {
     external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
+  }
+  if (current_cpu == "arm64") {
+    defines += [ "USE_ARM64" ]
   }
   include_dirs = []
   if (code_signature_enable) {

@@ -32,8 +32,17 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
+    uint32_t, bool &, const int32_t, const bool &);
+
 class InstalldOperator {
 public:
+    /**
+     * @brief Check link file and unlink.
+     * @param path Indicates the file path to be checked.
+     * @return Returns true if the file is link and unlink succeed; returns false otherwise.
+     */
+    static bool CheckAndDeleteLinkFile(const std::string &path);
     /**
      * @brief Check whether a file exist.
      * @param path Indicates the file path to be checked.
@@ -71,6 +80,8 @@ public:
      * @return Returns true if the directory deleted successfully; returns false otherwise.
      */
     static bool DeleteDir(const std::string &path);
+
+    static bool DeleteDirFast(const std::string &path);
     /**
      * @brief Extract the files of a compressed package to a specific directory.
      * @param srcModulePath Indicates the package file path.
@@ -302,17 +313,8 @@ public:
      * @return
      */
     static void RmvDeleteDfx(const std::string &path);
+
 private:
-    static bool OpenHandle(void **handle);
-
-    static void CloseHandle(void **handle);
-
-#if defined(CODE_ENCRYPTION_ENABLE)
-    static bool OpenEncryptionHandle(void **handle);
-
-    static void CloseEncryptionHandle(void **handle);
-#endif
-
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
 
@@ -322,6 +324,14 @@ private:
     static bool ExtractResourceFiles(const ExtractParam &extractParam, const BundleExtractor &extractor);
     static bool CheckPathIsSame(const std::string &path, int32_t mode, const int32_t uid, const int32_t gid,
         bool &isPathExist);
+#if defined(CODE_ENCRYPTION_ENABLE)
+    static std::mutex encryptionMutex_;
+    static void *encryptionHandle_;
+    static EnforceMetadataProcessForApp enforceMetadataProcessForApp_;
+    static bool OpenEncryptionHandle();
+#endif
+    static void FsyncResFile(const std::string &path, const ExtractFileType &extractFileType);
+    static std::string GetSameLevelTmpPath(const std::string &path);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -195,12 +195,13 @@ public:
      * @return Returns ERR_OK if get stats successfully; returns error code otherwise.
      */
     virtual ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
-        std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex = 0)
+        std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex = 0,
+        const uint32_t statFlag = 0, const std::vector<std::string> &moduleNameList = {})
     {
         return ERR_OK;
     }
 
-    virtual ErrCode GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    virtual ErrCode GetAllBundleStats(const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
     {
         return ERR_OK;
@@ -418,6 +419,11 @@ public:
     }
 
     virtual ErrCode AddUserDirDeleteDfx(int32_t userId)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
     {
         return ERR_OK;
     }

@@ -47,6 +47,7 @@ struct GetAllLauncherAbilityCallbackInfo : public BaseCallbackInfo {
 struct GetShortcutInfoCallbackInfo : public BaseCallbackInfo {
     explicit GetShortcutInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
     std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
 };
 

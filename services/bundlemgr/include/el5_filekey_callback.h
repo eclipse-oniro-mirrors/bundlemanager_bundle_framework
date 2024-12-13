@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_EL5_FILEKEY_CALLBACK_H
 
 #include "el5_filekey_callback_stub.h"
+#include "bundle_mgr_service.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -27,6 +28,8 @@ public:
     ~El5FilekeyCallback() = default;
 
     void OnRegenerateAppKey(std::vector<Security::AccessToken::AppKeyInfo> &infos) override;
+
+    void CheckEl5Dir(Security::AccessToken::AppKeyInfo &info, const InnerBundleInfo &bundleInfo);
 };
 } // AppExecFwk
 } // OHOS

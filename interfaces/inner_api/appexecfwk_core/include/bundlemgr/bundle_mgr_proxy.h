@@ -718,7 +718,7 @@ public:
      * @return Returns err code of result.
      */
     virtual ErrCode GetShortcutInfoV9(const std::string &bundleName,
-        std::vector<ShortcutInfo> &shortcutInfos) override;
+        std::vector<ShortcutInfo> &shortcutInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.
@@ -882,7 +882,7 @@ public:
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
-        std::vector<int64_t> &bundleStats, int32_t appIndex = 0) override;
+        std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
 
@@ -1005,6 +1005,9 @@ public:
 
     virtual ErrCode CreateBundleDataDir(int32_t userId) override;
 
+    virtual ErrCode UpdateAppEncryptedStatus(const std::string &bundleName,
+        bool isExisted, int32_t appIndex = 0) override;
+
     /**
      * @brief Check whether the link can be opened.
      * @param link Indicates the link to be opened.
@@ -1042,7 +1045,8 @@ public:
      * @param state Indicates whether the specified application can be uninstalled.
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
-    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state) override;
+    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state,
+        bool isNeedSendNotify = true) override;
 
     /**
      * @brief Query the AbilityInfo by continueType.
@@ -1072,10 +1076,12 @@ public:
     virtual ErrCode GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
+    virtual ErrCode GetLaunchWant(Want &want) override;
+
     virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName, int32_t flags,
         int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
-    
+
     virtual ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) override;
 
     virtual ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId) override;
@@ -1105,6 +1111,18 @@ public:
      */
     ErrCode GetContinueBundleNames(const std::string &continueBundleName, std::vector<std::string> &bundleNames,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, bool &isInstalled) override;
+
+    virtual ErrCode GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType) override;
+
+    virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName) override;
+
+    virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
+        std::string &dataDir) override;
+
+    virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

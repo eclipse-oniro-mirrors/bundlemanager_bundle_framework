@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -186,6 +186,8 @@ protected:
 
     ErrCode RollbackHmpCommonInfo(const std::string &bundleName);
 
+    bool HasDriverExtensionAbility(const std::string &bundleName);
+
 private:
     /**
      * @brief The real procedure for system and normal bundle install.
@@ -250,7 +252,7 @@ private:
      * @return Returns ERR_OK if the bundle updating successfully; returns error code otherwise.
      */
     ErrCode ProcessBundleUpdateStatus(InnerBundleInfo &oldInfo,
-        InnerBundleInfo &newInfo, bool isReplace, bool noSkipsKill = true);
+        InnerBundleInfo &newInfo, bool isReplace, bool killProcess = true);
     /**
      * @brief Remove a whole bundle.
      * @param info Indicates the InnerBundleInfo object of a bundle.
@@ -277,7 +279,7 @@ private:
      * @param isKeepData Indicates that whether to save data.
      * @return Returns ERR_OK if the bundle directories removed successfully; returns error code otherwise.
      */
-    ErrCode RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData) const;
+    ErrCode RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData);
     /**
      * @brief Remove the code and data directories of a module in a bundle.
      * @param info Indicates the InnerBundleInfo object of a bundle.
@@ -324,7 +326,7 @@ private:
      * @return Returns ERR_OK if the module updating successfully; returns error code otherwise.
      */
     ErrCode ProcessModuleUpdate(InnerBundleInfo &newInfo,
-        InnerBundleInfo &oldInfo, bool isReplace, bool noSkipsKill = true);
+        InnerBundleInfo &oldInfo, bool isReplace, bool killProcess = true);
     /**
      * @brief The real procedure for bundle install by bundleName.
      * @param bundleName Indicates the bundleName the application to install.
@@ -384,6 +386,8 @@ private:
         const Constants::AppType appType,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, InnerBundleInfo> &infos);
+
+    ErrCode CheckShellInstall(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
     ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, InnerBundleInfo> &infos, bool isSysCapValid);
@@ -466,7 +470,7 @@ private:
      * @param isAppExist Indicates if the innerBundleInfo is existed or not.
      * @return Returns ERR_OK if the innerBundleInfo is obtained successfully; returns error code otherwise.
      */
-    bool GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist);
+    bool GetInnerBundleInfoWithDisable(InnerBundleInfo &info, bool &isAppExist);
     /**
      * @brief To check whether the version code is compatible for application or not.
      * @param oldInfo Indicates the original innerBundleInfo of the bundle.
@@ -491,7 +495,7 @@ private:
      * @param packageVec Indicates the array of package names of the high version entry or feature hap.
      * @return Returns ERR_OK if uninstall successfully; returns error code otherwise.
      */
-    ErrCode UninstallLowerVersionFeature(const std::vector<std::string> &packageVec, bool noSkipsKill = false);
+    ErrCode UninstallLowerVersionFeature(const std::vector<std::string> &packageVec, bool killProcess = false);
     /**
      * @brief To get userId.
      * @param installParam Indicates the installParam of the bundle.
@@ -522,11 +526,14 @@ private:
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
-    ErrCode RemoveBundleDataDir(const InnerBundleInfo &info, bool forException = false) const;
+    ErrCode RemoveBundleDataDir(const InnerBundleInfo &info, bool forException = false);
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     ErrCode UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo);
     ErrCode SetDirApl(const InnerBundleInfo &info);
+    ErrCode SetDirApl(
+        int32_t userId, const std::string &bundleName, const std::string &CloneBundleName,
+        const std::string &appPrivilegeLevel, bool isPreInstallApp, const std::string &appProvisionType);
     /**
      * @brief Check to set isRemovable true when install.
      * @param newInfos Indicates all innerBundleInfo for all haps need to be installed.
@@ -554,7 +561,7 @@ private:
      */
     void SaveHapPathToRecords(
         bool isPreInstallApp, const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    void OnSingletonChange(bool noSkipsKill);
+    void OnSingletonChange(bool killProcess);
     bool AllowSingletonChange(const std::string &bundleName);
     void MarkPreInstallState(const std::string &bundleName, bool isUninstalled);
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
@@ -591,6 +598,8 @@ private:
     ErrCode CreateArkProfile(
         const std::string &bundleName, int32_t userId, int32_t uid, int32_t gid) const;
     ErrCode DeleteArkProfile(const std::string &bundleName, int32_t userId) const;
+    bool RemoveDataPreloadHapFiles(const std::string &bundleName) const;
+    bool IsDataPreloadHap(const std::string &path) const;
     ErrCode ExtractArkProfileFile(const std::string &modulePath, const std::string &bundleName,
         int32_t userId) const;
     ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo, bool checkRepeat = false) const;
@@ -613,6 +622,8 @@ private:
     ErrCode CleanAsanDirectory(InnerBundleInfo &info) const;
     void AddAppProvisionInfo(const std::string &bundleName,
         const Security::Verify::ProvisionInfo &provisionInfo, const InstallParam &installParam) const;
+    void UpdateRouterInfo();
+    void DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName = "");
     ErrCode UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName);
     ErrCode UninstallHspVersion(std::string &uninstallDir, int32_t versionCode, InnerBundleInfo &info);
     ErrCode CheckProxyDatas(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
@@ -627,7 +638,7 @@ private:
         uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
     void ProcessAOT(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     void RemoveOldHapIfOTA(const InstallParam &installParam,
-        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo) const;
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
     ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
     ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
     ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);
@@ -670,6 +681,8 @@ private:
         const InnerBundleInfo &innerBundleInfo);
     bool UpdateEncryptedStatus();
     bool DeleteEncryptedStatus(const std::string &bundleName, int32_t uid);
+    void ProcessEncryptedKeyExisted(int32_t res, uint32_t type,
+        const std::vector<CodeProtectBundleInfo> &infos);
     ErrCode VerifyCodeSignatureForNativeFiles(InnerBundleInfo &info, const std::string &cpuAbi,
         const std::string &targetSoPath, const std::string &signatureFileDir) const;
     ErrCode VerifyCodeSignatureForHap(const std::unordered_map<std::string, InnerBundleInfo> &infos,
@@ -686,14 +699,14 @@ private:
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    ErrCode CleanShaderCache(const std::string &bundleName) const;
     void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     bool VerifyActivationLock() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
     void CreateScreenLockProtectionDir();
+    void CreateEl5AndSetPolicy(const InnerBundleInfo &info);
     void DeleteScreenLockProtectionDir(const std::string bundleName) const;
-    bool SetEncryptionDirPolicy(InnerBundleInfo &info);
     void DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, bool isKeepData) const;
-    void CreateScreenLockProtectionExistDirs(const InnerBundleInfo &info, const std::string &dir);
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
 #endif
@@ -701,6 +714,7 @@ private:
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
     void VerifyDomain();
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
+    bool IsRdDevice() const;
     void SetAtomicServiceModuleUpgrade(const InnerBundleInfo &oldInfo);
     void UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
@@ -719,9 +733,33 @@ private:
     std::string GetInstallSource(const InstallParam &installParam) const;
     void SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InstallParam &installParam) const;
-    bool IsAppInBlocklist(const std::string &bundleName) const;
+    void SetApplicationFlagsForPreinstallSource(std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const InstallParam &installParam) const;
+    bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId) const;
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName) const;
     void CheckSystemFreeSizeAndClean() const;
+    void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier) const;
+    void GetUninstallBundleInfo(bool isKeepData, int32_t userId,
+        const InnerBundleInfo &oldInfo, UninstallBundleInfo &uninstallBundleInfo);
+    bool CheckInstallOnKeepData(const std::string &bundleName, bool isOTA,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,
+        const UninstallBundleInfo &uninstallBundleInfo);
+    void DeleteUninstallBundleInfo(const std::string &bundleName);
+    void MarkInstallFinish();
+    bool IsArkWeb(const std::string &bundleName) const;
+#ifdef WEBVIEW_ENABLE
+    ErrCode VerifyArkWebInstall(const std::string &bundleName);
+#endif
+
+    bool SetDisposedRuleWhenBundleUpdateStart(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const InnerBundleInfo &oldBundleInfo, bool isPreInstallApp);
+
+    bool DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo);
+    void ProcessAddResourceInfo(const InstallParam &installParam, const std::string &bundleName, int32_t userId);
+
+    bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
+        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -776,6 +814,8 @@ private:
     bool isEnterpriseBundle_ = false;
     bool isInternaltestingBundle_ = false;
     std::string appIdentifier_ = "";
+    // When it is true, it means that the same bundleName and same userId was uninstalled with keepData before
+    bool existBeforeKeepDataApp_ = false;
     Security::Verify::HapVerifyResult verifyRes_;
     std::map<std::string, std::string> targetSoPathMap_;
     bool copyHapToInstallPath_ = false;
@@ -786,6 +826,7 @@ private:
     std::vector<std::string> createExtensionDirs_;
     // indicates sandboxd dirs need to remove by extension
     std::vector<std::string> removeExtensionDirs_;
+    bool needSetDisposeRule_ = false;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

@@ -21,6 +21,7 @@
 #include <string>
 
 #include "application_info.h"
+#include "bms_extension_client.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_proxy.h"
@@ -30,7 +31,6 @@
 #include "bundle_resource_drawable.h"
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-#include "bms_extension_client.h"
 #include "bundle_resource_callback.h"
 #include "bundle_resource_change_type.h"
 #include "bundle_resource_configuration.h"
@@ -84,7 +84,7 @@ const std::string BUNDLE_NAME_NO_ICON = "com.third.hiworld.example1";
 // test layered image
 const std::string BUNDLE_NAME_LAYERED_IMAGE = "com.example.thumbnailtest";
 const std::string LAYERED_IMAGE_HAP_PATH = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
-const std::string CONTAINER_BUNDLE_NAME = "com.zhuoyi.appstore.lite";
+const std::string TEST_BUNDLE_NAME = "testBundleName";
 }  // namespace
 
 class BmsBundleResourceTest : public testing::Test {
@@ -156,6 +156,7 @@ ErrCode BmsBundleResourceTest::InstallBundle(const std::string &bundlePath) cons
     InstallParam installParam;
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -179,6 +180,7 @@ ErrCode BmsBundleResourceTest::UpdateBundle(const std::string &bundlePath) const
     InstallParam installParam;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -1978,16 +1980,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0092, Function | SmallTest
         EXPECT_FALSE(info4.icon.empty());
 
         BundleResourceInfo info5;
-        ret = manager->GetBundleResourceInfo(CONTAINER_BUNDLE_NAME,
+        ret = manager->GetBundleResourceInfo(TEST_BUNDLE_NAME,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), info5);
-#ifdef USE_EXTENSION_DATA
-        EXPECT_TRUE(ret);
-        EXPECT_EQ(info5.bundleName, BUNDLE_NAME);
-        EXPECT_TRUE(info5.label.empty());
-        EXPECT_FALSE(info5.icon.empty());
-#else
         EXPECT_FALSE(ret);
-#endif
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -3405,6 +3400,23 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0147, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleResourceTest_0175
+ * Function: DeleteResourceInfo
+ * @tc.name: test DeleteResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0175, Function | SmallTest | Level0)
+{
+    bool ret = BundleResourceHelper::DeleteAllResourceInfo();
+    EXPECT_TRUE(ret);
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        ret = manager->AddAllResourceInfo(USERID, 0, 0);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
  * @tc.number: BmsBundleResourceTest_0148
  * Function: BundleResourceProcess
  * @tc.name: test BundleResourceProcess
@@ -3616,9 +3628,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0159, Function | SmallTest
         ResourceInfo info;
         info.iconNeedParse_ = true;
         resourceInfosMap[BUNDLE_NAME].emplace_back(info);
-        bool needDelete = true;
-        manager->InnerProcessResourceInfoBySystemLanguageChanged(resourceInfosMap, needDelete);
-        EXPECT_FALSE(needDelete);
+        manager->InnerProcessResourceInfoBySystemLanguageChanged(resourceInfosMap);
         EXPECT_FALSE(resourceInfosMap[BUNDLE_NAME][0].iconNeedParse_);
     }
 }
@@ -3640,9 +3650,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0160, Function | SmallTest
         info.bundleName_ = BUNDLE_NAME;
         info.iconNeedParse_ = true;
         resourceInfosMap[BUNDLE_NAME].emplace_back(info);
-        bool needDelete = true;
-        manager->InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, USERID, needDelete);
-        EXPECT_FALSE(needDelete);
+        manager->InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, USERID);
         EXPECT_TRUE(resourceInfosMap.empty()); // theme not exist
     }
 }
@@ -3825,10 +3833,10 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0168, Function | SmallTest
 
 /**
  * @tc.number: BmsBundleResourceTest_0169
- * Function: GetIconResourceByDrawableNoTheme
+ * Function: GetIconResourceByHap
  * @tc.name: test
  * @tc.desc: 1. system running normally
- *           2. test GetIconResourceByDrawableNoTheme
+ *           2. test GetIconResourceByHap
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0169, Function | SmallTest | Level0)
 {
@@ -3837,7 +3845,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0169, Function | SmallTest
     int32_t density = 1;
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
     ResourceInfo resourceInfo;
-    bool ret = drawable.GetIconResourceByDrawableNoTheme(iconId, density, resourceManager, resourceInfo);
+    bool ret = drawable.GetIconResourceByHap(iconId, density, resourceManager, resourceInfo);
     EXPECT_FALSE(ret);
 }
 
@@ -3914,19 +3922,20 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0172, Function | SmallTest
 
 /**
  * @tc.number: BmsBundleResourceTest_0173
- * Function: SetThemeIdForThemeChanged
+ * Function: SetThemeParamForThemeChanged
  * @tc.name: test
  * @tc.desc: 1. system running normally
- *           2. test SetThemeIdForThemeChanged
+ *           2. test SetThemeParamForThemeChanged
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0173, Function | SmallTest | Level0)
 {
     int32_t themeId = 0;
+    int32_t themeIcon = 0;
     BundleResourceCallback bundleResourceCallback;
-    bool ret = bundleResourceCallback.SetThemeIdForThemeChanged(themeId);
+    bool ret = bundleResourceCallback.SetThemeParamForThemeChanged(themeId, themeIcon);
     EXPECT_FALSE(ret);
     themeId = 1000;
-    ret = bundleResourceCallback.SetThemeIdForThemeChanged(themeId);
+    ret = bundleResourceCallback.SetThemeParamForThemeChanged(themeId, themeIcon);
     EXPECT_TRUE(ret);
 }
 
@@ -3945,17 +3954,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0174, Function | SmallTest
     std::string key;
     bool ret = BundleResourceHelper::DeleteResourceInfo(key);
     EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0175
- * Function: DeleteResourceInfo
- * @tc.name: test DeleteResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0175, Function | SmallTest | Level0)
-{
-    bool ret = BundleResourceHelper::DeleteAllResourceInfo();
-    EXPECT_TRUE(ret);
 }
 
 /**
@@ -3986,20 +3984,58 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0177, Function | SmallTest
     EXPECT_NE(manager, nullptr);
     if (manager != nullptr) {
         std::vector<LauncherAbilityResourceInfo> infos;
-        bool ret = manager->GetLauncherAbilityResourceInfo(CONTAINER_BUNDLE_NAME,
+        bool ret = manager->GetLauncherAbilityResourceInfo(TEST_BUNDLE_NAME,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
-#ifdef USE_EXTENSION_DATA
-        EXPECT_TRUE(ret);
-#else
         EXPECT_FALSE(ret);
-#endif
-        if (!infos.empty()) {
-            EXPECT_EQ(infos[0].bundleName, CONTAINER_BUNDLE_NAME);
-            EXPECT_FALSE(infos[0].label.empty());
-            EXPECT_FALSE(infos[0].icon.empty());
-        }
     }
 }
+
+/**
+ * @tc.number: BmsBundleResourceTest_0186
+ * Function: GetIconResourceByTheme
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetIconResourceByTheme
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0186, Function | SmallTest | Level0)
+{
+    BundleResourceDrawable drawable;
+    uint32_t iconId = 1;
+    int32_t density = 1;
+    ResourceInfo resourceInfo;
+    bool ret = drawable.GetIconResourceByTheme(iconId, density, nullptr, resourceInfo);
+    EXPECT_FALSE(ret);
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    ret = drawable.GetIconResourceByTheme(iconId, density, resourceManager, resourceInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0187
+ * Function: GetIconResourceByTheme
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetIconResourceByTheme
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0187, Function | SmallTest | Level0)
+{
+    BundleResourceParser parse;
+    std::vector<ResourceInfo> resourceInfos;
+    parse.ProcessSpecialBundleResource(100, resourceInfos);
+    EXPECT_TRUE(resourceInfos.empty());
+    ResourceInfo resourceInfo;
+    resourceInfo.icon_ = "1";
+    resourceInfos.emplace_back(resourceInfo);
+    parse.ProcessSpecialBundleResource(100, resourceInfos);
+    EXPECT_EQ(resourceInfos[0].icon_, resourceInfo.icon_);
+
+    resourceInfos.clear();
+    resourceInfo.bundleName_ = "com.ohos.contacts";
+    resourceInfos.emplace_back(resourceInfo);
+    parse.ProcessSpecialBundleResource(100, resourceInfos);
+    EXPECT_EQ(resourceInfos[0].icon_, resourceInfo.icon_);
+}
+#endif
 
 /**
  * @tc.number: BmsBundleResourceTest_0178
@@ -4013,7 +4049,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0178, Function | SmallTest
 
     bmsExtensionClient->bmsExtensionImpl_ = nullptr;
     BundleResourceInfo bundleResourceInfo;
-    auto ret = bmsExtensionClient->GetBundleResourceInfo(CONTAINER_BUNDLE_NAME,
+    auto ret = bmsExtensionClient->GetBundleResourceInfo(TEST_BUNDLE_NAME,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo);
     EXPECT_NE(ret, ERR_OK);
 }
@@ -4030,7 +4066,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0179, Function | SmallTest
 
     bmsExtensionClient->bmsExtensionImpl_ = nullptr;
     std::vector<LauncherAbilityResourceInfo> infos;
-    auto ret = bmsExtensionClient->GetLauncherAbilityResourceInfo(CONTAINER_BUNDLE_NAME,
+    auto ret = bmsExtensionClient->GetLauncherAbilityResourceInfo(TEST_BUNDLE_NAME,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
     EXPECT_NE(ret, ERR_OK);
 }
@@ -4076,12 +4112,11 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0181, Function | SmallTest
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0182, Function | SmallTest | Level0)
 {
-    auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
-    EXPECT_NE(extensionDataMgr, nullptr);
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
 
-    extensionDataMgr->handler_ = nullptr;
     BundleResourceInfo bundleResourceInfo;
-    auto ret = extensionDataMgr->GetBundleResourceInfo(CONTAINER_BUNDLE_NAME,
+    auto ret = bmsExtensionClient->GetBundleResourceInfo(TEST_BUNDLE_NAME,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo);
     EXPECT_NE(ret, ERR_OK);
 }
@@ -4093,12 +4128,11 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0182, Function | SmallTest
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0183, Function | SmallTest | Level0)
 {
-    auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
-    EXPECT_NE(extensionDataMgr, nullptr);
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
 
-    extensionDataMgr->handler_ = nullptr;
     std::vector<LauncherAbilityResourceInfo> infos;
-    auto ret = extensionDataMgr->GetLauncherAbilityResourceInfo(CONTAINER_BUNDLE_NAME,
+    auto ret = bmsExtensionClient->GetLauncherAbilityResourceInfo(TEST_BUNDLE_NAME,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
     EXPECT_NE(ret, ERR_OK);
 }
@@ -4110,14 +4144,17 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0183, Function | SmallTest
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0184, Function | SmallTest | Level0)
 {
-    auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
-    EXPECT_NE(extensionDataMgr, nullptr);
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
 
-    extensionDataMgr->handler_ = nullptr;
     std::vector<BundleResourceInfo> infos;
-    auto ret = extensionDataMgr->GetAllBundleResourceInfo(
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+    auto ret = bmsExtensionClient->GetAllBundleResourceInfo(static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL),
+        infos);
+#ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, ERR_OK);
+#else
     EXPECT_NE(ret, ERR_OK);
+#endif
 }
 
 /**
@@ -4127,14 +4164,16 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0184, Function | SmallTest
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0185, Function | SmallTest | Level0)
 {
-    auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
-    EXPECT_NE(extensionDataMgr, nullptr);
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
 
-    extensionDataMgr->handler_ = nullptr;
     std::vector<LauncherAbilityResourceInfo> infos;
-    auto ret = extensionDataMgr->GetAllLauncherAbilityResourceInfo(
+    auto ret = bmsExtensionClient->GetAllLauncherAbilityResourceInfo(
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+#ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, ERR_OK);
+#else
     EXPECT_NE(ret, ERR_OK);
-}
 #endif
+}
 } // OHOS

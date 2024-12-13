@@ -27,7 +27,7 @@ namespace AppExecFwk {
 BundleStreamInstallerHost::BundleStreamInstallerHost()
 {
     LOG_D(BMS_TAG_INSTALLER, "create bundle stream installer host instance");
-    init();
+    Init();
 }
 
 int BundleStreamInstallerHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
@@ -108,7 +108,7 @@ ErrCode BundleStreamInstallerHost::HandleInstall(MessageParcel &data, MessagePar
     return ERR_OK;
 }
 
-void BundleStreamInstallerHost::init()
+void BundleStreamInstallerHost::Init()
 {
     funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_STREAM),
         [this](MessageParcel &data, MessageParcel &reply)->ErrCode {

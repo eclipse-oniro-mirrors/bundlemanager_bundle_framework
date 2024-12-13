@@ -33,9 +33,10 @@ namespace OHOS {
 namespace AppExecFwk {
 std::atomic_uint g_installedHapNum = 0;
 constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
+constexpr const char* DATA_PRELOAD_APP = "/data/preload/app/";
 constexpr uint8_t FACTOR = 8;
 constexpr uint8_t INTERVAL = 6;
-constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold/internal";
+constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold";
 constexpr const char* ACCESSTOKEN_PROCESS_NAME = "accesstoken_service";
 
 class UserReceiverImpl : public StatusReceiverHost {
@@ -156,6 +157,12 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         installParam.userId = userId;
         installParam.isPreInstallApp = !info.GetIsNonPreDriverApp();
         installParam.installFlag = InstallFlag::NORMAL;
+        installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
+        if (!info.GetBundlePaths().empty() && (info.GetBundlePaths().front().find(DATA_PRELOAD_APP) == 0) &&
+            userId != Constants::START_USERID) {
+            APP_LOGW("data preload app only install in 100 ,bundleName: %{public}s", info.GetBundleName().c_str());
+            continue;
+        }
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
         userReceiverImpl->SetBundlePromise(bundlePromise);
@@ -227,17 +234,16 @@ void BundleUserMgrHostImpl::GetAllDriverBundleInfos(std::set<PreInstallBundleInf
 
 void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 {
-    if (userId == Constants::START_USERID) {
-        DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
-        // need process main bundle status
-        BmsKeyEventMgr::ProcessMainBundleStatusFinally();
-    }
-
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleCreateUser(userId);
 #endif
     HandleSceneBoard(userId);
     RdbDataManager::ClearCache();
+    if (userId == Constants::START_USERID) {
+        DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+        // need process main bundle status
+        BmsKeyEventMgr::ProcessMainBundleStatusFinally();
+    }
 }
 
 ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
@@ -361,7 +367,7 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
     for (const auto &info : bundleInfos) {
         InstallParam installParam;
         installParam.userId = userId;
-        installParam.forceExecuted = true;
+        installParam.SetForceExecuted(true);
         installParam.concentrateSendEvent = true;
         installParam.isPreInstallApp = info.isPreInstallApp;
         installParam.installFlag = InstallFlag::NORMAL;
@@ -431,8 +437,10 @@ void BundleUserMgrHostImpl::HandleSceneBoard(int32_t userId) const
     }
     bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
     APP_LOGI("userId : %{public}d, sceneBoardEnable : %{public}d", userId, sceneBoardEnable);
-    dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, userId);
-    dataMgr->SetApplicationEnabled(ServiceConstants::LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
+    dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, 0, sceneBoardEnable,
+        ServiceConstants::CALLER_NAME_BMS, userId);
+    dataMgr->SetApplicationEnabled(ServiceConstants::LAUNCHER_BUNDLE_NAME, 0, !sceneBoardEnable,
+        ServiceConstants::CALLER_NAME_BMS, userId);
 #endif
 }
 

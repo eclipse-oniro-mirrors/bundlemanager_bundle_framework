@@ -34,6 +34,7 @@ config("bundle_all_dependent_config") {
 }
 
 ohos_shared_library("appexecfwk_base") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "src/ability_info.cpp",
     "src/app_jump_control_rule.cpp",
@@ -41,6 +42,8 @@ ohos_shared_library("appexecfwk_base") {
     "src/app_running_control_rule.cpp",
     "src/app_running_control_rule_result.cpp",
     "src/application_info.cpp",
+    "src/bms_json_util.cpp",
+    "src/bundle_dir.cpp",
     "src/bundle_info.cpp",
     "src/bundle_pack_info.cpp",
     "src/bundle_resource/bundle_resource_info.cpp",
@@ -110,6 +113,13 @@ ohos_shared_library("appexecfwk_base") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:utd_client" ]
+  }
+
+  if (bundle_framework_form_dimension_2_3) {
+    defines += [ "FORM_DIMENSION_2_3" ]
+  }
+  if (bundle_framework_form_dimension_3_3) {
+    defines += [ "FORM_DIMENSION_3_3" ]
   }
 
   public_external_deps = [

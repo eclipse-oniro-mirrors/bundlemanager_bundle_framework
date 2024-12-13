@@ -140,4 +140,25 @@ HWTEST_F(BmsBundleCommonTest, CancelDelayTask_0400, Function | SmallTest | Level
     serialQueue.CancelDelayTask(taskName);
     EXPECT_EQ(serialQueue.taskMap_.size(), 1);
 }
+
+/**
+ * @tc.number: CheckAppInstallControl
+ * @tc.name: test CheckAppInstallControl by InnerBundleInfo
+ * @tc.desc: 1.CheckAppInstallControl test
+ */
+HWTEST_F(BmsBundleCommonTest, CancelDelayTask_0500, Function | SmallTest | Level1)
+{
+    std::string queueName;
+    SerialQueue serialQueue(queueName);
+    auto registerEventListenerFunc = []() {
+        return;
+    };
+    std::string taskName = "task";
+    uint64_t ms;
+    std::function<void()> func;
+    serialQueue.ScheduleDelayTask(DISCONNECT_DELAY_TASK, 1000, registerEventListenerFunc);
+
+    serialQueue.CancelDelayTask(taskName);
+    EXPECT_EQ(serialQueue.taskMap_.size(), 1);
+}
 } // OHOS

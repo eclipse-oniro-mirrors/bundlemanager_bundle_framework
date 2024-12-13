@@ -21,6 +21,7 @@
 #include "application_info.h"
 #include "app_provision_info.h"
 #include "bundle_constants.h"
+#include "bundle_dir.h"
 #include "bundle_event_callback_interface.h"
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
@@ -971,7 +972,8 @@ public:
         return false;
     }
 
-    virtual ErrCode GetShortcutInfoV9(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
+    virtual ErrCode GetShortcutInfoV9(const std::string &bundleName,
+        std::vector<ShortcutInfo> &shortcutInfos, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -1227,7 +1229,7 @@ public:
     }
 
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats,
-        int32_t appIndex = 0)
+        int32_t appIndex = 0, uint32_t statFlag = 0)
     {
         return false;
     }
@@ -1495,7 +1497,8 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state)
+    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state,
+        bool isNeedSendNotify = true)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -1524,6 +1527,11 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode GetLaunchWant(Want &want)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName, int32_t flags,
         int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID)
@@ -1532,6 +1540,11 @@ public:
     }
 
     virtual ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex = 0)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -1578,6 +1591,38 @@ public:
      */
     virtual ErrCode GetContinueBundleNames(const std::string &continueBundleName, std::vector<std::string> &bundleNames,
         int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, bool &isInstalled)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetCompatibleDeviceTypeNative(std::string &deviceType)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
+        std::string &dataDir)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

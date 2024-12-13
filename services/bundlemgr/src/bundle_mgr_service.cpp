@@ -33,17 +33,18 @@
 #include "app_control_manager_host_impl.h"
 #endif
 #include "perf_profile.h"
+#include "scope_guard.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
-#ifdef HICOLLIE_ENABLE
-#include "xcollie/watchdog.h"
-#endif
+#include "xcollie_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int32_t BUNDLE_BROKER_SERVICE_ABILITY_ID = 0x00010500;
 constexpr int16_t EL5_FILEKEY_SERVICE_ABILITY_ID = 8250;
+constexpr const char* FUN_BMS_START = "BundleMgrService::Start";
+constexpr unsigned int BMS_START_TIME_OUT_SECONDS = 60 * 4;
 } // namespace
 
 const bool REGISTER_RESULT =
@@ -169,10 +170,11 @@ bool BundleMgrService::InitBundleInstaller()
 {
     if (installer_ == nullptr) {
         installer_ = new (std::nothrow) BundleInstallerHost();
-        if (installer_ == nullptr || !installer_->Init()) {
+        if (installer_ == nullptr) {
             APP_LOGE("init installer fail");
             return false;
         }
+        installer_->Init();
     }
 
     return true;
@@ -221,6 +223,8 @@ bool BundleMgrService::InitBundleEventHandler()
     }
     auto task = [this]() {
         BundleMemoryGuard memoryGuard;
+        int32_t timerId = XCollieHelper::SetRecoveryTimer(FUN_BMS_START, BMS_START_TIME_OUT_SECONDS);
+        ScopeGuard cancelTimerGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
         handler_->BmsStartEvent();
     };
     ffrt::submit(task);

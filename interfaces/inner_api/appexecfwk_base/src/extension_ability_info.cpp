@@ -53,12 +53,13 @@ const char* PROCESS = "process";
 const char* COMPILE_MODE = "compileMode";
 const char* UID = "uid";
 const char* APP_INDEX = "appIndex";
-const uint16_t ABILITY_CAPACITY = 10240; // 10K
+const uint32_t ABILITY_CAPACITY = 204800; // 200K
 const char* EXTENSION_PROCESS_MODE = "extensionProcessMode";
 const char* SKILLS = "skills";
 const char* NEED_CREATE_SANDBOX = "needCreateSandbox";
 const char* DATA_GROUP_IDS = "dataGroupIds";
 const char* JSON_KEY_VALID_DATA_GROUP_IDS = "validDataGroupIds";
+const char* JSON_KEY_CUSTOM_PROCESS = "customProcess";
 
 const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP = {
     { "form", ExtensionAbilityType::FORM },
@@ -66,6 +67,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "inputMethod", ExtensionAbilityType::INPUTMETHOD },
     { "service", ExtensionAbilityType::SERVICE },
     { "accessibility", ExtensionAbilityType::ACCESSIBILITY },
+    { "fence", ExtensionAbilityType::FENCE },
     { "dataShare", ExtensionAbilityType::DATASHARE },
     { "fileShare", ExtensionAbilityType::FILESHARE },
     { "staticSubscriber", ExtensionAbilityType::STATICSUBSCRIBER },
@@ -117,6 +119,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "autoFill/smart", ExtensionAbilityType::AUTO_FILL_SMART },
     { "liveViewLockScreen", ExtensionAbilityType::LIVEVIEW_LOCKSCREEN },
     { "photoEditor", ExtensionAbilityType::PHOTO_EDITOR },
+    { "callerInfoQuery", ExtensionAbilityType::CALLER_INFO_QUERY },
     { "sysPicker/photoEditor", ExtensionAbilityType::SYSPICKER_PHOTOEDITOR },
     { "sys/visualExtension", ExtensionAbilityType::SYS_VISUAL },
     { "uiService", ExtensionAbilityType::UI_SERVICE },
@@ -190,11 +193,11 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     name = Str16ToStr8(parcel.ReadString16());
     srcEntrance = Str16ToStr8(parcel.ReadString16());
     icon = Str16ToStr8(parcel.ReadString16());
-    iconId = parcel.ReadInt32();
+    iconId = parcel.ReadUint32();
     label = Str16ToStr8(parcel.ReadString16());
-    labelId = parcel.ReadInt32();
+    labelId = parcel.ReadUint32();
     description = Str16ToStr8(parcel.ReadString16());
-    descriptionId = parcel.ReadInt32();
+    descriptionId = parcel.ReadUint32();
     priority = parcel.ReadInt32();
     int32_t permissionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
@@ -257,6 +260,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     for (auto i = 0; i < validDataGroupIdsSize; i++) {
         dataGroupIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
+    customProcess = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -295,11 +299,11 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcEntrance));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(icon));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, iconId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, priority);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissions.size());
     for (auto &permission : permissions) {
@@ -341,6 +345,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     for (auto &dataGroupId : validDataGroupIds) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(customProcess));
     return true;
 }
 
@@ -378,7 +383,8 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {JSON_KEY_SKILLS, extensionInfo.skills},
         {NEED_CREATE_SANDBOX, extensionInfo.needCreateSandbox},
         {DATA_GROUP_IDS, extensionInfo.dataGroupIds},
-        {JSON_KEY_VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds}
+        {JSON_KEY_VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds},
+        {JSON_KEY_CUSTOM_PROCESS, extensionInfo.customProcess}
     };
 }
 
@@ -387,47 +393,37 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
     APP_LOGD("ExtensionAbilityInfo from_json begin");
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         extensionInfo.bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::MODULE_NAME,
         extensionInfo.moduleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         NAME,
         extensionInfo.name,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         SRC_ENTRANCE,
         extensionInfo.srcEntrance,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ICON,
         extensionInfo.icon,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         ICON_ID,
         extensionInfo.iconId,
@@ -435,15 +431,13 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         LABEL,
         extensionInfo.label,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         LABEL_ID,
         extensionInfo.labelId,
@@ -451,15 +445,13 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         DESCRIPTION,
         extensionInfo.description,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+        parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         DESCRIPTION_ID,
         extensionInfo.descriptionId,
@@ -483,38 +475,30 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         EXTENSION_TYPE_NAME,
         extensionInfo.extensionTypeName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         READ_PERMISSION,
         extensionInfo.readPermission,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         WRITE_PERMISSION,
         extensionInfo.writePermission,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         URI,
         extensionInfo.uri,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         PERMISSIONS,
@@ -523,14 +507,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         VISIBLE,
         extensionInfo.visible,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<Metadata>>(jsonObject,
         jsonObjectEnd,
         META_DATA,
@@ -539,38 +521,30 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         RESOURCE_PATH,
         extensionInfo.resourcePath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::HAP_PATH,
         extensionInfo.hapPath,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         ENABLED,
         extensionInfo.enabled,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         PROCESS,
         extensionInfo.process,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<CompileMode>(jsonObject,
         jsonObjectEnd,
         COMPILE_MODE,
@@ -611,14 +585,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<bool>(jsonObject,
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         NEED_CREATE_SANDBOX,
         extensionInfo.needCreateSandbox,
-        JsonType::BOOLEAN,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         DATA_GROUP_IDS,
@@ -635,6 +607,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_CUSTOM_PROCESS,
+        extensionInfo.customProcess,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("ExtensionAbilityInfo from_json error : %{public}d", parseResult);
     }

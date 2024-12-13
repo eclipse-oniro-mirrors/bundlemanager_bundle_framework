@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "application_info.h"
 #include "bundle_constants.h"
 #include "parcel.h"
 namespace OHOS {
@@ -56,15 +57,10 @@ struct InstallParam : public Parcelable {
     bool removable = true;
     // the profile-guided optimization(PGO) file path
     std::map<std::string, std::string> pgoParams;
-    bool isUninstallAndRecover = false;
-    // should force uninstall when delete userinfo.
-    bool forceExecuted  = false;
     // whether need copy hap to install path
     bool copyHapToInstallPath = true;
     // is aging Cause uninstall.
     bool isAgingUninstall = false;
-    // OTA upgrade skips the killing process
-    bool noSkipsKill  = true;
     bool needSendEvent = true;
     bool withCopyHaps = false;
     // for MDM self update
@@ -95,12 +91,63 @@ struct InstallParam : public Parcelable {
     std::string specifiedDistributionType = "";
     // Indicates the additional Info
     std::string additionalInfo = "";
+    bool isDataPreloadHap = false;
+    std::string appIdentifier;
     // utilizing for code-signature
     std::map<std::string, std::string> verifyCodeParams;
+    ApplicationInfoFlag preinstallSourceFlag = ApplicationInfoFlag::FLAG_INSTALLED;
     // the parcel object function is not const.
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static InstallParam *Unmarshalling(Parcel &parcel);
+
+private:
+    // should force uninstall when delete userinfo.
+    bool forceExecuted = false;
+    // OTA upgrade skips the killing process
+    bool killProcess = true;
+    // system app can be uninstalled when uninstallUpdates
+    bool isUninstallAndRecover = false;
+
+public:
+    bool GetForceExecuted() const
+    {
+        return forceExecuted;
+    }
+
+    void SetForceExecuted(bool value)
+    {
+        if (CheckPermission()) {
+            forceExecuted = value;
+        }
+    }
+
+    bool GetKillProcess() const
+    {
+        return killProcess;
+    }
+
+    void SetKillProcess(bool value)
+    {
+        if (CheckPermission()) {
+            killProcess = value;
+        }
+    }
+
+    bool GetIsUninstallAndRecover() const
+    {
+        return isUninstallAndRecover;
+    }
+
+    void SetIsUninstallAndRecover(bool value)
+    {
+        if (CheckPermission()) {
+            isUninstallAndRecover = value;
+        }
+    }
+
+private:
+    bool CheckPermission() const;
 };
 
 struct UninstallParam : public Parcelable {

@@ -65,14 +65,12 @@ struct PatchJson {
 void from_json(const nlohmann::json &jsonObject, App &app)
 {
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_PATCH_PROFILE_APP_KEY_BUNDLE_NAME,
         app.bundleName,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_CODE,
@@ -81,14 +79,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         true,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_PATCH_PROFILE_APP_KEY_VERSION_NAME,
         app.versionName,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         BUNDLE_PATCH_PROFILE_APP_KEY_PATCH_VERSION_CODE,
@@ -97,35 +93,29 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         true,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_PATCH_PROFILE_APP_KEY_PATCH_VERSION_NAME,
         app.patchVersionName,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
 {
     const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_PATCH_PROFILE_MODULE_KEY_NAME,
         module.name,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_PATCH_PROFILE_MODULE_KEY_TYPE,
         module.type,
-        JsonType::STRING,
         true,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         BUNDLE_PATCH_PROFILE_MODULE_KEY_DEVICE_TYPES,
@@ -134,14 +124,12 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         BUNDLE_PATCH_PROFILE_MODULE_KEY_ORIGINAL_MODULE_HASH,
         module.originalModuleHash,
-        JsonType::STRING,
         false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, PatchJson &patchJson)
@@ -336,6 +324,10 @@ ErrCode PatchProfile::TransformTo(
     // hot reload does not process so files
     if ((appQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) &&
         (!ParseNativeSo(patchExtractor, appQuickFix.deployingAppqfInfo))) {
+#ifdef X86_EMULATOR_MODE
+        LOG_E(BMS_TAG_DEFAULT, "ParseNativeSo failed");
+        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+#endif
         LOG_W(BMS_TAG_DEFAULT, "ParseNativeSo failed");
     }
     return ERR_OK;

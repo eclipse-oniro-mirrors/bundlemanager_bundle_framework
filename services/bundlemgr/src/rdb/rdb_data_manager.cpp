@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <atomic>
+#include <cstdlib>
 #include "rdb_data_manager.h"
 
 #include "app_log_wrapper.h"
@@ -31,6 +32,8 @@ constexpr int16_t WRITE_TIMEOUT = 300; // 300s
 constexpr int8_t CLOSE_TIME = 20; // delay 20s stop rdbStore
 constexpr const char* BMS_BACK_UP_RDB_NAME = "bms-backup.db";
 constexpr int32_t OPERATION_TYPE_OF_INSUFFICIENT_DISK = 3;
+static std::atomic<int64_t> g_lastReportTime = 0;
+constexpr int64_t REPORTING_INTERVAL = 1000 * 60 * 30; // 30min
 }
 
 std::mutex RdbDataManager::restoreRdbMutex_;
@@ -66,9 +69,14 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         isInitial_ = true;
     }
     // for check db exist or not
+    bool isNeedRebuildDb = false;
+    std::string rdbFilePath = bmsRdbConfig_.dbPath + std::string("/") + std::string(BMS_BACK_UP_RDB_NAME);
     if (access(rdbStoreConfig.GetPath().c_str(), F_OK) != 0) {
         APP_LOGW("bms db :%{public}s is not exist, need to create. errno:%{public}d",
             rdbStoreConfig.GetPath().c_str(), errno);
+        if (access(rdbFilePath.c_str(), F_OK) == 0) {
+            isNeedRebuildDb = true;
+        }
     }
     int32_t errCode = NativeRdb::E_OK;
     BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
@@ -84,11 +92,10 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     CheckSystemSizeAndHisysEvent(bmsRdbConfig_.dbPath, bmsRdbConfig_.dbName);
     NativeRdb::RebuiltType rebuildType = NativeRdb::RebuiltType::NONE;
     int32_t rebuildCode = rdbStore_->GetRebuilt(rebuildType);
-    if (rebuildType == NativeRdb::RebuiltType::REBUILT) {
+    if (rebuildType == NativeRdb::RebuiltType::REBUILT || isNeedRebuildDb) {
         APP_LOGI("start %{public}s restore ret %{public}d, type:%{public}d", bmsRdbConfig_.dbName.c_str(),
             rebuildCode, static_cast<int32_t>(rebuildType));
-        int32_t restoreRet = rdbStore_->Restore(bmsRdbConfig_.dbPath + std::string("/") +
-            std::string(BMS_BACK_UP_RDB_NAME));
+        int32_t restoreRet = rdbStore_->Restore(rdbFilePath);
         if (restoreRet != NativeRdb::E_OK) {
             APP_LOGE("rdb restore failed ret:%{public}d", restoreRet);
         }
@@ -102,11 +109,26 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
 
 void RdbDataManager::CheckSystemSizeAndHisysEvent(const std::string &path, const std::string &fileName)
 {
-    bool flag = BundleUtil::CheckSystemSizeAndHisysEvent(path, fileName);
-    if (flag) {
+    if (!CheckIsSatisfyTime()) {
+        APP_LOGD("not satisfy time");
+        return;
+    }
+    bool isInsufficientSpace = BundleUtil::CheckSystemSizeAndHisysEvent(path, fileName);
+    if (isInsufficientSpace) {
         APP_LOGW("space not enough %{public}s", fileName.c_str());
         EventReport::SendDiskSpaceEvent(fileName, 0, OPERATION_TYPE_OF_INSUFFICIENT_DISK);
     }
+}
+
+bool RdbDataManager::CheckIsSatisfyTime()
+{
+    int64_t now = BundleUtil::GetCurrentTimeMs();
+    if (abs(now - g_lastReportTime) < REPORTING_INTERVAL) {
+        APP_LOGD("time is not up yet");
+        return false;
+    }
+    g_lastReportTime = now;
+    return true;
 }
 
 void RdbDataManager::BackupRdb()

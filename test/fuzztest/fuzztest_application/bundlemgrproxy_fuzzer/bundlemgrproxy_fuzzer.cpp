@@ -191,7 +191,7 @@ namespace OHOS {
         int uid = bundleMgrProxy.GetUidByBundleName(bundleName, reinterpret_cast<uintptr_t>(data));
         bundleMgrProxy.GetUidByBundleName(bundleName, reinterpret_cast<uintptr_t>(data), 0);
         bundleMgrProxy.GetUidByDebugBundleName(bundleName, reinterpret_cast<uintptr_t>(data));
-        bundleMgrProxy.GetAppIdByBundleName(bundleName, reinterpret_cast<uintptr_t>(data));
+        std::string appId = bundleMgrProxy.GetAppIdByBundleName(bundleName, reinterpret_cast<uintptr_t>(data));
         bundleMgrProxy.GetBundleNameForUid(uid, bundleName);
         bundleMgrProxy.GetBundlesForUid(uid, bundleNames);
         int32_t appIndex = -1;
@@ -321,7 +321,6 @@ namespace OHOS {
         ElementName element;
         bundleMgrProxy.QueryCloneAbilityInfo(element, 0, 0, abilityInfo, reinterpret_cast<uintptr_t>(data));
         bundleMgrProxy.GetCloneBundleInfo(bundleName, 0, 0, bundleInfo);
-        std::vector<int32_t> appIndexes;
         element.SetAbilityName(abilityName);
         element.SetBundleName(bundleName);
         SignatureInfo sinfo;
@@ -331,6 +330,10 @@ namespace OHOS {
         bundleMgrProxy.GetAllDesktopShortcutInfo(reinterpret_cast<uintptr_t>(data), shortcutInfos);
         bundleMgrProxy.GetOdidByBundleName(bundleName, odid);
         bundleMgrProxy.GetBundleInfosForContinuation(0, bundleInfos, reinterpret_cast<uintptr_t>(data));
+        std::string deviceType;
+        bundleMgrProxy.GetCompatibleDeviceType(bundleName, deviceType);
+        std::string queryBundleName;
+        bundleMgrProxy.GetBundleNameByAppId(appId, queryBundleName);
         return true;
     }
 }

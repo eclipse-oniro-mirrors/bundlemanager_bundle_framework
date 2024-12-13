@@ -18,9 +18,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <dirent.h>
-#include "zip_utils.h"
-#include "directory_ex.h"
+
 #include "app_log_wrapper.h"
+#include "bundle_info.h"
+#include "common_func.h"
+#include "directory_ex.h"
+#include "zip_utils.h"
 
 using namespace std;
 using namespace OHOS::AppExecFwk;
@@ -31,6 +34,9 @@ namespace {
 const std::string SEPARATOR = "/";
 const std::string ZIP = ".zip";
 const std::int32_t ZIP_SIZE = 4;
+const uint8_t SINCE_API_VERSION = 13;
+constexpr const char* RELATIVE_PATH_SYMBOL = "../";
+const uint32_t API_VERSION_MOD = 1000;
 }
 const FilePath::CharType FilePath::kSeparators[] = FILE_PATH_LITERAL("/");
 const size_t FilePath::kSeparatorsLength = arraysize(kSeparators);
@@ -423,6 +429,48 @@ std::string FilePath::CheckDestDirTail()
     } else {
         return path_ + ZIP;
     }
+}
+
+bool FilePath::IsNeedCheckFilePathBaseOnAPIVersion()
+{
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("bundleMgr is nullptr");
+        return false;
+    }
+    BundleInfo bundleInfo;
+    auto ret = bundleMgr->GetBundleInfoForSelf(0, bundleInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("get failed, ret:%{public}d", ret);
+        return false;
+    }
+    return (bundleInfo.targetVersion % API_VERSION_MOD) >= SINCE_API_VERSION;
+}
+
+bool FilePath::HasRelativePathBaseOnAPIVersion(const std::string &path)
+{
+    if (!IsNeedCheckFilePathBaseOnAPIVersion()) {
+        return false;
+    }
+    if (path.find(RELATIVE_PATH_SYMBOL) != string::npos) {
+        APP_LOGI("path constains ../");
+        return true;
+    }
+    return false;
+}
+
+bool FilePath::HasRelativePathBaseOnAPIVersion(const std::vector<std::string> &paths)
+{
+    if (!IsNeedCheckFilePathBaseOnAPIVersion()) {
+        return false;
+    }
+    for (const auto &path : paths) {
+        if (path.find(RELATIVE_PATH_SYMBOL) != string::npos) {
+            APP_LOGI("path constains ../");
+            return true;
+        }
+    }
+    return false;
 }
 }  // namespace LIBZIP
 }  // namespace AppExecFwk

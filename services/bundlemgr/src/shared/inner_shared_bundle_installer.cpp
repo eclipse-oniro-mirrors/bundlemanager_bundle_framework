@@ -15,6 +15,8 @@
 
 #include "inner_shared_bundle_installer.h"
 
+#include <fcntl.h>
+
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
 #include "installd_client.h"
@@ -166,6 +168,7 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
     ErrCode result = ERR_OK;
     for (auto &item : parsedBundles_) {
         result = ExtractSharedBundles(item.first, item.second);
+        item.second.SetApplicationFlags(installParam.preinstallSourceFlag);
         CHECK_RESULT(result, "extract shared bundles failed %{public}d");
     }
 
@@ -179,7 +182,7 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
 
     // save specifiedDistributionType and additionalInfo
     SaveInstallParamInfo(bundleName_, installParam);
-
+    MarkInstallFinish();
     APP_LOGD("install shared bundle successfully: %{public}s", bundleName_.c_str());
     return result;
 }
@@ -363,6 +366,24 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
     return ERR_OK;
 }
 
+void InnerSharedBundleInstaller::UpdateInnerModuleInfo(const std::string packageName,
+    const InnerModuleInfo &innerModuleInfo)
+{
+    newBundleInfo_.ReplaceInnerModuleInfo(packageName, innerModuleInfo);
+    std::string moduleDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_ +
+        ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(innerModuleInfo.versionCode) +
+        ServiceConstants::PATH_SEPARATOR + innerModuleInfo.moduleName;
+    bool isDirExist = false;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(moduleDir, isDirExist);
+    if (isDirExist) {
+        newBundleInfo_.SetCurrentModulePackage(packageName);
+        newBundleInfo_.AddModuleSrcDir(moduleDir);
+        newBundleInfo_.AddModuleResPath(moduleDir);
+    } else {
+        APP_LOGW("update path failed %{public}s %{public}d", moduleDir.c_str(), result);
+    }
+}
+
 void InnerSharedBundleInstaller::MergeBundleInfos()
 {
     auto iter = parsedBundles_.begin();
@@ -384,6 +405,7 @@ void InnerSharedBundleInstaller::MergeBundleInfos()
         if (!innerModuleInfos.empty()) {
             const auto& innerModuleInfo = innerModuleInfos.front();
             newBundleInfo_.InsertInnerSharedModuleInfo(innerModuleInfo.modulePackage, innerModuleInfo);
+            UpdateInnerModuleInfo(innerModuleInfo.modulePackage, innerModuleInfo);
         }
         // update version
         if (newBundleInfo_.GetBaseBundleInfo().versionCode < currentBundle.GetBaseBundleInfo().versionCode) {
@@ -447,7 +469,7 @@ ErrCode InnerSharedBundleInstaller::SaveBundleInfoToStorage()
     }
 
     if (isBundleExist_) {
-        if (!dataMgr->UpdateInnerBundleInfo(newBundleInfo_)) {
+        if (!dataMgr->UpdateInnerBundleInfo(newBundleInfo_, false)) {
             APP_LOGE("save bundle failed : %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
@@ -579,13 +601,18 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
     if (!signatureFileDir_.empty()) {
         result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, signatureFileDir_);
     } else {
-        result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath);
+        result = InstalldClient::GetInstance()->MoveHapToCodeDir(bundlePath, tempHspPath);
         CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
         bool isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
         result = VerifyCodeSignatureForHsp(tempHspPath, appIdentifier_, isEnterpriseBundle_,
             isCompileSdkOpenHarmony, bundleName_);
     }
     CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
+    int32_t hspFd = open(tempHspPath.c_str(), O_RDONLY);
+    if (fsync(hspFd) != 0) {
+        APP_LOGE("fsync %{public}s failed", tempHspPath.c_str());
+    }
+    close(hspFd);
 
     // 3. move hsp to real installation dir
     APP_LOGD("move file from temp path %{public}s to real path %{public}s", tempHspPath.c_str(), realHspPath.c_str());
@@ -758,6 +785,25 @@ ErrCode InnerSharedBundleInstaller::DeliveryProfileToCodeSign(
 void InnerSharedBundleInstaller::SetCheckResultMsg(const std::string checkResultMsg) const
 {
     bundleInstallChecker_->SetCheckResultMsg(checkResultMsg);
+}
+
+void InnerSharedBundleInstaller::MarkInstallFinish()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+    InnerBundleInfo info;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName_, info)) {
+        APP_LOGE("mark finish failed, -n %{public}s not exist", bundleName_.c_str());
+        return;
+    }
+    info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
+    if (!dataMgr->UpdateInnerBundleInfo(info, true)) {
+        APP_LOGE("save mark failed, -n %{public}s", bundleName_.c_str());
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

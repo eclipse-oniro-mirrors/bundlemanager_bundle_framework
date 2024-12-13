@@ -120,6 +120,7 @@ ErrCode BmsBundleDependenciesTest::InstallBundle(const std::string &bundlePath) 
     InstallParam installParam;
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -143,6 +144,7 @@ ErrCode BmsBundleDependenciesTest::UpdateBundle(const std::string &bundlePath) c
     InstallParam installParam;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();

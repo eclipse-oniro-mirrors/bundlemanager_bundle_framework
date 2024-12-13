@@ -48,7 +48,6 @@ const BMSEventType BUNDLE_SYS_EVENT_MAP_VALUE[] = {
 void EventReport::SendBundleSystemEvent(BundleEventType bundleEventType, const EventInfo& eventInfo)
 {
     BMSEventType bmsEventType = BMSEventType::UNKNOW;
-    std::unordered_map<BundleEventType, BMSEventType>::const_iterator iter;
     if (eventInfo.errCode != ERR_OK) {
         size_t len = sizeof(BUNDLE_EXCEPTION_SYS_EVENT_MAP_KEY) / sizeof(BundleEventType);
         for (size_t i = 0; i < len; i++) {
@@ -88,8 +87,8 @@ void EventReport::SendUserSysEvent(UserEventType userEventType, int32_t userId)
     EventReport::SendSystemEvent(BMSEventType::BMS_USER_EVENT, eventInfo);
 }
 
-void EventReport::SendComponentStateSysEventForException(const std::string &bundleName,
-    const std::string &abilityName, int32_t userId, bool isEnable, int32_t appIndex)
+void EventReport::SendComponentStateSysEventForException(const std::string &bundleName, const std::string &abilityName,
+    int32_t userId, bool isEnable, int32_t appIndex, const std::string &caller)
 {
     EventInfo eventInfo;
     eventInfo.bundleName = bundleName;
@@ -97,13 +96,14 @@ void EventReport::SendComponentStateSysEventForException(const std::string &bund
     eventInfo.userId = userId;
     eventInfo.isEnable = isEnable;
     eventInfo.appIndex = appIndex;
+    eventInfo.callingBundleName = caller;
     BMSEventType bmsEventType = BMSEventType::BUNDLE_STATE_CHANGE_EXCEPTION;
 
     EventReport::SendSystemEvent(bmsEventType, eventInfo);
 }
 
-void EventReport::SendComponentStateSysEvent(const std::string &bundleName,
-    const std::string &abilityName, int32_t userId, bool isEnable, int32_t appIndex)
+void EventReport::SendComponentStateSysEvent(const std::string &bundleName, const std::string &abilityName,
+    int32_t userId, bool isEnable, int32_t appIndex, const std::string &caller)
 {
     EventInfo eventInfo;
     eventInfo.bundleName = bundleName;
@@ -111,6 +111,7 @@ void EventReport::SendComponentStateSysEvent(const std::string &bundleName,
     eventInfo.userId = userId;
     eventInfo.isEnable = isEnable;
     eventInfo.appIndex = appIndex;
+    eventInfo.callingBundleName = caller;
     BMSEventType bmsEventType = BMSEventType::BUNDLE_STATE_CHANGE;
 
     EventReport::SendSystemEvent(bmsEventType, eventInfo);
@@ -192,6 +193,11 @@ void EventReport::SendDiskSpaceEvent(const std::string &fileName,
     eventInfo.freeSize = freeSize;
     eventInfo.operationType = operationType;
     EventReport::SendSystemEvent(BMSEventType::BMS_DISK_SPACE, eventInfo);
+}
+
+void EventReport::SendAppConitolRuleEvent(const EventInfo& eventInfo)
+{
+    EventReport::SendSystemEvent(BMSEventType::APP_CONTROL_RULE, eventInfo);
 }
 
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)

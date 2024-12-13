@@ -113,8 +113,6 @@ private:
 
     void RecoverDriverForAllUsers(const std::string &bundleName, const InstallParam &installParam);
 
-    bool HasDriverExtensionAbility(const std::string &bundleName);
-
 private:
     const int64_t installerId_ = 0;
     const sptr<IStatusReceiver> statusReceiver_;

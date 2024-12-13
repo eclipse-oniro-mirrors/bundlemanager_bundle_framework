@@ -117,6 +117,7 @@ ErrCode BmsBundleQuickFixMgrRdbTest::InstallBundle(const std::string &bundlePath
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::NORMAL;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -148,7 +149,7 @@ void BmsBundleQuickFixMgrRdbTest::CheckQuickFixInfo(const std::string &bundleNam
     EXPECT_NE(dataMgr, nullptr) << "the data mgr is nullptr";
 
     InnerBundleInfo innerBundleInfo;
-    bool result = dataMgr->GetInnerBundleInfo(bundleName, innerBundleInfo);
+    bool result = dataMgr->GetInnerBundleInfoWithDisable(bundleName, innerBundleInfo);
     EXPECT_TRUE(result);
     auto appqfInof = innerBundleInfo.GetAppQuickFix();
     size_t ret = appqfInof.deployedAppqfInfo.hqfInfos.size();

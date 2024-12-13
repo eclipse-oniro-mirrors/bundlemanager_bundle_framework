@@ -74,8 +74,8 @@ void from_json(const nlohmann::json &jsonObject, CodeProtectBundleInfo &CodeProt
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, Constants::BUNDLE_NAME,
-        CodeProtectBundleInfo.bundleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, Constants::BUNDLE_NAME,
+        CodeProtectBundleInfo.bundleName, false, parseResult);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, Constants::UID,
         CodeProtectBundleInfo.uid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, Constants::APP_INDEX,

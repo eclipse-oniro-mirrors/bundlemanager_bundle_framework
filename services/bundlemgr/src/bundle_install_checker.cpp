@@ -16,6 +16,7 @@
 #include "bundle_install_checker.h"
 
 #include "app_log_tag_wrapper.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
@@ -48,8 +49,6 @@ constexpr const char* ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeE
 constexpr const char* ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 constexpr const char* ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 constexpr const char* ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
-constexpr const char* APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
-constexpr const char* BUNDLE_NAME_XTS_TEST = "com.acts.";
 constexpr const char* APL_NORMAL = "normal";
 constexpr const char* SLASH = "/";
 constexpr const char* DOUBLE_SLASH = "//";
@@ -177,7 +176,7 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
 
 ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     const std::vector<std::string> &bundlePaths,
-    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes)
+    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile)
 {
     LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo");
     if (bundlePaths.empty()) {
@@ -186,11 +185,16 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     }
     for (const std::string &bundlePath : bundlePaths) {
         Security::Verify::HapVerifyResult hapVerifyResult;
-        auto verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
+        ErrCode verifyRes = ERR_OK;
+        if (readFile) {
+            verifyRes = Security::Verify::HapVerify(bundlePath, hapVerifyResult, true);
+        } else {
+            verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
+        }
 #ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "hap file verify failed, bundlePath: %{public}s", bundlePath.c_str());
-            return verifyRes;
+            return readFile ? ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE : verifyRes;
         }
 #endif
         hapVerifyRes.emplace_back(hapVerifyResult);
@@ -414,6 +418,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
                 return result;
             }
         }
+        DetermineCloneNum(newInfo);
 
         infos.emplace(bundlePaths[i], newInfo);
     }
@@ -630,7 +635,7 @@ bool BundleInstallChecker::FindModuleInInstalledPackage(
 
     ScopeGuard enableGuard([&dataMgr, &bundleName] { dataMgr->EnableBundle(bundleName); });
     InnerBundleInfo bundleInfo;
-    bool isBundleExist = dataMgr->GetInnerBundleInfo(bundleName, bundleInfo);
+    bool isBundleExist = dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo);
     if (!isBundleExist) {
         LOG_E(BMS_TAG_INSTALLER, "the bundle: %{public}s is not install", bundleName.c_str());
         return false;
@@ -684,6 +689,11 @@ void BundleInstallChecker::CollectProvisionInfo(
 #endif
     newInfo.AddOldAppId(newInfo.GetAppId());
     newInfo.SetAppIdentifier(provisionInfo.bundleInfo.appIdentifier);
+    if (provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+        newInfo.SetCertificate(provisionInfo.bundleInfo.developmentCertificate);
+    } else {
+        newInfo.SetCertificate(provisionInfo.bundleInfo.distributionCertificate);
+    }
 }
 
 void BundleInstallChecker::SetAppProvisionMetadata(const std::vector<Security::Verify::Metadata> &provisionMetadatas,
@@ -898,10 +908,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     ErrCode ret = ERR_OK;
     std::string bundleName = (infos.begin()->second).GetBundleName();
     uint32_t versionCode = (infos.begin()->second).GetVersionCode();
-    uint32_t minCompatibleVersionCode = (infos.begin()->second).GetMinCompatibleVersionCode();
-    uint32_t target = (infos.begin()->second).GetTargetVersion();
     auto [isHsp, moduleName, releaseType] = GetValidReleaseType(infos);
-    uint32_t compatible = (infos.begin()->second).GetCompatibleVersion();
     bool singleton = (infos.begin()->second).IsSingleton();
     Constants::AppType appType = (infos.begin()->second).GetAppType();
     bool isStage = (infos.begin()->second).GetIsNewVersion();
@@ -1014,9 +1021,6 @@ ErrCode BundleInstallChecker::CheckMultiArkNativeFile(
             arkNativeFileAbi = info.second.GetArkNativeFileAbi();
             continue;
         }
-        if (arkNativeFileAbi != info.second.GetArkNativeFileAbi()) {
-            return ERR_APPEXECFWK_INSTALL_AN_INCOMPATIBLE;
-        }
     }
 
     // Ensure the an is consistent in multiple haps
@@ -1042,10 +1046,6 @@ ErrCode BundleInstallChecker::CheckMultiNativeSo(
             nativeLibraryPath = info.second.GetNativeLibraryPath();
             cpuAbi = info.second.GetCpuAbi();
             continue;
-        }
-        if (nativeLibraryPath != info.second.GetNativeLibraryPath()
-            || cpuAbi != info.second.GetCpuAbi()) {
-            return ERR_APPEXECFWK_INSTALL_SO_INCOMPATIBLE;
         }
     }
 
@@ -1075,13 +1075,6 @@ void BundleInstallChecker::ParseAppPrivilegeCapability(
             iter->second(appPrivilegeCapability);
         }
     }
-    if ((provisionInfo.bundleInfo.bundleName != APP_TEST_BUNDLE_NAME) &&
-        (provisionInfo.bundleInfo.bundleName.find(BUNDLE_NAME_XTS_TEST) != 0)) {
-        appPrivilegeCapability.allowMultiProcess = false;
-        appPrivilegeCapability.allowUsePrivilegeExtension = false;
-        appPrivilegeCapability.formVisibleNotify = false;
-    }
-
     LOG_D(BMS_TAG_INSTALLER, "AppPrivilegeCapability %{public}s",
         appPrivilegeCapability.ToString().c_str());
 #ifndef USE_PRE_BUNDLE_PROFILE
@@ -1623,5 +1616,28 @@ void BundleInstallChecker::SetCheckResultMsg(const std::string checkResultMsg)
 {
     checkResultMsg_ = checkResultMsg;
 }
+
+void BundleInstallChecker::DetermineCloneNum(InnerBundleInfo &innerBundleInfo)
+{
+    ApplicationInfo applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
+    if (applicationInfo.multiAppMode.multiAppModeType != MultiAppModeType::APP_CLONE
+        || applicationInfo.multiAppMode.maxCount == 0) {
+        BmsExtensionDataMgr bmsExtensionDataMgr;
+        int32_t cloneNum = 0;
+        const std::string appIdentifier = innerBundleInfo.GetAppIdentifier();
+        if (!bmsExtensionDataMgr.DetermineCloneNum(applicationInfo.bundleName, appIdentifier, cloneNum)) {
+            return;
+        }
+        if (cloneNum == 0) {
+            return;
+        }
+        LOG_I(BMS_TAG_INSTALLER, "install -n %{public}s -c %{public}d",
+            applicationInfo.bundleName.c_str(), cloneNum);
+        applicationInfo.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+        applicationInfo.multiAppMode.maxCount = cloneNum;
+        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    }
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

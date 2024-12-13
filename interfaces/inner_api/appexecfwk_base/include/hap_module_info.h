@@ -55,6 +55,8 @@ enum class AOTCompileStatus {
     NOT_COMPILED = 0,
     COMPILE_SUCCESS = 1,
     COMPILE_FAILED = 2,
+    COMPILE_CRASH = 3,
+    COMPILE_CANCELLED = 4,
 };
 
 struct PreloadItem : public Parcelable {
@@ -116,9 +118,9 @@ struct AppEnvironment : public Parcelable {
 struct HapModuleInfo : public Parcelable {
     bool compressNativeLibs = true;
     bool isLibIsolated = false;
-    int32_t descriptionId = 0;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
+    uint32_t descriptionId = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
     int supportedModes = 0;
     std::string name;        // module.name in config.json
     std::string package;

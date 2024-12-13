@@ -865,7 +865,8 @@ protected:
                     "continueType": [],
                     "continueBundleName": [],
                     "appIndex": 0,
-                    "orientationId": 0
+                    "orientationId": 0,
+                    "process": ""
                 },
                 "com.ohos.launcher.com.ohos.launcher.recents.com.ohos.launcher.recents.MainAbility": {
                     "applicationName": "com.ohos.launcher",
@@ -1548,6 +1549,7 @@ protected:
     const std::string abilityName = "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility";
     const std::string BASE_BUNDLE_INFO = "baseBundleInfo";
     const std::string BASE_APPLICATION_INFO = "baseApplicationInfo";
+    const std::string CALLER_NAME_UT = "ut";
 };
 
 BmsBundleDataStorageDatabaseTest::BmsBundleDataStorageDatabaseTest()
@@ -2703,7 +2705,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4500, Function | Smal
     InnerBundleInfo bundleInfo;
     InnerBundleUserInfo innerBundleUserInfo;
     bundleInfo.innerBundleUserInfos_.insert(std::make_pair(MODULE_NAME, innerBundleUserInfo));
-    auto ret = bundleInfo.SetCloneApplicationEnabled(true, appIndex, userId);
+    auto ret = bundleInfo.SetCloneApplicationEnabled(true, appIndex, CALLER_NAME_UT, userId);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
 
@@ -2724,7 +2726,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4600, Function | Smal
     cloneInfos.insert(std::make_pair(MODULE_NAME, innerBundleCloneInfo));
     innerBundleUserInfo.cloneInfos = cloneInfos;
     bundleInfo.innerBundleUserInfos_.insert(std::make_pair("_1", innerBundleUserInfo));
-    auto ret = bundleInfo.SetCloneApplicationEnabled(true, appIndex, userId);
+    auto ret = bundleInfo.SetCloneApplicationEnabled(true, appIndex, CALLER_NAME_UT, userId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX);
 }
 
@@ -2745,7 +2747,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4700, Function | Smal
     cloneInfos.insert(std::make_pair("1", innerBundleCloneInfo));
     innerBundleUserInfo.cloneInfos = cloneInfos;
     bundleInfo.innerBundleUserInfos_.insert(std::make_pair("_1", innerBundleUserInfo));
-    auto ret = bundleInfo.SetCloneApplicationEnabled(true, appIndex, userId);
+    auto ret = bundleInfo.SetCloneApplicationEnabled(true, appIndex, CALLER_NAME_UT, userId);
     EXPECT_EQ(ret, ERR_OK);
 }
 

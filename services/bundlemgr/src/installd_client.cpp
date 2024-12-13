@@ -180,29 +180,27 @@ ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, 
 }
 
 ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int32_t userId,
-    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex)
+    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
+    const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::GetBundleStats, bundleName, userId, bundleStats, uid, appIndex);
+    return CallService(&IInstalld::GetBundleStats, bundleName, userId, bundleStats,
+        uid, appIndex, statFlag, moduleNameList);
 }
 
-ErrCode InstalldClient::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
-    if (bundleNames.empty()) {
-        APP_LOGE("bundleName is empty");
+    if (uids.empty()) {
+        APP_LOGE("uids is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    if (bundleNames.size() != uids.size()) {
-        APP_LOGE("bundleNames size is not equal to uids size");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    return CallService(&IInstalld::GetAllBundleStats, bundleNames, userId, bundleStats, uids);
+    return CallService(&IInstalld::GetAllBundleStats, userId, bundleStats, uids);
 }
 
 ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
@@ -272,31 +270,31 @@ bool InstalldClient::LoadInstalldService()
     return true;
 }
 
-bool InstalldClient::GetInstalldProxy()
+sptr<IInstalld> InstalldClient::GetInstalldProxy()
 {
     std::lock_guard<std::mutex> lock(getProxyMutex_);
     if (installdProxy_ != nullptr) {
         APP_LOGD("installd ready");
-        return true;
+        return installdProxy_;
     }
 
     APP_LOGI("try to get installd proxy");
     if (!LoadInstalldService()) {
         APP_LOGE("load installd service failed");
-        return false;
+        return nullptr;
     }
     if ((installdProxy_ == nullptr) || (installdProxy_->AsObject() == nullptr)) {
         APP_LOGE("the installd proxy or remote object is null");
-        return false;
+        return nullptr;
     }
 
     recipient_ = new (std::nothrow) InstalldDeathRecipient();
     if (recipient_ == nullptr) {
         APP_LOGE("the death recipient is nullptr");
-        return false;
+        return nullptr;
     }
     installdProxy_->AsObject()->AddDeathRecipient(recipient_);
-    return true;
+    return installdProxy_;
 }
 
 ErrCode InstalldClient::ScanDir(
@@ -504,7 +502,7 @@ void InstalldClient::OnLoadSystemAbilityFail()
 
 bool InstalldClient::StartInstalldService()
 {
-    return GetInstalldProxy();
+    return GetInstalldProxy() != nullptr;
 }
 
 ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
@@ -573,6 +571,16 @@ ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &ty
 ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
 {
     return CallService(&IInstalld::AddUserDirDeleteDfx, userId);
+}
+
+ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    if (originPath.empty() || targetPath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::MoveHapToCodeDir, originPath, targetPath);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

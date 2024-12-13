@@ -141,6 +141,7 @@ ErrCode BmsBundleAccessTokenIdTest::InstallBundle(const std::string &bundlePath)
     InstallParam installParam;
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -164,6 +165,7 @@ ErrCode BmsBundleAccessTokenIdTest::UpdateBundle(const std::string &bundlePath) 
     InstallParam installParam;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -936,7 +938,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0003, Function |
 
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
     EXPECT_TRUE(result);
-    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
     EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
@@ -960,7 +962,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0004, Function |
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
     EXPECT_TRUE(result);
-    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
     EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
@@ -984,7 +986,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0005, Function |
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
     EXPECT_TRUE(result);
-    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
     EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
 
 

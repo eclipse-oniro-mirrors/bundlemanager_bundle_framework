@@ -82,38 +82,30 @@ void from_json(const nlohmann::json &jsonObject, OverlayModuleInfo &overlayModul
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_OVERLAY_BUNDLE_NAME,
         overlayModuleInfo.bundleName,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_OVERLAY_MODULE_NAME,
         overlayModuleInfo.moduleName,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_TARGET_MODULE_NAME,
         overlayModuleInfo.targetModuleName,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_OVERLAY_HAP_PATH,
         overlayModuleInfo.hapPath,
-        JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         MODULE_OVERLAY_PRIORITY,

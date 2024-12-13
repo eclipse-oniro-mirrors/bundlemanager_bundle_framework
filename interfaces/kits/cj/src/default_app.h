@@ -24,7 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 
 extern "C" {
-    FFI_EXPORT RetDataBool FfiIsDefaultApplication(char* type);
+    FFI_EXPORT RetDataBool FfiBundleManagerIsDefaultApplication(char* type);
 }
 }
 }

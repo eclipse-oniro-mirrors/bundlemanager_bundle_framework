@@ -411,7 +411,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     }
 
     // write shared bundles
-    uint32_t size = static_cast<uint32_t>(installParam.sharedBundleDirPaths.size());
+    size_t size = installParam.sharedBundleDirPaths.size();
     for (uint32_t i = 0; i < size; ++i) {
         realPaths.clear();
         std::vector<std::string> sharedBundleDir = {installParam.sharedBundleDirPaths[i]};

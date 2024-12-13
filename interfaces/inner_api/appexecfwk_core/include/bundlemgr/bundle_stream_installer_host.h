@@ -35,7 +35,7 @@ public:
 private:
     DISALLOW_COPY_AND_MOVE(BundleStreamInstallerHost);
 
-    void init();
+    void Init();
     ErrCode HandleCreateStream(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleCreateSignatureFileStream(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleCreateSharedBundleStream(MessageParcel &data, MessageParcel &reply);

@@ -43,12 +43,11 @@ BundleInstallerHost::~BundleInstallerHost()
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "destroy bundle installer host instance");
 }
 
-bool BundleInstallerHost::Init()
+void BundleInstallerHost::Init()
 {
     LOG_D(BMS_TAG_INSTALLER, "begin to init");
     manager_ = std::make_shared<BundleInstallerManager>();
     LOG_D(BMS_TAG_INSTALLER, "init successfully");
-    return true;
 }
 
 int BundleInstallerHost::OnRemoteRequest(
@@ -147,6 +146,7 @@ void BundleInstallerHost::HandleRecoverMessage(MessageParcel &data)
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
 
+    installParam->preinstallSourceFlag = ApplicationInfoFlag::FLAG_RECOVER_INSTALLED;
     Recover(bundleName, *installParam, statusReceiver);
     LOG_D(BMS_TAG_INSTALLER, "handle install message by bundleName finished");
 }
@@ -338,6 +338,7 @@ void BundleInstallerHost::HandleUninstallAndRecoverMessage(MessageParcel &data)
         return;
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    installParam->preinstallSourceFlag = ApplicationInfoFlag::FLAG_RECOVER_INSTALLED;
     UninstallAndRecover(bundleName, *installParam, statusReceiver);
     LOG_D(BMS_TAG_INSTALLER, "handle UninstallAndRecover message finished");
 }

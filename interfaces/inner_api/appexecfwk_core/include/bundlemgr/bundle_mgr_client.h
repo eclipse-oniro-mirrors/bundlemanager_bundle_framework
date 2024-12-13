@@ -18,6 +18,7 @@
 
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
+#include "bundle_dir.h"
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
 #include "extension_ability_info.h"
@@ -110,6 +111,8 @@ public:
         std::vector<ExtensionAbilityInfo> &extensionInfos);
     ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
         HapModuleInfo &hapModuleInfo);
+    ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex, std::string &dataDir);
+    ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs);
 
 private:
     static std::shared_ptr<BundleMgrClientImpl> impl_;

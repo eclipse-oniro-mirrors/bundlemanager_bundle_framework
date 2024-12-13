@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,11 +21,13 @@ namespace {
 constexpr int8_t COMMON_PRIORITY = 0;
 constexpr int8_t HIGH_PRIORITY = 1;
 constexpr const char* INSTALL_LIST = "install_list";
+constexpr const char* APP_LIST = "app_list";
 constexpr const char* UNINSTALL_LIST = "uninstall_list";
 constexpr const char* EXTENSION_TYPE = "extensionType";
 constexpr const char* RECOVER_LIST = "recover_list";
 constexpr const char* APP_DIR = "app_dir";
 constexpr const char* REMOVABLE = "removable";
+constexpr const char* APPIDENTIFIER = "appIdentifier";
 constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* TYPE_NAME = "name";
 constexpr const char* KEEP_ALIVE = "keepAlive";
@@ -36,6 +38,7 @@ constexpr const char* APP_SIGNATURE = "app_signature";
 constexpr const char* ASSOCIATED_WAKE_UP = "associatedWakeUp";
 constexpr const char* RESOURCES_PATH_1 = "/app/ohos.global.systemres";
 constexpr const char* RESOURCES_PATH_2 = "/app/SystemResources";
+constexpr const char* DATA_PRELOAD_APP = "/data/preload/app/";
 constexpr const char* ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
 constexpr const char* ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
 constexpr const char* ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
@@ -80,22 +83,18 @@ ErrCode PreBundleProfile::TransformTo(
         preScanInfo.Reset();
         const auto &jsonObjectEnd = array.end();
         int32_t parseResult = ERR_OK;
-        GetValueIfFindKey<std::string>(array,
+        BMSJsonUtil::GetStrValueIfFindKey(array,
             jsonObjectEnd,
             APP_DIR,
             preScanInfo.bundleDir,
-            JsonType::STRING,
             true,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             REMOVABLE,
             preScanInfo.removable,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+            parseResult);
         bool isResourcesPath =
             (preScanInfo.bundleDir.find(RESOURCES_PATH_1) != preScanInfo.bundleDir.npos) ||
             (preScanInfo.bundleDir.find(RESOURCES_PATH_2) != preScanInfo.bundleDir.npos);
@@ -119,6 +118,61 @@ ErrCode PreBundleProfile::TransformTo(
         }
 
         scanInfos.insert(preScanInfo);
+    }
+
+    return result;
+}
+
+ErrCode PreBundleProfile::TransformToAppList(const nlohmann::json &jsonBuf, std::set<PreScanInfo> &scanAppInfos) const
+{
+    if (jsonBuf.is_discarded()) {
+        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
+    }
+
+    if (jsonBuf.find(APP_LIST) == jsonBuf.end()) {
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+
+    auto arrays = jsonBuf.at(APP_LIST);
+    if (!arrays.is_array() || arrays.empty()) {
+        APP_LOGE("value is not array");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+    int32_t result = ERR_OK;
+    PreScanInfo preScanInfo;
+    for (const auto &array : arrays) {
+        if (!array.is_object()) {
+            APP_LOGE("array is not json object");
+            return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+        }
+
+        preScanInfo.Reset();
+        const auto &jsonObjectEnd = array.end();
+        int32_t parseResult = ERR_OK;
+        BMSJsonUtil::GetStrValueIfFindKey(array, jsonObjectEnd, APP_DIR, preScanInfo.bundleDir, true, parseResult);
+        BMSJsonUtil::GetStrValueIfFindKey(
+            array, jsonObjectEnd, APPIDENTIFIER, preScanInfo.appIdentifier, true, parseResult);
+        preScanInfo.priority = COMMON_PRIORITY;
+        preScanInfo.isDataPreloadHap = (preScanInfo.bundleDir.find(DATA_PRELOAD_APP) == 0);
+        if (!preScanInfo.isDataPreloadHap || preScanInfo.bundleDir.empty() || preScanInfo.appIdentifier.empty()) {
+            APP_LOGE("set parameter BMS_DATA_PRELOAD false");
+            result = ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP;
+            continue;
+        }
+
+        if (parseResult != ERR_OK) {
+            APP_LOGE("parse from install json failed, error %{public}d", parseResult);
+            result = parseResult;
+            continue;
+        }
+
+        auto iter = std::find(scanAppInfos.begin(), scanAppInfos.end(), preScanInfo);
+        if (iter != scanAppInfos.end()) {
+            APP_LOGD("replace old preScanInfo(%{public}s)", preScanInfo.bundleDir.c_str());
+            scanAppInfos.erase(iter);
+        }
+
+        scanAppInfos.insert(preScanInfo);
     }
 
     return result;
@@ -199,30 +253,24 @@ ErrCode PreBundleProfile::TransformTo(
         preBundleConfigInfo.Reset();
         const auto &jsonObjectEnd = array.end();
         int32_t parseResult = ERR_OK;
-        GetValueIfFindKey<std::string>(array,
+        BMSJsonUtil::GetStrValueIfFindKey(array,
             jsonObjectEnd,
             BUNDLE_NAME,
             preBundleConfigInfo.bundleName,
-            JsonType::STRING,
             true,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             KEEP_ALIVE,
             preBundleConfigInfo.keepAlive,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             SINGLETON,
             preBundleConfigInfo.singleton,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+            parseResult);
         GetValueIfFindKey<std::vector<std::string>>(array,
             jsonObjectEnd,
             ALLOW_COMMON_EVENT,
@@ -239,110 +287,84 @@ ErrCode PreBundleProfile::TransformTo(
             false,
             parseResult,
             ArrayType::STRING);
-        GetValueIfFindKey<bool>(array,
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             RUNNING_RESOURCES_APPLY,
             preBundleConfigInfo.runningResourcesApply,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             ASSOCIATED_WAKE_UP,
             preBundleConfigInfo.associatedWakeUp,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             ALLOW_APP_DATA_NOT_CLEARED,
             preBundleConfigInfo.userDataClearable,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             ALLOW_APP_MULTI_PROCESS,
             preBundleConfigInfo.allowMultiProcess,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             ALLOW_APP_DESKTOP_ICON_HIDE,
             preBundleConfigInfo.hideDesktopIcon,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             ALLOW_ABILITY_PRIORITY_QUERIED,
             preBundleConfigInfo.allowQueryPriority,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS,
             preBundleConfigInfo.allowExcludeFromMissions,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             ALLOW_MISSION_NOT_CLEARED,
             preBundleConfigInfo.allowMissionNotCleared,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             ALLOW_APP_USE_PRIVILEGE_EXTENSION,
             preBundleConfigInfo.allowUsePrivilegeExtension,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             ALLOW_FORM_VISIBLE_NOTIFY,
             preBundleConfigInfo.formVisibleNotify,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             ALLOW_APP_SHARE_LIBRARY,
             preBundleConfigInfo.appShareLibrary,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             ALLOW_ENABLE_NOTIFICATION,
             preBundleConfigInfo.allowEnableNotification,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        GetValueIfFindKey<bool>(array,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
             jsonObjectEnd,
             ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED,
             preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked,
-            JsonType::BOOLEAN,
             false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+            parseResult);
         GetValueIfFindKey<std::vector<int32_t>>(array,
             jsonObjectEnd,
             RESOURCES_APPLY,
@@ -435,14 +457,12 @@ ErrCode PreBundleProfile::TransformJsonToExtensionTypeList(
         std::string extensionAbilityType;
         const auto &jsonObjectEnd = array.end();
         int32_t parseResult = ERR_OK;
-        GetValueIfFindKey<std::string>(array,
+        BMSJsonUtil::GetStrValueIfFindKey(array,
             jsonObjectEnd,
             TYPE_NAME,
             extensionAbilityType,
-            JsonType::STRING,
             true,
-            parseResult,
-            ArrayType::NOT_ARRAY);
+            parseResult);
         extensionTypeList.insert(extensionAbilityType);
     }
 

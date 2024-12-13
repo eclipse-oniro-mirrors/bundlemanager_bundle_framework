@@ -21,6 +21,7 @@
 #include "bundle_info.h"
 #include "common_event_data.h"
 #include "common_event_subscriber.h"
+#include "ipc/create_dir_param.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -45,11 +46,13 @@ public:
     static void ProcessExtensionDir(const BundleInfo &bundleInfo, std::vector<std::string> &dirs);
     static void ProcessNewBackupDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
 private:
+    static void CheckPathAttribute(const std::string &path, const BundleInfo &bundleInfo, bool &isExist);
     static void CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t userId);
     static bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir);
     static bool CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t userId);
     static bool CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_t userId);
     static void CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t userId);
+    static bool CreateEl5Dir(const CreateDirParam &createDirParam);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

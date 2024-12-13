@@ -91,6 +91,9 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
             (installResult.type == NotifyType::UNINSTALL_MODULE)) ?
             static_cast<uint8_t>(InstallType::UNINSTALL_CALLBACK) :
             static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
+    int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
+    int32_t publishUserId = (bundleUserId == Constants::DEFAULT_USERID) ?
+        AccountHelper::GetCurrentActiveUserId() : bundleUserId;
 
     // trigger the status callback for status listening
     if ((dataMgr != nullptr) && (installResult.type != NotifyType::START_INSTALL)) {
@@ -98,6 +101,11 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
         std::shared_lock<std::shared_mutex> lock(callbackMutex);
         auto callbackList = dataMgr->GetCallBackList();
         for (const auto& callback : callbackList) {
+            int32_t callbackUserId = callback->GetUserId();
+            if (callbackUserId != Constants::UNSPECIFIED_USERID && callbackUserId != publishUserId) {
+                LOG_W(BMS_TAG_DEFAULT, "not callback userId %{public}d incorrect", callbackUserId);
+                continue;
+            }
             if (callback->GetBundleName() == installResult.bundleName) {
                 // if the msg needed, it could convert in the proxy node
                 callback->OnBundleStateChanged(installType, installResult.resultCode, Constants::EMPTY_STRING,
@@ -111,9 +119,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
             installResult.resultCode, installResult.isBmsExtensionUninstalled);
         return;
     }
-    int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
-    int32_t publishUserId = (bundleUserId == Constants::DEFAULT_USERID) ?
-        AccountHelper::GetCurrentActiveUserId() : bundleUserId;
+
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId);
     IPCSkeleton::SetCallingIdentity(identity);

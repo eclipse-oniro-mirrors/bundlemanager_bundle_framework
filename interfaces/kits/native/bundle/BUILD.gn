@@ -47,6 +47,7 @@ ohos_shared_library("bundle_ndk") {
     "samgr:samgr_proxy",
   ]
 
+  relative_install_dir = "ndk"
   public_external_deps = [ "json:nlohmann_json_static" ]
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

@@ -96,6 +96,7 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     "power_manager:powermgr_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
     "syscap_codec:syscap_interface_shared",
   ]
   external_deps += bundle_install_external_deps
@@ -271,6 +272,7 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     "power_manager:powermgr_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
     "syscap_codec:syscap_interface_shared",
   ]
   external_deps += bundle_install_external_deps

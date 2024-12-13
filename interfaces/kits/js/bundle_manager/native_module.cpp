@@ -170,12 +170,14 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAppCloneBundleInfo", GetAppCloneBundleInfo),
         DECLARE_NAPI_FUNCTION("getAllAppCloneBundleInfo", GetAllAppCloneBundleInfo),
         DECLARE_NAPI_FUNCTION("getAppCloneIdentity", GetAppCloneIdentity),
+        DECLARE_NAPI_FUNCTION("getLaunchWant", GetLaunchWant),
         DECLARE_NAPI_PROPERTY("ApplicationInfoFlag", nApplicationInfoFlag),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
     RegisterClearCacheListener();
-    napi_add_env_cleanup_hook(env, ClearCacheListener::HandleCleanEnv, nullptr);
+    void* key = reinterpret_cast<void*>(ClearCacheListener::HandleCleanEnv);
+    napi_add_env_cleanup_hook(env, ClearCacheListener::HandleCleanEnv, key);
     APP_LOGD("init js bundle manager success");
     return exports;
 }

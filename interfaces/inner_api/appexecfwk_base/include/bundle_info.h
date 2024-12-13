@@ -80,7 +80,7 @@ struct RequestPermission : public Parcelable {
     std::string name;
     std::string moduleName;
     std::string reason;
-    int32_t reasonId = 0;
+    uint32_t reasonId = 0;
     RequestPermissionUsedScene usedScene;
 
     bool ReadFromParcel(Parcel &parcel);
@@ -148,7 +148,6 @@ struct BundleInfo : public Parcelable {
     std::vector<RequestPermission> reqPermissionDetails;
     std::vector<OverlayBundleInfo> overlayBundleInfos;
 
-    // unused
     std::string cpuAbi;
     std::string seInfo;
     std::string label;

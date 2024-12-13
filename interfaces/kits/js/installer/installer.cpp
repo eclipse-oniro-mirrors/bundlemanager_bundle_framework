@@ -289,7 +289,7 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
             ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
         { IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_SOURCE_INIT_FAIL, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
         { IStatusReceiver::ERR_INSTALL_SINGLETON_INCOMPATIBLE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_INCONSISTENT_SIGNATURE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_FAILED_INCONSISTENT_SIGNATURE, ERROR_INSTALL_FAILED_INCONSISTENT_SIGNATURE },
         { IStatusReceiver::ERR_INSTALL_PARAM_ERROR, ERROR_BUNDLE_NOT_EXIST },
         { IStatusReceiver::ERR_UNINSTALL_PARAM_ERROR, ERROR_BUNDLE_NOT_EXIST },
         { IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME, ERROR_BUNDLE_NOT_EXIST },
@@ -413,7 +413,8 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_NATIVE_FAILED, ERROR_INSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_UNINSTALL_NATIVE_FAILED, ERROR_UNINSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_NATIVE_HNP_EXTRACT_FAILED, ERROR_INSTALL_NATIVE_FAILED},
-        { IStatusReceiver::ERR_UNINSTALL_CONTROLLED, ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED }
+        { IStatusReceiver::ERR_UNINSTALL_CONTROLLED, ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED },
+        { IStatusReceiver::ERR_INSTALL_DEBUG_ENCRYPTED_BUNDLE_FAILED, ERROR_INSTALL_PARSE_FAILED }
     };
 }
 
@@ -1393,7 +1394,6 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
-    callbackPtr->installParam.isUninstallAndRecover = true;
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER,
         UninstallAndRecoverExecuter, OperationCompleted);
     callbackPtr.release();
@@ -1610,7 +1610,6 @@ void CreateAppCloneExec(napi_env env, void *data)
     CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("CreateAppCloneExec param: bundleName = %{public}s, userId = %{public}d, appIndex = %{public}d",
@@ -1725,7 +1724,6 @@ void DestroyAppCloneExec(napi_env env, void *data)
     CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("DestroyAppCloneExec param: bundleName = %{public}s, userId = %{public}d, appIndex = %{public}d",
@@ -1830,7 +1828,6 @@ void InstallPreexistingAppExec(napi_env env, void *data)
     InstallPreexistingAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallPreexistingAppCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
     APP_LOGD("param: bundleName = %{public}s, userId = %{public}d",

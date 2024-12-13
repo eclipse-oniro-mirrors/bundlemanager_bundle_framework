@@ -16,6 +16,7 @@
 #include "bundle_multiuser_installer.h"
 
 #include "ability_manager_helper.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
@@ -46,6 +47,12 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("-n %{public}s -u %{public}d begin", bundleName.c_str(), userId);
+
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    if (bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId)) {
+        APP_LOGE("app %{public}s is in blocklist", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
+    }
 
     if (GetDataMgr() != ERR_OK) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -89,7 +96,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     // 1. check whether original application installed or not
     ScopeGuard bundleEnabledGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleInfo info;
-    bool isExist = dataMgr_->GetInnerBundleInfo(bundleName, info);
+    bool isExist = dataMgr_->GetInnerBundleInfoWithDisable(bundleName, info);
     if (!isExist) {
         APP_LOGE("the bundle is not installed");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -115,6 +122,10 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         APP_LOGE("the origin application is enterprise, not allow to install here");
         return ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED;
     }
+    if (appDistributionType == Constants::APP_DISTRIBUTION_TYPE_INTERNALTESTING) {
+        APP_LOGE("the origin application is inrternaltesting, not allow to install here");
+        return ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+    }
 
     // uid
     InnerBundleUserInfo newUserInfo;
@@ -127,9 +138,11 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
 
     // 4. generate the accesstoken id and inherit original permissions
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
-    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx) != ERR_OK) {
-        APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    if (!RecoverHapToken(bundleName, userId, newTokenIdEx, info)) {
+        if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx) != ERR_OK) {
+            APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
     }
     ScopeGuard applyAccessTokenGuard([&] {
         BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID);
@@ -210,6 +223,31 @@ void BundleMultiUserInstaller::ResetInstallProperties()
 {
     uid_ = 0;
     accessTokenId_ = 0;
+}
+
+bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
+    Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo)
+{
+    UninstallBundleInfo uninstallBundleInfo;
+    if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        return false;
+    }
+    APP_LOGI("bundleName:%{public}s getUninstallBundleInfo success", bundleName.c_str());
+    if (uninstallBundleInfo.userInfos.empty()) {
+        APP_LOGW("bundleName:%{public}s empty userInfos", bundleName.c_str());
+        return false;
+    }
+    if (uninstallBundleInfo.userInfos.find(std::to_string(userId)) != uninstallBundleInfo.userInfos.end()) {
+        accessTokenIdEx.tokenIdExStruct.tokenID =
+            uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenId;
+        accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo) == ERR_OK) {
+            return true;
+        } else {
+            APP_LOGW("bundleName:%{public}s UpdateHapToken failed", bundleName.c_str());
+        }
+    }
+    return false;
 }
 } // AppExecFwk
 } // OHOS

@@ -16,6 +16,7 @@
 
 #include <cstdio>
 #include <dirent.h>
+#include <dlfcn.h>
 #include <fcntl.h>
 #include <fstream>
 #include <iostream>
@@ -28,6 +29,7 @@
 
 #include "bundle_util.h"
 #include "bundle_extractor.h"
+#include "directory_ex.h"
 #include "file_ex.h"
 #include "installd/installd_operator.h"
 
@@ -71,6 +73,8 @@ public:
     void TearDown();
     void CreateQuickFileDir(const std::string &dir) const;
     void DeleteQuickFileDir(const std::string &dir) const;
+    void CreateFile(const std::string &filePath, const std::string &content) const;
+    void DeleteFile(const std::string &filePath) const;
 };
 
 BmsInstallDaemonOperatorTest::BmsInstallDaemonOperatorTest()
@@ -94,14 +98,22 @@ void BmsInstallDaemonOperatorTest::TearDown()
 
 void BmsInstallDaemonOperatorTest::CreateQuickFileDir(const std::string &dir) const
 {
-    bool ret = BundleUtil::CreateDir(dir);
-    EXPECT_TRUE(ret);
+    BundleUtil::CreateDir(dir);
 }
 
 void BmsInstallDaemonOperatorTest::DeleteQuickFileDir(const std::string &dir) const
 {
-    bool ret = BundleUtil::DeleteDir(dir);
-    EXPECT_TRUE(ret);
+    BundleUtil::DeleteDir(dir);
+}
+
+void BmsInstallDaemonOperatorTest::CreateFile(const std::string &filePath, const std::string &content) const
+{
+    SaveStringToFile(filePath, content);
+}
+
+void BmsInstallDaemonOperatorTest::DeleteFile(const std::string &filePath) const
+{
+    RemoveFile(filePath);
 }
 
 /**
@@ -178,6 +190,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0600, Function | Sma
     std::string path;
     auto ret = InstalldOperator::MkRecursiveDir(path, false);
     EXPECT_FALSE(ret);
+    path = "/data/app/el2";
+    ret = InstalldOperator::MkRecursiveDir(path, false);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -453,6 +468,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2500, Function | Sma
     std::string path;
     auto ret = InstalldOperator::MkRecursiveDir(path, true);
     EXPECT_FALSE(ret);
+    path = "/data/app/el2";
+    ret = InstalldOperator::MkRecursiveDir(path, false);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -503,6 +521,22 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2600, Function | Sma
     extractParam.extractFileType = ExtractFileType::RES_FILE;
     ret = InstalldOperator::IsNativeFile(TEST_RES_FILE, extractParam);
     EXPECT_TRUE(ret);
+
+    extractParam.extractFileType = ExtractFileType::ALL;
+    ret = InstalldOperator::IsNativeFile(TEST_RES_FILE, extractParam);
+    EXPECT_FALSE(ret);
+
+    extractParam.extractFileType = ExtractFileType::SO;
+    ret = InstalldOperator::IsNativeFile(TEST_LIB_SO, extractParam);
+    EXPECT_TRUE(ret);
+
+    extractParam.extractFileType = ExtractFileType::HNPS_FILE;
+    ret = InstalldOperator::IsNativeFile(TEST_RES_FILE, extractParam);
+    EXPECT_FALSE(ret);
+
+    extractParam.extractFileType = ExtractFileType::RES_FILE;
+    ret = InstalldOperator::IsNativeFile("t", extractParam);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -603,6 +637,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3300, Function | Sma
     EXPECT_FALSE(ret);
     ret = InstalldOperator::RenameFile("/test/123", "/test/123");
     EXPECT_FALSE(ret);
+    ret = InstalldOperator::RenameFile("/test/123", TEST_PATH);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -664,25 +700,6 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3700, Function | Sma
 }
 
 /**
- * @tc.number: InstalldHostImplTest_3800
- * @tc.name: test function of InstalldOperator
- * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3800, Function | SmallTest | Level0)
-{
-    bool ret = InstalldOperator::ApplyDiffPatch(
-        TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_QUICK_FIX_FILE_PATH_SECOND, TEST_PATH, 0);
-    EXPECT_EQ(ret, false);
-    std::string tempPath = "/data/test/installOperator";
-    CreateQuickFileDir(tempPath);
-    ret = InstalldOperator::ApplyDiffPatch(
-        tempPath, tempPath, tempPath, 0);
-    EXPECT_EQ(ret, true);
-    DeleteQuickFileDir(tempPath);
-}
-
-/**
  * @tc.number: InstalldHostImplTest_3900
  * @tc.name: test function of InstalldOperator
  * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
@@ -692,19 +709,6 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3900, Function | Sma
 {
     bool ret = InstalldOperator::ApplyDiffPatch("", "", TEST_PATH, 0);
     EXPECT_EQ(ret, true);
-}
-
-/**
- * @tc.number: InstalldHostImplTest_4000
- * @tc.name: test function of InstalldOperator
- * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4000, Function | SmallTest | Level0)
-{
-    bool ret = InstalldOperator::ApplyDiffPatch(
-        TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_QUICK_FIX_FILE_PATH_SECOND, TEST_PATH, 0);
-    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -817,6 +821,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4800, Function | Sma
 {
     auto ret = InstalldOperator::MkOwnerDir("", false, 0, 0);
     EXPECT_FALSE(ret);
+    ret = InstalldOperator::MkOwnerDir("/data/app/el2", false, 0, 0);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -850,20 +856,6 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5000, Function | Sma
     res = InstalldOperator::ScanDir(
         "//", ScanMode::SUB_FILE_FILE, ResultMode::RELATIVE_PATH, paths);
     EXPECT_EQ(res, true);
-}
-
-/**
- * @tc.number: InstalldOperatorTest_5100
- * @tc.name: test function of InstalldOperator
- * @tc.desc: 1. calling OpenHandle of InstalldOperator
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5100, Function | SmallTest | Level0)
-{
-    void **handle = nullptr;
-    bool res = InstalldOperator::OpenHandle(handle);
-    EXPECT_EQ(res, false);
-    InstalldOperator::CloseHandle(handle);
-    EXPECT_EQ(res, false);
 }
 
 /**
@@ -949,22 +941,6 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5600, Function | Sma
     res = InstalldOperator::ProcessApplyDiffPatchPath(
         TEST_FILE_PATH, TEST_FILE_PATH, "noExist", oldSoFileNames, diffFileNames);
     EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: InstalldOperatorTest_5700
- * @tc.name: test function of InstalldOperator
- * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
- * @tc.require: issueI6PNQX
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5700, Function | SmallTest | Level0)
-{
-    bool ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, TEST_FILE_PATH, 0);
-    EXPECT_FALSE(ret);
-    ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, "", 0);
-    EXPECT_FALSE(ret);
-    ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, TEST_FILE_PATH, 0);
-    EXPECT_FALSE(ret);
 }
 
 /**
@@ -1438,6 +1414,12 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8900, Function | Sma
     Security::CodeSign::EntryMap entryMap;
     bool ret = InstalldOperator::PrepareEntryMap(codeSignatureParam, soEntryFiles, entryMap);
     EXPECT_TRUE(ret);
+    codeSignatureParam.targetSoPath = "";
+    ret = InstalldOperator::PrepareEntryMap(codeSignatureParam, soEntryFiles, entryMap);
+    EXPECT_FALSE(ret);
+    codeSignatureParam.targetSoPath = "target";
+    ret = InstalldOperator::PrepareEntryMap(codeSignatureParam, soEntryFiles, entryMap);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -1495,8 +1477,503 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9300, Function | Sma
     std::string entryName;
     std::string targetPath;
     InstalldOperator::ExtractTargetHnpFile(extractor, entryName, targetPath, ExtractFileType::ALL);
+    targetPath = TEST_PATH;
+    InstalldOperator::ExtractTargetHnpFile(extractor, entryName, targetPath);
     std::string path = "test.path";
     auto ret = InstalldOperator::IsDiffFiles(TEST_STRING, path, TEST_STRING);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_9400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DeterminePrefix of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9400, Function | SmallTest | Level1)
+{
+    std::string cpuAbi = "";
+    std::string prefix = "";
+    auto ret = InstalldOperator::DeterminePrefix(ExtractFileType::HNPS_FILE, cpuAbi, prefix);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_9500
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DetermineSuffix of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9500, Function | SmallTest | Level1)
+{
+    std::vector<std::string> suffixes;
+    auto ret = InstalldOperator::DetermineSuffix(ExtractFileType::HNPS_FILE, suffixes);
+    EXPECT_TRUE(ret);
+    ret = InstalldOperator::DetermineSuffix(ExtractFileType::ALL, suffixes);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_9600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ScanSoFiles of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9600, Function | SmallTest | Level1)
+{
+    std::string newSoPath = "";
+    std::string originPath = "";
+    std::string currentPath = "";
+    std::vector<std::string> paths;
+    auto ret = InstalldOperator::ScanSoFiles(newSoPath, originPath, currentPath, paths);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_9700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling VerifyCodeSignature of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9700, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = TEST_STRING;
+    codeSignatureParam.cpuAbi = "";
+    codeSignatureParam.targetSoPath = TEST_STRING;
+    codeSignatureParam.signatureFileDir = "";
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.appIdentifier = TEST_STRING;
+    auto ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_9800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling CheckEncryption of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9800, Function | SmallTest | Level0)
+{
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath = "";
+    checkEncryptionParam.cpuAbi = "";
+    checkEncryptionParam.targetSoPath = TEST_STRING;
+    checkEncryptionParam.bundleId = -1;
+    bool isEncrypted = false;
+    auto ret = InstalldOperator::CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_9900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling MoveFiles of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9900, Function | SmallTest | Level0)
+{
+    std::string srcDir = "";
+    std::string desDir = "";
+    auto ret =InstalldOperator::MoveFiles(srcDir, desDir, true);
+    EXPECT_FALSE(ret);
+    ret =InstalldOperator::MoveFiles(srcDir, desDir, false);
+    EXPECT_FALSE(ret);
+    ret =InstalldOperator::MoveFiles(srcDir, desDir);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_10000
+ * @tc.name: test function of InstalldOperatorTest
+ * @tc.desc: 1. calling CheckEncryption
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10000, Function | SmallTest | Level0)
+{
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath.resize(4097, 'a');
+    checkEncryptionParam.cpuAbi = TEST_STRING;
+    checkEncryptionParam.targetSoPath = TEST_STRING;
+    checkEncryptionParam.bundleId = -1;
+    bool isEncrypted = false;
+    auto ret = InstalldOperator::CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_10100
+ * @tc.name: test function of InstalldOperatorTest
+ * @tc.desc: 1. calling ExtractFiles
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10100, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    std::string hnpPackageInfo = "{\"package\": \"hnpsample.hnp\", \"type\": \"public\"}";
+    auto ret = InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_10200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractFiles of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10200, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    extractParam.srcPath = TEST_ZIP_PATH;
+    extractParam.targetPath = TEST_PATH;
+    extractParam.cpuAbi = TEST_CPU_ABI;
+    extractParam.extractFileType = ExtractFileType::SO;
+    std::string hnpPackageInfo = "{\"package\": \"hnpsample.hnp\", \"type\": \"public\"}";
+    auto ret = InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_10300
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractFiles of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10300, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    extractParam.srcPath = TEST_ZIP_PATH;
+    extractParam.targetPath = TEST_PATH;
+    extractParam.cpuAbi = TEST_CPU_ABI;
+    extractParam.extractFileType = ExtractFileType::SO;
+    std::string hnpPackageInfo;
+    auto ret = InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_10400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractTargetFile of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10400, Function | SmallTest | Level0)
+{
+    BundleExtractor extractor("");
+    std::string entryName = TEST_LIB_AP;
+    std::string targetPath = "/data/app/el1/";
+    std::string cpuAbi = TEST_CPU_ABI;
+    ExtractFileType extractFileType = ExtractFileType::AP;
+    InstalldOperator::ExtractTargetFile(extractor, entryName, targetPath, cpuAbi, extractFileType);
+    auto ret = InstalldOperator::ExtractDiffFiles(TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_PATH, TEST_CPU_ABI);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_10500
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling RenameFile of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10500, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir("/test/oldPath");
+    auto ret = InstalldOperator::RenameFile("/test/oldPath", "/test/newPath");
+#ifdef USE_ARM64
+    EXPECT_FALSE(ret);
+#else
+    EXPECT_TRUE(ret);
+#endif
+    DeleteQuickFileDir("/test/newPath");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_10600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling IsExistApFile of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10600, Function | SmallTest | Level0)
+{
+    CreateFile("/data/test/test.ap", "test");
+    auto ret = InstalldOperator::IsExistApFile("/data/test/test.ap");
+    EXPECT_TRUE(ret);
+    DeleteFile("/data/test/test.ap");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_10700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DeleteFilesExceptDirs of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10700, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir("/temp/test");
+    CreateFile("/temp/test/test.ap", "test");
+    std::vector<std::string> dirsToKeep;
+    bool ret = InstalldOperator::DeleteFilesExceptDirs("/temp", dirsToKeep);
+#ifdef USE_ARM64
+    EXPECT_FALSE(ret);
+#else
+    EXPECT_TRUE(ret);
+    DeleteFile("/temp/test/test.ap");
+    DeleteQuickFileDir("/temp");
+#endif
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_10800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ScanDir of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10800, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir("/temp/test/test1");
+    CreateFile("/temp/test.ap", "test");
+    std::vector<std::string> paths;
+    auto ret = InstalldOperator::ScanDir("/temp/", ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, paths);
+#ifdef USE_ARM64
+    EXPECT_FALSE(ret);
+#else
+    EXPECT_TRUE(ret);
+#endif
+    DeleteFile("/temp/test.ap");
+    DeleteQuickFileDir("/temp");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_10900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ScanDir of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10900, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir("/temp/test/test1");
+    CreateFile("/temp/test.ap", "test");
+    std::vector<std::string> paths;
+    auto ret = InstalldOperator::ScanDir("/temp/", ScanMode::SUB_FILE_FILE, ResultMode::RELATIVE_PATH, paths);
+#ifdef USE_ARM64
+    EXPECT_FALSE(ret);
+#else
+    EXPECT_TRUE(ret);
+#endif
+    DeleteFile("/temp/test.ap");
+    DeleteQuickFileDir("/temp");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_11000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ScanDir of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11000, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir("/temp/test/test1");
+    CreateFile("/temp/test.ap", "test");
+    std::vector<std::string> paths;
+    auto ret = InstalldOperator::ScanDir("/temp/", ScanMode::SUB_FILE_ALL, ResultMode::RELATIVE_PATH, paths);
+#ifdef USE_ARM64
+    EXPECT_FALSE(ret);
+#else
+    EXPECT_TRUE(ret);
+#endif
+    DeleteFile("/temp/test.ap");
+    DeleteQuickFileDir("/temp");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_11200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11200, Function | SmallTest | Level0)
+{
+    std::string newSoPath;
+    newSoPath.resize(4097, 'a');
+    auto ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, newSoPath, 1);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_11300
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling PerformCodeSignatureCheck of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11300, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.isCompileSdkOpenHarmony = true;
+    codeSignatureParam.isEnterpriseBundle = true;
+    Security::CodeSign::EntryMap entryMap;
+    ErrCode ret = InstalldOperator::PerformCodeSignatureCheck(codeSignatureParam, entryMap);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_11400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling PerformCodeSignatureCheck of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11400, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.signatureFileDir = "test";
+    Security::CodeSign::EntryMap entryMap;
+    ErrCode ret = InstalldOperator::PerformCodeSignatureCheck(codeSignatureParam, entryMap);
+    EXPECT_EQ(ret, CS_SUCCESS);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_11500
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling VerifyCodeSignature of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11500, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = TEST_STRING;
+    codeSignatureParam.cpuAbi = TEST_CPU_ABI;
+    codeSignatureParam.targetSoPath = "target/file.path";
+    codeSignatureParam.signatureFileDir = "";
+    codeSignatureParam.isCompileSdkOpenHarmony = true;
+    codeSignatureParam.isEnterpriseBundle = true;
+    codeSignatureParam.isPreInstalledBundle = true;
+    ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_11600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling VerifyCodeSignatures of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11600, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = TEST_ZIP_PATH;
+    codeSignatureParam.cpuAbi = TEST_CPU_ABI;
+    codeSignatureParam.targetSoPath = "target/file.path";
+    codeSignatureParam.signatureFileDir = "";
+    codeSignatureParam.isCompileSdkOpenHarmony = true;
+    codeSignatureParam.isEnterpriseBundle = true;
+    codeSignatureParam.isPreInstalledBundle = false;
+    ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_11700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling VerifyCodeSignature of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11700, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = "/system/app/com.ohos.camera/Camera.hap";
+    codeSignatureParam.cpuAbi = TEST_CPU_ABI;
+    codeSignatureParam.targetSoPath = "target/file.path";
+    codeSignatureParam.appIdentifier = "";
+    codeSignatureParam.signatureFileDir = "";
+    codeSignatureParam.isCompileSdkOpenHarmony = true;
+    codeSignatureParam.isEnterpriseBundle = true;
+    codeSignatureParam.isPreInstalledBundle = true;
+    ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+#ifdef USE_ARM64
+    EXPECT_FALSE(ret);
+#else
+    EXPECT_TRUE(ret);
+#endif
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_11800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling VerifyCodeSignature of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11800, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir("/temp/");
+    CreateFile("/temp/test", "test");
+    std::string srcDir = "/temp/test";
+    std::string desDir = "/temp/test";
+    auto ret =InstalldOperator::MoveFiles(srcDir, desDir, true);
+    EXPECT_FALSE(ret);
+    DeleteFile("/temp/test");
+    DeleteQuickFileDir("/temp");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_11900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractTargetHnpFile of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11900, Function | SmallTest | Level1)
+{
+    CreateQuickFileDir("/temp/");
+    CreateFile("/temp/test", "test");
+    BundleExtractor extractor("");
+    std::string entryName;
+    std::string targetPath = "/temp/test/";
+    InstalldOperator::ExtractTargetHnpFile(extractor, entryName, targetPath, ExtractFileType::ALL);
+    std::string dir = InstalldOperator::GetPathDir(targetPath);
+    auto ret = !InstalldOperator::IsExistDir(dir) && !InstalldOperator::MkRecursiveDir(dir, true);
+    EXPECT_TRUE(ret);
+    DeleteFile("/temp/test");
+    DeleteQuickFileDir("/temp");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_12000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling MoveFileOrDir of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12000, Function | SmallTest | Level1)
+{
+    auto ret = InstalldOperator::MoveFileOrDir("", "", S_IFDIR);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::MoveFileOrDir("", "", S_IFCHR);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_12100
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling MoveFile of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12100, Function | SmallTest | Level1)
+{
+    CreateFile("/temp.ap", "test");
+    auto ret = InstalldOperator::MoveFile("", "");
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::MoveFile("/temp.ap", "/temp1.ap");
+#ifdef USE_ARM64
+    EXPECT_FALSE(ret);
+#else
+    EXPECT_TRUE(ret);
+#endif
+    DeleteFile("/temp1.ap");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_12200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractDriverSoFiles of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12200, Function | SmallTest | Level0)
+{
+    std::string srcPath = "";
+    std::unordered_multimap<std::string, std::string> dirMap;
+    dirMap.insert(std::make_pair(".", ".."));
+    auto ret = InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_12300
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractResourceFiles of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12300, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    extractParam.srcPath = TEST_ZIP_PATH;
+    extractParam.targetPath = TEST_PATH;
+    extractParam.cpuAbi = TEST_CPU_ABI;
+    extractParam.extractFileType = ExtractFileType::SO;
+    BundleExtractor extractor("");
+    auto ret = InstalldOperator::ExtractResourceFiles(extractParam, extractor);
+#ifdef USE_ARM64
+    EXPECT_FALSE(ret);
+#else
+    EXPECT_TRUE(ret);
+#endif
 }
 } // OHOS

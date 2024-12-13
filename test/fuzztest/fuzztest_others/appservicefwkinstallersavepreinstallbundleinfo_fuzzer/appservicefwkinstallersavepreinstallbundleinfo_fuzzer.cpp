@@ -24,14 +24,15 @@
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    constexpr size_t FOO_MAX_LEN = 1024;
     constexpr size_t U32_AT_SIZE = 4;
     
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
         AppServiceFwkInstaller appServiceFwk;
         std::unordered_map<std::string, InnerBundleInfo> infos;
-        appServiceFwk.SavePreInstallBundleInfo(ERR_APPEXECFWK_INSTALL_PARAM_ERROR, infos);
+        InstallParam installParam;
+        installParam.needSavePreInstallInfo = true;
+        appServiceFwk.SavePreInstallBundleInfo(ERR_APPEXECFWK_INSTALL_PARAM_ERROR, infos, installParam);
         return true;
     }
 }
@@ -45,11 +46,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
 
     if (size < OHOS::U32_AT_SIZE) {
-        return 0;
-    }
-
-    /* Validate the length of size */
-    if (size > OHOS::FOO_MAX_LEN) {
         return 0;
     }
 

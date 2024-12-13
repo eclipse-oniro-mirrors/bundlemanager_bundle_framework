@@ -2433,5 +2433,95 @@ HWTEST_F(BundleMgrClientSystemTest, CreateBundleDataDir_0100, TestSize.Level1)
     auto result = bundleMgrClient.CreateBundleDataDir(userId);
     EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
 }
+
+/**
+ * @tc.number: GetDirByBundleNameAndAppIndex_0001
+ * @tc.name: GetDirByBundleNameAndAppIndex
+ * @tc.desc: GetDirByBundleNameAndAppIndex failed.
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetDirByBundleNameAndAppIndex_0001, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    std::string dataDir;
+    std::string bundleName = "com.example.application";
+    ErrCode queryResult = impl.GetDirByBundleNameAndAppIndex(bundleName, -1, dataDir);
+    EXPECT_EQ(queryResult, ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+    impl.OnDeath();
+}
+
+/**
+ * @tc.number: GetDirByBundleNameAndAppIndex_0002
+ * @tc.name: GetDirByBundleNameAndAppIndex
+ * @tc.desc: Test GetDirByBundleNameAndAppIndex.
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetDirByBundleNameAndAppIndex_0002, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    std::string dataDir;
+    std::string bundleName = "com.example.application";
+    ErrCode queryResult = impl.GetDirByBundleNameAndAppIndex(bundleName, 1, dataDir);
+    EXPECT_EQ(queryResult, ERR_OK);
+    EXPECT_EQ(dataDir, "+clone-1+com.example.application");
+    impl.OnDeath();
+}
+
+/**
+ * @tc.number: GetDirByBundleNameAndAppIndex_0003
+ * @tc.name: GetDirByBundleNameAndAppIndex
+ * @tc.desc: Test GetDirByBundleNameAndAppIndex.
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetDirByBundleNameAndAppIndex_0003, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    std::string dataDir;
+    std::string bundleName = "com.example.application";
+    ErrCode queryResult = impl.GetDirByBundleNameAndAppIndex(bundleName, 0, dataDir);
+    EXPECT_EQ(queryResult, ERR_OK);
+    EXPECT_EQ(dataDir, "com.example.application");
+    impl.OnDeath();
+}
+
+/**
+ * @tc.number: GetAllBundleDirs_0001
+ * @tc.name: GetAllBundleDirs
+ * @tc.desc: Test GetAllBundleDirs.
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetAllBundleDirs_0001, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    std::vector<BundleDir> bundleDirs;
+    ErrCode queryResult = impl.GetAllBundleDirs(DEFAULT_USERID, bundleDirs);
+    EXPECT_EQ(queryResult, ERR_OK);
+    impl.OnDeath();
+}
+
+/**
+ * @tc.number: GetAllBundleDirs_0002
+ * @tc.name: GetAllBundleDirs
+ * @tc.desc: Test GetAllBundleDirs.
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetAllBundleDirs_0002, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    std::vector<BundleDir> bundleDirs;
+    ErrCode queryResult = impl.GetAllBundleDirs(-100, bundleDirs);
+    EXPECT_NE(queryResult, ERR_OK);
+    impl.OnDeath();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

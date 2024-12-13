@@ -125,6 +125,7 @@ ErrCode BmsBundleQuickFixSwitcherTest::InstallBundle(const std::string &bundlePa
     InstallParam installParam;
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::NORMAL;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -520,7 +521,7 @@ HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_1300, Func
     EXPECT_NE(dataMgr, nullptr) << "the data mgr is nullptr";
 
     InnerBundleInfo innerBundleInfo;
-    bool result = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    bool result = dataMgr->GetInnerBundleInfoWithDisable(BUNDLE_NAME, innerBundleInfo);
     EXPECT_TRUE(result);
     SetAppQuickFix(innerBundleInfo);
     result = dataMgr->UpdateQuickFixInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
@@ -577,7 +578,7 @@ HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_1500, Func
     EXPECT_NE(dataMgr, nullptr) << "the data mgr is nullptr";
 
     InnerBundleInfo innerBundleInfo;
-    bool result = dataMgr->GetInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    bool result = dataMgr->GetInnerBundleInfoWithDisable(BUNDLE_NAME, innerBundleInfo);
     EXPECT_TRUE(result);
     SetAppQuickFix(innerBundleInfo);
     result = dataMgr->UpdateQuickFixInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);

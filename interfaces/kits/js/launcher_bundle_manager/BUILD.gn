@@ -54,7 +54,6 @@ ohos_shared_library("launcherbundlemanager") {
     "ipc:ipc_single",
     "napi:ace_napi",
   ]
-  public_external_deps = [ "node:node_header_notice" ]
   relative_install_dir = "module/bundle"
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

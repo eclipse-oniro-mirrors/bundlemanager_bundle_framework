@@ -191,6 +191,7 @@ ErrCode BmsBundleQuickFixTest::InstallBundle(const std::string &bundlePath) cons
     InstallParam installParam;
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -214,6 +215,7 @@ ErrCode BmsBundleQuickFixTest::UpdateBundle(const std::string &bundlePath) const
     InstallParam installParam;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
+    installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -4463,14 +4465,12 @@ HWTEST_F(BmsBundleQuickFixTest, to_json_0100, Function | SmallTest | Level0)
     to_json(jsonObject, quickFixMark);
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         quickFixMark.bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     EXPECT_EQ(parseResult, ERR_OK);
 }
 
@@ -4486,14 +4486,12 @@ HWTEST_F(BmsBundleQuickFixTest, to_json_0200, Function | SmallTest | Level0)
     to_json(jsonObject, quickFixMark);
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         quickFixMark.bundleName,
-        JsonType::STRING,
         false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        parseResult);
     EXPECT_EQ(parseResult, ERR_OK);
 }
 

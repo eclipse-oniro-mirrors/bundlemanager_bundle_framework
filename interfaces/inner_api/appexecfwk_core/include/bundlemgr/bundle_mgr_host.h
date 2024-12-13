@@ -805,6 +805,8 @@ private:
 
     ErrCode HandleGetCloneAppIndexes(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetLaunchWant(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSignatureInfoByBundleName(MessageParcel &data, MessageParcel &reply);
@@ -816,6 +818,8 @@ private:
     ErrCode HandleGetAllDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleUpdateAppEncryptedStatus(MessageParcel &data, MessageParcel &reply);
 
     /**
      * @brief Handles the GetBundleInfosForContinuation function called from a IBundleMgr proxy object.
@@ -833,6 +837,16 @@ private:
      */
     ErrCode HandleGetContinueBundleNames(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleIsBundleInstalled(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetCompatibleDeviceTypeNative(MessageParcel &data, MessageParcel &reply);
+    
+    ErrCode HandleGetCompatibleDeviceType(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetBundleNameByAppId(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetDirByBundleNameAndAppIndex(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetAllBundleDirs(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

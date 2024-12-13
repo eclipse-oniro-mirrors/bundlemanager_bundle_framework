@@ -83,10 +83,7 @@ ohos_shared_library("zlib") {
     "napi:ace_napi",
     "zlib:shared_libz",
   ]
-  public_external_deps = [
-    "libuv:uv",
-    "node:node_header_notice",
-  ]
+  public_external_deps = [ "libuv:uv" ]
   install_enable = true
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

@@ -30,7 +30,7 @@ namespace AppExecFwk {
 namespace {
 constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 100 * 1024 * 1024; // max ipc size 100MB
-bool GetData(void *&buffer, size_t size, const void *data)
+bool GetData(size_t size, const void *data, void *&buffer)
 {
     if (data == nullptr) {
         APP_LOGE("failed due to null data");
@@ -277,7 +277,7 @@ ErrCode BundleResourceProxy::GetParcelInfo(BundleResourceInterfaceCode code, Mes
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     } else {
-        if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+        if (!GetData(dataSize, reply.ReadRawData(dataSize), buffer)) {
             APP_LOGE("GetData failed dataSize: %{public}zu", dataSize);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -328,7 +328,7 @@ ErrCode BundleResourceProxy::GetVectorParcelInfo(
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     } else {
-        if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+        if (!GetData(dataSize, reply.ReadRawData(dataSize), buffer)) {
             APP_LOGE("GetData failed dataSize: %{public}zu", dataSize);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
