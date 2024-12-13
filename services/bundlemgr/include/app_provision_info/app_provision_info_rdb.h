@@ -39,7 +39,7 @@ public:
     bool GetAdditionalInfo(const std::string &bundleName, std::string &additionalInfo);
 
 private:
-    bool ConvertToAppProvision(const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
+    bool ConvertToAppProvision(const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
         AppProvisionInfo &appProvisionInfo);
     std::shared_ptr<RdbDataManager> rdbDataManager_;
 

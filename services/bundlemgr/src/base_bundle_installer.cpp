@@ -84,8 +84,6 @@ constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install/";
 const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
-constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
-constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr const char* LIBS_TMP = "libs_tmp";
 
 #ifdef STORAGE_SERVICE_ENABLE
@@ -240,14 +238,15 @@ ErrCode BaseBundleInstaller::InstallBundle(
             result);
     }
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
-    LOG_D(BMS_TAG_INSTALLER, "finish to process bundle install");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallBundle finished -n %{public}s -u %{public}d",
+        bundleName_.c_str(), installParam.userId);
     return result;
 }
 
 ErrCode BaseBundleInstaller::InstallBundleByBundleName(
     const std::string &bundleName, const InstallParam &installParam)
 {
-    LOG_I(BMS_TAG_INSTALLER, "begin to process bundle install by bundleName, which is %{public}s", bundleName.c_str());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallBundleByBundleName -n %{public}s", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
 
     int32_t uid = Constants::INVALID_UID;
@@ -751,12 +750,11 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_I(BMS_TAG_INSTALLER, "-n %{public}s -u %{public}d -f %{public}hhd",
-        bundleName_.c_str(), userId_, installParam.installFlag);
+    LOG_I(BMS_TAG_INSTALLER, "-n %{public}s -u %{public}d -f %{public}hhd isAppExist:%{public}d",
+        bundleName_.c_str(), userId_, installParam.installFlag, isAppExist_);
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    LOG_I(BMS_TAG_INSTALLER, "isAppExist:%{public}d", isAppExist_);
     SetOldAppIsEncrypted(oldInfo);
 
     KillRelatedProcessIfArkWeb(bundleName_, isAppExist_, installParam.isOTA);
@@ -869,7 +867,6 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
     auto it = newInfos.begin();
     if (!isAppExist_) {
-        LOG_I(BMS_TAG_INSTALLER, "app is not exist");
         if (!CheckInstallOnKeepData(bundleName_, installParam.isOTA, newInfos)) {
             LOG_E(BMS_TAG_INSTALLER, "check failed");
             return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
@@ -880,8 +877,6 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         newInnerBundleUserInfo.bundleUserInfo.userId = userId_;
         newInnerBundleUserInfo.bundleName = bundleName_;
         newInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
-        LOG_I(BMS_TAG_INSTALLER, "SetIsFreeInstallApp(%{public}d)",
-            InstallFlag::FREE_INSTALL == installParam.installFlag);
         newInfo.SetIsFreeInstallApp(InstallFlag::FREE_INSTALL == installParam.installFlag);
         SetApplicationFlagsForPreinstallSource(newInfos, installParam);
         result = ProcessBundleInstallStatus(newInfo, uid);
@@ -1309,9 +1304,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 
     // create data group dir
-    ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(); });
-    result = CreateDataGroupDirs(newInfos, oldInfo);
-    CHECK_RESULT_WITH_ROLLBACK(result, "create data group dirs failed with result %{public}d", newInfos, oldInfo);
+    ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(oldInfo); });
+    CreateDataGroupDirs(hapVerifyResults, oldInfo);
 
     // create Screen Lock File Protection Dir
     CreateScreenLockProtectionDir();
@@ -1347,7 +1341,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 #endif
     DeleteUninstallBundleInfo(bundleName_);
-    UpdateEncryptedStatus();
+    UpdateEncryptedStatus(oldInfo);
     GetInstallEventInfo(sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     UpdateRouterInfo();
@@ -1361,7 +1355,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (isAppExist_) {
         RemoveDataPreloadHapFiles(bundleName_);
     }
-    RemoveOldGroupDirs();
+    RemoveOldGroupDirs(oldInfo);
     RemoveOldExtensionDirs();
     /* process quick fix when install new moudle */
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
@@ -2004,7 +1998,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             std::vector<std::string> extensionDirs = oldInfo.GetAllExtensionDirs();
             createExtensionDirs_.assign(extensionDirs.begin(), extensionDirs.end());
             CreateExtensionDataDir(oldInfo);
-            CreateDataGroupDir(oldInfo);
+            GenerateNewUserDataGroupInfos(oldInfo);
             bundleName_ = bundleName;
             CreateScreenLockProtectionDir();
             // extract ap file
@@ -3009,62 +3003,29 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
 }
 
 ErrCode BaseBundleInstaller::CreateDataGroupDirs(
-    const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo)
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, const InnerBundleInfo &oldInfo)
 {
-    for (auto iter = newInfos.begin(); iter != newInfos.end(); iter++) {
-        auto result = GetGroupDirsChange(iter->second, oldInfo, isAppExist_);
-        CHECK_RESULT(result, "GetGroupDirsChange failed %{public}d");
-    }
-    auto result = CreateGroupDirs();
-    if (result != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "CreateGroupDirs failed %{public}d", result);
-    }
-    return ERR_OK;
-}
-
-ErrCode BaseBundleInstaller::GetGroupDirsChange(const InnerBundleInfo &info,
-    const InnerBundleInfo &oldInfo, bool oldInfoExisted)
-{
-    if (oldInfoExisted) {
-        auto result = GetRemoveDataGroupDirs(oldInfo, info);
-        CHECK_RESULT(result, "GetRemoveDataGroupDirs failed %{public}d");
-    }
-    auto result = GetDataGroupCreateInfos(info);
-    CHECK_RESULT(result, "GetDataGroupCreateInfos failed %{public}d");
-    return ERR_OK;
-}
-
-ErrCode BaseBundleInstaller::GetRemoveDataGroupDirs(
-    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo)
-{
-    auto oldDataGroupInfos = oldInfo.GetDataGroupInfos();
-    auto newDataGroupInfos = newInfo.GetDataGroupInfos();
     if (dataMgr_ == nullptr) {
-        LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        LOG_W(BMS_TAG_INSTALLER, "dataMgr_ null");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-
-    for (auto &item : oldDataGroupInfos) {
-        if (newDataGroupInfos.find(item.first) == newDataGroupInfos.end() &&
-            !(dataMgr_->IsShareDataGroupId(item.first, userId_)) && !item.second.empty()) {
-            std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-                + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + item.second[0].uuid;
-            LOG_D(BMS_TAG_INSTALLER, "remove dir: %{public}s", dir.c_str());
-            removeGroupDirs_.emplace_back(dir);
-        }
+    if (hapVerifyRes.empty()) {
+        LOG_W(BMS_TAG_INSTALLER, "hapVerifyRes empty");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
+    std::unordered_set<std::string> groupIds;
+    GetDataGroupIds(hapVerifyRes, groupIds);
+    dataMgr_->GenerateDataGroupInfos(bundleName_, groupIds, userId_);
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::RemoveOldGroupDirs() const
+void BaseBundleInstaller::RemoveOldGroupDirs(const InnerBundleInfo &oldInfo)
 {
-    for (const std::string &dir : removeGroupDirs_) {
-        LOG_D(BMS_TAG_INSTALLER, "RemoveOldGroupDirs %{public}s", dir.c_str());
-        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
-        CHECK_RESULT(result, "RemoveDir failed %{public}d");
+    if (dataMgr_ == nullptr) {
+        LOG_W(BMS_TAG_INSTALLER, "dataMgr_ null");
+        return;
     }
-    LOG_D(BMS_TAG_INSTALLER, "RemoveOldGroupDirs success");
-    return ERR_OK;
+    dataMgr_->RemoveOldGroupDirs(oldInfo);
 }
 
 std::vector<std::string> BaseBundleInstaller::GenerateScreenLockProtectionDir(const std::string &bundleName) const
@@ -3098,7 +3059,7 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
     bool hasPermission = false;
     std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
     auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
-        return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
     });
     if (it != reqPermissions.end()) {
         hasPermission = true;
@@ -3122,6 +3083,7 @@ void BaseBundleInstaller::CreateEl5AndSetPolicy(const InnerBundleInfo &info)
         LOG_E(BMS_TAG_INSTALLER, "init failed");
         return;
     }
+    std::vector<CreateDirParam> params;
     CreateDirParam el5Param;
     el5Param.bundleName = info.GetBundleName();
     el5Param.userId = userId_;
@@ -3129,7 +3091,20 @@ void BaseBundleInstaller::CreateEl5AndSetPolicy(const InnerBundleInfo &info)
     el5Param.apl = info.GetAppPrivilegeLevel();
     el5Param.isPreInstallApp = info.IsPreInstallApp();
     el5Param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
-    dataMgr_->CreateEl5Dir(std::vector<CreateDirParam> {el5Param});
+    params.emplace_back(el5Param);
+    InnerBundleUserInfo userInfo;
+    if (!info.GetInnerBundleUserInfo(userId_, userInfo)) {
+        APP_LOGE("get user info failed");
+        return;
+    }
+    for (const auto &cloneInfo : userInfo.cloneInfos) {
+        CreateDirParam cloneParam = el5Param;
+        cloneParam.uid = cloneInfo.second.uid;
+        cloneParam.gid = cloneInfo.second.uid;
+        cloneParam.appIndex = cloneInfo.second.appIndex;
+        params.emplace_back(cloneParam);
+    }
+    dataMgr_->CreateEl5Dir(params);
 }
 
 void BaseBundleInstaller::GetUninstallBundleInfo(bool isKeepData, int32_t userId,
@@ -3207,7 +3182,7 @@ void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, 
     }
     std::vector<RequestPermission> reqPermissions = oldInfo.GetAllRequestPermissions();
     auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
-        return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
     });
     if (it == reqPermissions.end()) {
         LOG_D(BMS_TAG_INSTALLER, "no need to delete el5 -n %{public}s", oldInfo.GetBundleName().c_str());
@@ -3241,74 +3216,22 @@ void BaseBundleInstaller::DeleteScreenLockProtectionDir(const std::string bundle
     }
 }
 
-ErrCode BaseBundleInstaller::CreateGroupDirs() const
+void BaseBundleInstaller::DeleteGroupDirsForException(const InnerBundleInfo &oldInfo) const
 {
-    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-        + std::to_string(userId_);
-    if (!BundleUtil::IsExistDir(parentDir)) {
-        LOG_E(BMS_TAG_INSTALLER, "parent dir(%{public}s) missing: group", parentDir.c_str());
-        return ERR_OK;
+    if (dataMgr_ == nullptr) {
+        LOG_W(BMS_TAG_INSTALLER, "dataMgr_ null");
+        return;
     }
-    for (const DataGroupInfo &dataGroupInfo : createGroupDirs_) {
-        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        LOG_D(BMS_TAG_INSTALLER, "create group dir: %{public}s", dir.c_str());
-        auto result = InstalldClient::GetInstance()->Mkdir(dir,
-            DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
-        CHECK_RESULT(result, "make groupDir failed %{public}d");
-    }
-    LOG_D(BMS_TAG_INSTALLER, "CreateGroupDirs success");
-    return ERR_OK;
-}
-
-ErrCode BaseBundleInstaller::GetDataGroupCreateInfos(const InnerBundleInfo &newInfo)
-{
-    auto newDataGroupInfos = newInfo.GetDataGroupInfos();
-    for (auto &item : newDataGroupInfos) {
-        const std::string &dataGroupId = item.first;
-        if (item.second.empty()) {
-            LOG_E(BMS_TAG_INSTALLER, "dataGroupInfos in bundle: %{public}s is empty", newInfo.GetBundleName().c_str());
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-        createGroupDirs_.emplace_back(item.second[0]);
-    }
-    return ERR_OK;
-}
-
-void BaseBundleInstaller::DeleteGroupDirsForException() const
-{
-    for (const DataGroupInfo &info : createGroupDirs_) {
-        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-            + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + info.uuid;
-        InstalldClient::GetInstance()->RemoveDir(dir);
-    }
+    dataMgr_->DeleteGroupDirsForException(oldInfo, userId_);
 }
 
 ErrCode BaseBundleInstaller::RemoveDataGroupDirs(const std::string &bundleName, int32_t userId, bool isKeepData) const
 {
-    if (isKeepData) {
-        return ERR_OK;
-    }
-    std::vector<DataGroupInfo> infos;
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    if (!(dataMgr_->QueryDataGroupInfos(bundleName, userId, infos))) {
-        return ERR_OK;
-    }
-    std::vector<std::string> removeDirs;
-    for (auto iter = infos.begin(); iter != infos.end(); iter++) {
-        std::string dir;
-        if (!(dataMgr_->IsShareDataGroupId(iter->dataGroupId, userId)) &&
-            dataMgr_->GetGroupDir(iter->dataGroupId, dir, userId)) {
-            LOG_D(BMS_TAG_INSTALLER, "dir: %{public}s need to be deleted", dir.c_str());
-            removeDirs.emplace_back(dir);
-        }
-    }
-    for (const std::string &dir : removeDirs) {
-        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
-        CHECK_RESULT(result, "RemoveDir failed %{public}d");
-    }
+    dataMgr_->DeleteUserDataGroupInfos(bundleName, userId, isKeepData);
     return ERR_OK;
 }
 
@@ -3824,8 +3747,8 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     if (!infos.empty()) {
         bundleType_ = infos.begin()->second.GetApplicationBundleType();
     }
+    dataMgr_->UpdateAppEncryptedStatus(infos.begin()->second.GetBundleName(), false, 0, true);
     GenerateOdid(infos, hapVerifyRes);
-    ProcessDataGroupInfo(bundlePaths, infos, installParam.userId, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
     /* At this place, hapVerifyRes cannot be empty and unnecessary to check it */
     isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyRes[0]);
@@ -3913,38 +3836,13 @@ void BaseBundleInstaller::CreateExtensionDataDir(InnerBundleInfo &info) const
     }
 }
 
-void BaseBundleInstaller::CreateDataGroupDir(InnerBundleInfo &info) const
+void BaseBundleInstaller::GenerateNewUserDataGroupInfos(InnerBundleInfo &info) const
 {
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
         return;
     }
-    std::vector<DataGroupInfo> dataGroupInfos;
-    if (!dataMgr_->QueryDataGroupInfos(info.GetBundleName(), userId_, dataGroupInfos)) {
-        LOG_W(BMS_TAG_INSTALLER, "query group info for bundle %{public}s userId %{public}d failed",
-            info.GetBundleName().c_str(), userId_);
-        return;
-    }
-    if (dataGroupInfos.empty()) {
-        return;
-    }
-
-    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-        + std::to_string(userId_);
-    if (!BundleUtil::IsExistDir(parentDir)) {
-        LOG_E(BMS_TAG_INSTALLER, "parent dir(%{public}s) missing: group", parentDir.c_str());
-        return;
-    }
-    for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
-        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        LOG_D(BMS_TAG_INSTALLER, "create group dir: %{public}s", dir.c_str());
-        auto result = InstalldClient::GetInstance()->Mkdir(dir,
-            DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
-        if (result != ERR_OK) {
-            LOG_W(BMS_TAG_INSTALLER, "create data group dir %{public}s userId %{public}d failed",
-                dataGroupInfo.uuid.c_str(), userId_);
-        }
-    }
+    dataMgr_->GenerateNewUserDataGroupInfos(info.GetBundleName(), userId_);
 }
 
 void BaseBundleInstaller::GetCreateExtensionDirs(std::unordered_map<std::string, InnerBundleInfo> &newInfos)
@@ -4108,27 +4006,18 @@ void BaseBundleInstaller::GenerateOdid(
     }
 }
 
-void BaseBundleInstaller::ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
-    std::unordered_map<std::string, InnerBundleInfo> &infos,
-    int32_t userId, const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+void BaseBundleInstaller::GetDataGroupIds(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+    std::unordered_set<std::string> &groupIds)
 {
-    if (hapVerifyRes.size() < bundlePaths.size()) {
-        LOG_E(BMS_TAG_INSTALLER, "hapVerifyRes size less than bundlePaths size");
-        return;
-    }
-    for (uint32_t i = 0; i < bundlePaths.size(); ++i) {
+    for (size_t i = 0; i < hapVerifyRes.size(); i++) {
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
-        auto dataGroupGids = provisionInfo.bundleInfo.dataGroupIds;
-        if (dataGroupGids.empty()) {
-            LOG_D(BMS_TAG_INSTALLER, "has no data-group-id in provisionInfo");
-            return;
+        auto dataGroupIds = provisionInfo.bundleInfo.dataGroupIds;
+        if (dataGroupIds.empty()) {
+            continue;
         }
-        std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-        if (dataMgr == nullptr) {
-            LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
-            return;
+        for (const std::string &id : dataGroupIds) {
+            groupIds.insert(id);
         }
-        dataMgr->GenerateDataGroupInfos(infos[bundlePaths[i]], dataGroupGids, userId);
     }
 }
 
@@ -4652,7 +4541,7 @@ void BaseBundleInstaller::SetOldAppIsEncrypted(const InnerBundleInfo &oldInfo)
     oldApplicationReservedFlag_ = oldInfo.GetApplicationReservedFlag();
 }
 
-bool BaseBundleInstaller::UpdateEncryptedStatus()
+bool BaseBundleInstaller::UpdateEncryptedStatus(const InnerBundleInfo &oldInfo)
 {
     if (!InitDataMgr()) {
         LOG_E(BMS_TAG_INSTALLER, "init failed");
@@ -4668,6 +4557,7 @@ bool BaseBundleInstaller::UpdateEncryptedStatus()
     info.versionCode = innerBundleInfo.GetVersionCode();
     info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
     info.uid = innerBundleInfo.GetUid(userId_);
+    info.appIdentifier = innerBundleInfo.GetAppIdentifier();
     std::vector<CodeProtectBundleInfo> infos { info };
     bool oldAppEncrypted = oldApplicationReservedFlag_ &
         static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
@@ -4682,13 +4572,13 @@ bool BaseBundleInstaller::UpdateEncryptedStatus()
     }
     if (isAppExist_ && oldAppEncrypted && !newAppEncrypted) {
         // new app is not a encrypted app, need to delete operation on main app & all clone app
+        infos[0].versionCode = oldInfo.GetVersionCode();
         auto res = bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::DELETE);
         ProcessEncryptedKeyExisted(res, CodeOperation::DELETE, infos);
         return res == ERR_OK;
     }
     if (isAppExist_ && newAppEncrypted) {
         // update a new encrypted app, need to update operation
-        GetAllConeCodeProtectBundleInfos(infos, innerBundleInfo);
         auto res = bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::UPDATE);
         ProcessEncryptedKeyExisted(res, CodeOperation::UPDATE, infos);
         return res == ERR_OK;
@@ -4733,32 +4623,6 @@ void BaseBundleInstaller::ProcessEncryptedKeyExisted(int32_t res, uint32_t type,
     }
 }
 
-void BaseBundleInstaller::GetAllConeCodeProtectBundleInfos(std::vector<CodeProtectBundleInfo> &infos,
-    const InnerBundleInfo &innerBundleInfo)
-{
-    if (!InitDataMgr()) {
-        LOG_E(BMS_TAG_INSTALLER, "init failed");
-        return;
-    }
-    auto innerBundleUserInfos = innerBundleInfo.GetInnerBundleUserInfos();
-    std::set<int32_t> appIndexSet;
-    for (const auto &item : innerBundleUserInfos) {
-        for (const auto &cloneInfo : item.second.cloneInfos) {
-            if (appIndexSet.find(cloneInfo.second.appIndex) != appIndexSet.end()) {
-                continue;
-            }
-            appIndexSet.insert(cloneInfo.second.appIndex);
-            CodeProtectBundleInfo info;
-            info.bundleName = bundleName_;
-            info.appIndex = cloneInfo.second.appIndex;
-            info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
-            info.uid = cloneInfo.second.uid;
-            info.versionCode = innerBundleInfo.GetVersionCode();
-            infos.emplace_back(info);
-        }
-    }
-}
-
 bool BaseBundleInstaller::DeleteEncryptedStatus(const std::string &bundleName, int32_t uid)
 {
     bool oldAppEncrypted = oldApplicationReservedFlag_ &
@@ -4771,6 +4635,7 @@ bool BaseBundleInstaller::DeleteEncryptedStatus(const std::string &bundleName, i
     info.applicationReservedFlag = oldApplicationReservedFlag_;
     info.versionCode = versionCode_;
     info.uid = uid;
+    info.appIdentifier = appIdentifier_;
     std::vector<CodeProtectBundleInfo> infos { info };
     BmsExtensionDataMgr bmsExtensionDataMgr;
     return bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::DELETE) == ERR_OK;
@@ -5026,7 +4891,7 @@ void BaseBundleInstaller::OnSingletonChange(bool killProcess)
     ScopeGuard enableGuard([&] {
         dataMgr_->EnableBundle(bundleName_);
     });
-    
+
     InnerBundleInfo info;
     bool isExist = false;
     if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
@@ -5468,6 +5333,8 @@ ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std:
     int uid = info.GetUid(userId_);
     param.bundleId = uid - userId_ * Constants::BASE_USER_RANGE;
     param.isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
+    param.appIdentifier = info.GetAppIdentifier();
+    param.versionCode = info.GetVersionCode();
     if (info.GetModuleTypeByPackage(modulePackage_) == Profile::MODULE_TYPE_SHARED) {
         param.installBundleType = InstallBundleType::INTER_APP_HSP;
     }
@@ -5711,6 +5578,8 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         int uid = info.second.GetUid(userId_);
         param.bundleId = uid - userId_ * Constants::BASE_USER_RANGE;
         param.isCompressNativeLibrary = info.second.IsCompressNativeLibs(info.second.GetCurModuleName());
+        param.appIdentifier = info.second.GetAppIdentifier();
+        param.versionCode = info.second.GetVersionCode();
         if (info.second.GetModuleTypeByPackage(modulePackage_) == Profile::MODULE_TYPE_SHARED) {
             param.installBundleType = InstallBundleType::INTER_APP_HSP;
         }
@@ -6014,7 +5883,7 @@ ErrCode BaseBundleInstaller::CheckBundleInBmsExtension(const std::string &bundle
 {
     LOG_D(BMS_TAG_INSTALLER, "start to check bundle(%{public}s) from bms extension", bundleName.c_str());
     if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
-        LOG_W(BMS_TAG_INSTALLER, "broker is not started");
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "broker is not started");
         return ERR_OK;
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
@@ -6341,7 +6210,7 @@ void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32
             ServiceConstants::CLOUD_SHADER_PATH, result);
         return;
     }
-    
+
     constexpr int32_t commonMode = (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_COMMON_PATH, commonMode, uid, gid);
     if (result != ERR_OK) {

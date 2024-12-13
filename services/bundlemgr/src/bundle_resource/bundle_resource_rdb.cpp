@@ -24,7 +24,9 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
-const int32_t CLOSE_TIME = 360; // delay 6 mins to backup
+constexpr const char* QUEUE_NAME = "BackupResourceDbQueue";
+constexpr const char* TASK_NAME = "BackUpResourceDbTask";
+constexpr uint64_t DELAY_TIME_MILLI_SECONDS = 8 * 60 * 1000; // 8min
 }
 
 BundleResourceRdb::BundleResourceRdb()
@@ -47,6 +49,8 @@ BundleResourceRdb::BundleResourceRdb()
         " ADD BACKGROUND BLOB;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
+
+    serialQueue_ = std::make_unique<SerialQueue>(QUEUE_NAME);
 }
 
 BundleResourceRdb::~BundleResourceRdb()
@@ -608,29 +612,18 @@ void BundleResourceRdb::ParseKey(const std::string &key,
 
 void BundleResourceRdb::BackupRdb()
 {
-    if (isBackingUp_) {
-        return;
-    }
-    isBackingUp_ = true;
     std::weak_ptr<BundleResourceRdb> weakPtr = weak_from_this();
     auto task = [weakPtr] {
-        APP_LOGI("bundleResource.db backup start");
-        std::this_thread::sleep_for(std::chrono::seconds(CLOSE_TIME));
+        APP_LOGI("backup resource db begin");
         auto sharedPtr = weakPtr.lock();
-        if (sharedPtr == nullptr) {
-            APP_LOGE("sharedPtr is null");
+        if (sharedPtr == nullptr || sharedPtr->rdbDataManager_ == nullptr) {
+            APP_LOGE("backup resource db failed");
             return;
         }
-        if (sharedPtr->rdbDataManager_ != nullptr) {
-            sharedPtr->rdbDataManager_->BackupRdb();
-        } else {
-            APP_LOGE("rdbDataManager_ is null");
-        }
-        sharedPtr->isBackingUp_ = false;
-        APP_LOGI("bundleResource.db backup end");
+        sharedPtr->rdbDataManager_->BackupRdb();
+        APP_LOGI("backup resource db end");
     };
-    std::thread backUpThread(task);
-    backUpThread.detach();
+    serialQueue_->ReScheduleDelayTask(TASK_NAME, DELAY_TIME_MILLI_SECONDS, task);
 }
 } // AppExecFwk
 } // OHOS

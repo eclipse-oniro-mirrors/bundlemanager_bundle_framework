@@ -65,8 +65,8 @@ constexpr const char* HQF_DIR_PREFIX = "patch_";
 static const char LIB_CODE_CRYPTO_SO_PATH[] = "system/lib/libcode_crypto_metadata_process_utils.z.so";
 static const char LIB64_CODE_CRYPTO_SO_PATH[] = "system/lib64/libcode_crypto_metadata_process_utils.z.so";
 static const char CODE_CRYPTO_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15CodeCryptoUtils28"
-    "EnforceMetadataProcessForAppERKNSt3__h13unordered_mapINS3_12basic_stringIcNS3_11char_traitsIcEENS3_"
-    "9allocatorIcEEEESA_NS3_4hashISA_EENS3_8equal_toISA_EENS8_INS3_4pairIKSA_SA_EEEEEEjRbNS2_17InstallBundleTypeERKb";
+    "EnforceMetadataProcessForAppERKNSt3__h13unordered_mapINS3_12basic_stringIcNS3_11char_traitsIcEENS"
+    "3_9allocatorIcEEEESA_NS3_4hashISA_EENS3_8equal_toISA_EENS8_INS3_4pairIKSA_SA_EEEEEERKNS2_17CodeCryptoHapInfoERb";
 #endif
 static constexpr int16_t INSTALLS_UID = 3060;
 static constexpr int16_t MODE_BASE = 07777;
@@ -872,13 +872,13 @@ bool InstalldOperator::DeleteFiles(const std::string &dataPath)
     bool ret = true;
     DIR *dir = opendir(dataPath.c_str());
     if (dir == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "fail to opendir:%{public}s, errno:%{public}d", dataPath.c_str(), errno);
-        return false;
+        LOG_D(BMS_TAG_INSTALLD, "fail to opendir:%{public}s, errno:%{public}d", dataPath.c_str(), errno);
+        return true;
     }
     while (true) {
         struct dirent *ptr = readdir(dir);
         if (ptr == nullptr) {
-            LOG_E(BMS_TAG_INSTALLD, "fail to readdir errno:%{public}d", errno);
+            LOG_D(BMS_TAG_INSTALLD, "fail to readdir errno:%{public}d", errno);
             break;
         }
         if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
@@ -888,13 +888,15 @@ bool InstalldOperator::DeleteFiles(const std::string &dataPath)
         if (ptr->d_type == DT_DIR) {
             if (!OHOS::ForceRemoveDirectory(subPath)) {
                 ret = false;
+                LOG_W(BMS_TAG_INSTALLD, "ForceRemoveDirectory %{public}s failed, error: %{public}d",
+                    dataPath.c_str(), errno);
             }
             continue;
         }
         if (access(subPath.c_str(), F_OK) == 0) {
             ret = OHOS::RemoveFile(subPath);
             if (!ret) {
-                LOG_I(BMS_TAG_INSTALLD, "RemoveFile %{public}s failed, error: %{public}d", subPath.c_str(), errno);
+                LOG_W(BMS_TAG_INSTALLD, "RemoveFile %{public}s failed, error: %{public}d", dataPath.c_str(), errno);
             }
             continue;
         }
@@ -1562,27 +1564,21 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     const int32_t bundleId = checkEncryptionParam.bundleId;
     InstallBundleType installBundleType = checkEncryptionParam.installBundleType;
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
-    LOG_D(BMS_TAG_INSTALLD,
-        "bundleId %{public}d, installBundleType %{public}d, isCompressNativeLibrary %{public}d, path %{public}s",
-        bundleId, static_cast<int32_t>(installBundleType),
-        isCompressNativeLibrary, checkEncryptionParam.modulePath.c_str());
-
+    LOG_D(BMS_TAG_INSTALLD, "a %{public}s, t %{public}d, p %{public}s", checkEncryptionParam.appIdentifier.c_str(),
+        static_cast<int32_t>(installBundleType), checkEncryptionParam.modulePath.c_str());
     BundleExtractor extractor(checkEncryptionParam.modulePath);
     if (!extractor.Init()) {
         return false;
     }
-
     std::vector<std::string> soEntryFiles;
     if (!ObtainNativeSoFile(extractor, cpuAbi, soEntryFiles)) {
         LOG_E(BMS_TAG_INSTALLD, "ObtainNativeSoFile failed");
         return false;
     }
-
     if (soEntryFiles.empty()) {
         LOG_D(BMS_TAG_INSTALLD, "no so file in installation file %{public}s", checkEncryptionParam.modulePath.c_str());
         return true;
     }
-
 #if defined(CODE_ENCRYPTION_ENABLE)
     const std::string targetSoPath = checkEncryptionParam.targetSoPath;
     std::unordered_map<std::string, std::string> entryMap;
@@ -1599,7 +1595,12 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
             LOG_D(BMS_TAG_INSTALLD, "CheckEncryption the targetSoPath is %{public}s", (path + fileName).c_str());
         });
     }
-    if (!EnforceEncryption(entryMap, bundleId, isEncryption, installBundleType, isCompressNativeLibrary)) {
+    CodeCryptoHapInfo hapInfo;
+    hapInfo.appIdentifier = checkEncryptionParam.appIdentifier;
+    hapInfo.versionCode = checkEncryptionParam.versionCode;
+    hapInfo.type = installBundleType;
+    hapInfo.libCompressed = isCompressNativeLibrary;
+    if (!EnforceEncryption(entryMap, hapInfo, isEncryption)) {
         return false;
     }
 #endif
@@ -1612,13 +1613,18 @@ bool InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEncry
     const int32_t bundleId = checkEncryptionParam.bundleId;
     InstallBundleType installBundleType = checkEncryptionParam.installBundleType;
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
-    LOG_D(BMS_TAG_INSTALLD, "CheckHapEncryption the hapPath is %{public}s, installBundleType is %{public}d, "
-        "bundleId is %{public}d, isCompressNativeLibrary is %{public}d", hapPath.c_str(),
-        static_cast<int32_t>(installBundleType), bundleId, isCompressNativeLibrary);
+    LOG_D(BMS_TAG_INSTALLD, "p %{public}s, t %{public}d, "
+        "a %{public}s, c is %{public}d", hapPath.c_str(),
+        static_cast<int32_t>(installBundleType), checkEncryptionParam.appIdentifier.c_str(), isCompressNativeLibrary);
 #if defined(CODE_ENCRYPTION_ENABLE)
     std::unordered_map<std::string, std::string> entryMap;
     entryMap.emplace(ServiceConstants::CODE_SIGNATURE_HAP, hapPath);
-    if (!EnforceEncryption(entryMap, bundleId, isEncryption, installBundleType, isCompressNativeLibrary)) {
+    CodeCryptoHapInfo hapInfo;
+    hapInfo.appIdentifier = checkEncryptionParam.appIdentifier;
+    hapInfo.versionCode = checkEncryptionParam.versionCode;
+    hapInfo.type = installBundleType;
+    hapInfo.libCompressed = isCompressNativeLibrary;
+    if (!EnforceEncryption(entryMap, hapInfo, isEncryption)) {
         return false;
     }
 #endif
@@ -2181,7 +2187,7 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
 
 bool InstalldOperator::DeleteKeyId(const std::string &bundleName, const int32_t userId)
 {
-    LOG_D(BMS_TAG_INSTALLD, "DeleteKeyId bundleName is %{public}s", bundleName.c_str());
+    LOG_I(BMS_TAG_INSTALLD, "DeleteKeyId %{public}s %{public}d", bundleName.c_str(), userId);
     auto ret = Security::AccessToken::El5FilekeyManagerKit::DeleteAppKey(bundleName, userId);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "Call DeleteAppKey failed ret = %{public}d", ret);
@@ -2271,7 +2277,7 @@ void InstalldOperator::RmvDeleteDfx(const std::string &path)
             close(fd);
             return;
         }
-        LOG_I(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is Rmv succeed", path.c_str());
+        LOG_D(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is Rmv succeed", path.c_str());
     }
     close(fd);
     return;
@@ -2311,14 +2317,13 @@ bool InstalldOperator::OpenEncryptionHandle()
     return true;
 }
 
-bool InstalldOperator::EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap, int32_t bundleId,
-    bool &isEncryption, InstallBundleType installBundleType, bool isCompressNativeLibrary)
+bool InstalldOperator::EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap,
+    const CodeCryptoHapInfo &hapInfo, bool &isEncryption)
 {
     if (!OpenEncryptionHandle()) {
         return false;
     }
-    ErrCode ret = enforceMetadataProcessForApp_(entryMap, bundleId,
-        isEncryption, static_cast<int32_t>(installBundleType), isCompressNativeLibrary);
+    ErrCode ret = enforceMetadataProcessForApp_(entryMap, hapInfo, isEncryption);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CheckEncryption failed due to %{public}d", ret);
         return false;

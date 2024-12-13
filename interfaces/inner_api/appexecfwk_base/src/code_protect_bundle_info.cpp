@@ -26,6 +26,7 @@ namespace AppExecFwk {
 namespace {
 const std::string VERSION_CODE = "versionCode";
 const std::string APPLICATION_RESERVED_FLAG = "applicationReservedFlag";
+const std::string APP_IDENTIFIER = "appIdentifier";
 }
 
 bool CodeProtectBundleInfo::ReadFromParcel(Parcel &parcel)
@@ -35,6 +36,7 @@ bool CodeProtectBundleInfo::ReadFromParcel(Parcel &parcel)
     appIndex = parcel.ReadInt32();
     versionCode = parcel.ReadUint32();
     applicationReservedFlag = parcel.ReadUint32();
+    appIdentifier = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -56,6 +58,7 @@ bool CodeProtectBundleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, applicationReservedFlag);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     return true;
 }
 
@@ -66,7 +69,8 @@ void to_json(nlohmann::json &jsonObject, const CodeProtectBundleInfo &CodeProtec
         {Constants::UID, CodeProtectBundleInfo.uid},
         {Constants::APP_INDEX, CodeProtectBundleInfo.appIndex},
         {VERSION_CODE, CodeProtectBundleInfo.versionCode},
-        {APPLICATION_RESERVED_FLAG, CodeProtectBundleInfo.applicationReservedFlag}
+        {APPLICATION_RESERVED_FLAG, CodeProtectBundleInfo.applicationReservedFlag},
+        {APP_IDENTIFIER, CodeProtectBundleInfo.appIdentifier}
     };
 }
 
@@ -84,6 +88,8 @@ void from_json(const nlohmann::json &jsonObject, CodeProtectBundleInfo &CodeProt
         CodeProtectBundleInfo.versionCode, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_RESERVED_FLAG,
         CodeProtectBundleInfo.applicationReservedFlag, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APP_IDENTIFIER,
+        CodeProtectBundleInfo.appIdentifier, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read CodeProtectBundleInfo jsonObject error : %{public}d", parseResult);
     }

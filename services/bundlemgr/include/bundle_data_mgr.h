@@ -774,6 +774,7 @@ public:
     bool GetBundleStats(const std::string &bundleName,
         const int32_t userId, std::vector<int64_t> &bundleStats,
         const int32_t appIndex = 0, const uint32_t statFlag = 0) const;
+    void GetBundleModuleNames(const std::string &bundleName, std::vector<std::string> &moduleNameList) const;
     bool GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const;
     bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
@@ -903,15 +904,29 @@ public:
     ErrCode DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const std::string &extName, const std::string &mimeType);
     bool QueryAppGalleryAbilityName(std::string &bundleName, std::string &abilityName);
+    void ScanAllBundleGroupInfo();
+    void HandleGroupIdAndIndex(const std::set<std::string> errorGroupIds,
+        std::map<int32_t, std::string> &indexMap, std::map<std::string, int32_t> &groupIdMap);
+    bool HandleErrorDataGroupInfos(
+        const std::map<std::string, int32_t> &groupIdMap,
+        const std::map<std::string, std::set<std::string>> &needProcessGroupInfoBundleNames);
     bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId, std::vector<DataGroupInfo> &infos) const;
     bool GetGroupDir(const std::string &dataGroupId, std::string &dir,
         int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
-        std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
-    void GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
-        const std::vector<std::string> &dataGroupIdList, int32_t userId) const;
-    void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
-    bool IsShareDataGroupId(const std::string &dataGroupId, int32_t userId) const;
+        std::unordered_set<int32_t> &uniqueIdSet) const;
+    void GenerateDataGroupInfos(const std::string &bundleName,
+        const std::unordered_set<std::string> &dataGroupIdList, int32_t userId);
+    void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
+        std::unordered_set<int32_t> &uniqueIdSet) const;
+    bool IsShareDataGroupIdNoLock(const std::string &dataGroupId, int32_t userId) const;
+    void GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId);
+    void DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData);
+    bool IsDataGroupIdExistNoLock(const std::string &dataGroupId, int32_t userId) const;
+    void ProcessAllUserDataGroupInfosWhenBundleUpdate(InnerBundleInfo &innerBundleInfo);
+    void RemoveOldGroupDirs(const InnerBundleInfo &oldInfo) const;
+    void DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId) const;
+    void CreateGroupDirIfNotExist(const DataGroupInfo &dataGroupInfo);
     ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName, const std::string &moduleName,
         std::string &profile, int32_t userId) const;
     ErrCode GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
@@ -994,19 +1009,22 @@ public:
      */
     ErrCode GetContinueBundleNames(
         const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId);
+    void HandleOTACodeEncryption();
 
     ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled);
     void CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage = false);
     int32_t GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t appIndex) const;
     ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName);
-    ErrCode GetDirForAtomicService(const std::string &bundleName, AccountSA::OhosAccountInfo &accountInfo,
-        std::string &dataDir) const;
+    ErrCode GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const;
+    ErrCode GetDirForAtomicServiceByUserId(const std::string &bundleName, int32_t userId,
+        AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const;
+    std::string GetDirForApp(const std::string &bundleName, const int32_t appIndex) const;
     ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir) const;
-    ErrCode GetDirByBundleNameAndAppIndexAndType(const std::string &bundleName, const int32_t appIndex,
-    const BundleType type, AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const;
     std::vector<int32_t> GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
         int32_t userId) const;
+    ErrCode GetBundleDir(int32_t userId, BundleType type, AccountSA::OhosAccountInfo &accountInfo,
+        BundleDir &bundleDir) const;
     ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) const;
 
 private:
@@ -1198,6 +1216,8 @@ private:
     void GetMultiLauncherAbilityInfo(const Want& want,
         const InnerBundleInfo& info, const InnerBundleUserInfo &bundleUserInfo,
         int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const;
+    void CreateNewDataGroupInfo(const std::string &groupId, const int32_t userId,
+        const DataGroupInfo &oldDataGroupInfo, DataGroupInfo &newDataGroupInfo);
 
     void PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const;
     void PostProcessAnyUserFlags(int32_t flags, int32_t userId,

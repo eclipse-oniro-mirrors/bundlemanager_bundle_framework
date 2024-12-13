@@ -32,6 +32,7 @@ ohos_shared_library("app_detail_ability") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_napi",
+    "ipc:ipc_single",
     "napi:ace_napi",
   ]
   relative_install_dir = "appdetailability"

@@ -41,6 +41,8 @@ public:
 private:
     ErrCode CreateDataDir(
         InnerBundleInfo &info, const int32_t userId, const int32_t &uid) const;
+    void CreateEl5Dir(InnerBundleInfo &info, const int32_t userId, const int32_t &uid);
+    void CreateDataGroupDir(const std::string &bundleName, const int32_t userId);
     ErrCode RemoveDataDir(const std::string bundleName, int32_t userId);
     ErrCode GetDataMgr();
 

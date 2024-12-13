@@ -210,6 +210,7 @@ ohos_unittest("BmsBundleCloneAppDataStructTest") {
     "ability_base:want",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
+    "appverify:libhapverify",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",

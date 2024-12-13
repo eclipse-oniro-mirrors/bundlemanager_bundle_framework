@@ -89,7 +89,7 @@ constexpr int NOT_EXIST_USERID = -5;
 constexpr int PATH_MAX_SIZE = 256;
 constexpr int32_t API_VERSION_NINE = 9;
 constexpr int32_t API_VERSION_TWELVE = 12;
-constexpr int32_t API_VERSION_THIRTEEN = 13;
+constexpr int32_t API_VERSION_FIFTEEN = 15;
 constexpr int32_t API_VERSION_MOD = 1000;
 constexpr int32_t BACKUP_DEFAULT_APP_KEY = -2;
 // native so
@@ -127,6 +127,7 @@ constexpr const char* PERMISSION_UNINSTALL_SANDBOX_BUNDLE = "ohos.permission.UNI
 constexpr const char* PERMISSION_INSTALL_QUICK_FIX_BUNDLE = "ohos.permission.INSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE = "ohos.permission.UNINSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
+constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 // max number of haps under one direction
@@ -171,6 +172,7 @@ constexpr const char* LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 // clone application
 constexpr int32_t CLONE_APP_INDEX_MIN = 1;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
+constexpr const char* CLONE_PREFIX = "+clone-";
 // shader
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
@@ -193,6 +195,8 @@ const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.mms",
     "com.ohos.FusionSearch"
 };
+// group
+constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

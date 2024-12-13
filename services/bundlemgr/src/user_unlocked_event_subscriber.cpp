@@ -30,11 +30,9 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 static constexpr int16_t MODE_BASE = 07777;
-static constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
 constexpr const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
-constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",
     "/files",
@@ -159,7 +157,9 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
             APP_LOGW("failed to CreateBundleDataDir");
         }
     }
-    CreateDataGroupDir(bundleInfo, userId);
+    if (elDir == ServiceConstants::BUNDLE_EL[1]) {
+        CreateDataGroupDir(bundleInfo, userId);
+    }
     return true;
 }
 
@@ -167,10 +167,25 @@ bool UpdateAppDataMgr::CreateEl5Dir(const CreateDirParam &createDirParam)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("CreateDataGroupDir failed for DataMgr is nullptr");
+        APP_LOGE("CreateEl5Dir failed for DataMgr is nullptr");
         return false;
     }
-    dataMgr->CreateEl5Dir(std::vector<CreateDirParam> {createDirParam});
+    std::vector<CreateDirParam> params;
+    params.emplace_back(createDirParam);
+    InnerBundleInfo info;
+    if (dataMgr->FetchInnerBundleInfo(createDirParam.bundleName, info)) {
+        InnerBundleUserInfo userInfo;
+        if (info.GetInnerBundleUserInfo(createDirParam.userId, userInfo)) {
+            for (const auto &cloneInfo : userInfo.cloneInfos) {
+                CreateDirParam cloneParam = createDirParam;
+                cloneParam.uid = cloneInfo.second.uid;
+                cloneParam.gid = cloneInfo.second.uid;
+                cloneParam.appIndex = cloneInfo.second.appIndex;
+                params.emplace_back(cloneParam);
+            }
+        }
+    }
+    dataMgr->CreateEl5Dir(params, true);
     return true;
 }
 
@@ -226,11 +241,15 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
     }
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
         std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        APP_LOGD("create group dir: %{public}s", dir.c_str());
+        if (BundleUtil::IsPathInformationConsistent(dir, dataGroupInfo.uid, dataGroupInfo.gid)) {
+            continue;
+        }
+        APP_LOGI("create group dir -n %{public}s uid %{public}d -u %{public}d", bundleInfo.name.c_str(),
+            dataGroupInfo.uid, userId);
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
-            DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+            ServiceConstants::DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
-            APP_LOGW("create data group dir %{public}s userId %{public}d failed", dataGroupInfo.uuid.c_str(), userId);
+            APP_LOGW("create data group dir %{private}s userId %{public}d failed", dataGroupInfo.uuid.c_str(), userId);
         }
     }
 }
@@ -284,7 +303,7 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
         if (elDir == ServiceConstants::DIR_EL5) {
             std::vector<std::string> reqPermissions = bundleInfo.reqPermissions;
             auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const std::string &permission) {
-                return permission == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+                return permission == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
             });
             if (it == reqPermissions.end()) {
                 continue;

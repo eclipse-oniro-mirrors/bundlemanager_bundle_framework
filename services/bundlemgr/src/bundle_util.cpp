@@ -552,6 +552,22 @@ bool BundleUtil::IsExistDirNoLog(const std::string &path)
     return S_ISDIR(buf.st_mode);
 }
 
+bool BundleUtil::IsPathInformationConsistent(const std::string &path, int32_t uid, int32_t gid)
+{
+    if (path.empty()) {
+        return false;
+    }
+    struct stat buf = {};
+    if (stat(path.c_str(), &buf) != 0) {
+        return false;
+    }
+    if ((static_cast<int32_t>(buf.st_uid) != uid) || ((static_cast<int32_t>(buf.st_gid) != gid))) {
+        APP_LOGE("path uid or gid is not same");
+        return false;
+    }
+    return true;
+}
+
 int64_t BundleUtil::CalculateFileSize(const std::string &bundlePath)
 {
     struct stat fileInfo = { 0 };
