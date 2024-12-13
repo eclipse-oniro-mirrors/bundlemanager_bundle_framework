@@ -7759,18 +7759,23 @@ void BundleDataMgr::ScanAllBundleGroupInfo()
             }
             int32_t groupUidIndex = dataGroupItem.second[0].uid -
                 dataGroupItem.second[0].userId * Constants::BASE_USER_RANGE - DATA_GROUP_UID_OFFSET;
-            if (indexMap.find(groupUidIndex) == indexMap.end()) {
+            bool hasIndex = indexMap.find(groupUidIndex) != indexMap.end();
+            if (!hasIndex && groupIdMap.find(dataGroupId) == groupIdMap.end()) {
                 indexMap[groupUidIndex] = dataGroupId;
-            }
-            if (groupIdMap.find(dataGroupId) == groupIdMap.end()) {
                 groupIdMap[dataGroupId] = groupUidIndex;
-            }
-            if ((indexMap[groupUidIndex] == dataGroupId) && (groupIdMap[dataGroupId] == groupUidIndex)) {
                 continue;
             }
-            if (indexMap[groupUidIndex] != dataGroupId) {
-                errorGroupIds.insert(dataGroupId);
+            if (!hasIndex && groupIdMap.find(dataGroupId) != groupIdMap.end()) {
+                APP_LOGW("id %{public}s has invalid index %{public}d, not index %{public}d",
+                    dataGroupId.c_str(), groupIdMap[dataGroupId], groupUidIndex);
             }
+            if (hasIndex && indexMap[groupUidIndex] == dataGroupId) {
+                continue;
+            }
+            if (hasIndex && indexMap[groupUidIndex] != dataGroupId) {
+                APP_LOGW("id %{public}s has invalid index %{public}d", dataGroupId.c_str(), groupUidIndex);
+            }
+            errorGroupIds.insert(dataGroupId);
             // invalid index or groupId
             APP_LOGW("error index %{public}d groudId %{public}s -n %{public}s",
                 groupUidIndex, dataGroupId.c_str(), info.first.c_str());
