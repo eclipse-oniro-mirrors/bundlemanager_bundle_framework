@@ -719,7 +719,7 @@ private:
     void CreateScreenLockProtectionDir();
     void CreateEl5AndSetPolicy(const InnerBundleInfo &info);
     void DeleteScreenLockProtectionDir(const std::string bundleName) const;
-    void DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, bool isKeepData) const;
+    void DeleteEncryptionKeyId(const InnerBundleUserInfo &userInfo, bool isKeepData) const;
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
 #endif
