@@ -418,10 +418,21 @@ ErrCode BundleInstallChecker::ParseHapFiles(
                 return result;
             }
         }
-        DetermineCloneNum(newInfo);
-
         infos.emplace(bundlePaths[i], newInfo);
     }
+    if (!infos.empty()) {
+        const InnerBundleInfo &first = infos.begin()->second;
+        int32_t cloneNum = 0;
+        if (DetermineCloneApp(first, cloneNum)) {
+            for (auto &info : infos) {
+                MultiAppModeData multiAppMode;
+                multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+                multiAppMode.maxCount = cloneNum;
+                info.second.SetMultiAppMode(multiAppMode);
+            }
+        }
+    }
+
     if ((result = CheckModuleNameForMulitHaps(infos)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "install failed due to duplicated moduleName");
         return result;
@@ -1617,27 +1628,24 @@ void BundleInstallChecker::SetCheckResultMsg(const std::string checkResultMsg)
     checkResultMsg_ = checkResultMsg;
 }
 
-void BundleInstallChecker::DetermineCloneNum(InnerBundleInfo &innerBundleInfo)
+bool BundleInstallChecker::DetermineCloneApp(const InnerBundleInfo &innerBundleInfo, int32_t &cloneNum)
 {
-    ApplicationInfo applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
+    const ApplicationInfo applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
     if (applicationInfo.multiAppMode.multiAppModeType != MultiAppModeType::APP_CLONE
         || applicationInfo.multiAppMode.maxCount == 0) {
         BmsExtensionDataMgr bmsExtensionDataMgr;
-        int32_t cloneNum = 0;
         const std::string appIdentifier = innerBundleInfo.GetAppIdentifier();
         if (!bmsExtensionDataMgr.DetermineCloneNum(applicationInfo.bundleName, appIdentifier, cloneNum)) {
-            return;
+            return false;
         }
         if (cloneNum == 0) {
-            return;
+            return false;
         }
         LOG_I(BMS_TAG_INSTALLER, "install -n %{public}s -c %{public}d",
             applicationInfo.bundleName.c_str(), cloneNum);
-        applicationInfo.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
-        applicationInfo.multiAppMode.maxCount = cloneNum;
-        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+        return true;
     }
+    return false;
 }
-
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -2231,6 +2231,11 @@ public:
     void CheckSoEncryption(const CheckEncryptionParam &checkEncryptionParam, const std::string &requestPackage,
         const InnerModuleInfo &moduleInfo) const;
 
+    void SetMultiAppMode(MultiAppModeData multiAppMode)
+    {
+        baseApplicationInfo_->multiAppMode = multiAppMode;
+    }
+
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(

@@ -247,7 +247,7 @@ private:
     bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     std::tuple<bool, std::string, std::string> GetValidReleaseType(
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    void DetermineCloneNum(InnerBundleInfo &innerBundleInfo);
+    bool DetermineCloneApp(const InnerBundleInfo &innerBundleInfo, int32_t &cloneNum);
 
     std::string checkResultMsg_ = "";
 };
