@@ -18,7 +18,7 @@ config("tool_config") {
   include_dirs = [ "include" ]
 }
 
-ohos_source_set("tool_common") {
+ohos_static_library("tool_common") {
   sources = [ "src/common_tool.cpp" ]
 
   public_configs = [ ":tool_config" ]
@@ -26,4 +26,5 @@ ohos_source_set("tool_common") {
   external_deps = [ "c_utils:utils" ]
 
   part_name = "bundle_framework"
+  subsystem_name = "bundlemanager"
 }

@@ -30,7 +30,10 @@ ohos_benchmarktest("BenchmarkTestForAbilityInfo") {
     "//third_party/benchmark:benchmark",
   ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "ipc:ipc_core",
+  ]
 }
 
 group("benchmarktest") {

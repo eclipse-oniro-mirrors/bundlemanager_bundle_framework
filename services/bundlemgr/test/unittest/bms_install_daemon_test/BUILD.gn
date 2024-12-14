@@ -291,10 +291,12 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     "appspawn:hnpapi",
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
   ]
 

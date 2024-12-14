@@ -50,6 +50,7 @@ ohos_systemtest("BundleMgrCodeSignatureSystemTest") {
 
   external_deps = [
     "ability_base:want",
+    "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "ipc:ipc_core",
