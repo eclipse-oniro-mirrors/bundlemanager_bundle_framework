@@ -1167,11 +1167,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "check DataPreloadHap appIdentifier failed %{public}d");
     // washing machine judge
     if (!installParam.isPreInstallApp) {
-        for (const auto &infoIter: newInfos) {
-            if (!infoIter.second.IsSystemApp() && !VerifyActivationLock()) {
-                result = ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
-                break;
-            }
+        bool isSystemApp = false;
+        if (!newInfos.empty()) {
+            isSystemApp = newInfos.begin()->second.IsSystemApp();
+        }
+        if (!isSystemApp && !VerifyActivationLock()) {
+            result = ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
         }
     }
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
