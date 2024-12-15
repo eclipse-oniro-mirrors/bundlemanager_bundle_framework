@@ -1153,6 +1153,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         }
     }
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
+    result = CheckShellCanInstallPreApp(newInfos);
+    CHECK_RESULT(result, "check shell can install pre app failed %{public}d");
     result = CheckInstallPermission(installParam, hapVerifyResults);
     CHECK_RESULT(result, "check install permission failed %{public}d");
     result = CheckInstallCondition(hapVerifyResults, newInfos);
@@ -6114,6 +6116,48 @@ void BaseBundleInstaller::ProcessAddResourceInfo(const InstallParam &installPara
         return;
     }
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+}
+
+ErrCode BaseBundleInstaller::CheckShellCanInstallPreApp(
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    if (sysEventInfo_.callingUid != ServiceConstants::SHELL_UID) {
+        return ERR_OK;
+    }
+    if (newInfos.empty()) {
+        return ERR_OK;
+    }
+    std::string bundleName = newInfos.begin()->second.GetBundleName();
+    if (dataMgr_->IsBundleExist(bundleName)) {
+        return ERR_OK;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        return ERR_OK;
+    }
+    if (preInstallBundleInfo.GetBundlePaths().empty()) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "pre bundle path empty");
+        return ERR_OK;
+    }
+    std::string hapPath = preInstallBundleInfo.GetBundlePaths().front();
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    ErrCode verifyRes = BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult);
+    if (verifyRes != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "get appId fail %{public}s", hapPath.c_str());
+        return ERR_OK;
+    }
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyResult.GetProvisionInfo();
+    if (!provisionInfo.bundleInfo.appIdentifier.empty() &&
+        !newInfos.begin()->second.GetAppIdentifier().empty() &&
+        provisionInfo.bundleInfo.appIdentifier == newInfos.begin()->second.GetAppIdentifier()) {
+        return ERR_OK;
+    }
+    if (provisionInfo.appId == newInfos.begin()->second.GetProvisionId()) {
+        return ERR_OK;
+    }
+    LOG_E(BMS_TAG_DEFAULT, "%{public}s appId or appIdentifier not same with preinstalled app",
+        newInfos.begin()->second.GetBundleName().c_str());
+    return ERR_APPEXECFWK_INSTALL_APPID_NOT_SAME_WITH_PREINSTALLED;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
