@@ -2257,12 +2257,16 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
 bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo)
 {
     // for versionCode update
-    if ((oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) &&
-        (oldInfo.GetProvisionId() != newInfo.GetProvisionId())) {
-        LOG_E(BMS_TAG_INSTALLER, "the appIdentifier or appId of the new bundle is not the same as old one");
-        return false;
+    if (!oldInfo.GetAppIdentifier().empty() &&
+        !newInfo.GetAppIdentifier().empty() &&
+        oldInfo.GetAppIdentifier() == newInfo.GetAppIdentifier()) {
+        return true;
     }
-    return true;
+    if (oldInfo.GetProvisionId() == newInfo.GetProvisionId()) {
+        return true;
+    }
+    LOG_E(BMS_TAG_INSTALLER, "the appIdentifier or appId of the new bundle is not the same as old one");
+    return false;
 }
 
 ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
