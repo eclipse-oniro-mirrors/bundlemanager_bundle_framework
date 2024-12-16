@@ -1168,10 +1168,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // washing machine judge
     if (!installParam.isPreInstallApp) {
         bool isSystemApp = false;
+        bool isInstall = false;
         if (!newInfos.empty()) {
-            isSystemApp = newInfos.begin()->second.IsSystemApp();
+            auto &firstBundleInfo = newInfos.begin()->second;
+            isSystemApp = firstBundleInfo.IsSystemApp();
+            isInstall = !dataMgr_->IsBundleExist(firstBundleInfo.GetBundleName());
         }
-        if (!isSystemApp && !VerifyActivationLock()) {
+        if (!isSystemApp && isInstall && !VerifyActivationLock()) {
             result = ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
         }
     }
@@ -1816,6 +1819,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_I(BMS_TAG_INSTALLER, "%{public}s is only module", modulePackage.c_str());
         enableGuard.Dismiss();
         stateGuard.Dismiss();
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+        std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
+        if (appControlMgr != nullptr) {
+            LOG_D(BMS_TAG_INSTALLER, "Delete disposed rule when bundleName :%{public}s uninstall", bundleName.c_str());
+            appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo, Constants::MAIN_APP_INDEX, userId_);
+        }
+#endif
         if (onlyInstallInUser) {
             result = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
             if (result != ERR_OK) {

@@ -209,7 +209,8 @@ private:
 private:
     InstallParam CheckInstallParam(const InstallParam &installParam);
     bool IsPermissionVaild(const InstallParam &installParam, InstallParam &installParam2);
-    bool CheckUninstallDisposedRule(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isKeepData);
+    bool CheckUninstallDisposedRule(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isKeepData,
+        const std::string &modulePackage = "");
     std::shared_ptr<BundleInstallerManager> manager_;
     std::vector<sptr<IBundleStreamInstaller>> streamInstallers_;
     std::atomic<uint32_t> streamInstallerIds_ = 0;
