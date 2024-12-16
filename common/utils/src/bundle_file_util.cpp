@@ -204,14 +204,21 @@ bool BundleFileUtil::GetHapFilesFromBundlePath(const std::string &currentBundleP
 
 bool BundleFileUtil::DeleteDir(const std::string &path)
 {
+    bool res = true;
     if (IsExistFile(path)) {
-        return OHOS::RemoveFile(path);
+        res = OHOS::RemoveFile(path);
+        if (!res && errno == ENOENT) {
+            return true;
+        }
+        return res;
     }
-
     if (IsExistDir(path)) {
-        return OHOS::ForceRemoveDirectory(path);
+        res = OHOS::ForceRemoveDirectory(path);
+        if (!res && errno == ENOENT) {
+            return true;
+        }
+        return res;
     }
-
     return true;
 }
 

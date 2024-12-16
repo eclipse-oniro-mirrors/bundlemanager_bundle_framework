@@ -1936,7 +1936,7 @@ bool InstalldHostImpl::ReadFileIntoJson(const std::string &filePath, nlohmann::j
     realPath.reserve(PATH_MAX);
     realPath.resize(PATH_MAX - 1);
     if (realpath(filePath.c_str(), &(realPath[0])) == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "transform real path error: %{public}d", errno);
+        LOG_E(BMS_TAG_INSTALLD, "transform real path: %{public}s  error: %{public}d", filePath.c_str(), errno);
         return false;
     }
     if (access(filePath.c_str(), F_OK) != 0) {
