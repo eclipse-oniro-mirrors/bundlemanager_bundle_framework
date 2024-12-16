@@ -399,6 +399,13 @@ ErrCode AppControlManager::DeleteDisposedRule(
 ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const InnerBundleInfo &bundleInfo, int32_t appIndex,
     int32_t userId)
 {
+    std::string appIdentifier = bundleInfo.GetAppIdentifier();
+    if (!appIdentifier.empty() && appControlManagerDb_) {
+        auto result = appControlManagerDb_->DeleteAllDisposedRuleByBundle(appIdentifier, appIndex, userId);
+        if (result != ERR_OK) {
+            LOG_W(BMS_TAG_DEFAULT, "delete failed. bundleName:%{public}s", bundleInfo.GetBundleName().c_str());
+        }
+    }
     std::string appId = bundleInfo.GetAppId();
     auto ret = appControlManagerDb_->DeleteAllDisposedRuleByBundle(appId, appIndex, userId);
     if (ret != ERR_OK) {
