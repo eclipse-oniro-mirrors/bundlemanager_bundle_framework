@@ -1635,6 +1635,11 @@ void CommonFunc::ConvertSignatureInfo(napi_env env, const SignatureInfo &signatu
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, signatureInfo.appIdentifier.c_str(), NAPI_AUTO_LENGTH, &nAppIdentifier));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "appIdentifier", nAppIdentifier));
+
+    napi_value nCertificate;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, signatureInfo.certificate.c_str(), NAPI_AUTO_LENGTH, &nCertificate));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "certificate", nCertificate));
 }
 
 void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo)

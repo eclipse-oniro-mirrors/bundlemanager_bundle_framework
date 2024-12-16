@@ -2391,6 +2391,23 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckEnterpriseBundle_0100, Function | Sma
 }
 
 /**
+ * @tc.number: CheckInternaltestingBundle_0100
+ * @tc.name: test CheckInternaltestingBundle
+ * @tc.desc: 1.test check Internaltesting bundle
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckInternaltestingBundle_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    provisionInfo.distributionType = Security::Verify::AppDistType::INTERNALTESTING;
+    result.SetProvisionInfo(provisionInfo);
+    bool ret = installChecker.CheckInternaltestingBundle(result);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: ParseBundleInfo_0100
  * @tc.name: test ParseBundleInfo
  * @tc.desc: 1.test parse bundle info
