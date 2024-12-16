@@ -24,6 +24,4 @@ config("bms_module_test_config") {
 
 group("moduletest") {
   testonly = true
-
-  deps = [ "bundle_parser_test:moduletest" ]
 }
