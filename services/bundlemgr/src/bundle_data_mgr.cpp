@@ -8166,7 +8166,7 @@ void BundleDataMgr::ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &i
 void BundleDataMgr::AddAppHspBundleName(const BundleType type, const std::string &bundleName)
 {
     if (type == BundleType::APP_SERVICE_FWK) {
-        APP_LOGD("add app hsp bundleName:%{pubcli}s", bundleName.c_str());
+        APP_LOGD("add app hsp bundleName:%{public}s", bundleName.c_str());
         std::lock_guard<std::mutex> hspLock(hspBundleNameMutex_);
         appServiceHspBundleName_.insert(bundleName);
     }

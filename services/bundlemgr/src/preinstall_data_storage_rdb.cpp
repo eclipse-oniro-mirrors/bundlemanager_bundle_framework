@@ -69,13 +69,13 @@ void PreInstallDataStorageRdb::TransformStrToInfo(
         PreInstallBundleInfo preInstallBundleInfo;
         nlohmann::json jsonObject = nlohmann::json::parse(data.second, nullptr, false);
         if (jsonObject.is_discarded()) {
-            APP_LOGE("Error key: %{plublic}s", data.first.c_str());
+            APP_LOGE("Error key: %{public}s", data.first.c_str());
             rdbDataManager_->DeleteData(data.first);
             continue;
         }
 
         if (preInstallBundleInfo.FromJson(jsonObject) != ERR_OK) {
-            APP_LOGE("Error key: %{plublic}s", data.first.c_str());
+            APP_LOGE("Error key: %{public}s", data.first.c_str());
             rdbDataManager_->DeleteData(data.first);
             continue;
         }
