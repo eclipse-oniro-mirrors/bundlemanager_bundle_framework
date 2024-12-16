@@ -56,6 +56,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
+constexpr const char* PREFIX_LIBS_PATH = "/libs/";
 constexpr const char* PREFIX_TARGET_PATH = "/print_service/";
 constexpr const char* HQF_DIR_PREFIX = "patch_";
 #if defined(CODE_ENCRYPTION_ENABLE)
@@ -68,6 +69,7 @@ static const char CODE_CRYPTO_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15
 static constexpr int32_t INSTALLS_UID = 3060;
 static constexpr int32_t MODE_BASE = 07777;
 static constexpr int32_t KEY_ID_STEP = 2;
+static constexpr int8_t STR_LIBS_LEN = 4;
 constexpr const char* PROC_MOUNTS_PATH = "/proc/mounts";
 constexpr const char* QUOTA_DEVICE_DATA_PATH = "/data";
 constexpr const char* CACHE_DIR = "cache";
@@ -1775,40 +1777,29 @@ bool InstalldOperator::ExtractDriverSoFiles(const std::string &srcPath,
         LOG_E(BMS_TAG_INSTALLD, "ExtractDriverSoFiles parameters are invalid");
         return false;
     }
-    BundleExtractor extractor(srcPath);
-    if (!extractor.Init()) {
-        LOG_E(BMS_TAG_INSTALLD, "extractor init failed");
-        return false;
-    }
-
-    std::vector<std::string> entryNames;
-    if (!extractor.GetZipFileNames(entryNames)) {
-        LOG_E(BMS_TAG_INSTALLD, "GetZipFileNames failed");
-        return false;
-    }
 
     for (auto &[originalDir, destinedDir] : dirMap) {
         if ((originalDir.compare(".") == 0) || (originalDir.compare("..") == 0)) {
             LOG_E(BMS_TAG_INSTALLD, "the originalDir %{public}s is not existed in the hap", originalDir.c_str());
             return false;
         }
-        if (!BundleUtil::StartWith(originalDir, PREFIX_RESOURCE_PATH) ||
+        if ((!BundleUtil::StartWith(originalDir, PREFIX_RESOURCE_PATH) &&
+            !BundleUtil::StartWith(originalDir, PREFIX_LIBS_PATH)) ||
             !BundleUtil::StartWith(destinedDir, PREFIX_TARGET_PATH)) {
             LOG_E(BMS_TAG_INSTALLD, "the originalDir %{public}s and destined dir %{public}s are invalid",
                 originalDir.c_str(), destinedDir.c_str());
             return false;
         }
-        std::string innerOriginalDir = originalDir;
-        if (innerOriginalDir.front() == ServiceConstants::PATH_SEPARATOR[0]) {
-            innerOriginalDir = innerOriginalDir.substr(1);
+        std::string fileName = originalDir;
+        if (fileName.front() == ServiceConstants::PATH_SEPARATOR[0]) {
+            fileName = fileName.substr(1);
         }
-        if (find(entryNames.cbegin(), entryNames.cend(), innerOriginalDir) == entryNames.cend()) {
-            LOG_E(BMS_TAG_INSTALLD, "the innerOriginalDir %{public}s is not existed in the hap",
-                innerOriginalDir.c_str());
-            return false;
-        }
+        int fileNamePos = 0;
+        fileNamePos = fileName.find(ServiceConstants::PATH_SEPARATOR[0], STR_LIBS_LEN + 1);
+        fileName.erase(0, fileNamePos);
+        LOG_D(BMS_TAG_INSTALLD, "ExtractDriverSoFiles fileName is %{public}s", fileName.c_str());
         std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;
-        if (!CopyDriverSoFiles(extractor, innerOriginalDir, systemServiceDir + destinedDir)) {
+        if (!CopyDriverSoFiles(srcPath + fileName, systemServiceDir + destinedDir)) {
             LOG_E(BMS_TAG_INSTALLD, "CopyDriverSoFiles failed");
             return false;
         }
@@ -1817,8 +1808,7 @@ bool InstalldOperator::ExtractDriverSoFiles(const std::string &srcPath,
     return true;
 }
 
-bool InstalldOperator::CopyDriverSoFiles(const BundleExtractor &extractor, const std::string &originalDir,
-    const std::string &destinedDir)
+bool InstalldOperator::CopyDriverSoFiles(const std::string &originalDir, const std::string &destinedDir)
 {
     LOG_D(BMS_TAG_INSTALLD, "CopyDriverSoFiles beign");
     auto pos = destinedDir.rfind(ServiceConstants::PATH_SEPARATOR);
@@ -1834,10 +1824,7 @@ bool InstalldOperator::CopyDriverSoFiles(const BundleExtractor &extractor, const
     }
     std::string realDestinedDir = realDesDir + destinedDir.substr(pos);
     LOG_D(BMS_TAG_INSTALLD, "realDestinedDir is %{public}s", realDestinedDir.c_str());
-    if (!extractor.ExtractFile(originalDir, realDestinedDir)) {
-        LOG_E(BMS_TAG_INSTALLD, "ExtractFile failed");
-        return false;
-    }
+    MoveFile(originalDir, realDestinedDir);
 
     struct stat buf = {};
     if (stat(realDesDir.c_str(), &buf) != 0) {
@@ -1846,8 +1833,10 @@ bool InstalldOperator::CopyDriverSoFiles(const BundleExtractor &extractor, const
         return false;
     }
     ChangeFileAttr(realDestinedDir, buf.st_uid, buf.st_gid);
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH;
     if (!OHOS::ChangeModeFile(realDestinedDir, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", realDestinedDir.c_str(),
+            errno);
         return false;
     }
     LOG_D(BMS_TAG_INSTALLD, "CopyDriverSoFiles end");

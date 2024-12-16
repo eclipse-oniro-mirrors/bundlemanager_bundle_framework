@@ -282,8 +282,7 @@ public:
     static bool ExtractDriverSoFiles(const std::string &srcPath,
         const std::unordered_multimap<std::string, std::string> &dirMap);
 
-    static bool CopyDriverSoFiles(const BundleExtractor &extractor, const std::string &originalDir,
-        const std::string &destinedDir);
+    static bool CopyDriverSoFiles(const std::string &originalDir, const std::string &destinedDir);
 
 #if defined(CODE_ENCRYPTION_ENABLE)
     static ErrCode ExtractSoFilesToTmpHapPath(const std::string &hapPath, const std::string &cpuAbi,

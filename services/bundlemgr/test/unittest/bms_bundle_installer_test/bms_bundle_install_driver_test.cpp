@@ -70,8 +70,7 @@ const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.driverTe
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.driverTest";
 const std::string PACKAGE_NAME_FIRST = "com.example.driverTest";
 const std::string DRIVER_FILE_DIR = "/data/service/el1/public/print_service/cups/datadir/model/";
-const std::string DRIVER_FILE_NAME = "main_pages.json";
-const std::string DRIVER_FILE_NAME1 = "main_test_pages.json";
+const std::string DRIVER_FILE_NAME = "libpng.z.so";
 const std::string MODULE_NAME_FEATURE6 = "feature6";
 const std::string MODULE_NAME_FEATURE10 = "feature10";
 const std::string MODULE_NAME_FEATURE13 = "feature13";
@@ -430,7 +429,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0800, Function | SmallTest | 
 
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -594,7 +593,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1600, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -737,7 +736,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2300, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -861,7 +860,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2900, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1030,7 +1029,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3800, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1253,7 +1252,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5000, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1280,7 +1279,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5100, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1318,7 +1317,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5200, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1365,7 +1364,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5300, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1378,7 +1377,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5300, Function | SmallTest | 
 
     isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     fileExisted = IsFileExisted(filePath);
@@ -1407,7 +1406,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5400, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1420,7 +1419,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5400, Function | SmallTest | 
 
     isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     fileExisted = IsFileExisted(filePath);
@@ -1449,7 +1448,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5500, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1462,15 +1461,15 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5500, Function | SmallTest | 
 
     isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     fileExisted = IsFileExisted(filePath);
     EXPECT_FALSE(fileExisted);
 
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature13_main_test_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature13_libpng.z.so
     filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE13 + PATH_UNDERLIND +
-        DRIVER_FILE_NAME1;
+        DRIVER_FILE_NAME;
     fileExisted = IsFileExisted(filePath);
     EXPECT_TRUE(fileExisted);
 
@@ -1497,7 +1496,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5600, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1510,7 +1509,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5600, Function | SmallTest | 
 
     isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     fileExisted = IsFileExisted(filePath);
@@ -1539,7 +1538,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5700, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1552,7 +1551,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5700, Function | SmallTest | 
 
     isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature10_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature10_libpng.z.so
     filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE10 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     fileExisted = IsFileExisted(filePath);
@@ -1579,7 +1578,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6000, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature15_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature15_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE15 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1606,7 +1605,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6100, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature16_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature16_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE16 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1633,7 +1632,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6200, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature17_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature17_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE17 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1660,7 +1659,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6300, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature18_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature18_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE18 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1687,7 +1686,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6400, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_FALSE(isDirEmpty);
-    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
@@ -1703,7 +1702,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6400, Function | SmallTest | 
     fileExisted = IsFileExisted(filePath);
     EXPECT_TRUE(fileExisted);
 
-    // /data/service/el1/public/print_service/cups/datadir/model/temp_com.example.driverTest_feature6_main_pages.json
+    // /data/service/el1/public/print_service/cups/datadir/model/temp_com.example.driverTest_feature6_libpng.z.so
     std::string tempFilePath = DRIVER_FILE_DIR + TEMP_PREFIX + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 +
         PATH_UNDERLIND + DRIVER_FILE_NAME;
     fileExisted = IsFileExisted(tempFilePath);
