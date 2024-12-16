@@ -275,20 +275,20 @@ public:
     }
 
 private:
-    std::string bundleName_;
-    std::string moduleName_;
-    int64_t hapTotalSize_ = 0;
+    bool removable_ = true;
+    bool isUninstalled_ = false;
+    bool systemApp_ = false;
+    // non pre-installed driver app also need to be pre-installed for new user
+    bool isNonPreDriverApp_ = false;
     uint32_t versionCode_;
     uint32_t labelId_ = 0;
     uint32_t iconId_ = 0;
-    std::vector<std::string> bundlePaths_;
-    bool removable_ = true;
-    bool isUninstalled_ = false;
     Constants::AppType appType_ = Constants::AppType::SYSTEM_APP;
-    bool systemApp_ = false;
+    std::string bundleName_;
+    std::string moduleName_;
+    int64_t hapTotalSize_ = 0;
     BundleType bundleType_ = BundleType::APP;
-    // non pre-installed driver app also need to be pre-installed for new user
-    bool isNonPreDriverApp_ = false;
+    std::vector<std::string> bundlePaths_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

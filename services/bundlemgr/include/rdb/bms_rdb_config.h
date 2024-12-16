@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,12 +25,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct BmsRdbConfig {
+    int32_t version { ServiceConstants::BUNDLE_RDB_VERSION };
     std::string dbPath { ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH };
     std::string dbName;
     std::string tableName;
     std::string createTableSql;
     std::vector<std::string> insertColumnSql;
-    int32_t version { ServiceConstants::BUNDLE_RDB_VERSION };
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
