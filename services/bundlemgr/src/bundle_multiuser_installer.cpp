@@ -214,7 +214,7 @@ void BundleMultiUserInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t
     el5Param.apl = info.GetAppPrivilegeLevel();
     el5Param.isPreInstallApp = info.IsPreInstallApp();
     el5Param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
-    dataMgr_->CreateEl5Dir(std::vector<CreateDirParam> {el5Param}, true);
+    dataMgr_->CreateEl5Dir(std::vector<CreateDirParam> {el5Param});
     return;
 }
 
