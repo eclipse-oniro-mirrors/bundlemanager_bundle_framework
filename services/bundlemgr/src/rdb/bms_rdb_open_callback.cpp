@@ -31,7 +31,7 @@ int32_t BmsRdbOpenCallback::OnCreate(NativeRdb::RdbStore &rdbStore)
 int32_t BmsRdbOpenCallback::OnUpgrade(
     NativeRdb::RdbStore &rdbStore, int currentVersion, int targetVersion)
 {
-    APP_LOGI("OnUpgrade currentVersion: %{plubic}d, targetVersion: %{plubic}d",
+    APP_LOGI("OnUpgrade currentVersion: %{public}d, targetVersion: %{public}d",
         currentVersion, targetVersion);
     return NativeRdb::E_OK;
 }
@@ -39,7 +39,7 @@ int32_t BmsRdbOpenCallback::OnUpgrade(
 int32_t BmsRdbOpenCallback::OnDowngrade(
     NativeRdb::RdbStore &rdbStore, int currentVersion, int targetVersion)
 {
-    APP_LOGI("OnDowngrade  currentVersion: %{plubic}d, targetVersion: %{plubic}d",
+    APP_LOGI("OnDowngrade  currentVersion: %{public}d, targetVersion: %{public}d",
         currentVersion, targetVersion);
     return NativeRdb::E_OK;
 }
