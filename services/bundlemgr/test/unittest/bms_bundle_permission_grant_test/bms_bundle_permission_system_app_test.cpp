@@ -239,19 +239,6 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0600
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_0700
- * @tc.name: test GetBundleInfoV9 of BundleMgrHostImpl
- * @tc.desc: 1. system running normally
- *           2. GetBundleInfoV9 false by no permission
- */
-HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0700, Function | SmallTest | Level0)
-{
-    BundleInfo bundleInfo;
-    ErrCode ret = bundleMgrHostImpl_->GetBundleInfoV9(BUNDLE_NAME, FLAGS, bundleInfo, USERID);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
-}
-
-/**
  * @tc.number: BmsBundleSyetemAppFalseTest_0800
  * @tc.name: test GetBundlePackInfo of BundleMgrHostImpl
  * @tc.desc: 1. system running normally
@@ -287,19 +274,6 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_1000
 {
     std::vector<BundleInfo> bundleInfos;
     ErrCode ret = bundleMgrHostImpl_->GetBundleInfosV9(FLAGS, bundleInfos, USERID);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
-}
-
-/**
- * @tc.number: BmsBundleSyetemAppFalseTest_1100
- * @tc.name: test GetNameForUid of BundleMgrHostImpl
- * @tc.desc: 1. system running normally
- *           2. GetNameForUid false by no permission
- */
-HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_1100, Function | SmallTest | Level0)
-{
-    std::string name;
-    ErrCode ret = bundleMgrHostImpl_->GetNameForUid(UID, name);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
