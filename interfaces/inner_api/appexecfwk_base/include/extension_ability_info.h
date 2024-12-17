@@ -177,6 +177,7 @@ struct ExtensionAbilityInfo : public Parcelable {
     bool needCreateSandbox = false;
     std::vector<std::string> dataGroupIds;
     std::vector<std::string> validDataGroupIds;
+    std::string customProcess;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

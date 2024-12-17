@@ -59,6 +59,7 @@ const char* SKILLS = "skills";
 const char* NEED_CREATE_SANDBOX = "needCreateSandbox";
 const char* DATA_GROUP_IDS = "dataGroupIds";
 const char* JSON_KEY_VALID_DATA_GROUP_IDS = "validDataGroupIds";
+const char* JSON_KEY_CUSTOM_PROCESS = "customProcess";
 
 const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP = {
     { "form", ExtensionAbilityType::FORM },
@@ -257,6 +258,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     for (auto i = 0; i < validDataGroupIdsSize; i++) {
         dataGroupIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
+    customProcess = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -341,6 +343,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     for (auto &dataGroupId : validDataGroupIds) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(customProcess));
     return true;
 }
 
@@ -378,7 +381,8 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {JSON_KEY_SKILLS, extensionInfo.skills},
         {NEED_CREATE_SANDBOX, extensionInfo.needCreateSandbox},
         {DATA_GROUP_IDS, extensionInfo.dataGroupIds},
-        {JSON_KEY_VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds}
+        {JSON_KEY_VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds},
+        {JSON_KEY_CUSTOM_PROCESS, extensionInfo.customProcess}
     };
 }
 
@@ -635,6 +639,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_CUSTOM_PROCESS,
+        extensionInfo.customProcess,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("ExtensionAbilityInfo from_json error : %{public}d", parseResult);
     }
