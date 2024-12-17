@@ -160,20 +160,23 @@ int AccessTokenKit::GetNativeTokenInfo(AccessTokenID tokenID, NativeTokenInfo &n
     return 0;
 }
 
-int32_t AccessTokenKit::InitHapToken(const HapInfoParams& info, HapPolicyParams& policy, AccessTokenIDEx& fullTokenId)
+int32_t AccessTokenKit::InitHapToken(const HapInfoParams& info, HapPolicyParams& policy,
+    AccessTokenIDEx& fullTokenId, HapInfoCheckResult& checkResult)
 {
     fullTokenId.tokenIDEx = 1;
+    checkResult.permCheckResult.permissionName = "test"; // invalid Name
     return 0;
 }
 
-int32_t AccessTokenKit::UpdateHapToken(
-    AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info, const HapPolicyParams& policy)
+int32_t AccessTokenKit::UpdateHapToken(AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info,
+    const HapPolicyParams& policy, HapInfoCheckResult& checkResult)
 {
     if (info.isSystemApp) {
         tokenIdEx.tokenIdExStruct.tokenAttr = 1;
     } else {
         tokenIdEx.tokenIdExStruct.tokenAttr = 0;
     }
+    checkResult.permCheckResult.permissionName = "test"; // invalid Name
     return 0;
 }
 }

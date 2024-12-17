@@ -668,12 +668,13 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
 }
 
 int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
-    const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx)
+    const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
+    Security::AccessToken::HapInfoCheckResult &checkResult)
 {
     LOG_I(BMS_TAG_DEFAULT, "start, init hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, dlpType);
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo);
-    auto ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx);
+    auto ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx, checkResult);
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_E(BMS_TAG_DEFAULT, "InitHapToken failed, bundleName:%{public}s errCode:%{public}d",
             innerBundleInfo.GetBundleName().c_str(), ret);
@@ -684,8 +685,8 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
     return ERR_OK;
 }
 
-int32_t BundlePermissionMgr::UpdateHapToken(
-    Security::AccessToken::AccessTokenIDEx& tokenIdeEx, const InnerBundleInfo &innerBundleInfo)
+int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
+    const InnerBundleInfo &innerBundleInfo, Security::AccessToken::HapInfoCheckResult &checkResult)
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "start UpdateHapToken -n %{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::UpdateHapInfoParams updateHapInfoParams;
@@ -696,7 +697,7 @@ int32_t BundlePermissionMgr::UpdateHapToken(
 
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo);
 
-    auto ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy);
+    auto ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy, checkResult);
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_NOFUNC_E(BMS_TAG_DEFAULT, "UpdateHapToken failed, bundleName:%{public}s errCode:%{public}d",
             innerBundleInfo.GetBundleName().c_str(), ret);
@@ -704,6 +705,18 @@ int32_t BundlePermissionMgr::UpdateHapToken(
     }
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "end UpdateHapToken");
     return ERR_OK;
+}
+
+std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult)
+{
+    std::string result = "";
+    auto permissionName = checkResult.permCheckResult.permissionName;
+    auto reason = checkResult.permCheckResult.rule;
+    if (reason == Security::AccessToken::PERMISSION_ACL_RULE) {
+        result = "PermissionName: " + permissionName;
+        return result;
+    }
+    return result;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
