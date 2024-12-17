@@ -140,7 +140,8 @@ const std::set<std::string> NOT_NEED_CREATE_SANBOX_MODE = {
 const std::unordered_map<std::string, ExtensionProcessMode> EXTENSION_PROCESS_MODE_MAP = {
     { "instance", ExtensionProcessMode::INSTANCE },
     { "type", ExtensionProcessMode::TYPE },
-    { "bundle", ExtensionProcessMode::BUNDLE }
+    { "bundle", ExtensionProcessMode::BUNDLE },
+    { "runWithMainProcess", ExtensionProcessMode::RUN_WITH_MAIN_PROCESS }
 };
 
 bool ReadSkillInfoFromParcel(Parcel &parcel, std::vector<SkillUriForAbilityAndExtension> &skillUri)
