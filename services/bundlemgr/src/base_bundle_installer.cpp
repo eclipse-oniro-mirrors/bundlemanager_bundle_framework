@@ -5671,11 +5671,21 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
             LOG_E(BMS_TAG_INSTALLER, "move file to real path failed %{public}d", result);
             return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
         }
-        int32_t hapFd = open(realInstallationPath.c_str(), O_RDONLY);
+        FILE *hapFp = fopen(realInstallationPath.c_str(), "r");
+        if (hapFp == nullptr) {
+            LOG_E(BMS_TAG_INSTALLER, "fopen %{public}s failed", realInstallationPath.c_str());
+            continue;
+        }
+        int32_t hapFd = fileno(hapFp);
+        if (hapFd < 0) {
+            LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed", realInstallationPath.c_str());
+            (void)fclose(hapFp);
+            continue;
+        }
         if (fsync(hapFd) != 0) {
             LOG_E(BMS_TAG_INSTALLER, "fsync %{public}s failed", realInstallationPath.c_str());
         }
-        close(hapFd);
+        (void)fclose(hapFp);
     }
     return ERR_OK;
 }
