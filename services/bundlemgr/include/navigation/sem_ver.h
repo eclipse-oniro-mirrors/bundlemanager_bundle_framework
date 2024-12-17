@@ -29,9 +29,9 @@ public:
     std::string major;
     std::string minor;
     std::string patch;
+    std::string raw;
     std::vector<std::string> prerelease;
     std::vector<std::string> buildMeta;
-    std::string raw;
 
     explicit SemVer(std::string versionString);
 };

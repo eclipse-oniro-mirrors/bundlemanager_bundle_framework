@@ -100,6 +100,7 @@ ohos_source_set("parser_common") {
   ]
 
   part_name = "bundle_framework"
+  subsystem_name = "bundlemanager"
 }
 
 ohos_source_set("rpcid_decode") {
@@ -121,6 +122,7 @@ ohos_source_set("rpcid_decode") {
   ]
 
   part_name = "bundle_framework"
+  subsystem_name = "bundlemanager"
 }
 
 ohos_source_set("bundle_parser") {
@@ -197,6 +199,7 @@ ohos_source_set("bundle_parser") {
     defines += [ "X86_EMULATOR_MODE" ]
   }
   part_name = "bundle_framework"
+  subsystem_name = "bundlemanager"
 }
 
 group("bms_target") {
@@ -558,7 +561,13 @@ ohos_shared_library("installs") {
   }
 
   if (dfx_sigdump_handler_enabled) {
-    external_deps += [ "faultloggerd:dfx_sigdump_handler" ]
+    external_deps += [
+      "faultloggerd:backtrace_local",
+      "faultloggerd:dfx_sigdump_handler",
+      "faultloggerd:libdfx_procinfo",
+      "faultloggerd:libfaultloggerd",
+      "faultloggerd:libunwinder",
+    ]
     defines += [ "DFX_SIGDUMP_HANDLER_ENABLE" ]
   }
 

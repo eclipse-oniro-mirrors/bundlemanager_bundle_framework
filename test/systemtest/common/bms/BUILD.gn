@@ -26,7 +26,7 @@ config("bms_system_test_config") {
   ]
 }
 
-ohos_source_set("bms_install_sst_source") {
+ohos_static_library("bms_install_sst_source") {
   testonly = true
 
   sources = [
@@ -43,30 +43,24 @@ ohos_source_set("bms_install_sst_source") {
 
   public_configs = [ ":bms_system_test_config" ]
 
-  public_deps = [
-    "${common_path}:libappexecfwk_common",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${common_path}:libappexecfwk_common" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [
-    "${services_path}/test/moduletest/utils:tool_common",
-    "//third_party/googletest:gtest_main",
-
-    # "${core_path}:appexecfwk_core",
-  ]
 
   external_deps = [
     "ability_base:base",
     "ability_base:want",
     "c_utils:utils",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
   ]
 
   part_name = "bundle_framework"
+  subsystem_name = "bundlemanager"
 }
 
 group("systemtest_bms") {

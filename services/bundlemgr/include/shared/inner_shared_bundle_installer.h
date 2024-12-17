@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -122,26 +122,26 @@ private:
     void UpdateInnerModuleInfo(const std::string packageName, const InnerModuleInfo &innerModuleInfo);
     ErrCode MarkInstallFinish();
 
+    bool isBundleExist_ = false;
+    bool isEnterpriseBundle_ = false;
+    bool isPreInstalledBundle_ = false;
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;
     std::string bundleName_;
     std::string signatureFileDir_;
+    std::string nativeLibraryPath_;
+    std::string appIdentifier_;
+    std::string compileSdkType_;
+    std::string cpuAbi_;
+    std::string tempSoPath_;
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     std::vector<std::string> toDeleteTempHspPath_;
     // the key is the real path of each hsp file
     std::unordered_map<std::string, InnerBundleInfo> parsedBundles_;
     // created directories during installation, will be deleted when rollback.
     std::vector<std::string> createdDirs_;
-    bool isBundleExist_ = false;
     InnerBundleInfo oldBundleInfo_;
     InnerBundleInfo newBundleInfo_;
-    std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
-    std::string nativeLibraryPath_;
-    bool isEnterpriseBundle_ = false;
-    std::string appIdentifier_;
-    std::string compileSdkType_;
-    std::string cpuAbi_;
-    std::string tempSoPath_;
-    bool isPreInstalledBundle_ = false;
 
     DISALLOW_COPY_AND_MOVE(InnerSharedBundleInstaller);
 

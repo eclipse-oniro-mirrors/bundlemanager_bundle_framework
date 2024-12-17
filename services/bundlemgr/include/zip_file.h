@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -140,11 +140,11 @@ struct ZipEntry {
     ~ZipEntry() = default;  // for CodeDEX warning
 
     uint16_t compressionMethod = 0;
+    uint16_t flags = 0;
     uint32_t uncompressedSize = 0;
     uint32_t compressedSize = 0;
     uint32_t localHeaderOffset = 0;
     uint32_t crc = 0;
-    uint16_t flags = 0;
     std::string fileName;
 };
 
@@ -291,17 +291,17 @@ private:
     bool ReadZStream(const BytePtr &buffer, z_stream &zstream, uint32_t &remainCompressedSize) const;
 
 private:
+    bool isOpen_ = false;
     std::string pathName_;
     FILE *file_ = nullptr;
-    EndDir endDir_;
-    ZipEntryMap entriesMap_;
     // offset of central directory relative to zip file.
     ZipPos centralDirPos_ = 0;
     // this zip content start offset relative to zip file.
     ZipPos fileStartPos_ = 0;
     // this zip content length in the zip file.
     ZipPos fileLength_ = 0;
-    bool isOpen_ = false;
+    EndDir endDir_;
+    ZipEntryMap entriesMap_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

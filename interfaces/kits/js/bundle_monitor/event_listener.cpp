@@ -154,7 +154,7 @@ bool EventListener::Find(napi_value handler)
 // operator on js thread
 void EventListener::Emit(std::string &bundleName, int32_t userId, int32_t appIndex)
 {
-    APP_LOGD("EventListener Emit Init callback size is %{publuic}d",
+    APP_LOGD("EventListener Emit Init callback size is %{public}d",
         static_cast<int32_t>(callbackRefs_.size()));
     std::lock_guard<std::mutex> lock(validMutex_);
     if (!valid_) {

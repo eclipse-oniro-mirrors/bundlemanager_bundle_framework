@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -53,13 +53,13 @@ public:
 private:
     bool RestoreSandboxAppIndex(const std::string &bundleName, int32_t appIndex);
 
+    mutable std::mutex sandboxAppIndexMapMutex_;
     mutable std::shared_mutex sandboxAppMutex_;
     mutable std::shared_mutex sandboxDbMutex_;
-    mutable std::mutex sandboxAppIndexMapMutex_;
+    std::shared_ptr<SandboxManagerRdb> sandboxManagerDb_ = nullptr;
     // key: bundleName_appindex
     std::unordered_map<std::string, InnerBundleInfo> sandboxAppInfos_;
     std::unordered_map<std::string, std::set<int32_t>> sandboxAppIndexMap_;
-    std::shared_ptr<SandboxManagerRdb> sandboxManagerDb_ = nullptr;
 };
 } // AppExecFwk
 } // OHOS

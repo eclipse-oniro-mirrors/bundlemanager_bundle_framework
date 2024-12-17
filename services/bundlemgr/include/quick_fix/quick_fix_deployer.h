@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -126,11 +126,11 @@ private:
     ErrCode ExtractQuickFixResFile(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
 
     std::vector<std::string> patchPaths_;
+    bool isDebug_ = false;
+    std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
+    std::string targetPath_ = "";
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
     DeployQuickFixResult deployQuickFixResult_;
-    std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
-    bool isDebug_ = false;
-    std::string targetPath_ = "";
 
 #define CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(errcode)                           \
     do {                                                                           \

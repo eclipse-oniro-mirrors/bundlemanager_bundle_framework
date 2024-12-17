@@ -843,7 +843,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             oldInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
-            if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx) != ERR_OK) {
+            if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)
+                && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
             }
@@ -1165,11 +1166,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "check DataPreloadHap appIdentifier failed %{public}d");
     // washing machine judge
     if (!installParam.isPreInstallApp) {
-        for (const auto &infoIter: newInfos) {
-            if (!infoIter.second.IsSystemApp() && !VerifyActivationLock()) {
-                result = ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
-                break;
-            }
+        bool isSystemApp = false;
+        if (!newInfos.empty()) {
+            isSystemApp = newInfos.begin()->second.IsSystemApp();
+        }
+        if (!isSystemApp && !VerifyActivationLock()) {
+            result = ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
         }
     }
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
@@ -1579,7 +1581,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("remove group dir failed for %{public}s", oldInfo.GetBundleName().c_str());
     }
 
-    DeleteEncryptionKeyId(oldInfo, installParam.isKeepData);
+    DeleteEncryptionKeyId(curInnerBundleUserInfo, installParam.isKeepData);
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
@@ -1816,6 +1818,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_I(BMS_TAG_INSTALLER, "%{public}s is only module", modulePackage.c_str());
         enableGuard.Dismiss();
         stateGuard.Dismiss();
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+        std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
+        if (appControlMgr != nullptr) {
+            LOG_D(BMS_TAG_INSTALLER, "Delete disposed rule when bundleName :%{public}s uninstall", bundleName.c_str());
+            appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo, Constants::MAIN_APP_INDEX, userId_);
+        }
+#endif
         if (onlyInstallInUser) {
             result = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
             if (result != ERR_OK) {
@@ -1982,9 +1991,11 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             oldInfo.AddInnerBundleUserInfo(curInnerBundleUserInfo);
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
-            if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx) != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
-                return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+            if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)) {
+                if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx) != ERR_OK) {
+                    LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
+                    return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+                }
             }
             accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
             oldInfo.SetAccessTokenIdEx(accessTokenIdEx, userId_);
@@ -2047,7 +2058,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_SUCCESS)) {
+    if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_SUCCESS, isKeepData)) {
         LOG_E(BMS_TAG_INSTALLER, "delete inner info failed");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
@@ -2069,9 +2080,11 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
     }
 
     accessTokenId_ = info.GetAccessTokenId(userId_);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
-        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+    if (!isKeepData) {
+        if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+            AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+        }
     }
 
     return ERR_OK;
@@ -2122,9 +2135,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     }
 
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
-    if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, info)) {
+        if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
     }
     accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
     info.SetAccessTokenIdEx(accessTokenIdEx, userId_);
@@ -3042,25 +3057,13 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
     }
 
     std::vector<std::string> dirs = GenerateScreenLockProtectionDir(bundleName_);
-    bool hasPermission = false;
     std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
     auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
         return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
     });
     if (it != reqPermissions.end()) {
-        hasPermission = true;
+        CreateEl5AndSetPolicy(info);
     }
-
-    if (!hasPermission) {
-        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "no protection permission found, remove dirs");
-        for (const std::string &dir : dirs) {
-            if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
-                LOG_NOFUNC_W(BMS_TAG_INSTALLER, "remove Screen Lock Protection dir %{public}s failed", dir.c_str());
-            }
-        }
-        return;
-    }
-    CreateEl5AndSetPolicy(info);
 }
 
 void BaseBundleInstaller::CreateEl5AndSetPolicy(InnerBundleInfo &info)
@@ -3161,33 +3164,28 @@ bool BaseBundleInstaller::CheckInstallOnKeepData(const std::string &bundleName, 
     return true;
 }
 
-void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, bool isKeepData) const
+void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleUserInfo &userInfo, bool isKeepData) const
 {
-    if (oldInfo.GetBundleName().empty()) {
+    if (userInfo.bundleName.empty()) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName is empty");
         return;
     }
-    std::vector<RequestPermission> reqPermissions = oldInfo.GetAllRequestPermissions();
-    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
-        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
-    });
-    if (it == reqPermissions.end()) {
-        LOG_D(BMS_TAG_INSTALLER, "no need to delete el5 -n %{public}s", oldInfo.GetBundleName().c_str());
-        return;
-    }
     if (isKeepData) {
-        LOG_I(BMS_TAG_INSTALLER, "keep el5 dir -n %{public}s", oldInfo.GetBundleName().c_str());
+        LOG_I(BMS_TAG_INSTALLER, "keep el5 dir -n %{public}s", userInfo.bundleName.c_str());
         return;
     }
-    LOG_I(BMS_TAG_INSTALLER, "delete el5 dir -n %{public}s", oldInfo.GetBundleName().c_str());
-    std::vector<std::string> dirs = GenerateScreenLockProtectionDir(oldInfo.GetBundleName());
+    LOG_D(BMS_TAG_INSTALLER, "delete el5 dir -n %{public}s", userInfo.bundleName.c_str());
+    std::vector<std::string> dirs = GenerateScreenLockProtectionDir(userInfo.bundleName);
     for (const std::string &dir : dirs) {
         if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "remove Screen Lock Protection dir %{public}s failed", dir.c_str());
         }
     }
 
-    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(oldInfo.GetBundleName(), userId_) != ERR_OK) {
+    if (userInfo.keyId.empty()) {
+        return;
+    }
+    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(userInfo.bundleName, userId_) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "delete encryption key id failed");
     }
 }
@@ -4699,9 +4697,11 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
 
     // delete accessTokenId
     accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
-        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+    if (!isKeepData) {
+        if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+            AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+        }
     }
     if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
         int32_t uid = innerBundleInfo.GetUid(userId_);
@@ -6557,6 +6557,31 @@ ErrCode BaseBundleInstaller::CheckShellCanInstallPreApp(
     LOG_E(BMS_TAG_DEFAULT, "%{public}s appId or appIdentifier not same with preinstalled app",
         newInfos.begin()->second.GetBundleName().c_str());
     return ERR_APPEXECFWK_INSTALL_APPID_NOT_SAME_WITH_PREINSTALLED;
+}
+
+bool BaseBundleInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
+    Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo)
+{
+    UninstallBundleInfo uninstallBundleInfo;
+    if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        return false;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "bundleName:%{public}s getUninstallBundleInfo success", bundleName.c_str());
+    if (uninstallBundleInfo.userInfos.empty()) {
+        LOG_W(BMS_TAG_INSTALLER, "bundleName:%{public}s empty userInfos", bundleName.c_str());
+        return false;
+    }
+    if (uninstallBundleInfo.userInfos.find(std::to_string(userId)) != uninstallBundleInfo.userInfos.end()) {
+        accessTokenIdEx.tokenIdExStruct.tokenID =
+            uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenId;
+        accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo) == ERR_OK) {
+            return true;
+        } else {
+            LOG_W(BMS_TAG_INSTALLER, "bundleName:%{public}s UpdateHapToken failed", bundleName.c_str());
+        }
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

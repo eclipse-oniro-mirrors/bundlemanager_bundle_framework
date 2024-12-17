@@ -38,6 +38,7 @@ ohos_shared_library("innerbundlemanager") {
     "c_utils:utils",
     "hilog:libhilog",
     "napi:ace_napi",
+    "samgr:samgr_proxy",
   ]
   public_external_deps = [ "libuv:uv" ]
   if (bundle_framework_launcher) {

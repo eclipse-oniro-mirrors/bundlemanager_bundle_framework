@@ -92,7 +92,8 @@ public:
      * @param state Indicates the install state to be set.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool UpdateBundleInstallState(const std::string &bundleName, const InstallState state);
+    bool UpdateBundleInstallState(const std::string &bundleName,
+        const InstallState state, const bool isKeepData = false);
     /**
      * @brief Add new InnerBundleInfo.
      * @param bundleName Indicates the bundle name.
@@ -833,6 +834,7 @@ public:
     bool UpdateUninstallBundleInfo(const std::string &bundleName, const UninstallBundleInfo &uninstallBundleInfo);
     bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo);
     bool DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
+    bool GetAllUninstallBundleInfo(std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos);
 
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
 
@@ -1058,7 +1060,7 @@ private:
      * @param state Indicates the InstallState object.
      * @return Returns true if install state is UPDATING_START or UNINSTALL_START; returns false otherwise.
      */
-    void DeleteBundleInfo(const std::string &bundleName, const InstallState state);
+    void DeleteBundleInfo(const std::string &bundleName, const InstallState state, const bool isKeepData = false);
     /**
      * @brief Implicit query abilityInfos by the given Want.
      * @param want Indicates the information of the ability.
@@ -1235,6 +1237,7 @@ private:
         const InnerBundleInfo &info, std::vector<ShortcutInfo> &shortcutInfos) const;
     std::string TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,
         const AbilityInfo &abilityInfo) const;
+    void RestoreUidAndGidFromUninstallInfo();
 private:
     mutable std::shared_mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;

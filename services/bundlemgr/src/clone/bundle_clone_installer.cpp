@@ -64,6 +64,8 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
         .uid = uid_,
         .appIndex = appIndex,
         .bundleName = bundleName,
+        .appId = appId_,
+        .appIdentifier = appIdentifier_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -92,7 +94,9 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
         .accessTokenId = accessTokenId_,
         .bundleName = bundleName,
         .uid = uid_,
-        .appIndex = appIndex
+        .appIndex = appIndex,
+        .appId = appId_,
+        .appIdentifier = appIdentifier_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -217,6 +221,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     uid_ = uid;
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
     versionCode_ = info.GetVersionCode();
+    appId_ = info.GetAppId();
+    appIdentifier_ = info.GetAppIdentifier();
 
     ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex); });
     ErrCode result = CreateCloneDataDir(info, userId, uid, appIndex);
@@ -293,6 +299,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     uid_ = it->second.uid;
     accessTokenId_ = it->second.accessTokenId;
     versionCode_ = info.GetVersionCode();
+    appId_ = info.GetAppId();
+    appIdentifier_ = info.GetAppIdentifier();
     if (!AbilityManagerHelper::UninstallApplicationProcesses(bundleName, uid_, false, appIndex)) {
         APP_LOGE("fail to kill running application");
     }
@@ -502,6 +510,8 @@ void BundleCloneInstaller::ResetInstallProperties()
     uid_ = 0;
     accessTokenId_ = 0;
     versionCode_ = 0;
+    appId_ = "";
+    appIdentifier_ = "";
 }
 } // AppExecFwk
 } // OHOS

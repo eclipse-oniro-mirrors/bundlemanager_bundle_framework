@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,9 +55,9 @@ private:
     bool GetCallingBundleName(std::string &bundleName);
 
     std::atomic<uint32_t> id_ = 0;
+    mutable std::shared_mutex bundleMutex_;
     // using for locking by bundleName
     std::unordered_map<std::string, std::mutex> bundleMutexMap_;
-    mutable std::shared_mutex bundleMutex_;
 };
 } // AppExecFwk
 } // OHOS

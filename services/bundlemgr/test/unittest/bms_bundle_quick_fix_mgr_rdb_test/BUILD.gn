@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2023-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -65,10 +65,6 @@ ohos_unittest("BmsBundleQuickFixMgrRdbTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest1:bmsAccessTokentest1",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest3:bmsAccessTokentest3",
   ]
-  if (bundle_framework_graphics) {
-    include_dirs += [ "../../../../../../../multimedia/image_framework/interfaces/innerkits/include" ]
-    deps += [ "../../../../../../../multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
   deps += bundle_install_deps
 
   deps += [
@@ -96,6 +92,11 @@ ohos_unittest("BmsBundleQuickFixMgrRdbTest") {
     "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
+
+  if (bundle_framework_graphics) {
+    external_deps += [ "image_framework:image_native" ]
+  }
+
   defines = []
   if (code_signature_enable) {
     sources += [

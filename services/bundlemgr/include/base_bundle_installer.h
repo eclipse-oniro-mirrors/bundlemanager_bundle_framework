@@ -720,7 +720,7 @@ private:
     void CreateScreenLockProtectionDir();
     void CreateEl5AndSetPolicy(InnerBundleInfo &info);
     void DeleteScreenLockProtectionDir(const std::string bundleName) const;
-    void DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, bool isKeepData) const;
+    void DeleteEncryptionKeyId(const InnerBundleUserInfo &userInfo, bool isKeepData) const;
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
 #endif
@@ -777,6 +777,9 @@ private:
     bool InitTempBundleFromCache(InnerBundleInfo &info, bool &isAppExist, std::string bundleName = "");
     ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex);
     ErrCode CheckShellCanInstallPreApp(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+
+    bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
+        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

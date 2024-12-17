@@ -34,6 +34,7 @@ using OHOS::Parcel;
 namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.demo.testDataGroup";
+const std::string BUNDLE_NAME_TEST = "com.example.demo.testDataGroup.test";
 const std::string DATA_GROUP_ID_TEST_ONE = "data-group-id-1";
 const std::string DATA_GROUP_ID_TEST_TWO = "data-group-id-2";
 const std::string DATA_GROUP_ID_TEST_THREE = "data-group-id-3";
@@ -361,5 +362,301 @@ HWTEST_F(BmsBundleDataGroupTest, GetGroupDir_0050, Function | SmallTest | Level0
     bool res = dataMgr->GetGroupDir(DATA_GROUP_ID_TEST_ONE, dir, USERID);
     EXPECT_FALSE(res);
     EXPECT_TRUE(dir.empty());
+}
+
+/**
+ * @tc.number: GenerateDataGroupInfos_0010
+ * @tc.name: test GenerateDataGroupInfos
+ * @tc.desc: 1.GenerateDataGroupInfos, bundleName not exist
+ */
+HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupInfos_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        std::unordered_set<std::string> dataGroupIdList;
+        dataMgr->GenerateDataGroupInfos(BUNDLE_NAME, dataGroupIdList, USERID);
+        std::vector<DataGroupInfo> dataGroupInfos;
+        bool res = dataMgr->QueryDataGroupInfos(BUNDLE_NAME, USERID, dataGroupInfos);
+        EXPECT_FALSE(res);
+        EXPECT_TRUE(dataGroupInfos.empty());
+    }
+}
+
+/**
+ * @tc.number: GenerateDataGroupInfos_0020
+ * @tc.name: test GenerateDataGroupInfos
+ * @tc.desc: 1.GenerateDataGroupInfos, groupId empty
+ */
+HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupInfos_0020, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleInfo info;
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleUserInfo.uid = TEST_UID;
+        info.innerBundleUserInfos_.emplace(TEST_USER_KEY, innerBundleUserInfo);
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+        ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
+        std::unordered_set<std::string> dataGroupIdList;
+        dataMgr->GenerateDataGroupInfos(BUNDLE_NAME, dataGroupIdList, USERID);
+
+        std::vector<DataGroupInfo> dataGroupInfos;
+        bool res = dataMgr->QueryDataGroupInfos(BUNDLE_NAME, USERID, dataGroupInfos);
+        EXPECT_TRUE(res);
+        EXPECT_TRUE(dataGroupInfos.empty());
+    }
+}
+
+/**
+ * @tc.number: GenerateDataGroupInfos_0030
+ * @tc.name: test GenerateDataGroupInfos
+ * @tc.desc: 1.GenerateDataGroupInfos
+ */
+HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupInfos_0030, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.userId = USERID;
+        std::vector<DataGroupInfo> dataGroupVector;
+        dataGroupVector.push_back(dataGroupInfo);
+
+        InnerBundleInfo info;
+        info.dataGroupInfos_[DATA_GROUP_ID_TEST_ONE] = dataGroupVector;
+        info.dataGroupInfos_[DATA_GROUP_ID_TEST_TWO] = dataGroupVector;
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleUserInfo.uid = TEST_UID;
+        info.innerBundleUserInfos_.emplace(TEST_USER_KEY, innerBundleUserInfo);
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+        ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+        std::vector<DataGroupInfo> dataGroupInfos;
+        bool res = dataMgr->QueryDataGroupInfos(BUNDLE_NAME, USERID, dataGroupInfos);
+        EXPECT_TRUE(res);
+        EXPECT_FALSE(dataGroupInfos.empty());
+
+        std::unordered_set<std::string> dataGroupIdList;
+        dataMgr->GenerateDataGroupInfos(BUNDLE_NAME, dataGroupIdList, USERID);
+
+        dataGroupInfos.clear();
+        res = dataMgr->QueryDataGroupInfos(BUNDLE_NAME, USERID, dataGroupInfos);
+        EXPECT_TRUE(res);
+        EXPECT_TRUE(dataGroupInfos.empty());
+    }
+}
+
+/**
+ * @tc.number: GenerateDataGroupInfos_0040
+ * @tc.name: test GenerateDataGroupInfos
+ * @tc.desc: 1.GenerateDataGroupInfos
+ */
+HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupInfos_0040, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+        std::vector<DataGroupInfo> dataGroupVector;
+        dataGroupVector.push_back(dataGroupInfo);
+
+        InnerBundleInfo info;
+        info.dataGroupInfos_[DATA_GROUP_ID_TEST_ONE] = dataGroupVector;
+        info.dataGroupInfos_[DATA_GROUP_ID_TEST_TWO] = dataGroupVector;
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleUserInfo.uid = TEST_UID;
+        info.innerBundleUserInfos_.emplace(TEST_USER_KEY, innerBundleUserInfo);
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+        ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+        std::vector<DataGroupInfo> dataGroupInfos;
+        bool res = dataMgr->QueryDataGroupInfos(BUNDLE_NAME, USERID, dataGroupInfos);
+        EXPECT_TRUE(res);
+        EXPECT_FALSE(dataGroupInfos.empty());
+
+        std::unordered_set<std::string> dataGroupIdList;
+        dataGroupIdList.insert(DATA_GROUP_ID_TEST_ONE);
+        dataMgr->GenerateDataGroupInfos(BUNDLE_NAME, dataGroupIdList, USERID);
+
+        dataGroupInfos.clear();
+        res = dataMgr->QueryDataGroupInfos(BUNDLE_NAME, USERID, dataGroupInfos);
+        EXPECT_TRUE(res);
+        EXPECT_FALSE(dataGroupInfos.empty());
+    }
+}
+
+/**
+ * @tc.number: GetDataGroupIndexMap_0010
+ * @tc.name: test GetDataGroupIndexMap
+ * @tc.desc: 1.GetDataGroupIndexMap
+ */
+HWTEST_F(BmsBundleDataGroupTest, GetDataGroupIndexMap_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+        dataGroupInfo.uid = TEST_UID;
+        std::vector<DataGroupInfo> dataGroupVector;
+        dataGroupVector.push_back(dataGroupInfo);
+
+        InnerBundleInfo info;
+        info.dataGroupInfos_[DATA_GROUP_ID_TEST_ONE] = dataGroupVector;
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+        ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
+        std::map<std::string, std::pair<int32_t, std::string>> dataGroupIndexMap;
+        std::unordered_set<int32_t> uniqueIdSet;
+        dataMgr->GetDataGroupIndexMap(dataGroupIndexMap, uniqueIdSet);
+        EXPECT_FALSE(dataGroupIndexMap.empty());
+        EXPECT_FALSE(uniqueIdSet.empty());
+    }
+}
+
+/**
+ * @tc.number: IsShareDataGroupIdNoLock_0010
+ * @tc.name: test IsShareDataGroupIdNoLock
+ * @tc.desc: 1.IsShareDataGroupIdNoLock
+ */
+HWTEST_F(BmsBundleDataGroupTest, IsShareDataGroupIdNoLock_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        bool res = dataMgr->IsShareDataGroupIdNoLock(BUNDLE_NAME, USERID);
+        EXPECT_FALSE(res);
+    }
+}
+
+/**
+ * @tc.number: IsShareDataGroupIdNoLock_0020
+ * @tc.name: test IsShareDataGroupIdNoLock
+ * @tc.desc: 1.IsShareDataGroupIdNoLock
+ */
+HWTEST_F(BmsBundleDataGroupTest, IsShareDataGroupIdNoLock_0020, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+        dataGroupInfo.uid = TEST_UID;
+        std::vector<DataGroupInfo> dataGroupVector;
+        dataGroupVector.push_back(dataGroupInfo);
+
+        InnerBundleInfo info;
+        info.dataGroupInfos_[DATA_GROUP_ID_TEST_ONE] = dataGroupVector;
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+        ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
+        bool res = dataMgr->IsShareDataGroupIdNoLock(DATA_GROUP_ID_TEST_ONE, USERID);
+        EXPECT_FALSE(res);
+    }
+}
+
+/**
+ * @tc.number: IsShareDataGroupIdNoLock_0030
+ * @tc.name: test IsShareDataGroupIdNoLock
+ * @tc.desc: 1.IsShareDataGroupIdNoLock
+ */
+HWTEST_F(BmsBundleDataGroupTest, IsShareDataGroupIdNoLock_0030, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+        dataGroupInfo.uid = TEST_UID;
+        std::vector<DataGroupInfo> dataGroupVector;
+        dataGroupVector.push_back(dataGroupInfo);
+
+        InnerBundleInfo info;
+        info.dataGroupInfos_[DATA_GROUP_ID_TEST_ONE] = dataGroupVector;
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, info);
+        ScopeGuard bundleInfoGuard([&] {
+            dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+            dataMgr->bundleInfos_.erase(BUNDLE_NAME_TEST);
+        });
+
+        bool res = dataMgr->IsShareDataGroupIdNoLock(DATA_GROUP_ID_TEST_ONE, USERID);
+        EXPECT_TRUE(res);
+    }
+}
+
+/**
+ * @tc.number: IsDataGroupIdExistNoLock_0010
+ * @tc.name: test IsDataGroupIdExistNoLock
+ * @tc.desc: 1.IsDataGroupIdExistNoLock
+ */
+HWTEST_F(BmsBundleDataGroupTest, IsDataGroupIdExistNoLock_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        bool res = dataMgr->IsShareDataGroupIdNoLock(DATA_GROUP_ID_TEST_ONE, USERID);
+        EXPECT_FALSE(res);
+    }
+}
+
+/**
+ * @tc.number: IsDataGroupIdExistNoLock_0020
+ * @tc.name: test IsDataGroupIdExistNoLock
+ * @tc.desc: 1.IsDataGroupIdExistNoLock
+ */
+HWTEST_F(BmsBundleDataGroupTest, IsDataGroupIdExistNoLock_0020, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+        dataGroupInfo.uid = TEST_UID;
+        std::vector<DataGroupInfo> dataGroupVector;
+        dataGroupVector.push_back(dataGroupInfo);
+
+        InnerBundleInfo info;
+        info.dataGroupInfos_[DATA_GROUP_ID_TEST_ONE] = dataGroupVector;
+        dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+        ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
+        bool res = dataMgr->IsDataGroupIdExistNoLock(DATA_GROUP_ID_TEST_ONE, USERID);
+        EXPECT_TRUE(res);
+    }
+}
+
+/**
+ * @tc.number: GenerateDataGroupUuidAndUid_0010
+ * @tc.name: test GenerateDataGroupUuidAndUid
+ * @tc.desc: 1.GenerateDataGroupUuidAndUid
+ */
+HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupUuidAndUid_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+        dataGroupInfo.userId = USERID;
+        dataGroupInfo.uid = 0;
+        dataGroupInfo.uuid = "";
+        std::unordered_set<int32_t> uniqueIdSet;
+        uniqueIdSet.insert(1);
+        dataMgr->GenerateDataGroupUuidAndUid(dataGroupInfo, USERID, uniqueIdSet);
+        EXPECT_NE(dataGroupInfo.uid, 0);
+        EXPECT_EQ(dataGroupInfo.uid, dataGroupInfo.gid);
+        EXPECT_NE(dataGroupInfo.uuid, "");
+    }
 }
 } // OHOS

@@ -240,7 +240,8 @@ void BundleDataMgr::ResetBundleStateData()
     }
 }
 
-bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, const InstallState state)
+bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
+    const InstallState state, const bool isKeepData)
 {
     if (bundleName.empty()) {
         APP_LOGW("update failed: bundle name is empty");
@@ -268,7 +269,7 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, cons
                 static_cast<int32_t>(previousState->second), static_cast<int32_t>(state));
             if (IsDeleteDataState(state)) {
                 installStates_.erase(item);
-                DeleteBundleInfo(bundleName, state);
+                DeleteBundleInfo(bundleName, state, isKeepData);
                 return true;
             }
             item->second = state;
@@ -505,6 +506,16 @@ bool BundleDataMgr::GetUninstallBundleInfo(const std::string &bundleName, Uninst
     return uninstallDataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo);
 }
 
+bool BundleDataMgr::GetAllUninstallBundleInfo(
+    std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos)
+{
+    if (uninstallDataMgr_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    return uninstallDataMgr_->GetAllUninstallBundleInfo(uninstallBundleInfos);
+}
+
 bool BundleDataMgr::DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId)
 {
     if (uninstallDataMgr_ == nullptr) {
@@ -720,7 +731,7 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
     if (!bundleName.empty() && !abilityName.empty()) {
         bool ret = ExplicitQueryAbilityInfo(want, flags, requestUserId, abilityInfo, appIndex);
         if (!ret) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility error -n %{public}s -a %{public}s -u %{public}d"
+            LOG_NOFUNC_D(BMS_TAG_QUERY, "ExplicitQueryAbility error -n %{public}s -a %{public}s -u %{public}d"
                 " -i %{public}d", bundleName.c_str(), abilityName.c_str(), userId, appIndex);
             return false;
         }
@@ -966,7 +977,7 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
     auto ability = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, responseUserId);
     if (!ability) {
         LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility not found UIAbility -n %{public}s -m %{public}s "
-            "-a %{public}s", bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+            "-a %{public}s -u %{public}d", bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), responseUserId);
         return false;
     }
     return QueryAbilityInfoWithFlags(ability, flags, responseUserId, innerBundleInfo, abilityInfo);
@@ -3997,7 +4008,7 @@ bool BundleDataMgr::IsDisableState(const InstallState state) const
     return false;
 }
 
-void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const InstallState state)
+void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const InstallState state, const bool isKeepData)
 {
     if (InstallState::INSTALL_FAIL == state) {
         APP_LOGW("del fail, bundle:%{public}s has no installed info", bundleName.c_str());
@@ -4015,7 +4026,9 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
 #endif
     APP_LOGI("del bundle name:%{public}s", bundleName.c_str());
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
-    RecycleUidAndGid(innerBundleInfo);
+    if (!isKeepData) {
+        RecycleUidAndGid(innerBundleInfo);
+    }
     bool ret = dataStorage_->DeleteStorageBundleInfo(innerBundleInfo);
     if (!ret) {
         APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
@@ -4061,8 +4074,8 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     if (appIndex == 0) {
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
             && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
-            APP_LOGD("bundleName: %{public}s userId: %{public}d incorrect",
-                innerBundleInfo.GetBundleName().c_str(), requestUserId);
+            LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+                bundleName.c_str(), responseUserId, appIndex, flags);
             return false;
         }
     } else if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
@@ -4073,8 +4086,8 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
             return false;
         }
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE) && !isEnabled) {
-            APP_LOGW("bundleName: %{public}s userId: %{public}d, appIndex: %{public}d incorrect",
-                innerBundleInfo.GetBundleName().c_str(), requestUserId, appIndex);
+            LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+                bundleName.c_str(), responseUserId, appIndex, flags);
             return false;
         }
     } else {
@@ -4148,7 +4161,8 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     }
     if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))
         && !isEnabled) {
-        APP_LOGD("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
+        LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+            bundleName.c_str(), responseUserId, appIndex, flags);
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
     info = innerBundleInfo;
@@ -4685,6 +4699,10 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
         return;
     }
 
+    UninstallBundleInfo uninstallBundleInfo;
+    if (GetUninstallBundleInfo(info.GetBundleName(), uninstallBundleInfo)) {
+        return;
+    }
     bundleIdMap_.erase(bundleId);
     BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH);
     BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::SHAREFS_CONFIG_PATH);
@@ -4733,6 +4751,7 @@ bool BundleDataMgr::RestoreUidAndGid()
             }
         }
     }
+    RestoreUidAndGidFromUninstallInfo();
     return true;
 }
 
@@ -8178,7 +8197,7 @@ void BundleDataMgr::ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &i
 void BundleDataMgr::AddAppHspBundleName(const BundleType type, const std::string &bundleName)
 {
     if (type == BundleType::APP_SERVICE_FWK) {
-        APP_LOGD("add app hsp bundleName:%{pubcli}s", bundleName.c_str());
+        APP_LOGD("add app hsp bundleName:%{public}s", bundleName.c_str());
         std::lock_guard<std::mutex> hspLock(hspBundleNameMutex_);
         appServiceHspBundleName_.insert(bundleName);
     }
@@ -9522,6 +9541,38 @@ ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &
         }
     }
     return ERR_OK;
+}
+void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
+{
+    std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    if (!GetAllUninstallBundleInfo(uninstallBundleInfos)) {
+        return;
+    }
+    std::map<int32_t, std::string> uninstallBundleIdMap;
+    for (const auto &info : uninstallBundleInfos) {
+        if (info.second.userInfos.empty()) {
+            continue;
+        }
+        int32_t userId = -1;
+        if (!OHOS::StrToInt(info.second.userInfos.begin()->first, userId)) {
+            APP_LOGW("strToInt fail");
+            continue;
+        }
+        int32_t bundleId = info.second.userInfos.begin()->second.uid
+            - userId * Constants::BASE_USER_RANGE;
+        if (bundleId < Constants::BASE_APP_UID || bundleId >= MAX_APP_UID) {
+            APP_LOGW("invalid bundleId");
+            continue;
+        }
+        auto item = bundleIdMap_.find(bundleId);
+        if (item == bundleIdMap_.end()) {
+            uninstallBundleIdMap.emplace(bundleId, info.first);
+        }
+    }
+    for (const auto &item : uninstallBundleIdMap) {
+        bundleIdMap_.emplace(item.first, item.second);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -29,7 +29,7 @@ bool CheckEncryptionParam::ReadFromParcel(Parcel &parcel)
     installBundleType = static_cast<InstallBundleType>(parcel.ReadInt32());
     isCompressNativeLibrary = parcel.ReadBool();
     appIdentifier = Str16ToStr8(parcel.ReadString16());
-    versionCode = parcel.ReadInt32();
+    versionCode = parcel.ReadUint32();
     return true;
 }
 
@@ -42,7 +42,7 @@ bool CheckEncryptionParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(installBundleType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isCompressNativeLibrary);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, versionCode);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
     return true;
 }
 

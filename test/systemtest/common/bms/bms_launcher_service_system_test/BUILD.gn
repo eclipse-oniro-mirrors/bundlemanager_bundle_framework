@@ -46,10 +46,13 @@ ohos_systemtest("BmsLauncherServiceSystemTest") {
     "access_token:libtoken_setproc",
     "access_token:libtokenid_sdk",
     "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
     "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "selinux:libselinux",
+    "selinux_adapter:librestorecon",
   ]
 }
 

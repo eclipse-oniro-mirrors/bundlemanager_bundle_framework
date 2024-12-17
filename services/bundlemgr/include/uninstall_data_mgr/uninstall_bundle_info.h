@@ -23,9 +23,9 @@ namespace OHOS {
 namespace AppExecFwk {
 struct UninstallDataUserInfo {
     int32_t uid = 0;
-    std::vector<int32_t> gids;
     uint32_t accessTokenId = 0;
     uint64_t accessTokenIdEx = 0;
+    std::vector<int32_t> gids;
 };
 struct UninstallBundleInfo {
     std::string appId;
