@@ -3126,7 +3126,7 @@ ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlags(
     }
     if (innerBundleInfo.IsDisabled()) {
         APP_LOGW("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
 
     if (appIndex == 0) {
@@ -3167,7 +3167,7 @@ ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlagsV9(
     }
     if (innerBundleInfo.IsDisabled()) {
         APP_LOGW("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
 
     if (appIndex == 0) {
@@ -4030,7 +4030,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     if (innerBundleInfo.IsDisabled()) {
         LOG_NOFUNC_E(BMS_TAG_COMMON, "bundle disabled -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
             bundleName.c_str(), userId, appIndex, flags);
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
@@ -4073,7 +4073,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bu
     const InnerBundleInfo &innerBundleInfo = item->second;
     if (innerBundleInfo.IsDisabled()) {
         APP_LOGW("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
