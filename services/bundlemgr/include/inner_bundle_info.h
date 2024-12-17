@@ -2236,6 +2236,8 @@ public:
         baseApplicationInfo_->multiAppMode = multiAppMode;
     }
 
+    void SetSanStatus();
+
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(

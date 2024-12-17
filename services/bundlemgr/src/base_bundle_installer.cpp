@@ -1343,7 +1343,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 #endif
     DeleteUninstallBundleInfo(bundleName_);
     UpdateEncryptedStatus(oldInfo);
-    GetInstallEventInfo(sysEventInfo_);
+    GetInstallEventInfo(oldInfo, sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     UpdateRouterInfo();
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
@@ -2320,7 +2320,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         LOG_E(BMS_TAG_INSTALLER, "process asan log directory failed");
         return result;
     }
-    if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo, false)) {
+    if (!dataMgr_->AddNewModuleInfo(newInfo, oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "add module %{public}s to innerBundleInfo %{public}s failed",
             modulePackage_.c_str(), bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
@@ -2444,7 +2444,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     newInfo.RestoreModuleInfo(oldInfo);
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_FINISH);
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
-    if (!dataMgr_->UpdateInnerBundleInfo(bundleName_, newInfo, oldInfo, false)) {
+    if (!dataMgr_->UpdateInnerBundleInfo(newInfo, oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "update innerBundleInfo %{public}s failed", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
@@ -4176,7 +4176,7 @@ bool BaseBundleInstaller::InitTempBundleFromCache(InnerBundleInfo &info, bool &i
     if (bundleName.empty()) {
         bundleName = bundleName_;
     }
-    isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName_, info);
+    isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName, info);
     tempInfo_.InitTempBundle(info, isAppExist);
     bundleName_ = bundleName;
     return true;
@@ -4877,7 +4877,6 @@ void BaseBundleInstaller::ResetInstallProperties()
     removeExtensionDirs_.clear();
     existBeforeKeepDataApp_ = false;
     needSetDisposeRule_ = false;
-    bundleInit_ = false;
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool killProcess)
@@ -4967,7 +4966,7 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
 void BaseBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
 {
     LOG_D(BMS_TAG_INSTALLER, "GetCallingEventInfo start, bundleName:%{public}s", eventInfo.callingBundleName.c_str());
-    if (dataMgr_ == nullptr) {
+    if (!InitDataMgr()) {
         LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
         return;
     }
@@ -4988,20 +4987,16 @@ void BaseBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
 void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
 {
     LOG_D(BMS_TAG_INSTALLER, "GetInstallEventInfo start, bundleName:%{public}s", bundleName_.c_str());
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
+        return;
+    }
     InnerBundleInfo info;
-    if (!FetchInnerBundleInfo(info)) {
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, info)) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return;
     }
-    eventInfo.fingerprint = info.GetCertificateFingerprint();
-    eventInfo.appDistributionType = info.GetAppDistributionType();
-    eventInfo.hideDesktopIcon = info.IsHideDesktopIcon();
-    eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
-    // report hapPath and hashValue
-    for (const auto &innerModuleInfo : info.GetInnerModuleInfos()) {
-        eventInfo.filePath.push_back(innerModuleInfo.second.hapPath);
-        eventInfo.hashValue.push_back(innerModuleInfo.second.hashValue);
-    }
+    GetInstallEventInfo(info, eventInfo);
 }
 
 void BaseBundleInstaller::GetInstallEventInfo(const InnerBundleInfo &bundleInfo, EventInfo &eventInfo)
@@ -6418,7 +6413,7 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
             }
         }
         return ERR_OK;
-    } 
+    }
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, info, false)) {
         LOG_E(BMS_TAG_INSTALLER, "add bundle failed, -n:%{public}s", bundleName_.c_str());
         dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_START);

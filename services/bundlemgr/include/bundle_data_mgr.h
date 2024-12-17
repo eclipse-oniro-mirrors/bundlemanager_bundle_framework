@@ -109,6 +109,8 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool AddNewModuleInfo(const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+    bool AddNewModuleInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+
     /**
      * @brief Remove module info from an exist InnerBundleInfo.
      * @param bundleName Indicates the bundle name.
@@ -129,6 +131,7 @@ public:
      */
     bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     bool UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+    void UpdateBaseBundleInfoIntoOld(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
     /**
      * @brief Get an InnerBundleInfo if exist (will change the status to DISABLED).
@@ -947,8 +950,9 @@ public:
     ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
     void UpdateRouterInfo(const std::string &bundleName);
     void UpdateRouterInfo(InnerBundleInfo &innerBundleInfo);
-    std::map<std::string, std::pair<std::string, std::string>> &FindRouterHapPath(InnerBundleInfo &innerBundleInfo);
-    void UpdateRouterInfo(std::string &bundleName,
+    void FindRouterHapPath(InnerBundleInfo &innerBundleInfo,
+        std::map<std::string, std::pair<std::string, std::string>> &hapPathMap);
+    void UpdateRouterInfo(const std::string &bundleName,
         std::map<std::string, std::pair<std::string, std::string>> &hapPathMap);
 
     bool DeleteRouterInfo(const std::string &bundleName);

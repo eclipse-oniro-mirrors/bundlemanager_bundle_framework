@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_TEMP_INFO_H
+#define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_TEMP_INFO_H
  
 #include <string>
 
@@ -24,14 +26,16 @@ namespace AppExecFwk {
 class InstallerBundleTempInfo {
 public:
     InstallerBundleTempInfo() = default;
-    ~InstallerBundleTempInfo();
+    ~InstallerBundleTempInfo() = default;
     bool FetchTempBundleInfo(InnerBundleInfo &info) const;
     InnerBundleInfo &GetCurrentBundleInfo();
-    bool InitTempBundle(InnerBundleInfo &info, bool isAppExist);
+    void InitTempBundle(InnerBundleInfo &info, bool isAppExist);
     bool UpdateTempBundleInfo(const InnerBundleInfo &info);
 private:
     bool bundleInit_ = false;
     InnerBundleInfo tempBundleInfo_;
-}
+};
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
+#endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_TEMP_INFO_H

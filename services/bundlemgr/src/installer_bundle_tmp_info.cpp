@@ -38,22 +38,23 @@ InnerBundleInfo &InstallerBundleTempInfo::GetCurrentBundleInfo()
     return tempBundleInfo_;
 }
 
-bool InstallerBundleTempInfo::InitTempBundle(InnerBundleInfo &info, bool isAppExist)
+void InstallerBundleTempInfo::InitTempBundle(InnerBundleInfo &info, bool isAppExist)
 {
-    if (isAppExist) {
-        bundleInit_ = isAppExist;
+    bundleInit_ = isAppExist;
+    if (bundleInit_) {
         tempBundleInfo_ = info;
     }
 }
 
-bool InstallerBundleTempInfo::UpdateInnerBundleInfo(const InnerBundleInfo &info)
+bool InstallerBundleTempInfo::UpdateTempBundleInfo(const InnerBundleInfo &info)
 {
-    if (innerBundleInfo.GetBundleName().empty()) {
-        APP_LOGW("UpdateInnerBundleInfo failed, empty bundleName");
+    if (info.GetBundleName().empty()) {
+        APP_LOGW("UpdateTempBundleInfo failed, empty bundleName");
         return false;
     }
     bundleInit_ = true;
     tempBundleInfo_ = info;
+    return true;
 }
 
 }  // namespace AppExecFwk

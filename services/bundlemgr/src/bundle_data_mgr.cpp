@@ -358,18 +358,23 @@ bool BundleDataMgr::AddNewModuleInfo(
     return false;
 }
 
+void BundleDataMgr::UpdateBaseBundleInfoIntoOld(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+{
+    oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
+    oldInfo.UpdateBaseApplicationInfo(newInfo);
+    oldInfo.UpdateRemovable(newInfo.IsPreInstallApp(), newInfo.IsRemovable());
+    oldInfo.UpdateMultiAppMode(newInfo);
+    oldInfo.UpdateReleaseType(newInfo);
+    oldInfo.SetAppType(newInfo.GetAppType());
+    oldInfo.SetAppFeature(newInfo.GetAppFeature());
+}
+
 bool BundleDataMgr::AddNewModuleInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
     APP_LOGD("save bundle:%{public}s info", oldInfo.GetBundleName().c_str());
     ProcessAllowedAcls(newInfo, oldInfo);
     if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
-        oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
-        oldInfo.UpdateBaseApplicationInfo(newInfo);
-        oldInfo.UpdateRemovable(newInfo.IsPreInstallApp(), newInfo.IsRemovable());
-        oldInfo.UpdateMultiAppMode(newInfo);
-        oldInfo.UpdateReleaseType(newInfo);
-        oldInfo.SetAppType(newInfo.GetAppType());
-        oldInfo.SetAppFeature(newInfo.GetAppFeature());
+        UpdateBaseBundleInfoIntoOld(newInfo, oldInfo);
     }
     if (oldInfo.GetOldAppIds().empty()) {
         oldInfo.AddOldAppId(oldInfo.GetAppId());
@@ -392,11 +397,7 @@ bool BundleDataMgr::AddNewModuleInfo(const InnerBundleInfo &newInfo, InnerBundle
     oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
     oldInfo.UpdateOdidByBundleInfo(newInfo);
-    oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
-    oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
-    oldInfo.SetTsanEnabled(oldInfo.IsTsanEnabled());
-    oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
-    oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
+    oldInfo.SetSanStatus();
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
         oldInfo.SetOverlayType(newInfo.GetOverlayType());
@@ -453,11 +454,7 @@ bool BundleDataMgr::RemoveModuleInfo(
         if (!oldInfo.isExistedOverlayModule()) {
             oldInfo.SetOverlayType(NON_OVERLAY_TYPE);
         }
-        oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
-        oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
-        oldInfo.SetTsanEnabled(oldInfo.IsTsanEnabled());
-        oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
-        oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
+        oldInfo.SetSanStatus();
         if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
             return false;
@@ -636,38 +633,29 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
     if (statusItem->second == InstallState::UPDATING_SUCCESS
         || statusItem->second == InstallState::ROLL_BACK
         || statusItem->second == InstallState::USER_CHANGE) {
+        APP_LOGD("begin to update, bundleName : %{public}s, moduleName : %{public}s",
+            oldInfo.GetBundleName().c_str(), newInfo.GetCurrentModulePackage().c_str());
         if (UpdateInnerBundleInfo(newInfo, oldInfo)) {
             bundleInfos_.at(bundleName) = oldInfo;
+            APP_LOGD("update storage success bundle:%{public}s", oldInfo.GetBundleName().c_str());
             return true;
         }
     }
     return false;
 }
 
-bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) {
-    APP_LOGD("begin to update, bundleName : %{public}s, moduleName : %{public}s",
-        oldInfo.GetBundleName().c_str(), newInfo.GetCurrentModulePackage().c_str());
+bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+{
     if (newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
         oldInfo.KeepOldOverlayConnection(newInfo);
     }
     ProcessAllowedAcls(newInfo, oldInfo);
     oldInfo.UpdateModuleInfo(newInfo);
-    oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
-    oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
-    oldInfo.SetTsanEnabled(oldInfo.IsTsanEnabled());
-    oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
-    oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
+    oldInfo.SetSanStatus();
     // 1.exist entry, update entry.
     // 2.only exist feature, update feature.
     if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
-        oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
-        oldInfo.UpdateBaseApplicationInfo(newInfo);
-        oldInfo.UpdateRemovable(
-            newInfo.IsPreInstallApp(), newInfo.IsRemovable());
-        oldInfo.SetAppType(newInfo.GetAppType());
-        oldInfo.SetAppFeature(newInfo.GetAppFeature());
-        oldInfo.UpdateMultiAppMode(newInfo);
-        oldInfo.UpdateReleaseType(newInfo);
+        UpdateBaseBundleInfoIntoOld(newInfo, oldInfo);
     }
     oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
     if (oldInfo.GetOldAppIds().empty()) {
@@ -703,13 +691,11 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleI
             return false;
         }
     }
-
     if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) && (!UpdateOverlayInfo(newInfo, oldInfo))) {
         APP_LOGD("update overlay info failed");
         return false;
     }
 #endif
-    APP_LOGD("update storage success bundle:%{public}s", oldInfo.GetBundleName().c_str());
     return true;
 }
 
@@ -2887,16 +2873,16 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
         APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
         return;
     }
-    auto hapPathMap = FindRouterHapPath(infoItem->second);
+    std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
+    FindRouterHapPath(infoItem->second, hapPathMap);
     lock.unlock();
     UpdateRouterInfo(bundleName, hapPathMap);
 }
 
-std::map<std::string, std::pair<std::string, std::string>> 
-    &BundleDataMgr::FindRouterHapPath(InnerBundleInfo &innerBundleInfo)
+void BundleDataMgr::FindRouterHapPath(
+    InnerBundleInfo &innerBundleInfo, std::map<std::string, std::pair<std::string, std::string>> &hapPathMap)
 {
     auto moduleMap = innerBundleInfo.GetInnerModuleInfos();
-    std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
     for (auto it = moduleMap.begin(); it != moduleMap.end(); it++) {
         std::string routerPath = it->second.routerMap;
         auto pos = routerPath.find(PROFILE_PREFIX);
@@ -2907,16 +2893,17 @@ std::map<std::string, std::pair<std::string, std::string>>
         std::string routerJsonPath = PROFILE_PATH + routerJsonName + JSON_SUFFIX;
         hapPathMap[it->second.moduleName] = std::make_pair(it->second.hapPath, routerJsonPath);
     }
-    return hapPathMap;
 }
 
 void BundleDataMgr::UpdateRouterInfo(InnerBundleInfo &innerBundleInfo)
 {
-    UpdateRouterInfo(innerBundleInfo.GetBundleName(), FindRouterHapPath(innerBundleInfo));
+    std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
+    FindRouterHapPath(innerBundleInfo, hapPathMap);
+    UpdateRouterInfo(innerBundleInfo.GetBundleName(), hapPathMap);
 }
 
-void BundleDataMgr::UpdateRouterInfo(std::string &bundleName,
-    std::map<std::string, std::pair<std::string, std::string>> hapPathMap)
+void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName,
+    std::map<std::string, std::pair<std::string, std::string>> &hapPathMap)
 {
     std::map<std::string, std::string> routerInfoMap;
     for (auto hapIter = hapPathMap.begin(); hapIter != hapPathMap.end(); hapIter++) {

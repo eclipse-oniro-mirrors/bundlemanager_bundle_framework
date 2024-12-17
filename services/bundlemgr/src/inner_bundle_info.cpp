@@ -4782,5 +4782,14 @@ void InnerBundleInfo::PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_
             bundleName.c_str(), userId, appIndex, caller.c_str());
     }
 }
+
+void InnerBundleInfo::SetSanStatus()
+{
+    SetAsanEnabled(IsAsanEnabled());
+    SetGwpAsanEnabled(IsGwpAsanEnabled());
+    SetTsanEnabled(IsTsanEnabled());
+    SetHwasanEnabled(IsHwasanEnabled());
+    SetUbsanEnabled(IsUbsanEnabled());
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
