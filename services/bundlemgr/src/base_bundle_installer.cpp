@@ -264,6 +264,8 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
         };
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
+        } else if (HasDriverExtensionAbility(bundleName)) {
+            AddBundleStatus(installRes);
         } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
         }
@@ -273,7 +275,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
         bundleName,
         BundleEventType::INSTALL,
         installParam,
-        InstallScene::CREATE_USER,
+        installParam.isPreInstallApp ? InstallScene::CREATE_USER : InstallScene::NORMAL,
         result);
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s resultCode: %{public}d", bundleName.c_str(), result);
@@ -4801,7 +4803,6 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     }
     // 1. copy hsp or hap file to temp installation dir
     ErrCode result = ERR_OK;
-    bool isDriver = HasDriverExtensionAbility(bundleName_);
     for (const auto &hapPathRecord : hapPathRecords_) {
         LOG_D(BMS_TAG_INSTALLER, "Save from %{public}s to %{public}s",
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
@@ -4811,18 +4812,10 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 signatureFileMap_.at(hapPathRecord.first));
             CHECK_RESULT(result, "Copy hap to install path failed or code signature hap failed %{public}d");
         } else {
-            if (isDriver) {
-                if (InstalldClient::GetInstance()->CopyFile(
-                    hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
-                    LOG_E(BMS_TAG_INSTALLER, "Copy hap to install path failed");
-                    return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
-                }
-            } else {
-                if (InstalldClient::GetInstance()->MoveHapToCodeDir(
-                    hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
-                    LOG_E(BMS_TAG_INSTALLER, "Move hap to install path failed");
-                    return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
-                }
+            if (InstalldClient::GetInstance()->MoveHapToCodeDir(
+                hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "Move hap to install path failed");
+                return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
             }
             if (VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "enable code signature failed");
