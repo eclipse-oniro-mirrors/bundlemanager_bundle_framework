@@ -58,6 +58,8 @@ public:
     void from_json(const nlohmann::json &jsonObject, Skill &skill);
     void to_json(nlohmann::json &jsonObject, const SkillUri &uri);
     void to_json(nlohmann::json &jsonObject, const Skill &skill);
+    std::string ConvertToLower(const std::string &str) const;
+    std::string ConvertUriToLower(const std::string& uri) const;
 private:
     bool MatchAction(const std::string &action) const;
     bool MatchEntities(const std::vector<std::string> &paramEntities) const;
