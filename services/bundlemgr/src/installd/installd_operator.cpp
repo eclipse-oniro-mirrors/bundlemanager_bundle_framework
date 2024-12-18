@@ -667,15 +667,21 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
 
 void InstalldOperator::FsyncFile(const std::string &path)
 {
-    int32_t fileFd = open(path.c_str(), O_RDONLY);
+    FILE *fileFp = fopen(path.c_str(), "r");
+    if (fileFp == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed", path.c_str());
+        return;
+    }
+    int32_t fileFd = fileno(fileFp);
     if (fileFd < 0) {
         LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed %{public}d", path.c_str(), errno);
+        (void)fclose(fileFp);
         return;
     }
     if (fsync(fileFd) != 0) {
         LOG_E(BMS_TAG_INSTALLER, "fsync %{public}s failed %{public}d", path.c_str(), errno);
     }
-    close(fileFd);
+    (void)fclose(fileFp);
 }
 
 bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
