@@ -22,6 +22,7 @@
 #include "bundle_resource_info.h"
 #include "launcher_ability_resource_info.h"
 #include "interfaces/hap_verify.h"
+#include "parameter.h"
 #include "want.h"
 #include "abs_rdb_predicates.h"
 
@@ -153,7 +154,7 @@ public:
     }
     virtual std::string GetCompatibleDeviceType(const std::string &bundleName)
     {
-        return "";
+        return GetDeviceType();
     }
 };
 
