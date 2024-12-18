@@ -107,9 +107,7 @@ private:
      */
     std::set<int32_t> GetExistsCommonUserIds();
 
-    void InstallDriverForAllUsers(const std::string &bundleFilePath, const InstallParam &installParam);
-
-    void InstallDriverForAllUsers(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam);
+    void InstallDriverForAllUsers(const InstallParam &installParam);
 
     void RecoverDriverForAllUsers(const std::string &bundleName, const InstallParam &installParam);
 
