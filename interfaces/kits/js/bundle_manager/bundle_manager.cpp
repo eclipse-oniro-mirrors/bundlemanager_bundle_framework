@@ -3296,6 +3296,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::PHOTO_EDITOR), &nPhotoEditor));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PHOTO_EDITOR", nPhotoEditor));
+
+    napi_value nCallerInfoQuery;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::CALLER_INFO_QUERY), &nCallerInfoQuery));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CALLER_INFO_QUERY", nCallerInfoQuery));
 }
 
 void CreateApplicationFlagObject(napi_env env, napi_value value)
