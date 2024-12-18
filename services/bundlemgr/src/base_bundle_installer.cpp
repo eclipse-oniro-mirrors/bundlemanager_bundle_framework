@@ -1166,16 +1166,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
     CHECK_RESULT(result, "check DataPreloadHap appIdentifier failed %{public}d");
     // washing machine judge
-    if (!installParam.isPreInstallApp) {
-        bool isSystemApp = false;
-        bool isInstall = false;
-        if (!newInfos.empty()) {
-            auto &firstBundleInfo = newInfos.begin()->second;
-            isSystemApp = firstBundleInfo.IsSystemApp();
-            isInstall = !dataMgr_->IsBundleExist(firstBundleInfo.GetBundleName());
-        }
-        if (!isSystemApp && isInstall && !VerifyActivationLock()) {
-            result = ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+    if (!installParam.isPreInstallApp && !newInfos.empty()) {
+        auto &firstBundleInfo = newInfos.begin()->second;
+        if (!firstBundleInfo.IsSystemApp()) {
+            bool isBundleExist = dataMgr_->IsBundleExist(firstBundleInfo.GetBundleName());
+            if (!isBundleExist && !VerifyActivationLock()) {
+                result = ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+            }
         }
     }
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
@@ -6236,6 +6233,7 @@ void BaseBundleInstaller::SetCheckResultMsg(const std::string checkResultMsg) co
 
 bool BaseBundleInstaller::VerifyActivationLock() const
 {
+    LOG_I(BMS_TAG_INSTALLER, "verify activation lock start");
     int32_t mode = GetIntParameter(IS_ROOT_MODE_PARAM, USER_MODE);
     if (mode != USER_MODE) {
         char enableActivationLock[BMS_ACTIVATION_LOCK_VAL_LEN] = {0};
