@@ -161,6 +161,8 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
+    CreateEl5Dir(info, userId, uid);
+
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
     createUserDataDirGuard.Dismiss();
@@ -189,6 +191,31 @@ ErrCode BundleMultiUserInstaller::CreateDataDir(InnerBundleInfo &info,
     }
     APP_LOGI("CreateDataDir successfully");
     return result;
+}
+
+void BundleMultiUserInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t userId, const int32_t &uid)
+{
+    std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
+    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
+        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    });
+    if (it == reqPermissions.end()) {
+        APP_LOGI("no el5 permission %{public}s", info.GetBundleName().c_str());
+        return;
+    }
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("get dataMgr failed");
+        return;
+    }
+    CreateDirParam el5Param;
+    el5Param.bundleName = info.GetBundleName();
+    el5Param.userId = userId;
+    el5Param.uid = uid;
+    el5Param.apl = info.GetAppPrivilegeLevel();
+    el5Param.isPreInstallApp = info.IsPreInstallApp();
+    el5Param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    dataMgr_->CreateEl5Dir(std::vector<CreateDirParam> {el5Param});
+    return;
 }
 
 ErrCode BundleMultiUserInstaller::RemoveDataDir(const std::string bundleName, int32_t userId)
