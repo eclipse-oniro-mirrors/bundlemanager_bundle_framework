@@ -22,7 +22,7 @@ namespace OHOS {
         const std::string FUZZTEST_BUNDLE = "com.test.ext.resource";
         const std::string FUZZTEST_MODULE = "testModule";
     }
-    bool fuzzelRemoveExtResourceCaseOne(const uint8_t* data, size_t size)
+    bool FuzzelRemoveExtResourceCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
         std::string emptyBundleName;
@@ -37,7 +37,7 @@ namespace OHOS {
         return false;
     }
 
-    bool fuzzelRemoveExtResourceCaseTwo()
+    bool FuzzelRemoveExtResourceCaseTwo()
     {
         ExtendResourceManagerHostImpl impl;
         std::vector<std::string> moduleNames;
@@ -48,7 +48,7 @@ namespace OHOS {
         return false;
     }
 
-    bool fuzzelRemoveExtResourceCaseThree()
+    bool FuzzelRemoveExtResourceCaseThree()
     {
         ExtendResourceManagerHostImpl impl;
         std::vector<std::string> moduleNames;
@@ -63,8 +63,8 @@ namespace OHOS {
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    OHOS::fuzzelRemoveExtResourceCaseOne(data, size);
-    OHOS::fuzzelRemoveExtResourceCaseTwo();
-    OHOS::fuzzelRemoveExtResourceCaseThree();
+    OHOS::FuzzelRemoveExtResourceCaseOne(data, size);
+    OHOS::FuzzelRemoveExtResourceCaseTwo();
+    OHOS::FuzzelRemoveExtResourceCaseThree();
     return 0;
 }

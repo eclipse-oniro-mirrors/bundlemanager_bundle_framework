@@ -33,7 +33,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     shortcutInfo.hostAbility = "hostAbility";
     shortcutInfo.icon = "$media:16777224";
     shortcutInfo.label = "shortcutLabel";
-    shortcutInfo.disableMessage = "shortcutDisableMessage";
+    shortcutInfo.disableMessage = std::string(reinterpret_cast<const char *>(data), size);
     shortcutInfo.isStatic = true;
     shortcutInfo.isHomeShortcut = true;
     shortcutInfo.isEnables = true;
