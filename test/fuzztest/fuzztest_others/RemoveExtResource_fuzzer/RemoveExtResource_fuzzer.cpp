@@ -31,10 +31,13 @@ namespace OHOS {
         if (ret == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST) {
             return true;
         }
+        std::string anyBundleName = std::string(reinterpret_cast<const char *>(data), size);
+        moduleNames.clear();
+        impl.RemoveExtResource(anyBundleName, moduleNames);
         return false;
     }
 
-    bool fuzzelRemoveExtResourceCaseTwo(const uint8_t* data, size_t size)
+    bool fuzzelRemoveExtResourceCaseTwo()
     {
         ExtendResourceManagerHostImpl impl;
         std::vector<std::string> moduleNames;
@@ -45,7 +48,7 @@ namespace OHOS {
         return false;
     }
 
-    bool fuzzelRemoveExtResourceCaseThree(const uint8_t* data, size_t size)
+    bool fuzzelRemoveExtResourceCaseThree()
     {
         ExtendResourceManagerHostImpl impl;
         std::vector<std::string> moduleNames;
@@ -61,7 +64,7 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     OHOS::fuzzelRemoveExtResourceCaseOne(data, size);
-    OHOS::fuzzelRemoveExtResourceCaseTwo(data, size);
-    OHOS::fuzzelRemoveExtResourceCaseThree(data, size);
+    OHOS::fuzzelRemoveExtResourceCaseTwo();
+    OHOS::fuzzelRemoveExtResourceCaseThree();
     return 0;
 }
