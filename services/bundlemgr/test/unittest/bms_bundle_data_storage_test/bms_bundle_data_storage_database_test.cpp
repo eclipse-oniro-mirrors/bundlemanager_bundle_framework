@@ -299,6 +299,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "allowCommonEvent":[
 
         ],
+        "allowMultiProcess":false,
         "apiCompatibleVersion":9,
         "apiReleaseType":"Beta3",
         "apiTargetVersion":9,
@@ -1010,6 +1011,7 @@ protected:
                 "accessible": false,
                 "allowEnableNotification": false,
                 "allowAppRunWhenDeviceFirstLocked": false,
+                "allowMultiProcess":false,
                 "apiCompatibleVersion": 8,
                 "apiReleaseType": "Beta1",
                 "apiTargetVersion": 8,

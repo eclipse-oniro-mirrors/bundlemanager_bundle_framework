@@ -321,6 +321,7 @@ struct ApplicationInfo : public Parcelable {
 
     std::string installSource;
     std::string configuration;
+    bool allowMultiProcess = false;
 
     int32_t applicationFlags = static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
 

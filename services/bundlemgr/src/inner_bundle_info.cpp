@@ -1768,6 +1768,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->needAppDetail = applicationInfo.needAppDetail;
     baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
     baseApplicationInfo_->bundleType = applicationInfo.bundleType;
+    baseApplicationInfo_->allowMultiProcess = applicationInfo.allowMultiProcess;
     UpdatePrivilegeCapability(applicationInfo);
     SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
@@ -1872,6 +1873,9 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     SetAllowAppRunWhenDeviceFirstLocked(applicationInfo.allowAppRunWhenDeviceFirstLocked);
     baseApplicationInfo_->resourcesApply = applicationInfo.resourcesApply;
     baseApplicationInfo_->allowEnableNotification = applicationInfo.allowEnableNotification;
+    if (applicationInfo.allowMultiProcess) {
+        baseApplicationInfo_->allowMultiProcess = true;
+    }
     if (applicationInfo.hideDesktopIcon) {
         SetHideDesktopIcon(true);
     }

@@ -697,6 +697,7 @@ void BundleInstallChecker::CollectProvisionInfo(
     newInfo.SetUserDataClearable(appPrivilegeCapability.userDataClearable);
     newInfo.SetHideDesktopIcon(appPrivilegeCapability.hideDesktopIcon);
     newInfo.SetFormVisibleNotify(appPrivilegeCapability.formVisibleNotify);
+    newInfo.SetAllowMultiProcess(appPrivilegeCapability.allowMultiProcess);
 #endif
     newInfo.AddOldAppId(newInfo.GetAppId());
     newInfo.SetAppIdentifier(provisionInfo.bundleInfo.appIdentifier);
