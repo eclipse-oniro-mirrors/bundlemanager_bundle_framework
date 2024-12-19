@@ -264,6 +264,8 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
         };
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
+        } else if (HasDriverExtensionAbility(bundleName)) {
+            AddBundleStatus(installRes);
         } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
         }
@@ -273,7 +275,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
         bundleName,
         BundleEventType::INSTALL,
         installParam,
-        InstallScene::CREATE_USER,
+        installParam.isPreInstallApp ? InstallScene::CREATE_USER : InstallScene::NORMAL,
         result);
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s resultCode: %{public}d", bundleName.c_str(), result);
@@ -842,9 +844,11 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             oldInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+            Security::AccessToken::HapInfoCheckResult checkResult;
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)
-                && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx) != ERR_OK) {
+                && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
+                SetVerifyPermissionResult(checkResult);
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
             }
             accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
@@ -1166,13 +1170,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
     CHECK_RESULT(result, "check DataPreloadHap appIdentifier failed %{public}d");
     // washing machine judge
-    if (!installParam.isPreInstallApp) {
-        bool isSystemApp = false;
-        if (!newInfos.empty()) {
-            isSystemApp = newInfos.begin()->second.IsSystemApp();
-        }
-        if (!isSystemApp && !VerifyActivationLock()) {
-            result = ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+    if (!installParam.isPreInstallApp && !newInfos.empty()) {
+        auto &firstBundleInfo = newInfos.begin()->second;
+        if (!firstBundleInfo.IsSystemApp()) {
+            bool isBundleExist = dataMgr_->IsBundleExist(firstBundleInfo.GetBundleName());
+            if (!isBundleExist && !VerifyActivationLock()) {
+                result = ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+            }
         }
     }
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
@@ -1993,9 +1997,11 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             oldInfo.AddInnerBundleUserInfo(curInnerBundleUserInfo);
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+            Security::AccessToken::HapInfoCheckResult checkResult;
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)) {
-                if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx) != ERR_OK) {
+                if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult) != ERR_OK) {
                     LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
+                    SetVerifyPermissionResult(checkResult);
                     return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
                 }
             }
@@ -2137,9 +2143,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     }
 
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    Security::AccessToken::HapInfoCheckResult checkResult;
     if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, info)) {
-        if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx) != ERR_OK) {
+        if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx, checkResult) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
+            SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
     }
@@ -4801,7 +4809,6 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     }
     // 1. copy hsp or hap file to temp installation dir
     ErrCode result = ERR_OK;
-    bool isDriver = HasDriverExtensionAbility(bundleName_);
     for (const auto &hapPathRecord : hapPathRecords_) {
         LOG_D(BMS_TAG_INSTALLER, "Save from %{public}s to %{public}s",
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
@@ -4811,18 +4818,10 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 signatureFileMap_.at(hapPathRecord.first));
             CHECK_RESULT(result, "Copy hap to install path failed or code signature hap failed %{public}d");
         } else {
-            if (isDriver) {
-                if (InstalldClient::GetInstance()->CopyFile(
-                    hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
-                    LOG_E(BMS_TAG_INSTALLER, "Copy hap to install path failed");
-                    return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
-                }
-            } else {
-                if (InstalldClient::GetInstance()->MoveHapToCodeDir(
-                    hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
-                    LOG_E(BMS_TAG_INSTALLER, "Move hap to install path failed");
-                    return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
-                }
+            if (InstalldClient::GetInstance()->MoveHapToCodeDir(
+                hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "Move hap to install path failed");
+                return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
             }
             if (VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "enable code signature failed");
@@ -6062,8 +6061,10 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         }
         Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo) != ERR_OK) {
+        Security::AccessToken::HapInfoCheckResult checkResult;
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, checkResult) != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
+            SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
         if (needUpdate) {
@@ -6074,8 +6075,10 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         for (const auto &cloneInfoPair : cloneInfos) {
             Security::AccessToken::AccessTokenIDEx cloneAccessTokenIdEx;
             cloneAccessTokenIdEx.tokenIDEx = cloneInfoPair.second.accessTokenIdEx;
-            if (BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo) != ERR_OK) {
+            Security::AccessToken::HapInfoCheckResult checkResult;
+            if (BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo, checkResult) != ERR_OK) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
+                SetVerifyPermissionResult(checkResult);
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
             }
             if (needUpdate) {
@@ -6241,8 +6244,16 @@ void BaseBundleInstaller::SetCheckResultMsg(const std::string checkResultMsg) co
     bundleInstallChecker_->SetCheckResultMsg(checkResultMsg);
 }
 
+void BaseBundleInstaller::SetVerifyPermissionResult(const Security::AccessToken::HapInfoCheckResult &checkResult)
+{
+    auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+    SetCheckResultMsg(result);
+    LOG_NOFUNC_E(BMS_TAG_INSTALLER, "%{public}s", result.c_str());
+}
+
 bool BaseBundleInstaller::VerifyActivationLock() const
 {
+    LOG_I(BMS_TAG_INSTALLER, "verify activation lock start");
     int32_t mode = GetIntParameter(IS_ROOT_MODE_PARAM, USER_MODE);
     if (mode != USER_MODE) {
         char enableActivationLock[BMS_ACTIVATION_LOCK_VAL_LEN] = {0};
@@ -6573,10 +6584,12 @@ bool BaseBundleInstaller::RecoverHapToken(const std::string &bundleName, const i
         accessTokenIdEx.tokenIdExStruct.tokenID =
             uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenId;
         accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo) == ERR_OK) {
+        Security::AccessToken::HapInfoCheckResult checkResult;
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, checkResult) == ERR_OK) {
             return true;
         } else {
             LOG_W(BMS_TAG_INSTALLER, "bundleName:%{public}s UpdateHapToken failed", bundleName.c_str());
+            SetVerifyPermissionResult(checkResult);
         }
     }
     return false;

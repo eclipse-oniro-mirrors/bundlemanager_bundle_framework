@@ -26,6 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 
 struct SkillUri {
+    int32_t maxFileSupported = 0;
     std::string scheme;
     std::string host;
     std::string port;
@@ -34,16 +35,15 @@ struct SkillUri {
     std::string pathRegex;
     std::string type;
     std::string utd;
-    int32_t maxFileSupported = 0;
     std::string linkFeature;
 };
 
 struct Skill : public Parcelable {
 public:
+    bool domainVerify = false;
     std::vector<std::string> actions;
     std::vector<std::string> entities;
     std::vector<SkillUri> uris;
-    bool domainVerify = false;
     std::vector<std::string> permissions;
     static std::string GetOptParamUri(const std::string &uriString);
     bool Match(const OHOS::AAFwk::Want &want) const;

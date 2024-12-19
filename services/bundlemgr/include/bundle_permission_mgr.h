@@ -61,10 +61,13 @@ public:
         const std::string &bundleName, const std::string &permissionName, const int32_t userId);
 
     static int32_t InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
-        const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx);
+        const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
+        Security::AccessToken::HapInfoCheckResult &checkResult);
 
-    static int32_t UpdateHapToken(
-        Security::AccessToken::AccessTokenIDEx& tokenIdeEx, const InnerBundleInfo &innerBundleInfo);
+    static int32_t UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
+        const InnerBundleInfo &innerBundleInfo, Security::AccessToken::HapInfoCheckResult &checkResult);
+
+    static std::string GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult);
 
     static int32_t DeleteAccessTokenId(const Security::AccessToken::AccessTokenID tokenId);
 

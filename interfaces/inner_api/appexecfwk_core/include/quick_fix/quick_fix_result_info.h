@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,10 +36,10 @@ struct QuickFixResult : public Parcelable {
 struct DeployQuickFixResult final : public QuickFixResult {
     bool isSoContained = false;
     int32_t resultCode = -1;
-    std::string bundleName;
     uint32_t bundleVersionCode = 0; // bundle version code
     uint32_t patchVersionCode = 0; // patch version code
     QuickFixType type = QuickFixType::UNKNOWN;
+    std::string bundleName;
     std::vector<std::string> moduleNames;
 
     DeployQuickFixResult() = default;

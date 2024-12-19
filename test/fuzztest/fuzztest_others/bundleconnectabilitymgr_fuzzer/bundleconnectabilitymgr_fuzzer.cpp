@@ -21,7 +21,6 @@
 #define private public
 #include "bundle_connect_ability_mgr.h"
 #include "securec.h"
-void DoSomething2(const char* data, size_t size){};
 using Want = OHOS::AAFwk::Want;
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
@@ -31,10 +30,53 @@ constexpr size_t DCAMERA_SHIFT_24 = 24;
 constexpr size_t DCAMERA_SHIFT_16 = 16;
 constexpr size_t DCAMERA_SHIFT_8 = 8;
 
-
 uint32_t GetU32Data(const char* ptr)
 {
     return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
+}
+
+void DoSomething2(const char* data, size_t size)
+{
+    BundleConnectAbilityMgr bundleConnectAbilityMgr;
+    OHOS::sptr<OHOS::IRemoteObject> callBack = nullptr;
+    Want want;
+    int32_t fixValue = reinterpret_cast<uintptr_t>(data);
+    int32_t userId = fixValue;
+    int32_t flags = fixValue;
+    TargetAbilityInfo targetAbilityInfo;
+    FreeInstallParams freeInstallParams;
+    freeInstallParams.callback = nullptr;
+    bundleConnectAbilityMgr.SendRequest(flags, targetAbilityInfo, want, userId,
+        freeInstallParams);
+    std::string transactId(data, size);
+    bundleConnectAbilityMgr.GetAbilityManagerServiceCallBack(transactId);
+    bundleConnectAbilityMgr.OutTimeMonitor(transactId);
+    bundleConnectAbilityMgr.GetTransactId();
+    int32_t resultCode = fixValue;
+    bundleConnectAbilityMgr.CallAbilityManager(resultCode, want, userId, callBack);
+    AbilityInfo abilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    bundleConnectAbilityMgr.IsObtainAbilityInfo(want, flags, userId, abilityInfo,
+        callBack, innerBundleInfo);
+    std::mutex mutex_;
+    std::unique_lock<std::mutex> lock(mutex_);
+    bundleConnectAbilityMgr.WaitFromConnecting(lock);
+    bundleConnectAbilityMgr.WaitFromConnected(lock);
+    bundleConnectAbilityMgr.DisconnectDelay();
+    bundleConnectAbilityMgr.PreloadRequest(flags, targetAbilityInfo);
+    bundleConnectAbilityMgr.ProcessPreloadCheck(targetAbilityInfo);
+    ErmsCallerInfo callerInfo;
+    bundleConnectAbilityMgr.GetEcologicalCallerInfo(want, callerInfo, userId);
+    bundleConnectAbilityMgr.GetPreloadFlag();
+    std::string moduleName(data, size);
+    std::string bundleName(data, size);
+    OHOS::sptr<TargetAbilityInfo> targetAbilityInfo1 = nullptr;
+    bundleConnectAbilityMgr.GetPreloadList(bundleName, moduleName, userId, targetAbilityInfo1);
+    bundleConnectAbilityMgr.LoadDownloadService();
+    bundleConnectAbilityMgr.CheckIsOnDemandLoad(targetAbilityInfo);
+    bundleConnectAbilityMgr.GetModuleName(innerBundleInfo, want, moduleName);
+    bundleConnectAbilityMgr.CheckIsModuleNeedUpdateWrap(innerBundleInfo, want, userId, callBack);
+    bundleConnectAbilityMgr.CheckSubPackageName(innerBundleInfo, want);
 }
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
@@ -82,49 +124,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
         userId, freeInstallParams);
     DoSomething2(data, size);
     return true;
-}
-void DoSomething2(const char* data, size_t size)
-{
-    BundleConnectAbilityMgr bundleConnectAbilityMgr;
-    OHOS::sptr<OHOS::IRemoteObject> callBack = nullptr;
-    Want want;
-    int32_t userId = reinterpret_cast<uintptr_t>(data);
-    int32_t flags = reinterpret_cast<uintptr_t>(data);
-    TargetAbilityInfo targetAbilityInfo;
-    FreeInstallParams freeInstallParams;
-    freeInstallParams.callback = nullptr;
-    bundleConnectAbilityMgr.SendRequest(flags, targetAbilityInfo, want, userId,
-        freeInstallParams);
-    std::string transactId(data, size);
-    bundleConnectAbilityMgr.GetAbilityManagerServiceCallBack(transactId);
-    bundleConnectAbilityMgr.OutTimeMonitor(transactId);
-    bundleConnectAbilityMgr.GetTransactId();
-    int32_t resultCode = reinterpret_cast<uintptr_t>(data);
-    bundleConnectAbilityMgr.CallAbilityManager(resultCode, want, userId, callBack);
-    AbilityInfo abilityInfo;
-    InnerBundleInfo innerBundleInfo;
-    bundleConnectAbilityMgr.IsObtainAbilityInfo(want, flags, userId, abilityInfo,
-        callBack, innerBundleInfo);
-    bundleConnectAbilityMgr.GetAbilityMgrProxy();
-    std::mutex mutex_;
-    std::unique_lock<std::mutex> lock(mutex_);
-    bundleConnectAbilityMgr.WaitFromConnecting(lock);
-    bundleConnectAbilityMgr.WaitFromConnected(lock);
-    bundleConnectAbilityMgr.DisconnectDelay();
-    bundleConnectAbilityMgr.PreloadRequest(flags, targetAbilityInfo);
-    bundleConnectAbilityMgr.ProcessPreloadCheck(targetAbilityInfo);
-    ErmsCallerInfo callerInfo;
-    bundleConnectAbilityMgr.GetEcologicalCallerInfo(want, callerInfo, userId);
-    bundleConnectAbilityMgr.GetPreloadFlag();
-    std::string moduleName(data, size);
-    std::string bundleName(data, size);
-    OHOS::sptr<TargetAbilityInfo> targetAbilityInfo1 = nullptr;
-    bundleConnectAbilityMgr.GetPreloadList(bundleName, moduleName, userId, targetAbilityInfo1);
-    bundleConnectAbilityMgr.LoadDownloadService();
-    bundleConnectAbilityMgr.CheckIsOnDemandLoad(targetAbilityInfo);
-    bundleConnectAbilityMgr.GetModuleName(innerBundleInfo, want, moduleName);
-    bundleConnectAbilityMgr.CheckIsModuleNeedUpdateWrap(innerBundleInfo, want, userId, callBack);
-    bundleConnectAbilityMgr.CheckSubPackageName(innerBundleInfo, want);
 }
 }
 

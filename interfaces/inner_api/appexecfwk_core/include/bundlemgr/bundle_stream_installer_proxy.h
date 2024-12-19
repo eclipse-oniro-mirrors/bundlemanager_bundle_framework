@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,8 +39,8 @@ public:
     virtual void UnInit() override {};
 
 private:
-    static inline BrokerDelegator<BundleStreamInstallerProxy> delegator_;
     uint32_t installerId_ = -1;
+    static inline BrokerDelegator<BundleStreamInstallerProxy> delegator_;
     bool SendStreamInstallRequest(BundleStreamInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply);
 };
 } // AppExecFwk

@@ -82,7 +82,7 @@ constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* BUNDLE_BACKUP_KEEP_DIR = "/.backup";
 constexpr const char* ATOMIC_SERVICE_PATH = "+auid-";
 const std::vector<std::string> DRIVER_EXECUTE_DIR {
-    "/print_service/cups/serverbin/filter", "/print_service/sane/backend"
+    "/print_service/cups/serverbin/filter", "/print_service/cups/datadir/model", "/print_service/sane/backend"
 };
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
@@ -1751,6 +1751,7 @@ bool InstalldOperator::MoveFile(const std::string &srcPath, const std::string &d
     };
     if (std::any_of(DRIVER_EXECUTE_DIR.begin(), DRIVER_EXECUTE_DIR.end(), filterExecuteFile)) {
         mode |= S_IXUSR;
+        mode &= ~S_IWUSR;
     }
     if (!OHOS::ChangeModeFile(destPath, mode)) {
         LOG_E(BMS_TAG_INSTALLD, "change mode failed");

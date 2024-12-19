@@ -741,7 +741,13 @@ void BMSEventHandler::AnalyzeHaps(
     std::map<std::string, std::vector<InnerBundleInfo>> &installInfos)
 {
     for (const auto &hapPaths : hapPathsMap) {
-        AnalyzeHaps(isPreInstallApp, hapPaths.second, installInfos);
+        std::unordered_map<std::string, InnerBundleInfo> hapInfos;
+        if (!CheckAndParseHapFiles(hapPaths.second, isPreInstallApp, hapInfos) || hapInfos.empty()) {
+            LOG_E(BMS_TAG_DEFAULT, "Parse bundleDir failed");
+            continue;
+        }
+
+        CollectInstallInfos(hapInfos, installInfos);
     }
 }
 
@@ -3186,8 +3192,6 @@ bool BMSEventHandler::CheckAndParseHapFiles(
     bool isPreInstallApp,
     std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
-        std::make_unique<BundleInstallChecker>();
     std::vector<std::string> hapFilePathVec { hapFilePath };
     std::vector<std::string> realPaths;
     auto ret = BundleUtil::CheckFilePath(hapFilePathVec, realPaths);
@@ -3195,17 +3199,27 @@ bool BMSEventHandler::CheckAndParseHapFiles(
         LOG_E(BMS_TAG_DEFAULT, "File path %{public}s invalid", hapFilePath.c_str());
         return false;
     }
+    return CheckAndParseHapFiles(realPaths, isPreInstallApp, infos);
+}
 
-    ret = bundleInstallChecker->CheckSysCap(realPaths);
+bool BMSEventHandler::CheckAndParseHapFiles(
+    const std::vector<std::string> &realPaths,
+    bool isPreInstallApp,
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
+        std::make_unique<BundleInstallChecker>();
+
+    auto ret = bundleInstallChecker->CheckSysCap(realPaths);
     if (ret != ERR_OK) {
-        LOG_I(BMS_TAG_DEFAULT, "hap(%{public}s) syscap check failed", hapFilePath.c_str());
+        LOG_I(BMS_TAG_DEFAULT, "hap syscap check failed");
     }
     bool isSysCapValid = (ret == ERR_OK);
 
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
     ret = bundleInstallChecker->CheckMultipleHapsSignInfo(realPaths, hapVerifyResults, true);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "CheckMultipleHapsSignInfo %{public}s failed", hapFilePath.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "CheckMultipleHapsSignInfo failed");
         return false;
     }
 
@@ -3216,12 +3230,12 @@ bool BMSEventHandler::CheckAndParseHapFiles(
     }
 
     if (!LoadPreInstallProFile()) {
-        LOG_W(BMS_TAG_DEFAULT, "load json failed for restore %{public}s", hapFilePath.c_str());
+        LOG_W(BMS_TAG_DEFAULT, "load json failed for restore");
     }
     ret = bundleInstallChecker->ParseHapFiles(
         realPaths, checkParam, hapVerifyResults, infos);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "parse haps file(%{public}s) failed", hapFilePath.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "parse haps file failed");
         return false;
     }
 
@@ -3242,6 +3256,12 @@ bool BMSEventHandler::CheckAndParseHapFiles(
     ret = bundleInstallChecker->CheckAppLabelInfo(infos);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "Check APP label failed %{public}d", ret);
+        return false;
+    }
+
+    ret = bundleInstallChecker->CheckMultiNativeFile(infos);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "CheckMultiNativeFile failed %{public}d", ret);
         return false;
     }
 

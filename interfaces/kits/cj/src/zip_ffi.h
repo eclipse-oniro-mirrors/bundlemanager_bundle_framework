@@ -31,8 +31,8 @@ struct RetOptions {
 };
 
 struct CArrUI8 {
-    uint8_t *data;
     int32_t len;
+    uint8_t *data;
 };
 
 extern "C" {

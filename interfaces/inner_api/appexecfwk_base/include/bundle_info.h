@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -68,8 +68,8 @@ enum class GetBundleInfoFlag {
 };
 
 struct RequestPermissionUsedScene : public Parcelable {
-    std::vector<std::string> abilities;
     std::string when;
+    std::vector<std::string> abilities;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
@@ -77,10 +77,10 @@ struct RequestPermissionUsedScene : public Parcelable {
 };
 
 struct RequestPermission : public Parcelable {
+    uint32_t reasonId = 0;
     std::string name;
     std::string moduleName;
     std::string reason;
-    uint32_t reasonId = 0;
     RequestPermissionUsedScene usedScene;
 
     bool ReadFromParcel(Parcel &parcel);
@@ -101,38 +101,48 @@ struct SignatureInfo : public Parcelable {
 
 // configuration information about a bundle
 struct BundleInfo : public Parcelable {
-    std::string name;
-
-    uint32_t versionCode = 0;
-    uint32_t minCompatibleVersionCode = 0;
-    std::string versionName;
-
-    uint32_t compatibleVersion = 0;
-    uint32_t targetVersion = 0;
-
     bool isNewVersion = false;
     bool isKeepAlive = false;
     bool singleton = false;
     bool isPreInstallApp = false;
 
-    std::string vendor;
-    std::string releaseType;
     bool isNativeApp = false;
-    
+
     bool entryInstallationFree = false; // application : false; atomic service : true
-    std::string mainEntry; // modulePackage
-    std::string entryModuleName; // moduleName
-    std::string appId;
-    std::vector<std::string> oldAppIds; // used for appId changed
+    bool isDifferentName = false;
+
+    uint32_t versionCode = 0;
+    uint32_t minCompatibleVersionCode = 0;
+
+    uint32_t compatibleVersion = 0;
+    uint32_t targetVersion = 0;
+    int32_t appIndex = 0; // index for sandbox app
+    int32_t minSdkVersion = -1;
+    int32_t maxSdkVersion = -1;
+    int32_t overlayType = NON_OVERLAY_TYPE;
 
     // user related fields, assign when calling the get interface
     int uid = -1;
     int gid = -1;
     int64_t installTime = 0;
     int64_t updateTime = 0;
-    int32_t appIndex = 0; // index for sandbox app
+    std::string name;
+    std::string versionName;
 
-    ApplicationInfo applicationInfo;
+    std::string vendor;
+    std::string releaseType;
+    std::string mainEntry; // modulePackage
+    std::string entryModuleName; // moduleName
+    std::string appId;
+
+    std::string cpuAbi;
+    std::string seInfo;
+    std::string label;
+    std::string description;
+    std::string jointUserId;
+    SignatureInfo signatureInfo;
+    std::vector<std::string> oldAppIds; // used for appId changed
+
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     std::vector<HapModuleInfo> hapModuleInfos;
@@ -148,18 +158,8 @@ struct BundleInfo : public Parcelable {
     std::vector<RequestPermission> reqPermissionDetails;
     std::vector<OverlayBundleInfo> overlayBundleInfos;
 
-    std::string cpuAbi;
-    std::string seInfo;
-    std::string label;
-    std::string description;
-    std::string jointUserId;
-    int32_t minSdkVersion = -1;
-    int32_t maxSdkVersion = -1;
-    bool isDifferentName = false;
-    int32_t overlayType = NON_OVERLAY_TYPE;
-
-    SignatureInfo signatureInfo;
     std::vector<RouterItem> routerArray;
+    ApplicationInfo applicationInfo;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

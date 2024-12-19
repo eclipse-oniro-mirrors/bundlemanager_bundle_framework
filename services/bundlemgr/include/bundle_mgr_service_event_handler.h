@@ -408,6 +408,8 @@ private:
      */
     bool CheckAndParseHapFiles(const std::string &hapFilePath,
         bool isPreInstallApp, std::unordered_map<std::string, InnerBundleInfo> &infos);
+    bool CheckAndParseHapFiles(const std::vector<std::string> &realPaths,
+        bool isPreInstallApp, std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
      * @brief Parse hap.
      * @param hapFilePath Indicates the absolute file path of the HAP.

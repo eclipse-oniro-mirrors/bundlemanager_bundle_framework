@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "access_token.h"
+#include "hap_token_info.h"
 
 namespace OHOS {
 namespace Security {
@@ -44,9 +45,10 @@ public:
     static AccessTokenID GetHapTokenID(int userID, const std::string& bundleName, int instIndex);
     static AccessTokenIDEx GetHapTokenIDEx(int userID, const std::string& bundleName, int instIndex);
     static int GetNativeTokenInfo(AccessTokenID tokenID, NativeTokenInfo &nativeTokenInfo);
-    static int32_t InitHapToken(const HapInfoParams& info, HapPolicyParams& policy, AccessTokenIDEx& fullTokenId);
-    static int32_t UpdateHapToken(
-        AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info, const HapPolicyParams& policy);
+    static int32_t InitHapToken(const HapInfoParams& info, HapPolicyParams& policy,
+        AccessTokenIDEx& fullTokenId, HapInfoCheckResult& checkResult);
+    static int32_t UpdateHapToken(AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info,
+        const HapPolicyParams& policy, HapInfoCheckResult& checkResult);
 };
 } // namespace AccessToken
 } // namespace Security
