@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,9 +22,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct CommonEventInfo : public Parcelable {
+    int32_t uid = -1;
     std::string name;
     std::string bundleName;
-    int32_t uid = -1;
     std::string permission;
     std::vector<std::string> data;
     std::vector<std::string> type;

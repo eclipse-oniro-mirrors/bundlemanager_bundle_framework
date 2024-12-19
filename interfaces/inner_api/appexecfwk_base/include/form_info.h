@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,25 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct FormInfo : public Parcelable {
+    bool defaultFlag = false;
+    bool formVisibleNotify = false;
+    bool updateEnabled = false;
+    bool isStatic = true;
+    bool dataProxyEnabled = false;
+    bool isDynamic = true;
+    bool transparencyEnabled = false;
+    bool fontScaleFollowSystem = true;
+    FormsColorMode colorMode = FormsColorMode::AUTO_MODE;
+    uint32_t displayNameId = 0;
+    uint32_t descriptionId = 0;
+    uint32_t versionCode = 0;
+    int32_t updateDuration = 0;
+    int32_t defaultDimension = 0;
+    int32_t privacyLevel = 0;
+    FormType type = FormType::JS;
+    FormType uiSyntax = FormType::JS;
+    BundleType bundleType = BundleType::APP;
+    FormWindow window;
     std::string package;
     std::string bundleName;
     std::string originalBundleName;
@@ -39,30 +58,11 @@ struct FormInfo : public Parcelable {
     std::string formConfigAbility;
     std::string scheduledUpdateTime = "";
     std::string src;
-    FormWindow window;
-    uint32_t displayNameId = 0;
-    uint32_t descriptionId = 0;
-    int32_t updateDuration = 0;
-    int32_t defaultDimension = 0;
-    bool defaultFlag = false;
-    bool formVisibleNotify = false;
-    bool updateEnabled = false;
-    bool isStatic = true;
-    bool dataProxyEnabled = false;
-    bool isDynamic = true;
-    bool transparencyEnabled = false;
-    bool fontScaleFollowSystem = true;
-    FormType type = FormType::JS;
-    FormType uiSyntax = FormType::JS;
     std::vector<int32_t> supportDimensions;
-    FormsColorMode colorMode = FormsColorMode::AUTO_MODE;
     std::vector<std::string> landscapeLayouts;
     std::vector<std::string> portraitLayouts;
     std::vector<FormCustomizeData> customizeDatas;
     std::vector<int32_t> supportShapes;
-    int32_t privacyLevel = 0;
-    uint32_t versionCode = 0;
-    BundleType bundleType = BundleType::APP;
 
     FormInfo() = default;
     explicit FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo);
