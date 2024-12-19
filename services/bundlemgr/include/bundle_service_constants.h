@@ -40,6 +40,7 @@ constexpr const char* DIR_EL3 = "el3";
 constexpr const char* DIR_EL4 = "el4";
 constexpr const char* DIR_EL5 = "el5";
 const std::vector<std::string> BUNDLE_EL = {DIR_EL1, DIR_EL2, DIR_EL3, DIR_EL4};
+const std::vector<std::string> FULL_BUNDLE_EL = {DIR_EL1, DIR_EL2, DIR_EL3, DIR_EL4, DIR_EL5};
 constexpr const char* ARM_EABI = "armeabi";
 constexpr const char* ARM_EABI_V7A = "armeabi-v7a";
 constexpr const char* ARM64_V8A = "arm64-v8a";

@@ -111,6 +111,11 @@ int64_t InstalldClient::GetDiskUsage(const std::string &dir, bool isRealPath)
     return 0;
 }
 
+int64_t InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
 {
     return 0;

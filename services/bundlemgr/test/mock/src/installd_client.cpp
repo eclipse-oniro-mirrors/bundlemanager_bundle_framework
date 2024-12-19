@@ -486,6 +486,11 @@ int64_t InstalldClient::GetDiskUsage(const std::string& dir, bool isRealPath)
     return 0;
 }
 
+int64_t InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
 {
     if (originPath.empty() || targetPath.empty()) {

@@ -54,6 +54,8 @@ ohos_shared_library("appexecfwk_core") {
     "src/bundlemgr/clean_cache_callback_host.cpp",
     "src/bundlemgr/clean_cache_callback_proxy.cpp",
     "src/bundlemgr/launcher_service.cpp",
+    "src/bundlemgr/process_cache_callback_host.cpp",
+    "src/bundlemgr/process_cache_callback_proxy.cpp",
     "src/bundlemgr/status_receiver_host.cpp",
     "src/extend_resource/extend_resource_manager_host.cpp",
     "src/extend_resource/extend_resource_manager_proxy.cpp",

@@ -949,6 +949,16 @@ int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
     return InstalldOperator::GetDiskUsage(dir, isRealPath);
 }
 
+int64_t InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    return InstalldOperator::GetDiskUsageFromPath(path);
+}
+
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldHostImpl::CleanBundleDataDir start");
@@ -1057,13 +1067,14 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
                 ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir +
                 ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
             cachePaths.push_back(moduleCachePath);
-            LOG_D(BMS_TAG_INSTALLD, "add module cache path: %{public}s", moduleCachePath.c_str());
-            moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
-                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES +
-                bundleNameDir + ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR +
-                Constants::CACHE_DIR;
-            cachePaths.push_back(moduleCachePath);
-            LOG_D(BMS_TAG_INSTALLD, "add module cache path: %{public}s", moduleCachePath.c_str());
+
+            if (ServiceConstants::BUNDLE_EL[1] == el) {
+                moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+                    ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES +
+                    bundleNameDir + ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR +
+                    Constants::CACHE_DIR;
+                cachePaths.push_back(moduleCachePath);
+            }
         }
     }
     return InstalldOperator::GetDiskUsageFromPath(cachePaths);

@@ -278,6 +278,31 @@ int64_t InstalldProxy::GetDiskUsage(const std::string &dir, bool isRealPath)
     return TransactInstalldCmd(InstalldInterfaceCode::GET_DISK_USAGE, data, reply, option);
 }
 
+int64_t InstalldProxy::GetDiskUsageFromPath(const std::vector<std::string> &path)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (path.size() > Constants::MAX_CACHE_DIR_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD, "cache path size invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!data.WriteUint32(path.size())) {
+        LOG_E(BMS_TAG_INSTALLD, "failed: write path count fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (size_t i = 0; i < path.size(); i++) {
+        if (!data.WriteString(path[i])) {
+            LOG_E(BMS_TAG_INSTALLD, "WriteParcelable path:[%{public}s] failed",
+                path[i].c_str());
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC, WAIT_TIME);
+    return TransactInstalldCmd(InstalldInterfaceCode::GET_DISK_USAGE_FROM_PATH, data, reply, option);
+}
+
 ErrCode InstalldProxy::CleanBundleDataDir(const std::string &bundleDir)
 {
     MessageParcel data;

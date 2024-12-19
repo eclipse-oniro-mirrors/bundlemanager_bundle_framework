@@ -5430,6 +5430,37 @@ ErrCode BundleMgrProxy::GetDirByBundleNameAndAppIndex(const std::string &bundleN
     return ret;
 }
 
+ErrCode BundleMgrProxy::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)
+{
+    APP_LOGI("GetAllBundleCacheStat start");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (processCacheCallback == nullptr) {
+        APP_LOGE("fail to CleanBundleCacheFiles due to params error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to GetAllBundleCacheStat due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteRemoteObject(processCacheCallback->AsObject())) {
+        APP_LOGE("fail to GetAllBundleCacheStat, for write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ALL_BUNDLE_CACHE, data, reply)) {
+        APP_LOGE("fail to GetAllBundleCacheStat from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    ErrCode res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("fail to GetAllBundleCacheStat from reply: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
