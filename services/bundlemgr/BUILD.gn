@@ -528,6 +528,7 @@ ohos_shared_library("installs") {
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_acl",
   ]
 
   if (code_signature_enable) {
