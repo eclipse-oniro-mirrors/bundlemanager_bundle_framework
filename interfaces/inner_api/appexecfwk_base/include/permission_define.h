@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,17 +24,17 @@ namespace OHOS {
 namespace AppExecFwk {
 // provides known system security permissions.
 struct PermissionDef : public Parcelable {
-    std::string permissionName;
-    std::string bundleName;
-    int32_t grantMode = 0;
-    int32_t availableLevel = 1;
     bool provisionEnable = true;
     bool distributedSceneEnable = false;
     uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
+    int32_t grantMode = 0;
+    int32_t availableLevel = 1;
+    int32_t availableType = 1;
+    std::string permissionName;
+    std::string bundleName;
     std::string label;
     std::string description;
-    uint32_t descriptionId = 0;
-    int32_t availableType = 1;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

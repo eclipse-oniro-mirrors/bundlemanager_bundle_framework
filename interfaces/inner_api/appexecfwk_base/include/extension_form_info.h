@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,8 @@ struct ExtensionFormInfo {
     bool isDynamic = true;
     bool transparencyEnabled = true;
     bool fontScaleFollowSystem = true;
+    int32_t updateDuration = 0;
+    int32_t defaultDimension = 0;
     FormsColorMode colorMode = FormsColorMode::AUTO_MODE;
     FormType type = FormType::JS;
     FormType uiSyntax = FormType::JS;
@@ -40,10 +42,9 @@ struct ExtensionFormInfo {
     std::string displayName;
     std::string description;
     std::string src;
-    FormWindow window;
     std::string formConfigAbility;
-    int32_t updateDuration = 0;
-    int32_t defaultDimension = 0;
+    FormWindow window;
+
     std::vector<int32_t> supportDimensions {};
     std::vector<FormCustomizeData> metadata {};
     std::vector<int32_t> supportShapes {};

@@ -23,8 +23,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct BundleDir : public Parcelable {
-    std::string bundleName;
     int32_t appIndex = 0;
+    std::string bundleName;
     std::string dir;
 
     bool ReadFromParcel(Parcel &parcel);

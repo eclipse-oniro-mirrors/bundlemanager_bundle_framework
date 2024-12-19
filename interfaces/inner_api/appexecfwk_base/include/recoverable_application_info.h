@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,12 +24,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct RecoverableApplicationInfo : public Parcelable {
-    std::string bundleName;
-    std::string moduleName;
+    bool systemApp = false;
     uint32_t labelId = 0;
     uint32_t iconId = 0;
-    bool systemApp = false;
     BundleType bundleType = BundleType::APP;
+    std::string bundleName;
+    std::string moduleName;
     std::vector<std::string> codePaths;
 
     bool ReadFromParcel(Parcel &parcel);

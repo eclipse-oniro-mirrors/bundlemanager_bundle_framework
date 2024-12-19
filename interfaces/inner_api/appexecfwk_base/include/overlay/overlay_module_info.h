@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,12 +28,12 @@ enum OverlayState : int8_t {
 };
 
 struct OverlayModuleInfo : public Parcelable {
+    int32_t priority = 0;
+    int32_t state = OVERLAY_INVALID; // 0 is for disable and 1 is for enable
     std::string bundleName;
     std::string moduleName;
     std::string targetModuleName;
     std::string hapPath;
-    int32_t priority = 0;
-    int32_t state = OVERLAY_INVALID; // 0 is for disable and 1 is for enable
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
