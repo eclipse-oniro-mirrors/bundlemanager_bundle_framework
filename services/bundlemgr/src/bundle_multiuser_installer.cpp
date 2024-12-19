@@ -139,9 +139,11 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
 
     // 4. generate the accesstoken id and inherit original permissions
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
+    Security::AccessToken::HapInfoCheckResult checkResult;
     if (!RecoverHapToken(bundleName, userId, newTokenIdEx, info)) {
-        if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx) != ERR_OK) {
-            APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
+        if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult) != ERR_OK) {
+            auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+            APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
     }
@@ -311,10 +313,12 @@ bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, co
         accessTokenIdEx.tokenIdExStruct.tokenID =
             uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenId;
         accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo) == ERR_OK) {
+        Security::AccessToken::HapInfoCheckResult checkResult;
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, checkResult) == ERR_OK) {
             return true;
         } else {
-            APP_LOGW("bundleName:%{public}s UpdateHapToken failed", bundleName.c_str());
+            auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+            APP_LOGW("bundleName:%{public}s UpdateHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
         }
     }
     return false;

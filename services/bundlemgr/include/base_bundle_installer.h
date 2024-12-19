@@ -28,6 +28,7 @@
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
 #include "event_report.h"
+#include "hap_token_info.h"
 #include "install_param.h"
 #include "quick_fix/appqf_info.h"
 #include "shared_bundle_installer.h"
@@ -182,6 +183,8 @@ protected:
     std::string GetCheckResultMsg() const;
 
     void SetCheckResultMsg(const std::string checkResultMsg) const;
+
+    void SetVerifyPermissionResult(const Security::AccessToken::HapInfoCheckResult &checkResult);
 
     ErrCode RollbackHmpUserInfo(const std::string &bundleName);
 

@@ -202,8 +202,10 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     // 4. generate the accesstoken id and inherit original permissions
     info.SetAppIndex(appIndex);
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
-    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx) != ERR_OK) {
-        APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult) != ERR_OK) {
+        auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+        APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
     ScopeGuard applyAccessTokenGuard([&] {
