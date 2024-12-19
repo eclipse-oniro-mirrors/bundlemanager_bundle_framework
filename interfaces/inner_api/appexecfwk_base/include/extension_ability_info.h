@@ -73,6 +73,7 @@ enum class ExtensionAbilityType {
     INSIGHT_INTENT_UI = 22,
     PHOTO_EDITOR = 23,
     FENCE = 24,
+    CALLER_INFO_QUERY = 25,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
