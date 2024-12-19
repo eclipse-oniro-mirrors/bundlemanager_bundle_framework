@@ -232,7 +232,7 @@ void BundleMultiUserInstaller::CreateDataGroupDir(const std::string &bundleName,
         std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         if (BundleUtil::IsExistDirNoLog(dir)) {
             APP_LOGI("group dir exist, no need to create");
-            return;
+            continue;
         }
         auto result = InstalldClient::GetInstance()->Mkdir(dir, ServiceConstants::DATA_GROUP_DIR_MODE,
             dataGroupInfo.uid, dataGroupInfo.gid);
