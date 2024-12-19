@@ -121,7 +121,9 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     }
 
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId);
+    if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId)) {
+        APP_LOGE("PublishCommonEventAsUser failed");
+    }
     IPCSkeleton::SetCallingIdentity(identity);
 }
 
@@ -177,7 +179,9 @@ ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info
     std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
     publishInfo.SetSubscriberPermissions(permissionVec);
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
     IPCSkeleton::SetCallingIdentity(identity);
     return ERR_OK;
 }
@@ -199,7 +203,9 @@ void BundleCommonEventMgr::NotifyOverlayModuleStateStatus(const std::string &bun
     std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
     publishInfo.SetSubscriberPermissions(permissionVec);
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
     IPCSkeleton::SetCallingIdentity(identity);
 }
 
@@ -227,7 +233,9 @@ void BundleCommonEventMgr::NotifySetDiposedRule(
     std::vector<std::string> permissionVec { PERMISSION_GET_DISPOSED_STATUS };
     publishInfo.SetSubscriberPermissions(permissionVec);
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
     IPCSkeleton::SetCallingIdentity(identity);
 }
 
@@ -243,7 +251,9 @@ void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int
     std::vector<std::string> permissionVec { PERMISSION_GET_DISPOSED_STATUS };
     publishInfo.SetSubscriberPermissions(permissionVec);
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
     IPCSkeleton::SetCallingIdentity(identity);
 }
 
@@ -261,7 +271,9 @@ void BundleCommonEventMgr::NotifyDynamicIconEvent(
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
     IPCSkeleton::SetCallingIdentity(identity);
 }
 
@@ -276,7 +288,9 @@ void BundleCommonEventMgr::NotifyBundleResourcesChanged(const int32_t userId, co
     std::vector<std::string> permissionVec { ServiceConstants::PERMISSION_GET_BUNDLE_RESOURCES };
     publishInfo.SetSubscriberPermissions(permissionVec);
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
     IPCSkeleton::SetCallingIdentity(identity);
 }
 } // AppExecFwk

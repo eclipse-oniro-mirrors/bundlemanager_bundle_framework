@@ -1005,7 +1005,12 @@ std::string BundleUtil::GetNoDisablingConfigPath()
 #ifdef CONFIG_POLOCY_ENABLE
     char buf[MAX_PATH_LEN] = { 0 };
     char *configPath = GetOneCfgFile(NO_DISABLING_CONFIG_PATH, buf, MAX_PATH_LEN);
-    if (configPath == nullptr || configPath[0] == '\0' || strlen(configPath) > MAX_PATH_LEN) {
+    if (configPath == nullptr || configPath[0] == '\0') {
+        APP_LOGE("BundleUtil GetOneCfgFile failed");
+        return NO_DISABLING_CONFIG_PATH_DEFAULT;
+    }
+    if (strlen(configPath) > MAX_PATH_LEN) {
+        APP_LOGE("length exceeds");
         return NO_DISABLING_CONFIG_PATH_DEFAULT;
     }
     return configPath;
