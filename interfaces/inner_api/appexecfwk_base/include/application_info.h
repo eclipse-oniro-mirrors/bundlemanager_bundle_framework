@@ -271,6 +271,9 @@ struct ApplicationInfo : public Parcelable {
     std::string arkNativeFilePath;
     std::string arkNativeFileAbi;
 
+
+    std::vector<std::string> assetAccessGroups;
+
     // assign when calling the get interface
     std::vector<std::string> permissions;
     std::vector<std::string> moduleSourceDirs;

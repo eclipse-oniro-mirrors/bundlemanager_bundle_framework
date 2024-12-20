@@ -73,6 +73,9 @@ private:
 
     void ResetInstallProperties();
 
+    std::string GetAssetAccessGroups(const std::string &bundleName);
+    std::string GetDeveloperId(const std::string &bundleName);
+
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     int32_t uid_ = 0;
     uint32_t accessTokenId_ = 0;

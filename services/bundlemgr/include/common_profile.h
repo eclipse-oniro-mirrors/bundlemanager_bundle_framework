@@ -356,6 +356,7 @@ constexpr const char* APP_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 constexpr const char* APP_TSAN_ENABLED = "tsanEnabled";
 constexpr const char* APP_UBSAN_ENABLED = "ubsanEnabled";
 constexpr const char* APP_CONFIGURATION = "configuration";
+constexpr const char* APP_ASSET_ACCESS_GROUPS = "assetAccessGroups";
 // multiappmode
 constexpr const char* APP_MULTI_APP_MODE = "multiAppMode";
 constexpr const char* APP_HWASAN_ENABLED = "hwasanEnabled";

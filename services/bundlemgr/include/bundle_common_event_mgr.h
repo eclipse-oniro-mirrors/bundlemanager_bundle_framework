@@ -65,6 +65,8 @@ struct NotifyBundleEvents {
     std::string appId;
     std::string appIdentifier;
     std::string appDistributionType;
+    std::string developerId;
+    std::string assetAccessGroups;
 };
 
 class BundleCommonEventMgr {

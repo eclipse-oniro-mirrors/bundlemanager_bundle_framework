@@ -86,6 +86,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
                 "allowCommonEvent":[
 
                 ],
+                "assetAccessGroups":[],
                 "apiCompatibleVersion":0,
                 "apiReleaseType":"",
                 "apiTargetVersion":0,
@@ -299,6 +300,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "allowCommonEvent":[
 
         ],
+        "assetAccessGroups":[],
         "apiCompatibleVersion":9,
         "apiReleaseType":"Beta3",
         "apiTargetVersion":9,
@@ -419,6 +421,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "allowCommonEvent":[
 
             ],
+            "assetAccessGroups":[],
             "apiCompatibleVersion":0,
             "apiReleaseType":"",
             "apiTargetVersion":0,
@@ -1141,6 +1144,7 @@ protected:
                 "hideDesktopIcon": false,
                 "formVisibleNotify": false,
                 "allowCommonEvent": [],
+                "assetAccessGroups":[],
                 "needAppDetail": false,
                 "appDetailAbilityLibraryPath": "",
                 "bundleType": 0,

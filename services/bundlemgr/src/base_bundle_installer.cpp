@@ -328,6 +328,9 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     LOG_I(BMS_TAG_INSTALLER, "begin to process %{public}s bundle uninstall", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
+    std::string developerId = GetDeveloperId(bundleName);
+    std::string assetAccessGroups = GetAssetAccessGroups(bundleName);
+
     // uninstall all sandbox app before
     UninstallAllSandboxApps(bundleName, installParam.userId);
 
@@ -360,7 +363,9 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .uid = uid,
             .bundleType = static_cast<int32_t>(bundleType_),
             .bundleName = bundleName,
-            .appId = uninstallBundleAppId_
+            .appId = uninstallBundleAppId_,
+            .developerId = developerId,
+            .assetAccessGroups = assetAccessGroups
         };
 
         if (installParam.concentrateSendEvent) {
@@ -370,12 +375,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         }
     }
 
-    SendBundleSystemEvent(
-        bundleName,
-        BundleEventType::UNINSTALL,
-        installParam,
-        sysEventInfo_.preBundleScene,
-        result);
+    SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, installParam, sysEventInfo_.preBundleScene, result);
     PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
     LOG_D(BMS_TAG_INSTALLER, "finish to process %{public}s bundle uninstall", bundleName.c_str());
     return result;
@@ -535,6 +535,14 @@ ErrCode BaseBundleInstaller::UninstallBundle(
         modulePackage.c_str(), bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
+    std::string developerId;
+    std::string assetAccessGroups;
+    std::vector<std::string> moduleNames;
+    GetModuleNames(bundleName, moduleNames);
+    if (moduleNames.size() == 1) {
+        developerId = GetDeveloperId(bundleName);
+        assetAccessGroups = GetAssetAccessGroups(bundleName);
+    }
     // uninstall all sandbox app before
     UninstallAllSandboxApps(bundleName, installParam.userId);
 
@@ -557,19 +565,16 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .bundleType = static_cast<int32_t>(bundleType_),
             .bundleName = bundleName,
             .modulePackage = modulePackage,
-            .appId = uninstallBundleAppId_
+            .appId = uninstallBundleAppId_,
+            .developerId = developerId,
+            .assetAccessGroups = assetAccessGroups
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
         }
     }
 
-    SendBundleSystemEvent(
-        bundleName,
-        BundleEventType::UNINSTALL,
-        installParam,
-        sysEventInfo_.preBundleScene,
-        result);
+    SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, installParam, sysEventInfo_.preBundleScene, result);
     PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
     LOG_D(BMS_TAG_INSTALLER, "finish uninstall %{public}s in %{public}s", modulePackage.c_str(), bundleName.c_str());
     return result;
@@ -6574,6 +6579,54 @@ bool BaseBundleInstaller::RecoverHapToken(const std::string &bundleName, const i
         }
     }
     return false;
+}
+
+std::string BaseBundleInstaller::GetAssetAccessGroups(const std::string &bundleName)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr null");
+        return Constants::EMPTY_STRING;
+    }
+    std::vector<std::string> assetAccessGroups;
+    ErrCode ret = dataMgr_->GetAssetAccessGroups(bundleName, assetAccessGroups);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "GetAssetAccessGroups failed, ret=%{public}d", ret);
+        return Constants::EMPTY_STRING;
+    }
+    std::string assetAccessGroupsStr;
+    if (!assetAccessGroups.empty()) {
+        std::stringstream assetAccessGroupsStream;
+        std::copy(assetAccessGroups.begin(), assetAccessGroups.end(),
+            std::ostream_iterator<std::string>(assetAccessGroupsStream, ","));
+        assetAccessGroupsStr = assetAccessGroupsStream.str();
+        if (!assetAccessGroupsStr.empty()) {
+            assetAccessGroupsStr.pop_back();
+        }
+    }
+    return assetAccessGroupsStr;
+}
+
+std::string BaseBundleInstaller::GetDeveloperId(const std::string &bundleName)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr null");
+        return Constants::EMPTY_STRING;
+    }
+    std::string developerId;
+    ErrCode ret = dataMgr_->GetDeveloperId(bundleName, developerId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "GetDeveloperId failed, ret=%{public}d", ret);
+    }
+    return developerId;
+}
+
+void BaseBundleInstaller::GetModuleNames(const std::string &bundleName, std::vector<std::string> &moduleNames)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr null");
+        return;
+    }
+    dataMgr_->GetBundleModuleNames(bundleName, moduleNames);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

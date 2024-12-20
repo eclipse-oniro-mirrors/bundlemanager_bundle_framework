@@ -15,6 +15,8 @@
 
 #include "bundle_clone_installer.h"
 
+#include <sstream>
+
 #include "ability_manager_helper.h"
 #include "account_helper.h"
 #include "bms_extension_data_mgr.h"
@@ -97,6 +99,8 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
         .appIndex = appIndex,
         .appId = appId_,
         .appIdentifier = appIdentifier_,
+        .developerId = GetDeveloperId(bundleName),
+        .assetAccessGroups = GetAssetAccessGroups(bundleName)
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -512,6 +516,45 @@ void BundleCloneInstaller::ResetInstallProperties()
     versionCode_ = 0;
     appId_ = "";
     appIdentifier_ = "";
+}
+
+std::string BundleCloneInstaller::GetAssetAccessGroups(const std::string &bundleName)
+{
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("DataMgr null");
+        return Constants::EMPTY_STRING;
+    }
+    std::vector<std::string> assetAccessGroups;
+    ErrCode ret = dataMgr_->GetAssetAccessGroups(bundleName, assetAccessGroups);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAssetAccessGroups failed, ret=%{public}d", ret);
+        return Constants::EMPTY_STRING;
+    }
+    std::string assetAccessGroupsStr;
+    if (!assetAccessGroups.empty()) {
+        std::stringstream assetAccessGroupsStream;
+        std::copy(assetAccessGroups.begin(), assetAccessGroups.end(),
+            std::ostream_iterator<std::string>(assetAccessGroupsStream, ","));
+        assetAccessGroupsStr = assetAccessGroupsStream.str();
+        if (!assetAccessGroupsStr.empty()) {
+            assetAccessGroupsStr.pop_back();
+        }
+    }
+    return assetAccessGroupsStr;
+}
+
+std::string BundleCloneInstaller::GetDeveloperId(const std::string &bundleName)
+{
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("DataMgr null");
+        return Constants::EMPTY_STRING;
+    }
+    std::string developerId;
+    ErrCode ret = dataMgr_->GetDeveloperId(bundleName, developerId);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetDeveloperId failed, ret=%{public}d", ret);
+    }
+    return developerId;
 }
 } // AppExecFwk
 } // OHOS

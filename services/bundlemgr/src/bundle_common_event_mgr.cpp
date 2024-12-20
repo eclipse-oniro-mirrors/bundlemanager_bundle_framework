@@ -43,6 +43,8 @@ constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* TYPE = "type";
 constexpr const char* RESULT_CODE = "resultCode";
 constexpr const char* PERMISSION_GET_DISPOSED_STATUS = "ohos.permission.GET_DISPOSED_APP_STATUS";
+constexpr const char* ASSET_ACCESS_GROUPS = "assetAccessGroups";
+constexpr const char* DEVELOPERID = "developerId";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -149,6 +151,11 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(APP_INDEX, installResult.appIndex);
     want.SetParam(TYPE, static_cast<int32_t>(installResult.type));
     want.SetParam(RESULT_CODE, installResult.resultCode);
+    if (want.GetAction() == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED
+        && !installResult.assetAccessGroups.empty()) {
+        want.SetParam(ASSET_ACCESS_GROUPS, installResult.assetAccessGroups);
+        want.SetParam(DEVELOPERID, installResult.developerId);
+    }
 }
 
 ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info, int32_t uid, int32_t userId,
