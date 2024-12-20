@@ -2867,15 +2867,16 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
         APP_LOGE("routerStorage_ is null");
         return;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    const auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem == bundleInfos_.end()) {
-        APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
-        return;
-    }
     std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
-    FindRouterHapPath(infoItem->second, hapPathMap);
-    lock.unlock();
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        const auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
+            return;
+        }
+        FindRouterHapPath(infoItem->second, hapPathMap);
+    }
     UpdateRouterInfo(bundleName, hapPathMap);
 }
 

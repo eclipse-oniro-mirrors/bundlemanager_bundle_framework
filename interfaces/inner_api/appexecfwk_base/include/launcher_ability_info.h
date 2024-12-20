@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,12 +24,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct LauncherAbilityInfo {
-    ApplicationInfo applicationInfo;
-    ElementName elementName; // bundle name , ability name, deviceid
     uint32_t labelId = 0;
     uint32_t iconId = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     int64_t installTime = 0;
+    ApplicationInfo applicationInfo;
+    ElementName elementName; // bundle name , ability name, deviceid
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

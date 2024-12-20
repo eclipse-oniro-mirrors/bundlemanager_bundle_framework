@@ -614,11 +614,18 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
             isCompileSdkOpenHarmony, bundleName_);
     }
     CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
-    int32_t hspFd = open(tempHspPath.c_str(), O_RDONLY);
-    if (fsync(hspFd) != 0) {
-        APP_LOGE("fsync %{public}s failed", tempHspPath.c_str());
+    FILE *hspFp = fopen(tempHspPath.c_str(), "r");
+    if (hspFp == nullptr) {
+        APP_LOGE("fopen %{public}s failed", tempHspPath.c_str());
+    } else {
+        int32_t hspFd = fileno(hspFp);
+        if (hspFd < 0) {
+            APP_LOGE("open %{public}s failed", tempHspPath.c_str());
+        } else if (fsync(hspFd) != 0) {
+            APP_LOGE("fsync %{public}s failed", tempHspPath.c_str());
+        }
+        fclose(hspFp);
     }
-    close(hspFd);
 
     // 3. move hsp to real installation dir
     APP_LOGD("move file from temp path %{public}s to real path %{public}s", tempHspPath.c_str(), realHspPath.c_str());

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -89,6 +89,7 @@ public:
     void Dump() const;
 
 private:
+    bool enableProfile_ = true;
     int64_t bmsLoadStart_ = 0;
     int64_t bmsLoadEnd_ = 0;
 
@@ -115,8 +116,6 @@ private:
     int64_t abilityLoadEnd_ = 0;
     int64_t appForkStart_ = 0;
     int64_t appForkEnd_ = 0;
-
-    bool enableProfile_ = true;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

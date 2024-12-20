@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -57,15 +57,13 @@ private:
     void ScheduleLoopTask();
 
 private:
-    std::mutex mutex_;
     bool running_ = false;
-    AgingHandlerChain chain_;
-    AgingRequest request_;
+    static const uint32_t EVENT_AGING_NOW = 1;
     int64_t agingTimerInterval_ = AgingConstants::DEFAULT_AGING_TIMER_INTERVAL;
     int64_t agingBatteryThresold_ = AgingConstants::DEFAULT_AGING_BATTERY_THRESHOLD;
-
-private:
-    static const uint32_t EVENT_AGING_NOW = 1;
+    std::mutex mutex_;
+    AgingHandlerChain chain_;
+    AgingRequest request_;
 };
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

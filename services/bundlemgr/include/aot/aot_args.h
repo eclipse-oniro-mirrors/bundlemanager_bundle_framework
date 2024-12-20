@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,12 +21,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct HspInfo : public Parcelable {
-    std::string bundleName;
-    std::string moduleName;
     uint32_t versionCode = 0;
-    std::string hapPath;
     uint32_t offset = 0;
     uint32_t length = 0;
+    std::string bundleName;
+    std::string moduleName;
+    std::string hapPath;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);
@@ -35,6 +35,13 @@ struct HspInfo : public Parcelable {
 };
 
 struct AOTArgs : public Parcelable {
+    uint32_t offset = 0;
+    uint32_t length = 0;
+    uint32_t isEncryptedBundle = 0;
+    uint32_t isScreenOff = 0;
+    uint32_t isEnableBaselinePgo = 0;
+    int32_t bundleUid = -1;
+    int32_t bundleGid = -1;
     std::string bundleName;
     std::string moduleName;
     std::string compileMode;
@@ -43,16 +50,9 @@ struct AOTArgs : public Parcelable {
     std::string outputPath;
     std::string arkProfilePath;
     std::string anFileName;
-    uint32_t offset = 0;
-    uint32_t length = 0;
-    std::vector<HspInfo> hspVector;
-    int32_t bundleUid = -1;
-    int32_t bundleGid = -1;
     std::string appIdentifier;
-    uint32_t isEncryptedBundle = 0;
     std::string optBCRangeList;
-    uint32_t isScreenOff = 0;
-    uint32_t isEnableBaselinePgo = 0;
+    std::vector<HspInfo> hspVector;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);

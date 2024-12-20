@@ -22,7 +22,7 @@ namespace OHOS {
     namespace {
         const std::string FUZZTEST_BUNDLE = "com.test.ext.resource";
     }
-    bool fuzzelGetExtResourceCaseOne(const uint8_t* data, size_t size)
+    bool FuzzelGetExtResourceCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
         std::string emptyBundleName;
@@ -31,10 +31,13 @@ namespace OHOS {
         if (ret == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST) {
             return true;
         }
+        std::string anyBundleName = std::string(reinterpret_cast<const char *>(data), size);
+        moduleNames.clear();
+        impl.GetExtResource(anyBundleName, moduleNames);
         return false;
     }
 
-    bool fuzzerlGetExtResourceCaseTwo(const uint8_t* data, size_t size)
+    bool FuzzerlGetExtResourceCaseTwo()
     {
         ExtendResourceManagerHostImpl impl;
         std::vector<std::string> moduleNames;
@@ -48,7 +51,7 @@ namespace OHOS {
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    OHOS::fuzzelGetExtResourceCaseOne(data, size);
-    OHOS::fuzzerlGetExtResourceCaseTwo(data, size);
+    OHOS::FuzzelGetExtResourceCaseOne(data, size);
+    OHOS::FuzzerlGetExtResourceCaseTwo();
     return 0;
 }

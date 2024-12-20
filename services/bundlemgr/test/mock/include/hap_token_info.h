@@ -13,26 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_DIR_H
-#define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_DIR_H
+#ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_ACCESSTOKEN_HAP_TOKEN_INFO_H
+#define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_ACCESSTOKEN_HAP_TOKEN_INFO_H
 
 #include <string>
+#include <vector>
 
-#include "parcel.h"
+#include "access_token.h"
 
 namespace OHOS {
-namespace AppExecFwk {
-struct BundleDir : public Parcelable {
-    int32_t appIndex = 0;
-    std::string bundleName;
-    std::string dir;
-
-    bool ReadFromParcel(Parcel &parcel);
-    virtual bool Marshalling(Parcel &parcel) const override;
-    static BundleDir *Unmarshalling(Parcel &parcel);
-    std::string ToString() const;
+namespace Security {
+namespace AccessToken {
+class PermissionInfoCheckResult final {
+public:
+    std::string permissionName;
+    PermissionRulesEnum rule;
 };
-} // AppExecFwk
-} // OHOS
 
-#endif // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_DIR_H
+class HapInfoCheckResult final {
+public:
+    PermissionInfoCheckResult permCheckResult;
+};
+} // namespace AccessToken
+} // namespace Security
+} // namespace OHOS
+#endif // ACCESSTOKEN_HAP_TOKEN_INFO_H

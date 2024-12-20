@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,20 +24,20 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct DistributedBundleInfo : public Parcelable {
+    bool enabled = true;
     uint32_t version = 1;
     uint32_t versionCode = 0;
-    std::string bundleName;
-    std::string versionName;
     uint32_t minCompatibleVersion = 0;
     uint32_t targetVersionCode = 0;
     uint32_t compatibleVersionCode = 0;
-    bool enabled = true;
-    std::string appId;
-    std::vector<DistributedModuleInfo> moduleInfos;
     // user related fields, assign when calling the get interface
     uint32_t accessTokenId = 0;
     // bundle update time
     int64_t updateTime = 0;
+    std::string bundleName;
+    std::string versionName;
+    std::string appId;
+    std::vector<DistributedModuleInfo> moduleInfos;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

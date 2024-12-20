@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -70,9 +70,9 @@ struct PreloadItem : public Parcelable {
 };
 
 struct Dependency : public Parcelable {
+    uint32_t versionCode = 0;
     std::string bundleName;
     std::string moduleName;
-    uint32_t versionCode = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
@@ -94,11 +94,11 @@ struct RouterItem : public Parcelable {
     std::string name;
     std::string pageSourceFile;
     std::string buildFunction;
-    std::map<std::string, std::string> data;
     std::string customData;
     std::string ohmurl;
     std::string bundleName;
     std::string moduleName;
+    std::map<std::string, std::string> data;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
@@ -118,10 +118,20 @@ struct AppEnvironment : public Parcelable {
 struct HapModuleInfo : public Parcelable {
     bool compressNativeLibs = true;
     bool isLibIsolated = false;
+    bool deliveryWithInstall = false;
+    bool installationFree = false;
+    bool isModuleJson = false;
+    bool isStageBasedModel = false;
     uint32_t descriptionId = 0;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
+    int32_t upgradeFlag = 0;
     int supportedModes = 0;
+    ModuleColorMode colorMode = ModuleColorMode::AUTO;
+    ModuleType moduleType = ModuleType::UNKNOWN;
+    CompileMode compileMode = CompileMode::JS_BUNDLE;
+    AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
+    IsolationMode isolationMode = IsolationMode::NONISOLATION_FIRST;
     std::string name;        // module.name in config.json
     std::string package;
     std::string moduleName;  // module.distro.moduleName in config.json
@@ -135,19 +145,6 @@ struct HapModuleInfo : public Parcelable {
     std::string hapPath;
     std::string nativeLibraryPath;
     std::string cpuAbi;
-    std::vector<std::string> nativeLibraryFileNames;
-
-    // quick fix hqf info
-    HqfInfo hqfInfo;
-
-    // overlay module info
-    std::vector<OverlayModuleInfo> overlayModuleInfos;
-
-    std::vector<std::string> reqCapabilities;
-    std::vector<std::string> deviceTypes;
-    std::vector<Dependency> dependencies;
-    std::vector<AbilityInfo> abilityInfos;
-    ModuleColorMode colorMode = ModuleColorMode::AUTO;
     // new version fields
     std::string bundleName;
     std::string mainElementName;
@@ -157,31 +154,34 @@ struct HapModuleInfo : public Parcelable {
     std::string srcEntrance;
     std::string uiSyntax;
     std::string virtualMachine;
-    bool deliveryWithInstall = false;
-    bool installationFree = false;
-    bool isModuleJson = false;
-    bool isStageBasedModel = false;
-    int32_t upgradeFlag = 0;
-    std::map<std::string, bool> isRemovable;
-    ModuleType moduleType = ModuleType::UNKNOWN;
+    std::string moduleSourceDir;
+    std::string buildHash;
+    std::string fileContextMenu;
+    std::string routerMap;
+    std::string packageName;
+    std::string appStartup;
+
+    // quick fix hqf info
+    HqfInfo hqfInfo;
+    std::vector<std::string> nativeLibraryFileNames;
+
+    // overlay module info
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+
+    std::vector<std::string> reqCapabilities;
+    std::vector<std::string> deviceTypes;
+    std::vector<Dependency> dependencies;
+    std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     std::vector<Metadata> metadata;
     std::vector<ProxyData> proxyDatas;
-    CompileMode compileMode = CompileMode::JS_BUNDLE;
-    std::string moduleSourceDir;
     std::vector<PreloadItem> preloads;
-    std::string buildHash;
-    IsolationMode isolationMode = IsolationMode::NONISOLATION_FIRST;
-    AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
-    std::string fileContextMenu;
-    std::string routerMap;
     std::vector<RouterItem> routerArray;
     std::vector<AppEnvironment> appEnvironments;
-    std::string packageName;
+    std::map<std::string, bool> isRemovable;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);
-    std::string appStartup;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

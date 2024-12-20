@@ -47,7 +47,6 @@ ohos_fuzztest("ZipFuzzTest") {
     "${core_path}:appexecfwk_core",
     "${kits_path}/js/common:bundle_napi_common",
     "${kits_path}/js/zip:zlib",
-    "//third_party/zlib:libz",
   ]
   external_deps = [
     "c_utils:utils",
@@ -56,4 +55,5 @@ ohos_fuzztest("ZipFuzzTest") {
     "ipc:ipc_core",
     "napi:ace_napi",
   ]
+  public_external_deps = [ "zlib:libz" ]
 }

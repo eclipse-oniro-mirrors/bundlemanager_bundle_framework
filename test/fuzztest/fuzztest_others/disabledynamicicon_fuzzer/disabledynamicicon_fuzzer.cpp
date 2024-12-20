@@ -22,7 +22,7 @@ namespace OHOS {
 namespace {
     const std::string TEST_BUNDLE = "com.test.ext.resource";
 }
-    bool fuzzelDisableDynamicIconCaseOne(const uint8_t* data, size_t size)
+    bool FuzzelDisableDynamicIconCaseOne(const uint8_t* data, size_t size)
     {
         ExtendResourceManagerHostImpl impl;
         std::string bundleName (reinterpret_cast<const char*>(data), size);
@@ -33,7 +33,7 @@ namespace {
         return false;
     }
 
-    bool fuzzelDisableDynamicIconCaseTwo(const uint8_t* data, size_t size)
+    bool FuzzelDisableDynamicIconCaseTwo()
     {
         ExtendResourceManagerHostImpl impl;
         auto ret = impl.DisableDynamicIcon(TEST_BUNDLE);
@@ -46,7 +46,7 @@ namespace {
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    OHOS::fuzzelDisableDynamicIconCaseOne(data, size);
-    OHOS::fuzzelDisableDynamicIconCaseTwo(data, size);
+    OHOS::FuzzelDisableDynamicIconCaseOne(data, size);
+    OHOS::FuzzelDisableDynamicIconCaseTwo();
     return 0;
 }

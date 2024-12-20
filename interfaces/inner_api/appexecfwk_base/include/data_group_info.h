@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,11 +25,11 @@ namespace OHOS {
 namespace AppExecFwk {
 struct DataGroupInfo : public Parcelable {
 public:
-    std::string dataGroupId;
-    std::string uuid;
     int32_t uid = 0;
     int32_t gid = 0;
     int32_t userId = 0;
+    std::string dataGroupId;
+    std::string uuid;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

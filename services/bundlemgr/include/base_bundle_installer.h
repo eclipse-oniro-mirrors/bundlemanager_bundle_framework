@@ -28,6 +28,7 @@
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
 #include "event_report.h"
+#include "hap_token_info.h"
 #include "install_param.h"
 #include "installer_bundle_tmp_info.h"
 #include "quick_fix/appqf_info.h"
@@ -183,6 +184,8 @@ protected:
     std::string GetCheckResultMsg() const;
 
     void SetCheckResultMsg(const std::string checkResultMsg) const;
+
+    void SetVerifyPermissionResult(const Security::AccessToken::HapInfoCheckResult &checkResult);
 
     ErrCode RollbackHmpUserInfo(const std::string &bundleName);
 
@@ -773,7 +776,7 @@ private:
 
     bool DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo);
     void ProcessAddResourceInfo(const InstallParam &installParam, const std::string &bundleName, int32_t userId);
-    bool FetchInnerBundleInfo(InnerBundleInfo &info) const;
+    bool FetchTempBundleInfo(InnerBundleInfo &info) const;
     bool InitTempBundleFromCache(InnerBundleInfo &info, bool &isAppExist, std::string bundleName = "");
     ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex);
     ErrCode CheckShellCanInstallPreApp(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
@@ -781,37 +784,49 @@ private:
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
         Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
 
+    bool isAppExist_ = false;
+    bool isContainEntry_ = false;
+    bool isAppService_ = false;
+    // value is packageName for uninstalling
+    bool isFeatureNeedUninstall_ = false;
+    // for quick fix
+    bool needDeleteQuickFixInfo_ = false;
+    bool hasInstalledInUser_ = false;
+    bool isModuleUpdate_ = false;
+    bool isEntryInstalled_ = false;
+    bool isEnterpriseBundle_ = false;
+    bool isInternaltestingBundle_ = false;
+    // When it is true, it means that the same bundleName and same userId was uninstalled with keepData before
+    bool existBeforeKeepDataApp_ = false;
+    bool copyHapToInstallPath_ = false;
+    bool needSetDisposeRule_ = false;
     InstallerState state_ = InstallerState::INSTALL_START;
-    std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
+    uint32_t versionCode_ = 0;
+    uint32_t accessTokenId_ = 0;
+    uint32_t oldApplicationReservedFlag_ = 0;
+
+    int32_t userId_ = Constants::INVALID_USERID;
+    int32_t overlayType_ = NON_OVERLAY_TYPE;
+    int32_t atomicServiceModuleUpgrade_ = 0;
+    SingletonState singletonState_ = SingletonState::DEFAULT;
+    BundleType bundleType_ = BundleType::APP;
     std::string bundleName_;
     std::string moduleTmpDir_;
     std::string modulePath_;
     std::string baseDataPath_;
     std::string modulePackage_;
     std::string mainAbility_;
+    std::string moduleName_;
+    std::string uninstallBundleAppId_;
+    std::string entryModuleName_ = "";
+    std::string appDistributionType_;
+    std::string appIdentifier_ = "";
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
+    std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
     // key is package name, value is boolean
     std::unordered_map<std::string, bool> installedModules_;
-    bool isAppExist_ = false;
-    bool isContainEntry_ = false;
-    uint32_t versionCode_ = 0;
-    uint32_t accessTokenId_ = 0;
-    bool isAppService_ = false;
-    // value is packageName for uninstalling
-    bool isFeatureNeedUninstall_ = false;
     std::vector<std::string> uninstallModuleVec_;
-    // for quick fix
-    bool needDeleteQuickFixInfo_ = false;
-    uint32_t oldApplicationReservedFlag_ = 0;
-
-    int32_t userId_ = Constants::INVALID_USERID;
-    bool hasInstalledInUser_ = false;
-    SingletonState singletonState_ = SingletonState::DEFAULT;
     std::map<std::string, std::string> hapPathRecords_;
-    // used to record system event infos
-    EventInfo sysEventInfo_;
-    std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
-    int32_t overlayType_ = NON_OVERLAY_TYPE;
-    std::string moduleName_;
     // utilizing for code-signature
     std::map<std::string, std::string> verifyCodeParams_;
     std::vector<std::string> toDeleteTempHapPath_;
@@ -821,30 +836,18 @@ private:
     std::map<std::string, std::string> signatureFileMap_;
     std::vector<std::string> bundlePaths_;
     std::unordered_map<std::string, std::string> signatureFileTmpMap_;
-    std::string uninstallBundleAppId_;
-    bool isModuleUpdate_ = false;
-    BundleType bundleType_ = BundleType::APP;
-    int32_t atomicServiceModuleUpgrade_ = 0;
     // utilize for install entry firstly from multi-installation
-    bool isEntryInstalled_ = false;
-    std::string entryModuleName_ = "";
     std::map<std::string, std::string> pgoParams_;
-    bool isEnterpriseBundle_ = false;
-    bool isInternaltestingBundle_ = false;
-    std::string appIdentifier_ = "";
-    // When it is true, it means that the same bundleName and same userId was uninstalled with keepData before
-    bool existBeforeKeepDataApp_ = false;
-    Security::Verify::HapVerifyResult verifyRes_;
     std::map<std::string, std::string> targetSoPathMap_;
-    bool copyHapToInstallPath_ = false;
-    std::string appDistributionType_;
     // indicates sandboxd dirs need to create by extension
     std::vector<std::string> newExtensionDirs_;
     // indicates sandboxd dirs need to create by extension
     std::vector<std::string> createExtensionDirs_;
     // indicates sandboxd dirs need to remove by extension
     std::vector<std::string> removeExtensionDirs_;
-    bool needSetDisposeRule_ = false;
+    // used to record system event infos
+    EventInfo sysEventInfo_;
+    Security::Verify::HapVerifyResult verifyRes_;
     InstallerBundleTempInfo tempInfo_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);

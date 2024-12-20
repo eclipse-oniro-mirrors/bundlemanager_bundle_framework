@@ -127,6 +127,8 @@ enum class ExtensionProcessMode {
 };
 
 struct SkillUriForAbilityAndExtension {
+    bool isMatch = false;
+    int32_t maxFileSupported = 0;
     std::string scheme;
     std::string host;
     std::string port;
@@ -136,51 +138,49 @@ struct SkillUriForAbilityAndExtension {
     std::string type;
     std::string utd;
     std::string linkFeature;
-    int32_t maxFileSupported = 0;
-    bool isMatch = false;
 };
 
 struct ExtensionAbilityInfo : public Parcelable {
+    bool visible = false;
+
+    // set when install
+    bool enabled = true;
+
+    bool needCreateSandbox = false;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
+    int32_t priority = 0;
+    // for NAPI, save self query cache
+    int32_t uid = -1;
+    int32_t appIndex = 0;
+    ExtensionAbilityType type = ExtensionAbilityType::UNSPECIFIED;
+    CompileMode compileMode = CompileMode::JS_BUNDLE;
+    ExtensionProcessMode extensionProcessMode = ExtensionProcessMode::UNDEFINED;
     std::string bundleName;
     std::string moduleName;
     std::string name;
     std::string srcEntrance;
     std::string icon;
-    uint32_t iconId = 0;
-    uint32_t labelId = 0;
     std::string label;
     std::string description;
-    uint32_t descriptionId = 0;
-    int32_t priority = 0;
-    std::vector<std::string> permissions;
     std::string readPermission;
     std::string writePermission;
     std::string uri;
-    ExtensionAbilityType type = ExtensionAbilityType::UNSPECIFIED;
     std::string extensionTypeName;
-    std::vector<Metadata> metadata;
-    ApplicationInfo applicationInfo;
-    ExtensionProcessMode extensionProcessMode = ExtensionProcessMode::UNDEFINED;
-    bool visible = false;
-
-    // set when install
-    bool enabled = true;
     std::string resourcePath;
     std::string hapPath;
     std::string process;
-    CompileMode compileMode = CompileMode::JS_BUNDLE;
-    // for NAPI, save self query cache
-    int32_t uid = -1;
-    int32_t appIndex = 0;
+    std::string customProcess;
+    std::vector<std::string> permissions;
+    std::vector<Metadata> metadata;
 
     // for Check flags, add to abilityInfo and extensionAbilityInfo
     std::vector<SkillUriForAbilityAndExtension> skillUri;
     std::vector<Skill> skills;
-
-    bool needCreateSandbox = false;
     std::vector<std::string> dataGroupIds;
     std::vector<std::string> validDataGroupIds;
-    std::string customProcess;
+    ApplicationInfo applicationInfo;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

@@ -1243,27 +1243,34 @@ private:
         const AbilityInfo &abilityInfo) const;
     void RestoreUidAndGidFromUninstallInfo();
 private:
-    mutable std::shared_mutex bundleInfoMutex_;
-    mutable std::mutex stateMutex_;
-    mutable std::shared_mutex bundleIdMapMutex_;
-    mutable std::shared_mutex callbackMutex_;
-    mutable ffrt::mutex eventCallbackMutex_;
-    mutable std::shared_mutex bundleMutex_;
-    mutable std::mutex multiUserIdSetMutex_;
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
+    mutable std::mutex stateMutex_;
+    mutable std::mutex multiUserIdSetMutex_;
+    mutable std::mutex hspBundleNameMutex_;
+    mutable ffrt::mutex eventCallbackMutex_;
+    mutable std::shared_mutex bundleInfoMutex_;
+    mutable std::shared_mutex bundleIdMapMutex_;
+    mutable std::shared_mutex callbackMutex_;
+    mutable std::shared_mutex bundleMutex_;
+    std::shared_ptr<IBundleDataStorage> dataStorage_;
+    std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
+    std::shared_ptr<BundleStateStorage> bundleStateStorage_;
+    std::shared_ptr<BundlePromise> bundlePromise_ = nullptr;
+    std::shared_ptr<BundleSandboxAppHelper> sandboxAppHelper_;
+    std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
+    std::shared_ptr<IRouterDataStorage> routerStorage_;
+    std::shared_ptr<UninstallDataMgrStorageRdb> uninstallDataMgr_;
+    // use vector because these functions using for IPC, the bundleName may duplicate
+    std::vector<sptr<IBundleStatusCallback>> callbackList_;
+    // common event callback
+    std::vector<sptr<IBundleEventCallback>> eventCallbackList_;
     // using for locking by bundleName
     std::unordered_map<std::string, std::mutex> bundleMutexMap_;
     // using for generating bundleId
     // key:bundleId
     // value:bundleName
     std::map<int32_t, std::string> bundleIdMap_;
-    // save all created users.
-    std::set<int32_t> multiUserIdsSet_;
-    // use vector because these functions using for IPC, the bundleName may duplicate
-    std::vector<sptr<IBundleStatusCallback>> callbackList_;
-    // common event callback
-    std::vector<sptr<IBundleEventCallback>> eventCallbackList_;
     // all installed bundles
     // key:bundleName
     // value:innerbundleInfo
@@ -1272,16 +1279,9 @@ private:
     std::map<std::string, InstallState> installStates_;
     // current-status:previous-statue pair
     std::multimap<InstallState, InstallState> transferStates_;
-    std::shared_ptr<IBundleDataStorage> dataStorage_;
-    std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
-    std::shared_ptr<BundleStateStorage> bundleStateStorage_;
-    std::shared_ptr<BundlePromise> bundlePromise_ = nullptr;
-    std::shared_ptr<BundleSandboxAppHelper> sandboxAppHelper_;
-    mutable std::mutex hspBundleNameMutex_;
+    // save all created users.
+    std::set<int32_t> multiUserIdsSet_;
     std::set<std::string> appServiceHspBundleName_;
-    std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
-    std::shared_ptr<IRouterDataStorage> routerStorage_;
-    std::shared_ptr<UninstallDataMgrStorageRdb> uninstallDataMgr_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

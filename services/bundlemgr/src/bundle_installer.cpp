@@ -51,7 +51,7 @@ void BundleInstaller::Install(const std::string &bundleFilePath, const InstallPa
     } else {
         resultCode = InstallBundle(
             bundleFilePath, installParam, Constants::AppType::THIRD_PARTY_APP);
-        InstallDriverForAllUsers(bundleFilePath, installParam);
+        InstallDriverForAllUsers(installParam);
     }
     std::string resultMsg = GetCheckResultMsg();
     SetCheckResultMsg("");
@@ -98,7 +98,7 @@ void BundleInstaller::Install(const std::vector<std::string> &bundleFilePaths, c
         NotifyAllBundleStatus();
     } else {
         resultCode = InstallBundle(bundleFilePaths, installParam, Constants::AppType::THIRD_PARTY_APP);
-        InstallDriverForAllUsers(bundleFilePaths, installParam);
+        InstallDriverForAllUsers(installParam);
     }
     std::string resultMsg = GetCheckResultMsg();
     SetCheckResultMsg("");
@@ -219,14 +219,7 @@ std::set<int32_t> BundleInstaller::GetExistsCommonUserIds()
     return userIds;
 }
 
-void BundleInstaller::InstallDriverForAllUsers(const std::string &bundleFilePath, const InstallParam &installParam)
-{
-    std::vector<std::string> bundleFilePaths { bundleFilePath };
-    InstallDriverForAllUsers(bundleFilePaths, installParam);
-}
-
-void BundleInstaller::InstallDriverForAllUsers(const std::vector<std::string> &bundleFilePaths,
-    const InstallParam &installParam)
+void BundleInstaller::InstallDriverForAllUsers(const InstallParam &installParam)
 {
     std::string bundleName = GetCurrentBundleName();
     if (!HasDriverExtensionAbility(bundleName)) {
@@ -236,15 +229,13 @@ void BundleInstaller::InstallDriverForAllUsers(const std::vector<std::string> &b
     APP_LOGI("bundle %{public}s has driver extension ability, need to install for all users", bundleName.c_str());
     ResetInstallProperties();
     auto userInstallParam = installParam;
-    userInstallParam.allUser = true;
     for (auto userId : GetExistsCommonUserIds()) {
         if (userId == installParam.userId) {
             continue;
         }
         userInstallParam.userId = userId;
         userInstallParam.installFlag = InstallFlag::REPLACE_EXISTING;
-        ErrCode resultCode = InstallBundle(
-            bundleFilePaths, userInstallParam, Constants::AppType::THIRD_PARTY_APP);
+        ErrCode resultCode = InstallBundleByBundleName(bundleName, userInstallParam);
         ResetInstallProperties();
         if (resultCode != ERR_OK) {
             APP_LOGE("install driver for user %{public}d failed, resultCode: %{public}d", userId, resultCode);

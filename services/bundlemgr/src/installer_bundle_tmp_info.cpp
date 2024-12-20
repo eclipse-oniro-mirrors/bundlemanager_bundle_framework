@@ -38,14 +38,6 @@ InnerBundleInfo &InstallerBundleTempInfo::GetCurrentBundleInfo()
     return tempBundleInfo_;
 }
 
-void InstallerBundleTempInfo::InitTempBundle(InnerBundleInfo &info, bool isAppExist)
-{
-    bundleInit_ = isAppExist;
-    if (bundleInit_) {
-        tempBundleInfo_ = info;
-    }
-}
-
 bool InstallerBundleTempInfo::UpdateTempBundleInfo(const InnerBundleInfo &info)
 {
     if (info.GetBundleName().empty()) {

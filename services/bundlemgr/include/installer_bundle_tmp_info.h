@@ -29,7 +29,6 @@ public:
     ~InstallerBundleTempInfo() = default;
     bool FetchTempBundleInfo(InnerBundleInfo &info) const;
     InnerBundleInfo &GetCurrentBundleInfo();
-    void InitTempBundle(InnerBundleInfo &info, bool isAppExist);
     bool UpdateTempBundleInfo(const InnerBundleInfo &info);
 private:
     bool bundleInit_ = false;
