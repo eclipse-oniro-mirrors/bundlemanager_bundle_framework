@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -109,13 +109,13 @@ private:
     bool CheckCanDispose(const std::string &appId, int32_t userId);
 
     bool isAppInstallControlEnabled_ = false;
+    std::mutex appRunningControlMutex_;
+    std::mutex abilityRunningControlRuleMutex_;
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
     std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb_;
-    std::unordered_map<std::string, AppRunningControlRuleResult> appRunningControlRuleResult_;
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr_;
-    std::mutex appRunningControlMutex_;
+    std::unordered_map<std::string, AppRunningControlRuleResult> appRunningControlRuleResult_;
     std::unordered_map<std::string, std::vector<DisposedRule>> abilityRunningControlRuleCache_;
-    std::mutex abilityRunningControlRuleMutex_;
     std::unordered_map<std::string, DisposedRule> abilityRunningControlRuleCacheForBms_;
     std::vector<std::string> noControllingList_;
 };

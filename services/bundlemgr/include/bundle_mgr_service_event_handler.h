@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -647,10 +647,6 @@ private:
     void CleanAllBundleShaderCache() const;
     void CleanTempDir() const;
     bool CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo);
-    // Used to save the information parsed by Hap in the scanned directory.
-    std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
-    // Used to save application information that already exists in the Db.
-    std::map<std::string, PreInstallBundleInfo> loadExistData_;
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
     // Used to notify bundle scan status
@@ -659,6 +655,10 @@ private:
     bool hasLoadAllPreInstallBundleInfosFromDb_ = false;
     // Used to mark module update status depend on system parameter
     ModuleUpdateStatus moduleUpdateStatus_ = ModuleUpdateStatus::DEFAULT;
+    // Used to save the information parsed by Hap in the scanned directory.
+    std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
+    // Used to save application information that already exists in the Db.
+    std::map<std::string, PreInstallBundleInfo> loadExistData_;
     // Used to mark every hmp install result
     std::map<std::string, bool> moduleUpdateInstallResults_;
     // Used to indicates not appService bundleName in hmp

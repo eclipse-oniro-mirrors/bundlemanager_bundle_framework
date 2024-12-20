@@ -85,10 +85,10 @@ private:
     bool GetOldAOTVersion(std::string &oldAOTVersion) const;
     void SaveAOTVersion(const std::string &curAOTVersion) const;
 private:
+    std::atomic<bool> OTACompileDeadline_ { false };
     mutable std::mutex executeMutex_;
     mutable std::mutex idleMutex_;
     mutable std::mutex compileMutex_;
-    std::atomic<bool> OTACompileDeadline_ { false };
     std::shared_ptr<SerialQueue> serialQueue_;
 };
 }  // namespace AppExecFwk
