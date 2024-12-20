@@ -63,6 +63,7 @@ struct FormInfo : public Parcelable {
     std::vector<std::string> portraitLayouts;
     std::vector<FormCustomizeData> customizeDatas;
     std::vector<int32_t> supportShapes;
+    std::vector<uint32_t> formPreviewImages;
 
     FormInfo() = default;
     explicit FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo);
