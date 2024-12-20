@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -59,39 +59,39 @@ struct BundleOptions {
 
 struct AbilityEnableCallbackInfo : public BaseCallbackInfo {
     explicit AbilityEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    AbilityInfo abilityInfo;
     bool isEnable = false;
+    AbilityInfo abilityInfo;
 };
 
 struct ApplicationEnableCallbackInfo : public BaseCallbackInfo {
     explicit ApplicationEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    std::string bundleName;
     bool isEnable = false;
+    std::string bundleName;
 };
 
 struct LaunchWantCallbackInfo : public BaseCallbackInfo {
     explicit LaunchWantCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    std::string bundleName;
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    OHOS::AAFwk::Want want;
     ErrCode ret = ERR_OK;
+    std::string bundleName;
+    OHOS::AAFwk::Want want;
 };
 
 struct GetBundleArchiveInfoCallbackInfo : public BaseCallbackInfo {
     explicit GetBundleArchiveInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    std::string hapFilePath;
-    int32_t flags = 0;
-    BundleInfo bundleInfo;
     bool ret = false;
+    int32_t flags = 0;
+    std::string hapFilePath;
+    BundleInfo bundleInfo;
 };
 
 struct AbilityIconCallbackInfo : public BaseCallbackInfo {
     explicit AbilityIconCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    bool hasModuleName = false;
+    ErrCode ret = ERR_OK;
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;
-    bool hasModuleName = false;
-    ErrCode ret = ERR_OK;
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
     std::shared_ptr<Media::PixelMap> pixelMap = nullptr;
 #endif
@@ -99,102 +99,102 @@ struct AbilityIconCallbackInfo : public BaseCallbackInfo {
 
 struct AsyncAbilityInfoCallbackInfo : public AsyncWorkData {
     explicit AsyncAbilityInfoCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    OHOS::AAFwk::Want want;
+    bool ret = false;
+    int32_t err = 0;
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     std::vector<OHOS::AppExecFwk::AbilityInfo> abilityInfos;
-    bool ret = false;
-    int32_t err = 0;
+    OHOS::AAFwk::Want want;
 };
 
 struct AsyncAbilityInfosCallbackInfo : public AsyncWorkData {
     explicit AsyncAbilityInfosCallbackInfo(napi_env env) : AsyncWorkData(env) {}
+    bool hasModuleName = false;
+    bool ret = false;
+    int32_t err = 0;
     int32_t flags = 0;
+    std::string message;
     std::string bundleName;
     std::string abilityName;
     std::string moduleName = "";
-    bool hasModuleName = false;
     OHOS::AppExecFwk::AbilityInfo abilityInfo;
-    bool ret = false;
-    int32_t err = 0;
-    std::string message;
 };
 
 struct AsyncBundleInfoCallbackInfo : public AsyncWorkData {
     explicit AsyncBundleInfoCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    std::string param;
-    int32_t flags = 0;
-    OHOS::AppExecFwk::BundleInfo bundleInfo;
     bool ret = false;
     int32_t err = 0;
+    int32_t flags = 0;
+    std::string param;
     std::string message;
+    OHOS::AppExecFwk::BundleInfo bundleInfo;
     BundleOptions bundleOptions;
 };
 
 struct AsyncApplicationInfoCallbackInfo : public AsyncWorkData {
     explicit AsyncApplicationInfoCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    std::string bundleName;
+    bool ret = false;
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    OHOS::AppExecFwk::ApplicationInfo appInfo;
-    bool ret = false;
     int32_t err = 0;
+    std::string bundleName;
     std::string message;
+    OHOS::AppExecFwk::ApplicationInfo appInfo;
 };
 
 struct AsyncPermissionDefCallbackInfo : public AsyncWorkData {
     explicit AsyncPermissionDefCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    std::string permissionName;
-    OHOS::AppExecFwk::PermissionDef permissionDef;
     bool ret = false;
     int32_t err = 0;
     std::string message;
+    std::string permissionName;
+    OHOS::AppExecFwk::PermissionDef permissionDef;
 };
 
 struct AsyncBundleInfosCallbackInfo : public AsyncWorkData {
     explicit AsyncBundleInfosCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    int32_t flags = 0;
-    std::vector<OHOS::AppExecFwk::BundleInfo> bundleInfos;
     bool ret = false;
+    int32_t flags = 0;
     int32_t err = 0;
-    std::string message;
     int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string message;
+    std::vector<OHOS::AppExecFwk::BundleInfo> bundleInfos;
 };
 
 struct AsyncApplicationInfosCallbackInfo : public AsyncWorkData {
     explicit AsyncApplicationInfosCallbackInfo(napi_env env) : AsyncWorkData(env) {}
+    bool ret = false;
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    std::vector<OHOS::AppExecFwk::ApplicationInfo> appInfos;
-    bool ret = false;
     int32_t err = 0;
     std::string message;
+    std::vector<OHOS::AppExecFwk::ApplicationInfo> appInfos;
 };
 
 struct AsyncAbilityLabelCallbackInfo : public AsyncWorkData {
     explicit AsyncAbilityLabelCallbackInfo(napi_env env) : AsyncWorkData(env) {}
+    bool hasModuleName = false;
+    int32_t err = 0;
     std::string bundleName;
     std::string className;
     std::string moduleName = "";
-    bool hasModuleName = false;
     std::string abilityLabel;
-    int32_t err = 0;
     std::string message;
 };
 
 struct InstallResult {
-    std::string resultMsg;
     int32_t resultCode = 0;
+    std::string resultMsg;
 };
 
 struct AsyncInstallCallbackInfo : public AsyncWorkData {
     explicit AsyncInstallCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    std::vector<std::string> hapFiles;
+    int32_t errCode = 0;
     std::string bundleName;
     std::string param;
+    std::vector<std::string> hapFiles;
     OHOS::AppExecFwk::InstallParam installParam;
     InstallResult installResult;
-    int32_t errCode = 0;
 };
 
 struct AsyncGetBundleInstallerCallbackInfo : public AsyncWorkData {
@@ -203,83 +203,83 @@ struct AsyncGetBundleInstallerCallbackInfo : public AsyncWorkData {
 
 struct AsyncFormInfosCallbackInfo : public AsyncWorkData {
     explicit AsyncFormInfosCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    std::vector<OHOS::AppExecFwk::FormInfo> formInfos;
     bool ret = false;
+    std::vector<OHOS::AppExecFwk::FormInfo> formInfos;
 };
 
 struct AsyncFormInfosByModuleCallbackInfo : public AsyncWorkData {
     explicit AsyncFormInfosByModuleCallbackInfo(napi_env env) : AsyncWorkData(env) {}
+    bool ret = false;
     std::string bundleName;
     std::string moduleName;
     std::vector<OHOS::AppExecFwk::FormInfo> formInfos;
-    bool ret = false;
 };
 
 struct AsyncFormInfosByAppCallbackInfo : public AsyncWorkData {
     explicit AsyncFormInfosByAppCallbackInfo(napi_env env) : AsyncWorkData(env) {}
+    bool ret = false;
     std::string bundleName;
     std::vector<OHOS::AppExecFwk::FormInfo> formInfos;
-    bool ret = false;
 };
 
 struct AsyncLaunchWantForBundleCallbackInfo : public AsyncWorkData {
     explicit AsyncLaunchWantForBundleCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    std::string bundleName;
-    OHOS::AAFwk::Want want;
     bool ret = false;
     int32_t err = 0;
+    std::string bundleName;
+    OHOS::AAFwk::Want want;
 };
 
 struct AsyncGetBundleGidsCallbackInfo : public AsyncWorkData {
     explicit AsyncGetBundleGidsCallbackInfo(napi_env env) : AsyncWorkData(env) {}
+    bool ret = false;
+    int32_t err = 0;
+    std::string message;
     std::string bundleName;
     std::vector<int32_t> gids;
-    int32_t err = 0;
-    bool ret = false;
-    std::string message;
 };
 
 struct AsyncGetNameByUidInfo : public AsyncWorkData {
     explicit AsyncGetNameByUidInfo(napi_env env) : AsyncWorkData(env) {}
-    int32_t uid = 0;
-    std::string bundleName;
-    int32_t err = 0;
     bool ret = false;
+    int32_t uid = 0;
+    int32_t err = 0;
+    std::string bundleName;
 };
 
 struct AsyncHandleBundleContext : public AsyncWorkData {
     explicit AsyncHandleBundleContext(napi_env env) : AsyncWorkData(env) {}
-    OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
-    std::string bundleName;
-    std::string className;
+    bool ret = false;
     uint32_t labelId = 0;
     uint32_t iconId = 0;
-    bool ret = false;
     int32_t err = 0;
+    std::string bundleName;
+    std::string className;
+    OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
 };
 
 struct EnabledInfo : public AsyncWorkData {
     explicit EnabledInfo(napi_env env) : AsyncWorkData(env) {}
-    std::string bundleName;
-    OHOS::AppExecFwk::AbilityInfo abilityInfo;
     bool isEnable = false;
     bool result = false;
     int32_t errCode = 0;
     std::string errMssage;
+    std::string bundleName;
+    OHOS::AppExecFwk::AbilityInfo abilityInfo;
 };
 
 struct AsyncAbilityInfo : public AsyncWorkData {
     explicit AsyncAbilityInfo(napi_env env) : AsyncWorkData(env) {}
+    bool hasModuleName = false;
+    bool result = false;
+    int32_t errCode = 0;
     std::string bundleName;
     std::string abilityName;
     std::string moduleName = "";
-    bool hasModuleName = false;
+    std::string errMssage;
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
     std::shared_ptr<Media::PixelMap> pixelMap;
 #endif
-    int32_t errCode = 0;
-    bool result = false;
-    std::string errMssage;
 };
 
 struct Query {
@@ -363,45 +363,45 @@ public:
     ~JsBundleMgr() = default;
 
     struct JsAbilityInfo {
+        bool hasModuleName = false;
+        bool ret = false;
         std::string bundleName;
         std::string abilityName;
         std::string moduleName = "";
-        bool hasModuleName = false;
         OHOS::AppExecFwk::AbilityInfo abilityInfo;
-        bool ret = false;
     };
 
     struct JsNameForUid {
-        std::string bundleName;
-        int32_t uid;
         bool ret = false;
+        int32_t uid;
+        std::string bundleName;
     };
 
     struct JsAbilityLabel {
+        bool hasModuleName = false;
         std::string bundleName;
         std::string className;
         std::string moduleName = "";
-        bool hasModuleName = false;
         std::string abilityLabel;
     };
 
     struct JsAbilityIcon {
+        bool hasModuleName = false;
         std::string bundleName;
         std::string abilityName;
         std::string moduleName = "";
-        bool hasModuleName = false;
     };
 
     struct JsGetPermissionDef {
+        bool ret = false;
         std::string permissionName;
         OHOS::AppExecFwk::PermissionDef permissionDef;
-        bool ret = false;
     };
 
     struct JsQueryAbilityInfo {
-        std::vector<AbilityInfo> abilityInfos;
         bool ret = false;
         bool getCache = false;
+        std::vector<AbilityInfo> abilityInfos;
     };
     std::string errMessage_;
 
