@@ -20,6 +20,7 @@
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
 #include "installd_client.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -250,6 +251,7 @@ void InnerSharedBundleInstaller::SendBundleSystemEvent(const EventInfo &eventTem
     EventInfo eventInfo = eventTemplate;
     eventInfo.bundleName = bundleName_;
     eventInfo.versionCode = newBundleInfo_.GetBaseBundleInfo().versionCode;
+    eventInfo.callingUid = IPCSkeleton::GetCallingUid();
     GetInstallEventInfo(eventInfo);
 
     BundleEventType eventType = isBundleExist_ ? BundleEventType::UPDATE : BundleEventType::INSTALL;
