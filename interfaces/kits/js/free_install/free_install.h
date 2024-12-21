@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,22 +26,22 @@ namespace OHOS {
 namespace AppExecFwk {
 struct HapModuleRemovableCallbackInfo : public BaseCallbackInfo {
     explicit HapModuleRemovableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    bool result = false;
     std::string bundleName;
     std::string moduleName;
-    bool result = false;
 };
 
 struct SetHapModuleUpgradeFlagCallbackInfo : public BaseCallbackInfo {
     explicit SetHapModuleUpgradeFlagCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    int32_t upgradeFlag = 0;
     std::string bundleName;
     std::string moduleName;
-    int32_t upgradeFlag = 0;
 };
 
 struct GetBundlePackInfoCallbackInfo : public BaseCallbackInfo {
     explicit GetBundlePackInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    std::string bundleName;
     int32_t bundlePackFlag = 0;
+    std::string bundleName;
     BundlePackInfo bundlePackInfo;
 };
 

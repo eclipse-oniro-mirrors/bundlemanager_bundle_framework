@@ -76,10 +76,10 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
         return;
     }
     AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow)AsyncCallbackInfo {
+        .userId_ = userId,
+        .bundleName_ = bundleName,
         .env_ = env_,
         .callback_ = addedCallback_,
-        .bundleName_ = bundleName,
-        .userId_ = userId,
     };
     if (asyncCallbackInfo == nullptr) {
         APP_LOGW("BundleStatusCallback OnBundleAdded asyncCallbackInfo is nullptr bundleName : %{public}s",
@@ -142,10 +142,10 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
         return;
     }
     AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow) AsyncCallbackInfo {
+        .userId_ = userId,
+        .bundleName_ = bundleName,
         .env_ = env_,
         .callback_ = updatedCallback_,
-        .bundleName_ = bundleName,
-        .userId_ = userId,
     };
     if (asyncCallbackInfo == nullptr) {
         APP_LOGW("BundleStatusCallback OnBundleUpdated asyncCallbackInfo is nullptr bundleName : %{public}s",
@@ -211,10 +211,10 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
         return;
     }
     AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow) AsyncCallbackInfo {
+        .userId_ = userId,
+        .bundleName_ = bundleName,
         .env_ = env_,
         .callback_ = removeCallback_,
-        .bundleName_ = bundleName,
-        .userId_ = userId,
     };
     if (asyncCallbackInfo == nullptr) {
         APP_LOGW("BundleStatusCallback OnBundleUpdated asyncCallbackInfo is nullptr bundleName : %{public}s",
