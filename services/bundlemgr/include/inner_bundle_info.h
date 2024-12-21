@@ -858,6 +858,15 @@ public:
         userId_ = userId;
     }
 
+    const std::unordered_set<int32_t> GetUsers() const
+    {
+        std::unordered_set<int32_t> userIds;
+        for (const auto &userInfoItem : innerBundleUserInfos_) {
+            userIds.insert(userInfoItem.second.bundleUserInfo.userId);
+        }
+        return userIds;
+    }
+
     // only used in install progress with newInfo
     std::string GetCurrentModulePackage() const
     {
@@ -1945,27 +1954,15 @@ public:
         return dataGroupInfos_;
     }
 
-    void AddDataGroupInfo(const std::string &dataGroupId, const DataGroupInfo &info)
+    void DeleteDataGroupInfo(const std::string &dataGroupId)
     {
-        APP_LOGD("AddDataGroupInfo, dataGroupId: %{public}s, dataGroupInfo: %{public}s",
-            dataGroupId.c_str(), info.ToString().c_str());
-        auto dataGroupInfosItem = dataGroupInfos_.find(dataGroupId);
-        if (dataGroupInfosItem == dataGroupInfos_.end()) {
-            APP_LOGD("AddDataGroupInfo add new dataGroupInfo for dataGroupId: %{public}s", dataGroupId.c_str());
-            dataGroupInfos_[dataGroupId] = std::vector<DataGroupInfo> { info };
+        if (dataGroupInfos_.find(dataGroupId) == dataGroupInfos_.end()) {
             return;
         }
-
-        int32_t userId = info.userId;
-        auto iter = std::find_if(std::begin(dataGroupInfos_[dataGroupId]), std::end(dataGroupInfos_[dataGroupId]),
-            [userId](const DataGroupInfo &dataGroupinfo) { return dataGroupinfo.userId == userId; });
-        if (iter != std::end(dataGroupInfos_[dataGroupId])) {
-            return;
-        }
-
-        APP_LOGD("AddDataGroupInfo add new dataGroupInfo for user: %{public}d", info.userId);
-        dataGroupInfos_[dataGroupId].emplace_back(info);
+        dataGroupInfos_.erase(dataGroupId);
     }
+
+    void AddDataGroupInfo(const std::string &dataGroupId, const DataGroupInfo &info);
 
     void RemoveGroupInfos(int32_t userId, const std::string &dataGroupId)
     {

@@ -641,19 +641,14 @@ private:
         const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
     void UpdateAppInstallControlled(int32_t userId);
     ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    void ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
-        std::unordered_map<std::string, InnerBundleInfo> &infos,
-        int32_t userId, const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
-    ErrCode GetGroupDirsChange(const InnerBundleInfo &info, const InnerBundleInfo &oldInfo, bool oldInfoExisted);
-    ErrCode GetRemoveDataGroupDirs(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
-    ErrCode RemoveOldGroupDirs() const;
-    ErrCode CreateGroupDirs() const;
-    void CreateDataGroupDir(InnerBundleInfo &info) const;
-    ErrCode GetDataGroupCreateInfos(const InnerBundleInfo &newInfo);
+    void GetDataGroupIds(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+        std::unordered_set<std::string> &groupIds);
+    void GenerateNewUserDataGroupInfos(InnerBundleInfo &info) const;
+    void RemoveOldGroupDirs(const InnerBundleInfo &oldInfo);
     ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId, bool isKeepData = false) const;
-    void DeleteGroupDirsForException() const;
+    void DeleteGroupDirsForException(const InnerBundleInfo &oldInfo) const;
     ErrCode CreateDataGroupDirs(
-        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, const InnerBundleInfo &oldInfo);
     bool NeedDeleteOldNativeLib(
         std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const InnerBundleInfo &oldInfo);
@@ -782,8 +777,6 @@ private:
     // key is the temp path of hap or hsp
     // value is the signature file path
     std::map<std::string, std::string> signatureFileMap_;
-    std::vector<DataGroupInfo> createGroupDirs_;
-    std::vector<std::string> removeGroupDirs_;
     std::vector<std::string> bundlePaths_;
     std::unordered_map<std::string, std::string> signatureFileTmpMap_;
     std::string uninstallBundleAppId_;

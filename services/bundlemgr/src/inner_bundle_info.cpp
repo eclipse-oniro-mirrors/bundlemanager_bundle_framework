@@ -4448,6 +4448,30 @@ void InnerBundleInfo::UpdateExtensionDataGroupInfo(
     it->second.validDataGroupIds = dataGroupIds;
 }
 
+void InnerBundleInfo::AddDataGroupInfo(const std::string &dataGroupId, const DataGroupInfo &info)
+{
+    APP_LOGD("AddDataGroupInfo, dataGroupId: %{public}s, dataGroupInfo: %{public}s",
+        dataGroupId.c_str(), info.ToString().c_str());
+    auto dataGroupInfosItem = dataGroupInfos_.find(dataGroupId);
+    if (dataGroupInfosItem == dataGroupInfos_.end()) {
+        APP_LOGD("AddDataGroupInfo add new dataGroupInfo for dataGroupId: %{public}s", dataGroupId.c_str());
+        dataGroupInfos_[dataGroupId] = std::vector<DataGroupInfo> { info };
+        return;
+    }
+    int32_t userId = info.userId;
+    auto iter = std::find_if(std::begin(dataGroupInfos_[dataGroupId]), std::end(dataGroupInfos_[dataGroupId]),
+        [userId](const DataGroupInfo &dataGroupinfo) { return dataGroupinfo.userId == userId; });
+    if (iter != std::end(dataGroupInfos_[dataGroupId])) {
+        if ((iter->uid == info.uid) && (iter->uuid == info.uuid)) {
+            return;
+        }
+        APP_LOGW("uid or uuid not same, dataGroupId: %{public}s", dataGroupId.c_str());
+        dataGroupInfos_[dataGroupId].erase(iter);
+    }
+    APP_LOGD("AddDataGroupInfo add new dataGroupInfo for user: %{public}d", info.userId);
+    dataGroupInfos_[dataGroupId].emplace_back(info);
+}
+
 ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
 {
     int32_t userId = attr.userId;
