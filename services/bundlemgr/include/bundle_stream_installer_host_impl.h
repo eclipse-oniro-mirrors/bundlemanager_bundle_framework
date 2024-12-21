@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,17 +44,17 @@ public:
     virtual void SetInstallerId(uint32_t installerId) override;
 
 private:
-    std::string tempDir_;
-    uint32_t installerId_ = -1;
-    std::vector<int32_t> streamFdVec_;
-    InstallParam installParam_;
-    int32_t installedUid_;
-    sptr<IStatusReceiver> receiver_ = nullptr;
     bool isInstallSharedBundlesOnly_ = true;
+    uint32_t installerId_ = -1;
+    int32_t installedUid_;
+    std::string tempDir_;
     std::string tempSignatureFileDir_;
     std::string tempPgoFileDir_;
+    sptr<IStatusReceiver> receiver_ = nullptr;
     std::mutex fdVecMutex_;
+    std::vector<int32_t> streamFdVec_;
     std::vector<std::string> originHapPaths_;
+    InstallParam installParam_;
 };
 } // AppExecFwk
 } // OHOS

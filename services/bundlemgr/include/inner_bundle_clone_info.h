@@ -22,34 +22,34 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct InnerBundleCloneInfo {
-    int32_t userId = Constants::INVALID_USERID;
-
     // Indicates whether the bundle is disabled.
     bool enabled = true;
+
+    bool encryptedKeyExisted = false;
+
+    int32_t userId = Constants::INVALID_USERID;
 
     // indicates whether the appIndex of clone app
     int32_t appIndex = 0;
 
     int32_t uid = 0;
 
-    std::vector<int32_t> gids;
-
-    // disabled abilities of the user.
-    std::vector<std::string> disabledAbilities;
-
     uint32_t accessTokenId = 0;
-
-    uint64_t accessTokenIdEx = 0;
 
     // The time(unix time) will be recalculated
     // if the application is reinstalled after being uninstalled.
     int64_t installTime = 0;
 
-    bool encryptedKeyExisted = false;
+    uint64_t accessTokenIdEx = 0;
 
     std::string setEnabledCaller;
 
     std::string keyId;
+
+    std::vector<int32_t> gids;
+
+    // disabled abilities of the user.
+    std::vector<std::string> disabledAbilities;
 };
 
 void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleCloneInfo);

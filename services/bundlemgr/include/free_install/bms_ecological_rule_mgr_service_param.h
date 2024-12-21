@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,6 +38,11 @@ struct BmsExperienceRule : public Parcelable {
 
 struct BmsCallerInfo : public Parcelable {
     enum:uint8_t {
+        MODEL_STAGE = 0,
+        MODEL_FA
+    };
+
+    enum:uint8_t {
         TYPE_INVALID = 0,
         TYPE_HARMONY_APP = 1,
         TYPE_ATOM_SERVICE = 2,
@@ -45,12 +50,6 @@ struct BmsCallerInfo : public Parcelable {
         TYPE_BOXED_ATOM_SERVICE = 5
     };
 
-    enum:uint8_t {
-        MODEL_STAGE = 0,
-        MODEL_FA
-    };
-
-    std::string packageName;
     int32_t uid = 0;
     int32_t pid = 0;
 
@@ -61,6 +60,7 @@ struct BmsCallerInfo : public Parcelable {
     int32_t targetLinkType = 0L;
     int32_t callerAbilityType = 0L;
     int32_t embedded = 0;
+    std::string packageName;
     std::string targetAppDistType = "";
     std::string targetLinkFeature = "";
     std::string callerAppProvisionType;
