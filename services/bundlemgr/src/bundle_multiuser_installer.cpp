@@ -114,7 +114,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         APP_LOGE("the origin application had installed at current user");
         return ERR_OK;
     }
- 
+
     std::string appDistributionType = info.GetAppDistributionType();
     if (appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE
         || appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL
@@ -162,6 +162,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     }
 
     CreateEl5Dir(info, userId, uid);
+    CreateDataGroupDir(bundleName, userId);
 
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
@@ -184,6 +185,7 @@ ErrCode BundleMultiUserInstaller::CreateDataDir(InnerBundleInfo &info,
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    createDirParam.extensionDirs = info.GetAllExtensionDirs();
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         APP_LOGE("fail to create data dir, error is %{public}d", result);
@@ -191,6 +193,41 @@ ErrCode BundleMultiUserInstaller::CreateDataDir(InnerBundleInfo &info,
     }
     APP_LOGI("CreateDataDir successfully");
     return result;
+}
+
+void BundleMultiUserInstaller::CreateDataGroupDir(const std::string &bundleName, const int32_t userId)
+{
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("get dataMgr failed");
+        return;
+    }
+    dataMgr_->GenerateNewUserDataGroupInfos(bundleName, userId);
+    std::vector<DataGroupInfo> infos;
+    if (!dataMgr_->QueryDataGroupInfos(bundleName, userId, infos)) {
+        APP_LOGE("find %{public}s in %{public}d failed", bundleName.c_str(), userId);
+        return;
+    }
+    if (infos.empty()) {
+        return;
+    }
+    for (const DataGroupInfo &dataGroupInfo : infos) {
+        std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+            + std::to_string(dataGroupInfo.userId);
+        if (!BundleUtil::IsExistDirNoLog(parentDir)) {
+            APP_LOGE("group parent dir %{public}s not exist", parentDir.c_str());
+            return;
+        }
+        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        if (BundleUtil::IsExistDirNoLog(dir)) {
+            APP_LOGI("group dir exist, no need to create");
+            continue;
+        }
+        auto result = InstalldClient::GetInstance()->Mkdir(dir, ServiceConstants::DATA_GROUP_DIR_MODE,
+            dataGroupInfo.uid, dataGroupInfo.gid);
+        if (result != ERR_OK) {
+            APP_LOGE("mkdir group dir failed, uid %{public}d err %{public}d", dataGroupInfo.uid, result);
+        }
+    }
 }
 
 void BundleMultiUserInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t userId, const int32_t &uid)
