@@ -1052,8 +1052,9 @@ void BaseBundleInstaller::KillRelatedProcessIfArkWeb(const std::string &bundleNa
         LOG_E(BMS_TAG_INSTALLER, "AppMgrClient is nullptr, kill ark web process failed");
         return;
     }
-    LOG_I(BMS_TAG_INSTALLER, "start to kill ark web related process");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "KillRelatedProcessIfArkWeb begin");
     appMgrClient->KillProcessDependedOnWeb();
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "KillRelatedProcessIfArkWeb end");
 }
 
 ErrCode BaseBundleInstaller::CheckAppService(
@@ -6148,12 +6149,13 @@ void BaseBundleInstaller::VerifyDomain()
         return;
     }
     std::string fingerprint = bundleInfo.GetCertificateFingerprint();
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "start to call VerifyDomain, size of skillUris: %{public}zu", skillUris.size());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "start VerifyDomain, size: %{public}zu", skillUris.size());
     // call VerifyDomain
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->VerifyDomain(
         appIdentifier, bundleName_, fingerprint, skillUris);
     IPCSkeleton::SetCallingIdentity(identity);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "end VerifyDomain");
 #else
     LOG_I(BMS_TAG_INSTALLER, "app domain verify is disabled");
     return;
@@ -6164,7 +6166,7 @@ void BaseBundleInstaller::ClearDomainVerifyStatus(const std::string &appIdentifi
     const std::string &bundleName) const
 {
 #ifdef APP_DOMAIN_VERIFY_ENABLED
-    LOG_I(BMS_TAG_INSTALLER, "start to clear domain verify status");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "start ClearDomainVerifyStatus");
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     // call ClearDomainVerifyStatus
     if (!DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->ClearDomainVerifyStatus(
@@ -6172,6 +6174,7 @@ void BaseBundleInstaller::ClearDomainVerifyStatus(const std::string &appIdentifi
         LOG_W(BMS_TAG_INSTALLER, "ClearDomainVerifyStatus failed");
     }
     IPCSkeleton::SetCallingIdentity(identity);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "end ClearDomainVerifyStatus");
 #else
     LOG_I(BMS_TAG_INSTALLER, "app domain verify is disabled");
     return;
