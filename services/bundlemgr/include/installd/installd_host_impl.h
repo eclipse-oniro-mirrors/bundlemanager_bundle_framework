@@ -254,6 +254,9 @@ private:
     ErrCode InnerRemoveAtomicServiceBundleDataDir(
         const std::string &bundleName, const int32_t userId, const bool async);
     ErrCode InnerRemoveBundleDataDir(const std::string &bundleName, const int32_t userId, const bool async);
+    ErrCode AclSetDir(bool debug, const std::string &dir, bool setAccess, bool setDefault);
+    ErrCode AclSetExtensionDirs(bool debug, const std::string &parentDir,
+        const std::vector<std::string> &extensionDirs, bool setAccess, bool setDefault);
     int64_t GetAppCacheSize(const std::string &bundleName, const int32_t userId,
         const int32_t appIndex, const std::vector<std::string> &moduleNames = {});
 };
