@@ -61,7 +61,7 @@ private:
     void RemoveEl5Dir(InnerBundleUserInfo &userInfo, const int32_t uid, int32_t userId, const int32_t appIndex);
     ErrCode GetDataMgr();
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid, int32_t appIndex,
-        int32_t userId, const InnerBundleInfo& innerBundleInfo);
+        const InnerBundleInfo& innerBundleInfo);
 
     ErrCode ProcessCloneBundleInstall(const std::string &bundleName, const int32_t userId, int32_t &appIndex);
     ErrCode ProcessCloneBundleUninstall(const std::string &bundleName, int32_t userId, int32_t appIndex);

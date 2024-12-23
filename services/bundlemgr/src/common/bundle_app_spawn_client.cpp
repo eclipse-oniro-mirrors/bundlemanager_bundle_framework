@@ -14,18 +14,26 @@
  */
 #include "bundle_app_spawn_client.h"
 
-#include <unordered_set>
-
 #include "app_log_tag_wrapper.h"
+#include "bundle_constants.h"
 #include "hitrace_meter.h"
-#include "parameters.h"
-#include "securec.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int16_t INITIAL_SANDBOX_APP_INDEX = 1000;
+constexpr int32_t MAX_PROC_NAME_LEN = 256;
 }
+
+BundleAppSpawnClient& BundleAppSpawnClient::GetInstance()
+{
+    static BundleAppSpawnClient instance;
+    return instance;
+}
+
+BundleAppSpawnClient::BundleAppSpawnClient()
+    : serviceName_(APPSPAWN_SERVER_NAME),
+      handle_(nullptr),
+      state_(SpawnConnectionState::STATE_NOT_CONNECT) {}
 
 BundleAppSpawnClient::~BundleAppSpawnClient()
 {
@@ -96,17 +104,21 @@ bool BundleAppSpawnClient::VerifyMsg(const AppSpawnRemoveSandboxDirMsg &removeSa
 {
     if (removeSandboxDirMsg.code == MSG_UNINSTALL_DEBUG_HAP) {
         if (removeSandboxDirMsg.bundleName.empty() || removeSandboxDirMsg.bundleName.size() >= MAX_PROC_NAME_LEN) {
-            LOG_E(BMS_TAG_INSTALLER, "invalid bundleName");
+            LOG_E(BMS_TAG_INSTALLER, "invalid bundleName, name:%{public}s", removeSandboxDirMsg.bundleName.c_str());
             return false;
         }
-        if (removeSandboxDirMsg.bundleIndex < 0 || removeSandboxDirMsg.bundleIndex > INITIAL_SANDBOX_APP_INDEX) {
-                LOG_E(BMS_TAG_INSTALLER, "invalid bundleIndex");
-                return false;
+        if (removeSandboxDirMsg.bundleIndex < 0 ||
+            removeSandboxDirMsg.bundleIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
+            LOG_E(BMS_TAG_INSTALLER, "invalid bundleIndex %{public}d.", removeSandboxDirMsg.bundleIndex);
+            return false;
         }
         if (removeSandboxDirMsg.uid < 0) {
-            LOG_E(BMS_TAG_INSTALLER, "invalid uid! [%{public}d]", removeSandboxDirMsg.uid);
+            LOG_E(BMS_TAG_INSTALLER, "invalid uid %{public}d.", removeSandboxDirMsg.uid);
             return false;
         }
+    } else {
+        LOG_E(BMS_TAG_INSTALLER, "invalid code %{public}d.", removeSandboxDirMsg.code);
+        return false;
     }
     return true;
 }
