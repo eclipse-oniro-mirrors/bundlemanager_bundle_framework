@@ -1887,6 +1887,10 @@ bool BundleMgrHostImpl::DumpInfos(
             ret = DumpAllBundleInfoNames(userId, result);
             break;
         }
+        case DumpFlag::DUMP_DEBUG_BUNDLE_LIST: {
+            ret = DumpDebugBundleInfoNames(userId, result);
+            break;
+        }
         case DumpFlag::DUMP_BUNDLE_INFO: {
             ret = DumpBundleInfo(bundleName, userId, result);
             break;
@@ -1942,6 +1946,49 @@ bool BundleMgrHostImpl::DumpAllBundleInfoNamesByUserId(int32_t userId, std::stri
         result.append("\n");
     }
     APP_LOGI("DumpAllBundleInfoNamesByUserId successfully");
+    return true;
+}
+
+bool BundleMgrHostImpl::DumpDebugBundleInfoNames(int32_t userId, std::string &result)
+{
+    APP_LOGD("DumpDebugBundleInfoNames begin");
+    if (userId != Constants::ALL_USERID) {
+        return DumpDebugBundleInfoNamesByUserId(userId, result);
+    }
+
+    auto userIds = GetExistsCommonUserIs();
+    for (auto userId : userIds) {
+        DumpDebugBundleInfoNamesByUserId(userId, result);
+    }
+
+    APP_LOGD("DumpDebugBundleInfoNames success");
+    return true;
+}
+
+bool BundleMgrHostImpl::DumpDebugBundleInfoNamesByUserId(int32_t userId, std::string &result)
+{
+    APP_LOGD("DumpDebugBundleInfoNamesByUserId begin");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+
+    std::vector<std::string> bundleNames;
+    if (!dataMgr->GetDebugBundleList(bundleNames, userId)) {
+        APP_LOGE("get debug bundle list failed by userId(%{public}d)", userId);
+        return false;
+    }
+
+    result.append("ID: ");
+    result.append(std::to_string(userId));
+    result.append(":\n");
+    for (const auto &name : bundleNames) {
+        result.append("\t");
+        result.append(name);
+        result.append("\n");
+    }
+    APP_LOGD("DumpDebugBundleInfoNamesByUserId successfully");
     return true;
 }
 

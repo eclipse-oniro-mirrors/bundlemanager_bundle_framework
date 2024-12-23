@@ -1859,6 +1859,21 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0025, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: bundleInfosFalse_0026
+ * @tc.name: test GetDebugBundleList
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0026, Function | SmallTest | Level1)
+{
+    std::vector<std::string> info;
+    GetBundleDataMgr()->bundleInfos_.clear();
+    bool testRet = GetBundleDataMgr()->GetDebugBundleList(info, USERID);
+    EXPECT_EQ(testRet, false);
+    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
+}
+
+/**
  * @tc.number: bundleInfosFalse_0027
  * @tc.name: test QueryExtensionAbilityInfoByUri
  * @tc.desc: 1.system run normally
@@ -3363,6 +3378,19 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0018, Function | SmallTest | Leve
     testRet = GetBundleDataMgr()->GetBundleInfosV9(
         0, bundleInfos, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: TestMgrByUserId_0019
+ * @tc.name: test GetDebugBundleList
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0019, Function | SmallTest | Level1)
+{
+    std::vector<std::string> appInfos;
+    std::vector<BundleInfo> bundleInfos;
+    bool testRet = GetBundleDataMgr()->GetDebugBundleList(appInfos, Constants::INVALID_USERID);
+    EXPECT_EQ(testRet, false);
 }
 
 /**
