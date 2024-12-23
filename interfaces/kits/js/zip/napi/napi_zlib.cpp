@@ -81,6 +81,12 @@ enum ReturnStatus {
         return ret;                                                                                   \
     }
 
+#define PARALLEL_STRATEGY_CHECK(parallel, ret)                                                      \
+    if (!((parallel) == PARALLEL_STRATEGY_SEQUENTIAL || (parallel) == PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION)) { \
+        APP_LOGE("parallel parameter= [%{public}d] value is incorrect", static_cast<int>(parallel));            \
+        return ret;                                                                                   \
+    }
+
 #define COMPRESS_MEM_CHECK(mem, false)                                                                            \
     if (!(mem == MEM_LEVEL_MIN_MEMLEVEL || mem == MEM_LEVEL_DEFAULT_MEMLEVEL || mem == MEM_LEVEL_MAX_MEMLEVEL)) { \
         APP_LOGE("memLevel parameter =[%{public}d] value is incorrect", (int)mem);                             \
@@ -231,6 +237,32 @@ napi_value CompressStrategyInit(napi_env env, napi_value exports)
 
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("CompressStrategy", compressStrategy),
+    };
+    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
+
+    return exports;
+}
+/**
+ * @brief ParallelStrategy data initialization.
+ *
+ * @param env The environment that the Node-API call is invoked under.
+ * @param exports An empty object via the exports parameter as a convenience.
+ *
+ * @return The return value from Init is treated as the exports object for the module.
+ */
+napi_value ParallelStrategyInit(napi_env env, napi_value exports)
+{
+    const int PARALLEL_STRATEGY_SEQUENTIAL = 0;
+    const int PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION = 1;
+
+    napi_value parallelStrategy = nullptr;
+    napi_create_object(env, &parallelStrategy);
+    SetNamedProperty(env, parallelStrategy, "PARALLEL_STRATEGY_SEQUENTIAL", PARALLEL_STRATEGY_SEQUENTIAL);
+    SetNamedProperty(env, parallelStrategy, "PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION",
+        PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION);
+
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_PROPERTY("ParallelStrategy", parallelStrategy),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
 
@@ -531,6 +563,11 @@ bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg)
             if (UnwrapIntValue(env, jsProValue, ret)) {
                 COMPRESS_STRATEGY_CHECK(ret, false)
                 options.strategy = static_cast<COMPRESS_STRATEGY>(ret);
+            }
+        } else if (strProName == std::string("parallel")) {
+            if (UnwrapIntValue(env, jsProValue, ret)) {
+                PARALLEL_STRATEGY_CHECK(ret, false)
+                options.parallel = static_cast<PARALLEL_STRATEGY>(ret);
             }
         }
     }

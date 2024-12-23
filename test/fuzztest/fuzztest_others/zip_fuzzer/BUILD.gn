@@ -51,6 +51,7 @@ ohos_fuzztest("ZipFuzzTest") {
   external_deps = [
     "c_utils:utils",
     "eventhandler:libeventhandler",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",

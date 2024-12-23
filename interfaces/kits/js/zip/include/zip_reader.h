@@ -17,11 +17,13 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <unistd.h>
 #include <functional>
 #include <memory>
 #include <string>
 #include <time.h>
 #include <stdio.h>
+#include "ffrt.h"
 #include "file_path.h"
 #include "zip_utils.h"
 #include "contrib/minizip/unzip.h"
@@ -152,6 +154,8 @@ public:
     // Advances the next entry. Returns true on success.
     bool AdvanceToNextEntry();
 
+    bool GetCurrentEntryPos(unz_file_pos &filePos);
+
     // Opens the current entry in the zip file. On success, returns true and
     // updates the the current entry state (i.e. CurrentEntryInfo() is
     // updated). This function should be called before operations over the
@@ -164,6 +168,8 @@ public:
     // starting from the beginning of the entry. Return value specifies whether
     // the entire file was extracted.
     bool ExtractCurrentEntry(WriterDelegate *delegate, uint64_t numBytesToExtract) const;
+
+    bool ExtractEntry(WriterDelegate *delegate, const unzFile &zipFile, uint64_t numBytesToExtract) const;
 
     // Returns the current entry info. Returns NULL if the current entry is
     // not yet opened. OpenCurrentEntryInZip() must be called beforehand.
@@ -193,6 +199,38 @@ private:
 
     DISALLOW_COPY_AND_ASSIGN(ZipReader);
 };
+
+class ZipParallelReader : public ZipReader {
+public:
+    ZipParallelReader() : ZipReader() {}
+    ~ZipParallelReader();
+
+    // Opens th zip file multi times specified by |zipFilePath|. Returns true on
+    // success.
+    bool Open(FilePath &zipFilePath);
+
+    // Closes the currently opened zip file. This function is called in the
+    // destructor of the class, so you usually don't need to call this.
+    void Close();
+
+    // Get unzFile handler resource. Returns the handler and give the |resourceId|
+    // by input parameter.
+    unzFile GetZipHandler(int &resourceId);
+    // Release unzFile handler resource accordding to |resourceId|.
+    void ReleaseZipHandler(const int &resourceId);
+
+    // Get the position in |zipFile| of the entry.
+    unz_file_pos GetEntryPos(unzFile &zipFile);
+    // Go to the entry indicated by |filePos| in |zipFile|.
+    bool GotoEntry(unzFile &zipFile, unz_file_pos filePos);
+private:
+    const int concurrency_ = sysconf(_SC_NPROCESSORS_ONLN);
+    std::vector<ffrt::mutex> mtxes_ = std::vector<ffrt::mutex> (concurrency_);
+    std::vector<unzFile> zipFiles_;
+
+    DISALLOW_COPY_AND_ASSIGN(ZipParallelReader);
+};
+
 
 // A writer delegate that writes a file at a given path.
 class FilePathWriterDelegate : public WriterDelegate {

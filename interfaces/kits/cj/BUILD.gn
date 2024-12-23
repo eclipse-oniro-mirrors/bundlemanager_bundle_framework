@@ -84,6 +84,7 @@ ohos_shared_library("cj_bundle_manager_ffi") {
       "ability_base:want",
       "c_utils:utils",
       "eventhandler:libeventhandler",
+      "ffrt:libffrt",
       "hilog:libhilog",
       "ipc:ipc_core",
       "napi:ace_napi",

@@ -39,6 +39,7 @@ static napi_value Init(napi_env env, napi_value exports)
     CompressFlushModeInit(env, exports);
     CompressMethodInit(env, exports);
     CompressStrategyInit(env, exports);
+    ParallelStrategyInit(env, exports);
     MemLevelInit(env, exports);
     ReturnStatusInit(env, exports);
     OffsetReferencePointInit(env, exports);

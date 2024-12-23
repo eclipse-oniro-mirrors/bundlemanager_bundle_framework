@@ -26,6 +26,7 @@
 #include "bundle_errors.h"
 #include "directory_ex.h"
 #include "event_handler.h"
+#include "ffrt.h"
 #include "file_path.h"
 #include "zip_internal.h"
 #include "zip_reader.h"
@@ -289,6 +290,82 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
     return ERR_OK;
 }
 
+ErrCode UnzipWithFilterAndWritersParallel(const FilePath &srcFile, FilePath &destDir, WriterFactory writerFactory,
+    DirectoryCreator directoryCreator, UnzipParam &unzipParam)
+{
+    APP_LOGD("destDir=%{private}s", destDir.Value().c_str());
+    ZipParallelReader reader;
+    FilePath src = srcFile;
+
+    if (!reader.Open(src)) {
+        APP_LOGI("Failed to open srcFile");
+        return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+    }
+    ErrCode ret = ERR_OK;
+    for (int i = 0; i < reader.num_entries(); i++) {
+        if (!reader.OpenCurrentEntryInZip()) {
+            APP_LOGI("Failed to open the current file in zip");
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+        }
+        const FilePath &constEntryPath = reader.CurrentEntryInfo()->GetFilePath();
+        if (reader.CurrentEntryInfo()->IsUnsafe()) {
+            APP_LOGI("Found an unsafe file in zip");
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+        }
+        unz_file_pos position = {};
+        if (!reader.GetCurrentEntryPos(position)) {
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+        }
+        bool isDirectory = reader.CurrentEntryInfo()->IsDirectory();
+        ffrt::submit([&, position, isDirectory, constEntryPath] () {
+            if (ret != ERR_OK) {
+                return;
+            }
+            int resourceId = sched_getcpu();
+            unzFile zipFile = reader.GetZipHandler(resourceId);
+            if (!reader.GotoEntry(zipFile, position)) {
+                APP_LOGI("Failed to go to entry");
+                ret = ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+                return;
+            }
+            FilePath entryPath = constEntryPath;
+            if (unzipParam.filterCB(entryPath)) {
+                if (isDirectory) {
+                    if (!directoryCreator(destDir, entryPath)) {
+                        APP_LOGI("directory_creator(%{private}s) Failed", entryPath.Value().c_str());
+                        reader.ReleaseZipHandler(resourceId);
+                        ret = ERR_ZLIB_DEST_FILE_DISABLED;
+                        return;
+                    }
+                } else {
+                    std::unique_ptr<WriterDelegate> writer = writerFactory(destDir, entryPath);
+                    if (!writer->PrepareOutput()) {
+                        APP_LOGE("PrepareOutput err");
+                        reader.ReleaseZipHandler(resourceId);
+                        ret = ERR_ZLIB_DEST_FILE_DISABLED;
+                        return;
+                    }
+                    if (!reader.ExtractEntry(writer.get(), zipFile, std::numeric_limits<uint64_t>::max())) {
+                        APP_LOGI("Failed to extract");
+                        reader.ReleaseZipHandler(resourceId);
+                        ret = ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+                        return;
+                    }
+                }
+            } else if (unzipParam.logSkippedFiles) {
+                APP_LOGI("Skipped file");
+            }
+            reader.ReleaseZipHandler(resourceId);
+            }, {}, {});
+        if (!reader.AdvanceToNextEntry()) {
+            APP_LOGI("Failed to advance to the next file");
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+        }
+    }
+    ffrt::wait();
+    return ERR_OK;
+}
+
 ErrCode UnzipWithFilterCallback(
     const FilePath &srcFile, const FilePath &destDir, const OPTIONS &options, UnzipParam &unzipParam)
 {
@@ -307,17 +384,26 @@ ErrCode UnzipWithFilterCallback(
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
 
-    PlatformFile zipFd = open(src.Value().c_str(), S_IREAD, O_CREAT);
-    if (zipFd == kInvalidPlatformFile) {
-        APP_LOGI("Failed to open");
-        return ERR_ZLIB_SRC_FILE_DISABLED;
+    ErrCode ret = ERR_OK;
+    if (options.parallel == PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION) {
+        ret = UnzipWithFilterAndWritersParallel(src,
+            dest,
+            std::bind(&CreateFilePathWriterDelegate, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&CreateDirectory, std::placeholders::_1, std::placeholders::_2),
+            unzipParam);
+    } else {
+        PlatformFile zipFd = open(src.Value().c_str(), S_IREAD, O_CREAT);
+        if (zipFd == kInvalidPlatformFile) {
+            APP_LOGI("Failed to open");
+            return ERR_ZLIB_SRC_FILE_DISABLED;
+        }
+        ret = UnzipWithFilterAndWriters(zipFd,
+            dest,
+            std::bind(&CreateFilePathWriterDelegate, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&CreateDirectory, std::placeholders::_1, std::placeholders::_2),
+            unzipParam);
+        close(zipFd);
     }
-    ErrCode ret = UnzipWithFilterAndWriters(zipFd,
-        dest,
-        std::bind(&CreateFilePathWriterDelegate, std::placeholders::_1, std::placeholders::_2),
-        std::bind(&CreateDirectory, std::placeholders::_1, std::placeholders::_2),
-        unzipParam);
-    close(zipFd);
     return ret;
 }
 
