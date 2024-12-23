@@ -693,6 +693,25 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
 bool BundleMgrHostImpl::SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
 {
     APP_LOGD("SilentInstall in");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return false;
+    }
+    std::string callingBundleName;
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    ErrCode ret = dataMgr->GetNameForUid(callingUid, callingBundleName);
+    if (ret != ERR_OK) {
+        APP_LOGE("get bundleName failed %{public}d %{public}d", ret, callingUid);
+        return false;
+    }
+    ElementName element = want.GetElement();
+    std::string packageName = element.GetBundleName();
+    if (packageName != callingBundleName) {
+        APP_LOGE("callingBundleName vaild fail %{public}s %{public}s",
+            packageName.c_str(), callingBundleName.c_str());
+        return false;
+    }
     auto connectMgr = GetConnectAbilityMgrFromService();
     if (connectMgr == nullptr) {
         APP_LOGE("connectMgr is nullptr");
@@ -1505,6 +1524,12 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     if (userId < 0) {
         APP_LOGE("userId is invalid");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
@@ -1518,13 +1543,6 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         APP_LOGE("the cleanCacheCallback is nullptr or bundleName empty");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE) &&
-        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
-        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
     if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
@@ -1671,17 +1689,17 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        return false;
+    }
     if (bundleName.empty() || userId < 0) {
         APP_LOGE("the  bundleName empty or invalid userid");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
     if (!CheckAppIndex(bundleName, userId, appIndex)) {
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
-        return false;
-    }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
-        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
@@ -1756,7 +1774,7 @@ bool BundleMgrHostImpl::RegisterBundleEventCallback(const sptr<IBundleEventCallb
         return false;
     }
     auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != Constants::FOUNDATION_UID && uid != Constants::CODE_PROTECT_UID) {
+    if (uid != Constants::FOUNDATION_UID) {
         APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
         return false;
     }

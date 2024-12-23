@@ -34,6 +34,7 @@
 #include "inner_app_quick_fix.h"
 #include "inner_bundle_clone_info.h"
 #include "inner_bundle_user_info.h"
+#include "ipc/check_encryption_param.h"
 #include "json_util.h"
 #include "preinstalled_application_info.h"
 #include "quick_fix/app_quick_fix.h"
@@ -82,9 +83,9 @@ struct InnerModuleInfo {
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
     uint32_t iconId = 0;
+    uint32_t versionCode = 0;
     int32_t upgradeFlag = 0;
     int32_t targetPriority;
-    uint32_t versionCode = 0;
     BundleType bundleType = BundleType::SHARED;
     AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
     ModuleColorMode colorMode = ModuleColorMode::AUTO;
@@ -119,6 +120,7 @@ struct InnerModuleInfo {
     std::string routerMap;
     std::string packageName;
     std::string appStartup;
+    Distro distro;
     // all user's value of isRemovable
     // key:userId
     // value:isRemovable true or flase
@@ -142,7 +144,6 @@ struct InnerModuleInfo {
     std::vector<AppEnvironment> appEnvironments;
     std::map<std::string, bool> isRemovable;
     MetaData metaData;
-    Distro distro;
 };
 
 struct ExtendResourceInfo {
@@ -857,6 +858,16 @@ public:
             userIds.insert(userInfoItem.second.bundleUserInfo.userId);
         }
         return userIds;
+    }
+
+    bool GetAllowMultiProcess() const
+    {
+        return baseApplicationInfo_->allowMultiProcess;
+    }
+
+    void SetAllowMultiProcess(bool allowMultiProcess)
+    {
+        baseApplicationInfo_->allowMultiProcess = allowMultiProcess;
     }
 
     // only used in install progress with newInfo
@@ -2211,7 +2222,7 @@ public:
     ErrCode RemoveCloneBundle(const int32_t userId, const int32_t appIndex);
     ErrCode GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex);
     ErrCode IsCloneAppIndexExisted(const int32_t userId, const int32_t appIndex, bool &res);
-    void SetkeyId(const int32_t userId, const std::string &keyId);
+    void SetkeyId(const int32_t userId, const std::string &keyId, const int32_t appIndex = 0);
     bool GetApplicationInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
         ApplicationInfo &appInfo) const;
     bool GetBundleInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
@@ -2224,6 +2235,16 @@ public:
     std::set<int32_t> GetCloneBundleAppIndexes() const;
     static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
     void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
+    void HandleOTACodeEncryption(bool &needResetFlag) const;
+    void CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam,
+        const InnerModuleInfo &moduleInfo) const;
+    void CheckSoEncryption(const CheckEncryptionParam &checkEncryptionParam, const std::string &requestPackage,
+        const InnerModuleInfo &moduleInfo) const;
+
+    void SetMultiAppMode(MultiAppModeData multiAppMode)
+    {
+        baseApplicationInfo_->multiAppMode = multiAppMode;
+    }
 
 private:
     bool IsExistLauncherAbility() const;
@@ -2247,27 +2268,54 @@ private:
     void InnerProcessRequestPermissions(
         const std::unordered_map<std::string, std::string> &moduleNameMap,
         std::vector<RequestPermission> &requestPermissions) const;
-    void GetApplicationReservedFlagAdaptClone(ApplicationInfo &appInfo, int32_t appIndex) const;
     void PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_t appIndex,
         const std::string &bundleName, const std::string &caller) const;
 
-    // using for get
-    Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
-    int userId_ = Constants::DEFAULT_USERID;
-    BundleStatus bundleStatus_ = BundleStatus::ENABLED;
-    std::shared_ptr<ApplicationInfo> baseApplicationInfo_;
-    std::shared_ptr<BundleInfo> baseBundleInfo_;  // applicationInfo and abilityInfo empty
-    std::string appFeature_;
-    std::vector<std::string> allowedAcls_;
-    InstallMark mark_;
-    int32_t appIndex_ = Constants::INITIAL_APP_INDEX;
     bool isSandboxApp_ = false;
-
-    // only using for install or update progress, doesn't need to save to database
-    std::string currentPackage_;
     // Auxiliary property, which is used when the application
     // has been installed when the user is created.
     bool onlyCreateBundleUser_ = false;
+    // new version fields
+    bool isNewVersion_ = false;
+
+    // use to control uninstalling
+    bool uninstallState_ = true;
+
+    // need to send a notification when uninstallState_ change
+    bool isNeedSendNotify_ = false;
+    BundleStatus bundleStatus_ = BundleStatus::ENABLED;
+    int32_t appIndex_ = Constants::INITIAL_APP_INDEX;
+    // apply quick fix frequency
+    int32_t applyQuickFixFrequency_ = 0;
+    int32_t overlayType_ = NON_OVERLAY_TYPE;
+    // using for get
+    Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
+    int userId_ = Constants::DEFAULT_USERID;
+    std::string appFeature_;
+
+    // only using for install or update progress, doesn't need to save to database
+    std::string currentPackage_;
+    // curDynamicIconModule only in ExtendResourceInfos
+    std::string curDynamicIconModule_;
+
+    // for odid
+    std::string developerId_;
+    std::string odid_;
+    std::shared_ptr<ApplicationInfo> baseApplicationInfo_;
+    std::shared_ptr<BundleInfo> baseBundleInfo_;  // applicationInfo and abilityInfo empty
+
+    std::shared_ptr<BundlePackInfo> bundlePackInfo_;
+    InstallMark mark_;
+    std::vector<std::string> allowedAcls_;
+
+    // quick fix hqf info
+    std::vector<HqfInfo> hqfInfos_;
+
+    // overlay bundleInfo
+    std::vector<OverlayBundleInfo> overlayBundleInfo_;
+
+    // provision metadata
+    std::vector<Metadata> provisionMetadatas_;
 
     std::map<std::string, InnerModuleInfo> innerModuleInfos_;
 
@@ -2279,45 +2327,17 @@ private:
     std::map<std::string, std::vector<Skill>> skillInfos_;
 
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos_;
-
-    std::shared_ptr<BundlePackInfo> bundlePackInfo_;
-    // new version fields
-    bool isNewVersion_ = false;
     std::map<std::string, ExtensionAbilityInfo> baseExtensionInfos_;
     std::map<std::string, std::vector<Skill>> extensionSkillInfos_;
-
-    // quick fix hqf info
-    std::vector<HqfInfo> hqfInfos_;
-    // apply quick fix frequency
-    int32_t applyQuickFixFrequency_ = 0;
-
-    // overlay bundleInfo
-    std::vector<OverlayBundleInfo> overlayBundleInfo_;
-    int32_t overlayType_ = NON_OVERLAY_TYPE;
-
-    // provision metadata
-    std::vector<Metadata> provisionMetadatas_;
 
     // shared module info
     std::map<std::string, std::vector<InnerModuleInfo>> innerSharedModuleInfos_ ;
 
-    // data group info
-    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos_;
-
     // key:moduleName value:ExtendResourceInfo
     std::map<std::string, ExtendResourceInfo> extendResourceInfos_;
-    // curDynamicIconModule only in ExtendResourceInfos
-    std::string curDynamicIconModule_;
 
-    // for odid
-    std::string developerId_;
-    std::string odid_;
-
-    // use to control uninstalling
-    bool uninstallState_ = true;
-
-    // need to send a notification when uninstallState_ change
-    bool isNeedSendNotify_ = false;
+    // data group info
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos_;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

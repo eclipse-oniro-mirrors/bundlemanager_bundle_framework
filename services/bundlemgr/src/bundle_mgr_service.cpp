@@ -221,13 +221,13 @@ bool BundleMgrService::InitBundleEventHandler()
     if (handler_ == nullptr) {
         handler_ = std::make_shared<BMSEventHandler>();
     }
-    auto task = [this]() {
+    auto task = [handler = handler_]() {
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetRecoveryTimer(FUN_BMS_START, BMS_START_TIME_OUT_SECONDS);
         ScopeGuard cancelTimerGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
-        handler_->BmsStartEvent();
+        handler->BmsStartEvent();
     };
-    ffrt::submit(task);
+    std::thread(task).detach();
     return true;
 }
 

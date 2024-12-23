@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,13 +33,14 @@ struct CreateDirParam : public Parcelable {
     bool isPreInstallApp = false;
     bool debug = false;
     bool isDlpSandbox = false;
-    int32_t userId;
-    int32_t uid;
-    int32_t gid;
-    std::string bundleName;
-    std::vector<std::string> extensionDirs;
-    std::string apl;
     CreateDirFlag createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
+    int32_t userId = -1;
+    int32_t uid = -1;
+    int32_t gid = -1;
+    int32_t appIndex = 0;
+    std::string bundleName;
+    std::string apl;
+    std::vector<std::string> extensionDirs;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

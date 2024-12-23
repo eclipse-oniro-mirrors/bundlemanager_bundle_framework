@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -110,21 +110,21 @@ private:
     ErrCode VerifyCodeSignatureForHsp(const std::string &realHspPath, const std::string &realSoPath) const;
     ErrCode MarkInstallFinish();
 
-    std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
-    std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
-    std::string bundleName_;
-    std::string bundleMsg_;
-    std::vector<std::string> uninstallModuleVec_;
     bool versionUpgrade_ = false;
     bool moduleUpdate_ = false;
-    std::vector<std::string> deleteBundlePath_;
-    uint32_t versionCode_ = 0;
-    InnerBundleInfo newInnerBundleInfo_;
     bool isEnterpriseBundle_ = false;
+    uint32_t versionCode_ = 0;
+    std::string bundleName_;
+    std::string bundleMsg_;
     std::string appIdentifier_;
     std::string compileSdkType_;
     std::string cpuAbi_;
     std::string nativeLibraryPath_;
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
+    std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
+    std::vector<std::string> uninstallModuleVec_;
+    std::vector<std::string> deleteBundlePath_;
+    InnerBundleInfo newInnerBundleInfo_;
     DISALLOW_COPY_AND_MOVE(AppServiceFwkInstaller);
 
 #define CHECK_RESULT(errcode, errmsg)                                              \

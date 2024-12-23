@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,13 +28,22 @@ enum class InstallBundleType : uint8_t {
     HQF = 3,
 };
 
+struct CodeCryptoHapInfo {
+    std::string appIdentifier;
+    uint32_t versionCode;
+    InstallBundleType type;
+    bool libCompressed;
+};
+
 struct CheckEncryptionParam : public Parcelable {
+    bool isCompressNativeLibrary = false;
+    InstallBundleType installBundleType = InstallBundleType::HAP;
+    int32_t bundleId = -1;
     std::string modulePath;
     std::string cpuAbi;
     std::string targetSoPath;
-    bool isCompressNativeLibrary = false;
-    int32_t bundleId = -1;
-    InstallBundleType installBundleType = InstallBundleType::HAP;
+    std::string appIdentifier;
+    uint32_t versionCode;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

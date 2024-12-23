@@ -2298,8 +2298,8 @@ bool ToInnerBundleInfo(
     ToInnerModuleInfo(configJson, innerModuleInfo);
 
     if (applicationInfo.apiTargetVersion % ServiceConstants::API_VERSION_MOD <=
-        ServiceConstants::API_VERSION_THIRTEEN) {
-        APP_LOGD("targetAPIVersion is less than 14, set isCompressNativeLibs flag to true");
+        ServiceConstants::API_VERSION_FIFTEEN) {
+        APP_LOGD("targetAPIVersion is less than 16, set isCompressNativeLibs flag to true");
         applicationInfo.isCompressNativeLibs = true;
         innerModuleInfo.compressNativeLibs = true;
     }
@@ -2415,7 +2415,7 @@ bool ToInnerBundleInfo(
         }
         innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     }
-    if ((!find || !isExistPageAbility) && !transformParam.isPreInstallApp) {
+    if (!find || !isExistPageAbility) {
         applicationInfo.needAppDetail = true;
         if (BundleUtil::IsExistDir(ServiceConstants::SYSTEM_LIB64)) {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;

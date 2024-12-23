@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,8 +46,8 @@ private:
     ErrCode CopyHqfToSecurityDir(const std::vector<std::string> &bundleFilePaths,
         std::vector<std::string> &securityFilePaths) const;
 
-    std::shared_ptr<QuickFixMgr> quickFixMgr_ = nullptr;
     std::atomic<uint32_t> id_ = 0;
+    std::shared_ptr<QuickFixMgr> quickFixMgr_ = nullptr;
 };
 } // AppExecFwk
 } // OHOS

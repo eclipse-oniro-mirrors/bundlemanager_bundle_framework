@@ -80,7 +80,7 @@ bool RdbDataManager::QueryData(const std::string &key, std::string &value)
     return false;
 }
 
-std::shared_ptr<NativeRdb::AbsSharedResultSet> RdbDataManager::QueryData(
+std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryData(
     const NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
     return nullptr;

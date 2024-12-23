@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,7 +41,7 @@ public:
     bool UpdateData(const NativeRdb::ValuesBucket &valuesBucket,
         const NativeRdb::AbsRdbPredicates &absRdbPredicates);
     bool DeleteData(const NativeRdb::AbsRdbPredicates &absRdbPredicates);
-    std::shared_ptr<NativeRdb::AbsSharedResultSet> QueryData(
+    std::shared_ptr<NativeRdb::ResultSet> QueryData(
         const NativeRdb::AbsRdbPredicates &absRdbPredicates);
     bool CreateTable();
     void DelayCloseRdbStore();
@@ -61,11 +61,11 @@ private:
     int32_t InsertWithRetry(std::shared_ptr<NativeRdb::RdbStore> rdbStore, int64_t &rowId,
         const NativeRdb::ValuesBucket &valuesBucket);
     bool IsRetryErrCode(int32_t errCode);
-    std::mutex rdbMutex_;
-    std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
     bool isInitial_ = false;
+    std::mutex rdbMutex_;
 
     static std::mutex restoreRdbMutex_;
+    std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
 
     BmsRdbConfig bmsRdbConfig_;
 };

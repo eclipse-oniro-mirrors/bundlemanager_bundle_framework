@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,14 +37,14 @@ enum OverlayOption : uint32_t {
 struct OverlayCallbackInfo : public BaseCallbackInfo {
     explicit OverlayCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
+    bool isEnabled = true;
+    OverlayOption option = INVALID_OPTION;
     std::string bundleName;
     std::string moduleName;
     std::string targetModuleName;
     std::string targetBundleName;
-    bool isEnabled = true;
-    OverlayOption option = INVALID_OPTION;
-    OverlayModuleInfo overlayModuleInfo;
     std::vector<OverlayModuleInfo> infoVec;
+    OverlayModuleInfo overlayModuleInfo;
 };
 
 napi_value SetOverlayEnabled(napi_env env, napi_callback_info info);

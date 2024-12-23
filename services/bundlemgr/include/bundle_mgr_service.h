@@ -192,9 +192,9 @@ private:
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     mutable std::mutex bundleConnectMutex_;
     std::shared_ptr<BundleAgingMgr> agingMgr_;
+    std::shared_ptr<BundleDistributedManager> bundleDistributedManager_;
     // key is userId
     std::map<int32_t, std::shared_ptr<BundleConnectAbilityMgr>> connectAbilityMgr_;
-    std::shared_ptr<BundleDistributedManager> bundleDistributedManager_;
 #endif
     sptr<BundleMgrHostImpl> host_;
     sptr<BundleInstallerHost> installer_;

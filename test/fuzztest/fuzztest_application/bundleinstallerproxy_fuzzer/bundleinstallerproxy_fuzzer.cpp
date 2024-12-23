@@ -42,9 +42,10 @@ namespace OHOS {
         bundleinstallerProxy.Uninstall(bundleName, installParam, statusReceiver);
         std::string modulePackage (reinterpret_cast<const char*>(data), size);
         bundleinstallerProxy.Uninstall(bundleFilePath, modulePackage, installParam, statusReceiver);
-        int32_t dlpType = reinterpret_cast<uintptr_t>(data);
-        int32_t userId = reinterpret_cast<uintptr_t>(data);
-        int32_t appIndex = reinterpret_cast<uintptr_t>(data);
+        int32_t fixedValue = reinterpret_cast<uintptr_t>(data);
+        int32_t dlpType = fixedValue;
+        int32_t userId = fixedValue;
+        int32_t appIndex = fixedValue;
         bundleinstallerProxy.InstallSandboxApp(bundleName, dlpType, userId, appIndex);
         bundleinstallerProxy.UninstallSandboxApp(bundleName, appIndex, userId);
         bundleinstallerProxy.CreateStreamInstaller(installParam, statusReceiver, originHapPaths);

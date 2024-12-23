@@ -138,14 +138,14 @@ struct MetaData {
 };
 
 struct Resource : public Parcelable {
+    /** the resource id in hap */
+    uint32_t id = 0;
+
     /** the hap bundle name */
     std::string bundleName;
 
     /** the hap module name */
     std::string moduleName;
-
-    /** the resource id in hap */
-    uint32_t id = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
@@ -164,6 +164,17 @@ struct ApplicationEnvironment : public Parcelable {
 struct ApplicationInfo;
 
 struct CompatibleApplicationInfo : public Parcelable {
+    bool isCompressNativeLibs = true;
+
+    bool systemApp = false;
+    bool enabled = true;
+    bool debug = false;
+
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
+
+    int32_t supportedModes = 0; // supported modes.
     // items set when installing.
     std::string name; // application name.
     std::string icon; // application icon resource index.
@@ -171,20 +182,9 @@ struct CompatibleApplicationInfo : public Parcelable {
     std::string description; // description of application.
     std::string cpuAbi; // current device cpu abi.
     std::string process;
-    bool isCompressNativeLibs = true;
-
-    uint32_t iconId = 0;
-    uint32_t labelId = 0;
-    uint32_t descriptionId = 0;
-
-    bool systemApp = false;
 
     std::vector<std::string> permissions;
     std::vector<ModuleInfo> moduleInfos;
-
-    int32_t supportedModes = 0; // supported modes.
-    bool enabled = true;
-    bool debug = false;
 
     bool ReadFromParcel(Parcel& parcel);
     virtual bool Marshalling(Parcel& parcel) const override;
@@ -194,29 +194,6 @@ struct CompatibleApplicationInfo : public Parcelable {
 
 // configuration information about an application
 struct ApplicationInfo : public Parcelable {
-    std::string name;  // application name is same to bundleName
-    std::string bundleName;
-
-    uint32_t versionCode = 0;
-    int32_t minCompatibleVersionCode = 0;
-    std::string versionName;
-
-    uint32_t apiCompatibleVersion = 0;
-    int32_t apiTargetVersion = 0;
-    int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE;
-
-    std::string iconPath;
-    uint32_t iconId = 0;
-    Resource iconResource;
-
-    std::string label;
-    uint32_t labelId = 0;
-    Resource labelResource;
-
-    std::string description;
-    uint32_t descriptionId = 0;
-    Resource descriptionResource;
-
     bool keepAlive = false;
     bool removable = true;
     bool singleton = false;
@@ -233,12 +210,60 @@ struct ApplicationInfo : public Parcelable {
     bool asanEnabled = false;
     bool debug = false;
     bool distributedNotificationEnabled = true;
-    std::vector<int32_t> resourcesApply;
-    std::vector<std::string> allowCommonEvent;
 
     bool allowEnableNotification = false;
+    bool allowMultiProcess = false;
     bool gwpAsanEnabled = false;
+    bool enabled = false;
+
+    // switch
+    bool multiProjects = false;
+
+    bool isCompressNativeLibs = true;
+    bool tsanEnabled = false;
+    bool hwasanEnabled = false;
+    bool ubsanEnabled = false;
+    bool cloudFileSyncEnabled = false;
+
+    // app detail ability
+    bool needAppDetail = false;
+    uint32_t versionCode = 0;
+
+    uint32_t apiCompatibleVersion = 0;
+    uint32_t iconId = 0;
+    uint32_t labelId = 0;
+    uint32_t descriptionId = 0;
+
+    // user related fields, assign when calling the get interface
+    uint32_t accessTokenId = 0;
+    uint32_t applicationReservedFlag = 0;
+    int32_t apiTargetVersion = 0;
+    int32_t minCompatibleVersionCode = 0;
     int32_t supportedModes = 0;  // returns 0 if the application does not support the driving mode
+    int32_t appIndex = 0;
+    int32_t uid = -1;
+    int32_t flags = 0;
+    int32_t targetPriority = 0;
+    int32_t overlayState = 0;
+    int32_t maxChildProcess = 0;
+
+    int32_t applicationFlags = static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+
+    BundleType bundleType = BundleType::APP;
+
+    MultiAppModeData multiAppMode;
+    int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE;
+    uint64_t accessTokenIdEx = 0;
+    std::string name;  // application name is same to bundleName
+    std::string bundleName;
+
+    std::string versionName;
+
+    std::string iconPath;
+
+    std::string label;
+
+    std::string description;
 
     std::string asanLogPath;
     std::string codePath;
@@ -258,71 +283,47 @@ struct ApplicationInfo : public Parcelable {
     std::string appDistributionType = Constants::APP_DISTRIBUTION_TYPE_NONE;
     std::string appProvisionType = Constants::APP_PROVISION_TYPE_RELEASE;
 
-    // user related fields, assign when calling the get interface
-    uint32_t accessTokenId = 0;
-    int32_t appIndex = 0;
-    uint64_t accessTokenIdEx = 0;
-    bool enabled = false;
-    int32_t uid = -1;
-
     // native so
     std::string nativeLibraryPath;
     std::string cpuAbi;
     std::string arkNativeFilePath;
     std::string arkNativeFileAbi;
 
-    // assign when calling the get interface
-    std::vector<std::string> permissions;
-    std::vector<std::string> moduleSourceDirs;
-    std::vector<ModuleInfo> moduleInfos;
-    std::map<std::string, std::vector<HnpPackage>> hnpPackages;
-    std::map<std::string, std::vector<CustomizeData>> metaData;
-    std::map<std::string, std::vector<Metadata>> metadata;
-    // Installation-free
-    std::vector<std::string> targetBundleList;
-
     std::string fingerprint;
-    // quick fix info
-    AppQuickFix appQuickFix;
-
-    // switch
-    bool multiProjects = false;
-
-    bool isCompressNativeLibs = true;
-    int32_t flags = 0;
     std::string icon;
     std::string entryModuleName;
     std::string signatureKey;
 
     // overlay installation
     std::string targetBundleName;
-    int32_t targetPriority = 0;
-    int32_t overlayState = 0;
-
-    BundleType bundleType = BundleType::APP;
 
     std::string compileSdkVersion;
     std::string compileSdkType = DEFAULT_COMPILE_SDK_TYPE;
-
-    std::vector<ApplicationEnvironment> appEnvironments;
     std::string organization;
-    uint32_t applicationReservedFlag = 0;
-    bool tsanEnabled = false;
-    bool hwasanEnabled = false;
-    bool ubsanEnabled = false;
-    bool cloudFileSyncEnabled = false;
-
-    // app detail ability
-    bool needAppDetail = false;
     std::string appDetailAbilityLibraryPath;
-
-    MultiAppModeData multiAppMode;
-    int32_t maxChildProcess = 0;
 
     std::string installSource;
     std::string configuration;
+    Resource iconResource;
+    Resource labelResource;
+    Resource descriptionResource;
 
-    int32_t applicationFlags = static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+    std::vector<int32_t> resourcesApply;
+    std::vector<std::string> allowCommonEvent;
+
+    // assign when calling the get interface
+    std::vector<std::string> permissions;
+    std::vector<std::string> moduleSourceDirs;
+    std::vector<ModuleInfo> moduleInfos;
+    // Installation-free
+    std::vector<std::string> targetBundleList;
+
+    std::vector<ApplicationEnvironment> appEnvironments;
+    std::map<std::string, std::vector<HnpPackage>> hnpPackages;
+    std::map<std::string, std::vector<CustomizeData>> metaData;
+    std::map<std::string, std::vector<Metadata>> metadata;
+    // quick fix info
+    AppQuickFix appQuickFix;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

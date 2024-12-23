@@ -23,12 +23,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct InnerBundleUserInfo {
-    BundleUserInfo bundleUserInfo;
-    std::vector<int32_t> gids;
+    // app install control
+    bool isRemovable = true;
+
     int32_t uid = Constants::INVALID_UID;
     uint32_t accessTokenId = 0;
     uint64_t accessTokenIdEx = 0;
-    std::string bundleName;
 
     // The time(unix time) will be recalculated
     // if the application is reinstalled after being uninstalled.
@@ -37,15 +37,15 @@ struct InnerBundleUserInfo {
     // The time(unix time) will be recalculated
     // if the application is uninstalled after being installed.
     int64_t updateTime = 0;
-
-    // app install control
-    bool isRemovable = true;
+    std::string bundleName;
 
     // encryption key id
     std::string keyId;
+    std::vector<int32_t> gids;
 
     // appIndex -> cloneInfo
     std::map<std::string, InnerBundleCloneInfo> cloneInfos;
+    BundleUserInfo bundleUserInfo;
 
     bool operator() (const InnerBundleUserInfo& info) const
     {

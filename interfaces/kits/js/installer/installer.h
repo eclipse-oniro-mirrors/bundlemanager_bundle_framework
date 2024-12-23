@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,19 +45,18 @@ struct AsyncInstallCallbackInfo {
     explicit AsyncInstallCallbackInfo(napi_env napiEnv) : env(napiEnv) {}
     ~AsyncInstallCallbackInfo();
 
-    std::vector<std::string> hapFiles;
-    std::string bundleName;
-    std::string param;
-    OHOS::AppExecFwk::InstallParam installParam;
-    OHOS::AppExecFwk::UninstallParam uninstallParam;
-    InstallResult installResult;
     int32_t err = 0;
     InstallOption option = InstallOption::UNKNOWN;
-
+    std::string bundleName;
+    std::string param;
     napi_env env;
     napi_async_work asyncWork = nullptr;
     napi_deferred deferred = nullptr;
     napi_ref callback = nullptr;
+    std::vector<std::string> hapFiles;
+    OHOS::AppExecFwk::InstallParam installParam;
+    OHOS::AppExecFwk::UninstallParam uninstallParam;
+    InstallResult installResult;
 };
 
 struct AsyncGetBundleInstallerCallbackInfo {
@@ -79,16 +78,16 @@ struct ExtResourceCallbackInfo : public BaseCallbackInfo {
 
 struct CreateAppCloneCallbackInfo : public BaseCallbackInfo {
     explicit CreateAppCloneCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    std::string bundleName;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     int32_t appIndex = Constants::INITIAL_APP_INDEX;
+    std::string bundleName;
     OHOS::AppExecFwk::DestroyAppCloneParam destroyAppCloneParam;
 };
 
 struct InstallPreexistingAppCallbackInfo : public BaseCallbackInfo {
     explicit InstallPreexistingAppCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    std::string bundleName;
     int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName;
 };
 
 napi_value GetBundleInstaller(napi_env env, napi_callback_info info);

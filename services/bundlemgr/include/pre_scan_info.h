@@ -27,7 +27,6 @@ namespace {
     }
 }
 struct PreBundleConfigInfo {
-    std::string bundleName;
     bool keepAlive = false;
     bool singleton = false;
     bool runningResourcesApply = false;
@@ -43,6 +42,7 @@ struct PreBundleConfigInfo {
     bool appShareLibrary = false;
     bool allowEnableNotification = false;
     bool allowAppRunWhenDeviceFirstLocked = false;
+    std::string bundleName;
     std::vector<std::string> allowCommonEvent;
     std::vector<std::string> appSignature;
     std::vector<std::string> existInJsonFile;
@@ -99,11 +99,11 @@ struct PreBundleConfigInfo {
 };
 
 struct PreScanInfo {
-    std::string bundleDir;
     bool removable = true;
-    int32_t priority = 0;
-    std::string appIdentifier;
     bool isDataPreloadHap = false;
+    int32_t priority = 0;
+    std::string bundleDir;
+    std::string appIdentifier;
 
     bool operator < (const PreScanInfo &preScanInfo) const
     {

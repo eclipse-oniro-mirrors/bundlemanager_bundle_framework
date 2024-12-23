@@ -21,7 +21,9 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
-const int32_t CLOSE_TIME = 360; // delay 6 mins to backup
+constexpr const char* QUEUE_NAME = "BackupBMSDbQueue";
+constexpr const char* TASK_NAME = "BackUpBMSDbTask";
+constexpr uint64_t DELAY_TIME_MILLI_SECONDS = 6 * 60 * 1000; // 6min
 }
 BundleDataStorageRdb::BundleDataStorageRdb()
 {
@@ -31,6 +33,8 @@ BundleDataStorageRdb::BundleDataStorageRdb()
     bmsRdbConfig.tableName = BUNDLE_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
+
+    serialQueue_ = std::make_unique<SerialQueue>(QUEUE_NAME);
 }
 
 BundleDataStorageRdb::~BundleDataStorageRdb()
@@ -71,13 +75,13 @@ void BundleDataStorageRdb::TransformStrToInfo(
         InnerBundleInfo innerBundleInfo;
         nlohmann::json jsonObject = nlohmann::json::parse(data.second, nullptr, false);
         if (jsonObject.is_discarded()) {
-            APP_LOGE("Error key: %{plublic}s", data.first.c_str());
+            APP_LOGE("Error key: %{public}s", data.first.c_str());
             rdbDataManager_->DeleteData(data.first);
             continue;
         }
 
         if (innerBundleInfo.FromJson(jsonObject) != ERR_OK) {
-            APP_LOGE("Error key: %{plublic}s", data.first.c_str());
+            APP_LOGE("Error key: %{public}s", data.first.c_str());
             rdbDataManager_->DeleteData(data.first);
             continue;
         }
@@ -154,29 +158,18 @@ bool BundleDataStorageRdb::ResetKvStore()
 
 void BundleDataStorageRdb::BackupRdb()
 {
-    if (isBackingUp_) {
-        return;
-    }
-    isBackingUp_ = true;
     std::weak_ptr<BundleDataStorageRdb> weakPtr = weak_from_this();
     auto task = [weakPtr] {
-        APP_LOGI("bms.db backup start");
-        std::this_thread::sleep_for(std::chrono::seconds(CLOSE_TIME));
+        APP_LOGI("backup BMS db begin");
         auto sharedPtr = weakPtr.lock();
-        if (sharedPtr == nullptr) {
-            APP_LOGE("sharedPtr is null");
+        if (sharedPtr == nullptr || sharedPtr->rdbDataManager_ == nullptr) {
+            APP_LOGE("backup BMS db failed");
             return;
         }
-        if (sharedPtr->rdbDataManager_ != nullptr) {
-            sharedPtr->rdbDataManager_->BackupRdb();
-        } else {
-            APP_LOGE("rdbDataManager_ is null");
-        }
-        sharedPtr->isBackingUp_ = false;
-        APP_LOGI("bms.db backup end");
+        sharedPtr->rdbDataManager_->BackupRdb();
+        APP_LOGI("backup BMS db end");
     };
-    std::thread backUpThread(task);
-    backUpThread.detach();
+    serialQueue_->ReScheduleDelayTask(TASK_NAME, DELAY_TIME_MILLI_SECONDS, task);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

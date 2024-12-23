@@ -41,6 +41,7 @@ ohos_shared_library("page_ability_native2") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
+    "ipc:ipc_napi",
     "napi:ace_napi",
   ]
   subsystem_name = "bundlemanager"

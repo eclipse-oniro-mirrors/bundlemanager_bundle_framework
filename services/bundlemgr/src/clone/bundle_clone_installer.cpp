@@ -64,6 +64,8 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
         .uid = uid_,
         .appIndex = appIndex,
         .bundleName = bundleName,
+        .appId = appId_,
+        .appIdentifier = appIdentifier_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -92,7 +94,9 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
         .accessTokenId = accessTokenId_,
         .bundleName = bundleName,
         .uid = uid_,
-        .appIndex = appIndex
+        .appIndex = appIndex,
+        .appId = appId_,
+        .appIdentifier = appIdentifier_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -198,8 +202,10 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     // 4. generate the accesstoken id and inherit original permissions
     info.SetAppIndex(appIndex);
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
-    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx) != ERR_OK) {
-        APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult) != ERR_OK) {
+        auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+        APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
     ScopeGuard applyAccessTokenGuard([&] {
@@ -217,13 +223,15 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     uid_ = uid;
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
     versionCode_ = info.GetVersionCode();
+    appId_ = info.GetAppId();
+    appIdentifier_ = info.GetAppIdentifier();
 
+    ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex); });
     ErrCode result = CreateCloneDataDir(info, userId, uid, appIndex);
     if (result != ERR_OK) {
         APP_LOGE("InstallCloneApp create clone dir failed");
         return result;
     }
-    ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex); });
 
     ScopeGuard addCloneBundleGuard([&] { dataMgr->RemoveCloneBundle(bundleName, userId, appIndex); });
     ErrCode addRes = dataMgr->AddCloneBundle(bundleName, attr);
@@ -233,6 +241,9 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         return addRes;
     }
 
+    ScopeGuard createEl5DirGuard([&] { RemoveEl5Dir(userInfo, uid, userId, appIndex); });
+    CreateEl5Dir(info, userId, uid, appIndex);
+
     // process icon and label
     {
         auto appIndexes = info.GetCloneBundleAppIndexes();
@@ -241,12 +252,12 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
             BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, appIndex, userId);
         }
     }
-    AddKeyOperation(bundleName, appIndex, userId, uid);
 
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
     createCloneDataDirGuard.Dismiss();
     addCloneBundleGuard.Dismiss();
+    createEl5DirGuard.Dismiss();
     APP_LOGI("InstallCloneApp %{public}s appIndex:%{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
 }
@@ -290,6 +301,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     uid_ = it->second.uid;
     accessTokenId_ = it->second.accessTokenId;
     versionCode_ = info.GetVersionCode();
+    appId_ = info.GetAppId();
+    appIdentifier_ = info.GetAppIdentifier();
     if (!AbilityManagerHelper::UninstallApplicationProcesses(bundleName, uid_, false, appIndex)) {
         APP_LOGE("fail to kill running application");
     }
@@ -304,6 +317,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     if (RemoveCloneDataDir(bundleName, userId, appIndex) != ERR_OK) {
         APP_LOGW("RemoveCloneDataDir failed");
     }
+    RemoveEl5Dir(userInfo, uid_, userId, appIndex);
     // process icon and label
     {
         InnerBundleInfo info;
@@ -321,7 +335,6 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         appControlMgr->DeleteAllDisposedRuleByBundle(info, appIndex, userId);
     }
 #endif
-    DeleteKeyOperation(bundleName, appIndex, userId, uid_);
     UninstallDebugAppSandbox(bundleName, uid_, appIndex, userId, info);
     APP_LOGI("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
@@ -350,76 +363,6 @@ void BundleCloneInstaller::UninstallDebugAppSandbox(const std::string &bundleNam
     APP_LOGD("call UninstallDebugAppSandbox end");
 }
 
-bool BundleCloneInstaller::AddKeyOperation(
-    const std::string &bundleName, int32_t appIndex, int32_t userId, int32_t uid)
-{
-    if (GetDataMgr() != ERR_OK) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return false;
-    }
-    InnerBundleInfo innerBundleInfo;
-    if (!dataMgr_->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        APP_LOGE("get failed");
-        return false;
-    }
-    bool appEncrypted = innerBundleInfo.GetApplicationReservedFlag() &
-        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
-    if (!appEncrypted) {
-        return true;
-    }
-    CodeProtectBundleInfo info;
-    info.bundleName = innerBundleInfo.GetBundleName();
-    info.versionCode = innerBundleInfo.GetVersionCode();
-    info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
-    info.uid = uid;
-    info.appIndex = appIndex;
-
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    auto res = bmsExtensionDataMgr.KeyOperation(std::vector<CodeProtectBundleInfo> { info }, CodeOperation::ADD);
-    if (res == ERR_OK) {
-        dataMgr_->UpdateAppEncryptedStatus(bundleName, true, appIndex);
-    } else {
-        dataMgr_->UpdateAppEncryptedStatus(bundleName, false, appIndex);
-    }
-    return res == ERR_OK;
-}
-
-void BundleCloneInstaller::DeleteKeyOperation(const std::string &bundleName,
-    int32_t appIndex, int32_t userId, int32_t uid)
-{
-    if (GetDataMgr() != ERR_OK) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return;
-    }
-    InnerBundleInfo innerBundleInfo;
-    if (!dataMgr_->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        APP_LOGE("get failed");
-        return;
-    }
-    auto appIndexSet = innerBundleInfo.GetCloneBundleAppIndexes();
-    if (appIndexSet.find(appIndex) != appIndexSet.end()) {
-        return;
-    }
-    bool appEncrypted = innerBundleInfo.GetApplicationReservedFlag() &
-        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
-    if (!appEncrypted) {
-        return;
-    }
-    CodeProtectBundleInfo info;
-    info.bundleName = innerBundleInfo.GetBundleName();
-    info.versionCode = innerBundleInfo.GetVersionCode();
-    info.applicationReservedFlag = innerBundleInfo.GetApplicationReservedFlag();
-    info.uid = uid;
-    info.appIndex = appIndex;
-
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    auto res = bmsExtensionDataMgr.KeyOperation(std::vector<CodeProtectBundleInfo> { info }, CodeOperation::DELETE);
-    if (res == ERR_OK) {
-        dataMgr_->UpdateAppEncryptedStatus(bundleName, false, appIndex);
-    } else {
-        dataMgr_->UpdateAppEncryptedStatus(bundleName, true, appIndex);
-    }
-}
 
 ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,
     const int32_t userId, const int32_t &uid, const int32_t &appIndex) const
@@ -456,6 +399,61 @@ ErrCode BundleCloneInstaller::RemoveCloneDataDir(const std::string bundleName, i
         return ERR_APPEXECFWK_CLONE_INSTALL_INTERNAL_ERROR;
     }
     return ERR_OK;
+}
+
+void BundleCloneInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t userId,
+    const int32_t uid, const int32_t appIndex)
+{
+    std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
+    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
+        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    });
+    if (it == reqPermissions.end()) {
+        APP_LOGD("no el5 permission");
+        return;
+    }
+    APP_LOGI("el5 -n %{public}s -i %{public}d", info.GetBundleName().c_str(), appIndex);
+    CreateDirParam el5Param;
+    el5Param.bundleName = info.GetBundleName();
+    el5Param.userId = userId;
+    el5Param.uid = uid;
+    el5Param.gid = uid;
+    el5Param.apl = info.GetAppPrivilegeLevel();
+    el5Param.isPreInstallApp = info.IsPreInstallApp();
+    el5Param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    el5Param.appIndex = appIndex;
+    if (GetDataMgr() != ERR_OK) {
+        return;
+    }
+    dataMgr_->CreateEl5Dir(std::vector<CreateDirParam> {el5Param}, true);
+}
+
+void BundleCloneInstaller::RemoveEl5Dir(InnerBundleUserInfo &userInfo, const int32_t uid,
+    int32_t userId, const int32_t appIndex)
+{
+    APP_LOGI("el5 -n %{public}s -i %{public}d", userInfo.bundleName.c_str(), appIndex);
+    std::string key = BundleCloneCommonHelper::GetCloneDataDir(userInfo.bundleName, appIndex);
+    std::vector<std::string> dirs;
+    dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
+        std::to_string(userId) + ServiceConstants::BASE + key);
+    dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
+        std::to_string(userId) + ServiceConstants::DATABASE + key);
+    for (const std::string &dir : dirs) {
+        if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
+            APP_LOGW("remove el5 dir %{public}s failed", dir.c_str());
+        }
+    }
+    auto it = userInfo.cloneInfos.find(std::to_string(appIndex));
+    if (it == userInfo.cloneInfos.end()) {
+        APP_LOGE("find cloneInfo failed");
+        return;
+    }
+    if (it->second.keyId.empty()) {
+        return;
+    }
+    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(key, userId) != ERR_OK) {
+        APP_LOGW("delete encryption key id failed");
+    }
 }
 
 ErrCode BundleCloneInstaller::GetDataMgr()
@@ -514,6 +512,8 @@ void BundleCloneInstaller::ResetInstallProperties()
     uid_ = 0;
     accessTokenId_ = 0;
     versionCode_ = 0;
+    appId_ = "";
+    appIdentifier_ = "";
 }
 } // AppExecFwk
 } // OHOS

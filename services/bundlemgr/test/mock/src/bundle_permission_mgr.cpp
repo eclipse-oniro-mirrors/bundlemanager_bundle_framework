@@ -291,15 +291,21 @@ Security::AccessToken::HapInfoParams CreateHapInfoParams(const InnerBundleInfo &
 }
 
 int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
-    const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx)
+    const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
+    Security::AccessToken::HapInfoCheckResult &checkResult)
 {
     return 0;
 }
 
-int32_t BundlePermissionMgr::UpdateHapToken(
-    Security::AccessToken::AccessTokenIDEx& tokenIdeEx, const InnerBundleInfo &innerBundleInfo)
+int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
+    const InnerBundleInfo &innerBundleInfo, Security::AccessToken::HapInfoCheckResult &checkResult)
 {
     return 0;
+}
+
+std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult)
+{
+    return "";
 }
 } // AppExecFwk
 } // OHOS

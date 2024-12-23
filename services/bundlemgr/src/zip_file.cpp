@@ -176,7 +176,7 @@ bool ZipFile::Open()
     realPath.reserve(PATH_MAX);
     realPath.resize(PATH_MAX - 1);
     if (realpath(pathName_.c_str(), &(realPath[0])) == nullptr) {
-        APP_LOGE("transform real path error: %{public}d", errno);
+        APP_LOGE("transform real path: %{private}s error: %{public}d", pathName_.c_str(), errno);
         return false;
     }
 

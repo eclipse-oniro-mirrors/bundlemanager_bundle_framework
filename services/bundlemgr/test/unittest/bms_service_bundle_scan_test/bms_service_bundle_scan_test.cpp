@@ -126,12 +126,18 @@ void BmsServiceBundleScanTest::CreateFile(const std::string &path) const
         return;
     }
     mode_t mode = 0666;
-    int fd = open(path.c_str(), O_RDWR | O_CREAT, mode);
-    if (fd == -1) {
-        APP_LOGE("CreateFile-open:%{private}s error", path.c_str());
+    FILE *fp = fopen(path.c_str(), "a+");
+    if (fp == nullptr) {
+        APP_LOGE("CreateFile-fopen:%{private}s error", path.c_str());
         return;
     }
-    if (close(fd) != 0) {
+    int32_t fd = fileno(fp);
+    if (fd == -1) {
+        APP_LOGE("CreateFile-getFd:%{private}s error", path.c_str());
+        (void)fclose(fp);
+        return;
+    }
+    if (fclose(fp) != 0) {
         APP_LOGW("CreateFile-close:%{private}s error", path.c_str());
     }
     if (access(path.c_str(), F_OK) != 0) {

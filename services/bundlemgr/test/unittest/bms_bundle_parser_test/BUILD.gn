@@ -55,6 +55,7 @@ ohos_unittest("BmsBundleParserTest") {
     "ability_base:want",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
+    "appverify:libhapverify",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",

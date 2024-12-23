@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct TargetInfo : public Parcelable {
+    int32_t flags = 0;
+    int32_t reasonFlag = 0;
+    int32_t callingUid = 0;
+    int32_t callingAppType = 0;
+    int32_t embedded = 0;
     std::string transactId;
     std::string bundleName;
     std::string moduleName;
@@ -31,14 +36,9 @@ struct TargetInfo : public Parcelable {
     std::string action;
     std::string uri;
     std::string type;
-    int32_t flags = 0;
-    int32_t reasonFlag = 0;
-    int32_t callingUid = 0;
-    int32_t callingAppType = 0;
     std::vector<std::string> callingBundleNames;
     std::vector<std::string> callingAppIds;
     std::vector<std::string> preloadModuleNames;
-    int32_t embedded = 0;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static TargetInfo *Unmarshalling(Parcel &parcel);

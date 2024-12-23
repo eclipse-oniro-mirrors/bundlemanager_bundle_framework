@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,10 +24,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct BundleUserInfo : public Parcelable {
-    int32_t userId = Constants::INVALID_USERID;
-
     // Indicates whether the bundle is disabled.
     bool enabled = true;
+    int32_t userId = Constants::INVALID_USERID;
+    std::string setEnabledCaller;
 
     // disabled abilities of the user.
     std::vector<std::string> disabledAbilities;
@@ -35,8 +35,6 @@ struct BundleUserInfo : public Parcelable {
     // overlay module state
     // element is moduleName_state
     std::vector<std::string> overlayModulesState;
-
-    std::string setEnabledCaller;
 
     bool IsInitialState() const;
     void Reset();

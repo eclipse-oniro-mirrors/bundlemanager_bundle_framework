@@ -733,8 +733,10 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1700, Function | SmallTest |
     int32_t userId = 0;
     int32_t dlpType = 0;
     Security::AccessToken::AccessTokenIDEx tokenIdeEx;
+    Security::AccessToken::HapInfoCheckResult checkResult;
 
-    ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType, tokenIdeEx);
+    ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType, tokenIdeEx, checkResult);
+    EXPECT_EQ(checkResult.permCheckResult.permissionName, "test");
     EXPECT_EQ(ret, false);
 }
 
@@ -748,7 +750,9 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1800, Function | SmallTest |
     bool ret = BundlePermissionMgr::Init();
     InnerBundleInfo innerBundleInfo;
     Security::AccessToken::AccessTokenIDEx tokenIdeEx;
-    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo);
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo, checkResult);
+    EXPECT_EQ(checkResult.permCheckResult.permissionName, "test");
     EXPECT_EQ(ret, false);
 }
 

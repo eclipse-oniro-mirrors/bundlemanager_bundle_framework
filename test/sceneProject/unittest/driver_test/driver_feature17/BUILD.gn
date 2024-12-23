@@ -24,7 +24,11 @@ ohos_hap("driver_feature17_hap") {
     ":hjs_demo_js_assets",
     ":hjs_demo_resources",
   ]
-  shared_libraries = [ "//third_party/libpng:libpng" ]
+  if (ohos_indep_compiler_enable) {
+    external_deps = [ "libpng:libpng" ]
+  } else {
+    shared_libraries = [ "//third_party/libpng:libpng" ]
+  }
   certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.example.driverTest.p7b"
 }
 

@@ -173,7 +173,7 @@ bool AppProvisionInfoManagerRdb::GetAllAppProvisionInfoBundleName(std::unordered
 }
 
 bool AppProvisionInfoManagerRdb::ConvertToAppProvision(
-    const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
+    const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
     AppProvisionInfo &appProvisionInfo)
 {
     if (absSharedResultSet == nullptr) {

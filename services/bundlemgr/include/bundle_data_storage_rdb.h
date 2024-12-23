@@ -20,6 +20,7 @@
 #include "bundle_data_storage_interface.h"
 #include "inner_bundle_info.h"
 #include "rdb_data_manager.h"
+#include "serial_queue.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -43,7 +44,7 @@ private:
     void BackupRdb();
 
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
-    std::atomic_bool isBackingUp_ = false;
+    std::unique_ptr<SerialQueue> serialQueue_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

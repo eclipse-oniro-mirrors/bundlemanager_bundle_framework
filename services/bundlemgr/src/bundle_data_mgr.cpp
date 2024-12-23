@@ -52,6 +52,7 @@
 #include "bundle_overlay_data_manager.h"
 #endif
 #include "bundle_extractor.h"
+#include "scope_guard.h"
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
 #include "type_descriptor.h"
 #include "utd_client.h"
@@ -64,6 +65,7 @@
 #include "router_data_storage_rdb.h"
 #include "shortcut_data_storage_rdb.h"
 #include "ohos_account_kits.h"
+#include "xcollie_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -98,7 +100,6 @@ constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 constexpr const char* ENTRY = "entry";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
-constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -118,8 +119,9 @@ constexpr uint8_t PARAM_URI_SEPARATOR_LEN = 4;
 constexpr int8_t INVALID_BUNDLEID = -1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 constexpr int32_t MAX_APP_UID = 65535;
-constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr int8_t ONLY_ONE_USER = 1;
+constexpr unsigned int OTA_CODE_ENCRYPTION_TIMEOUT = 4 * 60;
+const std::string FUNCATION_HANDLE_OTA_CODE_ENCRYPTION = "BundleDataMgr::HandleOTACodeEncryption()";
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -238,7 +240,8 @@ void BundleDataMgr::ResetBundleStateData()
     }
 }
 
-bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, const InstallState state)
+bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
+    const InstallState state, const bool isKeepData)
 {
     if (bundleName.empty()) {
         APP_LOGW("update failed: bundle name is empty");
@@ -266,7 +269,7 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, cons
                 static_cast<int32_t>(previousState->second), static_cast<int32_t>(state));
             if (IsDeleteDataState(state)) {
                 installStates_.erase(item);
-                DeleteBundleInfo(bundleName, state);
+                DeleteBundleInfo(bundleName, state, isKeepData);
                 return true;
             }
             item->second = state;
@@ -496,6 +499,16 @@ bool BundleDataMgr::GetUninstallBundleInfo(const std::string &bundleName, Uninst
     return uninstallDataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo);
 }
 
+bool BundleDataMgr::GetAllUninstallBundleInfo(
+    std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos)
+{
+    if (uninstallDataMgr_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    return uninstallDataMgr_->GetAllUninstallBundleInfo(uninstallBundleInfos);
+}
+
 bool BundleDataMgr::DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId)
 {
     if (uninstallDataMgr_ == nullptr) {
@@ -705,7 +718,7 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
     if (!bundleName.empty() && !abilityName.empty()) {
         bool ret = ExplicitQueryAbilityInfo(want, flags, requestUserId, abilityInfo, appIndex);
         if (!ret) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility error -n %{public}s -a %{public}s -u %{public}d"
+            LOG_NOFUNC_D(BMS_TAG_QUERY, "ExplicitQueryAbility error -n %{public}s -a %{public}s -u %{public}d"
                 " -i %{public}d", bundleName.c_str(), abilityName.c_str(), userId, appIndex);
             return false;
         }
@@ -951,7 +964,7 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
     auto ability = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, responseUserId);
     if (!ability) {
         LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility not found UIAbility -n %{public}s -m %{public}s "
-            "-a %{public}s", bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+            "-a %{public}s -u %{public}d", bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), responseUserId);
         return false;
     }
     return QueryAbilityInfoWithFlags(ability, flags, responseUserId, innerBundleInfo, abilityInfo);
@@ -1511,7 +1524,6 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfosV9(const Want &want, int32_t fla
             InnerBundleInfo innerBundleInfo;
             ErrCode ret = GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId);
             if (ret != ERR_OK) {
-                LOG_NOFUNC_W(BMS_TAG_QUERY, "GetInnerBundleInfoWithFlagsV9 failed -n %{public}s", item.first.c_str());
                 continue;
             }
 
@@ -2945,12 +2957,14 @@ void BundleDataMgr::PostProcessAnyUserFlags(
         if (withAnyUser) {
             const std::map<std::string, InnerBundleUserInfo>& innerUserInfos
                 = innerBundleInfo.GetInnerBundleUserInfos();
+            uint32_t flagOtherInstalled = static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+            uint32_t applicationFlags = static_cast<uint32_t>(bundleInfo.applicationInfo.applicationFlags);
             if (!innerBundleInfo.HasInnerBundleUserInfo(originalUserId)) {
-                bundleInfo.applicationInfo.applicationFlags |=
-                    static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+                bundleInfo.applicationInfo.applicationFlags =
+                    static_cast<int32_t>(applicationFlags | flagOtherInstalled);
             } else if (innerUserInfos.size() > 1) {
-                bundleInfo.applicationInfo.applicationFlags |=
-                    static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTHER_INSTALLED);
+                bundleInfo.applicationInfo.applicationFlags =
+                    static_cast<int32_t>(applicationFlags | flagOtherInstalled);
             }
         }
     }
@@ -3963,7 +3977,7 @@ bool BundleDataMgr::IsDisableState(const InstallState state) const
     return false;
 }
 
-void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const InstallState state)
+void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const InstallState state, const bool isKeepData)
 {
     if (InstallState::INSTALL_FAIL == state) {
         APP_LOGW("del fail, bundle:%{public}s has no installed info", bundleName.c_str());
@@ -3981,7 +3995,9 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
 #endif
     APP_LOGI("del bundle name:%{public}s", bundleName.c_str());
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
-    RecycleUidAndGid(innerBundleInfo);
+    if (!isKeepData) {
+        RecycleUidAndGid(innerBundleInfo);
+    }
     bool ret = dataStorage_->DeleteStorageBundleInfo(innerBundleInfo);
     if (!ret) {
         APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
@@ -4027,8 +4043,8 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     if (appIndex == 0) {
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
             && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
-            APP_LOGD("bundleName: %{public}s userId: %{public}d incorrect",
-                innerBundleInfo.GetBundleName().c_str(), requestUserId);
+            LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+                bundleName.c_str(), responseUserId, appIndex, flags);
             return false;
         }
     } else if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
@@ -4039,8 +4055,8 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
             return false;
         }
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE) && !isEnabled) {
-            APP_LOGW("bundleName: %{public}s userId: %{public}d, appIndex: %{public}d incorrect",
-                innerBundleInfo.GetBundleName().c_str(), requestUserId, appIndex);
+            LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+                bundleName.c_str(), responseUserId, appIndex, flags);
             return false;
         }
     } else {
@@ -4054,7 +4070,6 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
 {
     bool res = GetInnerBundleInfoWithFlags(bundleName, flags, userId, appIndex);
     if (!res) {
-        APP_LOGW("get with flag failed");
         return false;
     }
     auto item = bundleInfos_.find(bundleName);
@@ -4115,7 +4130,8 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     }
     if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))
         && !isEnabled) {
-        APP_LOGD("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
+        LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+            bundleName.c_str(), responseUserId, appIndex, flags);
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
     info = innerBundleInfo;
@@ -4652,6 +4668,10 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
         return;
     }
 
+    UninstallBundleInfo uninstallBundleInfo;
+    if (GetUninstallBundleInfo(info.GetBundleName(), uninstallBundleInfo)) {
+        return;
+    }
     bundleIdMap_.erase(bundleId);
     BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH);
     BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::SHAREFS_CONFIG_PATH);
@@ -4700,6 +4720,7 @@ bool BundleDataMgr::RestoreUidAndGid()
             }
         }
     }
+    RestoreUidAndGidFromUninstallInfo();
     return true;
 }
 
@@ -7511,7 +7532,8 @@ void BundleDataMgr::CreateGroupDirIfNotExist(const DataGroupInfo &dataGroupInfo)
         APP_LOGI("group dir exist, no need to create");
         return;
     }
-    auto result = InstalldClient::GetInstance()->Mkdir(dir, DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+    auto result = InstalldClient::GetInstance()->Mkdir(dir, ServiceConstants::DATA_GROUP_DIR_MODE,
+        dataGroupInfo.uid, dataGroupInfo.gid);
     if (result != ERR_OK) {
         APP_LOGE("mkdir group dir failed, uid %{public}d err %{public}d", dataGroupInfo.uid, result);
     }
@@ -7756,18 +7778,23 @@ void BundleDataMgr::ScanAllBundleGroupInfo()
             }
             int32_t groupUidIndex = dataGroupItem.second[0].uid -
                 dataGroupItem.second[0].userId * Constants::BASE_USER_RANGE - DATA_GROUP_UID_OFFSET;
-            if (indexMap.find(groupUidIndex) == indexMap.end()) {
+            bool hasIndex = indexMap.find(groupUidIndex) != indexMap.end();
+            if (!hasIndex && groupIdMap.find(dataGroupId) == groupIdMap.end()) {
                 indexMap[groupUidIndex] = dataGroupId;
-            }
-            if (groupIdMap.find(dataGroupId) == groupIdMap.end()) {
                 groupIdMap[dataGroupId] = groupUidIndex;
-            }
-            if ((indexMap[groupUidIndex] == dataGroupId) && (groupIdMap[dataGroupId] == groupUidIndex)) {
                 continue;
             }
-            if (indexMap[groupUidIndex] != dataGroupId) {
-                errorGroupIds.insert(dataGroupId);
+            if (!hasIndex && groupIdMap.find(dataGroupId) != groupIdMap.end()) {
+                APP_LOGW("id %{public}s has invalid index %{public}d, not index %{public}d",
+                    dataGroupId.c_str(), groupIdMap[dataGroupId], groupUidIndex);
             }
+            if (hasIndex && indexMap[groupUidIndex] == dataGroupId) {
+                continue;
+            }
+            if (hasIndex && indexMap[groupUidIndex] != dataGroupId) {
+                APP_LOGW("id %{public}s has invalid index %{public}d", dataGroupId.c_str(), groupUidIndex);
+            }
+            errorGroupIds.insert(dataGroupId);
             // invalid index or groupId
             APP_LOGW("error index %{public}d groudId %{public}s -n %{public}s",
                 groupUidIndex, dataGroupId.c_str(), info.first.c_str());
@@ -8139,7 +8166,7 @@ void BundleDataMgr::ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &i
 void BundleDataMgr::AddAppHspBundleName(const BundleType type, const std::string &bundleName)
 {
     if (type == BundleType::APP_SERVICE_FWK) {
-        APP_LOGD("add app hsp bundleName:%{pubcli}s", bundleName.c_str());
+        APP_LOGD("add app hsp bundleName:%{public}s", bundleName.c_str());
         std::lock_guard<std::mutex> hspLock(hspBundleNameMutex_);
         appServiceHspBundleName_.insert(bundleName);
     }
@@ -8172,7 +8199,7 @@ void BundleDataMgr::CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32
         std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         APP_LOGD("create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
-            DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+            ServiceConstants::DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
             APP_LOGW("%{public}s group dir %{public}s userId %{public}d failed",
                 innerBundleInfo.GetBundleName().c_str(), dataGroupInfo.uuid.c_str(), userId);
@@ -8208,7 +8235,7 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
 
         std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
         auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
-            return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+            return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
         });
         if (it != reqPermissions.end()) {
             el5Params.emplace_back(createDirParam);
@@ -8226,7 +8253,8 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
 void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage)
 {
     for (const auto &el5Param : el5Params) {
-        APP_LOGI("-n %{public}s -u %{public}d", el5Param.bundleName.c_str(), el5Param.userId);
+        APP_LOGI("-n %{public}s -u %{public}d -i %{public}d",
+            el5Param.bundleName.c_str(), el5Param.userId, el5Param.appIndex);
         InnerCreateEl5Dir(el5Param);
         SetEl5DirPolicy(el5Param, needSaveStorage);
     }
@@ -8262,8 +8290,12 @@ void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
         return;
     }
     std::vector<std::string> dirs;
-    dirs.emplace_back(parentDir + ServiceConstants::BASE + el5Param.bundleName);
-    dirs.emplace_back(parentDir + ServiceConstants::DATABASE + el5Param.bundleName);
+    std::string bundleNameDir = el5Param.bundleName;
+    if (el5Param.appIndex > 0) {
+        bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(el5Param.bundleName, el5Param.appIndex);
+    }
+    dirs.emplace_back(parentDir + ServiceConstants::BASE + bundleNameDir);
+    dirs.emplace_back(parentDir + ServiceConstants::DATABASE + bundleNameDir);
     for (const std::string &dir : dirs) {
         uint32_t mode = S_IRWXU;
         int32_t gid = el5Param.uid;
@@ -8289,20 +8321,18 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSav
         LOG_E(BMS_TAG_INSTALLER, "get bundle %{public}s failed", el5Param.bundleName.c_str());
         return;
     }
-    InnerBundleUserInfo userInfo;
-    if (!info.GetInnerBundleUserInfo(el5Param.userId, userInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "%{public}s get user %{public}d failed",
-            info.GetBundleName().c_str(), el5Param.userId);
-        return;
-    }
-    int32_t uid = userInfo.uid;
+    int32_t uid = el5Param.uid;
+    std::string bundleName = info.GetBundleName();
     std::string keyId = "";
-    auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(uid, info.GetBundleName(), el5Param.userId, keyId);
+    if (el5Param.appIndex > 0) {
+        bundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, el5Param.appIndex);
+    }
+    auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(uid, bundleName, el5Param.userId, keyId);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "SetEncryptionPolicy failed");
     }
-    LOG_D(BMS_TAG_INSTALLER, "%{public}s, keyId: %{public}s", info.GetBundleName().c_str(), keyId.c_str());
-    info.SetkeyId(el5Param.userId, keyId);
+    LOG_D(BMS_TAG_INSTALLER, "%{public}s, keyId: %{public}s", bundleName.c_str(), keyId.c_str());
+    info.SetkeyId(el5Param.userId, keyId, el5Param.appIndex);
     if (!UpdateInnerBundleInfo(info, needSaveStorage)) {
         LOG_E(BMS_TAG_INSTALLER, "save keyId failed");
     }
@@ -8408,6 +8438,29 @@ ErrCode BundleDataMgr::GetOdidByBundleName(const std::string &bundleName, std::s
     const InnerBundleInfo &bundleInfo = item->second;
     bundleInfo.GetOdid(odid);
     return ERR_OK;
+}
+
+void BundleDataMgr::HandleOTACodeEncryption()
+{
+    int32_t timerId =
+        XCollieHelper::SetRecoveryTimer(FUNCATION_HANDLE_OTA_CODE_ENCRYPTION, OTA_CODE_ENCRYPTION_TIMEOUT);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+    APP_LOGI("begin");
+    std::vector<std::string> noEncrytedKeyBundles;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (const auto &item : bundleInfos_) {
+            bool needResetFlag = false;
+            item.second.HandleOTACodeEncryption(needResetFlag);
+            if (needResetFlag) {
+                noEncrytedKeyBundles.emplace_back(item.first);
+            }
+        }
+    }
+    for (const std::string &bundleName : noEncrytedKeyBundles) {
+        UpdateAppEncryptedStatus(bundleName, false, 0, true);
+    }
+    APP_LOGI("end");
 }
 
 void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
@@ -9069,7 +9122,6 @@ ErrCode BundleDataMgr::UpdateAppEncryptedStatus(
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        LOG_E(BMS_TAG_DEFAULT, "%{public}s not exist", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto res = item->second.UpdateAppEncryptedStatus(bundleName, isExisted, appIndex);
@@ -9313,33 +9365,42 @@ ErrCode BundleDataMgr::GetBundleNameByAppId(const std::string &appId, std::strin
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
-ErrCode BundleDataMgr::GetDirForAtomicService(const std::string &bundleName, AccountSA::OhosAccountInfo &accountInfo,
-    std::string &dataDir) const
+ErrCode BundleDataMgr::GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const
 {
+    APP_LOGD("start GetDirForAtomicService name: %{public}s", bundleName.c_str());
+    AccountSA::OhosAccountInfo accountInfo;
+    auto ret = AccountSA::OhosAccountKits::GetInstance().GetOhosAccountInfo(accountInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetOhosAccountInfo failed, errCode: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED;
+    }
+    dataDir = ATOMIC_SERVICE_DIR_PREFIX + accountInfo.uid_ + PLUS + bundleName;
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetDirForAtomicServiceByUserId(const std::string &bundleName, int32_t userId,
+    AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const
+{
+    APP_LOGD("start GetDirForAtomicServiceByUserId name: %{public}s userId: %{public}d", bundleName.c_str(), userId);
     if (accountInfo.uid_.empty()) {
-        auto ret = AccountSA::OhosAccountKits::GetInstance().GetOhosAccountInfo(accountInfo);
+        auto ret = AccountSA::OhosAccountKits::GetInstance().GetOsAccountDistributedInfo(userId, accountInfo);
         if (ret != ERR_OK) {
-            APP_LOGE("GetOhosAccountInfo failed, errCode: %{public}d", ret);
-            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+            APP_LOGE("GetOsAccountDistributedInfo failed, errCode: %{public}d", ret);
+            return ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED;
         }
     }
     dataDir = ATOMIC_SERVICE_DIR_PREFIX + accountInfo.uid_ + PLUS + bundleName;
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndexAndType(const std::string &bundleName, const int32_t appIndex,
-    const BundleType type, AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const
+std::string BundleDataMgr::GetDirForApp(const std::string &bundleName, const int32_t appIndex) const
 {
-    if (type == BundleType::ATOMIC_SERVICE) {
-        return GetDirForAtomicService(bundleName, accountInfo, dataDir);
-    }
-
+    APP_LOGD("start GetDirForApp name: %{public}s appIndex: %{public}d", bundleName.c_str(), appIndex);
     if (appIndex == 0) {
-        dataDir = bundleName;
+        return bundleName;
     } else {
-        dataDir = CLONE_APP_DIR_PREFIX + std::to_string(appIndex) + PLUS + bundleName;
+        return CLONE_APP_DIR_PREFIX + std::to_string(appIndex) + PLUS + bundleName;
     }
-    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
@@ -9349,10 +9410,13 @@ ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleNa
     if (appIndex < 0) {
         return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
     }
-    AccountSA::OhosAccountInfo accountInfo;
-    BundleType type;
+    BundleType type = BundleType::APP;
     GetBundleType(bundleName, type);
-    return GetDirByBundleNameAndAppIndexAndType(bundleName, appIndex, type, accountInfo, dataDir);
+    if (type == BundleType::ATOMIC_SERVICE) {
+        return GetDirForAtomicService(bundleName, dataDir);
+    }
+    dataDir = GetDirForApp(bundleName, appIndex);
+    return ERR_OK;
 }
 
 std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
@@ -9372,6 +9436,23 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesByInnerBundleInfo(const In
         cloneAppIndexes.emplace_back(cloneInfo.second.appIndex);
     }
     return cloneAppIndexes;
+}
+
+ErrCode BundleDataMgr::GetBundleDir(int32_t userId, BundleType type, AccountSA::OhosAccountInfo &accountInfo,
+    BundleDir &bundleDir) const
+{
+    APP_LOGD("start GetBundleDir");
+    if (type == BundleType::ATOMIC_SERVICE) {
+        std::string dataDir;
+        auto ret = GetDirForAtomicServiceByUserId(bundleDir.bundleName, userId, accountInfo, dataDir);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+        bundleDir.dir = dataDir;
+    } else {
+        bundleDir.dir = GetDirForApp(bundleDir.bundleName, bundleDir.appIndex);
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) const
@@ -9403,18 +9484,49 @@ ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &
             allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
         }
         for (int32_t appIndex: allAppIndexes) {
-            std::string dataDir;
-            if (GetDirByBundleNameAndAppIndexAndType(bundleName, appIndex, type, accountInfo, dataDir) != ERR_OK) {
-                return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-            }
             BundleDir bundleDir;
             bundleDir.bundleName = bundleName;
             bundleDir.appIndex = appIndex;
-            bundleDir.dir = dataDir;
+            auto ret = GetBundleDir(responseUserId, type, accountInfo, bundleDir);
+            if (ret != ERR_OK) {
+                return ret;
+            }
             bundleDirs.emplace_back(bundleDir);
         }
     }
     return ERR_OK;
+}
+void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
+{
+    std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    if (!GetAllUninstallBundleInfo(uninstallBundleInfos)) {
+        return;
+    }
+    std::map<int32_t, std::string> uninstallBundleIdMap;
+    for (const auto &info : uninstallBundleInfos) {
+        if (info.second.userInfos.empty()) {
+            continue;
+        }
+        int32_t userId = -1;
+        if (!OHOS::StrToInt(info.second.userInfos.begin()->first, userId)) {
+            APP_LOGW("strToInt fail");
+            continue;
+        }
+        int32_t bundleId = info.second.userInfos.begin()->second.uid
+            - userId * Constants::BASE_USER_RANGE;
+        if (bundleId < Constants::BASE_APP_UID || bundleId >= MAX_APP_UID) {
+            APP_LOGW("invalid bundleId");
+            continue;
+        }
+        auto item = bundleIdMap_.find(bundleId);
+        if (item == bundleIdMap_.end()) {
+            uninstallBundleIdMap.emplace(bundleId, info.first);
+        }
+    }
+    for (const auto &item : uninstallBundleIdMap) {
+        bundleIdMap_.emplace(item.first, item.second);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

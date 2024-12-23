@@ -765,9 +765,10 @@ void ConvertRuleInfo(napi_env env, napi_value nRule, const UninstallDisposedRule
         napi_create_object(env, &nWant);
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "want", nWant));
-    napi_value nComponentType;
-    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.componentType), &nComponentType));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "componentType", nComponentType));
+    napi_value uninstallComponentType;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_uint32(env, static_cast<int32_t>(rule.uninstallComponentType), &uninstallComponentType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "uninstallComponentType", uninstallComponentType));
     napi_value nPriority;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, rule.priority, &nPriority));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "priority", nPriority));
@@ -790,18 +791,17 @@ bool ParseUninstallDiposedRule(napi_env env, napi_value nRule, UninstallDisposed
         return false;
     }
     rule.want = std::make_shared<AAFwk::Want>(want);
-    napi_get_named_property(env, nRule, "componentType", &prop);
-    int32_t componentType;
-    if (!CommonFunc::ParseInt(env, prop, componentType)) {
-        APP_LOGW("componentType parseInt failed");
+    napi_get_named_property(env, nRule, "uninstallComponentType", &prop);
+    int32_t uninstallComponentType;
+    if (!CommonFunc::ParseInt(env, prop, uninstallComponentType)) {
+        APP_LOGW("uninstallComponentType parseInt failed");
         return false;
     }
-    if (componentType > static_cast<int32_t>(ComponentType::UI_EXTENSION) ||
-        componentType < static_cast<int32_t>(ComponentType::UI_ABILITY)) {
-        APP_LOGW("componentType not valid");
+    if (uninstallComponentType != static_cast<int32_t>(UninstallComponentType::EXTENSION)) {
+        APP_LOGW("uninstallComponentType not valid");
         return false;
     }
-    rule.componentType = static_cast<ComponentType>(componentType);
+    rule.uninstallComponentType = static_cast<UninstallComponentType>(uninstallComponentType);
     napi_get_named_property(env, nRule, "priority", &prop);
     if (!CommonFunc::ParseInt(env, prop, rule.priority)) {
         APP_LOGW("priority parseInt failed");
@@ -1023,6 +1023,15 @@ void CreateComponentType(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ComponentType::UI_EXTENSION),
         &nExtensionAbilityType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UI_EXTENSION",
+        nExtensionAbilityType));
+}
+
+void CreateUninstallComponentType(napi_env env, napi_value value)
+{
+    napi_value nExtensionAbilityType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(UninstallComponentType::EXTENSION),
+        &nExtensionAbilityType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "EXTENSION",
         nExtensionAbilityType));
 }
 

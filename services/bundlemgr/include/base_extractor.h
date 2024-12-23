@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,9 +63,9 @@ public:
     bool GetFileInfo(const std::string &fileName, uint32_t &offset, uint32_t &length) const;
 
 protected:
+    bool initial_ = false;
     const std::string sourceFile_;
     ZipFile zipFile_;
-    bool initial_ = false;
 private:
     bool isNewVersion_ = true;
 };

@@ -29,7 +29,8 @@ public:
 
     void OnRegenerateAppKey(std::vector<Security::AccessToken::AppKeyInfo> &infos) override;
 
-    void CheckEl5Dir(Security::AccessToken::AppKeyInfo &info, const InnerBundleInfo &bundleInfo);
+    void CheckEl5Dir(Security::AccessToken::AppKeyInfo &info, const InnerBundleInfo &bundleInfo,
+        const std::string &bundleName);
 };
 } // AppExecFwk
 } // OHOS

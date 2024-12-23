@@ -51,9 +51,6 @@ ohos_unittest("zip_test") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${kits_path}/js/common:bundle_napi_common",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-    "//third_party/zlib:libz",
   ]
 
   external_deps = [
@@ -62,6 +59,12 @@ ohos_unittest("zip_test") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
+  ]
+
+  public_external_deps = [
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+    "zlib:libz",
   ]
 }
 

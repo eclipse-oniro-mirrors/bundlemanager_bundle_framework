@@ -115,7 +115,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         APP_LOGE("the origin application had installed at current user");
         return ERR_OK;
     }
- 
+
     std::string appDistributionType = info.GetAppDistributionType();
     if (appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE
         || appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL
@@ -139,9 +139,13 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
 
     // 4. generate the accesstoken id and inherit original permissions
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
-    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx) != ERR_OK) {
-        APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    if (!RecoverHapToken(bundleName, userId, newTokenIdEx, info)) {
+        if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult) != ERR_OK) {
+            auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+            APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
     }
     ScopeGuard applyAccessTokenGuard([&] {
         BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID);
@@ -166,6 +170,9 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
+    CreateEl5Dir(info, userId, uid);
+    CreateDataGroupDir(bundleName, userId);
+
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
     createUserDataDirGuard.Dismiss();
@@ -187,6 +194,7 @@ ErrCode BundleMultiUserInstaller::CreateDataDir(InnerBundleInfo &info,
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    createDirParam.extensionDirs = info.GetAllExtensionDirs();
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         // if user is not activated, access el2-el4 may return ok but dir cannot be created
@@ -199,6 +207,66 @@ ErrCode BundleMultiUserInstaller::CreateDataDir(InnerBundleInfo &info,
     }
     APP_LOGI("CreateDataDir successfully");
     return result;
+}
+
+void BundleMultiUserInstaller::CreateDataGroupDir(const std::string &bundleName, const int32_t userId)
+{
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("get dataMgr failed");
+        return;
+    }
+    dataMgr_->GenerateNewUserDataGroupInfos(bundleName, userId);
+    std::vector<DataGroupInfo> infos;
+    if (!dataMgr_->QueryDataGroupInfos(bundleName, userId, infos)) {
+        APP_LOGE("find %{public}s in %{public}d failed", bundleName.c_str(), userId);
+        return;
+    }
+    if (infos.empty()) {
+        return;
+    }
+    for (const DataGroupInfo &dataGroupInfo : infos) {
+        std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+            + std::to_string(dataGroupInfo.userId);
+        if (!BundleUtil::IsExistDirNoLog(parentDir)) {
+            APP_LOGE("group parent dir %{public}s not exist", parentDir.c_str());
+            return;
+        }
+        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        if (BundleUtil::IsExistDirNoLog(dir)) {
+            APP_LOGI("group dir exist, no need to create");
+            continue;
+        }
+        auto result = InstalldClient::GetInstance()->Mkdir(dir, ServiceConstants::DATA_GROUP_DIR_MODE,
+            dataGroupInfo.uid, dataGroupInfo.gid);
+        if (result != ERR_OK) {
+            APP_LOGE("mkdir group dir failed, uid %{public}d err %{public}d", dataGroupInfo.uid, result);
+        }
+    }
+}
+
+void BundleMultiUserInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t userId, const int32_t &uid)
+{
+    std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
+    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
+        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    });
+    if (it == reqPermissions.end()) {
+        APP_LOGI("no el5 permission %{public}s", info.GetBundleName().c_str());
+        return;
+    }
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("get dataMgr failed");
+        return;
+    }
+    CreateDirParam el5Param;
+    el5Param.bundleName = info.GetBundleName();
+    el5Param.userId = userId;
+    el5Param.uid = uid;
+    el5Param.apl = info.GetAppPrivilegeLevel();
+    el5Param.isPreInstallApp = info.IsPreInstallApp();
+    el5Param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    dataMgr_->CreateEl5Dir(std::vector<CreateDirParam> {el5Param}, true);
+    return;
 }
 
 ErrCode BundleMultiUserInstaller::RemoveDataDir(const std::string bundleName, int32_t userId)
@@ -227,6 +295,33 @@ void BundleMultiUserInstaller::ResetInstallProperties()
 {
     uid_ = 0;
     accessTokenId_ = 0;
+}
+
+bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
+    Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo)
+{
+    UninstallBundleInfo uninstallBundleInfo;
+    if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        return false;
+    }
+    APP_LOGI("bundleName:%{public}s getUninstallBundleInfo success", bundleName.c_str());
+    if (uninstallBundleInfo.userInfos.empty()) {
+        APP_LOGW("bundleName:%{public}s empty userInfos", bundleName.c_str());
+        return false;
+    }
+    if (uninstallBundleInfo.userInfos.find(std::to_string(userId)) != uninstallBundleInfo.userInfos.end()) {
+        accessTokenIdEx.tokenIdExStruct.tokenID =
+            uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenId;
+        accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
+        Security::AccessToken::HapInfoCheckResult checkResult;
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, checkResult) == ERR_OK) {
+            return true;
+        } else {
+            auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+            APP_LOGW("bundleName:%{public}s UpdateHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
+        }
+    }
+    return false;
 }
 } // AppExecFwk
 } // OHOS

@@ -23,6 +23,7 @@
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "app_service_fwk_installer.h"
+#include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
@@ -112,6 +113,8 @@ constexpr const char* PGO_FILE_PATH = "pgo_files";
 constexpr const char* BUNDLE_SCAN_PARAM = "bms.scanning_apps.status";
 constexpr const char* BUNDLE_SCAN_START = "0";
 constexpr const char* BUNDLE_SCAN_FINISH = "1";
+constexpr const char* CODE_PROTECT_FLAG = "codeProtectFlag";
+constexpr const char* CODE_PROTECT_FLAG_CHECKED = "checked";
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> systemHspList_;
@@ -354,6 +357,7 @@ void BMSEventHandler::BundleRebootStartEvent()
     if (IsSystemUpgrade()) {
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
         OnBundleRebootStart();
+        HandleOTACodeEncryption();
         SaveSystemFingerprint();
         AOTHandler::GetInstance().HandleOTA();
     } else {
@@ -593,7 +597,8 @@ std::vector<std::string> BMSEventHandler::CheckHapPaths(
 {
     std::vector<std::string> checkHapPaths;
     for (const auto &hapPath : hapPaths) {
-        if (!BundleUtil::CheckFileType(hapPath, ServiceConstants::INSTALL_FILE_SUFFIX)) {
+        if (!BundleUtil::CheckFileType(hapPath, ServiceConstants::INSTALL_FILE_SUFFIX) &&
+            !BundleUtil::CheckFileType(hapPath, ServiceConstants::HSP_FILE_SUFFIX)) {
             LOG_E(BMS_TAG_DEFAULT, "Check hapPath(%{public}s) failed", hapPath.c_str());
             continue;
         }
@@ -736,7 +741,13 @@ void BMSEventHandler::AnalyzeHaps(
     std::map<std::string, std::vector<InnerBundleInfo>> &installInfos)
 {
     for (const auto &hapPaths : hapPathsMap) {
-        AnalyzeHaps(isPreInstallApp, hapPaths.second, installInfos);
+        std::unordered_map<std::string, InnerBundleInfo> hapInfos;
+        if (!CheckAndParseHapFiles(hapPaths.second, isPreInstallApp, hapInfos) || hapInfos.empty()) {
+            LOG_E(BMS_TAG_DEFAULT, "Parse bundleDir failed");
+            continue;
+        }
+
+        CollectInstallInfos(hapInfos, installInfos);
     }
 }
 
@@ -766,9 +777,17 @@ void BMSEventHandler::CollectInstallInfos(
             std::vector<InnerBundleInfo> innerBundleInfos { hapInfoIter.second };
             installInfos.emplace(bundleName, innerBundleInfos);
             continue;
+        } else {
+            std::vector<InnerBundleInfo> &infos = installInfos.at(bundleName);
+            if (!infos.empty() && hapInfoIter.second.GetVersionCode() < infos[0].GetVersionCode()) {
+                continue;
+            }
+            if (std::find_if(infos.begin(), infos.end(), [&hapInfoIter](const InnerBundleInfo &info) {
+                    return info.GetCurModuleName() == hapInfoIter.second.GetCurModuleName();
+                }) == infos.end()) {
+                installInfos.at(bundleName).emplace_back(hapInfoIter.second);
+            }
         }
-
-        installInfos.at(bundleName).emplace_back(hapInfoIter.second);
     }
 }
 
@@ -2257,6 +2276,43 @@ void BMSEventHandler::SaveSystemFingerprint()
     bmsPara->SaveBmsParam(FINGERPRINT, curSystemFingerprint);
 }
 
+void BMSEventHandler::HandleOTACodeEncryption()
+{
+    std::string codeProtectFlag;
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsParam != nullptr) {
+        bmsParam->GetBmsParam(CODE_PROTECT_FLAG, codeProtectFlag);
+        if (codeProtectFlag == std::string{ CODE_PROTECT_FLAG_CHECKED }) {
+            LOG_I(BMS_TAG_DEFAULT, "checked");
+            return;
+        }
+    }
+    LOG_I(BMS_TAG_DEFAULT, "begin");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
+        return;
+    }
+    dataMgr->HandleOTACodeEncryption();
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<CodeProtectBundleInfo> infos;
+    auto res = bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::OTA_CHECK_FINISHED);
+    LOG_I(BMS_TAG_DEFAULT, "keyOperation result %{public}d", res);
+    SaveCodeProtectFlag();
+}
+
+void BMSEventHandler::SaveCodeProtectFlag()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
+        return;
+    }
+    if (!bmsPara->SaveBmsParam(CODE_PROTECT_FLAG, std::string{ CODE_PROTECT_FLAG_CHECKED })) {
+        LOG_E(BMS_TAG_DEFAULT, "save failed");
+    }
+}
+
 bool BMSEventHandler::IsModuleUpdate()
 {
     std::string paramValue;
@@ -3136,8 +3192,6 @@ bool BMSEventHandler::CheckAndParseHapFiles(
     bool isPreInstallApp,
     std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
-        std::make_unique<BundleInstallChecker>();
     std::vector<std::string> hapFilePathVec { hapFilePath };
     std::vector<std::string> realPaths;
     auto ret = BundleUtil::CheckFilePath(hapFilePathVec, realPaths);
@@ -3145,17 +3199,27 @@ bool BMSEventHandler::CheckAndParseHapFiles(
         LOG_E(BMS_TAG_DEFAULT, "File path %{public}s invalid", hapFilePath.c_str());
         return false;
     }
+    return CheckAndParseHapFiles(realPaths, isPreInstallApp, infos);
+}
 
-    ret = bundleInstallChecker->CheckSysCap(realPaths);
+bool BMSEventHandler::CheckAndParseHapFiles(
+    const std::vector<std::string> &realPaths,
+    bool isPreInstallApp,
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
+        std::make_unique<BundleInstallChecker>();
+
+    auto ret = bundleInstallChecker->CheckSysCap(realPaths);
     if (ret != ERR_OK) {
-        LOG_I(BMS_TAG_DEFAULT, "hap(%{public}s) syscap check failed", hapFilePath.c_str());
+        LOG_I(BMS_TAG_DEFAULT, "hap syscap check failed");
     }
     bool isSysCapValid = (ret == ERR_OK);
 
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
     ret = bundleInstallChecker->CheckMultipleHapsSignInfo(realPaths, hapVerifyResults, true);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "CheckMultipleHapsSignInfo %{public}s failed", hapFilePath.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "CheckMultipleHapsSignInfo failed");
         return false;
     }
 
@@ -3165,10 +3229,13 @@ bool BMSEventHandler::CheckAndParseHapFiles(
         checkParam.appType = Constants::AppType::SYSTEM_APP;
     }
 
+    if (!LoadPreInstallProFile()) {
+        LOG_W(BMS_TAG_DEFAULT, "load json failed for restore");
+    }
     ret = bundleInstallChecker->ParseHapFiles(
         realPaths, checkParam, hapVerifyResults, infos);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "parse haps file(%{public}s) failed", hapFilePath.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "parse haps file failed");
         return false;
     }
 
@@ -3189,6 +3256,12 @@ bool BMSEventHandler::CheckAndParseHapFiles(
     ret = bundleInstallChecker->CheckAppLabelInfo(infos);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "Check APP label failed %{public}d", ret);
+        return false;
+    }
+
+    ret = bundleInstallChecker->CheckMultiNativeFile(infos);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "CheckMultiNativeFile failed %{public}d", ret);
         return false;
     }
 
@@ -3393,6 +3466,8 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     appInfo.resourcesApply = preBundleConfigInfo.resourcesApply;
     appInfo.allowAppRunWhenDeviceFirstLocked = preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked;
     appInfo.allowEnableNotification = preBundleConfigInfo.allowEnableNotification;
+    appInfo.hideDesktopIcon = preBundleConfigInfo.hideDesktopIcon;
+    appInfo.allowMultiProcess = preBundleConfigInfo.allowMultiProcess;
     dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
 }
 #endif

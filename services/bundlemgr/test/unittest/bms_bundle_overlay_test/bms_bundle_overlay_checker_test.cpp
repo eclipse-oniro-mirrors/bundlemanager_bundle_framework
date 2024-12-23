@@ -3193,6 +3193,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0300, Function | Small
     std::vector<std::string> validGroupIds;
     InnerBundleInfo innerBundleInfo;
     InnerBundleInfo oldInfo;
+    InnerBundleUserInfo userInfo;
 
 
     innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
@@ -3202,7 +3203,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0300, Function | Small
     installer->dataMgr_ = nullptr;
     installer->MarkPreInstallState(bundleName, isUninstalled);
 
-    installer->DeleteEncryptionKeyId(oldInfo, isKeepData);
+    installer->DeleteEncryptionKeyId(userInfo, isKeepData);
 
     installer->UpdateExtensionSandboxInfo(newInfos, hapVerifyRes);
 

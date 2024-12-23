@@ -60,36 +60,36 @@ namespace BundleManager {
     };
     
     struct RetApplicationInfo {
-        char* name;
-        char* description;
-        uint32_t descriptionId;
         bool enabled;
-        char* label;
-        uint32_t labelId;
-        char* icon;
-        uint32_t iconId;
-        char* process;
-        CArrString permissions;
-        char* codePath;
-        CArrMoMeta metadataArray;
         bool removable;
-        uint32_t accessTokenId;
-        int32_t uid;
-        CResource iconResource;
-        CResource labelResource;
-        CResource descriptionResource;
-        char* appDistributionType;
-        char* appProvisionType;
         bool systemApp;
-        int32_t bundleType;
         bool debug;
         bool dataUnclearable;
         bool cloudFileSyncEnabled;
-        char* nativeLibraryPath;
-        MultiAppMode multiAppMode;
+        int32_t uid;
+        int32_t bundleType;
         int32_t appIndex;
+        uint32_t descriptionId;
+        uint32_t labelId;
+        uint32_t iconId;
+        uint32_t accessTokenId;
+        char* name;
+        char* description;
+        char* label;
+        char* icon;
+        char* process;
+        char* codePath;
+        char* appDistributionType;
+        char* appProvisionType;
+        char* nativeLibraryPath;
         char* installSource;
         char* releaseType;
+        CArrString permissions;
+        CArrMoMeta metadataArray;
+        CResource iconResource;
+        CResource labelResource;
+        CResource descriptionResource;
+        MultiAppMode multiAppMode;
     };
 
     struct CArrInt32 {
@@ -98,15 +98,16 @@ namespace BundleManager {
     };
 
     struct RetWindowSize {
-        double maxWindowRatio;
-        double minWindowRatio;
         uint32_t maxWindowWidth;
         uint32_t minWindowWidth;
         uint32_t maxWindowHeight;
         uint32_t minWindowHeight;
+        double maxWindowRatio;
+        double minWindowRatio;
     };
 
     struct RetSkillUri {
+        int32_t maxFileSupported;
         char* scheme;
         char* host;
         char* port;
@@ -115,7 +116,6 @@ namespace BundleManager {
         char* pathRegex;
         char* type;
         char* utd;
-        int32_t maxFileSupported;
         char* linkFeature;
     };
 
@@ -125,10 +125,10 @@ namespace BundleManager {
     };
 
     struct RetSkill {
+        bool domainVerify;
         CArrString actions;
         CArrString entities;
         RetCArrSkillUri uris;
-        bool domainVerify;
     };
 
     struct RetCArrSkill {
@@ -137,29 +137,29 @@ namespace BundleManager {
     };
 
     struct RetAbilityInfo {
+        bool exported;
+        bool enabled;
+        bool excludeFromDock;
+        int32_t orientation;
+        int32_t launchType;
+        int32_t appIndex;
+        uint32_t labelId;
+        uint32_t descriptionId;
+        uint32_t iconId;
         char* bundleName;
         char* moduleName;
         char* name;
         char* label;
-        uint32_t labelId;
         char* description;
-        uint32_t descriptionId;
         char* icon;
-        uint32_t iconId;
         char* process;
-        bool exported;
-        int32_t orientation;
-        int32_t launchType;
         CArrString permissions;
         CArrString deviceTypes;
-        RetApplicationInfo applicationInfo;
         CArrMetadata metadata;
-        bool enabled;
         CArrInt32 supportWindowModes;
+        RetApplicationInfo applicationInfo;
         RetWindowSize windowSize;
-        bool excludeFromDock;
         RetCArrSkill skills;
-        int32_t appIndex;
     };
 
     struct CArrRetAbilityInfo {
@@ -168,23 +168,23 @@ namespace BundleManager {
     };
 
     struct RetExtensionAbilityInfo {
-        char* bundleName;
-        char* moduleName;
-        char* name;
+        bool exported;
+        bool enabled;
+        int32_t extensionAbilityType;
+        int32_t appIndex;
         uint32_t labelId;
         uint32_t descriptionId;
         uint32_t iconId;
-        bool exported;
-        int32_t extensionAbilityType;
-        CArrString permissions;
-        RetApplicationInfo applicationInfo;
-        CArrMetadata metadata;
-        bool enabled;
+        char* bundleName;
+        char* moduleName;
+        char* name;
         char* readPermission;
         char* writePermission;
         char* extensionAbilityTypeName;
+        CArrString permissions;
+        CArrMetadata metadata;
+        RetApplicationInfo applicationInfo;
         RetCArrSkill skills;
-        int32_t appIndex;
     };
 
     struct CArrRetExtensionAbilityInfo {
@@ -202,9 +202,9 @@ namespace BundleManager {
     };
 
     struct RetDependency {
+        uint32_t versionCode;
         char* bundleName;
         char* moduleName;
-        uint32_t versionCode;
     };
 
     struct CArrRetDependency {
@@ -225,8 +225,8 @@ namespace BundleManager {
         char* name;
         char* pageSourceFile;
         char* buildFunction;
-        CArrDataItem data;
         char* customData;
+        CArrDataItem data;
     };
 
     struct CArrRouterItem {
@@ -235,27 +235,27 @@ namespace BundleManager {
     };
 
     struct RetHapModuleInfo {
+        bool installationFree;
+        int32_t moduleType;
+        uint32_t iconId;
+        uint32_t labelId;
+        uint32_t descriptionId;
         char* name;
         char* icon;
-        uint32_t iconId;
         char* label;
-        uint32_t labelId;
         char* description;
-        uint32_t descriptionId;
         char* mainElementName;
+        char* hashValue;
+        char* codePath;
+        char* nativeLibraryPath;
+        char* fileContextMenuConfig;
         CArrRetAbilityInfo abilitiesInfo;
         CArrRetExtensionAbilityInfo extensionAbilitiesInfo;
         CArrMetadata metadata;
         CArrString deviceTypes;
-        bool installationFree;
-        char* hashValue;
-        int32_t moduleType;
         CArrRetPreloadItem preloads;
         CArrRetDependency dependencies;
-        char* fileContextMenuConfig;
         CArrRouterItem routerMap;
-        char* codePath;
-        char* nativeLibraryPath;
     };
 
     struct CArrHapInfo {
@@ -269,10 +269,10 @@ namespace BundleManager {
     };
     
     struct RetReqPermissionDetail {
+        uint32_t reasonId;
         char* name;
         char* moduleName;
         char* reason;
-        uint32_t reasonId;
         RetUsedScene usedScence;
     };
 
@@ -293,10 +293,10 @@ namespace BundleManager {
     };
  
     struct CRecoverableApplicationInfo {
-        char* bundleName;
-        char* moduleName;
         uint32_t labelId;
         uint32_t iconId;
+        char* bundleName;
+        char* moduleName;
     };
  
     struct CArrRecoverableApplicationInfo {
@@ -310,22 +310,22 @@ namespace BundleManager {
     };
 
     struct RetBundleInfo {
-        char* name;
-        char* vendor;
+        int32_t uid;
+        int32_t appIndex;
         uint32_t versionCode;
-        char* versionName;
         uint32_t minCompatibleVersionCode;
         uint32_t targetVersion;
+        int64_t installTime;
+        int64_t updateTime;
+        char* name;
+        char* vendor;
+        char* versionName;
         RetApplicationInfo appInfo;
         CArrHapInfo hapInfo;
         CArrReqPerDetail perDetail;
         CArrInt32 state;
         RetSignatureInfo signInfo;
-        int64_t installTime;
-        int64_t updateTime;
-        int32_t uid;
         CArrRouterItem routerMap;
-        int32_t appIndex;
     };
 
     enum BundleFlag {

@@ -401,7 +401,6 @@ ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &creat
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     ErrCode res = ERR_OK;
-    bool isExist = false;
     FileStat fileStat;
     int32_t uid = createDirParam.uid;
     int32_t gid = createDirParam.gid;
@@ -413,7 +412,6 @@ ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &creat
             shareFilesDataDir.c_str(), bundleName.c_str());
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
-    isExist = true;
     std::string bundleShareFilesDataDir = shareFilesDataDir + bundleName;
     if (!InstalldOperator::MkOwnerDir(bundleShareFilesDataDir, S_IRWXU, uid, gid)) {
         LOG_W(BMS_TAG_INSTALLD, "MkOwnerDir %{public}s failed: %{public}d",
@@ -1938,7 +1936,7 @@ bool InstalldHostImpl::ReadFileIntoJson(const std::string &filePath, nlohmann::j
     realPath.reserve(PATH_MAX);
     realPath.resize(PATH_MAX - 1);
     if (realpath(filePath.c_str(), &(realPath[0])) == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "transform real path error: %{public}d", errno);
+        LOG_E(BMS_TAG_INSTALLD, "transform real path: %{public}s  error: %{public}d", filePath.c_str(), errno);
         return false;
     }
     if (access(filePath.c_str(), F_OK) != 0) {
