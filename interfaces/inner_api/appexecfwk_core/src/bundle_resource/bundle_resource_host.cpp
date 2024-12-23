@@ -187,14 +187,6 @@ ErrCode BundleResourceHost::HandleDeleteResourceInfo(MessageParcel &data, Messag
     return ERR_OK;
 }
 
-void BundleResourceHost::ClearAshmem(sptr<Ashmem> &optMem)
-{
-    if (optMem != nullptr) {
-        optMem->UnmapAshmem();
-        optMem->CloseAshmem();
-    }
-}
-
 int32_t BundleResourceHost::AllocatAshmemNum()
 {
     std::lock_guard<std::mutex> lock(bundleAshmemMutex_);
@@ -221,16 +213,13 @@ ErrCode BundleResourceHost::WriteParcelableIntoAshmem(MessageParcel &tempParcel,
     int32_t offset = 0;
     if (!ashmem->WriteToAshmem(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize, offset)) {
         APP_LOGE("Write info to shared memory fail");
-        ClearAshmem(ashmem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     if (!reply.WriteAshmem(ashmem)) {
-        ClearAshmem(ashmem);
         APP_LOGE("Write ashmem to tempParcel fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    ClearAshmem(ashmem);
     return ERR_OK;
 }
 

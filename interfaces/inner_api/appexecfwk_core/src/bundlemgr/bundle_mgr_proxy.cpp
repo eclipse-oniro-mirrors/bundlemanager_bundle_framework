@@ -41,40 +41,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-inline void ClearAshmem(sptr<Ashmem> &optMem)
-{
-    if (optMem != nullptr) {
-        optMem->UnmapAshmem();
-        optMem->CloseAshmem();
-    }
-}
-
-bool SendData(void *&buffer, size_t size, const void *data)
-{
-    if (data == nullptr) {
-        APP_LOGE("data is nullptr");
-        return false;
-    }
-
-    if (size == 0) {
-        APP_LOGE("size is invalid");
-        return false;
-    }
-
-    buffer = malloc(size);
-    if (buffer == nullptr) {
-        APP_LOGE("buffer malloc failed");
-        return false;
-    }
-
-    if (memcpy_s(buffer, size, data, size) != EOK) {
-        free(buffer);
-        APP_LOGE("memcpy_s failed");
-        return false;
-    }
-
-    return true;
-}
+constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
+constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
 
 bool GetData(void *&buffer, size_t size, const void *data)
 {
@@ -3523,7 +3491,6 @@ ErrCode BundleMgrProxy::GetMediaDataFromAshMem(
     }
     if (!ashMem->MapReadOnlyAshmem()) {
         APP_LOGE("MapReadOnlyAshmem failed");
-        ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t ashMemSize = ashMem->GetAshmemSize();
@@ -3531,7 +3498,6 @@ ErrCode BundleMgrProxy::GetMediaDataFromAshMem(
     const uint8_t* ashDataPtr = reinterpret_cast<const uint8_t*>(ashMem->ReadFromAshmem(ashMemSize, offset));
     if (ashDataPtr == nullptr) {
         APP_LOGE("ashDataPtr is nullptr");
-        ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     len = static_cast<size_t>(ashMemSize);
@@ -3539,10 +3505,8 @@ ErrCode BundleMgrProxy::GetMediaDataFromAshMem(
     if (memcpy_s(mediaDataPtr.get(), len, ashDataPtr, len) != 0) {
         mediaDataPtr.reset();
         len = 0;
-        ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    ClearAshmem(ashMem);
     return ERR_OK;
 }
 
@@ -4597,9 +4561,17 @@ ErrCode BundleMgrProxy::InnerGetVectorFromParcelIntelligent(
     }
 
     void *buffer = nullptr;
-    if (!SendData(buffer, dataSize, reply.ReadRawData(dataSize))) {
-        APP_LOGE("Fail read raw data length %{public}zu", dataSize);
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (dataSize > MAX_IPC_REWDATA_SIZE) {
+        APP_LOGI("dataSize is too large, use ashmem");
+        if (GetParcelInfoFromAshMem(reply, buffer) != ERR_OK) {
+            APP_LOGE("read data from ashmem fail, length %{public}zu", dataSize);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    } else {
+        if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+            APP_LOGE("Fail read raw data length %{public}zu", dataSize);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
 
     MessageParcel tempParcel;
@@ -5444,6 +5416,42 @@ ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> 
     }
     return GetVectorFromParcelIntelligentWithErrCode<BundleDir>(
         BundleMgrInterfaceCode::GET_ALL_BUNDLE_DIRS, data, bundleDirs);
+}
+
+ErrCode BundleMgrProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&data)
+{
+    sptr<Ashmem> ashMem = reply.ReadAshmem();
+    if (ashMem == nullptr) {
+        APP_LOGE("Ashmem is nullptr");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!ashMem->MapReadOnlyAshmem()) {
+        APP_LOGE("MapReadOnlyAshmem failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t ashMemSize = ashMem->GetAshmemSize();
+    int32_t offset = 0;
+    const void* ashDataPtr = ashMem->ReadFromAshmem(ashMemSize, offset);
+    if (ashDataPtr == nullptr) {
+        APP_LOGE("ashDataPtr is nullptr");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY)) {
+        APP_LOGE("failed due to wrong size");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    data = malloc(ashMemSize);
+    if (data == nullptr) {
+        APP_LOGE("failed due to malloc data failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (memcpy_s(data, ashMemSize, ashDataPtr, ashMemSize) != EOK) {
+        free(data);
+        APP_LOGE("failed due to memcpy_s failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
