@@ -863,7 +863,8 @@ protected:
                     "continueType": [],
                     "continueBundleName": [],
                     "appIndex": 0,
-                    "orientationId": 0
+                    "orientationId": 0,
+                    "process": ""
                 },
                 "com.ohos.launcher.com.ohos.launcher.recents.com.ohos.launcher.recents.MainAbility": {
                     "applicationName": "com.ohos.launcher",
