@@ -277,16 +277,12 @@ bool RdbDataManager::QueryData(const std::string &key, std::string &value)
 
     NativeRdb::AbsRdbPredicates absRdbPredicates(bmsRdbConfig_.tableName);
     absRdbPredicates.EqualTo(BMS_KEY, key);
-    auto absSharedResultSet = rdbStore->Query(absRdbPredicates, std::vector<std::string>());
+    auto absSharedResultSet = rdbStore->QueryByStep(absRdbPredicates, std::vector<std::string>());
     if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet failed");
         return false;
     }
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
-    if (!absSharedResultSet->HasBlock()) {
-        APP_LOGE("absSharedResultSet has no block");
-        return false;
-    }
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
@@ -302,7 +298,7 @@ bool RdbDataManager::QueryData(const std::string &key, std::string &value)
     return true;
 }
 
-std::shared_ptr<NativeRdb::AbsSharedResultSet> RdbDataManager::QueryData(
+std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryData(
     const NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
     APP_LOGD("QueryData start");
@@ -315,8 +311,8 @@ std::shared_ptr<NativeRdb::AbsSharedResultSet> RdbDataManager::QueryData(
         APP_LOGE("RdbStore table is invalid");
         return nullptr;
     }
-    auto absSharedResultSet = rdbStore->Query(absRdbPredicates, std::vector<std::string>());
-    if (absSharedResultSet == nullptr || !absSharedResultSet->HasBlock()) {
+    auto absSharedResultSet = rdbStore->QueryByStep(absRdbPredicates, std::vector<std::string>());
+    if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet failed");
         return nullptr;
     }
@@ -333,16 +329,12 @@ bool RdbDataManager::QueryAllData(std::map<std::string, std::string> &datas)
     }
 
     NativeRdb::AbsRdbPredicates absRdbPredicates(bmsRdbConfig_.tableName);
-    auto absSharedResultSet = rdbStore->Query(absRdbPredicates, std::vector<std::string>());
+    auto absSharedResultSet = rdbStore->QueryByStep(absRdbPredicates, std::vector<std::string>());
     if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet failed");
         return false;
     }
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
-    if (!absSharedResultSet->HasBlock()) {
-        APP_LOGE("absSharedResultSet has no block");
-        return false;
-    }
 
     if (absSharedResultSet->GoToFirstRow() != NativeRdb::E_OK) {
         APP_LOGE("GoToFirstRow failed");
