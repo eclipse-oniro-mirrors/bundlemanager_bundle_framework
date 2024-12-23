@@ -1620,8 +1620,8 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
 ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
     const unsigned char *profileBlock)
 {
-    LOG_D(BMS_TAG_INSTALLD, "start to delivery sign profile");
 #if defined(CODE_SIGNATURE_ENABLE)
+    LOG_I(BMS_TAG_INSTALLD, "start");
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
@@ -1641,6 +1641,7 @@ ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int
         LOG_E(BMS_TAG_INSTALLD, "delivery code sign profile failed due to error %{public}d", ret);
         return ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED;
     }
+    LOG_I(BMS_TAG_INSTALLD, "end");
 #else
     LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported");
 #endif
@@ -1976,7 +1977,7 @@ bool InstalldHostImpl::ReadFileIntoJson(const std::string &filePath, nlohmann::j
 ErrCode InstalldHostImpl::InnerRemoveAtomicServiceBundleDataDir(
     const std::string &bundleName, const int32_t userId, const bool async)
 {
-    LOG_I(BMS_TAG_INSTALLD, "process atomic service bundleName:%{public}s", bundleName.c_str());
+    LOG_D(BMS_TAG_INSTALLD, "process atomic service bundleName:%{public}s", bundleName.c_str());
     std::vector<std::string> pathName;
     if (!InstalldOperator::GetAtomicServiceBundleDataDir(bundleName, userId, pathName)) {
         LOG_W(BMS_TAG_INSTALLD, "atomic bundle %{public}s no other path", bundleName.c_str());
