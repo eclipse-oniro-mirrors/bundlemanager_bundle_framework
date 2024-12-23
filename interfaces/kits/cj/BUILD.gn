@@ -21,10 +21,16 @@ config("cj_bundle_manager_ffi_config") {
 
 ohos_shared_library("cj_bundle_manager_ffi") {
   public_configs = [ ":cj_bundle_manager_ffi_config" ]
+
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
 
   include_dirs = [
@@ -41,8 +47,15 @@ ohos_shared_library("cj_bundle_manager_ffi") {
     defines = []
   }
 
-  cflags = [ "-Os" ]
-  cflags_cc = [ "-Os" ]
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
 
   if (product_name != "ohos-sdk") {
     sources = [

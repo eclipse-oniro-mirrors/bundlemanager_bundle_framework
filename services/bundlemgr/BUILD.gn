@@ -70,9 +70,12 @@ ohos_source_set("parser_common") {
   branch_protector_ret = "pac_ret"
 
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
 
   sources = [
@@ -107,9 +110,12 @@ ohos_source_set("rpcid_decode") {
   branch_protector_ret = "pac_ret"
 
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
 
   include_dirs = [ "include/rpcid_decode" ]
@@ -129,9 +135,12 @@ ohos_source_set("bundle_parser") {
   branch_protector_ret = "pac_ret"
 
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
 
   sources = [
@@ -160,7 +169,9 @@ ohos_source_set("bundle_parser") {
   }
 
   public_configs = bundlemgr_parser_common_config
-  cflags = []
+
+  cflags = [ "-fstack-protector-strong" ]
+
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
@@ -251,12 +262,14 @@ ohos_shared_library("libbms") {
     "-ffunction-sections",
     "-Wno-non-c-typedef-for-linkage",
     "-Os",
+    "-fstack-protector-strong",
   ]
 
   cflags_cc = [
     "-fvisibility-inlines-hidden",
     "-Wno-non-c-typedef-for-linkage",
     "-Os",
+    "-fstack-protector-strong",
   ]
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
@@ -511,8 +524,12 @@ ohos_shared_library("installs") {
 
   configs = [ ":bundlemgr_common_config" ]
 
-  cflags = [ "-Os" ]
-  cflags_cc = [ "-Os" ]
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = cflags
 
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
