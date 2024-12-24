@@ -69,10 +69,10 @@ bool AccountHelper::IsOsAccountVerified(const int32_t userId)
 
 int32_t AccountHelper::GetOsAccountLocalIdFromUid(const int32_t callingUid)
 {
+    int32_t localId = callingUid < Constants::DEFAULT_USERID ? Constants::INVALID_USERID :
+        callingUid / Constants::BASE_USER_RANGE;
 #ifdef ACCOUNT_ENABLE
-    int32_t localId;
-    ErrCode err = AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(callingUid, localId);
-    if (err != ERR_OK || localId == Constants::DEFAULT_USERID) {
+    if (localId <= Constants::DEFAULT_USERID) {
         APP_LOGW_NOFUNC("GetOsAccountLocalIdFromUid fail uid:%{public}d req from active userid", callingUid);
         return AccountHelper::GetCurrentActiveUserId();
     }
@@ -80,7 +80,7 @@ int32_t AccountHelper::GetOsAccountLocalIdFromUid(const int32_t callingUid)
 #else
     APP_LOGI("ACCOUNT_ENABLE is false");
     // ACCOUNT_ENABLE is false, do nothing and return -1.
-    return -1;
+    return localId;
 #endif
 }
 }  // namespace AppExecFwk
