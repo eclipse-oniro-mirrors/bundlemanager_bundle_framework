@@ -1699,7 +1699,11 @@ void BaseBundleInstaller::UninstallDebugAppSandbox(const std::string &bundleName
         removeSandboxDirMsg.bundleName = bundleName;
         removeSandboxDirMsg.bundleIndex = innerBundleInfo.GetAppIndex();
         removeSandboxDirMsg.uid = uid;
-        removeSandboxDirMsg.flags = static_cast<AppFlagsIndex>(flagIndex);
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
+            removeSandboxDirMsg.flags = APP_FLAGS_ATOMIC_SERVICE;
+        } else {
+            removeSandboxDirMsg.flags = static_cast<AppFlagsIndex>(flagIndex);
+        }
         if (BundleAppSpawnClient::GetInstance().RemoveSandboxDir(removeSandboxDirMsg) != 0) {
             LOG_E(BMS_TAG_INSTALLER, "removeSandboxDir failed");
         }
@@ -1867,6 +1871,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             }
             DeleteRouterInfo(bundleName);
             SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+            UninstallDebugAppSandbox(bundleName, uid, oldInfo);
             return ERR_OK;
         }
         auto removeRes = RemoveBundleUserData(oldInfo, installParam.isKeepData);
@@ -1874,6 +1879,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return removeRes;
         }
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+        UninstallDebugAppSandbox(bundleName, uid, oldInfo);
         return ERR_OK;
     }
 
