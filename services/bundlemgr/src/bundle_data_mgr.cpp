@@ -350,57 +350,65 @@ bool BundleDataMgr::AddNewModuleInfo(
         return false;
     }
     if (statusItem->second == InstallState::UPDATING_SUCCESS) {
-        APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
-        ProcessAllowedAcls(newInfo, oldInfo);
-        if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
-            oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
-            oldInfo.UpdateBaseApplicationInfo(newInfo);
-            oldInfo.UpdateRemovable(newInfo.IsPreInstallApp(), newInfo.IsRemovable());
-            oldInfo.UpdateMultiAppMode(newInfo);
-            oldInfo.UpdateReleaseType(newInfo);
-            oldInfo.SetAppType(newInfo.GetAppType());
-            oldInfo.SetAppFeature(newInfo.GetAppFeature());
+        if (AddNewModuleInfo(newInfo, oldInfo)) {
+            bundleInfos_.at(bundleName) = oldInfo;
+            return true;
         }
-        if (oldInfo.GetOldAppIds().empty()) {
-            oldInfo.AddOldAppId(oldInfo.GetAppId());
-        }
-        oldInfo.SetProvisionId(newInfo.GetProvisionId());
-        oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
-        oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
-        oldInfo.SetCertificate(newInfo.GetCertificate());
-        oldInfo.AddOldAppId(newInfo.GetAppId());
-        oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-        oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
-        oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
-        oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
-        oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
-        oldInfo.AddModuleInfo(newInfo);
-        oldInfo.UpdateAppDetailAbilityAttrs();
-        if (oldInfo.GetBaseApplicationInfo().needAppDetail) {
-            AddAppDetailAbilityInfo(oldInfo);
-        }
-        oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-        oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
-        oldInfo.UpdateOdidByBundleInfo(newInfo);
-        oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
-        oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
-        oldInfo.SetTsanEnabled(oldInfo.IsTsanEnabled());
-        oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
-        oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
-#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
-        if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
-            oldInfo.SetOverlayType(newInfo.GetOverlayType());
-        }
-        if (!UpdateOverlayInfo(newInfo, oldInfo)) {
-            APP_LOGD("bundleName: %{public}s : update overlay info failed", bundleName.c_str());
-            return false;
-        }
-#endif
-        APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
-        bundleInfos_.at(bundleName) = oldInfo;
-        return true;
     }
     return false;
+}
+
+void BundleDataMgr::UpdateBaseBundleInfoIntoOld(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+{
+    oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
+    oldInfo.UpdateBaseApplicationInfo(newInfo);
+    oldInfo.UpdateRemovable(newInfo.IsPreInstallApp(), newInfo.IsRemovable());
+    oldInfo.UpdateMultiAppMode(newInfo);
+    oldInfo.UpdateReleaseType(newInfo);
+    oldInfo.SetAppType(newInfo.GetAppType());
+    oldInfo.SetAppFeature(newInfo.GetAppFeature());
+}
+
+bool BundleDataMgr::AddNewModuleInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+{
+    APP_LOGD("save bundle:%{public}s info", oldInfo.GetBundleName().c_str());
+    ProcessAllowedAcls(newInfo, oldInfo);
+    if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
+        UpdateBaseBundleInfoIntoOld(newInfo, oldInfo);
+    }
+    if (oldInfo.GetOldAppIds().empty()) {
+        oldInfo.AddOldAppId(oldInfo.GetAppId());
+    }
+    oldInfo.SetProvisionId(newInfo.GetProvisionId());
+    oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
+    oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
+    oldInfo.SetCertificate(newInfo.GetCertificate());
+    oldInfo.AddOldAppId(newInfo.GetAppId());
+    oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
+    oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
+    oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
+    oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
+    oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
+    oldInfo.AddModuleInfo(newInfo);
+    oldInfo.UpdateAppDetailAbilityAttrs();
+    if (oldInfo.GetBaseApplicationInfo().needAppDetail) {
+        AddAppDetailAbilityInfo(oldInfo);
+    }
+    oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
+    oldInfo.UpdateOdidByBundleInfo(newInfo);
+    oldInfo.SetDFXParamStatus();
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
+        oldInfo.SetOverlayType(newInfo.GetOverlayType());
+    }
+    if (!UpdateOverlayInfo(newInfo, oldInfo)) {
+        APP_LOGD("bundleName: %{public}s : update overlay info failed", oldInfo.GetBundleName().c_str());
+        return false;
+    }
+#endif
+    APP_LOGD("update storage success bundle:%{public}s", oldInfo.GetBundleName().c_str());
+    return true;
 }
 
 bool BundleDataMgr::RemoveModuleInfo(
@@ -446,11 +454,7 @@ bool BundleDataMgr::RemoveModuleInfo(
         if (!oldInfo.isExistedOverlayModule()) {
             oldInfo.SetOverlayType(NON_OVERLAY_TYPE);
         }
-        oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
-        oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
-        oldInfo.SetTsanEnabled(oldInfo.IsTsanEnabled());
-        oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
-        oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
+        oldInfo.SetDFXParamStatus();
         if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
             return false;
@@ -630,74 +634,69 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         || statusItem->second == InstallState::ROLL_BACK
         || statusItem->second == InstallState::USER_CHANGE) {
         APP_LOGD("begin to update, bundleName : %{public}s, moduleName : %{public}s",
-            bundleName.c_str(), newInfo.GetCurrentModulePackage().c_str());
-        if (newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
-            oldInfo.KeepOldOverlayConnection(newInfo);
+            oldInfo.GetBundleName().c_str(), newInfo.GetCurrentModulePackage().c_str());
+        if (UpdateInnerBundleInfo(newInfo, oldInfo)) {
+            bundleInfos_.at(bundleName) = oldInfo;
+            APP_LOGD("update storage success bundle:%{public}s", oldInfo.GetBundleName().c_str());
+            return true;
         }
-        ProcessAllowedAcls(newInfo, oldInfo);
-        oldInfo.UpdateModuleInfo(newInfo);
-        oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
-        oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
-        oldInfo.SetTsanEnabled(oldInfo.IsTsanEnabled());
-        oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
-        oldInfo.SetUbsanEnabled(oldInfo.IsUbsanEnabled());
-        // 1.exist entry, update entry.
-        // 2.only exist feature, update feature.
-        if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
-            oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
-            oldInfo.UpdateBaseApplicationInfo(newInfo);
-            oldInfo.UpdateRemovable(
-                newInfo.IsPreInstallApp(), newInfo.IsRemovable());
-            oldInfo.SetAppType(newInfo.GetAppType());
-            oldInfo.SetAppFeature(newInfo.GetAppFeature());
-            oldInfo.UpdateMultiAppMode(newInfo);
-            oldInfo.UpdateReleaseType(newInfo);
-        }
-        oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
-        if (oldInfo.GetOldAppIds().empty()) {
-            oldInfo.AddOldAppId(oldInfo.GetAppId());
-        }
-        oldInfo.AddOldAppId(newInfo.GetAppId());
-        oldInfo.SetProvisionId(newInfo.GetProvisionId());
-        oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
-        oldInfo.SetCertificate(newInfo.GetCertificate());
-        oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-        oldInfo.UpdateAppDetailAbilityAttrs();
-        oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
-        if (oldInfo.GetBaseApplicationInfo().needAppDetail) {
-            AddAppDetailAbilityInfo(oldInfo);
-        }
-        oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
-        oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
-        oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
-        if (newInfo.GetAppCrowdtestDeadline() != Constants::INHERIT_CROWDTEST_DEADLINE) {
-            oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
-        }
-        oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
-        // clear apply quick fix frequency
-        oldInfo.ResetApplyQuickFixFrequency();
-        oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-        oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
-        oldInfo.SetAppProvisionMetadata(newInfo.GetAppProvisionMetadata());
-        oldInfo.UpdateOdidByBundleInfo(newInfo);
-#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
-        if (newInfo.GetIsNewVersion() && newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
-            if (!UpdateOverlayInfo(newInfo, oldInfo)) {
-                APP_LOGD("update overlay info failed");
-                return false;
-            }
-        }
+    }
+    return false;
+}
 
-        if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) && (!UpdateOverlayInfo(newInfo, oldInfo))) {
+bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+{
+    if (newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
+        oldInfo.KeepOldOverlayConnection(newInfo);
+    }
+    ProcessAllowedAcls(newInfo, oldInfo);
+    oldInfo.UpdateModuleInfo(newInfo);
+    oldInfo.SetDFXParamStatus();
+    // 1.exist entry, update entry.
+    // 2.only exist feature, update feature.
+    if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
+        UpdateBaseBundleInfoIntoOld(newInfo, oldInfo);
+    }
+    oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
+    if (oldInfo.GetOldAppIds().empty()) {
+        oldInfo.AddOldAppId(oldInfo.GetAppId());
+    }
+    oldInfo.AddOldAppId(newInfo.GetAppId());
+    oldInfo.SetProvisionId(newInfo.GetProvisionId());
+    oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
+    oldInfo.SetCertificate(newInfo.GetCertificate());
+    oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
+    oldInfo.UpdateAppDetailAbilityAttrs();
+    oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
+    if (oldInfo.GetBaseApplicationInfo().needAppDetail) {
+        AddAppDetailAbilityInfo(oldInfo);
+    }
+    oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
+    oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
+    oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
+    if (newInfo.GetAppCrowdtestDeadline() != Constants::INHERIT_CROWDTEST_DEADLINE) {
+        oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
+    }
+    oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
+    // clear apply quick fix frequency
+    oldInfo.ResetApplyQuickFixFrequency();
+    oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
+    oldInfo.SetAppProvisionMetadata(newInfo.GetAppProvisionMetadata());
+    oldInfo.UpdateOdidByBundleInfo(newInfo);
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (newInfo.GetIsNewVersion() && newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
+        if (!UpdateOverlayInfo(newInfo, oldInfo)) {
             APP_LOGD("update overlay info failed");
             return false;
         }
-#endif
-        APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
-        bundleInfos_.at(bundleName) = oldInfo;
-        return true;
     }
-    return false;
+    if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) && (!UpdateOverlayInfo(newInfo, oldInfo))) {
+        APP_LOGD("update overlay info failed");
+        return false;
+    }
+#endif
+    return true;
 }
 
 bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
@@ -2868,14 +2867,23 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
         APP_LOGE("routerStorage_ is null");
         return;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    const auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem == bundleInfos_.end()) {
-        APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
-        return;
-    }
-    auto moduleMap = infoItem->second.GetInnerModuleInfos();
     std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        const auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
+            return;
+        }
+        FindRouterHapPath(infoItem->second, hapPathMap);
+    }
+    UpdateRouterInfo(bundleName, hapPathMap);
+}
+
+void BundleDataMgr::FindRouterHapPath(const InnerBundleInfo &innerBundleInfo,
+    std::map<std::string, std::pair<std::string, std::string>> &hapPathMap)
+{
+    auto moduleMap = innerBundleInfo.GetInnerModuleInfos();
     for (auto it = moduleMap.begin(); it != moduleMap.end(); it++) {
         std::string routerPath = it->second.routerMap;
         auto pos = routerPath.find(PROFILE_PREFIX);
@@ -2886,7 +2894,18 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
         std::string routerJsonPath = PROFILE_PATH + routerJsonName + JSON_SUFFIX;
         hapPathMap[it->second.moduleName] = std::make_pair(it->second.hapPath, routerJsonPath);
     }
-    lock.unlock();
+}
+
+void BundleDataMgr::UpdateRouterInfo(InnerBundleInfo &innerBundleInfo)
+{
+    std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
+    FindRouterHapPath(innerBundleInfo, hapPathMap);
+    UpdateRouterInfo(innerBundleInfo.GetBundleName(), hapPathMap);
+}
+
+void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName,
+    std::map<std::string, std::pair<std::string, std::string>> &hapPathMap)
+{
     std::map<std::string, std::string> routerInfoMap;
     for (auto hapIter = hapPathMap.begin(); hapIter != hapPathMap.end(); hapIter++) {
         std::string routerMapString;
@@ -8293,6 +8312,16 @@ void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, b
     }
 }
 
+void BundleDataMgr::CreateEl5DirNoCache(const std::vector<CreateDirParam> &el5Params, InnerBundleInfo &info)
+{
+    for (const auto &el5Param : el5Params) {
+        APP_LOGI("-n %{public}s -u %{public}d -i %{public}d",
+            el5Param.bundleName.c_str(), el5Param.userId, el5Param.appIndex);
+        InnerCreateEl5Dir(el5Param);
+        SetEl5DirPolicy(el5Param, info);
+    }
+}
+
 int32_t BundleDataMgr::GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t appIndex) const
 {
     if (bundleName.empty()) {
@@ -8354,6 +8383,14 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSav
         LOG_E(BMS_TAG_INSTALLER, "get bundle %{public}s failed", el5Param.bundleName.c_str());
         return;
     }
+    SetEl5DirPolicy(el5Param, info);
+    if (!UpdateInnerBundleInfo(info, needSaveStorage)) {
+        LOG_E(BMS_TAG_INSTALLER, "save keyId failed");
+    }
+}
+
+void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleInfo &info)
+{
     int32_t uid = el5Param.uid;
     std::string bundleName = info.GetBundleName();
     std::string keyId = "";
@@ -8366,9 +8403,6 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSav
     }
     LOG_D(BMS_TAG_INSTALLER, "%{public}s, keyId: %{public}s", bundleName.c_str(), keyId.c_str());
     info.SetkeyId(el5Param.userId, keyId, el5Param.appIndex);
-    if (!UpdateInnerBundleInfo(info, needSaveStorage)) {
-        LOG_E(BMS_TAG_INSTALLER, "save keyId failed");
-    }
 }
 
 ErrCode BundleDataMgr::CanOpenLink(

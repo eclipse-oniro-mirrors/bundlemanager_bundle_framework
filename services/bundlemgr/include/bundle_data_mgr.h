@@ -109,6 +109,8 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool AddNewModuleInfo(const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+    bool AddNewModuleInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+
     /**
      * @brief Remove module info from an exist InnerBundleInfo.
      * @param bundleName Indicates the bundle name.
@@ -128,7 +130,8 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
-
+    bool UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+    void UpdateBaseBundleInfoIntoOld(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
     /**
      * @brief Get an InnerBundleInfo if exist (will change the status to DISABLED).
@@ -954,6 +957,12 @@ public:
     ErrCode GetOdid(std::string &odid) const;
     ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
     void UpdateRouterInfo(const std::string &bundleName);
+    void UpdateRouterInfo(InnerBundleInfo &innerBundleInfo);
+    void FindRouterHapPath(const InnerBundleInfo &innerBundleInfo,
+        std::map<std::string, std::pair<std::string, std::string>> &hapPathMap);
+    void UpdateRouterInfo(const std::string &bundleName,
+        std::map<std::string, std::pair<std::string, std::string>> &hapPathMap);
+
     bool DeleteRouterInfo(const std::string &bundleName);
     bool DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName);
     void GetAllBundleNames(std::set<std::string> &bundleNames);
@@ -1023,6 +1032,7 @@ public:
 
     ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled);
     void CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage = false);
+    void CreateEl5DirNoCache(const std::vector<CreateDirParam> &el5Params, InnerBundleInfo &info);
     int32_t GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t appIndex) const;
     ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName);
     ErrCode GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const;
@@ -1123,6 +1133,7 @@ private:
     void CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32_t userId) const;
     void InnerCreateEl5Dir(const CreateDirParam &el5Param);
     void SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSaveStorage);
+    void SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleInfo &info);
 
     void FilterExtensionAbilityInfosByModuleName(const std::string &moduleName,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;

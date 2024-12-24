@@ -2246,6 +2246,8 @@ public:
         baseApplicationInfo_->multiAppMode = multiAppMode;
     }
 
+    void SetDFXParamStatus();
+
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(
