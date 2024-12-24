@@ -3184,6 +3184,39 @@ bool BundleDataMgr::GetBundleList(
     return find;
 }
 
+bool BundleDataMgr::GetDebugBundleList(std::vector<std::string> &bundleNames, int32_t userId) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("UserId is invalid");
+        return false;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGE("bundleInfos_ data is empty");
+        return false;
+    }
+
+    for (const auto &infoItem : bundleInfos_) {
+        const InnerBundleInfo &innerBundleInfo = infoItem.second;
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+        if (CheckInnerBundleInfoWithFlags(
+            innerBundleInfo, BundleFlag::GET_BUNDLE_DEFAULT, responseUserId) != ERR_OK) {
+            continue;
+        }
+
+        ApplicationInfo appInfo = innerBundleInfo.GetBaseApplicationInfo();
+        if (appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG) {
+            bundleNames.emplace_back(infoItem.first);
+        }
+    }
+
+    bool find = !bundleNames.empty();
+    APP_LOGD("user(%{public}d) get installed debug bundles list result(%{public}d)", userId, find);
+    return find;
+}
+
 bool BundleDataMgr::GetBundleInfos(
     int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId) const
 {

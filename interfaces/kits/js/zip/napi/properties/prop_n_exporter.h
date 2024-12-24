@@ -25,9 +25,9 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 struct AsyncIOWrtieArg {
-    NapiReference refWriteArrayBuf_;
-    std::unique_ptr<char[]> guardWriteStr_ = nullptr;
     ssize_t actLen = 0;
+    std::unique_ptr<char[]> guardWriteStr_ = nullptr;
+    NapiReference refWriteArrayBuf_;
 
     explicit AsyncIOWrtieArg(NapiValue refWriteArrayBuf) : refWriteArrayBuf_(refWriteArrayBuf) {}
     explicit AsyncIOWrtieArg(std::unique_ptr<char[]> &&guardWriteStr) : guardWriteStr_(move(guardWriteStr)) {}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -272,15 +272,15 @@ private:
         const sptr<IRemoteObject> &callBack);
     bool CheckSubPackageName(const InnerBundleInfo &innerBundleInfo, const Want &want);
 
+    int32_t connectState_ = ServiceCenterConnectState::DISCONNECTED;
     mutable std::atomic<int> transactId_ = 0;
-    std::condition_variable cv_;
+    sptr<ServiceCenterConnection> serviceCenterConnection_;
+    sptr<IRemoteObject> serviceCenterRemoteObject_;
     std::mutex mapMutex_;
     std::mutex mutex_;
-    sptr<ServiceCenterConnection> serviceCenterConnection_;
-    std::map<std::string, FreeInstallParams> freeInstallParamsMap_;
-    sptr<IRemoteObject> serviceCenterRemoteObject_;
-    int32_t connectState_ = ServiceCenterConnectState::DISCONNECTED;
+    std::condition_variable cv_;
     std::shared_ptr<SerialQueue> serialQueue_;
+    std::map<std::string, FreeInstallParams> freeInstallParamsMap_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

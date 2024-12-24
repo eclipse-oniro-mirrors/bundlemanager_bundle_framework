@@ -860,6 +860,16 @@ public:
         return userIds;
     }
 
+    bool GetAllowMultiProcess() const
+    {
+        return baseApplicationInfo_->allowMultiProcess;
+    }
+
+    void SetAllowMultiProcess(bool allowMultiProcess)
+    {
+        baseApplicationInfo_->allowMultiProcess = allowMultiProcess;
+    }
+
     // only used in install progress with newInfo
     std::string GetCurrentModulePackage() const
     {

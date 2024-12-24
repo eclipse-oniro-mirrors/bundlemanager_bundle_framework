@@ -18,6 +18,7 @@
 #include "bundle_mgr_service.h"
 #include "system_ability_helper.h"
 
+#include "app_log_tag_wrapper.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "ability_manager_client.h"
 #include "app_mgr_interface.h"
@@ -30,8 +31,8 @@ bool AbilityManagerHelper::UninstallApplicationProcesses(
     const std::string &bundleName, const int uid, bool isUpgradeApp, int32_t appIndex)
 {
 #ifdef ABILITY_RUNTIME_ENABLE
-    APP_LOGI("uninstall kill running processes, app name is %{public}s, isUpgradeApp : %{public}d",
-        bundleName.c_str(), isUpgradeApp);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin UninstallApplicationProcesses -n %{public}s, -up %{public}d, -u %{public}d,"
+        "-i %{public}d", bundleName.c_str(), isUpgradeApp, uid, appIndex);
     int ret = 0;
     if (isUpgradeApp) {
         ret = SystemAbilityHelper::UpgradeApp(bundleName, uid, appIndex);
@@ -42,9 +43,10 @@ bool AbilityManagerHelper::UninstallApplicationProcesses(
         APP_LOGE("kill application process failed uid: %{public}d, appIndex: %{public}d", uid, appIndex);
         return false;
     }
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "UninstallApplicationProcesses end");
     return true;
 #else
-    APP_LOGI("ABILITY_RUNTIME_ENABLE is false");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ABILITY_RUNTIME_ENABLE is false");
     return true;
 #endif
 }
@@ -52,7 +54,7 @@ bool AbilityManagerHelper::UninstallApplicationProcesses(
 int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName)
 {
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-    APP_LOGD("check app is running, app name is %{public}s", bundleName.c_str());
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "IsRunning check %{public}s", bundleName.c_str());
     sptr<IAppMgr> appMgrProxy =
         iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
     if (appMgrProxy == nullptr) {
@@ -66,6 +68,7 @@ int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName)
         APP_LOGE("GetAllRunningProcesses failed");
         return FAILED;
     }
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "size %{public}zu", runningList.size());
 
     for (const auto &info : runningList) {
         auto res = std::any_of(info.bundleNames.begin(), info.bundleNames.end(),

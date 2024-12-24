@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -77,6 +77,8 @@ private:
     ErrCode SetDefaultApplicationInternal(
         int32_t userId, const std::string& normalizedType, const Element& element) const;
     ErrCode ResetDefaultApplicationInternal(int32_t userId, const std::string& normalizedType) const;
+
+    std::string GetAnonymizeType(const std::string& type) const;
 
     std::shared_ptr<IDefaultAppDb> defaultAppDb_;
     mutable std::mutex mutex_;

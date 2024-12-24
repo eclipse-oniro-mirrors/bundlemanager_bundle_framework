@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 
-bool InstallerBundleTempInfo::FetchTempBundleInfo(InnerBundleInfo &info) const
+bool InstallerBundleTempInfo::GetTempBundleInfo(InnerBundleInfo &info) const
 {
     if (!bundleInit_) {
         return bundleInit_;
@@ -33,15 +33,10 @@ bool InstallerBundleTempInfo::FetchTempBundleInfo(InnerBundleInfo &info) const
     return true;
 }
 
-InnerBundleInfo &InstallerBundleTempInfo::GetCurrentBundleInfo()
-{
-    return tempBundleInfo_;
-}
-
-bool InstallerBundleTempInfo::UpdateTempBundleInfo(const InnerBundleInfo &info)
+bool InstallerBundleTempInfo::SetTempBundleInfo(const InnerBundleInfo &info)
 {
     if (info.GetBundleName().empty()) {
-        APP_LOGW("UpdateTempBundleInfo failed, empty bundleName");
+        APP_LOGW("SetTempBundleInfo failed, empty bundleName");
         return false;
     }
     bundleInit_ = true;

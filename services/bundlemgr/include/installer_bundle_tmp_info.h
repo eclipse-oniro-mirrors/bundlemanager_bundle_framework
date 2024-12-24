@@ -27,9 +27,9 @@ class InstallerBundleTempInfo {
 public:
     InstallerBundleTempInfo() = default;
     ~InstallerBundleTempInfo() = default;
-    bool FetchTempBundleInfo(InnerBundleInfo &info) const;
+    bool GetTempBundleInfo(InnerBundleInfo &info) const;
     InnerBundleInfo &GetCurrentBundleInfo();
-    bool UpdateTempBundleInfo(const InnerBundleInfo &info);
+    bool SetTempBundleInfo(const InnerBundleInfo &info);
 private:
     bool bundleInit_ = false;
     InnerBundleInfo tempBundleInfo_;

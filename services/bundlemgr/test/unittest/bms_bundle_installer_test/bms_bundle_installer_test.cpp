@@ -776,6 +776,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(metadata.name, "a01");
         EXPECT_EQ(metadata.value, "v01");
         EXPECT_EQ(metadata.resource, "hello");
+        EXPECT_EQ(metadata.valueId, 0);
 
         auto extensionInfos = hapModuleInfo.extensionInfos.front();
         EXPECT_EQ(extensionInfos.name, "FormName");
@@ -2426,7 +2427,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_7100, Function | SmallTest 
         "bundleName", installParam, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
     InnerBundleInfo info;
-    bool res = installer.FetchTempBundleInfo(info);
+    bool res = installer.GetTempBundleInfo(info);
     EXPECT_EQ(res, false);
     ResetDataMgr();
 

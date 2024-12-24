@@ -88,8 +88,8 @@ public:
 private:
     NapiClass() = default;
     ~NapiClass() = default;
-    std::map<std::string, napi_ref> exClassMap;
     std::mutex exClassMapLock;
+    std::map<std::string, napi_ref> exClassMap;
 };
 }  // namespace LIBZIP
 }  // namespace AppExecFwk

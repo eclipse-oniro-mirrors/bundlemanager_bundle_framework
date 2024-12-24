@@ -765,7 +765,7 @@ private:
     void DeleteUninstallBundleInfo(const std::string &bundleName);
     ErrCode MarkInstallFinish();
     bool IsArkWeb(const std::string &bundleName) const;
-    void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid, int32_t userId,
+    void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
         const InnerBundleInfo& innerBundleInfo);
 #ifdef WEBVIEW_ENABLE
     ErrCode VerifyArkWebInstall();
@@ -776,7 +776,7 @@ private:
 
     bool DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo);
     void ProcessAddResourceInfo(const InstallParam &installParam, const std::string &bundleName, int32_t userId);
-    bool FetchTempBundleInfo(InnerBundleInfo &info) const;
+    bool GetTempBundleInfo(InnerBundleInfo &info) const;
     bool InitTempBundleFromCache(InnerBundleInfo &info, bool &isAppExist, std::string bundleName = "");
     ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex);
     ErrCode CheckShellCanInstallPreApp(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);

@@ -32,6 +32,17 @@ config("zip_config") {
 }
 
 ohos_shared_library("zlib") {
+  branch_protector_ret = "pac_ret"
+
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
   public_configs = [ ":zip_config" ]
 
   sources = [
@@ -62,8 +73,15 @@ ohos_shared_library("zlib") {
     "src/zip_writer.cpp",
   ]
 
-  cflags = [ "-Os" ]
-  cflags_cc = [ "-Os" ]
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
 
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
