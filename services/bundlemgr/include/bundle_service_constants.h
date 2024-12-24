@@ -76,6 +76,7 @@ constexpr const char* FILE_SEPARATOR_LINE = "-";
 constexpr const char* FILE_SEPARATOR_PLUS = "+";
 constexpr const char* BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bms/bundle_manager_service";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
+constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
 constexpr const char* DATA_GROUP_PATH = "/group/";
 constexpr const char* STREAM_INSTALL_PATH = "stream_install";
