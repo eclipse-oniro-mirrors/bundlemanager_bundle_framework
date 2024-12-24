@@ -1,0 +1,71 @@
+{
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": "EntryAbility",
+    "deviceTypes": [
+      "2in1",
+      "default",
+      "tablet"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "abilities": [
+      {
+        "name": "EntryAbility",
+        "srcEntrance": "./ets/entryability/EntryAbility.ts",
+        "description": "$string:EntryAbility_desc",
+        "icon": "$media:icon",
+        "label": "$string:EntryAbility_label",
+        "startWindowIcon": "$media:icon",
+        "startWindowBackground": "$color:start_window_background",
+        "visible": true,
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "action.system.home"
+            ]
+          }
+        ]
+      }
+    ],
+    "extensionAbilities": [
+      {
+        "exported": true,
+        "iconId": 16777217,
+        "metadata": [
+          {
+            "name": "bus",
+            "value": "USB"
+          },
+          {
+            "name": "description",
+            "value": "the sample of driverExtensionAbility V1"
+          },
+          {
+            "name": "vendor",
+            "value": "string"
+          },
+          {
+            "name": "vid",
+            "value": "0x0B57"
+          },
+          {
+            "name": "pid",
+            "value": "0xA13F,0xA150"
+          }
+        ],
+        "srcEntry": "./ets/driverability/driver.ts",
+        "name": "driverExtensionAbility",
+        "icon": "$media:icon",
+        "description": "$string:DriverAbility_desc",
+        "type": "driver"
+      }
+    ]
+  }
+}
