@@ -3781,7 +3781,10 @@ void BaseBundleInstaller::UpdateExtensionSandboxInfo(std::unordered_map<std::str
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
     auto dataGroupGids = provisionInfo.bundleInfo.dataGroupIds;
     std::vector<std::string> typeList;
-    InstalldClient::GetInstance()->GetExtensionSandboxTypeList(typeList);
+    ErrCode res = InstalldClient::GetInstance()->GetExtensionSandboxTypeList(typeList);
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "GetExtensionSandboxTypeList failed %{public}d", res);
+    }
     for (auto &item : newInfos) {
         item.second.UpdateExtensionSandboxInfo(typeList);
         auto innerBundleInfo = item.second;
