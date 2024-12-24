@@ -3071,7 +3071,7 @@ std::vector<std::string> BaseBundleInstaller::GenerateScreenLockProtectionDir(co
 
 void BaseBundleInstaller::CreateScreenLockProtectionDir()
 {
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
     if (!InitDataMgr()) {
         LOG_E(BMS_TAG_INSTALLER, "init failed");
         return;
@@ -4813,6 +4813,7 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     }
     // 1. copy hsp or hap file to temp installation dir
     ErrCode result = ERR_OK;
+    LOG_I(BMS_TAG_INSTALLER, "codesign start");
     for (const auto &hapPathRecord : hapPathRecords_) {
         LOG_D(BMS_TAG_INSTALLER, "Save from %{public}s to %{public}s",
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
@@ -4833,7 +4834,7 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
             }
         }
     }
-    LOG_D(BMS_TAG_INSTALLER, "copy hap to install path success");
+    LOG_I(BMS_TAG_INSTALLER, "codesign end");
 
     // 2. check encryption of hap
     if ((result = CheckHapEncryption(infos, oldInfo)) != ERR_OK) {
@@ -5273,7 +5274,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     const std::string &targetSoPath, const std::string &signatureFileDir) const
 {
     if (copyHapToInstallPath_) {
-        LOG_I(BMS_TAG_INSTALLER, "hap will be copied to install path, verified code signature later");
+        LOG_D(BMS_TAG_INSTALLER, "hap will be copied to install path, verified code signature later");
         return ERR_OK;
     }
     LOG_D(BMS_TAG_INSTALLER, "begin to verify code signature for native files");
@@ -5564,7 +5565,7 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
 ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos,
     const InnerBundleInfo &oldInfo)
 {
-    LOG_D(BMS_TAG_INSTALLER, "begin to check hap encryption");
+    LOG_I(BMS_TAG_INSTALLER, "begin");
     InnerBundleInfo newInfo;
     if (!FetchInnerBundleInfo(newInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
@@ -5602,6 +5603,7 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         LOG_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
+    LOG_I(BMS_TAG_INSTALLER, "end");
     return ERR_OK;
 }
 

@@ -1334,7 +1334,7 @@ bool InstalldOperator::ProcessApplyDiffPatchPath(
     const std::string &oldSoPath, const std::string &diffFilePath,
     const std::string &newSoPath, std::vector<std::string> &oldSoFileNames, std::vector<std::string> &diffFileNames)
 {
-    LOG_I(BMS_TAG_INSTALLD, "oldSoPath: %{public}s, diffFilePath: %{public}s, newSoPath: %{public}s",
+    LOG_D(BMS_TAG_INSTALLD, "oldSoPath: %{public}s, diffFilePath: %{public}s, newSoPath: %{public}s",
         oldSoPath.c_str(), diffFilePath.c_str(), newSoPath.c_str());
     if (oldSoPath.empty() || diffFilePath.empty() || newSoPath.empty()) {
         return false;
@@ -1367,7 +1367,7 @@ bool InstalldOperator::ProcessApplyDiffPatchPath(
             return false;
         }
     }
-    LOG_I(BMS_TAG_INSTALLD, "ProcessApplyDiffPatchPath end");
+    LOG_D(BMS_TAG_INSTALLD, "ProcessApplyDiffPatchPath end");
     return true;
 }
 
@@ -2309,10 +2309,10 @@ bool InstalldOperator::OpenEncryptionHandle()
 {
     std::lock_guard<std::mutex> lock(encryptionMutex_);
     if (encryptionHandle_ != nullptr && enforceMetadataProcessForApp_ != nullptr) {
-        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "encrypt handle opened");
+        LOG_NOFUNC_D(BMS_TAG_INSTALLD, "encrypt handle opened");
         return true;
     }
-    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "OpenEncryption start");
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD, "OpenEncryption start");
     encryptionHandle_ = dlopen(LIB64_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
     if (encryptionHandle_ == nullptr) {
         LOG_W(BMS_TAG_INSTALLD, "open encrypt lib64 failed %{public}s", dlerror());

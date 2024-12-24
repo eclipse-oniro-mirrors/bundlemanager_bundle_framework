@@ -4069,10 +4069,12 @@ void InnerBundleInfo::HandleOTACodeEncryption(bool &needResetFlag) const
         innerBundleUserInfos_.begin()->second.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
     checkEncryptionParam.appIdentifier = GetAppIdentifier();
     checkEncryptionParam.versionCode = GetVersionCode();
+    APP_LOGI("start");
     for (const auto &item : innerModuleInfos_) {
         CheckHapEncryption(checkEncryptionParam, item.second);
         CheckSoEncryption(checkEncryptionParam, item.first, item.second);
     }
+    APP_LOGI("end");
 }
 
 void InnerBundleInfo::CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam,
