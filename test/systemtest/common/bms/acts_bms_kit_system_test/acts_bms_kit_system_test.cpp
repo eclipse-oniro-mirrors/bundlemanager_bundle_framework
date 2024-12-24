@@ -9512,6 +9512,57 @@ std::cout << "END GetOdidByBundleName_0002" << std::endl;
 }
 
 /**
+ * @tc.number: GetCompatibleDeviceType_0001
+ * @tc.name: test GetCompatibleDeviceType interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call GetCompatibleDeviceType
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetCompatibleDeviceType_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetCompatibleDeviceType_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string deviceType;
+    auto queryResult = bundleMgrProxy->GetCompatibleDeviceType(appName, deviceType);
+
+    EXPECT_EQ(queryResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetCompatibleDeviceType_0001" << std::endl;
+}
+
+/**
+ * @tc.number: GetCompatibleDeviceType_0002
+ * @tc.name: test GetCompatibleDeviceType interface
+ * @tc.desc: GetCompatibleDeviceType failed for calling bundle name is invalid
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetCompatibleDeviceType_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START GetCompatibleDeviceType_0002" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string deviceType;
+    auto queryResult = bundleMgrProxy->GetCompatibleDeviceType("", deviceType);
+
+    EXPECT_EQ(queryResult, ERR_OK);
+    std::cout << "END GetCompatibleDeviceType_0002" << std::endl;
+}
+
+/**
  * @tc.number: GetSignatureInfoByBundleName_0100
  * @tc.name: test GetSignatureInfoByBundleName interface
  * @tc.desc: 1.ret is ERR_OK

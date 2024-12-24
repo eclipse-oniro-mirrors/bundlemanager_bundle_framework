@@ -151,6 +151,10 @@ public:
     {
         return;
     }
+    virtual std::string GetCompatibleDeviceType(const std::string &bundleName)
+    {
+        return "";
+    }
 };
 
 } // AppExecFwk

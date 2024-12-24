@@ -329,6 +329,8 @@ namespace OHOS {
         bundleMgrProxy.AddDesktopShortcutInfo(shortcutInfo, reinterpret_cast<uintptr_t>(data));
         bundleMgrProxy.DeleteDesktopShortcutInfo(shortcutInfo, reinterpret_cast<uintptr_t>(data));
         bundleMgrProxy.GetAllDesktopShortcutInfo(reinterpret_cast<uintptr_t>(data), shortcutInfos);
+        std::string deviceType;
+        bundleMgrProxy.GetCompatibleDeviceType(bundleName, deviceType);
         bundleMgrProxy.GetOdidByBundleName(bundleName, odid);
         bundleMgrProxy.GetBundleInfosForContinuation(0, bundleInfos, reinterpret_cast<uintptr_t>(data));
         return true;

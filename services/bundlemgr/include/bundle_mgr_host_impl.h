@@ -1008,6 +1008,9 @@ public:
 
     virtual ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) override;
 
+    virtual ErrCode GetCompatibleDeviceTypeNative(std::string &deviceType) override;
+    virtual ErrCode GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType) override;
+
     virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) override;
 
     /**

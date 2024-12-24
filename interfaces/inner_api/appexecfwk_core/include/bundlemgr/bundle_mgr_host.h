@@ -817,6 +817,10 @@ private:
 
     ErrCode HandleGetAllDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetCompatibleDeviceTypeNative(MessageParcel &data, MessageParcel &reply);
+    
+    ErrCode HandleGetCompatibleDeviceType(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply);
 
     /**
