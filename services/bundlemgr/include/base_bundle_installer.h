@@ -774,6 +774,11 @@ private:
         const InnerBundleInfo &oldBundleInfo, bool isPreInstallApp);
 
     bool DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo);
+
+    bool SetDisposedRuleWhenBundleUninstallStart(const std::string &bundleName,
+        const std::string &appId, bool isMultiUser);
+    bool DeleteDisposedRuleWhenBundleUninstallEnd(const std::string &bundleName,
+        const std::string &appId, bool isMultiUser);
     void ProcessAddResourceInfo(const InstallParam &installParam, const std::string &bundleName, int32_t userId);
     bool FetchInnerBundleInfo(InnerBundleInfo &info);
     ErrCode CheckShellCanInstallPreApp(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);

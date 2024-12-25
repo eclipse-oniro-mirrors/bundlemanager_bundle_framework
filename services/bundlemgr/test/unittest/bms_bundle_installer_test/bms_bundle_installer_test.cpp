@@ -7584,6 +7584,38 @@ HWTEST_F(BmsBundleInstallerTest, SetDisposedRuleWhenBundleUpdateStart_0030, Func
 }
 
 /**
+ * @tc.number: SetDisposedRuleWhenBundleUninstallStart_0010
+ * @tc.name: test SetDisposedRuleWhenBundleUninstallStart
+ * @tc.desc: 1.SetDisposedRuleWhenBundleUninstallStart
+ */
+HWTEST_F(BmsBundleInstallerTest, SetDisposedRuleWhenBundleUninstallStart_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string appId = "xxxx";
+    bool ret = installer.SetDisposedRuleWhenBundleUninstallStart(BUNDLE_NAME, appId, true);
+    EXPECT_FALSE(ret);
+
+    ret = installer.SetDisposedRuleWhenBundleUninstallStart(BUNDLE_NAME, appId, false);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DeleteDisposedRuleWhenBundleUninstallEnd_0010
+ * @tc.name: test DeleteDisposedRuleWhenBundleUninstallEnd
+ * @tc.desc: 1.DeleteDisposedRuleWhenBundleUninstallEnd
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteDisposedRuleWhenBundleUninstallEnd_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string appId = "xxxx";
+    bool ret = installer.DeleteDisposedRuleWhenBundleUninstallEnd(BUNDLE_NAME, appId, true);
+    EXPECT_FALSE(ret);
+
+    ret = installer.DeleteDisposedRuleWhenBundleUninstallEnd(BUNDLE_NAME, appId, false);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: GetRealSoPath_0010
  * @tc.name: test GetRealSoPath
  * @tc.desc: 1.Test the GetRealSoPath
