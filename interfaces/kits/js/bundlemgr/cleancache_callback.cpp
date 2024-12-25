@@ -21,17 +21,27 @@
 namespace {
 constexpr int8_t OPERATION_SUCCESS = 0;
 constexpr int8_t OPERATION_FAILED = 1;
+constexpr uint8_t TIMEOUT = 60;
 }
 
-CleanCacheCallback::CleanCacheCallback(int32_t err) : err_(err)
-{
-    uv_sem_init(&uvSem_, 0);
-}
+CleanCacheCallback::CleanCacheCallback(int32_t err) : err_(err) {}
 
 CleanCacheCallback::~CleanCacheCallback() {}
 
 void CleanCacheCallback::OnCleanCacheFinished(bool err)
 {
-    err_ = err ? OPERATION_SUCCESS : OPERATION_FAILED;
-    uv_sem_post(&uvSem_);
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!complete_) {
+        complete_ = true;
+        err_ = err ? OPERATION_SUCCESS : OPERATION_FAILED;
+        promise_.set_value();
+    }
+}
+
+bool CleanCacheCallback::WaitForCompletion()
+{
+    if (future_.wait_for(std::chrono::seconds(TIMEOUT)) == std::future_status::ready) {
+        return true;
+    }
+    return false;
 }

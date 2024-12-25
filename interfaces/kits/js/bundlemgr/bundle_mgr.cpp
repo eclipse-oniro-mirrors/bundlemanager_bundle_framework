@@ -2787,6 +2787,17 @@ napi_value ClearBundleCache(napi_env env, napi_callback_info info)
             if (!asyncCallbackInfo->err) {
                 asyncCallbackInfo->ret =
                     InnerCleanBundleCacheCallback(asyncCallbackInfo->bundleName, asyncCallbackInfo->cleanCacheCallback);
+                if (asyncCallbackInfo->ret && asyncCallbackInfo->cleanCacheCallback != nullptr) {
+                    // wait for OnCleanCacheFinished
+                    APP_LOGI("clean exec wait");
+                    if (asyncCallbackInfo->cleanCacheCallback->WaitForCompletion()) {
+                        asyncCallbackInfo->ret = asyncCallbackInfo->cleanCacheCallback->GetErr() ? false : true;
+                    } else {
+                        APP_LOGI("clean exec timeout");
+                        asyncCallbackInfo->ret = false;
+                    }
+                    APP_LOGI("clean exec end");
+                }
             }
         },
         [](napi_env env, napi_status status, void* data) {
@@ -2802,9 +2813,6 @@ napi_value ClearBundleCache(napi_env env, napi_callback_info info)
                     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, OPERATION_FAILED, &result[0]));
                 } else {
                     if (asyncCallbackInfo->cleanCacheCallback) {
-                        // wait for OnCleanCacheFinished
-                        uv_sem_wait(&(asyncCallbackInfo->cleanCacheCallback->uvSem_));
-                        asyncCallbackInfo->ret = asyncCallbackInfo->cleanCacheCallback->GetErr() ? false : true;
                         if (!asyncCallbackInfo->cleanCacheCallback->GetErr()) {
                             NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[0]));
                         } else {
