@@ -995,7 +995,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5900, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6000, Function | SmallTest | Level0)
 {
     BundleExtractor extractor("");
-    InstalldOperator::ExtractTargetFile(extractor, "", "", "", ExtractFileType::SO);
+    ExtractParam param;
+    param.extractFileType = ExtractFileType::SO;
+    InstalldOperator::ExtractTargetFile(extractor, "", param);
     auto ret = InstalldOperator::ExtractDiffFiles(
         TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_PATH, TEST_CPU_ABI);
     EXPECT_FALSE(ret);
@@ -1010,9 +1012,14 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6000, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6100, Function | SmallTest | Level0)
 {
     BundleExtractor extractor("");
-    InstalldOperator::ExtractTargetFile(
-        extractor, TEST_DIFF_LIB_STRING, "data/test", TEST_CPU_ABI, ExtractFileType::AP);
-    InstalldOperator::ExtractTargetFile(extractor, "", "data/test", "", ExtractFileType::ALL);
+    ExtractParam param;
+    param.targetPath = "data/test";
+    param.cpuAbi = TEST_CPU_ABI;
+    param.extractFileType = ExtractFileType::AP;
+    InstalldOperator::ExtractTargetFile(extractor, TEST_DIFF_LIB_STRING, param);
+    param.cpuAbi = "";
+    param.extractFileType = ExtractFileType::ALL;
+    InstalldOperator::ExtractTargetFile(extractor, "", param);
     auto ret = InstalldOperator::ExtractDiffFiles(
         TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_PATH, TEST_CPU_ABI);
     EXPECT_FALSE(ret);
@@ -1667,10 +1674,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10400, Function | Sm
 {
     BundleExtractor extractor("");
     std::string entryName = TEST_LIB_AP;
-    std::string targetPath = "/data/app/el1/";
-    std::string cpuAbi = TEST_CPU_ABI;
-    ExtractFileType extractFileType = ExtractFileType::AP;
-    InstalldOperator::ExtractTargetFile(extractor, entryName, targetPath, cpuAbi, extractFileType);
+    ExtractParam param;
+    param.targetPath = "/data/app/el1/";
+    param.cpuAbi = TEST_CPU_ABI;
+    param.extractFileType = ExtractFileType::AP;
+    InstalldOperator::ExtractTargetFile(extractor, entryName, param);
     auto ret = InstalldOperator::ExtractDiffFiles(TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_PATH, TEST_CPU_ABI);
     EXPECT_FALSE(ret);
 }

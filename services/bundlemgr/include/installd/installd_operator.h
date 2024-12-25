@@ -103,9 +103,7 @@ public:
     static void ExtractTargetFile(
         const BundleExtractor &extractor,
         const std::string &entryName,
-        const std::string &targetPath,
-        const std::string &cpuAbi,
-        const ExtractFileType &extractFileType = ExtractFileType::SO);
+        const ExtractParam &param);
     static void ExtractTargetHnpFile(
         const BundleExtractor &extractor,
         const std::string &entryName,
