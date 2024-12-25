@@ -558,7 +558,7 @@ std::string BmsExtensionDataMgr::GetCompatibleDeviceType(const std::string &bund
             return bundleMgrExtPtr->GetCompatibleDeviceType(bundleName);
         }
         APP_LOGE("create class: %{public}s failed", bmsExtension_.bmsExtensionBundleMgr.extensionName.c_str());
-        return "";
+        return GetDeviceType();
     }
     APP_LOGW("access bms-extension failed");
     return GetDeviceType();
