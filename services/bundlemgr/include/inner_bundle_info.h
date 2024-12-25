@@ -2246,7 +2246,7 @@ public:
         baseApplicationInfo_->multiAppMode = multiAppMode;
     }
 
-    void SetSanStatus();
+    void SetDFXParamStatus();
 
 private:
     bool IsExistLauncherAbility() const;

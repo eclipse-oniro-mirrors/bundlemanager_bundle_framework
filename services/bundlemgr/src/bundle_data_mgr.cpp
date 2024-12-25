@@ -397,7 +397,7 @@ bool BundleDataMgr::AddNewModuleInfo(const InnerBundleInfo &newInfo, InnerBundle
     oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
     oldInfo.UpdateOdidByBundleInfo(newInfo);
-    oldInfo.SetSanStatus();
+    oldInfo.SetDFXParamStatus();
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
         oldInfo.SetOverlayType(newInfo.GetOverlayType());
@@ -454,7 +454,7 @@ bool BundleDataMgr::RemoveModuleInfo(
         if (!oldInfo.isExistedOverlayModule()) {
             oldInfo.SetOverlayType(NON_OVERLAY_TYPE);
         }
-        oldInfo.SetSanStatus();
+        oldInfo.SetDFXParamStatus();
         if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
             return false;
@@ -651,7 +651,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleI
     }
     ProcessAllowedAcls(newInfo, oldInfo);
     oldInfo.UpdateModuleInfo(newInfo);
-    oldInfo.SetSanStatus();
+    oldInfo.SetDFXParamStatus();
     // 1.exist entry, update entry.
     // 2.only exist feature, update feature.
     if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
@@ -2880,8 +2880,8 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
     UpdateRouterInfo(bundleName, hapPathMap);
 }
 
-void BundleDataMgr::FindRouterHapPath(
-    InnerBundleInfo &innerBundleInfo, std::map<std::string, std::pair<std::string, std::string>> &hapPathMap)
+void BundleDataMgr::FindRouterHapPath(const InnerBundleInfo &innerBundleInfo,
+    std::map<std::string, std::pair<std::string, std::string>> &hapPathMap)
 {
     auto moduleMap = innerBundleInfo.GetInnerModuleInfos();
     for (auto it = moduleMap.begin(); it != moduleMap.end(); it++) {
@@ -7528,7 +7528,7 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
 }
 
 void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
-    const std::unordered_set<std::string> &dataGroupIdList, int32_t userId)
+    const std::unordered_set<std::string> &dataGroupIdList, int32_t userId, bool needSaveStorage)
 {
     APP_LOGD("called for user: %{public}d", userId);
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -7569,6 +7569,9 @@ void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
         CreateGroupDirIfNotExist(dataGroupInfo);
     }
     ProcessAllUserDataGroupInfosWhenBundleUpdate(bundleInfoItem->second);
+    if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(bundleInfoItem->second)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+    }
 }
 
 void BundleDataMgr::CreateGroupDirIfNotExist(const DataGroupInfo &dataGroupInfo)

@@ -1309,10 +1309,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         UninstallLowerVersionFeature(uninstallModuleVec_, installParam.GetKillProcess());
     }
 
-    // create data group dir
-    ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(oldInfo); });
-    CreateDataGroupDirs(hapVerifyResults, oldInfo);
-
     // create Screen Lock File Protection Dir
     CreateScreenLockProtectionDir();
     ScopeGuard ScreenLockFileProtectionDirGuard([&] { DeleteScreenLockProtectionDir(bundleName_); });
@@ -1355,7 +1351,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessAOT(installParam.isOTA, newInfos);
     RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     UpdateAppInstallControlled(userId_);
-    groupDirGuard.Dismiss();
     extensionDirGuard.Dismiss();
     ScreenLockFileProtectionDirGuard.Dismiss();
     if (isAppExist_) {
@@ -1368,9 +1363,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     VerifyDomain();
     // check mark install finish
     result = MarkInstallFinish();
+    CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
+    // create data group dir
+    ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(oldInfo); });
+    CreateDataGroupDirs(hapVerifyResults, oldInfo);
+    groupDirGuard.Dismiss();
     ProcessAddResourceInfo(installParam, bundleName_, userId_);
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
-    CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     return result;
 }
@@ -1924,7 +1923,7 @@ void BaseBundleInstaller::MarkPreInstallState(const std::string &bundleName, boo
 void BaseBundleInstaller::UpdateRouterInfo()
 {
     InnerBundleInfo bundle;
-    if(tempInfo_.GetTempBundleInfo(bundle)){
+    if (tempInfo_.GetTempBundleInfo(bundle)) {
         dataMgr_->UpdateRouterInfo(bundle);
     }
 }
@@ -3035,7 +3034,7 @@ ErrCode BaseBundleInstaller::CreateDataGroupDirs(
     }
     std::unordered_set<std::string> groupIds;
     GetDataGroupIds(hapVerifyRes, groupIds);
-    dataMgr_->GenerateDataGroupInfos(bundleName_, groupIds, userId_);
+    dataMgr_->GenerateDataGroupInfos(bundleName_, groupIds, userId_, true);
     return ERR_OK;
 }
 
@@ -3772,7 +3771,10 @@ void BaseBundleInstaller::UpdateExtensionSandboxInfo(std::unordered_map<std::str
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
     auto dataGroupGids = provisionInfo.bundleInfo.dataGroupIds;
     std::vector<std::string> typeList;
-    InstalldClient::GetInstance()->GetExtensionSandboxTypeList(typeList);
+    ErrCode res = InstalldClient::GetInstance()->GetExtensionSandboxTypeList(typeList);
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "GetExtensionSandboxTypeList failed %{public}d", res);
+    }
     for (auto &item : newInfos) {
         item.second.UpdateExtensionSandboxInfo(typeList);
         auto innerBundleInfo = item.second;

@@ -28,7 +28,6 @@ public:
     InstallerBundleTempInfo() = default;
     ~InstallerBundleTempInfo() = default;
     bool GetTempBundleInfo(InnerBundleInfo &info) const;
-    InnerBundleInfo &GetCurrentBundleInfo();
     bool SetTempBundleInfo(const InnerBundleInfo &info);
 private:
     bool bundleInit_ = false;

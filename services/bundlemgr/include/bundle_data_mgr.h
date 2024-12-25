@@ -929,7 +929,8 @@ public:
     void GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
         std::unordered_set<int32_t> &uniqueIdSet) const;
     void GenerateDataGroupInfos(const std::string &bundleName,
-        const std::unordered_set<std::string> &dataGroupIdList, int32_t userId);
+        const std::unordered_set<std::string> &dataGroupIdList, int32_t userId,
+        bool needSaveStorage = false);
     void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
         std::unordered_set<int32_t> &uniqueIdSet) const;
     bool IsShareDataGroupIdNoLock(const std::string &dataGroupId, int32_t userId) const;
@@ -958,7 +959,7 @@ public:
     ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
     void UpdateRouterInfo(const std::string &bundleName);
     void UpdateRouterInfo(InnerBundleInfo &innerBundleInfo);
-    void FindRouterHapPath(InnerBundleInfo &innerBundleInfo,
+    void FindRouterHapPath(const InnerBundleInfo &innerBundleInfo,
         std::map<std::string, std::pair<std::string, std::string>> &hapPathMap);
     void UpdateRouterInfo(const std::string &bundleName,
         std::map<std::string, std::pair<std::string, std::string>> &hapPathMap);

@@ -779,16 +779,27 @@ bool BundleUtil::CreateDir(const std::string &dir)
 bool BundleUtil::RevertToRealPath(const std::string &sandBoxPath, const std::string &bundleName, std::string &realPath)
 {
     if (sandBoxPath.empty() || bundleName.empty() ||
-        sandBoxPath.find(ServiceConstants::SANDBOX_DATA_PATH) == std::string::npos) {
+        (sandBoxPath.find(ServiceConstants::SANDBOX_DATA_PATH) == std::string::npos &&
+        sandBoxPath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == std::string::npos)) {
         APP_LOGE("input sandboxPath or bundleName invalid");
         return false;
     }
 
     realPath = sandBoxPath;
-    std::string relaDataPath = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-        + std::to_string(BundleUtil::GetUserIdByCallingUid()) + ServiceConstants::BASE + bundleName;
-    realPath.replace(realPath.find(ServiceConstants::SANDBOX_DATA_PATH),
-        std::string(ServiceConstants::SANDBOX_DATA_PATH).size(), relaDataPath);
+    if (sandBoxPath.find(ServiceConstants::SANDBOX_DATA_PATH) == 0) {
+        std::string relaDataPath = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+            + std::to_string(BundleUtil::GetUserIdByCallingUid()) + ServiceConstants::BASE + bundleName;
+        realPath.replace(realPath.find(ServiceConstants::SANDBOX_DATA_PATH),
+            std::string(ServiceConstants::SANDBOX_DATA_PATH).size(), relaDataPath);
+    } else if (sandBoxPath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == 0) {
+        std::string relaDataPath = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+            ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(BundleUtil::GetUserIdByCallingUid());
+        realPath.replace(realPath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH),
+            std::string(ServiceConstants::APP_INSTALL_SANDBOX_PATH).size(), relaDataPath);
+    } else {
+        APP_LOGE("input sandboxPath invalid");
+        return false;
+    }
     return true;
 }
 
@@ -1005,7 +1016,12 @@ std::string BundleUtil::GetNoDisablingConfigPath()
 #ifdef CONFIG_POLOCY_ENABLE
     char buf[MAX_PATH_LEN] = { 0 };
     char *configPath = GetOneCfgFile(NO_DISABLING_CONFIG_PATH, buf, MAX_PATH_LEN);
-    if (configPath == nullptr || configPath[0] == '\0' || strlen(configPath) > MAX_PATH_LEN) {
+    if (configPath == nullptr || configPath[0] == '\0') {
+        APP_LOGE("BundleUtil GetOneCfgFile failed");
+        return NO_DISABLING_CONFIG_PATH_DEFAULT;
+    }
+    if (strlen(configPath) > MAX_PATH_LEN) {
+        APP_LOGE("length exceeds");
         return NO_DISABLING_CONFIG_PATH_DEFAULT;
     }
     return configPath;

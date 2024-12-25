@@ -4789,7 +4789,7 @@ void InnerBundleInfo::PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_
     }
 }
 
-void InnerBundleInfo::SetSanStatus()
+void InnerBundleInfo::SetDFXParamStatus()
 {
     SetAsanEnabled(IsAsanEnabled());
     SetGwpAsanEnabled(IsGwpAsanEnabled());

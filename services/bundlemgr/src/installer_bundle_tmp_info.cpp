@@ -13,17 +13,10 @@
  * limitations under the License.
  */
 
-#include <string>
-
-#include "nocopyable.h"
-
-#include "inner_bundle_info.h"
 #include "installer_bundle_tmp_info.h"
-
 
 namespace OHOS {
 namespace AppExecFwk {
-
 bool InstallerBundleTempInfo::GetTempBundleInfo(InnerBundleInfo &info) const
 {
     if (!bundleInit_) {
