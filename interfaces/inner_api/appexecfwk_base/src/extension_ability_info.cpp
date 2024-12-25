@@ -123,7 +123,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysPicker/photoEditor", ExtensionAbilityType::SYSPICKER_PHOTOEDITOR },
     { "sys/visualExtension", ExtensionAbilityType::SYS_VISUAL },
     { "uiService", ExtensionAbilityType::UI_SERVICE },
-    { "recentPhoto", ExtensionAbilityType::RECENT_PHOTO }
+    { "recentPhoto", ExtensionAbilityType::RECENT_PHOTO },
+    { "assetAcceleration", ExtensionAbilityType::ASSET_ACCELERATION }
 };
 
 // the new extension type does not need to be added here
