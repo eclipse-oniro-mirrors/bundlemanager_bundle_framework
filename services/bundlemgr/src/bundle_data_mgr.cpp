@@ -3523,6 +3523,59 @@ ErrCode BundleDataMgr::GetBundleNameAndIndexForUid(const int32_t uid, std::strin
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bundleName,
+    int32_t &appIndex) const
+{
+    if (uid < Constants::BASE_APP_UID) {
+        APP_LOGD("the uid(%{public}d) is not an application", uid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    int32_t userId = GetUserIdByUid(uid);
+    int32_t bundleId = uid - userId * Constants::BASE_USER_RANGE;
+    if (bundleId < 0) {
+        APP_LOGD("the uid(%{public}d) is not an application", uid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+
+    std::shared_lock<std::shared_mutex> bundleIdLock(bundleIdMapMutex_);
+    auto bundleIdIter = bundleIdMap_.find(bundleId);
+    if (bundleIdIter == bundleIdMap_.end()) {
+        APP_LOGW_NOFUNC("bundleId %{public}d is not existed", bundleId);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    std::string keyName = bundleIdIter->second;
+    if (keyName.empty()) {
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    // bundleName, sandbox_app: \d+_w+, clone_app: \d+clone_w+, others
+    if (isdigit(keyName[0])) {
+        size_t pos = keyName.find_first_not_of("0123456789");
+        if (pos == std::string::npos) {
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        }
+        std::string index = keyName.substr(0, pos);
+        if (!OHOS::StrToInt(index, appIndex)) {
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        }
+        
+        auto clonePos = keyName.find(CLONE_BUNDLE_PREFIX);
+        if (clonePos != std::string::npos && clonePos == pos) {
+            bundleName = keyName.substr(clonePos + strlen(CLONE_BUNDLE_PREFIX));
+            return ERR_OK;
+        }
+        
+        auto sandboxPos = keyName.find(Constants::FILE_UNDERLINE);
+        if (sandboxPos != std::string::npos && sandboxPos == pos) {
+            bundleName = keyName.substr(sandboxPos + strlen(Constants::FILE_UNDERLINE));
+            return ERR_OK;
+        }
+    }
+
+    bundleName = keyName;
+    appIndex = 0;
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerBundleInfo &innerBundleInfo,
     int32_t &appIndex) const
 {
@@ -3788,20 +3841,14 @@ bool BundleDataMgr::GetBundlesForUid(const int uid, std::vector<std::string> &bu
 
 ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
 {
-    InnerBundleInfo innerBundleInfo;
-    ErrCode ret = GetInnerBundleInfoByUid(uid, innerBundleInfo);
+    int32_t appIndex = 0;
+    ErrCode ret = GetBundleNameAndIndex(uid, name, appIndex);
     if (ret != ERR_OK) {
-        APP_LOGD("get innerBundleInfo from bundleInfo_ by uid failed");
-        if (sandboxAppHelper_ == nullptr) {
-            APP_LOGW("sandboxAppHelper_ is nullptr");
-            return ERR_BUNDLE_MANAGER_INVALID_UID;
-        }
-        if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-            return ERR_BUNDLE_MANAGER_INVALID_UID;
-        }
+        APP_LOGE("the uid(%{public}d) is not an application", uid);
+        return ret;
     }
-
-    name = innerBundleInfo.GetBundleName();
+    APP_LOGD("GetBundleNameForUid, uid %{public}d, bundleName %{public}s, appIndex %{public}d",
+        uid, name.c_str(), appIndex);
     return ERR_OK;
 }
 

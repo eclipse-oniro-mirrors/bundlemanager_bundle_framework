@@ -988,6 +988,7 @@ public:
     ErrCode RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex);
     ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex = 0) const;
+    ErrCode GetBundleNameAndIndex(const int32_t uid, std::string &bundleName, int32_t &appIndex) const;
     ErrCode GetBundleNameAndIndexForUid(const int32_t uid, std::string &bundleName, int32_t &appIndex) const;
 
     ErrCode QueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
