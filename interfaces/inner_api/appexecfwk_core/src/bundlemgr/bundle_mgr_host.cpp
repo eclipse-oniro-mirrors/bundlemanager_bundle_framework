@@ -769,12 +769,12 @@ ErrCode BundleMgrHost::HandleGetBundleInfoForSelf(MessageParcel &data, MessagePa
     int32_t flags = data.ReadInt32();
     APP_LOGD("GetBundleInfoForSelf, flags %{public}d", flags);
     BundleInfo info;
-    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     auto ret = GetBundleInfoForSelf(flags, info);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -789,12 +789,12 @@ ErrCode BundleMgrHost::HandleGetDependentBundleInfo(MessageParcel &data, Message
     GetDependentBundleInfoFlag flag = static_cast<GetDependentBundleInfoFlag>(data.ReadUint32());
     APP_LOGD("GetDependentBundleInfo, bundle %{public}s", name.c_str());
     BundleInfo info;
-    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     auto ret = GetDependentBundleInfo(name, info, flag);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -810,9 +810,9 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlags(MessageParcel &data, Mess
     int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flags %{public}d", name.c_str(), flags);
     BundleInfo info;
-    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     bool ret = GetBundleInfo(name, flags, info, userId);
     if (ret) {
+        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
         WRITE_PARCEL(reply.WriteInt32(ERR_OK));
         return WriteParcelInfoIntelligent(info, reply);
     }
@@ -832,13 +832,13 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9(MessageParcel &data, Me
     int32_t userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flags %{public}d", name.c_str(), flags);
     BundleInfo info;
-    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     auto ret = GetBundleInfoV9(name, flags, info, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
+        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
         return WriteParcelInfoIntelligent<BundleInfo>(info, reply);
     }
     return ERR_OK;
@@ -865,13 +865,13 @@ ErrCode BundleMgrHost::HandleBatchGetBundleInfo(MessageParcel &data, MessageParc
     int32_t flags = data.ReadInt32();
     int32_t userId = data.ReadInt32();
     std::vector<BundleInfo> bundleInfos;
-    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     auto ret = BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
+        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
         if (!WriteVectorToParcelIntelligent(bundleInfos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -931,13 +931,13 @@ ErrCode BundleMgrHost::HandleGetBundleInfos(MessageParcel &data, MessageParcel &
     int userId = data.ReadInt32();
 
     std::vector<BundleInfo> infos;
-    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
     bool ret = GetBundleInfos(flag, infos, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
+        reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
         if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -954,13 +954,13 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlags(MessageParcel &data, Mes
     int userId = data.ReadInt32();
 
     std::vector<BundleInfo> infos;
-    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
     bool ret = GetBundleInfos(flags, infos, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
+        reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
         if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -3519,12 +3519,12 @@ ErrCode BundleMgrHost::HandleGetUninstalledBundleInfo(MessageParcel &data, Messa
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BundleInfo info;
-    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     auto ret = GetUninstalledBundleInfo(name, info);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -4090,13 +4090,13 @@ ErrCode BundleMgrHost::HandleGetBundleInfosForContinuation(MessageParcel &data, 
     int userId = data.ReadInt32();
  
     std::vector<BundleInfo> infos;
-    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
     bool ret = GetBundleInfosForContinuation(flags, infos, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
+        reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
         if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -4111,14 +4111,13 @@ ErrCode BundleMgrHost::HandleGetContinueBundleNames(MessageParcel &data, Message
     std::string continueBundleName = data.ReadString();
     int userId = data.ReadInt32();
 
-    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
     std::vector<std::string> bundleNames;
-
     auto ret = GetContinueBundleNames(continueBundleName, bundleNames, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("GetContinueBundleNames write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
     if (ret == ERR_OK && !reply.WriteStringVector(bundleNames)) {
         APP_LOGE("Write bundleNames results failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
