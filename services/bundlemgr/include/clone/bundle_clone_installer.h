@@ -61,7 +61,7 @@ private:
     void RemoveEl5Dir(InnerBundleUserInfo &userInfo, const int32_t uid, int32_t userId, const int32_t appIndex);
     ErrCode GetDataMgr();
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid, int32_t appIndex,
-        int32_t userId, const InnerBundleInfo& innerBundleInfo);
+        const InnerBundleInfo& innerBundleInfo);
 
     ErrCode ProcessCloneBundleInstall(const std::string &bundleName, const int32_t userId, int32_t &appIndex);
     ErrCode ProcessCloneBundleUninstall(const std::string &bundleName, int32_t userId, int32_t appIndex);
@@ -76,12 +76,12 @@ private:
     std::string GetAssetAccessGroups(const std::string &bundleName);
     std::string GetDeveloperId(const std::string &bundleName);
 
-    std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     int32_t uid_ = 0;
     uint32_t accessTokenId_ = 0;
     uint32_t versionCode_ = 0;
     std::string appId_;
     std::string appIdentifier_;
+    std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
 };
 } // AppExecFwk
 } // OHOS

@@ -849,9 +849,11 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             oldInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+            Security::AccessToken::HapInfoCheckResult checkResult;
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)
-                && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx) != ERR_OK) {
+                && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
+                SetVerifyPermissionResult(checkResult);
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
             }
             accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
@@ -1055,8 +1057,9 @@ void BaseBundleInstaller::KillRelatedProcessIfArkWeb(const std::string &bundleNa
         LOG_E(BMS_TAG_INSTALLER, "AppMgrClient is nullptr, kill ark web process failed");
         return;
     }
-    LOG_I(BMS_TAG_INSTALLER, "start to kill ark web related process");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "KillRelatedProcessIfArkWeb begin");
     appMgrClient->KillProcessDependedOnWeb();
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "KillRelatedProcessIfArkWeb end");
 }
 
 ErrCode BaseBundleInstaller::CheckAppService(
@@ -1596,6 +1599,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return res;
         }
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+        UninstallDebugAppSandbox(bundleName, uid, oldInfo);
         return ERR_OK;
     }
     dataMgr_->DisableBundle(bundleName);
@@ -1682,19 +1686,17 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     RemoveProfileFromCodeSign(bundleName);
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
     SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
-    UninstallDebugAppSandbox(bundleName, uid, userId_, oldInfo);
+    UninstallDebugAppSandbox(bundleName, uid, oldInfo);
     return ERR_OK;
 }
 
-void BaseBundleInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid, int32_t userId,
+void BaseBundleInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
     const InnerBundleInfo& innerBundleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_INSTALLER, "call UninstallDebugAppSandbox start");
-    ApplicationInfo appInfo;
-    innerBundleInfo.GetApplicationInfo(ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
     bool isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
-    bool isDebugApp = appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    bool isDebugApp = innerBundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     if (isDeveloperMode && isDebugApp) {
         int32_t flagIndex = 0;
         AppSpawnRemoveSandboxDirMsg removeSandboxDirMsg;
@@ -2000,9 +2002,11 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             oldInfo.AddInnerBundleUserInfo(curInnerBundleUserInfo);
             ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+            Security::AccessToken::HapInfoCheckResult checkResult;
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)) {
-                if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx) != ERR_OK) {
+                if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult) != ERR_OK) {
                     LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
+                    SetVerifyPermissionResult(checkResult);
                     return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
                 }
             }
@@ -2144,9 +2148,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     }
 
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    Security::AccessToken::HapInfoCheckResult checkResult;
     if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, info)) {
-        if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx) != ERR_OK) {
+        if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx, checkResult) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
+            SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
     }
@@ -2245,7 +2251,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
 
-    if (!CheckAppIdentifier(oldInfo, newInfo)) {
+    if (!CheckAppIdentifier(oldInfo.GetAppIdentifier(), newInfo.GetAppIdentifier(),
+        oldInfo.GetProvisionId(), newInfo.GetProvisionId())) {
         return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
     }
     LOG_D(BMS_TAG_INSTALLER, "ProcessBundleUpdateStatus killProcess = %{public}d", killProcess);
@@ -2268,15 +2275,20 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     return ERR_OK;
 }
 
-bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo)
+bool BaseBundleInstaller::CheckAppIdentifier(const std::string &oldAppIdentifier, const std::string &newAppIdentifier,
+    const std::string &oldAppId, const std::string &newAppId)
 {
     // for versionCode update
-    if ((oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) &&
-        (oldInfo.GetProvisionId() != newInfo.GetProvisionId())) {
-        LOG_E(BMS_TAG_INSTALLER, "the appIdentifier or appId of the new bundle is not the same as old one");
-        return false;
+    if (!oldAppIdentifier.empty() &&
+        !newAppIdentifier.empty() &&
+        oldAppIdentifier == newAppIdentifier) {
+        return true;
     }
-    return true;
+    if (oldAppId == newAppId) {
+        return true;
+    }
+    LOG_E(BMS_TAG_INSTALLER, "the appIdentifier or appId of the new bundle is not the same as old one");
+    return false;
 }
 
 ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
@@ -3066,7 +3078,7 @@ std::vector<std::string> BaseBundleInstaller::GenerateScreenLockProtectionDir(co
 
 void BaseBundleInstaller::CreateScreenLockProtectionDir()
 {
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
     if (!InitDataMgr()) {
         LOG_E(BMS_TAG_INSTALLER, "init failed");
         return;
@@ -3174,8 +3186,8 @@ bool BaseBundleInstaller::CheckInstallOnKeepData(const std::string &bundleName, 
     }
     existBeforeKeepDataApp_ = true;
     LOG_I(BMS_TAG_INSTALLER, "this app was uninstalled with keep data before");
-    if (infos.begin()->second.GetAppIdentifier() != uninstallBundleInfo.appIdentifier &&
-        infos.begin()->second.GetAppId() != uninstallBundleInfo.appId) {
+    if (!CheckAppIdentifier(uninstallBundleInfo.appIdentifier, infos.begin()->second.GetAppIdentifier(),
+        uninstallBundleInfo.appId, infos.begin()->second.GetAppId())) {
         LOG_E(BMS_TAG_INSTALLER,
             "%{public}s has been uninstalled with keep data, and the appIdentifier or appId is not the same",
             bundleName.c_str());
@@ -3776,7 +3788,10 @@ void BaseBundleInstaller::UpdateExtensionSandboxInfo(std::unordered_map<std::str
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
     auto dataGroupGids = provisionInfo.bundleInfo.dataGroupIds;
     std::vector<std::string> typeList;
-    InstalldClient::GetInstance()->GetExtensionSandboxTypeList(typeList);
+    ErrCode res = InstalldClient::GetInstance()->GetExtensionSandboxTypeList(typeList);
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "GetExtensionSandboxTypeList failed %{public}d", res);
+    }
     for (auto &item : newInfos) {
         item.second.UpdateExtensionSandboxInfo(typeList);
         auto innerBundleInfo = item.second;
@@ -4808,6 +4823,7 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     }
     // 1. copy hsp or hap file to temp installation dir
     ErrCode result = ERR_OK;
+    LOG_I(BMS_TAG_INSTALLER, "codesign start");
     for (const auto &hapPathRecord : hapPathRecords_) {
         LOG_D(BMS_TAG_INSTALLER, "Save from %{public}s to %{public}s",
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
@@ -4828,7 +4844,7 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
             }
         }
     }
-    LOG_D(BMS_TAG_INSTALLER, "copy hap to install path success");
+    LOG_I(BMS_TAG_INSTALLER, "codesign end");
 
     // 2. check encryption of hap
     if ((result = CheckHapEncryption(infos, oldInfo)) != ERR_OK) {
@@ -5268,7 +5284,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     const std::string &targetSoPath, const std::string &signatureFileDir) const
 {
     if (copyHapToInstallPath_) {
-        LOG_I(BMS_TAG_INSTALLER, "hap will be copied to install path, verified code signature later");
+        LOG_D(BMS_TAG_INSTALLER, "hap will be copied to install path, verified code signature later");
         return ERR_OK;
     }
     LOG_D(BMS_TAG_INSTALLER, "begin to verify code signature for native files");
@@ -5559,7 +5575,7 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
 ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos,
     const InnerBundleInfo &oldInfo)
 {
-    LOG_D(BMS_TAG_INSTALLER, "begin to check hap encryption");
+    LOG_I(BMS_TAG_INSTALLER, "begin");
     InnerBundleInfo newInfo;
     if (!FetchInnerBundleInfo(newInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
@@ -5597,6 +5613,7 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         LOG_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
+    LOG_I(BMS_TAG_INSTALLER, "end");
     return ERR_OK;
 }
 
@@ -6060,8 +6077,10 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         }
         Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo) != ERR_OK) {
+        Security::AccessToken::HapInfoCheckResult checkResult;
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, checkResult) != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
+            SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
         if (needUpdate) {
@@ -6072,8 +6091,10 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         for (const auto &cloneInfoPair : cloneInfos) {
             Security::AccessToken::AccessTokenIDEx cloneAccessTokenIdEx;
             cloneAccessTokenIdEx.tokenIDEx = cloneInfoPair.second.accessTokenIdEx;
-            if (BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo) != ERR_OK) {
+            Security::AccessToken::HapInfoCheckResult checkResult;
+            if (BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo, checkResult) != ERR_OK) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
+                SetVerifyPermissionResult(checkResult);
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
             }
             if (needUpdate) {
@@ -6139,12 +6160,13 @@ void BaseBundleInstaller::VerifyDomain()
         return;
     }
     std::string fingerprint = bundleInfo.GetCertificateFingerprint();
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "start to call VerifyDomain, size of skillUris: %{public}zu", skillUris.size());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "start VerifyDomain, size: %{public}zu", skillUris.size());
     // call VerifyDomain
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->VerifyDomain(
         appIdentifier, bundleName_, fingerprint, skillUris);
     IPCSkeleton::SetCallingIdentity(identity);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "end VerifyDomain");
 #else
     LOG_I(BMS_TAG_INSTALLER, "app domain verify is disabled");
     return;
@@ -6155,7 +6177,7 @@ void BaseBundleInstaller::ClearDomainVerifyStatus(const std::string &appIdentifi
     const std::string &bundleName) const
 {
 #ifdef APP_DOMAIN_VERIFY_ENABLED
-    LOG_I(BMS_TAG_INSTALLER, "start to clear domain verify status");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "start ClearDomainVerifyStatus");
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     // call ClearDomainVerifyStatus
     if (!DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->ClearDomainVerifyStatus(
@@ -6163,6 +6185,7 @@ void BaseBundleInstaller::ClearDomainVerifyStatus(const std::string &appIdentifi
         LOG_W(BMS_TAG_INSTALLER, "ClearDomainVerifyStatus failed");
     }
     IPCSkeleton::SetCallingIdentity(identity);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "end ClearDomainVerifyStatus");
 #else
     LOG_I(BMS_TAG_INSTALLER, "app domain verify is disabled");
     return;
@@ -6237,6 +6260,13 @@ std::string BaseBundleInstaller::GetCheckResultMsg() const
 void BaseBundleInstaller::SetCheckResultMsg(const std::string checkResultMsg) const
 {
     bundleInstallChecker_->SetCheckResultMsg(checkResultMsg);
+}
+
+void BaseBundleInstaller::SetVerifyPermissionResult(const Security::AccessToken::HapInfoCheckResult &checkResult)
+{
+    auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+    SetCheckResultMsg(result);
+    LOG_NOFUNC_E(BMS_TAG_INSTALLER, "%{public}s", result.c_str());
 }
 
 bool BaseBundleInstaller::VerifyActivationLock() const
@@ -6543,12 +6573,8 @@ ErrCode BaseBundleInstaller::CheckShellCanInstallPreApp(
         return ERR_OK;
     }
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyResult.GetProvisionInfo();
-    if (!provisionInfo.bundleInfo.appIdentifier.empty() &&
-        !newInfos.begin()->second.GetAppIdentifier().empty() &&
-        provisionInfo.bundleInfo.appIdentifier == newInfos.begin()->second.GetAppIdentifier()) {
-        return ERR_OK;
-    }
-    if (provisionInfo.appId == newInfos.begin()->second.GetProvisionId()) {
+    if (CheckAppIdentifier(provisionInfo.bundleInfo.appIdentifier, newInfos.begin()->second.GetAppIdentifier(),
+        provisionInfo.appId, newInfos.begin()->second.GetProvisionId())) {
         return ERR_OK;
     }
     LOG_E(BMS_TAG_DEFAULT, "%{public}s appId or appIdentifier not same with preinstalled app",
@@ -6572,10 +6598,12 @@ bool BaseBundleInstaller::RecoverHapToken(const std::string &bundleName, const i
         accessTokenIdEx.tokenIdExStruct.tokenID =
             uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenId;
         accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo) == ERR_OK) {
+        Security::AccessToken::HapInfoCheckResult checkResult;
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, checkResult) == ERR_OK) {
             return true;
         } else {
             LOG_W(BMS_TAG_INSTALLER, "bundleName:%{public}s UpdateHapToken failed", bundleName.c_str());
+            SetVerifyPermissionResult(checkResult);
         }
     }
     return false;

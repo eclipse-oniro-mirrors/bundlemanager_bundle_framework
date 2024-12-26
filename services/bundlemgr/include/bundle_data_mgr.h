@@ -109,6 +109,8 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool AddNewModuleInfo(const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+    bool AddNewModuleInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+
     /**
      * @brief Remove module info from an exist InnerBundleInfo.
      * @param bundleName Indicates the bundle name.
@@ -128,7 +130,8 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
-
+    bool UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+    void UpdateBaseBundleInfoIntoOld(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
     /**
      * @brief Get an InnerBundleInfo if exist (will change the status to DISABLED).
@@ -426,6 +429,14 @@ public:
      */
     bool GetBundleList(
         std::vector<std::string> &bundleNames, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    /**
+     * @brief Obtains debug bundle names installed.
+     * @param bundleNames Indicates the debug bundle Names.
+     * @param userId Indicates the user ID.
+     * @return Returns true if have debug bundle installed; returns false otherwise.
+     */
+    bool GetDebugBundleList(
+        std::vector<std::string> &bundleNames, int32_t userId) const;
     /**
      * @brief Set the bundle status disable.
      * @param bundleName Indicates the bundle name.
@@ -946,6 +957,12 @@ public:
     ErrCode GetOdid(std::string &odid) const;
     ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
     void UpdateRouterInfo(const std::string &bundleName);
+    void UpdateRouterInfo(InnerBundleInfo &innerBundleInfo);
+    void FindRouterHapPath(const InnerBundleInfo &innerBundleInfo,
+        std::map<std::string, std::pair<std::string, std::string>> &hapPathMap);
+    void UpdateRouterInfo(const std::string &bundleName,
+        std::map<std::string, std::pair<std::string, std::string>> &hapPathMap);
+
     bool DeleteRouterInfo(const std::string &bundleName);
     bool DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName);
     void GetAllBundleNames(std::set<std::string> &bundleNames);
@@ -1015,6 +1032,7 @@ public:
 
     ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled);
     void CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage = false);
+    void CreateEl5DirNoCache(const std::vector<CreateDirParam> &el5Params, InnerBundleInfo &info);
     int32_t GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t appIndex) const;
     ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName);
     ErrCode GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const;
@@ -1117,6 +1135,7 @@ private:
     void CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32_t userId) const;
     void InnerCreateEl5Dir(const CreateDirParam &el5Param);
     void SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSaveStorage);
+    void SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleInfo &info);
 
     void FilterExtensionAbilityInfosByModuleName(const std::string &moduleName,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
@@ -1234,27 +1253,34 @@ private:
         const AbilityInfo &abilityInfo) const;
     void RestoreUidAndGidFromUninstallInfo();
 private:
-    mutable std::shared_mutex bundleInfoMutex_;
-    mutable std::mutex stateMutex_;
-    mutable std::shared_mutex bundleIdMapMutex_;
-    mutable std::shared_mutex callbackMutex_;
-    mutable ffrt::mutex eventCallbackMutex_;
-    mutable std::shared_mutex bundleMutex_;
-    mutable std::mutex multiUserIdSetMutex_;
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
+    mutable std::mutex stateMutex_;
+    mutable std::mutex multiUserIdSetMutex_;
+    mutable std::mutex hspBundleNameMutex_;
+    mutable ffrt::mutex eventCallbackMutex_;
+    mutable std::shared_mutex bundleInfoMutex_;
+    mutable std::shared_mutex bundleIdMapMutex_;
+    mutable std::shared_mutex callbackMutex_;
+    mutable std::shared_mutex bundleMutex_;
+    std::shared_ptr<IBundleDataStorage> dataStorage_;
+    std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
+    std::shared_ptr<BundleStateStorage> bundleStateStorage_;
+    std::shared_ptr<BundlePromise> bundlePromise_ = nullptr;
+    std::shared_ptr<BundleSandboxAppHelper> sandboxAppHelper_;
+    std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
+    std::shared_ptr<IRouterDataStorage> routerStorage_;
+    std::shared_ptr<UninstallDataMgrStorageRdb> uninstallDataMgr_;
+    // use vector because these functions using for IPC, the bundleName may duplicate
+    std::vector<sptr<IBundleStatusCallback>> callbackList_;
+    // common event callback
+    std::vector<sptr<IBundleEventCallback>> eventCallbackList_;
     // using for locking by bundleName
     std::unordered_map<std::string, std::mutex> bundleMutexMap_;
     // using for generating bundleId
     // key:bundleId
     // value:bundleName
     std::map<int32_t, std::string> bundleIdMap_;
-    // save all created users.
-    std::set<int32_t> multiUserIdsSet_;
-    // use vector because these functions using for IPC, the bundleName may duplicate
-    std::vector<sptr<IBundleStatusCallback>> callbackList_;
-    // common event callback
-    std::vector<sptr<IBundleEventCallback>> eventCallbackList_;
     // all installed bundles
     // key:bundleName
     // value:innerbundleInfo
@@ -1263,16 +1289,9 @@ private:
     std::map<std::string, InstallState> installStates_;
     // current-status:previous-statue pair
     std::multimap<InstallState, InstallState> transferStates_;
-    std::shared_ptr<IBundleDataStorage> dataStorage_;
-    std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
-    std::shared_ptr<BundleStateStorage> bundleStateStorage_;
-    std::shared_ptr<BundlePromise> bundlePromise_ = nullptr;
-    std::shared_ptr<BundleSandboxAppHelper> sandboxAppHelper_;
-    mutable std::mutex hspBundleNameMutex_;
+    // save all created users.
+    std::set<int32_t> multiUserIdsSet_;
     std::set<std::string> appServiceHspBundleName_;
-    std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
-    std::shared_ptr<IRouterDataStorage> routerStorage_;
-    std::shared_ptr<UninstallDataMgrStorageRdb> uninstallDataMgr_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

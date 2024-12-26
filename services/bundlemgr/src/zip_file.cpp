@@ -67,12 +67,32 @@ void ZipFile::SetContentLocation(const ZipPos start, const size_t length)
 bool ZipFile::CheckEndDir(const EndDir &endDir) const
 {
     size_t lenEndDir = sizeof(EndDir);
-    if ((endDir.numDisk != 0) || (endDir.signature != EOCD_SIGNATURE) || (endDir.startDiskOfCentralDir != 0) ||
-        (endDir.offset >= fileLength_) || (endDir.totalEntriesInThisDisk != endDir.totalEntries) ||
-        (endDir.commentLen != 0) ||
-        // central dir can't overlap end of central dir
-        ((endDir.offset + endDir.sizeOfCentralDir + lenEndDir) > fileLength_)) {
-        APP_LOGE("end dir format error");
+    if (endDir.numDisk != 0) {
+        APP_LOGE("endDir.numDisk != 0");
+        return false;
+    }
+    if (endDir.signature != EOCD_SIGNATURE) {
+        APP_LOGE("endDir.signature != EOCD_SIGNATURE");
+        return false;
+    }
+    if (endDir.startDiskOfCentralDir != 0) {
+        APP_LOGE("endDir.startDiskOfCentralDir != 0");
+        return false;
+    }
+    if (endDir.offset >= fileLength_) {
+        APP_LOGE("endDir.offset >= fileLength_");
+        return false;
+    }
+    if (endDir.totalEntriesInThisDisk != endDir.totalEntries) {
+        APP_LOGE("endDir.totalEntriesInThisDisk != endDir.totalEntries");
+        return false;
+    }
+    if (endDir.commentLen != 0) {
+        APP_LOGE("endDir.commentLen != 0");
+        return false;
+    }
+    if ((endDir.offset + endDir.sizeOfCentralDir + lenEndDir) > fileLength_) {
+        APP_LOGE("(endDir.offset + endDir.sizeOfCentralDir + lenEndDir) > fileLength_");
         return false;
     }
     return true;
@@ -176,7 +196,7 @@ bool ZipFile::Open()
     realPath.reserve(PATH_MAX);
     realPath.resize(PATH_MAX - 1);
     if (realpath(pathName_.c_str(), &(realPath[0])) == nullptr) {
-        APP_LOGE("transform real path error: %{public}d", errno);
+        APP_LOGE("transform real path: %{private}s error: %{public}d", pathName_.c_str(), errno);
         return false;
     }
 

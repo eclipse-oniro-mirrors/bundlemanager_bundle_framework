@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,8 +33,8 @@ namespace AppExecFwk {
 
 struct GetLauncherAbilityCallbackInfo : public BaseCallbackInfo {
     explicit GetLauncherAbilityCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    std::string bundleName;
     int32_t userId = 0;
+    std::string bundleName;
     std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
 };
 
@@ -46,8 +46,8 @@ struct GetAllLauncherAbilityCallbackInfo : public BaseCallbackInfo {
 
 struct GetShortcutInfoCallbackInfo : public BaseCallbackInfo {
     explicit GetShortcutInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    std::string bundleName;
     int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName;
     std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
 };
 

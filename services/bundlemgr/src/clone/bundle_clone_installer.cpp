@@ -206,8 +206,10 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     // 4. generate the accesstoken id and inherit original permissions
     info.SetAppIndex(appIndex);
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
-    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx) != ERR_OK) {
-        APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
+    Security::AccessToken::HapInfoCheckResult checkResult;
+    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult) != ERR_OK) {
+        auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+        APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
     ScopeGuard applyAccessTokenGuard([&] {
@@ -337,19 +339,17 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         appControlMgr->DeleteAllDisposedRuleByBundle(info, appIndex, userId);
     }
 #endif
-    UninstallDebugAppSandbox(bundleName, uid_, appIndex, userId, info);
+    UninstallDebugAppSandbox(bundleName, uid_, appIndex, info);
     APP_LOGI("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
 }
 
 void BundleCloneInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
-    int32_t appIndex, int32_t userId, const InnerBundleInfo& innerBundleInfo)
+    int32_t appIndex, const InnerBundleInfo& innerBundleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("call UninstallDebugAppSandbox start");
-    ApplicationInfo appInfo;
-    innerBundleInfo.GetApplicationInfo(ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
-    bool isDebugApp = appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    bool isDebugApp = innerBundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     bool isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
     if (isDeveloperMode && isDebugApp) {
         AppSpawnRemoveSandboxDirMsg removeSandboxDirMsg;

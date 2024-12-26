@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,11 +49,11 @@ private:
         transactId_++;
         return transactId_.load();
     }
+    mutable std::atomic<int> transactId_ = 0;
     std::shared_mutex mutex_;
 
-    mutable std::atomic<int> transactId_ = 0;
-    std::map<std::string, QueryRpcIdParams> queryAbilityParamsMap_;
     std::shared_ptr<SerialQueue> serialQueue_;
+    std::map<std::string, QueryRpcIdParams> queryAbilityParamsMap_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

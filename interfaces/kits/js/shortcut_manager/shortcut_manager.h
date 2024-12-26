@@ -28,16 +28,16 @@ namespace AppExecFwk {
 
 struct AddDesktopShortcutInfoCallbackInfo : public BaseCallbackInfo {
     explicit AddDesktopShortcutInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    OHOS::AppExecFwk::ShortcutInfo shortcutInfo;
     int32_t userId = 0;
     int32_t errCode = 0;
+    OHOS::AppExecFwk::ShortcutInfo shortcutInfo;
 };
 
 struct DeleteDesktopShortcutInfoCallbackInfo : public BaseCallbackInfo {
     explicit DeleteDesktopShortcutInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    OHOS::AppExecFwk::ShortcutInfo shortcutInfo;
     int32_t userId = 0;
     int32_t errCode = 0;
+    OHOS::AppExecFwk::ShortcutInfo shortcutInfo;
 };
 
 struct GetAllDesktopShortcutInfoCallbackInfo : public BaseCallbackInfo {

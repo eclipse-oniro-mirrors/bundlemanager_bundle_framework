@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,12 +40,12 @@ public:
     napi_value operator[](size_t pos) const;
 
 private:
-    napi_env env_ = nullptr;
-    napi_callback_info info_ = nullptr;
     size_t argc_ = 0;
     size_t maxArgc_ = 0;
-    std::unique_ptr<napi_value[]> argv_ = { nullptr };
+    napi_env env_ = nullptr;
+    napi_callback_info info_ = nullptr;
     napi_value thisArg_ = nullptr;
+    std::unique_ptr<napi_value[]> argv_ = { nullptr };
 };
 }
 }

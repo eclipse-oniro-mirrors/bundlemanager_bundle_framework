@@ -1859,6 +1859,21 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0025, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: bundleInfosFalse_0026
+ * @tc.name: test GetDebugBundleList
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0026, Function | SmallTest | Level1)
+{
+    std::vector<std::string> info;
+    GetBundleDataMgr()->bundleInfos_.clear();
+    bool testRet = GetBundleDataMgr()->GetDebugBundleList(info, USERID);
+    EXPECT_EQ(testRet, false);
+    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
+}
+
+/**
  * @tc.number: bundleInfosFalse_0027
  * @tc.name: test QueryExtensionAbilityInfoByUri
  * @tc.desc: 1.system run normally
@@ -2002,6 +2017,501 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0008, Function | SmallTest | Level1)
     bool ret = skill.MatchMimeType(".jpg", matchUriIndex);
     EXPECT_EQ(true, ret);
     EXPECT_EQ(matchUriIndex, 0);
+}
+
+/**
+ * @tc.number: MatchUri_0100
+ * @tc.name: test MatchUri
+ * @tc.desc: 1.system run normally
+ *           2.skill uri not has host.
+*/
+HWTEST_F(BmsBundleManagerTest, MatchUri_0100, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back("action001");
+    SkillUri skillUri;
+    skillUri.scheme = "myscheme";
+    skillUri.port = "888";
+    skillUri.path = "test";
+    skillUri.pathStartWith = "";
+    skillUri.pathRegex = "";
+    std::string uriString = "mySCHEME";
+    bool ret = skill.MatchUri(uriString, skillUri);
+    EXPECT_EQ(true, ret);
+
+    std::string uriString1 = "mySCHEME:";
+    bool ret1 = skill.MatchUri(uriString1, skillUri);
+    EXPECT_EQ(true, ret1);
+
+    std::string uriString2 = "mySCHEME:/";
+    bool ret2 = skill.MatchUri(uriString2, skillUri);
+    EXPECT_EQ(true, ret2);
+
+    std::string uriString3 = "mySCHEME://";
+    bool ret3 = skill.MatchUri(uriString3, skillUri);
+    EXPECT_EQ(true, ret3);
+
+    std::string uriString4 = "myscheme";
+    bool ret4 = skill.MatchUri(uriString4, skillUri);
+    EXPECT_EQ(true, ret4);
+
+    std::string uriString5 = "myscheme:";
+    bool ret5 = skill.MatchUri(uriString5, skillUri);
+    EXPECT_EQ(true, ret5);
+
+    std::string uriString6 = "myscheme:/";
+    bool ret6 = skill.MatchUri(uriString6, skillUri);
+    EXPECT_EQ(true, ret6);
+
+    std::string uriString7 = "myscheme://";
+    bool ret7 = skill.MatchUri(uriString7, skillUri);
+    EXPECT_EQ(true, ret7);
+
+    std::string uriString8 = "MYSCHEME";
+    bool ret8 = skill.MatchUri(uriString8, skillUri);
+    EXPECT_EQ(true, ret8);
+
+    std::string uriString9 = "MYSCHEME:";
+    bool ret9 = skill.MatchUri(uriString9, skillUri);
+    EXPECT_EQ(true, ret9);
+
+    std::string uriString10 = "MYSCHEME:/";
+    bool ret10 = skill.MatchUri(uriString10, skillUri);
+    EXPECT_EQ(true, ret10);
+
+    std::string uriString11 = "MYSCHEME://";
+    bool ret11 = skill.MatchUri(uriString11, skillUri);
+    EXPECT_EQ(true, ret11);
+}
+
+/**
+ * @tc.number: MatchUri_0200
+ * @tc.name: test MatchUri
+ * @tc.desc: 1.system run normally
+ *           2.skill uri not has host.
+*/
+HWTEST_F(BmsBundleManagerTest, MatchUri_0200, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back("action001");
+    SkillUri skillUri;
+    skillUri.scheme = "MYSCHEME";
+    skillUri.port = "888";
+    skillUri.path = "test";
+    skillUri.pathStartWith = "";
+    skillUri.pathRegex = "";
+    std::string uriString = "mySCHEME";
+    bool ret = skill.MatchUri(uriString, skillUri);
+    EXPECT_EQ(true, ret);
+
+    std::string uriString1 = "mySCHEME:";
+    bool ret1 = skill.MatchUri(uriString1, skillUri);
+    EXPECT_EQ(true, ret1);
+
+    std::string uriString2 = "mySCHEME:/";
+    bool ret2 = skill.MatchUri(uriString2, skillUri);
+    EXPECT_EQ(true, ret2);
+
+    std::string uriString3 = "mySCHEME://";
+    bool ret3 = skill.MatchUri(uriString3, skillUri);
+    EXPECT_EQ(true, ret3);
+
+    std::string uriString4 = "myscheme";
+    bool ret4 = skill.MatchUri(uriString4, skillUri);
+    EXPECT_EQ(true, ret4);
+
+    std::string uriString5 = "myscheme:";
+    bool ret5 = skill.MatchUri(uriString5, skillUri);
+    EXPECT_EQ(true, ret5);
+
+    std::string uriString6 = "myscheme:/";
+    bool ret6 = skill.MatchUri(uriString6, skillUri);
+    EXPECT_EQ(true, ret6);
+
+    std::string uriString7 = "myscheme://";
+    bool ret7 = skill.MatchUri(uriString7, skillUri);
+    EXPECT_EQ(true, ret7);
+
+    std::string uriString8 = "MYSCHEME";
+    bool ret8 = skill.MatchUri(uriString8, skillUri);
+    EXPECT_EQ(true, ret8);
+
+    std::string uriString9 = "MYSCHEME:";
+    bool ret9 = skill.MatchUri(uriString9, skillUri);
+    EXPECT_EQ(true, ret9);
+
+    std::string uriString10 = "MYSCHEME:/";
+    bool ret10 = skill.MatchUri(uriString10, skillUri);
+    EXPECT_EQ(true, ret10);
+
+    std::string uriString11 = "MYSCHEME://";
+    bool ret11 = skill.MatchUri(uriString11, skillUri);
+    EXPECT_EQ(true, ret11);
+}
+
+/**
+ * @tc.number: MatchUri_0300
+ * @tc.name: test MatchUri
+ * @tc.desc: 1.system run normally
+ *           2.skill uri not has host.
+*/
+HWTEST_F(BmsBundleManagerTest, MatchUri_0300, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back("action001");
+    SkillUri skillUri;
+    skillUri.scheme = "MYscheme";
+    skillUri.port = "888";
+    skillUri.path = "test";
+    skillUri.pathStartWith = "";
+    skillUri.pathRegex = "";
+    std::string uriString = "mySCHEME";
+    bool ret = skill.MatchUri(uriString, skillUri);
+    EXPECT_EQ(true, ret);
+
+    std::string uriString1 = "mySCHEME:";
+    bool ret1 = skill.MatchUri(uriString1, skillUri);
+    EXPECT_EQ(true, ret1);
+
+    std::string uriString2 = "mySCHEME:/";
+    bool ret2 = skill.MatchUri(uriString2, skillUri);
+    EXPECT_EQ(true, ret2);
+
+    std::string uriString3 = "mySCHEME://";
+    bool ret3 = skill.MatchUri(uriString3, skillUri);
+    EXPECT_EQ(true, ret3);
+
+    std::string uriString4 = "myscheme";
+    bool ret4 = skill.MatchUri(uriString4, skillUri);
+    EXPECT_EQ(true, ret4);
+
+    std::string uriString5 = "myscheme:";
+    bool ret5 = skill.MatchUri(uriString5, skillUri);
+    EXPECT_EQ(true, ret5);
+
+    std::string uriString6 = "myscheme:/";
+    bool ret6 = skill.MatchUri(uriString6, skillUri);
+    EXPECT_EQ(true, ret6);
+
+    std::string uriString7 = "myscheme://";
+    bool ret7 = skill.MatchUri(uriString7, skillUri);
+    EXPECT_EQ(true, ret7);
+
+    std::string uriString8 = "MYSCHEME";
+    bool ret8 = skill.MatchUri(uriString8, skillUri);
+    EXPECT_EQ(true, ret8);
+
+    std::string uriString9 = "MYSCHEME:";
+    bool ret9 = skill.MatchUri(uriString9, skillUri);
+    EXPECT_EQ(true, ret9);
+
+    std::string uriString10 = "MYSCHEME:/";
+    bool ret10 = skill.MatchUri(uriString10, skillUri);
+    EXPECT_EQ(true, ret10);
+
+    std::string uriString11 = "MYSCHEME://";
+    bool ret11 = skill.MatchUri(uriString11, skillUri);
+    EXPECT_EQ(true, ret11);
+}
+
+/**
+ * @tc.number: MatchUri_0400
+ * @tc.name: test MatchUri
+ * @tc.desc: 1.system run normally
+ *           2.test scheme and host case-sensitivity match.
+*/
+HWTEST_F(BmsBundleManagerTest, MatchUri_0400, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back("action001");
+    SkillUri skillUri;
+    skillUri.scheme = "myscheme";
+    skillUri.host = "www.test.host";
+    skillUri.port = "888";
+    skillUri.path = "test";
+    skillUri.pathStartWith = "";
+    skillUri.pathRegex = "";
+    std::string uriString1 = "myscheme://www.test.host:888/test";
+    bool ret1 = skill.MatchUri(uriString1, skillUri);
+    EXPECT_EQ(true, ret1);
+
+    std::string uriString2 = "MYSCHEME://www.test.host:888/test";
+    bool ret2 = skill.MatchUri(uriString2, skillUri);
+    EXPECT_EQ(true, ret2);
+
+    std::string uriString3 = "myscheme://WWW.TEST.HOST:888/test";
+    bool ret3 = skill.MatchUri(uriString3, skillUri);
+    EXPECT_EQ(true, ret3);
+
+    std::string uriString4 = "MYSCHEME://WWW.TEST.HOST:888/test";
+    bool ret4 = skill.MatchUri(uriString4, skillUri);
+    EXPECT_EQ(true, ret4);
+
+    std::string uriString5 = "MYSCHEME://WWW.TEST.HOST:888/test";
+    bool ret5 = skill.MatchUri(uriString5, skillUri);
+    EXPECT_EQ(true, ret5);
+
+    std::string uriString6 = "mySCHEME://WWW.TEST.HOST:888/test";
+    bool ret6 = skill.MatchUri(uriString6, skillUri);
+    EXPECT_EQ(true, ret6);
+
+    std::string uriString7 = "mySCHEME://WWW.test.HOST:888/test";
+    bool ret7 = skill.MatchUri(uriString7, skillUri);
+    EXPECT_EQ(true, ret7);
+
+    std::string uriString8 = "MYSCHEME://WWW.test.HOST:888/test";
+    bool ret8 = skill.MatchUri(uriString8, skillUri);
+    EXPECT_EQ(true, ret8);
+}
+
+/**
+ * @tc.number: MatchUri_0500
+ * @tc.name: test MatchUri
+ * @tc.desc: 1.system run normally
+ *           2.test scheme and host case-sensitivity match.
+*/
+HWTEST_F(BmsBundleManagerTest, MatchUri_0500, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back("action001");
+    SkillUri skillUri;
+    skillUri.scheme = "MYSCHEME";
+    skillUri.host = "www.test.host";
+    skillUri.port = "888";
+    skillUri.path = "test";
+    skillUri.pathStartWith = "";
+    skillUri.pathRegex = "";
+    std::string uriString1 = "myscheme://www.test.host:888/test";
+    bool ret1 = skill.MatchUri(uriString1, skillUri);
+    EXPECT_EQ(true, ret1);
+
+    std::string uriString2 = "MYSCHEME://www.test.host:888/test";
+    bool ret2 = skill.MatchUri(uriString2, skillUri);
+    EXPECT_EQ(true, ret2);
+
+    std::string uriString3 = "myscheme://WWW.TEST.HOST:888/test";
+    bool ret3 = skill.MatchUri(uriString3, skillUri);
+    EXPECT_EQ(true, ret3);
+
+    std::string uriString4 = "MYSCHEME://WWW.TEST.HOST:888/test";
+    bool ret4 = skill.MatchUri(uriString4, skillUri);
+    EXPECT_EQ(true, ret4);
+
+    std::string uriString5 = "MYSCHEME://WWW.TEST.HOST:888/test";
+    bool ret5 = skill.MatchUri(uriString5, skillUri);
+    EXPECT_EQ(true, ret5);
+
+    std::string uriString6 = "mySCHEME://WWW.TEST.HOST:888/test";
+    bool ret6 = skill.MatchUri(uriString6, skillUri);
+    EXPECT_EQ(true, ret6);
+
+    std::string uriString7 = "mySCHEME://WWW.test.HOST:888/test";
+    bool ret7 = skill.MatchUri(uriString7, skillUri);
+    EXPECT_EQ(true, ret7);
+
+    std::string uriString8 = "MYSCHEME://WWW.test.HOST:888/test";
+    bool ret8 = skill.MatchUri(uriString8, skillUri);
+    EXPECT_EQ(true, ret8);
+}
+
+/**
+ * @tc.number: MatchUri_0600
+ * @tc.name: test MatchUri
+ * @tc.desc: 1.system run normally
+ *           2.test scheme and host case-sensitivity match.
+*/
+HWTEST_F(BmsBundleManagerTest, MatchUri_0600, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back("action001");
+    SkillUri skillUri;
+    skillUri.scheme = "MYSCHEME";
+    skillUri.host = "WWW.TEST.HOST";
+    skillUri.port = "888";
+    skillUri.path = "test";
+    skillUri.pathStartWith = "";
+    skillUri.pathRegex = "";
+    std::string uriString1 = "myscheme://www.test.host:888/test";
+    bool ret1 = skill.MatchUri(uriString1, skillUri);
+    EXPECT_EQ(true, ret1);
+
+    std::string uriString2 = "MYSCHEME://www.test.host:888/test";
+    bool ret2 = skill.MatchUri(uriString2, skillUri);
+    EXPECT_EQ(true, ret2);
+
+    std::string uriString3 = "myscheme://WWW.TEST.HOST:888/test";
+    bool ret3 = skill.MatchUri(uriString3, skillUri);
+    EXPECT_EQ(true, ret3);
+
+    std::string uriString4 = "MYSCHEME://WWW.TEST.HOST:888/test";
+    bool ret4 = skill.MatchUri(uriString4, skillUri);
+    EXPECT_EQ(true, ret4);
+
+    std::string uriString5 = "MYSCHEME://WWW.TEST.HOST:888/test";
+    bool ret5 = skill.MatchUri(uriString5, skillUri);
+    EXPECT_EQ(true, ret5);
+
+    std::string uriString6 = "mySCHEME://WWW.TEST.HOST:888/test";
+    bool ret6 = skill.MatchUri(uriString6, skillUri);
+    EXPECT_EQ(true, ret6);
+
+    std::string uriString7 = "mySCHEME://WWW.test.HOST:888/test";
+    bool ret7 = skill.MatchUri(uriString7, skillUri);
+    EXPECT_EQ(true, ret7);
+
+    std::string uriString8 = "MYSCHEME://WWW.test.HOST:888/test";
+    bool ret8 = skill.MatchUri(uriString8, skillUri);
+    EXPECT_EQ(true, ret8);
+}
+
+/**
+ * @tc.number: MatchUri_0700
+ * @tc.name: test MatchUri
+ * @tc.desc: 1.system run normally
+ *           2.test scheme and host case-sensitivity match.
+*/
+HWTEST_F(BmsBundleManagerTest, MatchUri_0700, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back("action001");
+    SkillUri skillUri;
+    skillUri.scheme = "myscheme";
+    skillUri.host = "WWW.TEST.HOST";
+    skillUri.port = "888";
+    skillUri.path = "test";
+    skillUri.pathStartWith = "";
+    skillUri.pathRegex = "";
+    std::string uriString1 = "myscheme://www.test.host:888/test";
+    bool ret1 = skill.MatchUri(uriString1, skillUri);
+    EXPECT_EQ(true, ret1);
+
+    std::string uriString2 = "MYSCHEME://www.test.host:888/test";
+    bool ret2 = skill.MatchUri(uriString2, skillUri);
+    EXPECT_EQ(true, ret2);
+
+    std::string uriString3 = "myscheme://WWW.TEST.HOST:888/test";
+    bool ret3 = skill.MatchUri(uriString3, skillUri);
+    EXPECT_EQ(true, ret3);
+
+    std::string uriString4 = "MYSCHEME://WWW.TEST.HOST:888/test";
+    bool ret4 = skill.MatchUri(uriString4, skillUri);
+    EXPECT_EQ(true, ret4);
+
+    std::string uriString5 = "MYSCHEME://WWW.TEST.HOST:888/test";
+    bool ret5 = skill.MatchUri(uriString5, skillUri);
+    EXPECT_EQ(true, ret5);
+
+    std::string uriString6 = "mySCHEME://WWW.TEST.HOST:888/test";
+    bool ret6 = skill.MatchUri(uriString6, skillUri);
+    EXPECT_EQ(true, ret6);
+
+    std::string uriString7 = "mySCHEME://WWW.test.HOST:888/test";
+    bool ret7 = skill.MatchUri(uriString7, skillUri);
+    EXPECT_EQ(true, ret7);
+
+    std::string uriString8 = "MYSCHEME://WWW.test.HOST:888/test";
+    bool ret8 = skill.MatchUri(uriString8, skillUri);
+    EXPECT_EQ(true, ret8);
+}
+
+/**
+ * @tc.number: MatchUri_0800
+ * @tc.name: test MatchUri
+ * @tc.desc: 1.system run normally
+ *           2.test scheme and host case-sensitivity match.
+*/
+HWTEST_F(BmsBundleManagerTest, MatchUri_0800, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back("action001");
+    SkillUri skillUri;
+    skillUri.scheme = "mySCHEME";
+    skillUri.host = "www.test.HOST";
+    skillUri.port = "888";
+    skillUri.path = "test";
+    skillUri.pathStartWith = "";
+    skillUri.pathRegex = "";
+    std::string uriString1 = "myscheme://www.test.host:888/test";
+    bool ret1 = skill.MatchUri(uriString1, skillUri);
+    EXPECT_EQ(true, ret1);
+
+    std::string uriString2 = "MYSCHEME://www.test.host:888/test";
+    bool ret2 = skill.MatchUri(uriString2, skillUri);
+    EXPECT_EQ(true, ret2);
+
+    std::string uriString3 = "myscheme://WWW.TEST.HOST:888/test";
+    bool ret3 = skill.MatchUri(uriString3, skillUri);
+    EXPECT_EQ(true, ret3);
+
+    std::string uriString4 = "MYSCHEME://WWW.TEST.HOST:888/test";
+    bool ret4 = skill.MatchUri(uriString4, skillUri);
+    EXPECT_EQ(true, ret4);
+
+    std::string uriString5 = "MYSCHEME://WWW.TEST.HOST:888/test";
+    bool ret5 = skill.MatchUri(uriString5, skillUri);
+    EXPECT_EQ(true, ret5);
+
+    std::string uriString6 = "mySCHEME://WWW.TEST.HOST:888/test";
+    bool ret6 = skill.MatchUri(uriString6, skillUri);
+    EXPECT_EQ(true, ret6);
+
+    std::string uriString7 = "mySCHEME://WWW.test.HOST:888/test";
+    bool ret7 = skill.MatchUri(uriString7, skillUri);
+    EXPECT_EQ(true, ret7);
+
+    std::string uriString8 = "MYSCHEME://WWW.test.HOST:888/test";
+    bool ret8 = skill.MatchUri(uriString8, skillUri);
+    EXPECT_EQ(true, ret8);
+}
+
+/**
+ * @tc.number: MatchUri_0900
+ * @tc.name: test MatchUri
+ * @tc.desc: 1.system run normally
+ *           2.test scheme and host case-sensitivity match.
+*/
+HWTEST_F(BmsBundleManagerTest, MatchUri_0900, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back("action001");
+    SkillUri skillUri;
+    skillUri.scheme = "myscheme";
+    skillUri.host = "www.test.HOST";
+    skillUri.port = "888";
+    skillUri.path = "test";
+    skillUri.pathStartWith = "";
+    skillUri.pathRegex = "";
+    std::string uriString1 = "myscheme://www.test.host:888/test";
+    bool ret1 = skill.MatchUri(uriString1, skillUri);
+    EXPECT_EQ(true, ret1);
+
+    std::string uriString2 = "MYSCHEME://www.test.host:888/test";
+    bool ret2 = skill.MatchUri(uriString2, skillUri);
+    EXPECT_EQ(true, ret2);
+
+    std::string uriString3 = "myscheme://WWW.TEST.HOST:888/test";
+    bool ret3 = skill.MatchUri(uriString3, skillUri);
+    EXPECT_EQ(true, ret3);
+
+    std::string uriString4 = "MYSCHEME://WWW.TEST.HOST:888/test";
+    bool ret4 = skill.MatchUri(uriString4, skillUri);
+    EXPECT_EQ(true, ret4);
+
+    std::string uriString5 = "MYSCHEME://WWW.TEST.HOST:888/test";
+    bool ret5 = skill.MatchUri(uriString5, skillUri);
+    EXPECT_EQ(true, ret5);
+
+    std::string uriString6 = "mySCHEME://WWW.TEST.HOST:888/test";
+    bool ret6 = skill.MatchUri(uriString6, skillUri);
+    EXPECT_EQ(true, ret6);
+
+    std::string uriString7 = "mySCHEME://WWW.test.HOST:888/test";
+    bool ret7 = skill.MatchUri(uriString7, skillUri);
+    EXPECT_EQ(true, ret7);
+
+    std::string uriString8 = "MYSCHEME://WWW.test.HOST:888/test";
+    bool ret8 = skill.MatchUri(uriString8, skillUri);
+    EXPECT_EQ(true, ret8);
 }
 
 /**
@@ -3363,6 +3873,19 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0018, Function | SmallTest | Leve
     testRet = GetBundleDataMgr()->GetBundleInfosV9(
         0, bundleInfos, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: TestMgrByUserId_0019
+ * @tc.name: test GetDebugBundleList
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0019, Function | SmallTest | Level1)
+{
+    std::vector<std::string> appInfos;
+    std::vector<BundleInfo> bundleInfos;
+    bool testRet = GetBundleDataMgr()->GetDebugBundleList(appInfos, Constants::INVALID_USERID);
+    EXPECT_EQ(testRet, false);
 }
 
 /**

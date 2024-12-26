@@ -37,10 +37,14 @@ public:
     }
 
 public:
-    uv_sem_t uvSem_;
+    bool WaitForCompletion();
 
 private:
     int32_t err_;
+    std::mutex mutex_;
+    bool complete_ = false;
+    std::promise<void> promise_;
+    std::future<void> future_ = promise_.get_future();
     DISALLOW_COPY_AND_MOVE(CleanCacheCallback);
 };
 

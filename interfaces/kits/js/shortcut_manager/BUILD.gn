@@ -32,8 +32,15 @@ ohos_shared_library("shortcutmanager") {
     "LOG_DOMAIN = 0xD001120",
   ]
 
-  cflags = [ "-Os" ]
-  cflags_cc = [ "-Os" ]
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
 
   sources = [
     "native_module.cpp",

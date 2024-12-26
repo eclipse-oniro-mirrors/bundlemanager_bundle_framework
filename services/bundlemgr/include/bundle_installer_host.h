@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -211,10 +211,10 @@ private:
     bool IsPermissionVaild(const InstallParam &installParam, InstallParam &installParam2);
     bool CheckUninstallDisposedRule(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isKeepData,
         const std::string &modulePackage = "");
-    std::shared_ptr<BundleInstallerManager> manager_;
-    std::vector<sptr<IBundleStreamInstaller>> streamInstallers_;
     std::atomic<uint32_t> streamInstallerIds_ = 0;
     std::mutex streamInstallMutex_;
+    std::shared_ptr<BundleInstallerManager> manager_;
+    std::vector<sptr<IBundleStreamInstaller>> streamInstallers_;
 
     DISALLOW_COPY_AND_MOVE(BundleInstallerHost);
 };

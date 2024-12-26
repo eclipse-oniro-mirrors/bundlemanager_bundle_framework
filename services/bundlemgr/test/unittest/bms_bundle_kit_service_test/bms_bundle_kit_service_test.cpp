@@ -3166,6 +3166,36 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleList_0100, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: GetDebugBundleList_0100
+ * @tc.name: test can get all installed debug bundle names
+ * @tc.desc: 1.system run normally
+ *           2.get installed bundle names successfully with correct names
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetDebugBundleList_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
+
+    for (auto &infoItem : GetBundleDataMgr()->bundleInfos_) {
+        InnerBundleInfo &innerBundleInfo = infoItem.second;
+        ApplicationInfo appInfo = innerBundleInfo.GetBaseApplicationInfo();
+        if (appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_RELEASE) {
+            appInfo.appProvisionType = Constants::APP_PROVISION_TYPE_DEBUG;
+            innerBundleInfo.SetBaseApplicationInfo(appInfo);
+        }
+    }
+
+    std::vector<std::string> testResult;
+    bool testRet = GetBundleDataMgr()->GetDebugBundleList(testResult, DEFAULT_USERID);
+    EXPECT_TRUE(testRet);
+    CheckBundleList(BUNDLE_NAME_TEST, testResult);
+    CheckBundleList(BUNDLE_NAME_DEMO, testResult);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
+
+/**
  * @tc.number: GetBundleNameForUid_0100
  * @tc.name: test can get the bundle names with bundle installed
  * @tc.desc: 1.system run normally
@@ -6966,6 +6996,7 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_003, Function | SmallTest | Level1
 HWTEST_F(BmsBundleKitServiceTest, Marshalling_004, Function | SmallTest | Level1)
 {
     Metadata metadata;
+    metadata.valueId = 0;
     metadata.name = "ohos.global.systemres";
     metadata.value = "1";
     metadata.resource = "/data/accounts/account_0/applications/ohos.global.systemres";

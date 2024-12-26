@@ -49,8 +49,8 @@ public:
 struct GetBundleArchiveInfoCallbackInfo : public BaseCallbackInfo {
     explicit GetBundleArchiveInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
-    std::string hapFilePath;
     int32_t flags = 0;
+    std::string hapFilePath;
     BundleInfo bundleInfo;
 };
 struct GetBundleNameByUidCallbackInfo : public BaseCallbackInfo {
@@ -67,32 +67,32 @@ struct GetAppCloneIdentityCallbackInfo : public GetBundleNameByUidCallbackInfo {
 struct AbilityCallbackInfo : public BaseCallbackInfo {
     explicit AbilityCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
-    OHOS::AAFwk::Want want;
+    bool isSavedInCache = false;
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool isSavedInCache = false;
     std::vector<AbilityInfo> abilityInfos;
+    OHOS::AAFwk::Want want;
 };
 
 struct BatchAbilityCallbackInfo : public BaseCallbackInfo {
     explicit BatchAbilityCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
-    std::vector<OHOS::AAFwk::Want> wants;
+    bool isSavedInCache = false;
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool isSavedInCache = false;
     std::vector<AbilityInfo> abilityInfos;
+    std::vector<OHOS::AAFwk::Want> wants;
 };
 
 struct ExtensionCallbackInfo : public BaseCallbackInfo {
     explicit ExtensionCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
-    OHOS::AAFwk::Want want;
+    bool isSavedInCache = false;
     int32_t extensionAbilityType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool isSavedInCache = false;
     std::vector<ExtensionAbilityInfo> extensionInfos;
+    OHOS::AAFwk::Want want;
 };
 
 struct CleanBundleCacheCallbackInfo : public BaseCallbackInfo {
@@ -121,23 +121,23 @@ struct AbilityLabelCallbackInfo : public BaseCallbackInfo {
 
 struct ApplicationEnableCallbackInfo : public BaseCallbackInfo {
     explicit ApplicationEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    std::string bundleName;
     bool isEnable = false;
     int32_t appIndex = 0;
+    std::string bundleName;
 };
 
 struct LaunchWantCallbackInfo : public BaseCallbackInfo {
     explicit LaunchWantCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    std::string bundleName;
     int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName;
     OHOS::AAFwk::Want want;
 };
 
 struct VerifyCallbackInfo : public BaseCallbackInfo {
     explicit VerifyCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    std::vector<std::string> abcPaths;
     bool flag = false;
     std::string deletePath;
+    std::vector<std::string> abcPaths;
 };
 
 struct DynamicIconCallbackInfo : public BaseCallbackInfo {
@@ -164,17 +164,17 @@ struct GetProfileCallbackInfo : public BaseCallbackInfo {
 
 struct AbilityEnableCallbackInfo : public BaseCallbackInfo {
     explicit AbilityEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    AbilityInfo abilityInfo;
     bool isEnable = false;
     int32_t appIndex = 0;
+    AbilityInfo abilityInfo;
 };
 
 struct ApplicationInfoCallbackInfo : public BaseCallbackInfo {
     explicit ApplicationInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
-    std::string bundleName;
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName;
     ApplicationInfo appInfo;
 };
 
@@ -227,21 +227,21 @@ struct BundleInfosCallbackInfo : public BaseCallbackInfo {
 
 struct BundleInfoCallbackInfo : public BaseCallbackInfo {
     explicit BundleInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
-    std::string bundleName;
+    bool isSavedInCache = false;
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool isSavedInCache = false;
     int32_t uid = 0;
+    std::string bundleName;
     BundleInfo bundleInfo;
 };
 
 struct BatchBundleInfoCallbackInfo : public BaseCallbackInfo {
     explicit BatchBundleInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
-    std::vector<std::string> bundleNames;
+    bool isSavedInCache = false;
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool isSavedInCache = false;
     int32_t uid = 0;
+    std::vector<std::string> bundleNames;
     std::vector<BundleInfo> bundleInfos;
 };
 
@@ -255,8 +255,8 @@ struct SharedBundleCallbackInfo : public BaseCallbackInfo {
 
 struct AppProvisionInfoCallbackInfo : public BaseCallbackInfo {
     explicit AppProvisionInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
-    std::string bundleName;
     int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName;
     AppProvisionInfo appProvisionInfo;
 };
 
@@ -274,19 +274,19 @@ struct PreinstalledApplicationInfosCallbackInfo : public BaseCallbackInfo {
 struct CloneAppBundleInfoCallbackInfo : public BaseCallbackInfo {
     explicit CloneAppBundleInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
 
-    std::string bundleName;
     int32_t appIndex = 0;
     int32_t bundleFlags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName;
     BundleInfo bundleInfo;
 };
 
 struct CloneAppBundleInfosCallbackInfo : public BaseCallbackInfo {
     explicit CloneAppBundleInfosCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
 
-    std::string bundleName;
     int32_t bundleFlags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName;
     std::vector<BundleInfo> bundleInfos;
 };
 

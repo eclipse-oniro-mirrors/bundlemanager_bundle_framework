@@ -776,6 +776,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(metadata.name, "a01");
         EXPECT_EQ(metadata.value, "v01");
         EXPECT_EQ(metadata.resource, "hello");
+        EXPECT_EQ(metadata.valueId, 0);
 
         auto extensionInfos = hapModuleInfo.extensionInfos.front();
         EXPECT_EQ(extensionInfos.name, "FormName");
@@ -5388,18 +5389,12 @@ HWTEST_F(BmsBundleInstallerTest, GetCallingEventInfo_0010, Function | SmallTest 
 */
 HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0100, Function | SmallTest | Level0)
 {
-    BundleInfo oldBundleInfo;
-    oldBundleInfo.signatureInfo.appIdentifier = "appIdentifier";
-    InnerBundleInfo oldInfo;
-    oldInfo.SetBaseBundleInfo(oldBundleInfo);
-
-    BundleInfo newBundleInfo;
-    newBundleInfo.signatureInfo.appIdentifier = "appIdentifier";
-    InnerBundleInfo newInfo;
-    newInfo.SetBaseBundleInfo(newBundleInfo);
-
+    std::string oldAppIdentifier = "appIdentifier";
+    std::string newAppIdentifier = "appIdentifier";
+    std::string oldAppId = "appId";
+    std::string newAppId = "appId";
     BaseBundleInstaller installer;
-    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    bool res = installer.CheckAppIdentifier(oldAppIdentifier, newAppIdentifier, oldAppId, newAppId);
     EXPECT_TRUE(res);
 }
 
@@ -5410,20 +5405,12 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0100, Function | SmallTest |
 */
 HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0200, Function | SmallTest | Level0)
 {
-    BundleInfo oldBundleInfo;
-    oldBundleInfo.signatureInfo.appIdentifier = "oldappIdentifier";
-    InnerBundleInfo oldInfo;
-    oldInfo.SetBaseBundleInfo(oldBundleInfo);
-    oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
-
-    BundleInfo newBundleInfo;
-    newBundleInfo.signatureInfo.appIdentifier = "newappIdentifier";
-    InnerBundleInfo newInfo;
-    newInfo.SetBaseBundleInfo(newBundleInfo);
-    newInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080EDXXXX");
-
+    std::string oldAppIdentifier = "";
+    std::string newAppIdentifier = "appIdentifier";
+    std::string oldAppId = "oldAppId";
+    std::string newAppId = "newAppId";
     BaseBundleInstaller installer;
-    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    bool res = installer.CheckAppIdentifier(oldAppIdentifier, newAppIdentifier, oldAppId, newAppId);
     EXPECT_FALSE(res);
 }
 
@@ -5434,24 +5421,13 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0200, Function | SmallTest |
 */
 HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0300, Function | SmallTest | Level0)
 {
-    BundleInfo oldBundleInfo;
-    oldBundleInfo.name = "com.example.baseApplication";
-    oldBundleInfo.versionCode = 1000000;
-    InnerBundleInfo oldInfo;
-    oldInfo.SetBaseBundleInfo(oldBundleInfo);
-    oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
-
-    BundleInfo newBundleInfo;
-    newBundleInfo.signatureInfo.appIdentifier = "newappIdentifier";
-    newBundleInfo.versionCode = 2000000;
-    newBundleInfo.name = "com.example.baseApplication";
-    InnerBundleInfo newInfo;
-    newInfo.SetBaseBundleInfo(newBundleInfo);
-    newInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
-
+    std::string oldAppIdentifier = "appIdentifier";
+    std::string newAppIdentifier = "";
+    std::string oldAppId = "oldAppId";
+    std::string newAppId = "newAppId";
     BaseBundleInstaller installer;
-    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
-    EXPECT_TRUE(res);
+    bool res = installer.CheckAppIdentifier(oldAppIdentifier, newAppIdentifier, oldAppId, newAppId);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -5461,21 +5437,12 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0300, Function | SmallTest |
 */
 HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0400, Function | SmallTest | Level0)
 {
-    BundleInfo oldBundleInfo;
-    oldBundleInfo.signatureInfo.appIdentifier = "oldappIdentifier";
-    oldBundleInfo.name = "com.example.baseApplication";
-    InnerBundleInfo oldInfo;
-    oldInfo.SetBaseBundleInfo(oldBundleInfo);
-    oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
-
-    BundleInfo newBundleInfo;
-    newBundleInfo.name = "com.example.baseApplication";
-    InnerBundleInfo newInfo;
-    newInfo.SetBaseBundleInfo(newBundleInfo);
-    newInfo.SetProvisionId("E64B13B84E6D2167F73B46530C6E02E323DA43C9C2DA251D7C64D20E091B936F");
-
+    std::string oldAppIdentifier = "";
+    std::string newAppIdentifier = "";
+    std::string oldAppId = "oldAppId";
+    std::string newAppId = "newAppId";
     BaseBundleInstaller installer;
-    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    bool res = installer.CheckAppIdentifier(oldAppIdentifier, newAppIdentifier, oldAppId, newAppId);
     EXPECT_FALSE(res);
 }
 
@@ -5486,20 +5453,76 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0400, Function | SmallTest |
 */
 HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0500, Function | SmallTest | Level0)
 {
-    BundleInfo oldBundleInfo;
-    oldBundleInfo.name = "com.example.baseApplication";
-    InnerBundleInfo oldInfo;
-    oldInfo.SetBaseBundleInfo(oldBundleInfo);
-    oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
-
-    BundleInfo newBundleInfo;
-    newBundleInfo.name = "com.example.baseApplication";
-    InnerBundleInfo newInfo;
-    newInfo.SetBaseBundleInfo(newBundleInfo);
-    newInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
-
+    std::string oldAppIdentifier = "";
+    std::string newAppIdentifier = "";
+    std::string oldAppId = "appId";
+    std::string newAppId = "appId";
     BaseBundleInstaller installer;
-    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    bool res = installer.CheckAppIdentifier(oldAppIdentifier, newAppIdentifier, oldAppId, newAppId);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: CheckAppIdentifier_0600
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0600, Function | SmallTest | Level0)
+{
+    std::string oldAppIdentifier = "";
+    std::string newAppIdentifier = "newAppIdentifier";
+    std::string oldAppId = "appId";
+    std::string newAppId = "appId";
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(oldAppIdentifier, newAppIdentifier, oldAppId, newAppId);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: CheckAppIdentifier_0700
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0700, Function | SmallTest | Level0)
+{
+    std::string oldAppIdentifier = "oldAppIdentifier";
+    std::string newAppIdentifier = "";
+    std::string oldAppId = "appId";
+    std::string newAppId = "appId";
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(oldAppIdentifier, newAppIdentifier, oldAppId, newAppId);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: CheckAppIdentifier_0800
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0800, Function | SmallTest | Level0)
+{
+    std::string oldAppIdentifier = "oldAppIdentifier";
+    std::string newAppIdentifier = "newAppIdentifier";
+    std::string oldAppId = "oldAppId";
+    std::string newAppId = "newAppId";
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(oldAppIdentifier, newAppIdentifier, oldAppId, newAppId);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: CheckAppIdentifier_0900
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0900, Function | SmallTest | Level0)
+{
+    std::string oldAppIdentifier = "appIdentifier";
+    std::string newAppIdentifier = "appIdentifier";
+    std::string oldAppId = "oldAppId";
+    std::string newAppId = "newAppId";
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(oldAppIdentifier, newAppIdentifier, oldAppId, newAppId);
     EXPECT_TRUE(res);
 }
 

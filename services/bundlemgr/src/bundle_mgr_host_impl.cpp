@@ -1114,7 +1114,8 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         APP_LOGE("invalid hapFilePath");
         return false;
     }
-    if (hapFilePath.find(ServiceConstants::SANDBOX_DATA_PATH) == std::string::npos) {
+    if (hapFilePath.find(ServiceConstants::SANDBOX_DATA_PATH) == std::string::npos &&
+        hapFilePath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == std::string::npos) {
         std::string realPath;
         auto ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
         if (ret != ERR_OK) {
@@ -1155,7 +1156,8 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
         APP_LOGD("invalid hapFilePath");
         return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
-    if (hapFilePath.find(ServiceConstants::SANDBOX_DATA_PATH) == 0) {
+    if (hapFilePath.find(ServiceConstants::SANDBOX_DATA_PATH) == 0 ||
+        hapFilePath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == 0) {
         APP_LOGD("sandbox path");
         return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo, true);
     }
@@ -1192,6 +1194,11 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     if (!ObtainCallingBundleName(bundleName)) {
         APP_LOGE("get calling bundleName failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (hapFilePath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == 0 &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ACCESS_APP_INSTALL_DIR)) {
+        APP_LOGE("verify ACCESS_APP_INSTALL_DIR failed");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
     std::string hapRealPath;
     if (!BundleUtil::RevertToRealPath(hapFilePath, bundleName, hapRealPath)) {
@@ -1524,6 +1531,12 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     if (userId < 0) {
         APP_LOGE("userId is invalid");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
@@ -1537,13 +1550,6 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         APP_LOGE("the cleanCacheCallback is nullptr or bundleName empty");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE) &&
-        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
-        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
     if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
@@ -1690,17 +1696,17 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        return false;
+    }
     if (bundleName.empty() || userId < 0) {
         APP_LOGE("the  bundleName empty or invalid userid");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
     if (!CheckAppIndex(bundleName, userId, appIndex)) {
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
-        return false;
-    }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
-        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
@@ -1775,7 +1781,7 @@ bool BundleMgrHostImpl::RegisterBundleEventCallback(const sptr<IBundleEventCallb
         return false;
     }
     auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != Constants::FOUNDATION_UID && uid != Constants::CODE_PROTECT_UID) {
+    if (uid != Constants::FOUNDATION_UID) {
         APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
         return false;
     }
@@ -1888,6 +1894,10 @@ bool BundleMgrHostImpl::DumpInfos(
             ret = DumpAllBundleInfoNames(userId, result);
             break;
         }
+        case DumpFlag::DUMP_DEBUG_BUNDLE_LIST: {
+            ret = DumpDebugBundleInfoNames(userId, result);
+            break;
+        }
         case DumpFlag::DUMP_BUNDLE_INFO: {
             ret = DumpBundleInfo(bundleName, userId, result);
             break;
@@ -1943,6 +1953,49 @@ bool BundleMgrHostImpl::DumpAllBundleInfoNamesByUserId(int32_t userId, std::stri
         result.append("\n");
     }
     APP_LOGI("DumpAllBundleInfoNamesByUserId successfully");
+    return true;
+}
+
+bool BundleMgrHostImpl::DumpDebugBundleInfoNames(int32_t userId, std::string &result)
+{
+    APP_LOGD("DumpDebugBundleInfoNames begin");
+    if (userId != Constants::ALL_USERID) {
+        return DumpDebugBundleInfoNamesByUserId(userId, result);
+    }
+
+    auto userIds = GetExistsCommonUserIs();
+    for (auto userId : userIds) {
+        DumpDebugBundleInfoNamesByUserId(userId, result);
+    }
+
+    APP_LOGD("DumpDebugBundleInfoNames success");
+    return true;
+}
+
+bool BundleMgrHostImpl::DumpDebugBundleInfoNamesByUserId(int32_t userId, std::string &result)
+{
+    APP_LOGD("DumpDebugBundleInfoNamesByUserId begin");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+
+    std::vector<std::string> bundleNames;
+    if (!dataMgr->GetDebugBundleList(bundleNames, userId)) {
+        APP_LOGE("get debug bundle list failed by userId(%{public}d)", userId);
+        return false;
+    }
+
+    result.append("ID: ");
+    result.append(std::to_string(userId));
+    result.append(":\n");
+    for (const auto &name : bundleNames) {
+        result.append("\t");
+        result.append(name);
+        result.append("\n");
+    }
+    APP_LOGD("DumpDebugBundleInfoNamesByUserId successfully");
     return true;
 }
 
