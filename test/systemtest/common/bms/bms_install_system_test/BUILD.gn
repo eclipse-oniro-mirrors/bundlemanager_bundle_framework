@@ -16,6 +16,11 @@ import("../../../../../appexecfwk.gni")
 module_output_path = "bundle_framework/bundlemgrsst"
 
 ohos_systemtest("BmsInstallHapSoTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   module_out_path = module_output_path
 
   sources = [ "bms_install_hap_so_test.cpp" ]
@@ -98,6 +103,11 @@ ohos_systemtest("BmsInstallHapSoTest") {
 }
 
 ohos_systemtest("BmsInstallSystemTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   module_out_path = module_output_path
 
   sources = [ "bms_install_system_test.cpp" ]
@@ -156,6 +166,11 @@ ohos_systemtest("BmsInstallSystemTest") {
 }
 
 ohos_systemtest("BmsInstallExternalHspSoTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   module_out_path = module_output_path
 
   sources = [ "bms_install_external_hsp_so_test.cpp" ]
@@ -194,6 +209,11 @@ ohos_systemtest("BmsInstallExternalHspSoTest") {
 }
 
 ohos_systemtest("BmsInstallMultiUserTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   module_out_path = module_output_path
 
   sources = [ "bm_install_multi_user_test.cpp" ]
@@ -234,6 +254,11 @@ ohos_systemtest("BmsInstallMultiUserTest") {
 }
 
 ohos_systemtest("BmsInstallExtensionSystemTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   module_out_path = module_output_path
 
   sources = [ "bms_install_extension_system_test.cpp" ]
