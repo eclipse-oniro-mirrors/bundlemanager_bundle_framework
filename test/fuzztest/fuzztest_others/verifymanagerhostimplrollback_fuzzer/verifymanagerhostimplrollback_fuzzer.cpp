@@ -24,8 +24,11 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
     constexpr size_t U32_AT_SIZE = 4;
 
-    bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
+    bool DoSomethingInterestingWithMyAPI(const std::string &str)
     {
+        if (str.length() == 1) {
+            return true;
+        }
         VerifyManagerHostImpl impl;
         std::vector<std::string> Paths;
         std::string rootDir;
@@ -48,19 +51,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
 
-    char* ch = static_cast<char*>(malloc(size + 1));
-    if (ch == nullptr) {
-        return 0;
-    }
-
-    (void)memset_s(ch, size + 1, 0x00, size + 1);
-    if (memcpy_s(ch, size, data, size) != EOK) {
-        free(ch);
-        ch = nullptr;
-        return 0;
-    }
-    OHOS::DoSomethingInterestingWithMyAPI(ch, size);
-    free(ch);
-    ch = nullptr;
+    std::string str(reinterpret_cast<const char *>(data), size);
+    OHOS::DoSomethingInterestingWithMyAPI(str);
     return 0;
 }

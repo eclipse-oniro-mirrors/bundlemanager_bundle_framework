@@ -22,6 +22,8 @@
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
+    constexpr size_t U32_AT_SIZE = 4;
+
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         sptr<IRemoteObject> object;
@@ -44,8 +46,8 @@ namespace OHOS {
         bundleinstallerProxy.Uninstall(bundleFilePath, modulePackage, installParam, statusReceiver);
         int32_t fixedValue = reinterpret_cast<uintptr_t>(data);
         int32_t dlpType = fixedValue;
-        int32_t userId = fixedValue;
-        int32_t appIndex = fixedValue;
+        int32_t userId = 0;
+        int32_t appIndex = 0;
         bundleinstallerProxy.InstallSandboxApp(bundleName, dlpType, userId, appIndex);
         bundleinstallerProxy.UninstallSandboxApp(bundleName, appIndex, userId);
         bundleinstallerProxy.CreateStreamInstaller(installParam, statusReceiver, originHapPaths);
@@ -59,6 +61,12 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     // Run your code on data.
+    if (data == nullptr) {
+        return 0;
+    }
+    if (size < OHOS::U32_AT_SIZE) {
+        return 0;
+    }
     OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }
