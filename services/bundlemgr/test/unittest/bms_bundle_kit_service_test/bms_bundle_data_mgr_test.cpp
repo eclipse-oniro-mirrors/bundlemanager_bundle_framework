@@ -6660,6 +6660,59 @@ HWTEST_F(BmsBundleDataMgrTest, IsBundleInstalled_0005, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: GetAllBundleDirs_0001
+ * @tc.name: GetAllBundleDirs
+ * @tc.desc: test GetAllBundleDirs
+ */
+
+HWTEST_F(BmsBundleDataMgrTest, GetAllBundleDirs_0001, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    if (bundleDataMgr != nullptr) {
+        bundleDataMgr->AddUserId(100);
+        InnerBundleInfo innerBundleInfo;
+        innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
+        innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME_TEST + "_100", innerBundleUserInfo);
+        bundleDataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+        std::vector<BundleDir> bundleDirs;
+        auto ret = bundleDataMgr->GetAllBundleDirs(100, bundleDirs);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(bundleDirs.size(), 1);
+    }
+}
+
+/**
+ * @tc.number: GetAllBundleDirs_0002
+ * @tc.name: GetAllBundleDirs
+ * @tc.desc: test GetAllBundleDirs
+ */
+
+HWTEST_F(BmsBundleDataMgrTest, GetAllBundleDirs_0002, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    if (bundleDataMgr != nullptr) {
+        bundleDataMgr->AddUserId(100);
+        InnerBundleInfo innerBundleInfo;
+        innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::SHARED;
+        innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME_TEST + "_100", innerBundleUserInfo);
+        bundleDataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+        std::vector<BundleDir> bundleDirs;
+        auto ret = bundleDataMgr->GetAllBundleDirs(100, bundleDirs);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(bundleDirs.size(), 0);
+    }
+}
+
+/**
  * @tc.number: PostProcessAnyUser_0001
  * @tc.name: SetUserId
  * @tc.desc: test SetUserId
@@ -6725,4 +6778,4 @@ HWTEST_F(BmsBundleDataMgrTest, PostProcessAnyUser_0002, Function | SmallTest | L
     EXPECT_EQ(r1, true);
     EXPECT_EQ(r2, true);
 }
-}
+} // OHOS
