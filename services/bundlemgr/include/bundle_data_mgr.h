@@ -1046,6 +1046,8 @@ public:
     ErrCode GetBundleDir(int32_t userId, BundleType type, AccountSA::OhosAccountInfo &accountInfo,
         BundleDir &bundleDir) const;
     ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) const;
+    ErrCode GetAssetAccessGroups(const std::string &bundleName, std::vector<std::string> &assetAccessGroups) const;
+    ErrCode GetDeveloperId(const std::string &bundleName, std::string &developerId) const;
 
 private:
     /**

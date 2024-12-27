@@ -310,6 +310,7 @@ struct ApplicationInfo : public Parcelable {
 
     std::vector<int32_t> resourcesApply;
     std::vector<std::string> allowCommonEvent;
+    std::vector<std::string> assetAccessGroups;
 
     // assign when calling the get interface
     std::vector<std::string> permissions;

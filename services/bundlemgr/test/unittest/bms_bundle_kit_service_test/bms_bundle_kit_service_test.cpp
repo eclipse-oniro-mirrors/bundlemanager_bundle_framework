@@ -7086,6 +7086,7 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_008, Function | SmallTest | Level1
     std::vector<std::string> permissions;
     std::vector<std::string> moduleSourceDirs;
     std::vector<std::string> targetBundleList;
+    std::vector<std::string> assetAccessGroups;
     std::vector<ModuleInfo> moduleInfos;
     ModuleInfo moduleInfo;
     Metadata data1("paramName", "paramValue", "paramResource");
@@ -7102,11 +7103,13 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_008, Function | SmallTest | Level1
     permissions.emplace_back("permission1");
     moduleSourceDirs.emplace_back("dir1");
     targetBundleList.emplace_back("target");
+    assetAccessGroups.emplace_back("group1");
     moduleInfos.emplace_back(moduleInfo);
     info.allowCommonEvent = allowCommonEvent;
     info.permissions = permissions;
     info.targetBundleList = targetBundleList;
     info.moduleSourceDirs = moduleSourceDirs;
+    info.assetAccessGroups = assetAccessGroups;
     info.moduleInfos = moduleInfos;
     info.metadata = metadata;
     info.metaData = metaData;

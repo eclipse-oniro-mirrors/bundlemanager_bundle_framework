@@ -2075,6 +2075,16 @@ public:
         baseApplicationInfo_->appEnvironments = appEnvironments;
     }
 
+    std::vector<std::string> GetAssetAccessGroups() const
+    {
+        return baseApplicationInfo_->assetAccessGroups;
+    }
+
+    std::string GetDeveloperId() const
+    {
+        return developerId_;
+    }
+
     int32_t GetMaxChildProcess() const
     {
         return baseApplicationInfo_->maxChildProcess;

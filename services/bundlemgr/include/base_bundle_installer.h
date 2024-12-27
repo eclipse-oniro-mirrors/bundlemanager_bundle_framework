@@ -781,6 +781,9 @@ private:
 
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
         Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
+    std::string GetAssetAccessGroups(const std::string &bundleName);
+    std::string GetDeveloperId(const std::string &bundleName);
+    void GetModuleNames(const std::string &bundleName, std::vector<std::string> &moduleNames);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

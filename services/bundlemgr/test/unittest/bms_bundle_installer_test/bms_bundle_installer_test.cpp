@@ -7899,4 +7899,45 @@ HWTEST_F(BmsBundleInstallerTest, RecoverHapToken_0200, Function | SmallTest | Le
     ASSERT_TRUE(ret);
     dataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME, USERID);
 }
+
+/**
+ * @tc.number: GetAssetAccessGroups_0100
+ * @tc.name: test GetAssetAccessGroups
+ * @tc.desc: test GetAssetAccessGroups of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, GetAssetAccessGroups_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "bundlename";
+    std::string bundleName1 = "bundlename1";
+    std::string asset1 = "asset1";
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.assetAccessGroups.push_back(asset1);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[bundleName] = innerBundleInfo;
+    EXPECT_EQ(installer.GetAssetAccessGroups(bundleName), "asset1");
+    EXPECT_EQ(installer.GetAssetAccessGroups(bundleName1), "");
+}
+
+/**
+ * @tc.number: GetDeveloperId_0100
+ * @tc.name: test GetDeveloperId
+ * @tc.desc: test GetDeveloperId of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, GetDeveloperId_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "bundlename";
+    std::string bundleName1 = "bundlename1";
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.developerId_ = "testDeveloperId";
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[bundleName] = innerBundleInfo;
+    EXPECT_EQ(installer.GetDeveloperId(bundleName), "testDeveloperId");
+    EXPECT_EQ(installer.GetDeveloperId(bundleName1), "");
+}
 } // OHOS

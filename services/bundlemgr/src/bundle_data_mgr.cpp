@@ -9563,6 +9563,7 @@ ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &
     }
     return ERR_OK;
 }
+
 void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
 {
     std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
@@ -9594,6 +9595,31 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
     for (const auto &item : uninstallBundleIdMap) {
         bundleIdMap_.emplace(item.first, item.second);
     }
+}
+
+ErrCode BundleDataMgr::GetAssetAccessGroups(const std::string &bundleName,
+    std::vector<std::string> &assetAccessGroups) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    assetAccessGroups = item->second.GetAssetAccessGroups();
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetDeveloperId(const std::string &bundleName, std::string &developerId) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    developerId = item->second.GetDeveloperId();
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

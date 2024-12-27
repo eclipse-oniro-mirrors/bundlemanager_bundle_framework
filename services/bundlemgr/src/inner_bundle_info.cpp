@@ -1782,6 +1782,9 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
     baseApplicationInfo_->installSource = applicationInfo.installSource;
     baseApplicationInfo_->configuration = applicationInfo.configuration;
+    if (newInfo.HasEntry()) {
+        baseApplicationInfo_->assetAccessGroups = applicationInfo.assetAccessGroups;
+    }
 }
 
 ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled, int32_t appIndex) const

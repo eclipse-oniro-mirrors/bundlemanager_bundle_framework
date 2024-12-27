@@ -411,4 +411,43 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_013, TestSize.
     EXPECT_EQ(ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR, res);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->dataStorage_ = dataStorage;
 }
+
+/**
+ * @tc.number: GetAssetAccessGroups_0100
+ * @tc.name: test GetAssetAccessGroups
+ * @tc.desc: test GetAssetAccessGroups of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, GetAssetAccessGroups_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "bundlename";
+    std::string bundleName1 = "testBundleName1";
+    std::string asset = "asset1";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.assetAccessGroups.push_back(asset);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[bundleName] = innerBundleInfo;
+    ASSERT_NE(bundleCloneInstall_, nullptr);
+    EXPECT_EQ(bundleCloneInstall_->GetAssetAccessGroups(bundleName), "asset1");
+    EXPECT_EQ(bundleCloneInstall_->GetAssetAccessGroups(bundleName1), "");
+}
+
+/**
+ * @tc.number: GetDeveloperId_0100
+ * @tc.name: test GetDeveloperId
+ * @tc.desc: test GetDeveloperId of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, GetDeveloperId_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.developerId_ = "testDeveloperId";
+    std::string bundleName1 = "testBundleName1";
+    std::string bundleName = "testBundleName";
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[bundleName] = innerBundleInfo;
+    SetInnerBundleInfo(bundleName);
+    ASSERT_NE(bundleCloneInstall_, nullptr);
+    EXPECT_EQ(bundleCloneInstall_->GetDeveloperId(bundleName), "testDeveloperId");
+    EXPECT_EQ(bundleCloneInstall_->GetDeveloperId(bundleName1), "");
+}
 }

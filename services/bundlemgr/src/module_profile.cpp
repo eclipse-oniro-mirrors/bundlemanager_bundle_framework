@@ -270,6 +270,7 @@ struct App {
     std::vector<ApplicationEnvironment> appEnvironments;
     MultiAppMode multiAppMode;
     std::string configuration;
+    std::vector<std::string> assetAccessGroups;
 };
 
 struct Module {
@@ -1262,6 +1263,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.ubsanEnabled,
         false,
         g_parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        APP_ASSET_ACCESS_GROUPS,
+        app.assetAccessGroups,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1987,6 +1996,9 @@ bool ToApplicationInfo(
     applicationInfo.hwasanEnabled = app.hwasanEnabled;
     applicationInfo.ubsanEnabled = app.ubsanEnabled;
     applicationInfo.appEnvironments = app.appEnvironments;
+    if (moduleJson.module.type == Profile::MODULE_TYPE_ENTRY) {
+        applicationInfo.assetAccessGroups = app.assetAccessGroups;
+    }
     // bundleType is app && moduleType is entry or feature
     if (applicationInfo.bundleType == BundleType::APP &&
         (moduleJson.module.type == Profile::MODULE_TYPE_ENTRY ||
