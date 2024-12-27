@@ -3924,7 +3924,7 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
     eventInfo.userId = Constants::ANY_USERID;
     eventInfo.bundleName = bundleInfo.name;
     eventInfo.versionCode = bundleInfo.versionCode;
-    eventInfo.errCode = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    eventInfo.errCode = ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE;
     eventInfo.isPreInstallApp = bundleInfo.isPreInstallApp;
     EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
 }
