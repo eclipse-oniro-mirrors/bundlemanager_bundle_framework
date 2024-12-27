@@ -4037,7 +4037,8 @@ ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
     return ERR_OK;
 }
 
-void InnerBundleInfo::HandleOTACodeEncryption(bool &needResetFlag) const
+void InnerBundleInfo::HandleOTACodeEncryption(std::vector<std::string> &withoutKeyBundles,
+    std::vector<std::string> &withKeyBundles) const
 {
     BundleType bundleType = GetApplicationBundleType();
     if (bundleType != BundleType::APP && bundleType != BundleType::ATOMIC_SERVICE) {
@@ -4065,7 +4066,9 @@ void InnerBundleInfo::HandleOTACodeEncryption(bool &needResetFlag) const
         if (res != CPM_KEY_NOT_EXIST) {
             return;
         }
-        needResetFlag = true;
+        withoutKeyBundles.emplace_back(GetBundleName());
+    } else {
+        withKeyBundles.emplace_back(GetBundleName());
     }
     CheckEncryptionParam checkEncryptionParam;
     checkEncryptionParam.bundleId = innerBundleUserInfos_.begin()->second.uid -

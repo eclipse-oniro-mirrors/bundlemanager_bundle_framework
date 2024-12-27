@@ -8513,18 +8513,18 @@ void BundleDataMgr::HandleOTACodeEncryption()
         XCollieHelper::SetRecoveryTimer(FUNCATION_HANDLE_OTA_CODE_ENCRYPTION, OTA_CODE_ENCRYPTION_TIMEOUT);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     APP_LOGI("begin");
-    std::vector<std::string> noEncrytedKeyBundles;
+    std::vector<std::string> withoutKeyBundles;
+    std::vector<std::string> withKeyBundles;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         for (const auto &item : bundleInfos_) {
-            bool needResetFlag = false;
-            item.second.HandleOTACodeEncryption(needResetFlag);
-            if (needResetFlag) {
-                noEncrytedKeyBundles.emplace_back(item.first);
-            }
+            item.second.HandleOTACodeEncryption(withoutKeyBundles, withKeyBundles);
         }
     }
-    for (const std::string &bundleName : noEncrytedKeyBundles) {
+    for (const std::string &bundleName : withKeyBundles) {
+        UpdateAppEncryptedStatus(bundleName, true, 0, true);
+    }
+    for (const std::string &bundleName : withoutKeyBundles) {
         UpdateAppEncryptedStatus(bundleName, false, 0, true);
     }
     APP_LOGI("end");
