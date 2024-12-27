@@ -2257,6 +2257,10 @@ public:
     }
 
     void SetDFXParamStatus();
+    int32_t GetApplicationFlags() const
+    {
+        return baseApplicationInfo_->applicationFlags;
+    }
 
 private:
     bool IsExistLauncherAbility() const;

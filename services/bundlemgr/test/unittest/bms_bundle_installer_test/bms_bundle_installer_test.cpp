@@ -7972,4 +7972,63 @@ HWTEST_F(BmsBundleInstallerTest, GetDeveloperId_0100, Function | SmallTest | Lev
     EXPECT_EQ(installer.GetDeveloperId(bundleName), "testDeveloperId");
     EXPECT_EQ(installer.GetDeveloperId(bundleName1), "");
 }
+
+/**
+ * @tc.number: GetInstallSource_0100
+ * @tc.name: test GetInstallSource
+ * @tc.desc: GetInstallSource
+ */
+HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
+    BaseBundleInstaller installer;
+    std::string installSource = installer.GetInstallSource(installParam);
+    EXPECT_EQ(installSource, "pre-installed");
+}
+
+/**
+ * @tc.number: GetInstallSource_0200
+ * @tc.name: test GetInstallSource
+ * @tc.desc: GetInstallSource
+ */
+HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0200, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
+    BaseBundleInstaller installer;
+    std::string installSource = installer.GetInstallSource(installParam);
+    EXPECT_EQ(installSource, "ota");
+}
+
+/**
+ * @tc.number: GetInstallSource_0200
+ * @tc.name: test GetInstallSource
+ * @tc.desc: GetInstallSource
+ */
+HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0300, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_RECOVER_INSTALLED;
+    BaseBundleInstaller installer;
+    std::string installSource = installer.GetInstallSource(installParam);
+    EXPECT_EQ(installSource, "recovery");
+}
+
+/**
+ * @tc.number: GetInstallSource_0400
+ * @tc.name: test GetInstallSource
+ * @tc.desc: GetInstallSource
+ */
+HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0400, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.isPreInstallApp = false;
+    BaseBundleInstaller installer;
+    std::string installSource = installer.GetInstallSource(installParam);
+    EXPECT_EQ(installSource, "unknown");
+}
 } // OHOS
