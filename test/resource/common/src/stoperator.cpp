@@ -40,7 +40,7 @@ std::vector<string> SerializationStOperatorToVector(StOperator &ParentOperator)
 
 void PullOperatorFromVector(StOperator &ParentOperator, std::vector<string> &vectorOperator)
 {
-    int childnum = std::stoi(vectorOperator.front());
+    int childnum = atoi(vectorOperator.front().c_str());
     vectorOperator.erase(vectorOperator.begin());
     string abilityType = vectorOperator.front();
     vectorOperator.erase(vectorOperator.begin());

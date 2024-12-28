@@ -2438,7 +2438,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         }
         for (auto &cloneInfo : userInfo.cloneInfos) {
             if (!AbilityManagerHelper::UninstallApplicationProcesses(
-                oldInfo.GetApplicationName(), cloneInfo.second.uid, true, std::stoi(cloneInfo.first))) {
+                oldInfo.GetApplicationName(), cloneInfo.second.uid, true, atoi(cloneInfo.first.c_str()))) {
                 LOG_E(BMS_TAG_INSTALLER, "fail to kill clone application");
             }
         }
@@ -4328,7 +4328,7 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
         }
         for (auto &cloneInfo : userInfo.cloneInfos) {
             if (!AbilityManagerHelper::UninstallApplicationProcesses(
-                info.GetApplicationName(), cloneInfo.second.uid, true, std::stoi(cloneInfo.first))) {
+                info.GetApplicationName(), cloneInfo.second.uid, true, atoi(cloneInfo.first.c_str()))) {
                 LOG_W(BMS_TAG_INSTALLER, "fail to kill clone application");
             }
         }

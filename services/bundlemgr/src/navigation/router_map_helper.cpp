@@ -90,7 +90,7 @@ int32_t RouterMapHelper::CompareIdentifiers(const std::string& a, const std::str
     bool anum = std::regex_match(a, NUM_REGEX);
     bool bnum = std::regex_match(b, NUM_REGEX);
     if (anum && bnum) {
-        auto diff = std::stoi(a) - std::stoi(b);
+        auto diff = atoi(a.c_str()) - atoi(b.c_str());
         if (diff) {
             return diff > 0 ? 1 : -1;
         }

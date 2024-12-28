@@ -144,7 +144,7 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
     }
     ErrCode result = ERR_OK;
     for (auto it = userInfo.cloneInfos.begin(); it != userInfo.cloneInfos.end(); it++) {
-        if (UninstallCloneApp(bundleName, userId, std::stoi(it->first)) != ERR_OK) {
+        if (UninstallCloneApp(bundleName, userId, atoi(it->first.c_str())) != ERR_OK) {
             APP_LOGE("UninstallCloneApp failed, appIndex %{public}s", it->first.c_str());
             result = ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
         }
