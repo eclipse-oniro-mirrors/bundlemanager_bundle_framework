@@ -69,7 +69,7 @@ enum ReturnStatus {
 #define COMPRESS_LEVE_CHECK(level, ret)                                                            \
     if (!(level == COMPRESS_LEVEL_NO_COMPRESSION || level == COMPRESS_LEVEL_DEFAULT_COMPRESSION || \
             level == COMPRESS_LEVEL_BEST_SPEED || level == COMPRESS_LEVEL_BEST_COMPRESSION)) {     \
-        APP_LOGE("level parameter =[%{public}d] value is incorrect", (int)level);               \
+        APP_LOGE("level parameter =[%{public}d] value is incorrect", static_cast<int>(level));     \
         return ret;                                                                                \
     }
 
@@ -77,13 +77,13 @@ enum ReturnStatus {
     if (!(strategy == COMPRESS_STRATEGY_DEFAULT_STRATEGY || strategy == COMPRESS_STRATEGY_FILTERED || \
             strategy == COMPRESS_STRATEGY_HUFFMAN_ONLY || strategy == COMPRESS_STRATEGY_RLE ||        \
             strategy == COMPRESS_STRATEGY_FIXED)) {                                                   \
-        APP_LOGE("strategy parameter= [%{public}d] value is incorrect", (int)strategy);            \
+        APP_LOGE("strategy parameter= [%{public}d] value is incorrect", static_cast<int>(strategy));  \
         return ret;                                                                                   \
     }
 
 #define COMPRESS_MEM_CHECK(mem, false)                                                                            \
     if (!(mem == MEM_LEVEL_MIN_MEMLEVEL || mem == MEM_LEVEL_DEFAULT_MEMLEVEL || mem == MEM_LEVEL_MAX_MEMLEVEL)) { \
-        APP_LOGE("memLevel parameter =[%{public}d] value is incorrect", (int)mem);                             \
+        APP_LOGE("memLevel parameter =[%{public}d] value is incorrect", static_cast<int>(mem));                   \
         return ret;                                                                                               \
     }
 
