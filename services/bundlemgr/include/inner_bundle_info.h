@@ -2245,7 +2245,8 @@ public:
     std::set<int32_t> GetCloneBundleAppIndexes() const;
     static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
     void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
-    void HandleOTACodeEncryption(bool &needResetFlag) const;
+    void HandleOTACodeEncryption(std::vector<std::string> &withoutKeyBundles,
+        std::vector<std::string> &withKeyBundles) const;
     void CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam,
         const InnerModuleInfo &moduleInfo) const;
     void CheckSoEncryption(const CheckEncryptionParam &checkEncryptionParam, const std::string &requestPackage,
