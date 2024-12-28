@@ -25,6 +25,7 @@
 #include "bundle_memory_guard.h"
 #include "hitrace_meter.h"
 #include "datetime_ex.h"
+#include "ipc_skeleton.h"
 #include "ipc_types.h"
 #include "json_util.h"
 #include "preinstalled_application_info.h"
@@ -43,6 +44,9 @@ constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 const int16_t MAX_STATUS_VECTOR_NUM = 1000;
 constexpr int16_t MAX_BATCH_QUERY_ABILITY_SIZE = 1000;
+constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // max allow 1 GB resource size
+constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
+const std::string BUNDLE_MANAGER_ASHMEM_NAME = "bundleManagerAshemeName";
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)
 {
@@ -54,14 +58,6 @@ void SplitString(const std::string &source, std::vector<std::string> &strings)
     for (int i = 0; i < splitSize; i++) {
         int32_t start = LIMIT_PARCEL_SIZE * i;
         strings.emplace_back(source.substr(start, LIMIT_PARCEL_SIZE));
-    }
-}
-
-inline void ClearAshmem(sptr<Ashmem> &optMem)
-{
-    if (optMem != nullptr) {
-        optMem->UnmapAshmem();
-        optMem->CloseAshmem();
     }
 }
 
@@ -2886,7 +2882,7 @@ bool BundleMgrHost::WriteParcelableVector(std::vector<T> &parcelableVector, Mess
 template<typename T>
 bool BundleMgrHost::WriteVectorToParcelIntelligent(std::vector<T> &parcelableVector, MessageParcel &reply)
 {
-    Parcel tempParcel;
+    MessageParcel tempParcel;
     (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
     if (!tempParcel.WriteInt32(parcelableVector.size())) {
         APP_LOGE("write ParcelableVector failed");
@@ -2904,6 +2900,13 @@ bool BundleMgrHost::WriteVectorToParcelIntelligent(std::vector<T> &parcelableVec
     if (!reply.WriteInt32(static_cast<int32_t>(dataSize))) {
         APP_LOGE("write WriteInt32 failed");
         return false;
+    }
+
+    if (dataSize > MAX_IPC_REWDATA_SIZE) {
+        (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY_OF_ASHMEM);
+        int32_t callingUid = IPCSkeleton::GetCallingUid();
+        APP_LOGI("datasize is too large, use ashmem %{public}d", callingUid);
+        return WriteParcelableIntoAshmem(tempParcel, reply);
     }
 
     if (!reply.WriteRawData(
@@ -3045,22 +3048,18 @@ ErrCode BundleMgrHost::HandleGetMediaData(MessageParcel &data, MessageParcel &re
     }
     if (!ashMem->MapReadAndWriteAshmem()) {
         APP_LOGE("MapReadAndWriteAshmem failed");
-        ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t offset = 0;
     if (!ashMem->WriteToAshmem(mediaDataPtr.get(), len, offset)) {
         APP_LOGE("MapReadAndWriteAshmem failed");
-        ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel *messageParcel = &reply;
     if (messageParcel == nullptr || !messageParcel->WriteAshmem(ashMem)) {
         APP_LOGE("WriteAshmem failed");
-        ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    ClearAshmem(ashMem);
     return ERR_OK;
 }
 
@@ -3617,7 +3616,6 @@ bool BundleMgrHost::WriteParcelableIntoAshmem(
     ret = ashmem->WriteToAshmem(std::to_string(itemLen).c_str(), ASHMEM_LEN, offset);
     if (!ret) {
         APP_LOGE("Write itemLen to shared memory fail");
-        ClearAshmem(ashmem);
         return false;
     }
 
@@ -3625,12 +3623,10 @@ bool BundleMgrHost::WriteParcelableIntoAshmem(
     ret = ashmem->WriteToAshmem(infoStr.c_str(), itemLen, offset);
     if (!ret) {
         APP_LOGE("Write info to shared memory fail");
-        ClearAshmem(ashmem);
         return false;
     }
 
     ret = messageParcel->WriteAshmem(ashmem);
-    ClearAshmem(ashmem);
     if (!ret) {
         APP_LOGE("Write ashmem to MessageParcel fail");
         return false;
@@ -4219,6 +4215,36 @@ ErrCode BundleMgrHost::HandleGetAllBundleDirs(MessageParcel &data, MessageParcel
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::WriteParcelableIntoAshmem(MessageParcel &tempParcel, MessageParcel &reply)
+{
+    size_t dataSize = tempParcel.GetDataSize();
+    // The ashmem name must be unique.
+    sptr<Ashmem> ashmem = Ashmem::CreateAshmem(
+        (BUNDLE_MANAGER_ASHMEM_NAME + std::to_string(AllocatAshmemNum())).c_str(), dataSize);
+    if (ashmem == nullptr) {
+        APP_LOGE("Create shared memory failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    // Set the read/write mode of the ashme.
+    if (!ashmem->MapReadAndWriteAshmem()) {
+        APP_LOGE("Map shared memory fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    // Write the size and content of each item to the ashmem.
+    int32_t offset = 0;
+    if (!ashmem->WriteToAshmem(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize, offset)) {
+        APP_LOGE("Write info to shared memory fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteAshmem(ashmem)) {
+        APP_LOGE("Write ashmem to tempParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

@@ -291,26 +291,5 @@ HWTEST_F(BundleResourceProxyTest, SendRequest_0100, Function | SmallTest | Level
     GTEST_LOG_(INFO) << "SendRequest_0100 end, " << ret;
     EXPECT_TRUE(ret);
 }
-
-/**
- * @tc.number: ClearAshmem_0100
- * @tc.name: test the ClearAshmem
- * @tc.desc: 1. system running normally
- *           2. test ClearAshmem
- */
-HWTEST_F(BundleResourceProxyTest, ClearAshmem_0100, Function | SmallTest | Level0)
-{
-    GTEST_LOG_(INFO) << "ClearAshmem_0100 start";
-    sptr<MockStub> stub = new MockStub();
-    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
-    int fd = 1;
-    int32_t size = 1;
-    sptr<Ashmem> ashMem = new Ashmem(fd, size);
-    ashMem->flag_ = MAX_PARCEL_CAPACITY;
-    ASSERT_NE(ashMem, nullptr);
-    proxy->ClearAshmem(ashMem);
-    GTEST_LOG_(INFO) << "ClearAshmem_0100 end";
-    EXPECT_EQ(ashMem->flag_, 0);
-}
 }
 }
