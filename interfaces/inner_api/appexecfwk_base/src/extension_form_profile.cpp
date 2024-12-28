@@ -98,6 +98,8 @@ struct Window {
     bool autoDesignWidth = false;
 };
 
+constexpr char CHAR_COLON = ':';
+
 struct Metadata {
     std::string name;
     std::string value;
@@ -126,6 +128,7 @@ struct ExtensionFormProfileInfo {
     std::vector<std::string> supportShapes {};
     std::vector<std::string> supportDimensions {};
     std::vector<Metadata> metadata {};
+    std::vector<std::string> previewImages {};
 };
 
 struct ExtensionFormProfileInfoStruct {
@@ -314,6 +317,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         false,
         g_parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::PREVIEW_IMAGES,
+        extensionFormProfileInfo.previewImages,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
@@ -426,6 +437,20 @@ bool GetSupportShapes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &i
     return true;
 }
 
+bool GetPreviewImages(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
+    for (const auto &previewImage: form.previewImages) {
+        auto pos = previewImage.find(CHAR_COLON);
+        if (pos != std::string::npos) {
+            int32_t previewImageLength = static_cast<int32_t>(previewImage.length());
+            auto previewImageId = static_cast<uint32_t>(
+                    atoi(previewImage.substr(pos + 1, previewImageLength - pos - 1).c_str()));
+            info.previewImages.emplace_back(previewImageId);
+        }
+    }
+    return true;
+}
+
 bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
     if (!CheckFormNameIsValid(form.name)) {
@@ -476,6 +501,9 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     info.fontScaleFollowSystem = form.fontScaleFollowSystem;
 
     if (!GetSupportShapes(form, info)) {
+        return false;
+    }
+    if (!GetPreviewImages(form, info)) {
         return false;
     }
     return true;

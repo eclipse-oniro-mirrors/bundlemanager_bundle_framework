@@ -44,6 +44,7 @@ constexpr const char* UPDATE_DURATION = "updateDuration";
 constexpr const char* DEFAULT_DIMENSION = "defaultDimension";
 constexpr const char* SUPPORT_DIMENSIONS = "supportDimensions";
 constexpr const char* METADATA = "metadata";
+constexpr const char* PREVIEW_IMAGES = "previewImages";
 constexpr const char* METADATA_NAME = "name";
 constexpr const char* METADATA_VALUE = "value";
 constexpr const char* DATA_PROXY_ENABLED = "dataProxyEnabled";

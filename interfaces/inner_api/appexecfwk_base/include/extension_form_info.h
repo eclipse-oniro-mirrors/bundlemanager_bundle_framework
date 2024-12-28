@@ -48,6 +48,7 @@ struct ExtensionFormInfo {
     std::vector<int32_t> supportDimensions {};
     std::vector<FormCustomizeData> metadata {};
     std::vector<int32_t> supportShapes {};
+    std::vector<uint32_t> previewImages {};
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
