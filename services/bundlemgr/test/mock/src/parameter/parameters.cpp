@@ -46,7 +46,7 @@ T GetIntParameter(const std::string& key, T def)
         if (item == paramMap.end()) {
             return def;
         }
-        return std::stoi(item->second);
+        return atoi(item->second.c_str());
     } catch (...) {
         return def;
     }
