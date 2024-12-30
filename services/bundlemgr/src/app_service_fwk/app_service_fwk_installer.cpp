@@ -231,6 +231,7 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
         if (result != ERR_OK) {
             APP_LOGE("InnerProcessInstall failed %{public}d", result);
             RollBack();
+            return result;
         }
     }
     SavePreInstallBundleInfo(result, newInfos, installParam);
