@@ -291,7 +291,7 @@ bool ZipParallelReader::Open(FilePath &zipFilePath)
 
     unzFile zipFile;
     std::string zipFilePathValue = zipFilePath.Value();
-    for (int i = 0; i < concurrency_; i++) {
+    for (int32_t i = 0; i < concurrency_; i++) {
         zipFile = OpenForUnzipping(zipFilePathValue);
         if (!zipFile) {
             return false;

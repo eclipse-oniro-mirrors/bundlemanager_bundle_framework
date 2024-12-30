@@ -302,7 +302,7 @@ ErrCode UnzipWithFilterAndWritersParallel(const FilePath &srcFile, FilePath &des
         return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
     }
     ErrCode ret = ERR_OK;
-    for (int i = 0; i < reader.num_entries(); i++) {
+    for (int32_t i = 0; i < reader.num_entries(); i++) {
         if (!reader.OpenCurrentEntryInZip()) {
             APP_LOGI("Failed to open the current file in zip");
             return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
@@ -394,7 +394,7 @@ ErrCode UnzipWithFilterCallback(
     } else {
         PlatformFile zipFd = open(src.Value().c_str(), S_IREAD, O_CREAT);
         if (zipFd == kInvalidPlatformFile) {
-            APP_LOGI("Failed to open");
+            APP_LOGE("Failed to open");
             return ERR_ZLIB_SRC_FILE_DISABLED;
         }
         ret = UnzipWithFilterAndWriters(zipFd,

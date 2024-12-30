@@ -252,8 +252,8 @@ napi_value CompressStrategyInit(napi_env env, napi_value exports)
  */
 napi_value ParallelStrategyInit(napi_env env, napi_value exports)
 {
-    const int PARALLEL_STRATEGY_SEQUENTIAL = 0;
-    const int PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION = 1;
+    const int32_t PARALLEL_STRATEGY_SEQUENTIAL = 0;
+    const int32_t PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION = 1;
 
     napi_value parallelStrategy = nullptr;
     napi_create_object(env, &parallelStrategy);
