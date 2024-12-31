@@ -864,13 +864,13 @@ bool InstalldOperator::DeleteFiles(const std::string &dataPath)
     bool ret = true;
     DIR *dir = opendir(dataPath.c_str());
     if (dir == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "fail to opendir:%{public}s, errno:%{public}d", dataPath.c_str(), errno);
-        return false;
+        LOG_D(BMS_TAG_INSTALLD, "fail to opendir:%{public}s, errno:%{public}d", dataPath.c_str(), errno);
+        return true;
     }
     while (true) {
         struct dirent *ptr = readdir(dir);
         if (ptr == nullptr) {
-            LOG_E(BMS_TAG_INSTALLD, "fail to readdir errno:%{public}d", errno);
+            LOG_D(BMS_TAG_INSTALLD, "fail to readdir errno:%{public}d", errno);
             break;
         }
         if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
@@ -880,13 +880,15 @@ bool InstalldOperator::DeleteFiles(const std::string &dataPath)
         if (ptr->d_type == DT_DIR) {
             if (!OHOS::ForceRemoveDirectory(subPath)) {
                 ret = false;
+                LOG_W(BMS_TAG_INSTALLD, "ForceRemoveDirectory %{public}s failed, error: %{public}d",
+                    dataPath.c_str(), errno);
             }
             continue;
         }
         if (access(subPath.c_str(), F_OK) == 0) {
             ret = OHOS::RemoveFile(subPath);
             if (!ret) {
-                LOG_I(BMS_TAG_INSTALLD, "RemoveFile %{public}s failed, error: %{public}d", subPath.c_str(), errno);
+                LOG_W(BMS_TAG_INSTALLD, "RemoveFile %{public}s failed, error: %{public}d", dataPath.c_str(), errno);
             }
             continue;
         }
