@@ -83,7 +83,7 @@ const nlohmann::json DISTRO_ERROR_JSON = R"(
 {
     "deliveryWithInstall":[]
 })"_json;
-const nlohmann::json INSTALL_MARK_ERROR_JSON= R"(
+const nlohmann::json INSTALL_MARK_ERROR_JSON = R"(
 {
     "installMarkBundle":[]
 })"_json;
