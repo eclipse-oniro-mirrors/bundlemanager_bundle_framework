@@ -191,7 +191,7 @@ namespace OHOS {
         int uid = bundleMgrProxy.GetUidByBundleName(bundleName, reinterpret_cast<uintptr_t>(data));
         bundleMgrProxy.GetUidByBundleName(bundleName, reinterpret_cast<uintptr_t>(data), 0);
         bundleMgrProxy.GetUidByDebugBundleName(bundleName, reinterpret_cast<uintptr_t>(data));
-        bundleMgrProxy.GetAppIdByBundleName(bundleName, reinterpret_cast<uintptr_t>(data));
+        std::string appId = bundleMgrProxy.GetAppIdByBundleName(bundleName, reinterpret_cast<uintptr_t>(data));
         bundleMgrProxy.GetBundleNameForUid(uid, bundleName);
         bundleMgrProxy.GetBundlesForUid(uid, bundleNames);
         int32_t appIndex = -1;
@@ -333,6 +333,8 @@ namespace OHOS {
         bundleMgrProxy.GetCompatibleDeviceType(bundleName, deviceType);
         bundleMgrProxy.GetOdidByBundleName(bundleName, odid);
         bundleMgrProxy.GetBundleInfosForContinuation(0, bundleInfos, reinterpret_cast<uintptr_t>(data));
+        std::string queryBundleName;
+        bundleMgrProxy.GetBundleNameByAppId(appId, queryBundleName);
         return true;
     }
 }

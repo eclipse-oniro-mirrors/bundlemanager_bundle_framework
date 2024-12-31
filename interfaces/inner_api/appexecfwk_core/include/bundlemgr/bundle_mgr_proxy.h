@@ -1114,6 +1114,8 @@ public:
 
     virtual ErrCode GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType) override;
 
+    virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName) override;
+
     virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir) override;
 

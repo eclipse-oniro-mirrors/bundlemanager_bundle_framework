@@ -841,6 +841,8 @@ private:
 
     ErrCode HandleIsBundleInstalled(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetBundleNameByAppId(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetDirByBundleNameAndAppIndex(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllBundleDirs(MessageParcel &data, MessageParcel &reply);
 

@@ -997,6 +997,7 @@ public:
     ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled);
     void CreateEl5Dir(const std::vector<CreateDirParam> &el5Params);
     int32_t GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t appIndex) const;
+    ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName);
     ErrCode GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const;
     ErrCode GetDirForAtomicServiceByUserId(const std::string &bundleName, int32_t userId,
         AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const;
