@@ -30,7 +30,6 @@
 #include "event_report.h"
 #include "hap_token_info.h"
 #include "install_param.h"
-#include "installer_bundle_tmp_info.h"
 #include "quick_fix/appqf_info.h"
 #include "shared_bundle_installer.h"
 
@@ -589,11 +588,11 @@ private:
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode NotifyBundleStatus(const NotifyBundleEvents &installRes);
     void AddNotifyBundleEvents(const NotifyBundleEvents &notifyBundleEvents);
-    void ProcessHqfInfo(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
+    void ProcessHqfInfo(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath,
         const std::string &cpuAbi) const;
     ErrCode ProcessDeployedHqfInfo(const std::string &nativeLibraryPath,
-        const std::string &cpuAbi, const InnerBundleInfo &newInfo, const AppQuickFix &appQuickFix);
+        const std::string &cpuAbi, const InnerBundleInfo &newInfo, const AppQuickFix &appQuickFix) const;
     ErrCode ProcessDeployingHqfInfo(
         const std::string &nativeLibraryPath, const std::string &cpuAbi, const InnerBundleInfo &newInfo) const;
     ErrCode UpdateLibAttrs(const InnerBundleInfo &newInfo,
@@ -620,7 +619,7 @@ private:
     ErrCode CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos, int32_t userId);
     ErrCode CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, int32_t userId) const;
     NotifyType GetNotifyType();
-    void KillRelatedProcessIfArkWeb(bool isOta);
+    void KillRelatedProcessIfArkWeb(const std::string &bundleName, bool isAppExist, bool isOta);
     ErrCode CheckAppService(
         const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo, bool isAppExist);
     ErrCode CheckSingleton(const InnerBundleInfo &newInfo, const int32_t userId);
@@ -722,7 +721,7 @@ private:
     bool VerifyActivationLockToken() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
     void CreateScreenLockProtectionDir();
-    void CreateEl5AndSetPolicy(InnerBundleInfo &info);
+    void CreateEl5AndSetPolicy(const InnerBundleInfo &info);
     void DeleteScreenLockProtectionDir(const std::string bundleName) const;
     void DeleteEncryptionKeyId(const InnerBundleUserInfo &userInfo, bool isKeepData) const;
 #ifdef APP_DOMAIN_VERIFY_ENABLED
@@ -769,7 +768,7 @@ private:
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
         const InnerBundleInfo& innerBundleInfo);
 #ifdef WEBVIEW_ENABLE
-    ErrCode VerifyArkWebInstall();
+    ErrCode VerifyArkWebInstall(const std::string &bundleName);
 #endif
 
     bool SetDisposedRuleWhenBundleUpdateStart(const std::unordered_map<std::string, InnerBundleInfo> &infos,
@@ -782,9 +781,7 @@ private:
     bool DeleteDisposedRuleWhenBundleUninstallEnd(const std::string &bundleName,
         const std::string &appId, bool isMultiUser);
     void ProcessAddResourceInfo(const InstallParam &installParam, const std::string &bundleName, int32_t userId);
-    bool GetTempBundleInfo(InnerBundleInfo &info) const;
-    bool InitTempBundleFromCache(InnerBundleInfo &info, bool &isAppExist, std::string bundleName = "");
-    ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex);
+    bool FetchInnerBundleInfo(InnerBundleInfo &info);
     ErrCode CheckShellCanInstallPreApp(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
@@ -858,7 +855,6 @@ private:
     // used to record system event infos
     EventInfo sysEventInfo_;
     Security::Verify::HapVerifyResult verifyRes_;
-    InstallerBundleTempInfo tempInfo_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 
