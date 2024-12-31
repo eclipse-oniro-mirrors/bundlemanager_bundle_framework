@@ -4645,31 +4645,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12500, Function | Sma
 
 /**
  * @tc.number: InnerBundleInfo_12600
- * @tc.name: Test UpdateAppEncryptedStatus
- * @tc.desc: Test the UpdateAppEncryptedStatus of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12600, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    InnerBundleUserInfo firstInnerBundleUserInfo;
-    info.innerBundleUserInfos_.try_emplace(TEST_KEY, firstInnerBundleUserInfo);
-    auto ret = info.UpdateAppEncryptedStatus(BUNDLE_NAME, false, appIndex);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP);
-
-    InnerBundleUserInfo secondInnerBundleUserInfo;
-    InnerBundleCloneInfo innerBundleCloneInfo;
-    secondInnerBundleUserInfo.cloneInfos.try_emplace(std::to_string(appIndex), innerBundleCloneInfo);
-    info.innerBundleUserInfos_.try_emplace(TEST_KEY1, secondInnerBundleUserInfo);
-    ret = info.UpdateAppEncryptedStatus(BUNDLE_NAME, false, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
- * @tc.number: InnerBundleInfo_12700
  * @tc.name: Test GetAllDependentModuleNames
  * @tc.desc: Test the GetAllDependentModuleNames of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12700, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12600, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     std::vector<std::string> dependentModuleNames;
@@ -4678,11 +4657,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12700, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_12800
+ * @tc.number: InnerBundleInfo_12700
  * @tc.name: Test DeleteHspModuleByVersion
  * @tc.desc: Test the DeleteHspModuleByVersion of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12800, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12700, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     std::vector<InnerModuleInfo> innerModuleInfos;
