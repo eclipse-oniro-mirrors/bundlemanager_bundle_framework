@@ -2427,7 +2427,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_7100, Function | SmallTest 
         "bundleName", installParam, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
     InnerBundleInfo info;
-    bool res = installer.GetTempBundleInfo(info);
+    bool res = installer.FetchInnerBundleInfo(info);
     EXPECT_EQ(res, false);
     ResetDataMgr();
 
