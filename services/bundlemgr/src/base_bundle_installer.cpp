@@ -2138,7 +2138,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
 
-    if (!CheckAppIdentifier(oldInfo, newInfo)) {
+    if (!CheckAppIdentifier(oldInfo.GetAppIdentifier(), newInfo.GetAppIdentifier(),
+        oldInfo.GetProvisionId(), newInfo.GetProvisionId())) {
         return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
     }
     LOG_D(BMS_TAG_INSTALLER, "ProcessBundleUpdateStatus killProcess = %{public}d", killProcess);
@@ -2161,15 +2162,20 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     return ERR_OK;
 }
 
-bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo)
+bool BaseBundleInstaller::CheckAppIdentifier(const std::string &oldAppIdentifier, const std::string &newAppIdentifier,
+    const std::string &oldAppId, const std::string &newAppId)
 {
     // for versionCode update
-    if ((oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) &&
-        (oldInfo.GetProvisionId() != newInfo.GetProvisionId())) {
-        LOG_E(BMS_TAG_INSTALLER, "the appIdentifier or appId of the new bundle is not the same as old one");
-        return false;
+    if (!oldAppIdentifier.empty() &&
+        !newAppIdentifier.empty() &&
+        oldAppIdentifier == newAppIdentifier) {
+        return true;
     }
-    return true;
+    if (oldAppId == newAppId) {
+        return true;
+    }
+    LOG_E(BMS_TAG_INSTALLER, "the appIdentifier or appId of the new bundle is not the same as old one");
+    return false;
 }
 
 ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
@@ -4910,8 +4916,8 @@ bool BaseBundleInstaller::CheckInstallOnKeepData(const std::string &bundleName, 
     }
     existBeforeKeepDataApp_ = true;
     LOG_I(BMS_TAG_INSTALLER, "this app was uninstalled with keep data before");
-    if (infos.begin()->second.GetAppIdentifier() != uninstallBundleInfo.appIdentifier &&
-        infos.begin()->second.GetAppId() != uninstallBundleInfo.appId) {
+    if (!CheckAppIdentifier(uninstallBundleInfo.appIdentifier, infos.begin()->second.GetAppIdentifier(),
+        uninstallBundleInfo.appId, infos.begin()->second.GetAppId())) {
         LOG_E(BMS_TAG_INSTALLER,
             "%{public}s has been uninstalled with keep data, and the appIdentifier or appId is not the same",
             bundleName.c_str());
@@ -6036,12 +6042,8 @@ ErrCode BaseBundleInstaller::CheckShellCanInstallPreApp(
         return ERR_OK;
     }
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyResult.GetProvisionInfo();
-    if (!provisionInfo.bundleInfo.appIdentifier.empty() &&
-        !newInfos.begin()->second.GetAppIdentifier().empty() &&
-        provisionInfo.bundleInfo.appIdentifier == newInfos.begin()->second.GetAppIdentifier()) {
-        return ERR_OK;
-    }
-    if (provisionInfo.appId == newInfos.begin()->second.GetProvisionId()) {
+    if (CheckAppIdentifier(provisionInfo.bundleInfo.appIdentifier, newInfos.begin()->second.GetAppIdentifier(),
+        provisionInfo.appId, newInfos.begin()->second.GetProvisionId())) {
         return ERR_OK;
     }
     LOG_E(BMS_TAG_DEFAULT, "%{public}s appId or appIdentifier not same with preinstalled app",

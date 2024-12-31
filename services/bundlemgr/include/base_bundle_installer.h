@@ -658,7 +658,8 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, bool isAppExist);
     void ExtractResourceFiles(const InnerBundleInfo &info, const std::string &targetPath) const;
     void RemoveTempSoDir(const std::string &tempSoDir);
-    bool CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo);
+    bool CheckAppIdentifier(const std::string &oldAppIdentifier, const std::string &newAppIdentifier,
+        const std::string &oldAppId, const std::string &newAppId);
     ErrCode InstallEntryMoudleFirst(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         InnerBundleInfo &bundleInfo, const InnerBundleUserInfo &innerBundleUserInfo, const InstallParam &installParam);
     void ProcessQuickFixWhenInstallNewModule(const InstallParam &installParam,
