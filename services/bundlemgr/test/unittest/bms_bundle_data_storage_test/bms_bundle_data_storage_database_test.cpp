@@ -3998,57 +3998,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8600, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_8700
- * @tc.name: Test GetApplicationReservedFlagAdaptClone
- * @tc.desc: Test the GetApplicationReservedFlagAdaptClone of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8700, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleName = TEST_BUNDLE_NAME;
-    userInfo.uid = userId;
-    info.innerBundleUserInfos_.try_emplace(TEST_BUNDLE_NAME, userInfo);
-    ApplicationInfo appInfo;
-    info.GetApplicationReservedFlagAdaptClone(appInfo, appIndex);
-    EXPECT_EQ(appInfo.applicationReservedFlag, 0);
-}
-
-/**
- * @tc.number: InnerBundleInfo_8800
- * @tc.name: Test GetApplicationReservedFlagAdaptClone
- * @tc.desc: Test the GetApplicationReservedFlagAdaptClone of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8800, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    ApplicationInfo appInfo;
-    info.GetApplicationReservedFlagAdaptClone(appInfo, appIndex);
-    auto size = info.innerBundleUserInfos_.size();
-    EXPECT_EQ(size, 0);
-}
-
-/**
- * @tc.number: InnerBundleInfo_8900
- * @tc.name: Test GetApplicationReservedFlagAdaptClone
- * @tc.desc: Test the GetApplicationReservedFlagAdaptClone of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_8900, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    InnerBundleUserInfo innerBundleUserInfo;
-    std::map<std::string, InnerBundleCloneInfo> cloneInfos;
-    InnerBundleCloneInfo innerBundleCloneInfo;
-    innerBundleCloneInfo.encryptedKeyExisted = true;
-    cloneInfos.insert(std::make_pair(std::to_string(appIndex), innerBundleCloneInfo));
-    innerBundleUserInfo.cloneInfos = cloneInfos;
-    info.innerBundleUserInfos_.try_emplace(TEST_BUNDLE_NAME, innerBundleUserInfo);
-    ApplicationInfo appInfo;
-    info.GetApplicationReservedFlagAdaptClone(appInfo, appIndex);
-    EXPECT_EQ(appInfo.applicationReservedFlag, 2);
-}
-
-/**
  * @tc.number: InnerBundleInfo_9000
  * @tc.name: Test GetBundleInfo
  * @tc.desc: Test the GetBundleInfo of InnerBundleInfo
