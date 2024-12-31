@@ -154,6 +154,14 @@ bool ZipReader::AdvanceToNextEntry()
     return true;
 }
 
+bool ZipReader::GetCurrentEntryPos(unz_file_pos &filePos)
+{
+    if (unzGetFilePos(zipFile_, &filePos) != UNZ_OK) {
+        return false;
+    }
+    return true;
+}
+
 bool ZipReader::OpenCurrentEntryInZip()
 {
     if (zipFile_ == nullptr) {
@@ -187,10 +195,15 @@ bool ZipReader::OpenCurrentEntryInZip()
 
 bool ZipReader::ExtractCurrentEntry(WriterDelegate *delegate, uint64_t numBytesToExtract) const
 {
-    if ((zipFile_ == nullptr) || (delegate == nullptr)) {
+    return ExtractEntry(delegate, zipFile_, numBytesToExtract);
+}
+
+bool ZipReader::ExtractEntry(WriterDelegate *delegate, const unzFile &zipFile, uint64_t numBytesToExtract) const
+{
+    if ((zipFile == nullptr) || (delegate == nullptr)) {
         return false;
     }
-    const int openResult = unzOpenCurrentFile(zipFile_);
+    const int openResult = unzOpenCurrentFile(zipFile);
     if (openResult != UNZ_OK) {
         APP_LOGE("unzOpen err %{public}d", openResult);
         return false;
@@ -200,7 +213,7 @@ bool ZipReader::ExtractCurrentEntry(WriterDelegate *delegate, uint64_t numBytesT
     bool entirefileextracted = false;
 
     while (remainingCapacity > 0) {
-        const int numBytesRead = unzReadCurrentFile(zipFile_, buf.get(), kZipBufSize);
+        const int numBytesRead = unzReadCurrentFile(zipFile, buf.get(), kZipBufSize);
         if (numBytesRead == 0) {
             entirefileextracted = true;
             APP_LOGD("extract entry");
@@ -217,7 +230,7 @@ bool ZipReader::ExtractCurrentEntry(WriterDelegate *delegate, uint64_t numBytesT
             }
             if (remainingCapacity == checked_cast<uint64_t>(numBytesRead)) {
                 // Ensures function returns true if the entire file has been read.
-                entirefileextracted = (unzReadCurrentFile(zipFile_, buf.get(), 1) == 0);
+                entirefileextracted = (unzReadCurrentFile(zipFile, buf.get(), 1) == 0);
                 APP_LOGI("extract entry %{public}d", entirefileextracted);
             }
             if (remainingCapacity >= numBytesToWrite) {
@@ -226,7 +239,7 @@ bool ZipReader::ExtractCurrentEntry(WriterDelegate *delegate, uint64_t numBytesT
         }
     }
 
-    unzCloseCurrentFile(zipFile_);
+    unzCloseCurrentFile(zipFile);
     // closeFile
     delegate->SetTimeModified(GetCurrentSystemTime());
 
@@ -259,6 +272,70 @@ void ZipReader::Reset()
     numEntries_ = 0;
     reachedEnd_ = false;
     currentEntryInfo_.reset();
+}
+
+// ZipParallelReader
+ZipParallelReader::~ZipParallelReader()
+{
+    Close();
+}
+
+bool ZipParallelReader::Open(FilePath &zipFilePath)
+{
+    if (!zipFiles_.empty()) {
+        return false;
+    }
+    if (!ZipReader::Open(zipFilePath)) {
+        return false;
+    }
+
+    unzFile zipFile;
+    std::string zipFilePathValue = zipFilePath.Value();
+    for (int32_t i = 0; i < concurrency_; i++) {
+        zipFile = OpenForUnzipping(zipFilePathValue);
+        if (!zipFile) {
+            return false;
+        }
+        zipFiles_.push_back(zipFile);
+    }
+    return true;
+}
+
+bool ZipParallelReader::GotoEntry(unzFile &zipFile, unz_file_pos filePos)
+{
+    if (zipFile == nullptr) {
+        return false;
+    }
+    if (filePos.num_of_file >= ZipReader::num_entries()) {
+        return false;
+    }
+
+    if (unzGoToFilePos(zipFile, &filePos) != UNZ_OK) {
+        return false;
+    }
+    return true;
+}
+
+unzFile ZipParallelReader::GetZipHandler(int &resourceId)
+{
+    resourceId %= concurrency_;
+    while (!mtxes_[resourceId].try_lock()) {
+        resourceId = (resourceId + 1) % concurrency_;
+    }
+    return zipFiles_[resourceId];
+}
+
+void ZipParallelReader::ReleaseZipHandler(const int &resourceId)
+{
+    mtxes_[resourceId].unlock();
+}
+
+void ZipParallelReader::Close()
+{
+    ZipReader::Close();
+    for (unzFile zipFile : zipFiles_) {
+        unzClose(zipFile);
+    }
 }
 
 // FilePathWriterDelegate

@@ -75,6 +75,16 @@ napi_value CompressMethodInit(napi_env env, napi_value exports);
 napi_value CompressStrategyInit(napi_env env, napi_value exports);
 
 /**
+ * @brief ParallelStrategy data initialization.
+ *
+ * @param env The environment that the Node-API call is invoked under.
+ * @param exports An empty object via the exports parameter as a convenience.
+ *
+ * @return The return value from Init is treated as the exports object for the module.
+ */
+napi_value ParallelStrategyInit(napi_env env, napi_value exports);
+
+/**
  * @brief MemLevel data initialization.
  *
  * @param env The environment that the Node-API call is invoked under.

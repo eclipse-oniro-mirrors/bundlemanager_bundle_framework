@@ -92,6 +92,13 @@ enum CompressStrategy {
 };
 using COMPRESS_STRATEGY = enum CompressStrategy;
 
+// Parallel Strategy
+enum ParallelStrategy {
+    PARALLEL_STRATEGY_SEQUENTIAL = 0,
+    PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION = 1
+};
+using PARALLEL_STRATEGY = enum ParallelStrategy;
+
 // Memory Level
 enum MemoryLevel { MEM_LEVEL_MIN_MEMLEVEL = 1, MEM_LEVEL_DEFAULT_MEMLEVEL = 8, MEM_LEVEL_MAX_MEMLEVEL = 9 };
 using MEMORY_LEVEL = enum MemoryLevel;
@@ -106,6 +113,7 @@ struct Options {
                             // compression rate, and 0 does not compress
     MEMORY_LEVEL memLevel;  // Internal compression status, how much memory should be allocated
     COMPRESS_STRATEGY strategy;  // CompressStrategy
+    PARALLEL_STRATEGY parallel;  // ParallelStrategy
 
     // default constructor
     Options()
@@ -122,6 +130,7 @@ struct Options {
         level = COMPRESS_LEVEL_DEFAULT_COMPRESSION;
         memLevel = MEM_LEVEL_DEFAULT_MEMLEVEL;
         strategy = COMPRESS_STRATEGY_DEFAULT_STRATEGY;
+        parallel = PARALLEL_STRATEGY_SEQUENTIAL;
     }
 };
 using OPTIONS = struct Options;

@@ -130,6 +130,25 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_unzip_0100_8file, Function | MediumTest | Le
     EXPECT_FALSE(ret);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_unzip_0100_8file_parallel
+ * @tc.name: unzip_0100_8file_parallel
+ * @tc.desc:
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_unzip_0100_8file_parallel, Function | MediumTest | Level1)
+{
+    std::string src = BASE_PATH + APP_PATH + "result/8file.zip";
+    std::string dest = BASE_PATH + APP_PATH + "unzip/01";
+
+    OPTIONS options;
+    options.parallel = PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION;
+    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
+    auto ret = Unzip(src, dest, options, zlibCallbackInfo);
+    EXPECT_FALSE(ret);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+}
+
 /**
  * @tc.number: APPEXECFWK_LIBZIP_unzip_single_0200_1file
  * @tc.name: unzip_single_0200_1file
@@ -146,6 +165,25 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_unzip_single_0200_1file, Function | MediumTe
     EXPECT_FALSE(ret);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_unzip_single_0200_1file_parallel
+ * @tc.name: unzip_single_0200_1file_parallel
+ * @tc.desc:
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_unzip_single_0200_1file_parallel, Function | MediumTest | Level1)
+{
+    std::string src = BASE_PATH + APP_PATH + "result/1file.zip";
+    std::string dest = BASE_PATH + APP_PATH + "unzip/02";
+
+    OPTIONS options;
+    options.parallel = PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION;
+    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
+    auto ret = Unzip(src, dest, options, zlibCallbackInfo);
+    EXPECT_FALSE(ret);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+}
+
 /**
  * @tc.number: APPEXECFWK_LIBZIP_zip_0100_zip1file
  * @tc.name: zip_0100_zip1file
@@ -162,6 +200,25 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_unzip_0100_zip1file, Function | MediumTest |
     EXPECT_FALSE(ret);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_zip_0100_zip1file_parallel
+ * @tc.name: zip_0100_zip1file_parallel
+ * @tc.desc:
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_unzip_0100_zip1file_parallel, Function | MediumTest | Level1)
+{
+    std::string src = BASE_PATH + APP_PATH + "result/zip1file.zip";
+    std::string dest = BASE_PATH + APP_PATH + "unzip/zip1file";
+
+    OPTIONS options;
+    options.parallel = PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION;
+    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
+    auto ret = Unzip(src, dest, options, zlibCallbackInfo);
+    EXPECT_FALSE(ret);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+}
+
 
 /**
  * @tc.number: APPEXECFWK_LIBZIP_Checkzip_0100
@@ -262,6 +319,25 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0500, Function | MediumTest | Level
 }
 
 /**
+ * @tc.number: APPEXECFWK_LIBZIP_Checkzip_0500_parallel
+ * @tc.name: Checkzip_0500_parallel
+ * @tc.desc:
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0500_parallel, Function | MediumTest | Level1)
+{
+    std::string src = BASE_PATH + APP_PATH + "error";
+    std::string dest = BASE_PATH + APP_PATH + "error1";
+
+    OPTIONS options;
+    options.parallel = PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION;
+    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
+    auto ret = Unzip(src, dest, options, zlibCallbackInfo);
+    EXPECT_FALSE(ret);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+}
+
+
+/**
  * @tc.number: APPEXECFWK_LIBZIP_Checkzip_0600
  * @tc.name: Checkzip_0600
  * @tc.desc:
@@ -311,6 +387,24 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0800, Function | MediumTest | Level
     std::string dest = BASE_PATH + APP_PATH;
 
     OPTIONS options;
+    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
+    auto ret = Unzip(src, dest, options, zlibCallbackInfo);
+    EXPECT_FALSE(ret);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_Checkzip_0800_parallel
+ * @tc.name: Checkzip_0800_parallel
+ * @tc.desc:
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0800_parallel, Function | MediumTest | Level1)
+{
+    std::string src = "";
+    std::string dest = BASE_PATH + APP_PATH;
+
+    OPTIONS options;
+    options.parallel = PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION;
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
