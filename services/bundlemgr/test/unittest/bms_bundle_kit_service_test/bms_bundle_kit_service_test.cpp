@@ -13764,14 +13764,14 @@ HWTEST_F(BmsBundleKitServiceTest, UpdatePrivilegeCapability_0001, Function | Sma
     innerBundleInfo.baseApplicationInfo_->formVisibleNotify = false;
 
     ApplicationInfo applicationInfo;
-    applicationInfo->keepAlive = true;
-    applicationInfo->associatedWakeUp = true;
-    applicationInfo->allowAppRunWhenDeviceFirstLocked = true;
-    applicationInfo->allowEnableNotification = true;
-    applicationInfo->allowMultiProcess = true;
-    applicationInfo->hideDesktopIcon = true;
-    applicationInfo->userDataClearable = false;
-    applicationInfo->formVisibleNotify = true;
+    applicationInfo.keepAlive = true;
+    applicationInfo.associatedWakeUp = true;
+    applicationInfo.allowAppRunWhenDeviceFirstLocked = true;
+    applicationInfo.allowEnableNotification = true;
+    applicationInfo.allowMultiProcess = true;
+    applicationInfo.hideDesktopIcon = true;
+    applicationInfo.userDataClearable = false;
+    applicationInfo.formVisibleNotify = true;
 
     innerBundleInfo.UpdatePrivilegeCapability(applicationInfo);
     EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->keepAlive);
@@ -13802,20 +13802,20 @@ HWTEST_F(BmsBundleKitServiceTest, UpdatePrivilegeCapability_0002, Function | Sma
     innerBundleInfo.baseApplicationInfo_->formVisibleNotify = true;
 
     ApplicationInfo applicationInfo;
-    applicationInfo->keepAlive = false;
-    applicationInfo->associatedWakeUp = false;
-    applicationInfo->allowAppRunWhenDeviceFirstLocked = false;
-    applicationInfo->allowEnableNotification = false;
-    applicationInfo->allowMultiProcess = false;
-    applicationInfo->hideDesktopIcon = false;
-    applicationInfo->userDataClearable = true;
-    applicationInfo->formVisibleNotify = false;
+    applicationInfo.keepAlive = false;
+    applicationInfo.associatedWakeUp = false;
+    applicationInfo.allowAppRunWhenDeviceFirstLocked = false;
+    applicationInfo.allowEnableNotification = false;
+    applicationInfo.allowMultiProcess = false;
+    applicationInfo.hideDesktopIcon = false;
+    applicationInfo.userDataClearable = true;
+    applicationInfo.formVisibleNotify = false;
 
     innerBundleInfo.UpdatePrivilegeCapability(applicationInfo);
     EXPECT_FALSE(innerBundleInfo.baseApplicationInfo_->keepAlive);
     EXPECT_FALSE(innerBundleInfo.baseApplicationInfo_->associatedWakeUp);
     EXPECT_FALSE(innerBundleInfo.baseApplicationInfo_->allowAppRunWhenDeviceFirstLocked);
-    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->allowEnableNotification);
+    EXPECT_FALSE(innerBundleInfo.baseApplicationInfo_->allowEnableNotification);
     EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->allowMultiProcess);
     EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->hideDesktopIcon);
     EXPECT_FALSE(innerBundleInfo.baseApplicationInfo_->userDataClearable);
