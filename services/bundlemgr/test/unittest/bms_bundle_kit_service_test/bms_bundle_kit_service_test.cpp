@@ -13745,4 +13745,80 @@ HWTEST_F(BmsBundleKitServiceTest, IsBundleInstalled_0001, Function | SmallTest |
     EXPECT_EQ(testRet, ERR_OK);
     EXPECT_FALSE(isInstalled);
 }
+
+/**
+ * @tc.number: UpdatePrivilegeCapability_0001
+ * @tc.name: test UpdatePrivilegeCapability
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdatePrivilegeCapability_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->keepAlive = false;
+    innerBundleInfo.baseApplicationInfo_->associatedWakeUp = false;
+    innerBundleInfo.baseApplicationInfo_->allowAppRunWhenDeviceFirstLocked = false;
+    innerBundleInfo.baseApplicationInfo_->allowEnableNotification = false;
+    innerBundleInfo.baseApplicationInfo_->allowMultiProcess = false;
+    innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = false;
+    innerBundleInfo.baseApplicationInfo_->userDataClearable = true;
+    innerBundleInfo.baseApplicationInfo_->formVisibleNotify = false;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo->keepAlive = true;
+    applicationInfo->associatedWakeUp = true;
+    applicationInfo->allowAppRunWhenDeviceFirstLocked = true;
+    applicationInfo->allowEnableNotification = true;
+    applicationInfo->allowMultiProcess = true;
+    applicationInfo->hideDesktopIcon = true;
+    applicationInfo->userDataClearable = false;
+    applicationInfo->formVisibleNotify = true;
+
+    innerBundleInfo.UpdatePrivilegeCapability(applicationInfo);
+    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->keepAlive);
+    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->associatedWakeUp);
+    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->allowAppRunWhenDeviceFirstLocked);
+    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->allowEnableNotification);
+    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->allowMultiProcess);
+    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.baseApplicationInfo_->userDataClearable);
+    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->formVisibleNotify);
+}
+
+/**
+ * @tc.number: UpdatePrivilegeCapability_0002
+ * @tc.name: test UpdatePrivilegeCapability
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdatePrivilegeCapability_0002, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->keepAlive = true;
+    innerBundleInfo.baseApplicationInfo_->associatedWakeUp = true;
+    innerBundleInfo.baseApplicationInfo_->allowAppRunWhenDeviceFirstLocked = true;
+    innerBundleInfo.baseApplicationInfo_->allowEnableNotification = true;
+    innerBundleInfo.baseApplicationInfo_->allowMultiProcess = true;
+    innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = true;
+    innerBundleInfo.baseApplicationInfo_->userDataClearable = false;
+    innerBundleInfo.baseApplicationInfo_->formVisibleNotify = true;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo->keepAlive = false;
+    applicationInfo->associatedWakeUp = false;
+    applicationInfo->allowAppRunWhenDeviceFirstLocked = false;
+    applicationInfo->allowEnableNotification = false;
+    applicationInfo->allowMultiProcess = false;
+    applicationInfo->hideDesktopIcon = false;
+    applicationInfo->userDataClearable = true;
+    applicationInfo->formVisibleNotify = false;
+
+    innerBundleInfo.UpdatePrivilegeCapability(applicationInfo);
+    EXPECT_FALSE(innerBundleInfo.baseApplicationInfo_->keepAlive);
+    EXPECT_FALSE(innerBundleInfo.baseApplicationInfo_->associatedWakeUp);
+    EXPECT_FALSE(innerBundleInfo.baseApplicationInfo_->allowAppRunWhenDeviceFirstLocked);
+    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->allowEnableNotification);
+    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->allowMultiProcess);
+    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->hideDesktopIcon);
+    EXPECT_FALSE(innerBundleInfo.baseApplicationInfo_->userDataClearable);
+    EXPECT_TRUE(innerBundleInfo.baseApplicationInfo_->formVisibleNotify);
+}
 }
