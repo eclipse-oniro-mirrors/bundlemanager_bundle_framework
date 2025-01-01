@@ -44,6 +44,7 @@ constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 const int16_t MAX_STATUS_VECTOR_NUM = 1000;
 constexpr int16_t MAX_BATCH_QUERY_ABILITY_SIZE = 1000;
+constexpr int16_t MAX_GET_FOR_UIDS_SIZE = 1000;
 constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // max allow 1 GB resource size
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
 const std::string BUNDLE_MANAGER_ASHMEM_NAME = "bundleManagerAshemeName";
@@ -159,6 +160,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_NAME_AND_APPINDEX_FOR_UID):
             errCode = this->HandleGetNameAndIndexForUid(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SIMPLE_APP_INFO_FOR_UID):
+            errCode = this->HandleGetSimpleAppInfoForUid(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_GIDS):
             errCode = this->HandleGetBundleGids(data, reply);
@@ -1077,6 +1081,31 @@ ErrCode BundleMgrHost::HandleGetNameAndIndexForUid(MessageParcel &data, MessageP
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         if (!reply.WriteInt32(appIndex)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetSimpleAppInfoForUid(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::vector<std::int32_t> uids;
+    data.ReadInt32Vector(&uids);
+    if (uids.size() <= 0 || uids.size() > MAX_GET_FOR_UIDS_SIZE) {
+        APP_LOGE("uid count is error");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    std::vector<SimpleAppInfo> simpleAppInfo;
+    ErrCode ret = GetSimpleAppInfoForUid(uids, simpleAppInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteParcelableVector(simpleAppInfo, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }

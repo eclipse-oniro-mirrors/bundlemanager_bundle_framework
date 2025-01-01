@@ -380,6 +380,17 @@ public:
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     /**
+     * @brief Obtains the formal name associated with the given UID list.
+     * @param uids Indicates the uid list.
+     * @param simpleAppInfo Indicates all of the obtained SimpleAppInfo objects.
+     * @return Returns ERR_OK if execute success; returns errCode otherwise.
+     */
+    virtual ErrCode GetSimpleAppInfoForUid(
+        const std::vector<std::int32_t> &uids, std::vector<SimpleAppInfo> &simpleAppInfo)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    /**
      * @brief Obtains an array of all group IDs associated with a specified bundle.
      * @param bundleName Indicates the bundle name.
      * @param gids Indicates the group IDs associated with the specified bundle.

@@ -9257,6 +9257,25 @@ HWTEST_F(BmsBundleKitServiceTest, GetNameAndIndexForUidImpl_0100, Function | Sma
 }
 
 /**
+ * @tc.number: GetSimpleAppInfoForUid_0100
+ * @tc.name: test GetSimpleAppInfoForUid
+ * @tc.desc: 1.Test the GetSimpleAppInfoForUid by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSimpleAppInfoForUidImpl_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::int32_t> uids;
+    std::vector<SimpleAppInfo> simpleAppInfo;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->GetSimpleAppInfoForUid(uids, simpleAppInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    uids.emplace_back(DEMO_UID);
+    ret = hostImpl->GetSimpleAppInfoForUid(uids, simpleAppInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: QueryAbilityInfoImpl_0100
  * @tc.name: test QueryAbilityInfo
  * @tc.desc: 1.Test the QueryAbilityInfo by BundleMgrHostImpl
