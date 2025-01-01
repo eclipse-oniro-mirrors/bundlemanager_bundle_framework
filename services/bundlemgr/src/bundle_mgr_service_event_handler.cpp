@@ -3468,6 +3468,8 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     appInfo.allowEnableNotification = preBundleConfigInfo.allowEnableNotification;
     appInfo.hideDesktopIcon = preBundleConfigInfo.hideDesktopIcon;
     appInfo.allowMultiProcess = preBundleConfigInfo.allowMultiProcess;
+    appInfo.userDataClearable = preBundleConfigInfo.userDataClearable;
+    appInfo.formVisibleNotify = preBundleConfigInfo.formVisibleNotify;
     dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
 }
 #endif
