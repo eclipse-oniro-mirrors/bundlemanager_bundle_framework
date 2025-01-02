@@ -50,6 +50,11 @@ int ProcessCacheCallbackHost::OnRemoteRequest(
             OnGetAllBundleCacheFinished(cacheStat);
             break;
         }
+        case static_cast<uint32_t>(ProcessCacheCallbackInterfaceCode::CLEAN_ALL_BUNDLE_CACHE): {
+            bool succeed = data.ReadBool();
+            OnCleanAllBundleCacheFinished(succeed);
+            break;
+        }
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }

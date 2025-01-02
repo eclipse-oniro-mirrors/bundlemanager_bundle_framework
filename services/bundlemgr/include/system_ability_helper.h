@@ -19,6 +19,10 @@
 #include <string>
 
 #include "iremote_object.h"
+#ifdef ABILITY_RUNTIME_ENABLE
+#include "app_mgr_interface.h"
+#include "running_process_info.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -56,6 +60,10 @@ public:
     static int UpgradeApp(const std::string &bundleName, int32_t uid, int32_t appIndex);
 
     static bool UnloadSystemAbility(const int32_t systemAbilityId);
+#ifdef ABILITY_RUNTIME_ENABLE
+    static bool IsAppRunning(const sptr<IAppMgr> appMgrProxy,
+        const std::string &bundleName, int32_t appCloneIndex);
+#endif
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

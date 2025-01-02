@@ -889,6 +889,8 @@ public:
 
     virtual ErrCode GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback) override;
 
+    virtual ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback) override;
+
     virtual sptr<IExtendResourceManager> GetExtendResourceManager() override;
 
     virtual bool CheckAbilityEnableInstall(

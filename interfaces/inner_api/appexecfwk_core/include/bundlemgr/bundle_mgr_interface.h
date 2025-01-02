@@ -1246,6 +1246,11 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual sptr<IExtendResourceManager> GetExtendResourceManager()
     {
         return nullptr;

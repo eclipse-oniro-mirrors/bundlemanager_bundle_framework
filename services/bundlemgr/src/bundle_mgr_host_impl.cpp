@@ -3192,6 +3192,21 @@ ErrCode BundleMgrHostImpl::GetAllBundleCacheStat(const sptr<IProcessCacheCallbac
     return BundleCacheMgr().GetAllBundleCacheStat(processCacheCallback);
 }
 
+ErrCode BundleMgrHostImpl::CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
+{
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != Constants::STORAGE_MANAGER_UID) {
+        APP_LOGE("invalid callinguid: %{public}d", callingUid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    if (processCacheCallback == nullptr) {
+        APP_LOGE("the processCacheCallback is nullptr");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    return BundleCacheMgr().CleanAllBundleCache(processCacheCallback);
+}
+
 std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, const std::string &moduleName,
     uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
