@@ -79,6 +79,7 @@ enum class InstalldInterfaceCode : uint32_t {
     ADD_USER_DIR_DELETE_DFX = 51,
     MOVE_HAP_TO_CODE_DIR = 52,
     DELETE_UNINSTALL_TMP_DIRS = 53,
+    GET_DISK_USAGE_FROM_PATH = 54,
 };
 
 } // namespace AppExecFwk
