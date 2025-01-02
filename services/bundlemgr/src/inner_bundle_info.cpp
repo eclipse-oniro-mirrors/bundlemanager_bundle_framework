@@ -1780,7 +1780,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->multiProjects = applicationInfo.multiProjects;
     baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
     baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
-    baseApplicationInfo_->installSource = applicationInfo.installSource;
     baseApplicationInfo_->configuration = applicationInfo.configuration;
     if (newInfo.HasEntry()) {
         baseApplicationInfo_->assetAccessGroups = applicationInfo.assetAccessGroups;
