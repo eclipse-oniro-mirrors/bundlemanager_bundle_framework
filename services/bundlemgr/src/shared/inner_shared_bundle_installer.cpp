@@ -152,7 +152,7 @@ ErrCode InnerSharedBundleInstaller::NotifyBundleStatusOfShared(const NotifyBundl
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return false;
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
