@@ -1868,6 +1868,7 @@ void InnerBundleInfo::UpdateArkNativeAttrs(const ApplicationInfo &applicationInf
 
 void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo)
 {
+    // only json can be configured with the following privileges
     SetKeepAlive(applicationInfo.keepAlive);
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
@@ -1875,11 +1876,20 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     SetAllowAppRunWhenDeviceFirstLocked(applicationInfo.allowAppRunWhenDeviceFirstLocked);
     baseApplicationInfo_->resourcesApply = applicationInfo.resourcesApply;
     baseApplicationInfo_->allowEnableNotification = applicationInfo.allowEnableNotification;
+
+    // both json and signature can be configured with the following privileges
+    // this function is also used to update json privileges during reboot.
     if (applicationInfo.allowMultiProcess) {
         baseApplicationInfo_->allowMultiProcess = true;
     }
     if (applicationInfo.hideDesktopIcon) {
         SetHideDesktopIcon(true);
+    }
+    if (!applicationInfo.userDataClearable) {
+        baseApplicationInfo_->userDataClearable = false; // not allow to clear data
+    }
+    if (applicationInfo.formVisibleNotify) {
+        baseApplicationInfo_->formVisibleNotify = true;
     }
 }
 
