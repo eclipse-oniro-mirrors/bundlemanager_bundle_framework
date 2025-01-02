@@ -68,6 +68,7 @@ constexpr const char* APP_INDEX = "appIndex";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string GET_APP_CLONE_IDENTITY = "getAppCloneIdentity";
+const std::string GET_ALL_BUNDLE_CACHE_SIZE = "getAllBundleCacheSize";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
 const std::string BATCH_QUERY_ABILITY_INFOS = "BatchQueryAbilityInfos";
 const std::string QUERY_ABILITY_INFOS_SYNC = "QueryAbilityInfosSync";
@@ -575,6 +576,80 @@ napi_value GetAppCloneIdentity(napi_env env, napi_callback_info info)
         GET_APP_CLONE_IDENTITY, GetAppCloneIdentityExec, GetAppCloneIdentityComplete);
     callbackPtr.release();
     APP_LOGD("call GetAppCloneIdentity done");
+    return promise;
+}
+
+void GetAllBundleCacheSizeExec(napi_env env, void *data)
+{
+    GetAllBundleCacheCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetAllBundleCacheCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+
+    asyncCallbackInfo->cacheCallback = new (std::nothrow) ProcessCacheCallbackHost();
+    if (asyncCallbackInfo->cacheCallback == nullptr) {
+        APP_LOGE("cacheCallback is null");
+        return;
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        asyncCallbackInfo->err = CommonFunc::ConvertErrCode(ERROR_BUNDLE_SERVICE_EXCEPTION);
+        return;
+    }
+
+    asyncCallbackInfo->err =
+        CommonFunc::ConvertErrCode(iBundleMgr->GetAllBundleCacheStat(asyncCallbackInfo->cacheCallback));
+
+    APP_LOGI("GetAllBundleCacheStat call, result is %{public}d", asyncCallbackInfo->err);
+    if ((asyncCallbackInfo->err == NO_ERROR) && (asyncCallbackInfo->cacheCallback != nullptr)) {
+        // wait for GetAllBundleCacheStat
+        APP_LOGI("GetAllBundleCacheStat exec wait");
+        asyncCallbackInfo->cacheSize = asyncCallbackInfo->cacheCallback->GetCacheStat();
+    }
+    APP_LOGI("GetAllBundleCacheStat exec end");
+}
+
+void GetAllBundleCacheSizeComplete(napi_env env, napi_status status, void *data)
+{
+    GetAllBundleCacheCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetAllBundleCacheCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<GetAllBundleCacheCallbackInfo> callbackPtr{ asyncCallbackInfo };
+    napi_value result[ARGS_POS_TWO] = { 0 };
+    if (asyncCallbackInfo->cacheSize > uint64_t(INT64_MAX)) {
+        APP_LOGW("value out of range for int64");
+        asyncCallbackInfo->cacheSize = uint64_t(INT64_MAX);
+    }
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(
+            env, napi_create_int64(env, static_cast<int64_t>(asyncCallbackInfo->cacheSize), &result[ARGS_POS_ONE]));
+    } else {
+        APP_LOGE("GetAllBundleCacheSizeComplete failed");
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
+    }
+    CommonFunc::NapiReturnDeferred<GetAllBundleCacheCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetAllBundleCacheSize(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to GetAllBundleCacheSize");
+    GetAllBundleCacheCallbackInfo *asyncCallbackInfo = new (std::nothrow) GetAllBundleCacheCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+
+    std::unique_ptr<GetAllBundleCacheCallbackInfo> callbackPtr{ asyncCallbackInfo };
+    auto promise = CommonFunc::AsyncCallNativeMethod<GetAllBundleCacheCallbackInfo>(
+        env, asyncCallbackInfo, GET_ALL_BUNDLE_CACHE_SIZE, GetAllBundleCacheSizeExec, GetAllBundleCacheSizeComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetAllBundleCacheSize done");
     return promise;
 }
 

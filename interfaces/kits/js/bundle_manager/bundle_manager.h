@@ -33,6 +33,7 @@
 #include "pixel_map.h"
 #endif
 #include "preinstalled_application_info.h"
+#include "process_cache_callback_host.h"
 #include "recoverable_application_info.h"
 #include "shared/shared_bundle_info.h"
 #include "want.h"
@@ -100,6 +101,13 @@ struct CleanBundleCacheCallbackInfo : public BaseCallbackInfo {
     std::string bundleName;
     int32_t appIndex = 0;
     OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
+};
+
+struct GetAllBundleCacheCallbackInfo : public BaseCallbackInfo {
+    explicit GetAllBundleCacheCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+
+    uint64_t cacheSize = 0;
+    OHOS::sptr<ProcessCacheCallbackHost> cacheCallback;
 };
 
 struct AbilityIconCallbackInfo : public BaseCallbackInfo {
@@ -339,6 +347,7 @@ napi_value SwitchUninstallState(napi_env env, napi_callback_info info);
 napi_value GetAppCloneBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetAllAppCloneBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetAppCloneIdentity(napi_env env, napi_callback_info info);
+napi_value GetAllBundleCacheSize(napi_env env, napi_callback_info info);
 napi_value GetLaunchWant(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);

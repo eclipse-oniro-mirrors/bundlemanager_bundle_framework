@@ -3189,9 +3189,12 @@ bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &
 
 ErrCode BundleMgrHostImpl::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)
 {
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != Constants::STORAGE_MANAGER_UID) {
-        APP_LOGE("invalid callinguid: %{public}d", callingUid);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("ohos.permission.PERMISSION_GET_BUNDLE_INFO_PRIVILEGED permission denied");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 

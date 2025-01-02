@@ -16,6 +16,9 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_PROCESS_CACHE_CALLBACK_HOST_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_PROCESS_CACHE_CALLBACK_HOST_H
 
+#include <future>
+#include <mutex>
+
 #include "iremote_stub.h"
 #include "nocopyable.h"
 
@@ -29,8 +32,21 @@ public:
     virtual ~ProcessCacheCallbackHost() override;
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
-
+    void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
+    uint64_t GetCacheStat();
+    void OnCleanAllBundleCacheFinished(int32_t result) override;
+    int32_t GetCleanRet();
 private:
+    std::mutex getAllMutex_;
+    bool getAllcomplete_ = false;
+    std::promise<uint64_t> getAllPromise_;
+    std::future<uint64_t> getAllFuture_ = getAllPromise_.get_future();
+
+    std::mutex cleanAllMutex_;
+    bool cleanAllcomplete_ = false;
+    std::promise<int32_t> cleanAllPromise_;
+    std::future<int32_t> cleanAllFuture_ = cleanAllPromise_.get_future();
+
     DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackHost);
 };
 }  // namespace AppExecFwk
