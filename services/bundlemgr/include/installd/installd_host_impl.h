@@ -115,6 +115,12 @@ public:
      */
     virtual int64_t GetDiskUsage(const std::string &dir, bool isRealPath = false) override;
     /**
+     * @brief Get disk usage for dir.
+     * @param path Indicates the directory vector.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    virtual int64_t GetDiskUsageFromPath(const std::vector<std::string> &path) override;
+    /**
      * @brief Clean all files in a bundle data directory.
      * @param bundleDir Indicates the data directory path that to be cleaned.
      * @return Returns ERR_OK if the data directory cleaned successfully; returns error code otherwise.

@@ -1209,6 +1209,33 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsage_0200, TestSiz
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
+/**
+ * @tc.number: BmsInstalldClientTest_GetDiskUsageFromPath_0100
+ * @tc.name: GetDiskUsageFromPath
+ * @tc.desc: call GetDiskUsageFromPath.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsageFromPath_0100, TestSize.Level1)
+{
+    std::vector<std::string> path;
+    ASSERT_NE(installClient_, nullptr);
+    ErrCode result = installClient_->GetDiskUsageFromPath(path);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_GetDiskUsageFromPath_0200
+ * @tc.name: GetDiskUsageFromPath
+ * @tc.desc: call GetDiskUsageFromPath.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsageFromPath_0200, TestSize.Level1)
+{
+    std::vector<std::string> path;
+    path.emplace_back("disk.path");
+    ASSERT_NE(installClient_, nullptr);
+    ErrCode result = installClient_->GetDiskUsageFromPath(path);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
  /**
  * @tc.number: BmsInstalldClientTest_IsExistFile_0100
  * @tc.name: IsExistFile

@@ -554,6 +554,19 @@ HWTEST_F(BmsBundleInstallerPermissionTest, GetDiskUsage_0100, Function | SmallTe
 }
 
 /**
+ * @tc.number: GetDiskUsageFromPath_0100
+ * @tc.name: test GetDiskUsageFromPath
+ * @tc.desc: 1.Test the GetDiskUsageFromPath of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, GetDiskUsageFromPath_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    std::vector<std::string> path;
+    auto ret = installdHostImpl.GetDiskUsageFromPath(path);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: CleanBundleDataDirByName_0100
  * @tc.name: test CleanBundleDataDirByName
  * @tc.desc: 1.Test the CleanBundleDataDirByName of InstalldHostImpl without permission
