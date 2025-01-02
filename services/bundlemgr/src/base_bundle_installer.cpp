@@ -416,8 +416,9 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
     }
     auto &mtx = dataMgr_->GetBundleMutex(bundleName);
     std::lock_guard lock {mtx};
+    bool isAppExist = false;
     InnerBundleInfo info;
-    if (!dataMgr_->GetInnerBundleInfoWithDisable(bundleName, info)) {
+    if (!InitTempBundleFromCache(info, isAppExist, bundleName) || !isAppExist) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
@@ -764,7 +765,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     }
     SetOldAppIsEncrypted(oldInfo);
 
-    KillRelatedProcessIfArkWeb(bundleName_, isAppExist_, installParam.isOTA);
+    KillRelatedProcessIfArkWeb(installParam.isOTA);
     ErrCode result = ERR_OK;
     result = CheckAppService(newInfos.begin()->second, oldInfo, isAppExist_);
     CHECK_RESULT(result, "Check appService failed %{public}d");
@@ -897,8 +898,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     }
 
     InnerBundleInfo bundleInfo;
-    bool isBundleExist = false;
-    if (!GetInnerBundleInfoWithDisable(bundleInfo, isBundleExist) || !isBundleExist) {
+    if (!GetTempBundleInfo(bundleInfo)) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     bool isOldSystemApp = bundleInfo.IsSystemApp();
@@ -958,8 +958,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 ErrCode BaseBundleInstaller::InnerProcessUpdateHapToken(const bool isOldSystemApp)
 {
     InnerBundleInfo newBundleInfo;
-    bool isBundleExist = false;
-    if (!GetInnerBundleInfoWithDisable(newBundleInfo, isBundleExist) || !isBundleExist) {
+    if (!GetTempBundleInfo(newBundleInfo)) {
         APP_LOGE("bundleName:%{public}s not exist", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
@@ -1025,31 +1024,31 @@ bool BaseBundleInstaller::IsArkWeb(const std::string &bundleName) const
 }
 
 #ifdef WEBVIEW_ENABLE
-ErrCode BaseBundleInstaller::VerifyArkWebInstall(const std::string &bundleName)
+ErrCode BaseBundleInstaller::VerifyArkWebInstall()
 {
-    if (!IsArkWeb(bundleName)) {
+    if (!IsArkWeb(bundleName_)) {
         return ERR_OK;
     }
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     InnerBundleInfo info;
-    if (!dataMgr_->FetchInnerBundleInfo(bundleName, info)) {
+    if (!GetTempBundleInfo(info)) {
         LOG_W(BMS_TAG_INSTALLER, "bundle info missing");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     std::string hapPath = info.GetModuleHapPath(info.GetEntryModuleName());
     LOG_I(BMS_TAG_INSTALLER, "arkweb hapPath is %{public}s", hapPath.c_str());
-    if (NWeb::AppFwkUpdateClient::GetInstance().VerifyPackageInstall(bundleName, hapPath) != ERR_OK) {
+    if (NWeb::AppFwkUpdateClient::GetInstance().VerifyPackageInstall(bundleName_, hapPath) != ERR_OK) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     return ERR_OK;
 }
 #endif
 
-void BaseBundleInstaller::KillRelatedProcessIfArkWeb(const std::string &bundleName, bool isAppExist, bool isOta)
+void BaseBundleInstaller::KillRelatedProcessIfArkWeb(bool isOta)
 {
-    if (!isAppExist || isOta || !IsArkWeb(bundleName)) {
+    if (!isAppExist_ || isOta || !IsArkWeb(bundleName_)) {
         return;
     }
     auto appMgrClient = DelayedSingleton<AppMgrClient>::GetInstance();
@@ -1263,7 +1262,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     copyHapToInstallPath_ = installParam.copyHapToInstallPath;
     ScopeGuard extensionDirGuard([&] { RemoveCreatedExtensionDirsForException(); });
     // try to get the bundle info to decide use install or update. Always keep other exceptions below this line.
-    if (!GetInnerBundleInfoWithDisable(oldInfo, isAppExist_)) {
+    if (!InitTempBundleFromCache(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     // when bundle update start, bms need set disposed rule to forbidden app running.
@@ -1275,7 +1274,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
 
 #ifdef WEBVIEW_ENABLE
-    result = VerifyArkWebInstall(bundleName_);
+    result = VerifyArkWebInstall();
     CHECK_RESULT_WITH_ROLLBACK(result, "web verify failed %{public}d", newInfos, oldInfo);
 #endif
 
@@ -1286,6 +1285,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         LOG_D(BMS_TAG_INSTALLER, "begin to copy hap to install path");
         result = SaveHapToInstallPath(newInfos, oldInfo);
         CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
+    } else {
+        ClearEncryptionStatus();
     }
 
     if (installParam.isDataPreloadHap) {
@@ -1311,10 +1312,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!uninstallModuleVec_.empty()) {
         UninstallLowerVersionFeature(uninstallModuleVec_, installParam.GetKillProcess());
     }
-
-    // create data group dir
-    ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(oldInfo); });
-    CreateDataGroupDirs(hapVerifyResults, oldInfo);
 
     // create Screen Lock File Protection Dir
     CreateScreenLockProtectionDir();
@@ -1351,14 +1348,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 #endif
     DeleteUninstallBundleInfo(bundleName_);
     UpdateEncryptedStatus(oldInfo);
-    GetInstallEventInfo(sysEventInfo_);
+    GetInstallEventInfo(oldInfo, sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     UpdateRouterInfo();
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     ProcessAOT(installParam.isOTA, newInfos);
     RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     UpdateAppInstallControlled(userId_);
-    groupDirGuard.Dismiss();
     extensionDirGuard.Dismiss();
     ScreenLockFileProtectionDirGuard.Dismiss();
     if (isAppExist_) {
@@ -1368,11 +1364,16 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     RemoveOldExtensionDirs();
     /* process quick fix when install new moudle */
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
-    ProcessAddResourceInfo(installParam, bundleName_, userId_);
     VerifyDomain();
     // check mark install finish
     result = MarkInstallFinish();
     CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
+    // create data group dir
+    ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(oldInfo); });
+    CreateDataGroupDirs(hapVerifyResults, oldInfo);
+    groupDirGuard.Dismiss();
+    ProcessAddResourceInfo(installParam, bundleName_, userId_);
+    LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     return result;
 }
@@ -1517,7 +1518,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::lock_guard lock {mtx};
     InnerBundleInfo oldInfo;
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (!dataMgr_->FetchInnerBundleInfo(bundleName, oldInfo)) {
+    bool isAppExist = false;
+    if (!InitTempBundleFromCache(oldInfo, isAppExist, bundleName) || !isAppExist) {
         LOG_W(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
@@ -1758,7 +1760,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     auto &mtx = dataMgr_->GetBundleMutex(bundleName);
     std::lock_guard lock {mtx};
     InnerBundleInfo oldInfo;
-    if (!dataMgr_->GetInnerBundleInfoWithDisable(bundleName, oldInfo)) {
+    bool isAppExist = false;
+    if (!InitTempBundleFromCache(oldInfo, isAppExist, bundleName) || !isAppExist) {
         LOG_W(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
@@ -1936,11 +1939,10 @@ void BaseBundleInstaller::MarkPreInstallState(const std::string &bundleName, boo
 
 void BaseBundleInstaller::UpdateRouterInfo()
 {
-    if (!InitDataMgr()) {
-        LOG_E(BMS_TAG_INSTALLER, "init failed");
-        return;
+    InnerBundleInfo bundle;
+    if (tempInfo_.GetTempBundleInfo(bundle)) {
+        dataMgr_->UpdateRouterInfo(bundle);
     }
-    dataMgr_->UpdateRouterInfo(bundleName_);
 }
 
 ErrCode BaseBundleInstaller::ProcessInstallBundleByBundleName(
@@ -1979,8 +1981,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
         auto &mtx = dataMgr_->GetBundleMutex(bundleName);
         std::lock_guard lock {mtx};
         InnerBundleInfo oldInfo;
-        bool isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName, oldInfo);
-        if (isAppExist) {
+        InitTempBundleFromCache(oldInfo, isAppExist_, bundleName);
+        if (isAppExist_) {
             if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
                 LOG_D(BMS_TAG_INSTALLER, "shared bundle (%{public}s) is irrelevant to user", bundleName.c_str());
                 return ERR_OK;
@@ -2030,7 +2032,6 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             std::vector<std::string> extensionDirs = oldInfo.GetAllExtensionDirs();
             createExtensionDirs_.assign(extensionDirs.begin(), extensionDirs.end());
             CreateExtensionDataDir(oldInfo);
-            GenerateNewUserDataGroupInfos(oldInfo);
             bundleName_ = bundleName;
             CreateScreenLockProtectionDir();
             // extract ap file
@@ -2042,7 +2043,14 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
             GetInstallEventInfo(oldInfo, sysEventInfo_);
+            if (!dataMgr_->UpdateInnerBundleInfo(oldInfo, true)) {
+                if (!dataMgr_->UpdateInnerBundleInfo(oldInfo, true)) {
+                    LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
+                    return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+                }
+            }
             UtdHandler::InstallUtdAsync(bundleName, userId_);
+            GenerateNewUserDataGroupInfos(oldInfo);
             return ERR_OK;
         }
     }
@@ -2170,10 +2178,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     info.SetAccessTokenIdEx(accessTokenIdEx, userId_);
 
     info.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_START);
-    if (!dataMgr_->SaveInnerBundleInfo(info)) {
-        LOG_E(BMS_TAG_INSTALLER, "save install mark to storage failed");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
+
     ScopeGuard stateGuard([&] { dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_FAIL); });
     ErrCode result = CreateBundleAndDataDir(info);
     if (result != ERR_OK) {
@@ -2197,12 +2202,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
 
     uid = info.GetUid(userId_);
     info.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
-    if (!dataMgr_->AddInnerBundleInfo(bundleName_, info)) {
-        LOG_E(BMS_TAG_INSTALLER, "add bundle %{public}s info failed", bundleName_.c_str());
-        dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_START);
-        dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_SUCCESS);
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
+    tempInfo_.SetTempBundleInfo(info);
     stateGuard.Dismiss();
     bundleGuard.Dismiss();
 
@@ -2355,12 +2355,12 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         LOG_E(BMS_TAG_INSTALLER, "process asan log directory failed");
         return result;
     }
-    if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo)) {
+    if (!dataMgr_->AddNewModuleInfo(newInfo, oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "add module %{public}s to innerBundleInfo %{public}s failed",
             modulePackage_.c_str(), bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-
+    tempInfo_.SetTempBundleInfo(oldInfo);
     moduleGuard.Dismiss();
     return ERR_OK;
 }
@@ -2463,11 +2463,11 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     newInfo.RestoreModuleInfo(oldInfo);
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_FINISH);
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
-    if (!dataMgr_->UpdateInnerBundleInfo(bundleName_, newInfo, oldInfo)) {
+    if (!dataMgr_->UpdateInnerBundleInfo(newInfo, oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "update innerBundleInfo %{public}s failed", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-
+    tempInfo_.SetTempBundleInfo(oldInfo);
     needDeleteQuickFixInfo_ = true;
     return ERR_OK;
 }
@@ -2478,7 +2478,7 @@ void BaseBundleInstaller::ProcessQuickFixWhenInstallNewModule(const InstallParam
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     // hqf extract diff file or apply diff patch failed does not affect the hap installation
     InnerBundleInfo bundleInfo;
-    if (!FetchInnerBundleInfo(bundleInfo)) {
+    if (!GetTempBundleInfo(bundleInfo)) {
         return;
     }
     for (auto &info : newInfos) {
@@ -2495,7 +2495,7 @@ void BaseBundleInstaller::ProcessQuickFixWhenInstallNewModule(const InstallParam
 }
 
 void BaseBundleInstaller::ProcessHqfInfo(
-    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo)
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     LOG_D(BMS_TAG_INSTALLER, "bundleName: %{public}s, moduleName: %{public}s", bundleName_.c_str(),
@@ -2530,7 +2530,7 @@ void BaseBundleInstaller::ProcessHqfInfo(
 }
 
 ErrCode BaseBundleInstaller::ProcessDeployedHqfInfo(const std::string &nativeLibraryPath,
-    const std::string &cpuAbi, const InnerBundleInfo &newInfo, const AppQuickFix &oldAppQuickFix) const
+    const std::string &cpuAbi, const InnerBundleInfo &newInfo, const AppQuickFix &oldAppQuickFix)
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     LOG_D(BMS_TAG_INSTALLER, "ProcessDeployedHqfInfo");
@@ -2567,13 +2567,13 @@ ErrCode BaseBundleInstaller::ProcessDeployedHqfInfo(const std::string &nativeLib
     }
 
     InnerBundleInfo innerBundleInfo;
-    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, innerBundleInfo)) {
+    if (!GetTempBundleInfo(innerBundleInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "Fetch bundleInfo(%{public}s) failed", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
     innerBundleInfo.SetAppQuickFix(appQuickFix);
-    if (!dataMgr_->UpdateQuickFixInnerBundleInfo(bundleName_, innerBundleInfo)) {
+    if (!tempInfo_.SetTempBundleInfo(innerBundleInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "update quickfix innerbundleInfo failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
@@ -2738,7 +2738,7 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
         ScopeGuard guardRemoveOldSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
 
         InnerBundleInfo innerBundleInfo;
-        if (dataMgr_ == nullptr || !dataMgr_->FetchInnerBundleInfo(bundleName_, innerBundleInfo)) {
+        if (!GetTempBundleInfo(innerBundleInfo)) {
             LOG_E(BMS_TAG_INSTALLER, "Fetch bundleInfo(%{public}s) failed", bundleName_.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
         }
@@ -3039,7 +3039,7 @@ ErrCode BaseBundleInstaller::CreateDataGroupDirs(
     }
     std::unordered_set<std::string> groupIds;
     GetDataGroupIds(hapVerifyRes, groupIds);
-    dataMgr_->GenerateDataGroupInfos(bundleName_, groupIds, userId_);
+    dataMgr_->GenerateDataGroupInfos(bundleName_, groupIds, userId_, true);
     return ERR_OK;
 }
 
@@ -3068,13 +3068,9 @@ std::vector<std::string> BaseBundleInstaller::GenerateScreenLockProtectionDir(co
 
 void BaseBundleInstaller::CreateScreenLockProtectionDir()
 {
-    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
-    if (!InitDataMgr()) {
-        LOG_E(BMS_TAG_INSTALLER, "init failed");
-        return;
-    }
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
     InnerBundleInfo info;
-    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, info)) {
+    if (!GetTempBundleInfo(info)) {
         LOG_E(BMS_TAG_INSTALLER, "get failed");
         return;
     }
@@ -3089,7 +3085,7 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
     }
 }
 
-void BaseBundleInstaller::CreateEl5AndSetPolicy(const InnerBundleInfo &info)
+void BaseBundleInstaller::CreateEl5AndSetPolicy(InnerBundleInfo &info)
 {
     if (!InitDataMgr()) {
         LOG_E(BMS_TAG_INSTALLER, "init failed");
@@ -3116,7 +3112,8 @@ void BaseBundleInstaller::CreateEl5AndSetPolicy(const InnerBundleInfo &info)
         cloneParam.appIndex = cloneInfo.second.appIndex;
         params.emplace_back(cloneParam);
     }
-    dataMgr_->CreateEl5Dir(params);
+    dataMgr_->CreateEl5DirNoCache(params, info);
+    tempInfo_.SetTempBundleInfo(info);
 }
 
 void BaseBundleInstaller::GetUninstallBundleInfo(bool isKeepData, int32_t userId,
@@ -3754,6 +3751,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     if (!infos.empty()) {
         bundleType_ = infos.begin()->second.GetApplicationBundleType();
     }
+    // protect err scene
     dataMgr_->UpdateAppEncryptedStatus(infos.begin()->second.GetBundleName(), false, 0, true);
     GenerateOdid(infos, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
@@ -4192,12 +4190,26 @@ bool BaseBundleInstaller::GetInnerBundleInfoWithDisable(InnerBundleInfo &info, b
     return true;
 }
 
-bool BaseBundleInstaller::FetchInnerBundleInfo(InnerBundleInfo &info)
+bool BaseBundleInstaller::InitTempBundleFromCache(InnerBundleInfo &info, bool &isAppExist, std::string bundleName)
 {
     if (!InitDataMgr()) {
         return false;
     }
-    return dataMgr_->FetchInnerBundleInfo(bundleName_, info);
+    std::string cacheBundle = bundleName;
+    if (cacheBundle.empty()) {
+        cacheBundle = bundleName_;
+    }
+    isAppExist = dataMgr_->FetchInnerBundleInfo(cacheBundle, info);
+    if (isAppExist) {
+        tempInfo_.SetTempBundleInfo(info);
+    }
+    bundleName_ = cacheBundle;
+    return true;
+}
+
+bool BaseBundleInstaller::GetTempBundleInfo(InnerBundleInfo &info) const
+{
+    return tempInfo_.GetTempBundleInfo(info);
 }
 
 bool BaseBundleInstaller::InitDataMgr()
@@ -4282,8 +4294,7 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     InnerBundleInfo info;
-    bool isExist = false;
-    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
+    if (!GetTempBundleInfo(info)) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
@@ -4312,7 +4323,6 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
     }
 
     std::vector<std::string> moduleVec = info.GetModuleNameVec();
-    InnerBundleInfo oldInfo = info;
     for (const auto &package : moduleVec) {
         if (find(packageVec.begin(), packageVec.end(), package) == packageVec.end()) {
             LOG_D(BMS_TAG_INSTALLER, "uninstall package %{public}s", package.c_str());
@@ -4332,6 +4342,7 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
             }
         }
     }
+    tempInfo_.SetTempBundleInfo(info);
     needDeleteQuickFixInfo_ = true;
     LOG_D(BMS_TAG_INSTALLER, "finish to uninstall lower version feature hap");
     return ERR_OK;
@@ -4389,9 +4400,6 @@ ErrCode BaseBundleInstaller::CreateBundleUserData(InnerBundleInfo &innerBundleIn
 {
     LOG_I(BMS_TAG_INSTALLER, "CreateNewUserData %{public}s userId: %{public}d",
         innerBundleInfo.GetBundleName().c_str(), userId_);
-    if (!InitDataMgr()) {
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
     if (!innerBundleInfo.HasInnerBundleUserInfo(userId_)) {
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
@@ -4412,13 +4420,8 @@ ErrCode BaseBundleInstaller::CreateBundleUserData(InnerBundleInfo &innerBundleIn
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     OverlayDataMgr::GetInstance()->AddOverlayModuleStates(innerBundleInfo, innerBundleUserInfo);
 #endif
-
-    if (!dataMgr_->AddInnerBundleUserInfo(innerBundleInfo.GetBundleName(), innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "update bundle user info to db failed %{public}s when createNewUser",
-            innerBundleInfo.GetBundleName().c_str());
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
-
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    tempInfo_.SetTempBundleInfo(innerBundleInfo);
     return ERR_OK;
 }
 
@@ -4558,7 +4561,7 @@ bool BaseBundleInstaller::UpdateEncryptedStatus(const InnerBundleInfo &oldInfo)
         return false;
     }
     InnerBundleInfo innerBundleInfo;
-    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, innerBundleInfo)) {
+    if (!GetTempBundleInfo(innerBundleInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "get failed");
         return false;
     }
@@ -4599,38 +4602,51 @@ bool BaseBundleInstaller::UpdateEncryptedStatus(const InnerBundleInfo &oldInfo)
 void BaseBundleInstaller::ProcessEncryptedKeyExisted(int32_t res, uint32_t type,
     const std::vector<CodeProtectBundleInfo> &infos)
 {
-    if (!InitDataMgr() || infos.empty()) {
+    if (infos.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "init failed or infos is empty");
         return;
     }
     std::string bundleName = infos.begin()->bundleName;
     if (type == CodeOperation::ADD) {
         if (res == ERR_OK) {
-            dataMgr_->UpdateAppEncryptedStatus(bundleName, true, 0, false);
+            UpdateAppEncryptedStatus(bundleName, true, 0);
         } else {
-            dataMgr_->UpdateAppEncryptedStatus(bundleName, false, 0, false);
+            UpdateAppEncryptedStatus(bundleName, false, 0);
         }
         return;
     } else if (type == CodeOperation::DELETE) {
         if (res == ERR_OK) {
-            dataMgr_->UpdateAppEncryptedStatus(bundleName, false, 0, false);
+            UpdateAppEncryptedStatus(bundleName, false, 0);
         } else {
-            dataMgr_->UpdateAppEncryptedStatus(bundleName, true, 0, false);
+            UpdateAppEncryptedStatus(bundleName, true, 0);
         }
         return;
     }
     // UPDATE
     if (res == ERR_OK) {
-        dataMgr_->UpdateAppEncryptedStatus(bundleName, true, 0, false);
+        UpdateAppEncryptedStatus(bundleName, true, 0);
         for (const auto &codeProtectBundleInfo : infos) {
-            dataMgr_->UpdateAppEncryptedStatus(bundleName, true, codeProtectBundleInfo.appIndex, false);
+            UpdateAppEncryptedStatus(bundleName, true, codeProtectBundleInfo.appIndex);
         }
     } else {
-        dataMgr_->UpdateAppEncryptedStatus(bundleName, false, 0, false);
+        UpdateAppEncryptedStatus(bundleName, false, 0);
         for (const auto &codeProtectBundleInfo : infos) {
-            dataMgr_->UpdateAppEncryptedStatus(bundleName, false, codeProtectBundleInfo.appIndex, false);
+            UpdateAppEncryptedStatus(bundleName, false, codeProtectBundleInfo.appIndex);
         }
     }
+}
+
+ErrCode BaseBundleInstaller::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)
+{
+    InnerBundleInfo info;
+    tempInfo_.GetTempBundleInfo(info);
+    auto res = info.UpdateAppEncryptedStatus(bundleName, isExisted, appIndex);
+    tempInfo_.SetTempBundleInfo(info);
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "UpdateAppEncryptedStatus err %{public}s %{public}d", bundleName.c_str(), res);
+        return res;
+    }
+    return ERR_OK;
 }
 
 bool BaseBundleInstaller::DeleteEncryptedStatus(const std::string &bundleName, int32_t uid)
@@ -4970,7 +4986,7 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
 void BaseBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
 {
     LOG_D(BMS_TAG_INSTALLER, "GetCallingEventInfo start, bundleName:%{public}s", eventInfo.callingBundleName.c_str());
-    if (dataMgr_ == nullptr) {
+    if (!InitDataMgr()) {
         LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
         return;
     }
@@ -4991,20 +5007,16 @@ void BaseBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
 void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
 {
     LOG_D(BMS_TAG_INSTALLER, "GetInstallEventInfo start, bundleName:%{public}s", bundleName_.c_str());
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
+        return;
+    }
     InnerBundleInfo info;
-    if (!FetchInnerBundleInfo(info)) {
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, info)) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return;
     }
-    eventInfo.fingerprint = info.GetCertificateFingerprint();
-    eventInfo.appDistributionType = info.GetAppDistributionType();
-    eventInfo.hideDesktopIcon = info.IsHideDesktopIcon();
-    eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
-    // report hapPath and hashValue
-    for (const auto &innerModuleInfo : info.GetInnerModuleInfos()) {
-        eventInfo.filePath.push_back(innerModuleInfo.second.hapPath);
-        eventInfo.hashValue.push_back(innerModuleInfo.second.hashValue);
-    }
+    GetInstallEventInfo(info, eventInfo);
 }
 
 void BaseBundleInstaller::GetInstallEventInfo(const InnerBundleInfo &bundleInfo, EventInfo &eventInfo)
@@ -5401,7 +5413,7 @@ void BaseBundleInstaller::RemoveOldHapIfOTA(const InstallParam &installParam,
         return;
     }
     InnerBundleInfo newInfo;
-    if (!FetchInnerBundleInfo(newInfo)) {
+    if (!GetTempBundleInfo(newInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "get failed for %{public}s", bundleName_.c_str());
         return;
     }
@@ -5567,7 +5579,7 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
 {
     LOG_I(BMS_TAG_INSTALLER, "begin");
     InnerBundleInfo newInfo;
-    if (!FetchInnerBundleInfo(newInfo)) {
+    if (!GetTempBundleInfo(newInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -5599,7 +5611,7 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         newInfo.SetMoudleIsEncrpted(info.second.GetCurrentModulePackage(), isEncrypted);
     }
     UpdateEncryptionStatus(infos, oldInfo, newInfo);
-    if (dataMgr_ == nullptr || !dataMgr_->UpdateInnerBundleInfo(newInfo, false)) {
+    if (!tempInfo_.SetTempBundleInfo(newInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -5617,6 +5629,21 @@ void BaseBundleInstaller::UpdateEncryptionStatus(const std::unordered_map<std::s
         LOG_D(BMS_TAG_INSTALLER, "application does not contain encrypted module");
         newInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
     }
+}
+
+void BaseBundleInstaller::ClearEncryptionStatus()
+{
+    InnerBundleInfo newInfo;
+    if (!tempInfo_.GetTempBundleInfo(newInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return;
+    }
+    newInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
+    if (dataMgr_ == nullptr || !tempInfo_.SetTempBundleInfo(newInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "UpdateInnerBundleInfo failed");
+        return;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "encryption status is cleared for: %{public}s", bundleName_.c_str());
 }
 
 bool BaseBundleInstaller::IsBundleEncrypted(const std::unordered_map<std::string, InnerBundleInfo> &infos,
@@ -5843,13 +5870,13 @@ void BaseBundleInstaller::UpdateAppInstallControlled(int32_t userId)
         LOG_W(BMS_TAG_INSTALLER, "invalid bundleName_ or dataMgr is nullptr");
         return;
     }
-    InnerBundleInfo info;
-    bool isAppExisted = dataMgr_->QueryInnerBundleInfo(bundleName_, info);
-    if (!isAppExisted) {
+    if (!isAppExist_) {
         LOG_W(BMS_TAG_INSTALLER, "bundle %{public}s is not existed", bundleName_.c_str());
         return;
     }
 
+    InnerBundleInfo info;
+    tempInfo_.GetTempBundleInfo(info);
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
         LOG_W(BMS_TAG_INSTALLER, "current bundle (%{public}s) is not installed at current userId (%{public}d)",
@@ -5864,7 +5891,9 @@ void BaseBundleInstaller::UpdateAppInstallControlled(int32_t userId)
     if ((ret == ERR_OK) && (std::find(appIds.begin(), appIds.end(), currentAppId) != appIds.end())) {
         LOG_W(BMS_TAG_INSTALLER, "bundle %{public}s cannot be removed", bundleName_.c_str());
         userInfo.isRemovable = false;
-        dataMgr_->AddInnerBundleUserInfo(bundleName_, userInfo);
+        info.AddInnerBundleUserInfo(userInfo);
+        info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        tempInfo_.SetTempBundleInfo(info);
     }
 #else
     LOG_W(BMS_TAG_INSTALLER, "app control is disable");
@@ -6093,8 +6122,8 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             }
         }
     }
-    if (needUpdate && !dataMgr_->UpdateInnerBundleInfo(newInfo, false)) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed %{public}s", bundleName_.c_str());
+    if (needUpdate && !tempInfo_.SetTempBundleInfo(newInfo)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed %{publlic}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     return ERR_OK;
@@ -6131,7 +6160,7 @@ void BaseBundleInstaller::VerifyDomain()
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     LOG_D(BMS_TAG_INSTALLER, "start to verify domain");
     InnerBundleInfo bundleInfo;
-    if (!FetchInnerBundleInfo(bundleInfo)) {
+    if (!GetTempBundleInfo(bundleInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return;
     }
@@ -6428,7 +6457,7 @@ void BaseBundleInstaller::CheckBundleNameAndStratAbility(const std::string &bund
 ErrCode BaseBundleInstaller::MarkInstallFinish()
 {
     InnerBundleInfo info;
-    if (!FetchInnerBundleInfo(info)) {
+    if (!GetTempBundleInfo(info)) {
         LOG_W(BMS_TAG_INSTALLER, "mark finish failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -6437,11 +6466,24 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
+    if (isAppExist_) {
         if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
-            LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
+                LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
+                return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            }
         }
+        return ERR_OK;
+    }
+    if (!dataMgr_->AddInnerBundleInfo(bundleName_, info, false)) {
+        LOG_E(BMS_TAG_INSTALLER, "add bundle failed, -n:%{public}s", bundleName_.c_str());
+        dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_START);
+        dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_SUCCESS);
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    if (!dataMgr_->SaveInnerBundleInfo(info)) {
+        LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     return ERR_OK;
 }
@@ -6574,9 +6616,6 @@ bool BaseBundleInstaller::DeleteDisposedRuleWhenBundleUninstallEnd(
 void BaseBundleInstaller::ProcessAddResourceInfo(const InstallParam &installParam,
     const std::string &bundleName, int32_t userId)
 {
-    if (!InitDataMgr()) {
-        return;
-    }
     if (installParam.isOTA && userId != Constants::START_USERID &&
         dataMgr_->HasUserInstallInBundle(bundleName, Constants::START_USERID)) {
         return;

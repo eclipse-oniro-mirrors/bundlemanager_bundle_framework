@@ -100,7 +100,7 @@ public:
      * @param info Indicates the InnerBundleInfo object to be save.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool AddInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
+    bool AddInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info, bool checkStatus = true);
     /**
      * @brief Add new module info to an exist InnerBundleInfo.
      * @param bundleName Indicates the bundle name.
@@ -929,7 +929,8 @@ public:
     void GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
         std::unordered_set<int32_t> &uniqueIdSet) const;
     void GenerateDataGroupInfos(const std::string &bundleName,
-        const std::unordered_set<std::string> &dataGroupIdList, int32_t userId);
+        const std::unordered_set<std::string> &dataGroupIdList, int32_t userId,
+        bool needSaveStorage = false);
     void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
         std::unordered_set<int32_t> &uniqueIdSet) const;
     bool IsShareDataGroupIdNoLock(const std::string &dataGroupId, int32_t userId) const;
