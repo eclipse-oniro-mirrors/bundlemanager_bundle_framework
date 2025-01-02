@@ -63,8 +63,9 @@ std::string UtdHandler::GetEntryHapPath(const std::string &bundleName, const int
         return Constants::EMPTY_STRING;
     }
     BundleInfo bundleInfo;
-    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE);
-    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
+    uint32_t flags = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE);
+    flags |= static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, static_cast<int32_t>(flags), bundleInfo, userId);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "getBundleInfo failed,%{public}s,%{public}d", bundleName.c_str(), userId);
         return Constants::EMPTY_STRING;

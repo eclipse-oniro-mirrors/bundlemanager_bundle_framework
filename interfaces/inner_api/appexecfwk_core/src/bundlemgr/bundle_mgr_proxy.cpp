@@ -50,7 +50,7 @@ bool GetData(void *&buffer, size_t size, const void *data)
         APP_LOGE("GetData failed due to null data");
         return false;
     }
-    if (size == 0) {
+    if (size == 0 || size > MAX_PARCEL_CAPACITY) {
         APP_LOGE("GetData failed due to zero size");
         return false;
     }
