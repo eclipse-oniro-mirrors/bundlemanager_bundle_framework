@@ -422,7 +422,9 @@ void RdbDataManager::DelayCloseRdbStore()
         sharedPtr->rdbStore_ = nullptr;
         APP_LOGD("RdbDataManager DelayCloseRdbStore thread end");
     };
+    APP_LOGI_NOFUNC("th");
     std::thread closeRdbStoreThread(task);
+    APP_LOGI_NOFUNC("th end");
     closeRdbStoreThread.detach();
 }
 
