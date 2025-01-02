@@ -27,6 +27,7 @@
 #include "element_name.h"
 #include "iremote_proxy.h"
 #include "preinstalled_application_info.h"
+#include "process_cache_callback_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -885,6 +886,8 @@ public:
         std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
+
+    virtual ErrCode GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback) override;
 
     virtual sptr<IExtendResourceManager> GetExtendResourceManager() override;
 

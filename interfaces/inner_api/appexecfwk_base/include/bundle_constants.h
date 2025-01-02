@@ -52,10 +52,21 @@ constexpr int32_t CODE_PROTECT_UID = 7666;
 constexpr int32_t BASE_APP_UID = 10000;
 constexpr int32_t BASE_USER_RANGE = 200000;
 constexpr int32_t MAX_APP_UID = 65535;
+constexpr int32_t STORAGE_MANAGER_UID = 1090;
 
 // for render process
 constexpr int32_t START_UID_FOR_RENDER_PROCESS = 1000000;
 constexpr int32_t END_UID_FOR_RENDER_PROCESS = 1099999;
+
+/*
+all of cache path for bundle:
+modulename max is 128
+/data/app/el1~el5/userid/base/bundlename/cache;
+/data/app/el2/userid/sharefiles/bundlename/cache;
+/data/app/el1~el5/userid/base/bundlename/haps/modulename/cache;
+/data/app/el2/userid/sharefiles/bundlename/haps/modulename/cache;
+*/
+constexpr int16_t MAX_CACHE_DIR_SIZE = 774;
 
 // permissions
 constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";

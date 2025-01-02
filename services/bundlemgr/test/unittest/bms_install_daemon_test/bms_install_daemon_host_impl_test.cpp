@@ -1284,4 +1284,36 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7400, Function | Sma
     ErrCode res = hostImpl->GetExtensionSandboxTypeList(typeList);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: InstalldHostImplTest_7500
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetDiskUsageFromPath of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7500, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(installdProxy, nullptr);
+
+    std::vector<std::string> path;
+    int64_t res = installdProxy->GetDiskUsageFromPath(path);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7600
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetDiskUsage of hostImpl
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7600, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(installdProxy, nullptr);
+
+    std::vector<std::string> path;
+    path.emplace_back("com.acts.example");
+    int64_t res = installdProxy->GetDiskUsageFromPath(path);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
 } // OHOS
