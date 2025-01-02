@@ -1995,7 +1995,12 @@ bool BundleMgrHostImpl::DumpBundleInfo(
     jsonObject["applicationInfo"] = bundleInfo.applicationInfo;
     jsonObject["userInfo"] = innerBundleUserInfos;
     jsonObject["appIdentifier"] = bundleInfo.signatureInfo.appIdentifier;
-    result.append(jsonObject.dump(Constants::DUMP_INDENT));
+    try {
+        result.append(jsonObject.dump(Constants::DUMP_INDENT));
+    } catch (const nlohmann::json::type_error &e) {
+        APP_LOGE("dump[%{public}s] failed: %{public}s", bundleName.c_str(), e.what());
+        return false;
+    }
     result.append("\n");
     APP_LOGD("DumpBundleInfo success with bundleName %{public}s", bundleName.c_str());
     return true;
@@ -2026,7 +2031,12 @@ bool BundleMgrHostImpl::DumpShortcutInfo(
         result.append("\"shortcut\"");
         result.append(":\n");
         nlohmann::json jsonObject = info;
-        result.append(jsonObject.dump(Constants::DUMP_INDENT));
+        try {
+            result.append(jsonObject.dump(Constants::DUMP_INDENT));
+        } catch (const nlohmann::json::type_error &e) {
+            APP_LOGE("dump shortcut failed: %{public}s", e.what());
+            return false;
+        }
         result.append("\n");
     }
     APP_LOGD("DumpShortcutInfo success with bundleName %{public}s", bundleName.c_str());
