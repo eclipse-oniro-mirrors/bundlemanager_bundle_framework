@@ -14,14 +14,17 @@
  */
 #define private public
 
+#include <atomic>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <map>
 #include <sstream>
 #include <string>
+#include <thread>
 
 #include "bundle_mgr_service.h"
 #include "serial_queue.h"
+#include "single_delayed_task_mgr.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -160,5 +163,58 @@ HWTEST_F(BmsBundleCommonTest, CancelDelayTask_0500, Function | SmallTest | Level
 
     serialQueue.CancelDelayTask(taskName);
     EXPECT_EQ(serialQueue.taskMap_.size(), 1);
+}
+
+/**
+ * @tc.number: SingleDelayedTaskMgr_0100
+ * @tc.name: test ScheduleDelayedTask
+ * @tc.desc: 1.call ScheduleDelayedTask, task execute success
+ */
+HWTEST_F(BmsBundleCommonTest, SingleDelayedTaskMgr_0100, Function | SmallTest | Level1)
+{
+    std::string taskName = "SingleDelayedTaskMgr_0100";
+    uint64_t delayedTimeMs = 50;
+    std::shared_ptr<SingleDelayedTaskMgr> mgr = std::make_shared<SingleDelayedTaskMgr>(taskName, delayedTimeMs);
+    std::atomic<bool> flag = false;
+    auto func = [&flag]() {
+        flag = true;
+    };
+    mgr->ScheduleDelayedTask(func);
+    EXPECT_TRUE(mgr->isRunning_);
+    uint64_t sleepTimeMs = 100;
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleepTimeMs));
+    EXPECT_TRUE(flag);
+    EXPECT_FALSE(mgr->isRunning_);
+}
+
+/**
+ * @tc.number: SingleDelayedTaskMgr_0200
+ * @tc.name: test GetExecuteTime
+ * @tc.desc: 1.call GetExecuteTime, executeTime_ equal to now
+ */
+HWTEST_F(BmsBundleCommonTest, SingleDelayedTaskMgr_0200, Function | SmallTest | Level1)
+{
+    std::string taskName = "SingleDelayedTaskMgr_0200";
+    uint64_t delayedTimeMs = 50;
+    std::shared_ptr<SingleDelayedTaskMgr> mgr = std::make_shared<SingleDelayedTaskMgr>(taskName, delayedTimeMs);
+    auto now = std::chrono::steady_clock::now();
+    mgr->executeTime_ = now;
+    auto ret = mgr->GetExecuteTime();
+    EXPECT_TRUE(now == ret);
+}
+
+/**
+ * @tc.number: SingleDelayedTaskMgr_0300
+ * @tc.name: test SetTaskFinished
+ * @tc.desc: 1.call SetTaskFinished, isRunning_ is false
+ */
+HWTEST_F(BmsBundleCommonTest, SingleDelayedTaskMgr_0300, Function | SmallTest | Level1)
+{
+    std::string taskName = "SingleDelayedTaskMgr_0300";
+    uint64_t delayedTimeMs = 50;
+    std::shared_ptr<SingleDelayedTaskMgr> mgr = std::make_shared<SingleDelayedTaskMgr>(taskName, delayedTimeMs);
+    mgr->isRunning_ = true;
+    mgr->SetTaskFinished();
+    EXPECT_FALSE(mgr->isRunning_);
 }
 } // OHOS
