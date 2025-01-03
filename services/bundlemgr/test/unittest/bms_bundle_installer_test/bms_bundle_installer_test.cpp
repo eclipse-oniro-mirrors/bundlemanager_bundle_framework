@@ -8031,4 +8031,129 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0400, Function | SmallTest | L
     std::string installSource = installer.GetInstallSource(installParam);
     EXPECT_EQ(installSource, "unknown");
 }
+
+/*
+ * @tc.number: CheckPreAppAllowHdcInstall_0100
+ * @tc.name: test CheckPreAppAllowHdcInstall
+ * @tc.desc: CheckPreAppAllowHdcInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    InstallParam installParam;
+    installParam.isCallByShell = false;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    auto ret = installer.CheckPreAppAllowHdcInstall(installParam, hapVerifyRes);
+    EXPECT_EQ(ERR_OK, ret);
+}
+
+/**
+ * @tc.number: CheckPreAppAllowHdcInstall_0200
+ * @tc.name: test CheckPreAppAllowHdcInstall
+ * @tc.desc: CheckPreAppAllowHdcInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    installer.sysEventInfo_.callingUid = 0;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    auto ret = installer.CheckPreAppAllowHdcInstall(installParam, hapVerifyRes);
+    EXPECT_EQ(ERR_OK, ret);
+}
+
+/**
+ * @tc.number: CheckPreAppAllowHdcInstall_0300
+ * @tc.name: test CheckPreAppAllowHdcInstall
+ * @tc.desc: CheckPreAppAllowHdcInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    installer.sysEventInfo_.callingUid = 1000;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::CROWDTESTING;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    auto ret = installer.CheckPreAppAllowHdcInstall(installParam, hapVerifyRes);
+    EXPECT_EQ(ERR_OK, ret);
+}
+
+/**
+ * @tc.number: CheckPreAppAllowHdcInstall_0400
+ * @tc.name: test CheckPreAppAllowHdcInstall
+ * @tc.desc: CheckPreAppAllowHdcInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0400, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    installer.sysEventInfo_.callingUid = 1000;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::OS_INTEGRATION;
+    hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    auto ret = installer.CheckPreAppAllowHdcInstall(installParam, hapVerifyRes);
+    EXPECT_EQ(ERR_OK, ret);
+}
+
+/**
+ * @tc.number: CheckPreAppAllowHdcInstall_0500
+ * @tc.name: test CheckPreAppAllowHdcInstall
+ * @tc.desc: CheckPreAppAllowHdcInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    installer.sysEventInfo_.callingUid = 1000;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::OS_INTEGRATION;
+    hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.provisionInfo.appPrivilegeCapabilities.emplace_back("AllowHdcInstall");
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    auto ret = installer.CheckPreAppAllowHdcInstall(installParam, hapVerifyRes);
+    EXPECT_EQ(ERR_OK, ret);
+}
+
+/**
+ * @tc.number: CheckPreAppAllowHdcInstall_0600
+ * @tc.name: test CheckPreAppAllowHdcInstall
+ * @tc.desc: CheckPreAppAllowHdcInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0600, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    installer.sysEventInfo_.callingUid = 1000;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::OS_INTEGRATION;
+    hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    auto ret = installer.CheckPreAppAllowHdcInstall(installParam, hapVerifyRes);
+    if (installer.IsRdDevice()) {
+        EXPECT_EQ(ERR_OK, ret);
+    } else {
+        EXPECT_EQ(ERR_APPEXECFWK_INSTALL_OS_INTEGRATION_BUNDLE_NOT_ALLOWED_FOR_SHELL, ret);
+    }
+}
 } // OHOS
