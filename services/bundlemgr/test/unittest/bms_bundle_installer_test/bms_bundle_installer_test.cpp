@@ -7199,9 +7199,27 @@ HWTEST_F(BmsBundleInstallerTest, BundleUserMgrHostImpl_0100, Function | MediumTe
     host.ClearBundleEvents();
     host.HandleNotifyBundleEventsAsync();
     host.HandleNotifyBundleEvents();
-    host.UninstallBackupUninstallList(userId);
+    host.UninstallBackupUninstallList(userId, false);
 
-    bool ret = host.GetAllPreInstallBundleInfos(disallowList, userId, preInstallBundleInfos);
+    bool ret = host.GetAllPreInstallBundleInfos(disallowList, userId, false, preInstallBundleInfos);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0200
+ * @tc.name: test InnerProcessSkipPreInstallBundles
+ * @tc.desc: 1.Test InnerProcessSkipPreInstallBundles
+*/
+HWTEST_F(BmsBundleInstallerTest, BundleUserMgrHostImpl_0200, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+    std::set<std::string> uninstallList;
+    bool ret = host.InnerProcessSkipPreInstallBundles(uninstallList, false);
+    EXPECT_TRUE(ret);
+    uninstallList.insert(SYSTEMFIEID_NAME);
+    ret = host.InnerProcessSkipPreInstallBundles(uninstallList, false);
+    EXPECT_TRUE(ret);
+    ret = host.InnerProcessSkipPreInstallBundles(uninstallList, true);
     EXPECT_TRUE(ret);
 }
 

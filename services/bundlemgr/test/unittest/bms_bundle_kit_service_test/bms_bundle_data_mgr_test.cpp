@@ -4862,7 +4862,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0001, Function | SmallTest 
 {
     auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
-    bundleUserMgrHostImpl_->OnCreateNewUser(USERID);
+    bundleUserMgrHostImpl_->OnCreateNewUser(USERID, false);
     bundleUserMgrHostImpl_->RemoveUser(USERID);
     ASSERT_NE(bundleInstaller, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
@@ -4878,7 +4878,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0002, Function | SmallTest 
 {
     auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
-    bundleUserMgrHostImpl_->OnCreateNewUser(USERID, DISALLOWLIST);
+    bundleUserMgrHostImpl_->OnCreateNewUser(USERID, false, DISALLOWLIST);
     bundleUserMgrHostImpl_->RemoveUser(USERID);
     ASSERT_NE(bundleInstaller, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
@@ -4893,14 +4893,14 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0002, Function | SmallTest 
 HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0003, Function | SmallTest | Level0)
 {
     int32_t userId = 101;
-    bundleUserMgrHostImpl_->OnCreateNewUser(userId);
+    bundleUserMgrHostImpl_->OnCreateNewUser(userId, false);
     bundleUserMgrHostImpl_->RemoveUser(userId);
 
     auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
-    bundleUserMgrHostImpl_->OnCreateNewUser(userId);
+    bundleUserMgrHostImpl_->OnCreateNewUser(userId, false);
     bundleUserMgrHostImpl_->RemoveUser(userId);
 
     ASSERT_NE(bundleInstaller, nullptr);
@@ -4917,12 +4917,15 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0004, Function | SmallTest 
 {
     const std::vector<std::string> disallowList;
     std::set<PreInstallBundleInfo> preInstallBundleInfos;
-    auto res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, preInstallBundleInfos);
+    auto res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, false, preInstallBundleInfos);
+    EXPECT_TRUE(res);
+
+    res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, true, preInstallBundleInfos);
     EXPECT_TRUE(res);
 
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
-    res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, preInstallBundleInfos);
+    res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, false, preInstallBundleInfos);
     EXPECT_FALSE(res);
     bundleUserMgrHostImpl_->HandleNotifyBundleEvents();
 }

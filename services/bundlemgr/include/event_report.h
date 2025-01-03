@@ -83,6 +83,7 @@ enum class UserEventType : uint8_t {
     CREATE_END,
     REMOVE_START,
     REMOVE_END,
+    CREATE_WITH_SKIP_PRE_INSTALL_END,
 };
 
 enum class ACTION_TYPE_ENUM : uint8_t {
