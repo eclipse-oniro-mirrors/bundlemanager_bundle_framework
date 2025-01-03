@@ -161,6 +161,14 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
+        if (userReceiverImpl == nullptr) {
+            APP_LOGE("userReceiverImpl is nullptr, -n %{public}s", info.GetBundleName().c_str());
+            g_installedHapNum++;
+            if (needReinstall) {
+                SavePreInstallException(info.GetBundleName());
+            }
+            continue;
+        }
         userReceiverImpl->SetBundlePromise(bundlePromise);
         userReceiverImpl->SetTotalHapNum(totalHapNum);
         installer->InstallByBundleName(info.GetBundleName(), installParam, userReceiverImpl);
@@ -377,6 +385,11 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
         installParam.isRemoveUser = true;
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.name, false));
+        if (userReceiverImpl == nullptr) {
+            APP_LOGE("userReceiverImpl is nullptr, -n %{public}s", info.name.c_str());
+            g_installedHapNum++;
+            continue;
+        }
         userReceiverImpl->SetBundlePromise(bundlePromise);
         userReceiverImpl->SetTotalHapNum(totalHapNum);
         installer->Uninstall(info.name, installParam, userReceiverImpl);
@@ -473,6 +486,11 @@ void BundleUserMgrHostImpl::UninstallBackupUninstallList(int32_t userId)
         installParam.isPreInstallApp = true;
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(bundleName, false));
+        if (userReceiverImpl == nullptr) {
+            APP_LOGE("userReceiverImpl is nullptr, -n %{public}s", bundleName.c_str());
+            g_installedHapNum++;
+            continue;
+        }
         userReceiverImpl->SetBundlePromise(bundlePromise);
         userReceiverImpl->SetTotalHapNum(totalHapNum);
         installer->Uninstall(bundleName, installParam, userReceiverImpl);
@@ -482,6 +500,18 @@ void BundleUserMgrHostImpl::UninstallBackupUninstallList(int32_t userId)
     }
     IPCSkeleton::SetCallingIdentity(identity);
     bmsExtensionDataMgr.ClearBackupUninstallFile(userId);
+}
+
+void BundleUserMgrHostImpl::SavePreInstallException(const std::string &bundleName)
+{
+    auto preInstallExceptionMgr =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
+    if (preInstallExceptionMgr == nullptr) {
+        APP_LOGE("preInstallExceptionMgr is nullptr, -n %{public}s save failed", bundleName.c_str());
+        return;
+    }
+
+    preInstallExceptionMgr->SavePreInstallExceptionBundleName(bundleName);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

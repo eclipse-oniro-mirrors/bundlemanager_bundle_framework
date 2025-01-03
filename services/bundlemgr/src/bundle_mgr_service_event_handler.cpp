@@ -540,6 +540,10 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
         installParam.userId = Constants::ALL_USERID;
         installParam.installFlag = InstallFlag::REPLACE_EXISTING;
         sptr<InnerReceiverImpl> innerReceiverImpl(new (std::nothrow) InnerReceiverImpl());
+        if (innerReceiverImpl == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "InnerReceiverImpl create fail");
+            continue;
+        }
         innerReceiverImpl->SetBundleName(hapPaths.first);
         std::vector<std::string> tempHaps;
         MoveTempPath(hapPaths.second, hapPaths.first, tempHaps);

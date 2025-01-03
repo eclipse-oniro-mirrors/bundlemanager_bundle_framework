@@ -40,6 +40,8 @@ public:
 
     void AddNotifyBundleEvents(const NotifyBundleEvents &notifyBundleEvents);
 
+    void SavePreInstallException(const std::string &bundleName);
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
     const sptr<IBundleInstaller> GetBundleInstaller();
