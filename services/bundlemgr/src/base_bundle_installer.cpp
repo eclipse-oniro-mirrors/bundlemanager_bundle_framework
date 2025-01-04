@@ -15,6 +15,7 @@
 
 #include "base_bundle_installer.h"
 
+#include <algorithm>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sstream>
@@ -85,6 +86,7 @@ const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
 constexpr const char* LIBS_TMP = "libs_tmp";
+constexpr const char* PRIVILEGE_ALLOW_HDC_INSTALL = "AllowHdcInstall";
 
 #ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
@@ -1160,6 +1162,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     result = CheckShellInstall(hapVerifyResults);
     CHECK_RESULT(result, "check shell install failed %{public}d");
+
+    result = CheckPreAppAllowHdcInstall(installParam, hapVerifyResults);
+    CHECK_RESULT(result, "not allowed install os_integration bundle, %{public}d");
 
     result = CheckShellInstallInOobe();
     CHECK_RESULT(result, "check shell install in oobe failed %{public}d");
@@ -6722,6 +6727,38 @@ void BaseBundleInstaller::UpdateKillApplicationProcess(const InnerBundleInfo &ol
             }
         }
     }
+}
+
+ErrCode BaseBundleInstaller::CheckPreAppAllowHdcInstall(const InstallParam &installParam,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    if (!installParam.isCallByShell || sysEventInfo_.callingUid == Constants::ROOT_UID) {
+        return ERR_OK;
+    }
+
+    if (hapVerifyRes.empty()) {
+        LOG_W(BMS_TAG_INSTALLER, "hapVerifyRes empty");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
+    if (provisionInfo.distributionType != Security::Verify::AppDistType::OS_INTEGRATION) {
+        return ERR_OK;
+    }
+
+    if (provisionInfo.type != Security::Verify::ProvisionType::RELEASE) {
+        return ERR_OK;
+    }
+
+    auto privileges = provisionInfo.appPrivilegeCapabilities;
+    if (find(privileges.begin(), privileges.end(), PRIVILEGE_ALLOW_HDC_INSTALL) != privileges.end()) {
+        return ERR_OK;
+    }
+
+    if (IsRdDevice()) {
+        return ERR_OK;
+    }
+    return ERR_APPEXECFWK_INSTALL_OS_INTEGRATION_BUNDLE_NOT_ALLOWED_FOR_SHELL;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -788,6 +788,8 @@ private:
     std::string GetDeveloperId(const std::string &bundleName);
     void GetModuleNames(const std::string &bundleName, std::vector<std::string> &moduleNames);
     void UpdateKillApplicationProcess(const InnerBundleInfo &innerBundleInfo);
+    ErrCode CheckPreAppAllowHdcInstall(const InstallParam &installParam,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;
