@@ -21,7 +21,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
-constexpr const char* QUEUE_NAME = "BackupBMSDbQueue";
 constexpr const char* TASK_NAME = "BackUpBMSDbTask";
 constexpr uint64_t DELAY_TIME_MILLI_SECONDS = 6 * 60 * 1000; // 6min
 }
@@ -34,7 +33,7 @@ BundleDataStorageRdb::BundleDataStorageRdb()
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 
-    serialQueue_ = std::make_unique<SerialQueue>(QUEUE_NAME);
+    delayedTaskMgr_ = std::make_shared<SingleDelayedTaskMgr>(TASK_NAME, DELAY_TIME_MILLI_SECONDS);
 }
 
 BundleDataStorageRdb::~BundleDataStorageRdb()
@@ -169,7 +168,7 @@ void BundleDataStorageRdb::BackupRdb()
         sharedPtr->rdbDataManager_->BackupRdb();
         APP_LOGI("backup BMS db end");
     };
-    serialQueue_->ReScheduleDelayTask(TASK_NAME, DELAY_TIME_MILLI_SECONDS, task);
+    delayedTaskMgr_->ScheduleDelayedTask(task);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

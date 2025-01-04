@@ -24,7 +24,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
-constexpr const char* QUEUE_NAME = "BackupResourceDbQueue";
 constexpr const char* TASK_NAME = "BackUpResourceDbTask";
 constexpr uint64_t DELAY_TIME_MILLI_SECONDS = 8 * 60 * 1000; // 8min
 }
@@ -50,7 +49,7 @@ BundleResourceRdb::BundleResourceRdb()
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 
-    serialQueue_ = std::make_unique<SerialQueue>(QUEUE_NAME);
+    delayedTaskMgr_ = std::make_shared<SingleDelayedTaskMgr>(TASK_NAME, DELAY_TIME_MILLI_SECONDS);
 }
 
 BundleResourceRdb::~BundleResourceRdb()
@@ -623,7 +622,7 @@ void BundleResourceRdb::BackupRdb()
         sharedPtr->rdbDataManager_->BackupRdb();
         APP_LOGI("backup resource db end");
     };
-    serialQueue_->ReScheduleDelayTask(TASK_NAME, DELAY_TIME_MILLI_SECONDS, task);
+    delayedTaskMgr_->ScheduleDelayedTask(task);
 }
 } // AppExecFwk
 } // OHOS
