@@ -2294,23 +2294,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     LOG_D(BMS_TAG_INSTALLER, "ProcessModuleUpdate killProcess = %{public}d", killProcess);
     // reboot scan case will not kill the bundle
     if (killProcess) {
-        // kill the bundle process during updating
-        if (!AbilityManagerHelper::UninstallApplicationProcesses(
-            oldInfo.GetApplicationName(), oldInfo.GetUid(userId_), true)) {
-            LOG_E(BMS_TAG_INSTALLER, "fail to kill running application");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-        InnerBundleUserInfo userInfo;
-        if (!oldInfo.GetInnerBundleUserInfo(userId_, userInfo)) {
-            LOG_E(BMS_TAG_INSTALLER, "the origin application is not installed at current user");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-        for (auto &cloneInfo : userInfo.cloneInfos) {
-            if (!AbilityManagerHelper::UninstallApplicationProcesses(
-                oldInfo.GetApplicationName(), cloneInfo.second.uid, true, std::stoi(cloneInfo.first))) {
-                LOG_E(BMS_TAG_INSTALLER, "fail to kill clone application");
-            }
-        }
+        UpdateKillApplicationProcess(oldInfo);
     }
 
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_EXISTED_START);
@@ -6047,6 +6031,34 @@ ErrCode BaseBundleInstaller::CheckShellCanInstallPreApp(
     LOG_E(BMS_TAG_DEFAULT, "%{public}s appId or appIdentifier not same with preinstalled app",
         newInfos.begin()->second.GetBundleName().c_str());
     return ERR_APPEXECFWK_INSTALL_APPID_NOT_SAME_WITH_PREINSTALLED;
+}
+
+void BaseBundleInstaller::UpdateKillApplicationProcess(const InnerBundleInfo &oldInfo)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr null");
+        return;
+    }
+    auto currentBundleUserIds = dataMgr_->GetUserIds(bundleName_);
+    //kill the bundle process in all user during updating
+    for (auto userId : currentBundleUserIds) {
+        // kill the bundle process during updating
+        if (!AbilityManagerHelper::UninstallApplicationProcesses(
+            oldInfo.GetApplicationName(), oldInfo.GetUid(userId), true)) {
+            LOG_W(BMS_TAG_INSTALLER, "fail to kill running application");
+        }
+        InnerBundleUserInfo userInfo;
+        if (!oldInfo.GetInnerBundleUserInfo(userId, userInfo)) {
+            LOG_W(BMS_TAG_INSTALLER, "the origin application is not installed at current user");
+            continue;
+        }
+        for (auto &cloneInfo : userInfo.cloneInfos) {
+            if (!AbilityManagerHelper::UninstallApplicationProcesses(
+                oldInfo.GetApplicationName(), cloneInfo.second.uid, true, atoi(cloneInfo.first.c_str()))) {
+                LOG_W(BMS_TAG_INSTALLER, "fail to kill clone application");
+            }
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
