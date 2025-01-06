@@ -53,6 +53,7 @@ constexpr const char* TRANSPARENCY_ENABLED = "transparencyEnabled";
 constexpr const char* PRIVACY_LEVEL = "privacyLevel";
 constexpr const char* FONT_SCALE_FOLLOW_SYSTEM = "fontScaleFollowSystem";
 constexpr const char* SUPPORT_SHAPES = "supportShapes";
+constexpr const char* ENABLE_BLUR_BACKGROUND = "enableBlurBackground";
 }
 
 class ExtensionFormProfile {

@@ -70,6 +70,7 @@ const char* JSON_KEY_SUPPORT_SHAPES = "supportShapes";
 const char* JSON_KEY_VERSION_CODE = "versionCode";
 const char* JSON_KEY_BUNDLE_TYPE = "bundleType";
 const char* JSON_KEY_PREVIEW_IMAGES = "previewImages";
+const char* JSON_KEY_ENABLE_BLUR_BACKGROUND = "enableBlurBackground";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -124,6 +125,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     for (const auto &shape : formInfo.supportShapes) {
         supportShapes.push_back(shape);
     }
+    enableBlurBackground = formInfo.enableBlurBackground;
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -230,6 +232,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < formPreviewImagesSize; i++) {
         formPreviewImages.emplace_back(parcel.ReadUint32());
     }
+    enableBlurBackground = parcel.ReadBool();
     return true;
 }
 
@@ -318,6 +321,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     for (auto i = 0; i < formPreviewImagesSize; i++) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, formPreviewImages[i]);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enableBlurBackground);
     return true;
 }
 
@@ -385,7 +389,8 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_SUPPORT_SHAPES, formInfo.supportShapes},
         {JSON_KEY_VERSION_CODE, formInfo.versionCode},
         {JSON_KEY_BUNDLE_TYPE, formInfo.bundleType},
-        {JSON_KEY_PREVIEW_IMAGES, formInfo.formPreviewImages}
+        {JSON_KEY_PREVIEW_IMAGES, formInfo.formPreviewImages},
+        {JSON_KEY_ENABLE_BLUR_BACKGROUND, formInfo.enableBlurBackground}
     };
 }
 
@@ -705,6 +710,12 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NUMBER);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_ENABLE_BLUR_BACKGROUND,
+        formInfo.enableBlurBackground,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formInfo jsonObject error : %{public}d", parseResult);
     }

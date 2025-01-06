@@ -33,6 +33,7 @@ struct FormInfo : public Parcelable {
     bool isDynamic = true;
     bool transparencyEnabled = false;
     bool fontScaleFollowSystem = true;
+    bool enableBlurBackground = false;
     FormsColorMode colorMode = FormsColorMode::AUTO_MODE;
     uint32_t displayNameId = 0;
     uint32_t descriptionId = 0;
