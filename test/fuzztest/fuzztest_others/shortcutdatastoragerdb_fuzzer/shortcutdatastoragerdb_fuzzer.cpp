@@ -26,6 +26,10 @@ const int32_t USERID = 100;
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
+    std::string op(reinterpret_cast<const char *>(data), size);
+    if (op == "echo") {
+        return true;
+    }
     std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
     ShortcutInfo shortcutInfo;
     shortcutInfo.id = "id_test1";
@@ -33,7 +37,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     shortcutInfo.hostAbility = "hostAbility";
     shortcutInfo.icon = "$media:16777224";
     shortcutInfo.label = "shortcutLabel";
-    shortcutInfo.disableMessage = std::string(reinterpret_cast<const char *>(data), size);
+    shortcutInfo.disableMessage = "message";
     shortcutInfo.isStatic = true;
     shortcutInfo.isHomeShortcut = true;
     shortcutInfo.isEnables = true;
