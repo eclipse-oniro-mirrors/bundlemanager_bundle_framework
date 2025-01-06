@@ -367,7 +367,11 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
     }
 
     for_each(soEntryFiles.begin(), soEntryFiles.end(), [&extractor, &targetSoPath, &cpuAbi](const auto &entry) {
-        ExtractTargetFile(extractor, entry, targetSoPath, cpuAbi);
+        ExtractParam param;
+        param.targetPath = targetSoPath;
+        param.cpuAbi = cpuAbi;
+        param.extractFileType = ExtractFileType::SO;
+        ExtractTargetFile(extractor, entry, param);
     });
 
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles end");
@@ -409,8 +413,7 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
         }
         // handle native file
         if (IsNativeFile(entryName, extractParam)) {
-            ExtractTargetFile(extractor, entryName, extractParam.targetPath,
-                extractParam.cpuAbi, extractParam.extractFileType);
+            ExtractTargetFile(extractor, entryName, extractParam);
             continue;
         }
     }
@@ -623,23 +626,23 @@ bool InstalldOperator::ProcessBundleUnInstallNative(const std::string &userId, c
 }
 
 void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
-    const std::string &targetPath, const std::string &cpuAbi, const ExtractFileType &extractFileType)
+    const ExtractParam &param)
 {
     // create dir if not exist
-    if (!IsExistDir(targetPath)) {
-        if (!MkRecursiveDir(targetPath, true)) {
-            LOG_E(BMS_TAG_INSTALLD, "create targetPath %{public}s failed", targetPath.c_str());
+    if (!IsExistDir(param.targetPath)) {
+        if (!MkRecursiveDir(param.targetPath, true)) {
+            LOG_E(BMS_TAG_INSTALLD, "create targetPath %{public}s failed", param.targetPath.c_str());
             return;
         }
     }
 
     std::string prefix;
-    if (!DeterminePrefix(extractFileType, cpuAbi, prefix)) {
+    if (!DeterminePrefix(param.extractFileType, param.cpuAbi, prefix)) {
         LOG_E(BMS_TAG_INSTALLD, "determine prefix failed");
         return;
     }
     std::string targetName = entryName.substr(prefix.length());
-    std::string path = targetPath;
+    std::string path = param.targetPath;
     if (path.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
         path += ServiceConstants::FILE_SEPARATOR_CHAR;
     }
@@ -651,15 +654,18 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
             return;
         }
     }
+    if (param.needRemoveOld && IsExistFile(path) && !OHOS::RemoveFile(path)) {
+        LOG_W(BMS_TAG_INSTALLD, "remove file %{public}s failed", path.c_str());
+    }
     bool ret = extractor.ExtractFile(entryName, path);
     if (!ret) {
         LOG_E(BMS_TAG_INSTALLD, "extract file failed, entryName : %{public}s", entryName.c_str());
         return;
     }
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-    if (extractFileType == ExtractFileType::AP) {
+    if (param.extractFileType == ExtractFileType::AP) {
         struct stat buf = {};
-        if (stat(targetPath.c_str(), &buf) != 0) {
+        if (stat(param.targetPath.c_str(), &buf) != 0) {
             LOG_E(BMS_TAG_INSTALLD, "fail to stat errno:%{public}d", errno);
             return;
         }
@@ -1324,7 +1330,11 @@ bool InstalldOperator::ExtractDiffFiles(const std::string &filePath, const std::
         }
         // handle diff file
         if (IsDiffFiles(entryName, targetPath, cpuAbi)) {
-            ExtractTargetFile(extractor, entryName, targetPath, cpuAbi);
+            ExtractParam param;
+            param.targetPath = targetPath;
+            param.cpuAbi = cpuAbi;
+            param.extractFileType = ExtractFileType::SO;
+            ExtractTargetFile(extractor, entryName, param);
         }
     }
     return true;

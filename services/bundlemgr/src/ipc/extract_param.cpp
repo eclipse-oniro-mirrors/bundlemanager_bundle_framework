@@ -57,6 +57,7 @@ bool ExtractParam::ReadFromParcel(Parcel &parcel)
     targetPath = Str16ToStr8(parcel.ReadString16());
     cpuAbi = Str16ToStr8(parcel.ReadString16());
     extractFileType = static_cast<ExtractFileType>(parcel.ReadInt32());
+    needRemoveOld = parcel.ReadBool();
     return true;
 }
 
@@ -66,6 +67,7 @@ bool ExtractParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(targetPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(extractFileType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needRemoveOld);
     return true;
 }
 
@@ -83,7 +85,8 @@ std::string ExtractParam::ToString() const
     return "[ srcPath :" +  srcPath
             + ", targetPath = " + targetPath
             + ", cpuAbi = " + cpuAbi
-            + ", extractFileType = " + GetExtractFileTypeStrVal(extractFileType) + "]";
+            + ", extractFileType = " + GetExtractFileTypeStrVal(extractFileType)
+            + ", needRemoveOld = " + (needRemoveOld ? "true" : "false") + "]";
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

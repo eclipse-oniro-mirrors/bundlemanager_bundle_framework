@@ -30,7 +30,8 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.QuickFixManager");
 
     virtual ErrCode DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
-        const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug = false, const std::string &targetPath = "")
+        const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug = false, const std::string &targetPath = "",
+        bool isReplace = false)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

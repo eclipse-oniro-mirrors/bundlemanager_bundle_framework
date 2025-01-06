@@ -1446,7 +1446,7 @@ HWTEST_F(BmsInstallDaemonTest, Marshalling_0100, Function | SmallTest | Level0)
     EXPECT_EQ("[ srcPath :" +  HAP_FILE_PATH
             + ", targetPath = " + TEST_PATH
             + ", cpuAbi = " + TEST_CPU_ABI
-            + ", extractFileType = An]", value);
+            + ", extractFileType = An, needRemoveOld = false]", value);
     extractParam.Unmarshalling(parcel);
 }
 

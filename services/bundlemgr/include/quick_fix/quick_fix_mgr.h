@@ -32,7 +32,8 @@ public:
     ~QuickFixMgr();
 
     ErrCode DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
-        const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug = false, const std::string &targetPath = "");
+        const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug = false, const std::string &targetPath = "",
+        bool isReplace = false);
     ErrCode SwitchQuickFix(const std::string &bundleName, bool enable,
         const sptr<IQuickFixStatusCallback> &statusCallback);
     ErrCode DeleteQuickFix(const std::string &bundleName,
