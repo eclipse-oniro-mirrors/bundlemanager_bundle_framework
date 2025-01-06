@@ -43,8 +43,6 @@ private:
 
     ErrCode HandleGetAllLauncherAbilityResourceInfo(MessageParcel &data, MessageParcel &reply);
 
-    void ClearAshmem(sptr<Ashmem> &optMem);
-
     int32_t AllocatAshmemNum();
 
     ErrCode WriteParcelableIntoAshmem(MessageParcel &tempParcel, MessageParcel &reply);

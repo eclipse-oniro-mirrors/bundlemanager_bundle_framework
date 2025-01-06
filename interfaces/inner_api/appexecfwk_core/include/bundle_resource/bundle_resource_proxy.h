@@ -56,8 +56,6 @@ private:
 
     ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, void *&data);
 
-    void ClearAshmem(sptr<Ashmem> &optMem);
-
     bool SendRequest(BundleResourceInterfaceCode code, MessageParcel &data, MessageParcel &reply);
 
     static inline BrokerDelegator<BundleResourceProxy> delegator_;

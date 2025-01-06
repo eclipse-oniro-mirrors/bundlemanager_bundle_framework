@@ -883,6 +883,8 @@ private:
     template<typename T>
     ErrCode ReadParcelInfoIntelligent(MessageParcel &data, T &parcelInfo);
 
+    ErrCode WriteParcelableIntoAshmem(MessageParcel &tempParcel, MessageParcel &reply);
+
     std::mutex bundleAshmemMutex_;
     int32_t ashmemNum_ = 0;
     DISALLOW_COPY_AND_MOVE(BundleMgrHost);
