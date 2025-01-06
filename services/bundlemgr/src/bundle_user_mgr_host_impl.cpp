@@ -95,12 +95,16 @@ private:
 ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList)
 {
     HITRACE_METER(HITRACE_TAG_APP);
-    EventReport::SendUserSysEvent(UserEventType::CREATE_START, userId);
     EventReport::SendCpuSceneEvent(ACCESSTOKEN_PROCESS_NAME, 1 << 1); // second scene
+    APP_LOGI("CreateNewUser user(%{public}d) start", userId);
     BmsExtensionDataMgr bmsExtensionDataMgr;
     bool needToSkipPreBundleInstall = bmsExtensionDataMgr.IsNeedToSkipPreBundleInstall();
-    APP_LOGI("CreateNewUser user(%{public}d) start, skip pre bundle install flag %{public}d", userId,
-        needToSkipPreBundleInstall);
+    if (needToSkipPreBundleInstall) {
+        APP_LOGI("need to skip pre bundle install");
+        EventReport::SendUserSysEvent(UserEventType::CREATE_WITH_SKIP_PRE_INSTALL_START, userId);
+    } else {
+        EventReport::SendUserSysEvent(UserEventType::CREATE_START, userId);
+    }
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
     if (CheckInitialUser() != ERR_OK) {
         APP_LOGE("CheckInitialUser failed");
@@ -115,8 +119,7 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
     } else {
         EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
     }
-    APP_LOGI("CreateNewUser end userId: (%{public}d), skip pre bundle install flag %{public}d", userId,
-        needToSkipPreBundleInstall);
+    APP_LOGI("CreateNewUser end userId: (%{public}d)", userId);
     return ERR_OK;
 }
 
