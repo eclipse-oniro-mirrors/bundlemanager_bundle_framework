@@ -34,7 +34,7 @@ public:
      * @brief Called when del all bundle cache files progress finished.
      * @param succeeded Indicates the result of progress.
      */
-    virtual void OnCleanAllBundleCacheFinished(bool succeeded) = 0;
+    virtual void OnCleanAllBundleCacheFinished(int32_t resulted) = 0;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -791,9 +791,9 @@ public:
     std::vector<int32_t> GetNoRunningBundleCloneIndexes(const sptr<IAppMgr> appMgrProxy, const std::string &bundleName,
         const std::vector<int32_t> &cloneAppIndexes) const;
 #endif
-    void GetCleanBundleCacheInfos(
+    void GetBundleCacheInfos(
         const int32_t userId, std::vector<std::tuple<std::string, std::vector<std::string>,
-        std::vector<int32_t>>> &validBundles) const;
+        std::vector<int32_t>>> &validBundles, bool isClean = false) const;
     bool GetBundleStats(const std::string &bundleName,
         const int32_t userId, std::vector<int64_t> &bundleStats,
         const int32_t appIndex = 0, const uint32_t statFlag = 0) const;
