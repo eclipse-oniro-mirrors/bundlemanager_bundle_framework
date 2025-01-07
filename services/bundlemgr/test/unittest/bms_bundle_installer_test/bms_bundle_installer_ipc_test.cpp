@@ -211,7 +211,8 @@ HWTEST_F(BmsBundleInstallerIPCTest, CreateStreamInstaller_0100, Function | Small
     installParam.userId = TEST_INSTALLER_UID;
     installParam.installFlag = InstallFlag::NORMAL;
     sptr<IStatusReceiver> statusReceiver;
-    auto ret = proxy->CreateStreamInstaller(installParam, statusReceiver);
+    std::vector<std::string> originHapPaths;
+    auto ret = proxy->CreateStreamInstaller(installParam, statusReceiver, originHapPaths);
     EXPECT_EQ(ret, nullptr);
 }
 
@@ -229,7 +230,8 @@ HWTEST_F(BmsBundleInstallerIPCTest, CreateStreamInstaller_0200, Function | Small
 
     InstallParam installParam;
     sptr<IStatusReceiver> statusReceiver;
-    auto ret = proxy->CreateStreamInstaller(installParam, statusReceiver);
+    std::vector<std::string> originHapPaths;
+    auto ret = proxy->CreateStreamInstaller(installParam, statusReceiver, originHapPaths);
     EXPECT_EQ(ret, nullptr);
 }
 

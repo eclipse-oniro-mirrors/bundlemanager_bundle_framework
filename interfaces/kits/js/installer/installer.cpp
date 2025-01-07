@@ -79,6 +79,8 @@ const char* VERIFY_CODE_PARAM = "verifyCodeParams";
 const char* SIGNATURE_FILE_PATH = "signatureFilePath";
 const char* PGO_PARAM = "pgoParams";
 const char* PGO_FILE_PATH = "pgoFilePath";
+const char* KEY = "key";
+const char* VALUE = "value";
 const char* HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
 const char* CREATE_APP_CLONE = "CreateAppClone";
@@ -529,6 +531,55 @@ static bool ParseVerifyCodeParams(napi_env env, napi_value args, std::map<std::s
     return true;
 }
 
+static bool ParseParameter(napi_env env, napi_value args, std::string &key, std::string &value)
+{
+    APP_LOGD("start to parse parameter");
+    bool ret = CommonFunc::ParseStringPropertyFromObject(env, args, KEY, true, key);
+    if (!ret || key.empty()) {
+        APP_LOGE("param key is empty");
+        return false;
+    }
+    APP_LOGD("ParseParameter key is %{public}s", key.c_str());
+
+    APP_LOGD("start to parse value");
+    ret = CommonFunc::ParseStringPropertyFromObject(env, args, VALUE, true, value);
+    if (!ret || value.empty()) {
+        APP_LOGE("param value is empty");
+        return false;
+    }
+    APP_LOGD("ParseParameter value is %{public}s", value.c_str());
+    return true;
+}
+
+static bool ParseParameters(napi_env env, napi_value args, std::map<std::string, std::string> &parameters)
+{
+    APP_LOGD("start to parse parameters");
+    std::vector<napi_value> valueVec;
+    bool res = CommonFunc::ParsePropertyArray(env, args, PARAMETERS, valueVec);
+    if (!res) {
+        APP_LOGW("parameters type error, using default value");
+        return true;
+    }
+    if (valueVec.empty()) {
+        APP_LOGW("parameters is empty, using default value");
+        return true;
+    }
+    for (const auto &property : valueVec) {
+        std::string key;
+        std::string value;
+        if (!ParseParameter(env, property, key, value)) {
+            APP_LOGE("parse parameter failed");
+            return false;
+        }
+        if (parameters.find(key) != parameters.end()) {
+            APP_LOGE("key(%{public}s) is duplicate", key.c_str());
+            return false;
+        }
+        parameters.emplace(key, value);
+    }
+    return true;
+}
+
 static bool ParsePgoParam(napi_env env, napi_value args, std::string &key, std::string &value)
 {
     APP_LOGD("start to parse moduleName");
@@ -875,6 +926,9 @@ static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
     }
     if (!ParseAdditionalInfo(env, args, installParam.additionalInfo)) {
         APP_LOGW("Parse additionalInfo failed,using default value");
+    }
+    if (!ParseParameters(env, args, installParam.parameters)) {
+        APP_LOGW("Parse parameters failed,using default value");
     }
     return true;
 }

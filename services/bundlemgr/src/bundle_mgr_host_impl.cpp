@@ -1089,7 +1089,8 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         APP_LOGE("invalid hapFilePath");
         return false;
     }
-    if (hapFilePath.find(ServiceConstants::SANDBOX_DATA_PATH) == std::string::npos) {
+    if (hapFilePath.find(ServiceConstants::SANDBOX_DATA_PATH) == std::string::npos &&
+        hapFilePath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == std::string::npos) {
         std::string realPath;
         auto ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
         if (ret != ERR_OK) {
@@ -1130,7 +1131,8 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
         APP_LOGD("invalid hapFilePath");
         return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
-    if (hapFilePath.find(ServiceConstants::SANDBOX_DATA_PATH) == 0) {
+    if (hapFilePath.find(ServiceConstants::SANDBOX_DATA_PATH) == 0 ||
+        hapFilePath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == 0) {
         APP_LOGD("sandbox path");
         return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo, true);
     }
@@ -1167,6 +1169,11 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     if (!ObtainCallingBundleName(bundleName)) {
         APP_LOGE("get calling bundleName failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (hapFilePath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == 0 &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ACCESS_APP_INSTALL_DIR)) {
+        APP_LOGE("verify ACCESS_APP_INSTALL_DIR failed");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
     std::string hapRealPath;
     if (!BundleUtil::RevertToRealPath(hapFilePath, bundleName, hapRealPath)) {

@@ -288,8 +288,14 @@ void BundleInstallerHost::HandleCreateStreamInstaller(MessageParcel &data, Messa
         LOG_E(BMS_TAG_INSTALLER, "cast remote object to status receiver error");
         return;
     }
+    std::vector<std::string> originHapPaths;
+    if (!data.ReadStringVector(&originHapPaths)) {
+        reply.WriteBool(false);
+        LOG_E(BMS_TAG_INSTALLER, "read originPaths failed");
+        return;
+    }
 
-    sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(*installParam, statusReceiver);
+    sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(*installParam, statusReceiver, originHapPaths);
     if (streamInstaller == nullptr) {
         if (!reply.WriteBool(false)) {
             LOG_E(BMS_TAG_INSTALLER, "write result failed");
@@ -589,7 +595,7 @@ ErrCode BundleInstallerHost::StreamInstall(const std::vector<std::string> &bundl
 }
 
 sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const InstallParam &installParam,
-    const sptr<IStatusReceiver> &statusReceiver)
+    const sptr<IStatusReceiver> &statusReceiver, const std::vector<std::string> &originHapPaths)
 {
     if (!CheckBundleInstallerManager(statusReceiver)) {
         LOG_E(BMS_TAG_INSTALLER, "statusReceiver invalid");
@@ -614,7 +620,7 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
-    bool res = streamInstaller->Init(verifiedInstallParam, statusReceiver);
+    bool res = streamInstaller->Init(verifiedInstallParam, statusReceiver, originHapPaths);
     if (!res) {
         LOG_E(BMS_TAG_INSTALLER, "stream installer init failed");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");

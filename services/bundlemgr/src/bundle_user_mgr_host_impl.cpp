@@ -135,6 +135,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
     }
 
     dataMgr->AddUserId(userId);
+    dataMgr->CreateAppInstallDir(userId);
     std::set<PreInstallBundleInfo> preInstallBundleInfos;
     if (!GetAllPreInstallBundleInfos(disallowList, userId, preInstallBundleInfos)) {
         APP_LOGE("GetAllPreInstallBundleInfos failed %{public}d", userId);
@@ -250,6 +251,7 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
         RemoveArkProfile(userId);
         RemoveAsanLogDirectory(userId);
         dataMgr->RemoveUserId(userId);
+        dataMgr->RemoveAppInstallDir(userId);
         return ERR_OK;
     }
 
@@ -258,6 +260,7 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     RemoveArkProfile(userId);
     RemoveAsanLogDirectory(userId);
     dataMgr->RemoveUserId(userId);
+    dataMgr->RemoveAppInstallDir(userId);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
 #endif
