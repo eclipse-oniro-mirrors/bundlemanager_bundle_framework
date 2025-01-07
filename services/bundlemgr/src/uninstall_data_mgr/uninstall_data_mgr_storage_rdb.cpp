@@ -133,7 +133,7 @@ void UninstallDataMgrStorageRdb::TransformStrToInfo(const std::map<std::string, 
         UninstallBundleInfo uninstallBundleInfo;
         nlohmann::json jsonObject = nlohmann::json::parse(data.second, nullptr, false);
         if (jsonObject == nullptr || jsonObject.is_discarded()) {
-            APP_LOGE("error key: %{plublic}s", data.first.c_str());
+            APP_LOGE("error key: %{public}s", data.first.c_str());
             continue;
         }
         from_json(jsonObject, uninstallBundleInfo);
