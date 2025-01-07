@@ -178,6 +178,8 @@ const std::set<std::string> ALLOW_MULTI_ICON_BUNDLE = {
     "com.ohos.contacts"
 };
 constexpr const char* CALLER_NAME_BMS = "bms";
+// group
+constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS
