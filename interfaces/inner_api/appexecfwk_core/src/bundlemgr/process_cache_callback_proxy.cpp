@@ -61,5 +61,33 @@ void ProcessCacheCallbackProxy::OnGetAllBundleCacheFinished(uint64_t cacheStat)
         APP_LOGW("call OnGetAllBundleCacheFinished fail, for transact failed, error code: %{public}d", ret);
     }
 }
+
+void ProcessCacheCallbackProxy::OnCleanAllBundleCacheFinished(bool succeed)
+{
+    APP_LOGI("process delete all bundle cache result: %{public}d", succeed);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(ProcessCacheCallbackProxy::GetDescriptor())) {
+        APP_LOGE("fail to OnCleanAllBundleCacheFinished due to write MessageParcel fail");
+        return;
+    }
+    if (!data.WriteBool(succeed)) {
+        APP_LOGE("fail to call OnCleanAllBundleCacheFinished, for write parcel code failed");
+        return;
+    }
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("fail to call OnCleanAllBundleCacheFinished, for Remote() is nullptr");
+        return;
+    }
+
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(ProcessCacheCallbackInterfaceCode::CLEAN_ALL_BUNDLE_CACHE), data, reply, option);
+    if (ret != NO_ERROR) {
+        APP_LOGW("call OnCleanAllBundleCacheFinished fail, for transact failed, error code: %{public}d", ret);
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

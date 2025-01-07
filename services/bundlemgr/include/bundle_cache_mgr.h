@@ -27,6 +27,7 @@
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "process_cache_callback_interface.h"
+#include "system_ability_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -44,6 +45,11 @@ public:
         std::vector<std::string>, std::vector<int32_t>>> &validBundles,
         const int32_t userId, uint64_t &cacheStat);
     static ErrCode GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback);
+    static ErrCode CleanBundleCloneCache(const std::string &bundleName, int32_t userId,
+        int32_t appCloneIndex, const std::vector<std::string> &moduleNames);
+    static ErrCode CleanBundleCache(const std::vector<std::tuple<std::string,
+        std::vector<std::string>, std::vector<int32_t>>> &validBundles, int32_t userId);
+    static ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback);
 };
 } // AppExecFwk
 } // OHOS

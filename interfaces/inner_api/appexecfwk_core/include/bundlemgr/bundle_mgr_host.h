@@ -681,6 +681,8 @@ private:
 
     ErrCode HandleGetAllBundleCacheStat(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleCleanAllBundleCache(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetExtendResourceManager(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleCheckAbilityEnableInstall(MessageParcel &data, MessageParcel &reply);

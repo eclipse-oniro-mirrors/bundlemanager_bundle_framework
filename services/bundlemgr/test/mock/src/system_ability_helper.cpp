@@ -76,5 +76,13 @@ bool SystemAbilityHelper::UnloadSystemAbility(const int32_t systemAbilityId)
     // mock helper always return true.
     return true;
 }
+
+#ifdef ABILITY_RUNTIME_ENABLE
+bool SystemAbilityHelper::IsAppRunning(const sptr<IAppMgr> appMgrProxy,
+    const std::string &bundleName, int32_t appCloneIndex)
+{
+    return false;
+}
+#endif
 }  // namespace AppExecFwk
 }  // namespace OHOS

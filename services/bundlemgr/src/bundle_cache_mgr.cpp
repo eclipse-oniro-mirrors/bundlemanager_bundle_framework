@@ -19,6 +19,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 
+namespace {
+constexpr size_t INDEX_BUNDLE_NAME = 0;
+constexpr size_t INDEX_MODULE_NAMES = 1;
+constexpr size_t INDEX_CLONE_APP_INDEX = 2;
+}
+
 std::vector<std::string> BundleCacheMgr::GetBundleCachePath(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex, const std::vector<std::string> &moduleNameList)
 {
@@ -62,9 +68,9 @@ void BundleCacheMgr::GetBundleCacheSize(const std::vector<std::tuple<std::string
 {
     for (const auto &item : validBundles) {
         // get cache path for every bundle(contains clone and module)
-        std::string bundleName = std::get<0>(item);
-        std::vector<std::string> moduleNames = std::get<1>(item);
-        std::vector<int32_t> allCloneAppIndex = std::get<2>(item);
+        std::string bundleName = std::get<INDEX_BUNDLE_NAME>(item);
+        std::vector<std::string> moduleNames = std::get<INDEX_MODULE_NAMES>(item);
+        std::vector<int32_t> allCloneAppIndex = std::get<INDEX_CLONE_APP_INDEX>(item);
         for (const auto &appIndex : allCloneAppIndex) {
             std::vector<std::string> cachePaths = GetBundleCachePath(bundleName, userId, appIndex, moduleNames);
             int64_t cacheSize = InstalldClient::GetInstance()->GetDiskUsageFromPath(cachePaths);
@@ -79,29 +85,21 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
     APP_LOGI("start");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
+
     auto userId = AccountHelper::GetCurrentActiveUserId();
     if (userId <= Constants::DEFAULT_USERID) {
         APP_LOGE("Invalid userid: %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
-    std::string bundleName;
-    std::vector<std::string> bundleNames;
     std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
-    std::vector<std::string> bundleCachePaths;
     std::map<std::string, InnerBundleInfo> bundleInfos = dataMgr->GetAllInnerBundleInfos();
     for (const auto &item : bundleInfos) {
         const InnerBundleInfo &info = item.second;
-        bundleName = info.GetBundleName();
-        // add app base and module
-        bundleNames.emplace_back(bundleName);
-        // add module
+        std::string bundleName = info.GetBundleName();
         std::vector<std::string> moduleNameList;
         info.GetModuleNames(moduleNameList);
-        // add clone
         std::vector<int32_t> allAppIndexes = {0};
         std::vector<int32_t> cloneAppIndexes = dataMgr->GetCloneAppIndexesByInnerBundleInfo(info, userId);
         allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
@@ -132,5 +130,65 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
     return ERR_OK;
 }
 
+ErrCode BundleCacheMgr::CleanBundleCloneCache(const std::string &bundleName, int32_t userId,
+    int32_t appCloneIndex, const std::vector<std::string> &moduleNames)
+{
+    std::vector<std::string> cachePaths = GetBundleCachePath(bundleName, userId, appCloneIndex, moduleNames);
+    int32_t result = ERR_OK;
+    for (const auto& cache : cachePaths) {
+        int32_t ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
+        if (ret != ERR_OK) {
+            result = ret;
+            APP_LOGW("CleanBundleDataDir failed, path: %{private}s", cache.c_str());
+        }
+    }
+    return result;
+}
+
+ErrCode BundleCacheMgr::CleanBundleCache(const std::vector<std::tuple<std::string,
+    std::vector<std::string>, std::vector<int32_t>>> &validBundles, int32_t userId)
+{
+    int32_t ret = ERR_OK;
+    for (const auto &item : validBundles) {
+        // get cache path for every bundle(contains clone and module)
+        std::string bundleName = std::get<INDEX_BUNDLE_NAME>(item);
+        std::vector<std::string> moduleNames = std::get<INDEX_MODULE_NAMES>(item);
+        std::vector<int32_t> allCloneAppIndex = std::get<INDEX_CLONE_APP_INDEX>(item);
+        for (const auto &appIndex : allCloneAppIndex) {
+            ret = CleanBundleCloneCache(bundleName, userId, appIndex, moduleNames);
+            if (ERR_OK != ret) {
+                APP_LOGW("CleanNoRunningCloneCache %{public}s failed, userId: %{public}d, appIndex: %{public}d",
+                    bundleName.c_str(), userId, appIndex);
+            }
+        }
+    }
+    return ret;
+}
+ 
+ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
+{
+    APP_LOGI("start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId <= Constants::DEFAULT_USERID) {
+        APP_LOGE("Invalid userid: %{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
+    dataMgr->GetCleanBundleCacheInfos(userId, validBundles);
+    if (!validBundles.empty()) {
+        auto CleanAllBundleCache = [validBundles, userId, processCacheCallback]() {
+            bool succeed = true;
+            APP_LOGI("thread for CleanBundleCache start");
+            succeed = CleanBundleCache(validBundles, userId);
+            processCacheCallback->OnCleanAllBundleCacheFinished(succeed);
+        };
+        std::thread(CleanAllBundleCache).detach();
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

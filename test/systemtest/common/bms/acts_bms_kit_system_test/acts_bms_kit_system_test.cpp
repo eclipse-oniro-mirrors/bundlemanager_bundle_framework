@@ -173,14 +173,17 @@ void BundleStatusCallbackImpl::OnBundleStateChanged(
 
 class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
 public:
-    ProcessCacheCallbackImpl() : cacheStat_(std::make_shared<std::promise<uint64_t>>())
-    {}
+    ProcessCacheCallbackImpl() : cacheStat_(std::make_shared<std::promise<uint64_t>>()),
+        succeed_(std::make_shared<std::promise<bool>>()) {}
     ~ProcessCacheCallbackImpl() override
     {}
     void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
+    void OnCleanAllBundleCacheFinished(bool succeed) override;
     uint64_t GetCacheStat();
+    bool GetDelRet();
 private:
     std::shared_ptr<std::promise<uint64_t>> cacheStat_;
+    std::shared_ptr<std::promise<bool>> succeed_;
     DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackImpl);
 };
  
@@ -188,6 +191,13 @@ void ProcessCacheCallbackImpl::OnGetAllBundleCacheFinished(uint64_t cacheStat)
 {
     if (cacheStat_ != nullptr) {
         cacheStat_->set_value(cacheStat);
+    }
+}
+
+void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(bool succeed)
+{
+    if (succeed_ != nullptr) {
+        succeed_->set_value(succeed);
     }
 }
  
@@ -202,6 +212,19 @@ uint64_t ProcessCacheCallbackImpl::GetCacheStat()
         return future.get();
     }
     return 0;
+};
+
+bool ProcessCacheCallbackImpl::GetDelRet()
+{
+    if (succeed_ != nullptr) {
+        auto future = succeed_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return false;
+        }
+        return future.get();
+    }
+    return false;
 };
 
 class CleanCacheCallBackImpl : public CleanCacheCallbackHost {
@@ -9975,6 +9998,35 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleCacheStat_0001, Function | MediumTest
         getCache = nullptr;
     }
     std::cout << "END GetAllBundleCacheStat_0001" << std::endl;
+}
+
+/**
+ * @tc.number: CleanAllBundleCache_0001
+ * @tc.name: test CleanAllBundleCache interface
+ * @tc.desc: 1. call CleanAllBundleCache
+ */
+HWTEST_F(ActsBmsKitSystemTest, CleanAllBundleCache_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START CleanAllBundleCache_0001" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        setuid(Constants::STORAGE_MANAGER_UID);
+        sptr<ProcessCacheCallbackImpl> delCache = new (std::nothrow) ProcessCacheCallbackImpl();
+        ErrCode ret;
+        if (delCache == nullptr) {
+            ret = bundleMgrProxy->CleanAllBundleCache(delCache);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+        }
+        ret = bundleMgrProxy->CleanAllBundleCache(delCache);
+        EXPECT_EQ(ret, ERR_OK);
+        setuid(Constants::FOUNDATION_UID);
+        ret = bundleMgrProxy->CleanAllBundleCache(delCache);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        delete delCache;
+        delCache = nullptr;
+    }
+    std::cout << "END CleanAllBundleCache_0001" << std::endl;
 }
 
 }  // namespace AppExecFwk

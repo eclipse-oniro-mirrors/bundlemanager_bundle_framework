@@ -106,5 +106,22 @@ bool SystemAbilityHelper::UnloadSystemAbility(const int32_t systemAbilityId)
     APP_LOGE("fail unload %{public}d from system ability manager", systemAbilityId);
     return false;
 }
+
+#ifdef ABILITY_RUNTIME_ENABLE
+bool SystemAbilityHelper::IsAppRunning(const sptr<IAppMgr> appMgrProxy,
+    const std::string &bundleName, int32_t appCloneIndex)
+{
+    bool running = true;
+    if (appMgrProxy == nullptr) {
+        APP_LOGW("CleanBundleCache fail to find the app mgr service to check app is running");
+        return running;
+    }
+    int32_t result = appMgrProxy->IsAppRunning(bundleName, appCloneIndex, running);
+    if (result != 0) {
+        APP_LOGW("CleanBundleCache IsAppRunning failed");
+    }
+    return running;
+}
+#endif
 }  // namespace AppExecFwk
 }  // namespace OHOS
