@@ -46,6 +46,7 @@ struct ExtensionFormInfo {
     FormWindow window;
 
     std::vector<int32_t> supportDimensions {};
+    std::vector<int32_t> conditionUpdate {};
     std::vector<FormCustomizeData> metadata {};
     std::vector<int32_t> supportShapes {};
     std::vector<uint32_t> previewImages {};
