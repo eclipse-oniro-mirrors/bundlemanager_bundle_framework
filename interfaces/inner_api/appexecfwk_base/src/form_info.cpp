@@ -70,6 +70,7 @@ const char* JSON_KEY_SUPPORT_SHAPES = "supportShapes";
 const char* JSON_KEY_VERSION_CODE = "versionCode";
 const char* JSON_KEY_BUNDLE_TYPE = "bundleType";
 const char* JSON_KEY_PREVIEW_IMAGES = "previewImages";
+const char* JSON_KEY_CONDITION_UPDATE = "conditionUpdate";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -116,6 +117,9 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     }
     for (const auto &previewImage : formInfo.previewImages) {
         formPreviewImages.push_back(previewImage);
+    }
+    for (const auto &conditionUpdateType : formInfo.conditionUpdate) {
+        conditionUpdate.push_back(conditionUpdateType);
     }
     dataProxyEnabled = formInfo.dataProxyEnabled;
     isDynamic = formInfo.isDynamic;
@@ -230,6 +234,12 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < formPreviewImagesSize; i++) {
         formPreviewImages.emplace_back(parcel.ReadUint32());
     }
+    int32_t conditionUpdateSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, conditionUpdateSize);
+    CONTAINER_SECURITY_VERIFY(parcel, conditionUpdateSize, &conditionUpdate);
+    for (int32_t i = 0; i < conditionUpdateSize; i++) {
+        conditionUpdate.emplace_back(parcel.ReadInt32());
+    }
     return true;
 }
 
@@ -318,6 +328,12 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     for (auto i = 0; i < formPreviewImagesSize; i++) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, formPreviewImages[i]);
     }
+
+    const auto conditionUpdateSize = static_cast<int32_t>(conditionUpdate.size());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, conditionUpdateSize);
+    for (auto i = 0; i < conditionUpdateSize; i++) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, conditionUpdate[i]);
+    }
     return true;
 }
 
@@ -385,6 +401,7 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_SUPPORT_SHAPES, formInfo.supportShapes},
         {JSON_KEY_VERSION_CODE, formInfo.versionCode},
         {JSON_KEY_BUNDLE_TYPE, formInfo.bundleType},
+        {JSON_KEY_CONDITION_UPDATE, formInfo.conditionUpdate},
         {JSON_KEY_PREVIEW_IMAGES, formInfo.formPreviewImages}
     };
 }
@@ -701,6 +718,14 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         jsonObjectEnd,
         JSON_KEY_PREVIEW_IMAGES,
         formInfo.formPreviewImages,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::NUMBER);
+    GetValueIfFindKey<std::vector<int32_t>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_CONDITION_UPDATE,
+        formInfo.conditionUpdate,
         JsonType::ARRAY,
         false,
         parseResult,
