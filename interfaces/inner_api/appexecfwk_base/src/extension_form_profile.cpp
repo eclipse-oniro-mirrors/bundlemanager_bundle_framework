@@ -45,6 +45,16 @@ const FormsColorMode FORM_COLOR_MODE_MAP_VALUE[] = {
     FormsColorMode::DARK_MODE,
     FormsColorMode::LIGHT_MODE
 };
+constexpr const char* FORM_RENDERING_MODE_MAP_KEY[] = {
+    "autoColor",
+    "fullColor",
+    "singleColor"
+};
+const FormsRenderingMode FORM_RENDERING_MODE_MAP_VALUE[] = {
+    FormsRenderingMode::AUTO_COLOR,
+    FormsRenderingMode::FULL_COLOR,
+    FormsRenderingMode::SINGLE_COLOR
+};
 constexpr const char* DIMENSION_MAP_KEY[] = {
     "1*2",
     "2*2",
@@ -112,6 +122,7 @@ struct ExtensionFormProfileInfo {
     std::string src;
     Window window;
     std::string colorMode = "auto";
+    std::string renderingMode = "fullColor";
     std::string formConfigAbility;
     std::string type = "JS";
     std::string uiSyntax = "hml";
@@ -211,6 +222,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         jsonObjectEnd,
         ExtensionFormProfileReader::COLOR_MODE,
         extensionFormProfileInfo.colorMode,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::RENDERING_MODE,
+        extensionFormProfileInfo.renderingMode,
         false,
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
@@ -468,6 +485,13 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     for (size_t i = 0; i < len; i++) {
         if (FORM_COLOR_MODE_MAP_KEY[i] == form.colorMode)
             info.colorMode = FORM_COLOR_MODE_MAP_VALUE[i];
+    }
+
+    len = sizeof(FORM_RENDERING_MODE_MAP_KEY) / sizeof(FORM_RENDERING_MODE_MAP_KEY[0]);
+    for (size_t i = 0; i < len; i++) {
+        if (FORM_RENDERING_MODE_MAP_KEY[i] == form.renderingMode) {
+            info.renderingMode = FORM_RENDERING_MODE_MAP_VALUE[i];
+        }
     }
 
     len = sizeof(FORM_TYPE_MAP_KEY) / sizeof(FORM_TYPE_MAP_KEY[0]);
