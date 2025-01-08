@@ -29,6 +29,7 @@ std::mutex g_mutex;
 
 const int8_t MAX_FORM_NAME = 127;
 const int8_t DEFAULT_RECT_SHAPE = 1;
+const int8_t DEFAULT_CONDITION_TYPE = 0;
 #ifndef FORM_DIMENSION_2_3
 const int8_t DIMENSION_2_3 = 8;
 #endif
@@ -74,6 +75,12 @@ constexpr const char* SHAPE_MAP_KEY[] = {
 const int32_t SHAPE_MAP_VALUE[] = {
     1,
     2
+};
+constexpr const char* CONDITION_MAP_KEY[] = {
+    "network",
+};
+const int32_t CONDITION_MAP_VALUE[] = {
+    1,
 };
 constexpr const char* FORM_TYPE_MAP_KEY[] = {
     "JS",
@@ -127,6 +134,7 @@ struct ExtensionFormProfileInfo {
     bool fontScaleFollowSystem = true;
     std::vector<std::string> supportShapes {};
     std::vector<std::string> supportDimensions {};
+    std::vector<std::string> conditionUpdate {};
     std::vector<Metadata> metadata {};
     std::vector<std::string> previewImages {};
 };
@@ -319,6 +327,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         ArrayType::STRING);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
+        ExtensionFormProfileReader::CONDITION_UPDATE,
+        extensionFormProfileInfo.conditionUpdate,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
         ExtensionFormProfileReader::PREVIEW_IMAGES,
         extensionFormProfileInfo.previewImages,
         JsonType::ARRAY,
@@ -451,6 +467,32 @@ bool GetPreviewImages(const ExtensionFormProfileInfo &form, ExtensionFormInfo &i
     return true;
 }
 
+bool GetConditionUpdate(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
+    std::set<int32_t> conditionUpdateSet {};
+    size_t len = sizeof(CONDITION_MAP_KEY) / sizeof(CONDITION_MAP_KEY[0]);
+    size_t i = 0;
+    for (const auto &conditionUpdate: form.conditionUpdate) {
+        for (i = 0; i < len; i++) {
+            if (CONDITION_MAP_KEY[i] == conditionUpdate) {
+                break;
+            }
+        }
+        if (i == len) {
+            APP_LOGW("conditionUpdate invalid form %{public}s", form.name.c_str());
+            continue;
+        }
+        conditionUpdateSet.emplace(CONDITION_MAP_VALUE[i]);
+    }
+    if (conditionUpdateSet.empty()) {
+        conditionUpdateSet.emplace(DEFAULT_CONDITION_TYPE);
+    }
+    for (const auto &conditionUpdate: conditionUpdateSet) {
+        info.conditionUpdate.emplace_back(conditionUpdate);
+    }
+    return true;
+}
+
 bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
     if (!CheckFormNameIsValid(form.name)) {
@@ -501,6 +543,9 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     info.fontScaleFollowSystem = form.fontScaleFollowSystem;
 
     if (!GetSupportShapes(form, info)) {
+        return false;
+    }
+    if (!GetConditionUpdate(form, info)) {
         return false;
     }
     if (!GetPreviewImages(form, info)) {
