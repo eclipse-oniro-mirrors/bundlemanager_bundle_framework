@@ -43,6 +43,7 @@ constexpr const char* SCHEDULED_UPDATE_TIME = "scheduledUpdateTime";
 constexpr const char* UPDATE_DURATION = "updateDuration";
 constexpr const char* DEFAULT_DIMENSION = "defaultDimension";
 constexpr const char* SUPPORT_DIMENSIONS = "supportDimensions";
+constexpr const char* CONDITION_UPDATE = "conditionUpdate";
 constexpr const char* METADATA = "metadata";
 constexpr const char* PREVIEW_IMAGES = "previewImages";
 constexpr const char* METADATA_NAME = "name";
