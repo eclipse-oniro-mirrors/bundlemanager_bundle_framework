@@ -10786,7 +10786,7 @@ HWTEST_F(BmsBundleKitServiceTest, SystemAbilityHelper_0400, Function | SmallTest
 {
     SystemAbilityHelper helper;
 
-    std::string bundleName ="com.ohos.settings" ;
+    std::string bundleName = "com.ohos.settings" ;
     int32_t uid = 1;
     int32_t appIndex = 100;
     bool ret = helper.UpgradeApp(bundleName, uid, appIndex);
