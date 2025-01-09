@@ -74,6 +74,7 @@ const char* REQUESTPERMISSION_MODULE_NAME = "moduleName";
 const char* SIGNATUREINFO_APPID = "appId";
 const char* SIGNATUREINFO_FINGERPRINT = "fingerprint";
 const char* BUNDLE_INFO_APP_INDEX = "appIndex";
+const char* BUNDLE_INFO_ERROR_CODE = "errorCode";
 const char* BUNDLE_INFO_SIGNATURE_INFO = "signatureInfo";
 const char* OVERLAY_TYPE = "overlayType";
 const char* OVERLAY_BUNDLE_INFO = "overlayBundleInfos";
@@ -180,6 +181,42 @@ SignatureInfo *SignatureInfo::Unmarshalling(Parcel &parcel)
         info = nullptr;
     }
     return info;
+}
+
+bool SimpleAppInfo::ReadFromParcel(Parcel &parcel)
+{
+    uid = parcel.ReadInt32();
+    bundleName = Str16ToStr8(parcel.ReadString16());
+    appIndex = parcel.ReadInt32();
+    ret = parcel.ReadInt32();
+    return true;
+}
+
+bool SimpleAppInfo::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, ret);
+    return true;
+}
+
+SimpleAppInfo *SimpleAppInfo::Unmarshalling(Parcel &parcel)
+{
+    SimpleAppInfo *info = new (std::nothrow) SimpleAppInfo();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+std::string SimpleAppInfo::ToString() const
+{
+    nlohmann::json jsonObject;
+    to_json(jsonObject, *this);
+    return jsonObject.dump();
 }
 
 bool BundleInfo::ReadFromParcel(Parcel &parcel)
@@ -524,6 +561,16 @@ void to_json(nlohmann::json &jsonObject, const SignatureInfo &signatureInfo)
         {SIGNATUREINFO_APPID, signatureInfo.appId},
         {SIGNATUREINFO_FINGERPRINT, signatureInfo.fingerprint},
         {APP_IDENTIFIER, signatureInfo.appIdentifier}
+    };
+}
+
+void to_json(nlohmann::json &jsonObject, const SimpleAppInfo &simpleAppInfo)
+{
+    jsonObject = nlohmann::json {
+        {BUNDLE_INFO_UID, simpleAppInfo.uid},
+        {BUNDLE_INFO_NAME, simpleAppInfo.bundleName},
+        {BUNDLE_INFO_APP_INDEX, simpleAppInfo.appIndex},
+        {BUNDLE_INFO_ERROR_CODE, simpleAppInfo.ret}
     };
 }
 
