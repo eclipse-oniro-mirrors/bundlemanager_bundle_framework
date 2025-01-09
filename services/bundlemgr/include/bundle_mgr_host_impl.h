@@ -233,6 +233,14 @@ public:
      */
     virtual ErrCode GetNameAndIndexForUid(const int uid, std::string &bundleName, int32_t &appIndex) override;
     /**
+     * @brief Obtains the formal name associated with the given UID.
+     * @param uids Indicates the uid list.
+     * @param simpleAppInfo Indicates all of the obtained SimpleAppInfo objects.
+     * @return Returns ERR_OK if execute success; returns errCode otherwise.
+     */
+    virtual ErrCode GetSimpleAppInfoForUid(
+        const std::vector<std::int32_t> &uids, std::vector<SimpleAppInfo> &simpleAppInfo) override;
+    /**
      * @brief Obtains an array of all group IDs associated with a specified bundle.
      * @param bundleName Indicates the bundle name.
      * @param gids Indicates the group IDs associated with the specified bundle.
@@ -861,6 +869,8 @@ public:
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
 
     virtual ErrCode GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback) override;
+
+    virtual ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback) override;
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;

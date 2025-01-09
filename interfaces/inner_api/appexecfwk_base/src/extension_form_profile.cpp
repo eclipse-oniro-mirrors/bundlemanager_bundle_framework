@@ -393,7 +393,9 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
         supportDimensionSet.emplace(dimensionItem);
     }
     for (i = 0; i < len; i++) {
-        if (DIMENSION_MAP_KEY[i] == form.defaultDimension) break;
+        if (DIMENSION_MAP_KEY[i] == form.defaultDimension) {
+            break;
+        }
     }
     if (i == len) {
         APP_LOGW("defaultDimension invalid form %{public}s", form.name.c_str());

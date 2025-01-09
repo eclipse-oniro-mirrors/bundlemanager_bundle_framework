@@ -28,12 +28,12 @@ QuickFixer::QuickFixer(const sptr<IQuickFixStatusCallback> &statusCallback) : st
 }
 
 void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths, bool isDebug,
-    const std::string &targetPath)
+    const std::string &targetPath, bool isReplace)
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "DeployQuickFix start");
 
     std::unique_ptr<QuickFixDeployer> deployer = std::make_unique<QuickFixDeployer>(
-        bundleFilePaths, isDebug, targetPath);
+        bundleFilePaths, isDebug, targetPath, isReplace);
     auto ret = deployer->Execute();
 
     // callback operation

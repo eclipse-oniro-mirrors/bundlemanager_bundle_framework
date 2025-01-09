@@ -28,7 +28,7 @@ namespace AppExecFwk {
 class QuickFixDeployer final : public IQuickFix {
 public:
     QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, bool isDebug = false,
-        const std::string &targetPath = "");
+        const std::string &targetPath = "", bool isReplace = false);
 
     virtual ~QuickFixDeployer() = default;
 
@@ -123,12 +123,15 @@ private:
 
     ErrCode CheckHqfResourceIsValid(const std::vector<std::string> bundleFilePaths, const BundleInfo &bundleInfo);
 
+    ErrCode CheckReplaceMode(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
+
     ErrCode ExtractQuickFixResFile(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
 
     std::vector<std::string> patchPaths_;
     bool isDebug_ = false;
     std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
     std::string targetPath_ = "";
+    bool isReplace_ = false;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
     DeployQuickFixResult deployQuickFixResult_;
 

@@ -50,13 +50,14 @@ bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std:
 
     int index = 0;
     while (index + itemLen <= totalLen) {
-        char item[itemLen];
+        char item[itemLen + 1];
         if (strncpy_s(item, sizeof(item), buf + index, itemLen) != 0) {
             APP_LOGE("Parse rpcid failed due to strncpy_s error");
             return false;
         }
 
-        sysCaps.emplace_back((std::string)item, 0, itemLen);
+        item[itemLen] = '\0';
+        sysCaps.emplace_back(std::string(item));
         index += itemLen;
     }
 

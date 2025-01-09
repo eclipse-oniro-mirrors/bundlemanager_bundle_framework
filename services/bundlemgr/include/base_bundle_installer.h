@@ -750,9 +750,7 @@ private:
     ErrCode InnerProcessUpdateHapToken(const bool isOldSystemApp);
     bool InitDataMgr();
     std::string GetInstallSource(const InstallParam &installParam) const;
-    void SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
-        const InstallParam &installParam) const;
-    void SetApplicationFlagsForPreinstallSource(std::unordered_map<std::string, InnerBundleInfo> &infos,
+    void SetApplicationFlagsAndInstallSource(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InstallParam &installParam) const;
     bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId) const;
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName) const;
@@ -794,6 +792,8 @@ private:
     std::string GetDeveloperId(const std::string &bundleName);
     void GetModuleNames(const std::string &bundleName, std::vector<std::string> &moduleNames);
     void UpdateKillApplicationProcess(const InnerBundleInfo &innerBundleInfo);
+    ErrCode CheckPreAppAllowHdcInstall(const InstallParam &installParam,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

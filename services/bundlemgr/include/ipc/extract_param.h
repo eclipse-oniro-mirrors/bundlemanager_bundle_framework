@@ -36,6 +36,7 @@ struct ExtractParam : public Parcelable {
     std::string targetPath;
     std::string cpuAbi;
     ExtractFileType extractFileType = ExtractFileType::ALL;
+    bool needRemoveOld = false;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);

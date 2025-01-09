@@ -4999,6 +4999,84 @@ HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0003, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: CheckReplaceMode_0001
+ * Function: CheckReplaceMode
+ * @tc.name: test CheckReplaceMode
+ * @tc.desc: CheckReplaceMode
+ */
+HWTEST_F(BmsBundleQuickFixTest, CheckReplaceMode_0001, Function | SmallTest | Level0)
+{
+    std::vector<std::string> path;
+    auto deployer = std::make_shared<QuickFixDeployer>(path, true, "", true);
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        HqfInfo hqfInfo;
+        hqfInfo.moduleName = "entry";
+        AppqfInfo deployingAppqfInfo;
+        deployingAppqfInfo.hqfInfos.push_back(hqfInfo);
+        AppQuickFix appQuickFix;
+        appQuickFix.deployingAppqfInfo = deployingAppqfInfo;
+
+        HapModuleInfo info;
+        info.moduleName = "entry";
+        info.compressNativeLibs = true;
+        BundleInfo bundleInfo;
+        bundleInfo.hapModuleInfos.emplace_back(info);
+
+        auto ret = deployer->CheckReplaceMode(appQuickFix, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+
+        bundleInfo.hapModuleInfos[0].compressNativeLibs = false;
+        ret = deployer->CheckReplaceMode(appQuickFix, bundleInfo);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_REPLACE_MODE_WITH_COMPRESS_LIB_FAILED);
+
+        bundleInfo.hapModuleInfos[0].compressNativeLibs = true;
+        appQuickFix.deployingAppqfInfo.hqfInfos[0].moduleName = "entry1";
+        ret = deployer->CheckReplaceMode(appQuickFix, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: CheckReplaceMode_0002
+ * Function: CheckReplaceMode
+ * @tc.name: test CheckReplaceMode
+ * @tc.desc: CheckReplaceMode
+ */
+HWTEST_F(BmsBundleQuickFixTest, CheckReplaceMode_0002, Function | SmallTest | Level0)
+{
+    std::vector<std::string> path;
+    auto deployer = std::make_shared<QuickFixDeployer>(path, true, "", false);
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        HqfInfo hqfInfo;
+        hqfInfo.moduleName = "entry";
+        AppqfInfo deployingAppqfInfo;
+        deployingAppqfInfo.hqfInfos.push_back(hqfInfo);
+        AppQuickFix appQuickFix;
+        appQuickFix.deployingAppqfInfo = deployingAppqfInfo;
+
+        HapModuleInfo info;
+        info.moduleName = "entry";
+        info.compressNativeLibs = true;
+        BundleInfo bundleInfo;
+        bundleInfo.hapModuleInfos.emplace_back(info);
+
+        auto ret = deployer->CheckReplaceMode(appQuickFix, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+
+        bundleInfo.hapModuleInfos[0].compressNativeLibs = false;
+        ret = deployer->CheckReplaceMode(appQuickFix, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+
+        bundleInfo.hapModuleInfos[0].compressNativeLibs = true;
+        appQuickFix.deployingAppqfInfo.hqfInfos[0].moduleName = "entry1";
+        ret = deployer->CheckReplaceMode(appQuickFix, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+}
+
+/**
  * @tc.number: QuickFixBootScanner_0200
  * @tc.name: Test QuickFixBootScanner
  * @tc.desc: 1.Test SetQuickFixState

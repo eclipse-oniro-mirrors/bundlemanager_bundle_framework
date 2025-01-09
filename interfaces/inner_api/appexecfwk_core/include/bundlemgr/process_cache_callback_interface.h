@@ -26,9 +26,15 @@ public:
 
     /**
      * @brief Called when get all bundle cache files progress finished.
-     * @param succeeded Indicates the result of progress.
+     * @param cacheStat Indicates the result of progress.
      */
     virtual void OnGetAllBundleCacheFinished(uint64_t cacheStat) = 0;
+
+    /**
+     * @brief Called when del all bundle cache files progress finished.
+     * @param succeeded Indicates the result of progress.
+     */
+    virtual void OnCleanAllBundleCacheFinished(int32_t resulted) = 0;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

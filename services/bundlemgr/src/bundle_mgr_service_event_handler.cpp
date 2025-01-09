@@ -343,6 +343,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_BACK_UP_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
+    UpdateOtaFlag(OTAFlag::CHECK_INSTALL_SOURCE);
     PerfProfile::GetInstance().Dump();
 }
 
@@ -539,6 +540,10 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
         installParam.userId = Constants::ALL_USERID;
         installParam.installFlag = InstallFlag::REPLACE_EXISTING;
         sptr<InnerReceiverImpl> innerReceiverImpl(new (std::nothrow) InnerReceiverImpl());
+        if (innerReceiverImpl == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "InnerReceiverImpl create fail");
+            continue;
+        }
         innerReceiverImpl->SetBundleName(hapPaths.first);
         std::vector<std::string> tempHaps;
         MoveTempPath(hapPaths.second, hapPaths.first, tempHaps);
@@ -1208,6 +1213,7 @@ void BMSEventHandler::ProcessRebootBundle()
     CheckAndCreateShareFilesSubDataDirs();
     RefreshQuotaForAllUid();
     ProcessCheckRecoverableApplicationInfo();
+    ProcessCheckInstallSource();
     // Driver update may cause shader cache invalidity and need to be cleared
     CleanAllBundleShaderCache();
 }
@@ -1605,6 +1611,60 @@ void BMSEventHandler::InnerProcessCheckRecoverableApplicationInfo()
         }
         dataMgr->SavePreInstallBundleInfo(preInstallBundleInfo.GetBundleName(), preInstallBundleInfo);
     }
+}
+
+void BMSEventHandler::ProcessCheckInstallSource()
+{
+    bool hasCheck = false;
+    CheckOtaFlag(OTAFlag::CHECK_INSTALL_SOURCE, hasCheck);
+    if (hasCheck) {
+        LOG_D(BMS_TAG_DEFAULT, "install source has checked");
+        return;
+    }
+    LOG_D(BMS_TAG_DEFAULT, "Need to check install source");
+    InnerProcessCheckInstallSource();
+    UpdateOtaFlag(OTAFlag::CHECK_INSTALL_SOURCE);
+}
+
+void BMSEventHandler::InnerProcessCheckInstallSource()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    for (const auto &preInstallBundleInfo : preInstallBundleInfos) {
+        InnerBundleInfo innerBundleInfo;
+        if (!dataMgr->FetchInnerBundleInfo(preInstallBundleInfo.GetBundleName(), innerBundleInfo)) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "update installSorce FetchInnerBundleInfo fail -n %{public}s",
+                preInstallBundleInfo.GetBundleName().c_str());
+            continue;
+        }
+        std::string installSource = ConvertApplicationFlagToInstallSource(innerBundleInfo.GetApplicationFlags());
+        if (installSource.empty()) {
+            continue;
+        }
+        innerBundleInfo.SetInstallSource(installSource);
+        if (!dataMgr->UpdateInnerBundleInfo(innerBundleInfo)) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "update installSorce UpdateInnerBundleInfo fail -n %{public}s",
+                preInstallBundleInfo.GetBundleName().c_str());
+        }
+    }
+}
+
+std::string BMSEventHandler::ConvertApplicationFlagToInstallSource(int32_t flag)
+{
+    if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_BOOT_INSTALLED)) {
+        return ServiceConstants::INSTALL_SOURCE_PREINSTALL;
+    }
+    if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_OTA_INSTALLED)) {
+        return ServiceConstants::INSTALL_SOURCE_OTA;
+    }
+    if (static_cast<uint32_t>(flag) & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_RECOVER_INSTALLED)) {
+        return ServiceConstants::INSTALL_SOURCE_RECOVERY;
+    }
+    return Constants::EMPTY_STRING;
 }
 
 static void SendToStorageQuota(const std::string &bundleName, const int32_t uid,
@@ -3468,6 +3528,8 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     appInfo.allowEnableNotification = preBundleConfigInfo.allowEnableNotification;
     appInfo.hideDesktopIcon = preBundleConfigInfo.hideDesktopIcon;
     appInfo.allowMultiProcess = preBundleConfigInfo.allowMultiProcess;
+    appInfo.userDataClearable = preBundleConfigInfo.userDataClearable;
+    appInfo.formVisibleNotify = preBundleConfigInfo.formVisibleNotify;
     dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
 }
 #endif

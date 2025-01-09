@@ -50,7 +50,7 @@ bool GetData(void *&buffer, size_t size, const void *data)
         APP_LOGE("GetData failed due to null data");
         return false;
     }
-    if (size == 0) {
+    if (size == 0 || size > MAX_PARCEL_CAPACITY) {
         APP_LOGE("GetData failed due to zero size");
         return false;
     }
@@ -831,6 +831,29 @@ ErrCode BundleMgrProxy::GetNameAndIndexForUid(const int32_t uid, std::string &bu
     bundleName = reply.ReadString();
     appIndex = reply.ReadInt32();
     return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::GetSimpleAppInfoForUid(
+    const std::vector<std::int32_t> &uids, std::vector<SimpleAppInfo> &simpleAppInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetSimpleAppInfoForUid list");
+    if (uids.empty()) {
+        APP_LOGE("failed to GetSimpleAppInfoForUid list due to uids empty");
+        return ERR_APPEXECFWK_INVALID_UID;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetSimpleAppInfoForUid list due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32Vector(uids)) {
+        APP_LOGE("write uids count failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfosWithErrCode<SimpleAppInfo>(
+        BundleMgrInterfaceCode::GET_SIMPLE_APP_INFO_FOR_UID, data, simpleAppInfo);
 }
 
 bool BundleMgrProxy::GetBundleGids(const std::string &bundleName, std::vector<int> &gids)
@@ -5428,6 +5451,37 @@ ErrCode BundleMgrProxy::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
     ErrCode res = reply.ReadInt32();
     if (res != ERR_OK) {
         APP_LOGE("fail to GetAllBundleCacheStat from reply: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
+{
+    APP_LOGI("CleanAllBundleCache start");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (processCacheCallback == nullptr) {
+        APP_LOGE("fail to CleanBundleCacheFiles due to params error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to CleanAllBundleCache due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteRemoteObject(processCacheCallback->AsObject())) {
+        APP_LOGE("fail to CleanAllBundleCache, for write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CLEAN_ALL_BUNDLE_CACHE, data, reply)) {
+        APP_LOGE("fail to CleanAllBundleCache from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    ErrCode res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("fail to CleanAllBundleCache from reply: %{public}d", res);
         return res;
     }
     return ERR_OK;

@@ -105,7 +105,7 @@ constexpr const char* ENTITY_HOME = "entity.system.home";
 constexpr uint8_t MAX_BUNDLE_NAME = 128;
 constexpr uint8_t MIN_BUNDLE_NAME = 7;
 constexpr uint8_t MAX_JSON_ELEMENT_LENGTH = 255;
-constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 512;
+constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 1024;
 
 constexpr uint16_t MAX_JSON_STRING_LENGTH = 4096;
 constexpr const char* UID = "uid";

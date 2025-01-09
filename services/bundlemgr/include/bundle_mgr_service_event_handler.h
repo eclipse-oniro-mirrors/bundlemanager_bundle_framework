@@ -52,6 +52,7 @@ enum OTAFlag : uint32_t {
     CHECK_CLOUD_SHADER_DIR = 0x00000800,
     CHECK_BACK_UP_DIR = 0x00001000,
     CHECK_RECOVERABLE_APPLICATION_INFO = 0x00002000,
+    CHECK_INSTALL_SOURCE = 0x00004000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -530,6 +531,9 @@ private:
     void ProcessNewBackupDir();
     void ProcessCheckRecoverableApplicationInfo();
     void InnerProcessCheckRecoverableApplicationInfo();
+    void ProcessCheckInstallSource();
+    void InnerProcessCheckInstallSource();
+    std::string ConvertApplicationFlagToInstallSource(int32_t flag);
 
     bool InnerProcessUninstallForExistPreBundle(const BundleInfo &installedInfo);
 

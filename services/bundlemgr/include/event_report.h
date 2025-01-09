@@ -79,10 +79,12 @@ enum HiSysEventType : uint8_t {
 
 enum class UserEventType : uint8_t {
     UNKNOW = 0,
-    CREATE_START,
-    CREATE_END,
-    REMOVE_START,
-    REMOVE_END,
+    CREATE_START = 1,
+    CREATE_END = 2,
+    REMOVE_START = 3,
+    REMOVE_END = 4,
+    CREATE_WITH_SKIP_PRE_INSTALL_START = 5,
+    CREATE_WITH_SKIP_PRE_INSTALL_END = 6,
 };
 
 enum class ACTION_TYPE_ENUM : uint8_t {

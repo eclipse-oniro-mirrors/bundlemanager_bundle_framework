@@ -195,6 +195,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_DIR_BY_BUNDLENAME_AND_APPINDEX = 169,
     GET_ALL_BUNDLE_DIRS = 170,
     GET_ALL_BUNDLE_CACHE = 171,
+    CLEAN_ALL_BUNDLE_CACHE = 172,
+    GET_SIMPLE_APP_INFO_FOR_UID = 173,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -273,7 +275,7 @@ enum class CleanCacheCallbackInterfaceCode : uint8_t {
 /* SAID: 401-27 Interface No.26 subservice also provides the following interfaces */
 enum class ProcessCacheCallbackInterfaceCode : uint8_t {
     GET_ALL_BUNDLE_CACHE = 0,
-    DEL_ALL_BUNDLE_CACHE = 1,
+    CLEAN_ALL_BUNDLE_CACHE = 1,
 };
 
 /* SAID: 401-43 Interface No.43 subservice also provides the following interfaces */

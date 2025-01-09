@@ -20,7 +20,7 @@
 #include "bundle_data_storage_interface.h"
 #include "inner_bundle_info.h"
 #include "rdb_data_manager.h"
-#include "serial_queue.h"
+#include "single_delayed_task_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -44,7 +44,7 @@ private:
     void BackupRdb();
 
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
-    std::unique_ptr<SerialQueue> serialQueue_ = nullptr;
+    std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

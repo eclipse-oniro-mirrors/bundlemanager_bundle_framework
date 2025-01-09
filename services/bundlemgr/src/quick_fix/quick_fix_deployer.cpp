@@ -30,7 +30,8 @@ constexpr const char* PATCH_DIR = "patch/";
 }
 
 QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, bool isDebug,
-    const std::string &targetPath) : patchPaths_(bundleFilePaths), isDebug_(isDebug), targetPath_(targetPath)
+    const std::string &targetPath, bool isReplace) : patchPaths_(bundleFilePaths), isDebug_(isDebug),
+    targetPath_(targetPath), isReplace_(isReplace)
 {}
 
 ErrCode QuickFixDeployer::Execute()
@@ -130,6 +131,10 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
 
     // check resources/rawfile whether valid
     ret = CheckHqfResourceIsValid(bundleFilePaths, bundleInfo);
+    CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
+
+    // check replace mode and compressNativeLibs
+    ret = CheckReplaceMode(appQuickFix, bundleInfo);
     CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
 
     // check with installed bundle
@@ -314,6 +319,10 @@ void QuickFixDeployer::ProcessNativeLibraryPath(const std::string &patchPath, In
 void QuickFixDeployer::ProcessNativeLibraryPath(
     const std::string &patchPath, const InnerAppQuickFix &innerAppQuickFix, std::string &nativeLibraryPath)
 {
+    if (isReplace_) {
+        LOG_I(BMS_TAG_DEFAULT, "replace mode not need to modify nativeLibraryPath");
+        return;
+    }
     bool isSoExist = false;
     auto libraryPath = nativeLibraryPath;
     std::string soPath = patchPath + ServiceConstants::PATH_SEPARATOR + libraryPath;
@@ -340,13 +349,13 @@ void QuickFixDeployer::ProcessNativeLibraryPath(
 
 ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, std::string &patchPath)
 {
+    std::string basePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        appQuickFix.bundleName + ServiceConstants::PATH_SEPARATOR;
     if (!targetPath_.empty()) {
-        patchPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + appQuickFix.bundleName
-            + ServiceConstants::PATH_SEPARATOR + PATCH_DIR + targetPath_;
+        patchPath = basePath + PATCH_DIR + targetPath_;
     } else {
-        patchPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + appQuickFix.bundleName
-            + ServiceConstants::PATH_SEPARATOR + ServiceConstants::PATCH_PATH
-            + std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
+        patchPath = basePath + ServiceConstants::PATCH_PATH +
+            std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
     }
     if (InstalldClient::GetInstance()->CreateBundleDir(patchPath) != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "error: creat patch path failed");
@@ -361,7 +370,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         LOG_E(BMS_TAG_DEFAULT, "error: ExtractQuickFixResFile failed");
     }
     if (isDebug_ && (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG)) {
-        return ExtractQuickFixSoFile(appQuickFix, patchPath, bundleInfo);
+        return ExtractQuickFixSoFile(appQuickFix, isReplace_ ? basePath : patchPath, bundleInfo);
     }
     return ERR_OK;
 }
@@ -734,6 +743,7 @@ ErrCode QuickFixDeployer::ExtractQuickFixSoFile(
         extractParam.srcPath = hqf.hqfFilePath;
         extractParam.targetPath = soPath;
         extractParam.cpuAbi = cpuAbi;
+        extractParam.needRemoveOld = isReplace_;
         if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "moduleName: %{public}s extract so failed", hqf.moduleName.c_str());
             continue;
@@ -899,7 +909,8 @@ void QuickFixDeployer::PrepareCodeSignatureParam(const AppQuickFix &appQuickFix,
         LOG_I(BMS_TAG_DEFAULT, "no so file");
         codeSignatureParam.targetSoPath = "";
     } else {
-        std::string soPath = hqfSoPath.substr(0, hqfSoPath.rfind(ServiceConstants::PATH_SEPARATOR) + 1) + libraryPath;
+        std::string soPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+            appQuickFix.bundleName + ServiceConstants::PATH_SEPARATOR + libraryPath;
         codeSignatureParam.targetSoPath = soPath;
     }
     codeSignatureParam.cpuAbi = cpuAbi;
@@ -966,6 +977,23 @@ ErrCode QuickFixDeployer::CheckHqfResourceIsValid(
     if (hasResourceFile) {
         LOG_W(BMS_TAG_DEFAULT, "bundleName:%{public}s check resource failed", bundleInfo.name.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_RELEASE_HAP_HAS_RESOURCES_FILE_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode QuickFixDeployer::CheckReplaceMode(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo)
+{
+    if (!isReplace_) {
+        LOG_D(BMS_TAG_DEFAULT, "isReplace_ is false");
+        return ERR_OK;
+    }
+    std::string moduleName = appQuickFix.deployingAppqfInfo.hqfInfos[0].moduleName;
+    LOG_D(BMS_TAG_DEFAULT, "start %{public}s %{public}s", bundleInfo.name.c_str(), moduleName.c_str());
+    for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        if (hapModuleInfo.moduleName == moduleName && !hapModuleInfo.compressNativeLibs) {
+            LOG_E(BMS_TAG_DEFAULT, "failed: %{public}s %{public}s", bundleInfo.name.c_str(), moduleName.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_REPLACE_MODE_WITH_COMPRESS_LIB_FAILED;
+        }
     }
     return ERR_OK;
 }

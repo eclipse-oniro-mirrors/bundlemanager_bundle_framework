@@ -26,15 +26,16 @@ namespace OHOS {
 
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
+        std::string val(reinterpret_cast<const char*>(data), size);
         sptr<IRemoteObject> object;
         BundleInstallerProxy bundleinstallerProxy(object);
-        std::string bundleFilePath (reinterpret_cast<const char*>(data), size);
+        std::string bundleFilePath = val;
         InstallParam installParam;
         sptr<IStatusReceiver> statusReceiver;
         std::vector<std::string> originHapPaths;
         bundleinstallerProxy.Install(bundleFilePath, installParam, statusReceiver);
 
-        std::string bundleName (reinterpret_cast<const char*>(data), size);
+        std::string bundleName = val;
         bundleinstallerProxy.Recover(bundleName, installParam, statusReceiver);
 
         std::vector<std::string> bundleFilePaths;
@@ -42,16 +43,15 @@ namespace OHOS {
         bundleinstallerProxy.Install(bundleFilePaths, installParam, statusReceiver);
 
         bundleinstallerProxy.Uninstall(bundleName, installParam, statusReceiver);
-        std::string modulePackage (reinterpret_cast<const char*>(data), size);
+        std::string modulePackage = val;
         bundleinstallerProxy.Uninstall(bundleFilePath, modulePackage, installParam, statusReceiver);
-        int32_t fixedValue = reinterpret_cast<uintptr_t>(data);
-        int32_t dlpType = fixedValue;
+        int32_t dlpType = 0;
         int32_t userId = 0;
         int32_t appIndex = 0;
         bundleinstallerProxy.InstallSandboxApp(bundleName, dlpType, userId, appIndex);
         bundleinstallerProxy.UninstallSandboxApp(bundleName, appIndex, userId);
         bundleinstallerProxy.CreateStreamInstaller(installParam, statusReceiver, originHapPaths);
-        bundleinstallerProxy.DestoryBundleStreamInstaller(reinterpret_cast<uintptr_t>(data));
+        bundleinstallerProxy.DestoryBundleStreamInstaller(0);
         bundleinstallerProxy.StreamInstall(bundleFilePaths, installParam, statusReceiver);
         return true;
     }

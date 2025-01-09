@@ -30,6 +30,10 @@ using OHOS::AAFwk::Want;
 namespace OHOS {
 namespace AppExecFwk {
 
+namespace {
+    const int32_t ERR_CODE = 8388613;
+}
+
 class ICleanCacheCallbackTest : public ICleanCacheCallback {
 public:
     void OnCleanCacheFinished(bool succeeded);
@@ -510,6 +514,35 @@ HWTEST_F(BmsBundleMgrProxyTest, GetNameAndIndexForUid_0100, Function | MediumTes
 }
 
 /**
+ * @tc.number: GetSimpleAppInfoForUid_0100
+ * @tc.name: test the GetSimpleAppInfoForUid
+ * @tc.desc: 1. system running normally
+ *           2. test GetSimpleAppInfoForUid
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetSimpleAppInfoForUid_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+
+    int uid = 100;
+    std::vector<std::int32_t> uids;
+    std::vector<SimpleAppInfo> simpleAppInfo;
+
+    auto res = bundleMgrProxy.GetSimpleAppInfoForUid(uids, simpleAppInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INVALID_UID);
+
+    uids.emplace_back(uid);
+    res = bundleMgrProxy.GetSimpleAppInfoForUid(uids, simpleAppInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+
+    for (int i = 0; i <= 1000; i++) {
+        uids.emplace_back(uid + i);
+    }
+    res = bundleMgrProxy.GetSimpleAppInfoForUid(uids, simpleAppInfo);
+    EXPECT_EQ(res, ERR_CODE);
+}
+
+/**
  * @tc.number: GetBundleGids_0100
  * @tc.name: test the GetBundleGids
  * @tc.desc: 1. system running normally
@@ -855,7 +888,7 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAbilityLabel_0100, Function | MediumTest | Le
 {
     sptr<IRemoteObject> impl;
     BundleMgrProxy bundleMgrProxy(impl);
-    std::string bundleName ="";
+    std::string bundleName = "";
     std::string abilityName = "abilityName";
     auto res = bundleMgrProxy.GetAbilityLabel(bundleName, abilityName);
     EXPECT_EQ(res, Constants::EMPTY_STRING);
@@ -874,7 +907,7 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAbilityLabel_0200, Function | MediumTest | Le
 {
     sptr<IRemoteObject> impl;
     BundleMgrProxy bundleMgrProxy(impl);
-    std::string bundleName ="";
+    std::string bundleName = "";
     std::string moduleName = "moduleName";
     std::string abilityName = "abilityName";
     std::string label = "label";
