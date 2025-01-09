@@ -2679,6 +2679,7 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     appInfo.resourcesApply = preBundleConfigInfo.resourcesApply;
     appInfo.allowAppRunWhenDeviceFirstLocked = preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked;
     appInfo.allowEnableNotification = preBundleConfigInfo.allowEnableNotification;
+    appInfo.hideDesktopIcon = preBundleConfigInfo.hideDesktopIcon;
     dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
 }
 #endif
