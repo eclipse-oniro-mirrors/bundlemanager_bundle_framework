@@ -354,14 +354,6 @@ ErrCode BundleResourceProxy::GetVectorParcelInfo(
     return ERR_OK;
 }
 
-void BundleResourceProxy::ClearAshmem(sptr<Ashmem> &optMem)
-{
-    if (optMem != nullptr) {
-        optMem->UnmapAshmem();
-        optMem->CloseAshmem();
-    }
-}
-
 ErrCode BundleResourceProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&data)
 {
     sptr<Ashmem> ashMem = reply.ReadAshmem();
@@ -372,7 +364,6 @@ ErrCode BundleResourceProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void 
 
     if (!ashMem->MapReadOnlyAshmem()) {
         APP_LOGE("MapReadOnlyAshmem failed");
-        ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t ashMemSize = ashMem->GetAshmemSize();
@@ -380,27 +371,22 @@ ErrCode BundleResourceProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void 
     const void* ashDataPtr = ashMem->ReadFromAshmem(ashMemSize, offset);
     if (ashDataPtr == nullptr) {
         APP_LOGE("ashDataPtr is nullptr");
-        ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY)) {
         APP_LOGE("failed due to wrong size");
-        ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     data = malloc(ashMemSize);
     if (data == nullptr) {
         APP_LOGE("failed due to malloc data failed");
-        ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (memcpy_s(data, ashMemSize, ashDataPtr, ashMemSize) != EOK) {
         free(data);
-        ClearAshmem(ashMem);
         APP_LOGE("failed due to memcpy_s failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    ClearAshmem(ashMem);
     return ERR_OK;
 }
 

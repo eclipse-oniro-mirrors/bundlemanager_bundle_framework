@@ -1194,6 +1194,8 @@ private:
 
     template<typename T>
     ErrCode WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const;
+
+    ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, void *&data);
 };
 
 }  // namespace AppExecFwk
