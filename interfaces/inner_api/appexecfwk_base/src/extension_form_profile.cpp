@@ -123,6 +123,7 @@ struct ExtensionFormProfileInfo {
     std::string type = "JS";
     std::string uiSyntax = "hml";
     std::string scheduledUpdateTime = "";
+    std::string multiScheduledUpdateTime = "";
     int32_t updateDuration = 0;
     std::string defaultDimension;
     bool formVisibleNotify = false;
@@ -261,6 +262,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         jsonObjectEnd,
         ExtensionFormProfileReader::SCHEDULED_UPDATE_TIME,
         extensionFormProfileInfo.scheduledUpdateTime,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::MULTI_SCHEDULED_UPDATE_TIME,
+        extensionFormProfileInfo.multiScheduledUpdateTime,
         false,
         g_parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
@@ -493,18 +500,30 @@ bool GetConditionUpdate(const ExtensionFormProfileInfo &form, ExtensionFormInfo 
     return true;
 }
 
-bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
-    if (!CheckFormNameIsValid(form.name)) {
-        APP_LOGE("form name is invalid");
-        return false;
-    }
     info.name = form.name;
     info.description = form.description;
     info.displayName = form.displayName;
     info.src = form.src;
     info.window.autoDesignWidth = form.window.autoDesignWidth;
     info.window.designWidth = form.window.designWidth;
+    info.formConfigAbility = form.formConfigAbility;
+    info.formVisibleNotify = form.formVisibleNotify;
+    info.isDefault = form.isDefault;
+    info.updateEnabled = form.updateEnabled;
+    info.scheduledUpdateTime = form.scheduledUpdateTime;
+    info.multiScheduledUpdateTime = form.multiScheduledUpdateTime;
+    info.updateDuration = form.updateDuration;
+}
+
+bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
+    if (!CheckFormNameIsValid(form.name)) {
+        APP_LOGE("form name is invalid");
+        return false;
+    }
+    TransformToFormInfoExt(form, info);
 
     size_t len = sizeof(FORM_COLOR_MODE_MAP_KEY) / sizeof(FORM_COLOR_MODE_MAP_KEY[0]);
     for (size_t i = 0; i < len; i++) {
@@ -519,13 +538,6 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
         if (UI_SYNTAX_MAP_KEY[i] == form.uiSyntax)
             info.uiSyntax = UI_SYNTAX_MAP_VALUE[i];
     }
-
-    info.formConfigAbility = form.formConfigAbility;
-    info.formVisibleNotify = form.formVisibleNotify;
-    info.isDefault = form.isDefault;
-    info.updateEnabled = form.updateEnabled;
-    info.scheduledUpdateTime = form.scheduledUpdateTime;
-    info.updateDuration = form.updateDuration;
 
     if (!GetMetadata(form, info)) {
         return false;

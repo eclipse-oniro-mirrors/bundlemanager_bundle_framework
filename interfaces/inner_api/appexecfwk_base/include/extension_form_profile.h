@@ -40,6 +40,7 @@ constexpr const char* FORM_VISIBLE_NOTIFY = "formVisibleNotify";
 constexpr const char* IS_DEFAULT = "isDefault";
 constexpr const char* UPDATE_ENABLED = "updateEnabled";
 constexpr const char* SCHEDULED_UPDATE_TIME = "scheduledUpdateTime";
+constexpr const char* MULTI_SCHEDULED_UPDATE_TIME = "multiScheduledUpdateTime";
 constexpr const char* UPDATE_DURATION = "updateDuration";
 constexpr const char* DEFAULT_DIMENSION = "defaultDimension";
 constexpr const char* SUPPORT_DIMENSIONS = "supportDimensions";

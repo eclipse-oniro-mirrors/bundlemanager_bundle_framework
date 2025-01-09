@@ -46,6 +46,7 @@ const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_NAME = "name";
 const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_TYPE = "type";
 const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_UPDATE_ENABLED = "updateEnabled";
 const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_SCHEDULE_DUPDATETIME = "scheduledUpdateTime";
+const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_MULTI_SCHEDULE_DUPDATETIME = "multiScheduledUpdateTime";
 const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_UPDATE_DURATION = "updateDuration";
 const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_SUPPORT_DIMENSIONS = "supportDimensions";
 const char* PACK_SUMMARY_MODULE_ABILITY_FORMS_DEFAULT_DIMENSION = "defaultDimension";
@@ -239,6 +240,7 @@ void to_json(nlohmann::json &jsonObject, const AbilityFormInfo &abilityFormInfo)
         {PACK_SUMMARY_MODULE_ABILITY_FORMS_TYPE, abilityFormInfo.type},
         {PACK_SUMMARY_MODULE_ABILITY_FORMS_UPDATE_ENABLED, abilityFormInfo.updateEnabled},
         {PACK_SUMMARY_MODULE_ABILITY_FORMS_SCHEDULE_DUPDATETIME, abilityFormInfo.scheduledUpdateTime},
+        {PACK_SUMMARY_MODULE_ABILITY_FORMS_MULTI_SCHEDULE_DUPDATETIME, abilityFormInfo.multiScheduledUpdateTime},
         {PACK_SUMMARY_MODULE_ABILITY_FORMS_UPDATE_DURATION, abilityFormInfo.updateDuration},
         {PACK_SUMMARY_MODULE_ABILITY_FORMS_SUPPORT_DIMENSIONS, abilityFormInfo.supportDimensions},
         {PACK_SUMMARY_MODULE_ABILITY_FORMS_DEFAULT_DIMENSION, abilityFormInfo.defaultDimension}};
@@ -256,6 +258,9 @@ void from_json(const nlohmann::json &jsonObject, AbilityFormInfo &abilityFormInf
         abilityFormInfo.updateEnabled, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, PACK_SUMMARY_MODULE_ABILITY_FORMS_SCHEDULE_DUPDATETIME,
         abilityFormInfo.scheduledUpdateTime, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
+        PACK_SUMMARY_MODULE_ABILITY_FORMS_MULTI_SCHEDULE_DUPDATETIME,
+        abilityFormInfo.multiScheduledUpdateTime, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, PACK_SUMMARY_MODULE_ABILITY_FORMS_UPDATE_DURATION,
         abilityFormInfo.updateDuration, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd,

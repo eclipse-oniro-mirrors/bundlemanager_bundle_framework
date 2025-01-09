@@ -38,6 +38,7 @@ struct ExtensionFormInfo {
     FormType type = FormType::JS;
     FormType uiSyntax = FormType::JS;
     std::string scheduledUpdateTime = "";
+    std::string multiScheduledUpdateTime = "";
     std::string name;
     std::string displayName;
     std::string description;

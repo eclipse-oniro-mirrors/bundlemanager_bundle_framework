@@ -37,6 +37,7 @@ const char* JSON_KEY_SUPPORT_DIMENSIONS = "supportDimensions";
 const char* JSON_KEY_DEFAULT_DIMENSION = "defaultDimension";
 const char* JSON_KEY_UPDATE_ENABLED = "updateEnabled";
 const char* JSON_KEY_SCHEDULED_UPDATE_TIME = "scheduledUpdateTime";
+const char* JSON_KEY_MULTI_SCHEDULED_UPDATE_TIME = "multiScheduledUpdateTime";
 const char* JSON_KEY_UPDATE_DURATION = "updateDuration";
 const char* JSON_KEY_DEEP_LINK = "deepLink";
 const char* JSON_KEY_JS_COMPONENT_NAME = "jsComponentName";
@@ -75,12 +76,7 @@ const char* JSON_KEY_CONDITION_UPDATE = "conditionUpdate";
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
 {
-    package = abilityInfo.bundleName + abilityInfo.moduleName;
-    bundleName = abilityInfo.bundleName;
-    originalBundleName = abilityInfo.bundleName;
-    relatedBundleName = abilityInfo.bundleName;
-    moduleName = abilityInfo.moduleName;
-    abilityName = abilityInfo.name;
+    SetInfoByAbility(abilityInfo);
     name = formInfo.name;
     displayName = formInfo.displayName;
     description = formInfo.description;
@@ -88,6 +84,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     deepLink = "";
     formConfigAbility = formInfo.formConfigAbility;
     scheduledUpdateTime = formInfo.scheduledUpdateTime;
+    multiScheduledUpdateTime = formInfo.multiScheduledUpdateTime;
     src = formInfo.src;
     window.designWidth = formInfo.window.designWidth;
     window.autoDesignWidth = formInfo.window.autoDesignWidth;
@@ -115,6 +112,21 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     for (const auto &metadata : formInfo.metadata) {
         customizeDatas.push_back(metadata);
     }
+    SetInfoByFormExt(formInfo);
+}
+
+void FormInfo::SetInfoByAbility(const ExtensionAbilityInfo &abilityInfo)
+{
+    package = abilityInfo.bundleName + abilityInfo.moduleName;
+    bundleName = abilityInfo.bundleName;
+    originalBundleName = abilityInfo.bundleName;
+    relatedBundleName = abilityInfo.bundleName;
+    moduleName = abilityInfo.moduleName;
+    abilityName = abilityInfo.name;
+}
+
+void FormInfo::SetInfoByFormExt(const ExtensionFormInfo &formInfo)
+{
     for (const auto &previewImage : formInfo.previewImages) {
         formPreviewImages.push_back(previewImage);
     }
@@ -157,6 +169,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     description = Str16ToStr8(parcel.ReadString16());
     formConfigAbility = Str16ToStr8(parcel.ReadString16());
     scheduledUpdateTime = Str16ToStr8(parcel.ReadString16());
+    multiScheduledUpdateTime = Str16ToStr8(parcel.ReadString16());
     jsComponentName = Str16ToStr8(parcel.ReadString16());
     relatedBundleName = Str16ToStr8(parcel.ReadString16());
     originalBundleName = Str16ToStr8(parcel.ReadString16());
@@ -264,6 +277,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(formConfigAbility));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(scheduledUpdateTime));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(multiScheduledUpdateTime));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(jsComponentName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(relatedBundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(originalBundleName));
@@ -376,6 +390,7 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_SRC, formInfo.src},
         {JSON_KEY_FORMCONFIG_ABILITY, formInfo.formConfigAbility},
         {JSON_KEY_SCHEDULED_UPDATE_TIME, formInfo.scheduledUpdateTime},
+        {JSON_KEY_MULTI_SCHEDULED_UPDATE_TIME, formInfo.multiScheduledUpdateTime},
         {JSON_KEY_ORIGINAL_BUNDLE_NAME, formInfo.originalBundleName},
         {JSON_KEY_DISPLAY_NAME_ID, formInfo.displayNameId},
         {JSON_KEY_DESCRIPTION_ID, formInfo.descriptionId},
@@ -524,6 +539,12 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         jsonObjectEnd,
         JSON_KEY_SCHEDULED_UPDATE_TIME,
         formInfo.scheduledUpdateTime,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_MULTI_SCHEDULED_UPDATE_TIME,
+        formInfo.multiScheduledUpdateTime,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,

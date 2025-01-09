@@ -209,6 +209,7 @@ constexpr const char* BUNDLE_MODULE_PROFILE_FORMS_LANDSCAPE_LAYOUTS = "landscape
 constexpr const char* BUNDLE_MODULE_PROFILE_FORMS_PORTRAIT_LAYOUTS = "portraitLayouts";
 constexpr const char* BUNDLE_MODULE_PROFILE_FORMS_UPDATEENABLED = "updateEnabled";
 constexpr const char* BUNDLE_MODULE_PROFILE_FORMS_SCHEDULED_UPDATE_TIME = "scheduledUpdateTime";
+constexpr const char* BUNDLE_MODULE_PROFILE_FORMS_MULTI_SCHEDULED_UPDATE_TIME = "multiScheduledUpdateTime";
 constexpr const char* BUNDLE_MODULE_PROFILE_FORMS_UPDATE_DURATION = "updateDuration";
 constexpr const char* BUNDLE_MODULE_PROFILE_FORMS_DEEP_LINK = "deepLink";
 constexpr const char* BUNDLE_MODULE_PROFILE_FORMS_JS_COMPONENT_NAME = "jsComponentName";
