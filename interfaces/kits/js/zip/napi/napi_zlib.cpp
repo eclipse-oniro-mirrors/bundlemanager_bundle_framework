@@ -69,7 +69,7 @@ enum ReturnStatus {
 #define COMPRESS_LEVE_CHECK(level, ret)                                                            \
     if (!(level == COMPRESS_LEVEL_NO_COMPRESSION || level == COMPRESS_LEVEL_DEFAULT_COMPRESSION || \
             level == COMPRESS_LEVEL_BEST_SPEED || level == COMPRESS_LEVEL_BEST_COMPRESSION)) {     \
-        APP_LOGE("level parameter =[%{public}d] value is incorrect", (int)level);               \
+        APP_LOGE("level parameter =[%{public}d] value is incorrect", static_cast<int>(level));     \
         return ret;                                                                                \
     }
 
