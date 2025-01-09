@@ -36,7 +36,7 @@ public:
      * @brief Called when process cache files progress finished through the proxy object.
      * @param succeeded Indicates the result of the delete cache files progress.
      */
-    virtual void OnCleanAllBundleCacheFinished(bool succeeded) override;
+    virtual void OnCleanAllBundleCacheFinished(int32_t resulted) override;
 
 private:
     static inline BrokerDelegator<ProcessCacheCallbackProxy> delegator_;
