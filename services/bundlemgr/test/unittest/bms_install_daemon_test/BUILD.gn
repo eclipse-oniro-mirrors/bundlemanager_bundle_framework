@@ -105,6 +105,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     "${services_path}/bundlemgr/src/ipc/check_encryption_param.cpp",
     "${services_path}/bundlemgr/src/ipc/code_signature_param.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
@@ -186,6 +187,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "${services_path}/bundlemgr/src/ipc/check_encryption_param.cpp",
     "${services_path}/bundlemgr/src/ipc/code_signature_param.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
@@ -268,6 +270,7 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     "${services_path}/bundlemgr/src/ipc/check_encryption_param.cpp",
     "${services_path}/bundlemgr/src/ipc/code_signature_param.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
   ]
 

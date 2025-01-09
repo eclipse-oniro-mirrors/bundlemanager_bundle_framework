@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1368,7 +1368,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (isAppExist_) {
         RemoveDataPreloadHapFiles(bundleName_);
     }
-    RemoveOldGroupDirs(oldInfo);
     RemoveOldExtensionDirs();
     /* process quick fix when install new moudle */
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
@@ -3047,15 +3046,6 @@ ErrCode BaseBundleInstaller::CreateDataGroupDirs(
     return ERR_OK;
 }
 
-void BaseBundleInstaller::RemoveOldGroupDirs(const InnerBundleInfo &oldInfo)
-{
-    if (dataMgr_ == nullptr) {
-        LOG_W(BMS_TAG_INSTALLER, "dataMgr_ null");
-        return;
-    }
-    dataMgr_->RemoveOldGroupDirs(oldInfo);
-}
-
 std::vector<std::string> BaseBundleInstaller::GenerateScreenLockProtectionDir(const std::string &bundleName) const
 {
     std::vector<std::string> dirs;
@@ -3211,7 +3201,8 @@ void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleUserInfo &userI
     if (userInfo.keyId.empty()) {
         return;
     }
-    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(userInfo.bundleName, userId_) != ERR_OK) {
+    EncryptionParam encryptionParam(userInfo.bundleName, "", 0, userId_, EncryptionDirType::APP);
+    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(encryptionParam) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "delete encryption key id failed");
     }
 }
@@ -3856,6 +3847,7 @@ void BaseBundleInstaller::GenerateNewUserDataGroupInfos(InnerBundleInfo &info) c
         return;
     }
     dataMgr_->GenerateNewUserDataGroupInfos(info.GetBundleName(), userId_);
+    dataMgr_->CreateAppGroupDir(info.GetBundleName(), userId_);
 }
 
 void BaseBundleInstaller::GetCreateExtensionDirs(std::unordered_map<std::string, InnerBundleInfo> &newInfos)
@@ -6740,7 +6732,7 @@ ErrCode BaseBundleInstaller::CheckPreAppAllowHdcInstall(const InstallParam &inst
         LOG_W(BMS_TAG_INSTALLER, "hapVerifyRes empty");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    
+
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
     if (provisionInfo.distributionType != Security::Verify::AppDistType::OS_INTEGRATION) {
         return ERR_OK;

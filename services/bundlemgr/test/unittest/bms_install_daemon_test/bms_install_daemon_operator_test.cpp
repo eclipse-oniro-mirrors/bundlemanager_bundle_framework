@@ -1232,8 +1232,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7500, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7600, Function | SmallTest | Level0)
 {
-    std::string keyId = "";
-    bool res = InstalldOperator::GenerateKeyIdAndSetPolicy(0, "", 100, keyId);
+    EncryptionParam encryptionParam("", "", 0, 100, EncryptionDirType::APP);
+    std::string keyId;
+    bool res = InstalldOperator::GenerateKeyIdAndSetPolicy(encryptionParam, keyId);
     EXPECT_EQ(res, false);
 }
 
@@ -1266,9 +1267,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7700, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7800, Function | SmallTest | Level0)
 {
-    std::string bundleName;
-    int32_t userId = 100;
-    bool ret = InstalldOperator::DeleteKeyId(bundleName, userId);
+    EncryptionParam encryptionParam("", "", 0, 100, EncryptionDirType::APP);
+    bool ret = InstalldOperator::DeleteKeyId(encryptionParam);
     EXPECT_EQ(ret, false);
 }
 

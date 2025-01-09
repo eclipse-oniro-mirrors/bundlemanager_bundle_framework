@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,7 @@
 #include "ipc/check_encryption_param.h"
 #include "ipc/code_signature_param.h"
 #include "ipc/create_dir_param.h"
+#include "ipc/encryption_param.h"
 #include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
 #include "installd/installd_constants.h"
@@ -401,13 +402,12 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
-        const int32_t userId, std::string &keyId)
+    virtual ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
     {
         return ERR_OK;
     }
 
-    virtual ErrCode DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId)
+    virtual ErrCode DeleteEncryptionKeyId(const EncryptionParam &encryptionParam)
     {
         return ERR_OK;
     }
@@ -438,6 +438,16 @@ public:
     }
 
     virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode CreateDataGroupDirs(const std::vector<CreateDirParam> &params)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId)
     {
         return ERR_OK;
     }

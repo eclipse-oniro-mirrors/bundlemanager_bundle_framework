@@ -1113,7 +1113,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFiles_0100, TestSize.L
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetEncryptionPolicy_0100, TestSize.Level1)
 {
     std::string keyId = "";
-    ErrCode result = installClient_->SetEncryptionPolicy(0, "", 100, keyId);
+    EncryptionParam encryptionParam("", "", 0, 100, EncryptionDirType::APP);
+    ErrCode result = installClient_->SetEncryptionPolicy(encryptionParam, keyId);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1124,7 +1125,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetEncryptionPolicy_0100, 
  */
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeleteEncryptionKeyId_0100, TestSize.Level1)
 {
-    ErrCode result = installClient_->DeleteEncryptionKeyId("", 100);
+    EncryptionParam encryptionParam("", "", 0, 100, EncryptionDirType::APP);
+    ErrCode result = installClient_->DeleteEncryptionKeyId(encryptionParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
