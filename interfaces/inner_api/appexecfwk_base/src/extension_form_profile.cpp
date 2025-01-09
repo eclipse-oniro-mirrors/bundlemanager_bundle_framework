@@ -394,7 +394,7 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
     }
     for (i = 0; i < len; i++) {
         if (DIMENSION_MAP_KEY[i] == form.defaultDimension) {
-        break;
+            break;
         }
     }
     if (i == len) {
