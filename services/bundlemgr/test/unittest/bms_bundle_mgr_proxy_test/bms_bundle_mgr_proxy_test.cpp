@@ -855,7 +855,7 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAbilityLabel_0100, Function | MediumTest | Le
 {
     sptr<IRemoteObject> impl;
     BundleMgrProxy bundleMgrProxy(impl);
-    std::string bundleName ="";
+    std::string bundleName = "";
     std::string abilityName = "abilityName";
     auto res = bundleMgrProxy.GetAbilityLabel(bundleName, abilityName);
     EXPECT_EQ(res, Constants::EMPTY_STRING);
@@ -874,7 +874,7 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAbilityLabel_0200, Function | MediumTest | Le
 {
     sptr<IRemoteObject> impl;
     BundleMgrProxy bundleMgrProxy(impl);
-    std::string bundleName ="";
+    std::string bundleName = "";
     std::string moduleName = "moduleName";
     std::string abilityName = "abilityName";
     std::string label = "label";
