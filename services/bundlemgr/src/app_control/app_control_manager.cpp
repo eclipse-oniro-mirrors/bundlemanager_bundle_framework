@@ -478,6 +478,7 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
     auto iter = abilityRunningControlRuleCache_.find(key);
     if (iter != abilityRunningControlRuleCache_.end()) {
         disposedRules = iter->second;
+        PrintDisposedRuleInfo(disposedRules);
         return ERR_OK;
     }
     ret = appControlManagerDb_->GetAbilityRunningControlRule(appId, appIndex, userId, disposedRules);
@@ -491,6 +492,7 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
         disposedRules.emplace_back(iterBms->second);
     };
     abilityRunningControlRuleCache_[key] = disposedRules;
+    PrintDisposedRuleInfo(disposedRules);
     return ret;
 }
 
@@ -593,6 +595,14 @@ ErrCode AppControlManager::DeleteUninstallDisposedRule(
         return ret;
     }
     return ERR_OK;
+}
+
+void AppControlManager::PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules)
+{
+    for (const auto &rule : disposedRules) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "control rule caller:%{public}s time:%{public}" PRId64 " rule:%{public}s",
+        rule.callerName.c_str(), rule.setTime, rule.ToString().c_str());
+    }
 }
 }
 }

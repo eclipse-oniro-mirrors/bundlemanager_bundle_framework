@@ -55,6 +55,10 @@ public:
     std::shared_ptr<AAFwk::Want> want = nullptr;
     std::vector<ElementName> elementList;
 
+    // used for log
+    std::string callerName;
+    int64_t setTime = 0;
+
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static DisposedRule *Unmarshalling(Parcel &parcel);
