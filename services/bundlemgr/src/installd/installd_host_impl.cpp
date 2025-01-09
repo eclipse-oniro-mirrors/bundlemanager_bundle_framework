@@ -1766,7 +1766,12 @@ std::string InstalldHostImpl::GetExtensionConfigPath() const
 #ifdef CONFIG_POLOCY_ENABLE
     char buf[MAX_PATH_LEN] = { 0 };
     char *configPath = GetOneCfgFile(EXTENSION_CONFIG_FILE_PATH, buf, MAX_PATH_LEN);
-    if (configPath == nullptr || configPath[0] == '\0' || strlen(configPath) > MAX_PATH_LEN) {
+    if (configPath == nullptr || configPath[0] == '\0') {
+        LOG_E(BMS_TAG_INSTALLD, "GetOneCfgFile failed");
+        return EXTENSION_CONFIG_DEFAULT_PATH;
+    }
+    if (strlen(configPath) > MAX_PATH_LEN) {
+        LOG_E(BMS_TAG_INSTALLD, "configPath length exceeds");
         return EXTENSION_CONFIG_DEFAULT_PATH;
     }
     return configPath;
