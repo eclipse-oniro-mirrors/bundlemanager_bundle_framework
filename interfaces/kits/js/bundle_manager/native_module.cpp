@@ -171,6 +171,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAllAppCloneBundleInfo", GetAllAppCloneBundleInfo),
         DECLARE_NAPI_FUNCTION("getAppCloneIdentity", GetAppCloneIdentity),
         DECLARE_NAPI_FUNCTION("getLaunchWant", GetLaunchWant),
+        DECLARE_NAPI_FUNCTION("getAllBundleCacheSize", GetAllBundleCacheSize),
         DECLARE_NAPI_PROPERTY("ApplicationInfoFlag", nApplicationInfoFlag),
     };
 
