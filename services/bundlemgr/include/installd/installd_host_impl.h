@@ -280,6 +280,8 @@ private:
     ErrCode CreateDataGroupDir(const CreateDirParam &param);
     ErrCode DeleteEl5DataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId);
     ErrCode CreateBundleDataDirWithEl(const CreateDirParam &createDirParam);
+    ErrCode CreateCommonDataDir(const CreateDirParam &createDirParam, const std::string &el);
+    ErrCode CreateEl2DataDir(const CreateDirParam &createDirParam);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
