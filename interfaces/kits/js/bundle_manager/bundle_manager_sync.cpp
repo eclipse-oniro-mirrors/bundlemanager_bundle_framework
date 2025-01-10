@@ -56,6 +56,8 @@ const char* GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";
 const char* QUERY_EXTENSION_INFOS_SYNC = "QueryExtensionInfosSync";
 const char* GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
 const char* GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
+const char* GET_SIGNATURE_INFO_SYNC = "GetSignatureInfoSync";
+const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
 const char* BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const char* PERMISSION_NAME = "permissionName";
 const char* INVALID_WANT_ERROR =
@@ -970,6 +972,47 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
     CommonFunc::ConvertAppProvisionInfo(env, appProvisionInfo, nAppProvisionInfo);
     APP_LOGD("call GetAppProvisionInfoSync done");
     return nAppProvisionInfo;
+}
+
+napi_value GetSignatureInfoSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetSignatureInfoSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    int32_t uid = -1;
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, args[ARGS_POS_ZERO], &valueType);
+    if (valueType == napi_number) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], uid)) {
+            APP_LOGE("uid invalid");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, UID, TYPE_NUMBER);
+            return nullptr;
+        }
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    SignatureInfo signatureInfo;
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetSignatureInfoByUid(uid, signatureInfo));
+    if (ret != NO_ERROR) {
+        APP_LOGE("call GetSignatureInfoByUid failed, uid is %{public}d", uid);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_SIGNATURE_INFO_SYNC, GET_SIGNATURE_INFO_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nSignatureInfo = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nSignatureInfo));
+    CommonFunc::ConvertSignatureInfo(env, signatureInfo, nSignatureInfo);
+    APP_LOGD("call GetSignatureInfoSync done");
+    return nSignatureInfo;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

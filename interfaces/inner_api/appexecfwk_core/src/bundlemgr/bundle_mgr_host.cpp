@@ -570,6 +570,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SIGNATURE_INFO):
             errCode = this->HandleGetSignatureInfoByBundleName(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SIGNATURE_INFO_BY_UID):
+            errCode = HandleGetSignatureInfoByUid(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_CLONE_APPLICATION_ENABLED):
             errCode = this->HandleSetCloneApplicationEnabled(data, reply);
             break;
@@ -4019,6 +4022,23 @@ ErrCode BundleMgrHost::HandleGetSignatureInfoByBundleName(MessageParcel &data, M
     if (ret == ERR_OK) {
         return WriteParcelInfoIntelligent<SignatureInfo>(info, reply);
     }
+    return ret;
+}
+
+ErrCode BundleMgrHost::HandleGetSignatureInfoByUid(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t uid = data.ReadInt32();
+    SignatureInfo info;
+    ErrCode ret = GetSignatureInfoByUid(uid, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        return WriteParcelInfoIntelligent<SignatureInfo>(info, reply);
+    }
+    APP_LOGI("errCode: %{public}d, uid: %{public}d", ret, uid);
     return ret;
 }
 

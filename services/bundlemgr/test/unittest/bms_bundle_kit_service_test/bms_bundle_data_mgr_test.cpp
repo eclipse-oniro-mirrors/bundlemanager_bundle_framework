@@ -7960,4 +7960,49 @@ HWTEST_F(BmsBundleDataMgrTest, RestoreUidAndGidFromUninstallInfo_0100, Function 
     bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, USERID);
     bundleDataMgr->bundleIdMap_.erase(bundleId);
 }
+
+/**
+ * @tc.number: GetSignatureInfo_0001
+ * @tc.name: GetSignatureInfo_0001
+ * ShortcutInfo
+ * @tc.desc: test GetSignatureInfo_0001(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetSignatureInfo_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleDataMgr> localBundleDataMgr = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(localBundleDataMgr, nullptr);
+    SignatureInfo signatureInfo;
+    ErrCode ret = localBundleDataMgr->GetSignatureInfoByUid(100, signatureInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetSignatureInfo_0002
+ * @tc.name: GetSignatureInfo_0002
+ * ShortcutInfo
+ * @tc.desc: test GetSignatureInfo_0002(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetSignatureInfo_0002, Function | MediumTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    std::shared_ptr<BundleMgrProxy> localBundleMgrProxy = std::make_shared<BundleMgrProxy>(remoteObject);
+    SignatureInfo signatureInfo;
+    ErrCode ret = localBundleMgrProxy->GetSignatureInfoByUid(100, signatureInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetSignatureInfo_0003
+ * @tc.name: GetSignatureInfo_0003
+ * ShortcutInfo
+ * @tc.desc: test GetSignatureInfo_0003(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetSignatureInfo_0003, Function | MediumTest | Level1)
+{
+    SignatureInfo signatureInfo;
+    ErrCode ret = bundleMgrHostImpl_->GetSignatureInfoByUid(100, signatureInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
 } // OHOS

@@ -1020,6 +1020,10 @@ public:
 
     ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) const;
 
+    ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo) const;
+
+    ErrCode GetInnerBundleInfoWithSandboxByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
+
     ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted,
         int32_t appIndex = 0, bool needSaveStorage = true);
 
