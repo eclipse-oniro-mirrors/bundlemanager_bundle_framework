@@ -212,6 +212,9 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/user_unlocked_event_subscriber.cpp",
   "${services_path}/bundlemgr/src/verify/verify_manager_host_impl.cpp",
   "${services_path}/bundlemgr/src/verify/verify_util.cpp",
+  "${services_path}/bundlemgr/src/patch_data_storage_rdb.cpp",
+  "${services_path}/bundlemgr/src/inner_patch_info.cpp",
+  "${services_path}/bundlemgr/src/patch_data_mgr.cpp",
 ]
 
 bundle_resource = [

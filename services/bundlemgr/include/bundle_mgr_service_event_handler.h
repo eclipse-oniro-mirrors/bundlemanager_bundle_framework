@@ -446,6 +446,21 @@ private:
         Constants::AppType appType,
         bool removable);
     /**
+     * @brief OTA Install system app and system vendor bundles.
+     * @param filePaths Indicates the filePaths.
+     * @param bundleName Indicates the bundleName.
+     * @param appType Indicates the bundle type.
+     * @param removable Indicates whether it can be removed.
+     * @param userIds Indicates the user to which the app needs to be installed.
+     * @return Returns true if this function called successfully; returns false otherwise.
+     */
+    static bool OTAInstallSystemBundleTargetUser(
+        const std::vector<std::string> &filePaths,
+        const std::string &bundleName,
+        Constants::AppType appType,
+        bool removable,
+        const std::vector<int32_t> &userIds);
+    /**
      * @brief OTA Install system app and system vendor shared bundles.
      * @param filePaths Indicates the filePaths.
      * @param appType Indicates the bundle type.
@@ -569,7 +584,9 @@ private:
     void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
         bool isPreInstall, bool debug);
-    static bool IsQuickfixFlagExsit(const BundleInfo &bundleInfo);
+    static bool IsQuickfixPatchApp(const std::string &bundleName, uint32_t versionCode);
+    bool HotPatchAppProcessing(const std::string &bundleName, uint32_t hasInstallVersionCode, uint32_t hapVersionCode,
+        std::vector<int32_t> &userIds);
     static bool GetValueFromJson(nlohmann::json &jsonObject);
     static void PatchSystemHspInstall(const std::string &path, bool isOta);
     static void PatchSystemBundleInstall(const std::string &path, bool isOta);

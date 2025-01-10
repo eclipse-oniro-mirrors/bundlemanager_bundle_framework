@@ -67,6 +67,8 @@
 #endif
 #include "iservice_registry.h"
 #include "inner_bundle_clone_common.h"
+#include "inner_patch_info.h"
+#include "patch_data_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -1375,8 +1377,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     ProcessAddResourceInfo(installParam, bundleName_, userId_);
     VerifyDomain();
+    PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, inBundlePaths,
+        newInfos.begin()->second.GetVersionCode(), AppPatchType::INTERNAL, installParam.isPatch);
     // check mark install finish
     result = MarkInstallFinish();
+    if (result != ERR_OK) {
+        PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
+    }
     CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     return result;
@@ -1696,6 +1703,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
     SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
     UninstallDebugAppSandbox(bundleName, uid, oldInfo);
+    if (!PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName)) {
+        LOG_E(BMS_TAG_INSTALLER, "DeleteInnerPatchInfo failed, bundleName: %{public}s", bundleName.c_str());
+    }
     return ERR_OK;
 }
 
@@ -1894,6 +1904,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         }
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
         UninstallDebugAppSandbox(bundleName, uid, oldInfo);
+        if (!PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName)) {
+            LOG_E(BMS_TAG_INSTALLER, "DeleteInnerPatchInfo failed, bundleName: %{public}s", bundleName.c_str());
+        }
         return ERR_OK;
     }
 

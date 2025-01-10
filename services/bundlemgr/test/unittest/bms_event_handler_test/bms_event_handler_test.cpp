@@ -1152,11 +1152,11 @@ HWTEST_F(BmsEventHandlerTest, FetchInnerBundleInfo_0100, Function | SmallTest | 
 }
 
 /**
- * @tc.number: IsQuickfixFlagExsit_0100
- * @tc.name: IsQuickfixFlagExsit
- * @tc.desc: test IsQuickfixFlagExsit
+ * @tc.number: IsQuickfixPatchApp_0100
+ * @tc.name: IsQuickfixPatchApp
+ * @tc.desc: test IsQuickfixPatchApp
  */
-HWTEST_F(BmsEventHandlerTest, IsQuickfixFlagExsit_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsEventHandlerTest, IsQuickfixPatchApp_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
@@ -1166,32 +1166,32 @@ HWTEST_F(BmsEventHandlerTest, IsQuickfixFlagExsit_0100, Function | SmallTest | L
     HapModuleInfo hapModuleInfo;
     hapModuleInfo.metadata.push_back(metadata);
     bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
-    bool ret = handler->IsQuickfixFlagExsit(bundleInfo);
-    EXPECT_TRUE(ret);
+    bool ret = handler->IsQuickfixPatchApp(bundleInfo.name, bundleInfo.versionCode);
+    EXPECT_FALSE(ret);
 }
 
 /**
- * @tc.number: IsQuickfixFlagExsit_0200
- * @tc.name: IsQuickfixFlagExsit
- * @tc.desc: test IsQuickfixFlagExsit
+ * @tc.number: IsQuickfixPatchApp_0200
+ * @tc.name: IsQuickfixPatchApp
+ * @tc.desc: test IsQuickfixPatchApp
  */
-HWTEST_F(BmsEventHandlerTest, IsQuickfixFlagExsit_0200, Function | SmallTest | Level0)
+HWTEST_F(BmsEventHandlerTest, IsQuickfixPatchApp_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     BundleInfo bundleInfo;
-    bool ret = handler->IsQuickfixFlagExsit(bundleInfo);
+    bool ret = handler->IsQuickfixPatchApp(bundleInfo.name, bundleInfo.versionCode);
     EXPECT_FALSE(ret);
     HapModuleInfo hapModuleInfo;
     bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
-    ret = handler->IsQuickfixFlagExsit(bundleInfo);
+    ret = handler->IsQuickfixPatchApp(bundleInfo.name, bundleInfo.versionCode);
     EXPECT_FALSE(ret);
     bundleInfo.hapModuleInfos.clear();
     Metadata metadata;
     metadata.name = "test";
     hapModuleInfo.metadata.push_back(metadata);
     bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
-    ret = handler->IsQuickfixFlagExsit(bundleInfo);
+    ret = handler->IsQuickfixPatchApp(bundleInfo.name, bundleInfo.versionCode);
     EXPECT_FALSE(ret);
 }
 

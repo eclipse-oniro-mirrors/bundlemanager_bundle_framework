@@ -138,6 +138,48 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
     return result;
 }
 
+ErrCode SystemBundleInstaller::OTAInstallSystemBundleTargetUser(const std::vector<std::string> &filePaths,
+    InstallParam &installParam, const std::string &bundleName, Constants::AppType appType,
+    const std::vector<int32_t> &userIds)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
+    std::set<int32_t> userIdSet;
+    for (auto userId : userIds) {
+        userIdSet.insert(userId);
+    }
+    if (!installParam.removable) {
+        userIdSet.insert(Constants::START_USERID);
+    }
+    if (userIdSet.empty() || (userIdSet.find(Constants::DEFAULT_USERID) != userIdSet.end())) {
+        // for singleton hap or no user
+        userIdSet = dataMgr->GetAllUser();
+    } else {
+        // for non-singleton hap
+        userIdSet.insert(Constants::DEFAULT_USERID);
+    }
+    ErrCode result = ERR_OK;
+    for (auto userId : userIdSet) {
+        APP_LOGI_NOFUNC("start ota install -n %{public}s -u %{public}d begin", bundleName.c_str(), userId);
+        installParam.userId = userId;
+        MarkPreBundleSyeEventBootTag(false);
+        otaInstall_ = true;
+        ErrCode errCode = InstallBundle(filePaths, installParam, appType);
+        if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
+            APP_LOGE("install system bundle %{public}s fail error %{public}d", bundleName.c_str(), errCode);
+            result = errCode;
+            BmsKeyEventMgr::ProcessMainBundleInstallFailed(bundleName, result);
+        }
+        ResetInstallProperties();
+    }
+
+    return result;
+}
+
 bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
