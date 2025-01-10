@@ -135,6 +135,7 @@ BundleDataMgr::BundleDataMgr()
     shortcutStorage_ = std::make_shared<ShortcutDataStorageRdb>();
     routerStorage_ = std::make_shared<RouterDataStorageRdb>();
     uninstallDataMgr_ = std::make_shared<UninstallDataMgrStorageRdb>();
+    firstInstallDataMgr_ = std::make_shared<FirstInstallDataMgrStorageRdb>();
     baseAppUid_ = system::GetIntParameter<int32_t>("const.product.baseappid", Constants::BASE_APP_UID);
     if (baseAppUid_ < Constants::BASE_APP_UID || baseAppUid_ >= MAX_APP_UID) {
         baseAppUid_ = Constants::BASE_APP_UID;
@@ -539,6 +540,48 @@ bool BundleDataMgr::DeleteUninstallBundleInfo(const std::string &bundleName, int
         return uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName);
     }
     return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
+}
+
+bool BundleDataMgr::AddFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
+    const FirstInstallBundleInfo &firstInstallBundleInfo)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return false;
+    }
+    if (firstInstallDataMgr_ == nullptr) {
+        APP_LOGE("firstInstallDataMgr_ is null");
+        return false;
+    }
+
+    if (firstInstallDataMgr_->IsExistFirstInstallBundleInfo(bundleName, userId)) {
+        APP_LOGW("bundleName %{public}s, user %{public}d has been saved", bundleName.c_str(), userId);
+        return true;
+    }
+    return firstInstallDataMgr_->AddFirstInstallBundleInfo(bundleName, userId, firstInstallBundleInfo);
+}
+
+bool BundleDataMgr::GetFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
+    FirstInstallBundleInfo &firstInstallBundleInfo)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return false;
+    }
+    if (firstInstallDataMgr_ == nullptr) {
+        APP_LOGE("firstInstallDataMgr_ is null");
+        return false;
+    }
+    return firstInstallDataMgr_->GetFirstInstallBundleInfo(bundleName, userId, firstInstallBundleInfo);
+}
+
+bool BundleDataMgr::DeleteFirstInstallBundleInfo(int32_t userId)
+{
+    if (firstInstallDataMgr_ == nullptr) {
+        APP_LOGE("firstInstallDataMgr_ is null");
+        return false;
+    }
+    return firstInstallDataMgr_->DeleteFirstInstallBundleInfo(userId);
 }
 
 bool BundleDataMgr::RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundleInfo &info)

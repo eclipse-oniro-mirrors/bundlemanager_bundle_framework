@@ -25,6 +25,7 @@ constexpr const char* INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID_EX = "accessTokenId
 constexpr const char* INNER_BUNDLE_USER_INFO_BUNDLE_NAME = "bundleName";
 constexpr const char* INNER_BUNDLE_USER_INFO_INSTALL_TIME = "installTime";
 constexpr const char* INNER_BUNDLE_USER_INFO_UPDATE_TIME = "updateTime";
+constexpr const char* INNER_BUNDLE_USER_INFO_FIRST_INSTALL_TIME = "firstInstallTime";
 constexpr const char* INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO = "bundleUserInfo";
 constexpr const char* INNER_BUNDLE_USER_INFO_IS_REMOVABLE = "isRemovable";
 constexpr const char* INNER_BUNDLE_USER_INFO_CLONE_INFOS = "cloneInfos";
@@ -41,6 +42,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleU
         {INNER_BUNDLE_USER_INFO_BUNDLE_NAME, innerBundleUserInfo.bundleName},
         {INNER_BUNDLE_USER_INFO_INSTALL_TIME, innerBundleUserInfo.installTime},
         {INNER_BUNDLE_USER_INFO_UPDATE_TIME, innerBundleUserInfo.updateTime},
+        {INNER_BUNDLE_USER_INFO_FIRST_INSTALL_TIME, innerBundleUserInfo.firstInstallTime},
         {INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO, innerBundleUserInfo.bundleUserInfo},
         {INNER_BUNDLE_USER_INFO_IS_REMOVABLE, innerBundleUserInfo.isRemovable},
         {INNER_BUNDLE_USER_INFO_CLONE_INFOS, innerBundleUserInfo.cloneInfos},
@@ -66,6 +68,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
         innerBundleUserInfo.installTime, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int64_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_UPDATE_TIME,
         innerBundleUserInfo.updateTime, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int64_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_FIRST_INSTALL_TIME,
+        innerBundleUserInfo.firstInstallTime, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<BundleUserInfo>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO,
         innerBundleUserInfo.bundleUserInfo, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_IS_REMOVABLE,

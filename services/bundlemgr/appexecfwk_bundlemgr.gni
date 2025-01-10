@@ -201,6 +201,8 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/common/single_delayed_task_mgr.cpp",
   "${services_path}/bundlemgr/src/el5_filekey_callback.cpp",
   "${services_path}/bundlemgr/src/extend_resource/extend_resource_manager_host_impl.cpp",
+  "${services_path}/bundlemgr/src/first_install_data_mgr/first_install_bundle_info.cpp",
+  "${services_path}/bundlemgr/src/first_install_data_mgr/first_install_data_mgr_storage_rdb.cpp",
   "${services_path}/bundlemgr/src/hidump_helper.cpp",
   "${services_path}/bundlemgr/src/uninstall_data_mgr/uninstall_bundle_info.cpp",
   "${services_path}/bundlemgr/src/uninstall_data_mgr/uninstall_data_mgr_storage_rdb.cpp",

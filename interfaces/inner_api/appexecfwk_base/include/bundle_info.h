@@ -138,6 +138,7 @@ struct BundleInfo : public Parcelable {
     int gid = -1;
     int64_t installTime = 0;
     int64_t updateTime = 0;
+    int64_t firstInstallTime = 0;
     std::string name;
     std::string versionName;
 

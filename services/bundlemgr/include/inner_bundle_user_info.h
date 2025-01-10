@@ -37,6 +37,9 @@ struct InnerBundleUserInfo {
     // The time(unix time) will be recalculated
     // if the application is uninstalled after being installed.
     int64_t updateTime = 0;
+
+    // app first install time
+    int64_t firstInstallTime = 0;
     std::string bundleName;
 
     // encryption key id

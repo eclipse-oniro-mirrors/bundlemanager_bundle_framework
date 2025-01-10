@@ -1444,6 +1444,7 @@ void InnerBundleInfo::BuildDefaultUserInfo()
     defaultInnerBundleUserInfo.gids.emplace_back(ServiceConstants::INVALID_GID);
     defaultInnerBundleUserInfo.installTime = baseBundleInfo_->installTime;
     defaultInnerBundleUserInfo.updateTime = baseBundleInfo_->updateTime;
+    defaultInnerBundleUserInfo.firstInstallTime = baseBundleInfo_->firstInstallTime;
     defaultInnerBundleUserInfo.bundleName = baseApplicationInfo_->bundleName;
     defaultInnerBundleUserInfo.bundleUserInfo.enabled = baseApplicationInfo_->enabled;
     AddInnerBundleUserInfo(defaultInnerBundleUserInfo);
@@ -2815,6 +2816,10 @@ bool InnerBundleInfo::GetInnerBundleUserInfo(
     }
 
     innerBundleUserInfo = infoItem->second;
+    if (innerBundleUserInfo.firstInstallTime == ServiceConstants::DEFAULT_FIRST_INSTALL_TIME) {
+        innerBundleUserInfo.firstInstallTime = IsPreInstallApp() ?
+            ServiceConstants::PREINSTALL_FIRST_INSTALL_TIME : innerBundleUserInfo.installTime;
+    }
     return true;
 }
 
@@ -2839,6 +2844,17 @@ void InnerBundleInfo::SetBundleInstallTime(const int64_t time, int32_t userId)
 
     infoItem->second.installTime = time;
     infoItem->second.updateTime = time;
+}
+
+void InnerBundleInfo::SetFirstInstallTime(const int64_t time, int32_t userId)
+{
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        return;
+    }
+
+    infoItem->second.firstInstallTime = IsPreInstallApp() ? ServiceConstants::PREINSTALL_FIRST_INSTALL_TIME : time;
 }
 
 void InnerBundleInfo::SetAccessTokenId(uint32_t accessToken, const int32_t userId)
@@ -4687,6 +4703,7 @@ bool InnerBundleInfo::GetBundleInfoAdaptBundleClone(
     int32_t appIndex,
     BundleInfo &bundleInfo) const
 {
+    bundleInfo.firstInstallTime = innerBundleUserInfo.firstInstallTime;
     if (appIndex == 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         bundleInfo.uid = innerBundleUserInfo.uid;
         if (!innerBundleUserInfo.gids.empty()) {
