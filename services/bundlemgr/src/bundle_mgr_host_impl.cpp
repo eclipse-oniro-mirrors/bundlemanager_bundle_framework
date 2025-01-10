@@ -313,21 +313,12 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_BUNDLE_INFO_FOR_SELF);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
-    auto uid = IPCSkeleton::GetCallingUid();
-    int32_t userId = uid / Constants::BASE_USER_RANGE;
-    std::string bundleName;
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    int32_t appIndex = 0;
-    auto ret = dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
-    if (ret != ERR_OK) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleNameForUid failed uid:%{public}d", uid);
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
-    return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId, appIndex);
+    return dataMgr->GetBundleInfoForSelf(flags, bundleInfo);
 }
 
 ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundleName,
@@ -3229,9 +3220,12 @@ bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &
 
 ErrCode BundleMgrHostImpl::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)
 {
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != Constants::STORAGE_MANAGER_UID) {
-        APP_LOGE("invalid callinguid: %{public}d", callingUid);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("ohos.permission.PERMISSION_GET_BUNDLE_INFO_PRIVILEGED permission denied");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
@@ -3244,9 +3238,12 @@ ErrCode BundleMgrHostImpl::GetAllBundleCacheStat(const sptr<IProcessCacheCallbac
 
 ErrCode BundleMgrHostImpl::CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
 {
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != Constants::STORAGE_MANAGER_UID) {
-        APP_LOGE("invalid callinguid: %{public}d", callingUid);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("ohos.permission.PERMISSION_REMOVECACHEFILE permission denied");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 

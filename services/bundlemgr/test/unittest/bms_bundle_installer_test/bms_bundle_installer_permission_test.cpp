@@ -646,7 +646,8 @@ HWTEST_F(BmsBundleInstallerPermissionTest, DeleteEncryptionKeyId_0100, Function 
     InstalldHostImpl installdHostImpl;
     std::string bundleName = "com.example.testbundle";
     int32_t userId = USERID;
-    ErrCode ret = installdHostImpl.DeleteEncryptionKeyId(bundleName, userId);
+    EncryptionParam encryptionParam(bundleName, "", 0, userId, EncryptionDirType::APP);
+    ErrCode ret = installdHostImpl.DeleteEncryptionKeyId(encryptionParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -704,7 +705,8 @@ HWTEST_F(BmsBundleInstallerPermissionTest, SetEncryptionPolicy_0100, Function | 
     int32_t userId = USERID;
     std::string keyId;
     int32_t uid = -1;
-    ErrCode ret = hostImpl.SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    EncryptionParam encryptionParam(bundleName, "", uid, userId, EncryptionDirType::APP);
+    ErrCode ret = hostImpl.SetEncryptionPolicy(encryptionParam, keyId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

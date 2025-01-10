@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -125,7 +125,7 @@ public:
         std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID,
         const int32_t appIndex = 0, const uint32_t statFlag = 0,
         const std::vector<std::string> &moduleNameList = {});
-        
+
     ErrCode GetAllBundleStats(const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids);
 
@@ -231,10 +231,9 @@ public:
 
     ErrCode RemoveSignProfile(const std::string &bundleName);
 
-    ErrCode SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
-        const int32_t userId, std::string &keyId);
+    ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId);
 
-    ErrCode DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId);
+    ErrCode DeleteEncryptionKeyId(const EncryptionParam &encryptionParam);
 
     ErrCode RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs);
 
@@ -247,6 +246,10 @@ public:
     ErrCode AddUserDirDeleteDfx(int32_t userId);
 
     ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath);
+
+    ErrCode CreateDataGroupDirs(const std::vector<CreateDirParam> &params);
+
+    ErrCode DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId);
 
 private:
     sptr<IInstalld> GetInstalldProxy();

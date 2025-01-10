@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,53 +30,96 @@ void El5FilekeyCallback::OnRegenerateAppKey(std::vector<Security::AccessToken::A
         APP_LOGE("OnRegenerateAppKey infos is empty");
         return;
     }
+    for (auto &info : infos) {
+        switch (info.type) {
+            case Security::AccessToken::AppKeyType::APP:
+                ProcessAppEl5Dir(info);
+                break;
+            case Security::AccessToken::AppKeyType::GROUPID:
+                ProcessGroupEl5Dir(info);
+                break;
+        }
+    }
+}
+
+void El5FilekeyCallback::ProcessAppEl5Dir(const Security::AccessToken::AppKeyInfo &info)
+{
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("OnRegenerateAppKey dataMgr is nullptr");
         return;
     }
-    for (auto &info : infos) {
-        int32_t appIndex = 0;
-        std::string bundleName = info.bundleName;
-        if (info.bundleName.find(ServiceConstants::CLONE_PREFIX) == 0 &&
-            !BundleCloneCommonHelper::ParseCloneDataDir(info.bundleName, bundleName, appIndex)) {
-            APP_LOGE("parse clone name failed %{public}s", info.bundleName.c_str());
-            continue;
+    int32_t appIndex = 0;
+    std::string bundleName = info.bundleName;
+    if (info.bundleName.find(ServiceConstants::CLONE_PREFIX) == 0 &&
+        !BundleCloneCommonHelper::ParseCloneDataDir(info.bundleName, bundleName, appIndex)) {
+        APP_LOGE("parse clone name failed %{public}s", info.bundleName.c_str());
+        return;
+    }
+    InnerBundleInfo bundleInfo;
+    bool isAppExist = dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo);
+    if (!isAppExist || !bundleInfo.HasInnerBundleUserInfo(info.userId)) {
+        APP_LOGE("%{public}s is not exist %{public}d", bundleName.c_str(), info.userId);
+        return;
+    }
+    if (appIndex != 0) {
+        bool isAppIndexExisted = false;
+        ErrCode res = bundleInfo.IsCloneAppIndexExisted(info.userId, appIndex, isAppIndexExisted);
+        if (res != ERR_OK || !isAppIndexExisted) {
+            APP_LOGE("appIndex is not existed");
+            return;
         }
-        InnerBundleInfo bundleInfo;
-        bool isAppExist = dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo);
-        if (!isAppExist || !bundleInfo.HasInnerBundleUserInfo(info.userId)) {
-            APP_LOGE("%{public}s is not exist %{public}d", bundleName.c_str(), info.userId);
-            continue;
-        }
-        if (appIndex != 0) {
-            bool isAppIndexExisted = false;
-            ErrCode res = bundleInfo.IsCloneAppIndexExisted(info.userId, appIndex, isAppIndexExisted);
-            if (res != ERR_OK || !isAppIndexExisted) {
-                APP_LOGE("appIndex is not existed");
-                continue;
-            }
-        }
-        CheckEl5Dir(info, bundleInfo, bundleName);
-        std::string keyId = "";
-        auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(
-            info.uid, info.bundleName, info.userId, keyId);
-        if (result != ERR_OK) {
-            APP_LOGE("SetEncryptionPolicy failed for %{public}s", info.bundleName.c_str());
-            continue;
-        }
-        // update the keyId to the bundleInfo
-        bundleInfo.SetkeyId(info.userId, keyId, appIndex);
-        bundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-        if (!dataMgr->UpdateInnerBundleInfo(bundleInfo)) {
-            APP_LOGE("save keyId failed");
-            continue;
-        }
-        APP_LOGI("OnRegenerateAppKey success for %{public}s", info.bundleName.c_str());
+    }
+    CheckEl5Dir(info, bundleInfo, bundleName);
+    std::string keyId = "";
+    EncryptionParam encryptionParam(info.bundleName, "", info.uid, info.userId, EncryptionDirType::APP);
+    auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(encryptionParam, keyId);
+    if (result != ERR_OK) {
+        APP_LOGE("SetEncryptionPolicy failed for %{public}s", info.bundleName.c_str());
+        return;
+    }
+    // update the keyId to the bundleInfo
+    bundleInfo.SetkeyId(info.userId, keyId, appIndex);
+    bundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    if (!dataMgr->UpdateInnerBundleInfo(bundleInfo)) {
+        APP_LOGE("save keyId failed");
+        return;
+    }
+    APP_LOGI("OnRegenerateAppKey success for %{public}s", info.bundleName.c_str());
+}
+
+void El5FilekeyCallback::ProcessGroupEl5Dir(const Security::AccessToken::AppKeyInfo &info)
+{
+    if (info.type != Security::AccessToken::AppKeyType::GROUPID || info.uid < 0) {
+        APP_LOGE("param error, type %{public}d uid %{public}d", static_cast<int32_t>(info.type), info.uid);
+        return;
+    }
+    int32_t userId = info.uid / Constants::BASE_USER_RANGE;
+    std::string parentDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId);;
+    bool isDirExisted = false;
+    auto result = InstalldClient::GetInstance()->IsExistDir(parentDir, isDirExisted);
+    if (result != ERR_OK || !isDirExisted) {
+        return;
+    }
+    // create el5 group dir
+    std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + info.groupID;
+    auto mdkirRes = InstalldClient::GetInstance()->Mkdir(dir,
+        ServiceConstants::DATA_GROUP_DIR_MODE, info.uid, info.uid);
+    if (mdkirRes != ERR_OK) {
+        APP_LOGW("el5 group dir %{private}s userId %{public}d create failed",
+            info.groupID.c_str(), userId);
+    }
+    // set el5 group dirs encryption policy
+    EncryptionParam encryptionParam("", info.groupID, info.uid, userId, EncryptionDirType::GROUP);
+    std::string keyId = "";
+    auto setPolicyRes = InstalldClient::GetInstance()->SetEncryptionPolicy(encryptionParam, keyId);
+    if (setPolicyRes != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "SetEncryptionPolicy failed, %{public}d", setPolicyRes);
     }
 }
 
-void El5FilekeyCallback::CheckEl5Dir(Security::AccessToken::AppKeyInfo &info, const InnerBundleInfo &bundleInfo,
+void El5FilekeyCallback::CheckEl5Dir(const Security::AccessToken::AppKeyInfo &info, const InnerBundleInfo &bundleInfo,
     const std::string &bundleName)
 {
     std::string parentDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +

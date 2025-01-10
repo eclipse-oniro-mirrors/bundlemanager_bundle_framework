@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2157,13 +2157,20 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
 }
 #endif
 
-bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string &bundleName,
-    const int32_t userId, std::string &keyId)
+bool InstalldOperator::GenerateKeyId(const EncryptionParam &encryptionParam, std::string &keyId)
 {
-    LOG_D(BMS_TAG_INSTALLD, "GenerateKeyId uid is %{public}d, bundleName is %{public}s, userId is %{public}d",
-        uid, bundleName.c_str(), userId);
-    auto ret = Security::AccessToken::El5FilekeyManagerKit::GenerateAppKey(
-        static_cast<uint32_t>(uid), bundleName, keyId);
+    ErrCode ret = ERR_OK;
+    switch (encryptionParam.encryptionDirType) {
+        case EncryptionDirType::APP:
+            ret = Security::AccessToken::El5FilekeyManagerKit::GenerateAppKey(
+                static_cast<uint32_t>(encryptionParam.uid), encryptionParam.bundleName, keyId);
+            break;
+        case EncryptionDirType::GROUP:
+            ret = Security::AccessToken::El5FilekeyManagerKit::GenerateGroupIDKey(
+                static_cast<uint32_t>(encryptionParam.uid), encryptionParam.groupId, keyId);
+            break;
+    }
+
     if (ret == Security::AccessToken::EFM_ERR_KEYID_EXISTED) {
         LOG_I(BMS_TAG_INSTALLD, "key id is existed");
     } else if (ret != 0) {
@@ -2174,6 +2181,11 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
         LOG_E(BMS_TAG_INSTALLD, "keyId is empty");
         return false;
     }
+    return true;
+}
+
+bool InstalldOperator::SetKeyIdPolicy(const EncryptionParam &encryptionParam, const std::string &keyId)
+{
     struct fscrypt_asdp_policy policy;
     policy.version = 0;
     policy.asdp_class = FORCE_PROTECT;
@@ -2186,12 +2198,23 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
         char byte = (char)strtol(byteString.c_str(), NULL, 16);
         policy.app_key2_descriptor[i / KEY_ID_STEP] = byte;
     }
-
     std::vector<std::string> dirs;
-    dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
-        std::to_string(userId) + ServiceConstants::BASE + bundleName);
-    dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
-        std::to_string(userId) + ServiceConstants::DATABASE + bundleName);
+    switch (encryptionParam.encryptionDirType) {
+        case EncryptionDirType::APP:
+            dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(encryptionParam.userId) +
+                ServiceConstants::BASE + encryptionParam.bundleName);
+            dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(encryptionParam.userId) +
+                ServiceConstants::DATABASE + encryptionParam.bundleName);
+            break;
+        case EncryptionDirType::GROUP:
+            dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(encryptionParam.userId) +
+                ServiceConstants::DATA_GROUP_PATH + encryptionParam.groupId);
+            break;
+    }
+
     for (const auto &dir : dirs) {
         auto fd = open(dir.c_str(), O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
         if (fd < 0) {
@@ -2207,16 +2230,43 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
         }
         close(fd);
     }
-    LOG_I(BMS_TAG_INSTALLD, "GenerateKeyIdAndSetPolicy success for %{public}s", bundleName.c_str());
     return true;
 }
 
-bool InstalldOperator::DeleteKeyId(const std::string &bundleName, const int32_t userId)
+bool InstalldOperator::GenerateKeyIdAndSetPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
-    LOG_I(BMS_TAG_INSTALLD, "DeleteKeyId %{public}s %{public}d", bundleName.c_str(), userId);
-    auto ret = Security::AccessToken::El5FilekeyManagerKit::DeleteAppKey(bundleName, userId);
-    if (ret != 0) {
-        LOG_E(BMS_TAG_INSTALLD, "Call DeleteAppKey failed ret = %{public}d", ret);
+    if (!GenerateKeyId(encryptionParam, keyId)) {
+        LOG_E(BMS_TAG_INSTALLD, "generate keyId error");
+        return false;
+    }
+    if (!SetKeyIdPolicy(encryptionParam, keyId)) {
+        LOG_E(BMS_TAG_INSTALLD, "set keyId policy error");
+        return false;
+    }
+    std::string key = encryptionParam.encryptionDirType == EncryptionDirType::APP ?
+        encryptionParam.bundleName : encryptionParam.groupId;
+    LOG_I(BMS_TAG_INSTALLD, "success for %{public}s", key.c_str());
+    return true;
+}
+
+bool InstalldOperator::DeleteKeyId(const EncryptionParam &encryptionParam)
+{
+    const int32_t userId = encryptionParam.userId;
+    std::string key;
+    ErrCode result = ERR_OK;
+    switch (encryptionParam.encryptionDirType) {
+        case EncryptionDirType::APP:
+            key = encryptionParam.bundleName;
+            result = Security::AccessToken::El5FilekeyManagerKit::DeleteAppKey(key, userId);
+            break;
+        case EncryptionDirType::GROUP:
+            key = encryptionParam.groupId;
+            result = Security::AccessToken::El5FilekeyManagerKit::DeleteGroupIDKey(userId, key);
+            break;
+    }
+    LOG_I(BMS_TAG_INSTALLD, "DeleteKeyId %{public}s %{public}d", key.c_str(), userId);
+    if (result != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "failed ret = %{public}d", result);
         return false;
     }
     return true;

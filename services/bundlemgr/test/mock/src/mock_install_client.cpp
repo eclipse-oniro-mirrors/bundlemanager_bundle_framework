@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -286,13 +286,12 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
     return ERR_OK;
 }
 
-ErrCode InstalldClient::SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
-    const int32_t userId, std::string &keyId)
+ErrCode InstalldClient::SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
     return ERR_OK;
 }
 
-ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId)
+ErrCode InstalldClient::DeleteEncryptionKeyId(const EncryptionParam &encryptionParam)
 {
     return ERR_OK;
 }
@@ -323,6 +322,16 @@ ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
 }
 
 ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::CreateDataGroupDirs(const std::vector<CreateDirParam> &params)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId)
 {
     return ERR_OK;
 }
