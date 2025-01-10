@@ -282,7 +282,7 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
     return false;
 }
 
-bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
+bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info, bool checkStatus)
 {
     APP_LOGD("to save info:%{public}s", info.GetBundleName().c_str());
     if (bundleName.empty()) {
@@ -302,7 +302,7 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
         APP_LOGW("save info fail, bundleName:%{public}s is not installed", bundleName.c_str());
         return false;
     }
-    if (statusItem->second == InstallState::INSTALL_START) {
+    if (!checkStatus || statusItem->second == InstallState::INSTALL_START) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
         if (info.GetBaseApplicationInfo().needAppDetail) {
             AddAppDetailAbilityInfo(info);
@@ -7743,7 +7743,7 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
 }
 
 void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
-    const std::unordered_set<std::string> &dataGroupIdList, int32_t userId)
+    const std::unordered_set<std::string> &dataGroupIdList, int32_t userId, bool needSaveStorage)
 {
     APP_LOGD("called for user: %{public}d", userId);
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -7784,6 +7784,9 @@ void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
     }
     (void)CreateAppGroupDir(bundleInfoItem->second, userId);
     ProcessAllUserDataGroupInfosWhenBundleUpdate(bundleInfoItem->second);
+    if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(bundleInfoItem->second)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+    }
 }
 
 void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId)

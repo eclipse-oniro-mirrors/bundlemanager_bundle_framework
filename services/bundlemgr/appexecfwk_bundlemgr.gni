@@ -59,6 +59,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/installd/installd_load_callback.cpp",
   "${services_path}/bundlemgr/src/installd_client.cpp",
   "${services_path}/bundlemgr/src/installd_death_recipient.cpp",
+  "${services_path}/bundlemgr/src/installer_bundle_tmp_info.cpp",
   "${services_path}/bundlemgr/src/ipc/check_encryption_param.cpp",
   "${services_path}/bundlemgr/src/ipc/code_signature_param.cpp",
   "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
