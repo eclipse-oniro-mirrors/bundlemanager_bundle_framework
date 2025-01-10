@@ -279,6 +279,7 @@ private:
         const int32_t appIndex, const std::vector<std::string> &moduleNames = {});
     ErrCode CreateDataGroupDir(const CreateDirParam &param);
     ErrCode DeleteEl5DataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId);
+    ErrCode CreateBundleDataDirWithEl(const CreateDirParam &createDirParam);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

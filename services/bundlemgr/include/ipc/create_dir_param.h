@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_CREATE_DIR_PARAM_H
 
 #include <string>
+#include "bundle_dir.h"
 #include "message_parcel.h"
 
 namespace OHOS {
@@ -34,6 +35,7 @@ struct CreateDirParam : public Parcelable {
     bool debug = false;
     bool isDlpSandbox = false;
     CreateDirFlag createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
+    DataDirEl dataDirEl = DataDirEl::NONE;
     int32_t userId = -1;
     int32_t uid = -1;
     int32_t gid = -1;

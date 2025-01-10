@@ -965,6 +965,7 @@ public:
     ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
     ErrCode GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
     ErrCode CreateBundleDataDir(int32_t userId);
+    ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl);
     void GenerateOdid(const std::string &developerId, std::string &odid) const;
     ErrCode GetOdid(std::string &odid) const;
     ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
