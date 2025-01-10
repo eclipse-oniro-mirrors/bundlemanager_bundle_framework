@@ -687,7 +687,7 @@ HWTEST_F(BmsInstalldHostTest, HandleSetEncryptionDir_0100, Function | SmallTest 
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = installdHost.HandleSetEncryptionDir(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -701,7 +701,7 @@ HWTEST_F(BmsInstalldHostTest, HandleDeleteEncryptionKeyId_0100, Function | Small
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = installdHost.HandleDeleteEncryptionKeyId(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**

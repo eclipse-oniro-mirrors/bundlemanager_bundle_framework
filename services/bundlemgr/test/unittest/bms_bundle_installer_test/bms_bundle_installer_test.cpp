@@ -6527,10 +6527,11 @@ HWTEST_F(BmsBundleInstallerTest, SetEncryptionPolicy_0100, Function | SmallTest 
     std::string bundleName = "";
     int32_t userId = USERID;
     std::string keyId;
-    ErrCode ret = hostImpl.SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    EncryptionParam encryptionParam(bundleName, "", uid, userId, EncryptionDirType::APP);
+    ErrCode ret = hostImpl.SetEncryptionPolicy(encryptionParam, keyId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    bundleName = BUNDLE_NAME;
-    ret = hostImpl.SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    encryptionParam.bundleName = BUNDLE_NAME;
+    ret = hostImpl.SetEncryptionPolicy(encryptionParam, keyId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
 }
 
@@ -6544,10 +6545,11 @@ HWTEST_F(BmsBundleInstallerTest, DeleteEncryptionKeyId_0100, Function | SmallTes
     InstalldHostImpl hostImpl;
     std::string bundleName = "";
     int32_t userId = USERID;
-    ErrCode ret = hostImpl.DeleteEncryptionKeyId(bundleName, userId);
+    EncryptionParam encryptionParam(bundleName, "", 0, userId, EncryptionDirType::APP);
+    ErrCode ret = hostImpl.DeleteEncryptionKeyId(encryptionParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    bundleName = BUNDLE_NAME;
-    ret = hostImpl.DeleteEncryptionKeyId(bundleName, userId);
+    encryptionParam.bundleName = BUNDLE_NAME;
+    ret = hostImpl.DeleteEncryptionKeyId(encryptionParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED);
 }
 

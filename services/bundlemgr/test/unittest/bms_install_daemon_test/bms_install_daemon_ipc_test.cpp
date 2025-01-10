@@ -824,7 +824,8 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4100, Function | SmallTest |
     std::string bundleName = TEST_STRING;
     int32_t userId = 100;
     std::string keyId = "";
-    auto ret = proxy->SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    EncryptionParam encryptionParam(bundleName, "", uid, userId, EncryptionDirType::APP);
+    auto ret = proxy->SetEncryptionPolicy(encryptionParam, keyId);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -840,7 +841,8 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4200, Function | SmallTest |
 
     std::string bundleName = TEST_STRING;
     int32_t userId = 100;
-    auto ret = proxy->DeleteEncryptionKeyId(bundleName, userId);
+    EncryptionParam encryptionParam(bundleName, "", 0, userId, EncryptionDirType::APP);
+    auto ret = proxy->DeleteEncryptionKeyId(encryptionParam);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -1131,7 +1133,8 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6000, Function | SmallTest |
     std::string bundleName = TEST_STRING;
     int32_t userId = 100;
     std::string keyId = "";
-    auto ret = proxy->SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    EncryptionParam encryptionParam(bundleName, "", uid, userId, EncryptionDirType::APP);
+    auto ret = proxy->SetEncryptionPolicy(encryptionParam, keyId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
@@ -1147,7 +1150,8 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6100, Function | SmallTest |
 
     std::string bundleName = TEST_STRING;
     int32_t userId = 100;
-    auto ret = proxy->DeleteEncryptionKeyId(bundleName, userId);
+    EncryptionParam encryptionParam(bundleName, "", 0, userId, EncryptionDirType::APP);
+    auto ret = proxy->DeleteEncryptionKeyId(encryptionParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 

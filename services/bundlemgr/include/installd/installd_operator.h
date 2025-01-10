@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@
 #include "installd/installd_constants.h"
 #include "ipc/check_encryption_param.h"
 #include "ipc/code_signature_param.h"
+#include "ipc/encryption_param.h"
 #include "ipc/extract_param.h"
 #include "nocopyable.h"
 
@@ -297,10 +298,9 @@ public:
     static int32_t CallIoctl(int32_t flag, int32_t associatedFlag, int32_t uid, int32_t &fd);
 #endif
 
-    static bool GenerateKeyIdAndSetPolicy(int32_t uid, const std::string &bundleName,
-        const int32_t userId, std::string &keyId);
+    static bool GenerateKeyIdAndSetPolicy(const EncryptionParam &encryptionParam, std::string &keyId);
 
-    static bool DeleteKeyId(const std::string &bundleName, const int32_t userId);
+    static bool DeleteKeyId(const EncryptionParam &encryptionParam);
 
     /**
      * @brief Add file Delete dfx
@@ -326,6 +326,8 @@ private:
     static bool ExtractResourceFiles(const ExtractParam &extractParam, const BundleExtractor &extractor);
     static bool CheckPathIsSame(const std::string &path, int32_t mode, const int32_t uid, const int32_t gid,
         bool &isPathExist);
+    static bool SetKeyIdPolicy(const EncryptionParam &encryptionParam, const std::string &keyId);
+    static bool GenerateKeyId(const EncryptionParam &encryptionParam, std::string &keyId);
 #if defined(CODE_ENCRYPTION_ENABLE)
     static std::mutex encryptionMutex_;
     static void *encryptionHandle_;

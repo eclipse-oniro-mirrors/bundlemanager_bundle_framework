@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -453,7 +453,8 @@ void BundleCloneInstaller::RemoveEl5Dir(InnerBundleUserInfo &userInfo, const int
     if (it->second.keyId.empty()) {
         return;
     }
-    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(key, userId) != ERR_OK) {
+    EncryptionParam encryptionParam(key, "", 0, userId, EncryptionDirType::APP);
+    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(encryptionParam) != ERR_OK) {
         APP_LOGW("delete encryption key id failed");
     }
 }

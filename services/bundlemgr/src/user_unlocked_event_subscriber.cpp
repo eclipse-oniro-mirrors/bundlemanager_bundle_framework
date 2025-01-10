@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -186,6 +186,7 @@ bool UpdateAppDataMgr::CreateEl5Dir(const CreateDirParam &createDirParam)
         }
     }
     dataMgr->CreateEl5Dir(params, true);
+    dataMgr->CreateAppEl5GroupDir(createDirParam.bundleName, createDirParam.userId);
     return true;
 }
 
@@ -224,33 +225,9 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
         APP_LOGE("CreateDataGroupDir failed for DataMgr is nullptr");
         return;
     }
-    std::vector<DataGroupInfo> dataGroupInfos;
-    if (!dataMgr->QueryDataGroupInfos(bundleInfo.name, userId, dataGroupInfos)) {
-        APP_LOGW("QueryDataGroupInfo for bundle %{public}s userId %{public}d failed", bundleInfo.name.c_str(), userId);
+    if (!dataMgr->CreateAppGroupDir(bundleInfo.name, userId)) {
+        APP_LOGE("CreateAppGroupDir %{public}s in %{public}d failed", bundleInfo.name.c_str(), userId);
         return;
-    }
-    if (dataGroupInfos.empty()) {
-        return;
-    }
-
-    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-        + std::to_string(userId);
-    if (!BundleUtil::IsExistDir(parentDir)) {
-        APP_LOGE("parent dir(%{public}s) missing: group", parentDir.c_str());
-        return;
-    }
-    for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
-        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        if (BundleUtil::IsPathInformationConsistent(dir, dataGroupInfo.uid, dataGroupInfo.gid)) {
-            continue;
-        }
-        APP_LOGI("create group dir -n %{public}s uid %{public}d -u %{public}d", bundleInfo.name.c_str(),
-            dataGroupInfo.uid, userId);
-        auto result = InstalldClient::GetInstance()->Mkdir(dir,
-            ServiceConstants::DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
-        if (result != ERR_OK) {
-            APP_LOGW("create data group dir %{private}s userId %{public}d failed", dataGroupInfo.uuid.c_str(), userId);
-        }
     }
 }
 

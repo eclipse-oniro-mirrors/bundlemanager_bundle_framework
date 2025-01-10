@@ -908,7 +908,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5100, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
     std::string keyId = "";
-    auto ret = hostImpl->SetEncryptionPolicy(0, "", 100, keyId);
+    EncryptionParam encryptionParam("", "", 0, 100, EncryptionDirType::APP);
+    auto ret = hostImpl->SetEncryptionPolicy(encryptionParam, keyId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -922,7 +923,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5200, Function | Sma
 {
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
-    auto ret = hostImpl->DeleteEncryptionKeyId("", 100);
+    EncryptionParam encryptionParam("", "", 0, 100, EncryptionDirType::APP);
+    auto ret = hostImpl->DeleteEncryptionKeyId(encryptionParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

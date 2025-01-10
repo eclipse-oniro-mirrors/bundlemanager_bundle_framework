@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -4436,6 +4436,15 @@ bool InnerBundleInfo::IsUbsanEnabled() const
         }
     }
     return false;
+}
+
+bool InnerBundleInfo::NeedCreateEl5Dir() const
+{
+    std::vector<RequestPermission> reqPermissions = GetAllRequestPermissions();
+    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
+        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    });
+    return it != reqPermissions.end();
 }
 
 bool InnerBundleInfo::GetUninstallState() const

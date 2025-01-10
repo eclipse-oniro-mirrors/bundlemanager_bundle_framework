@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -216,31 +216,9 @@ void BundleMultiUserInstaller::CreateDataGroupDir(const std::string &bundleName,
         return;
     }
     dataMgr_->GenerateNewUserDataGroupInfos(bundleName, userId);
-    std::vector<DataGroupInfo> infos;
-    if (!dataMgr_->QueryDataGroupInfos(bundleName, userId, infos)) {
-        APP_LOGE("find %{public}s in %{public}d failed", bundleName.c_str(), userId);
+    if (!dataMgr_->CreateAppGroupDir(bundleName, userId)) {
+        APP_LOGE("CreateAppGroupDir %{public}s in %{public}d failed", bundleName.c_str(), userId);
         return;
-    }
-    if (infos.empty()) {
-        return;
-    }
-    for (const DataGroupInfo &dataGroupInfo : infos) {
-        std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-            + std::to_string(dataGroupInfo.userId);
-        if (!BundleUtil::IsExistDirNoLog(parentDir)) {
-            APP_LOGE("group parent dir %{public}s not exist", parentDir.c_str());
-            return;
-        }
-        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        if (BundleUtil::IsExistDirNoLog(dir)) {
-            APP_LOGI("group dir exist, no need to create");
-            continue;
-        }
-        auto result = InstalldClient::GetInstance()->Mkdir(dir, ServiceConstants::DATA_GROUP_DIR_MODE,
-            dataGroupInfo.uid, dataGroupInfo.gid);
-        if (result != ERR_OK) {
-            APP_LOGE("mkdir group dir failed, uid %{public}d err %{public}d", dataGroupInfo.uid, result);
-        }
     }
 }
 

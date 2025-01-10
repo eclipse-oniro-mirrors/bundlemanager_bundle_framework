@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -229,10 +229,9 @@ public:
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
 
-    virtual ErrCode SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
-        const int32_t userId, std::string &keyId) override;
+    virtual ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId) override;
 
-    virtual ErrCode DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId) override;
+    virtual ErrCode DeleteEncryptionKeyId(const EncryptionParam &encryptionParam) override;
 
     virtual ErrCode RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs) override;
 
@@ -246,7 +245,12 @@ public:
 
     virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath) override;
 
+    virtual ErrCode CreateDataGroupDirs(const std::vector<CreateDirParam> &params) override;
+
+    virtual ErrCode DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId) override;
+
 private:
+    static std::string GetGroupDirPath(const std::string &el, int32_t userId, const std::string &uuid);
     std::string GetExtensionConfigPath() const;
     /**
      * @brief Create /data/app/el2/userid/sharefiles/ bundle data directory.
@@ -273,6 +277,8 @@ private:
         const std::vector<std::string> &extensionDirs, bool setAccess, bool setDefault);
     int64_t GetAppCacheSize(const std::string &bundleName, const int32_t userId,
         const int32_t appIndex, const std::vector<std::string> &moduleNames = {});
+    ErrCode CreateDataGroupDir(const CreateDirParam &param);
+    ErrCode DeleteEl5DataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

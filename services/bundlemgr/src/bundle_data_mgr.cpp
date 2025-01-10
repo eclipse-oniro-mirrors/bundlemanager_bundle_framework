@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -7235,6 +7235,130 @@ std::vector<int32_t> BundleDataMgr::GetUserIds(const std::string &bundleName) co
     return userIds;
 }
 
+void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto bundleInfoItem = bundleInfos_.find(bundleName);
+    if (bundleInfoItem == bundleInfos_.end()) {
+        APP_LOGW("%{public}s not found", bundleName.c_str());
+        return;
+    }
+    bool needCreateEl5Dir = bundleInfoItem->second.NeedCreateEl5Dir();
+    if (!needCreateEl5Dir) {
+        return;
+    }
+    auto dataGroupInfoMap = bundleInfoItem->second.GetDataGroupInfos();
+    if (dataGroupInfoMap.empty()) {
+        return;
+    }
+    std::vector<DataGroupInfo> dataGroupInfos;
+    for (const auto &groupItem : dataGroupInfoMap) {
+        for (const DataGroupInfo &dataGroupInfo : groupItem.second) {
+            if (dataGroupInfo.userId == userId) {
+                dataGroupInfos.emplace_back(dataGroupInfo);
+            }
+        }
+    }
+    if (CreateEl5GroupDirs(dataGroupInfos, userId) != ERR_OK) {
+        APP_LOGW("create el5 group dirs for %{public}s %{public}d failed", bundleName.c_str(), userId);
+    }
+}
+
+bool BundleDataMgr::CreateAppGroupDir(const InnerBundleInfo &info, int32_t userId)
+{
+    auto dataGroupInfoMap = info.GetDataGroupInfos();
+    if (dataGroupInfoMap.empty()) {
+        return true;
+    }
+    std::vector<DataGroupInfo> dataGroupInfos;
+    for (const auto &groupItem : dataGroupInfoMap) {
+        for (const DataGroupInfo &dataGroupInfo : groupItem.second) {
+            if (dataGroupInfo.userId == userId) {
+                dataGroupInfos.emplace_back(dataGroupInfo);
+            }
+        }
+    }
+    bool needCreateEl5Dir = info.NeedCreateEl5Dir();
+    return CreateGroupDirs(dataGroupInfos, userId, needCreateEl5Dir) == ERR_OK;
+}
+
+bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t userId)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto bundleInfoItem = bundleInfos_.find(bundleName);
+    if (bundleInfoItem == bundleInfos_.end()) {
+        APP_LOGW("%{public}s not found", bundleName.c_str());
+        return false;
+    }
+    return CreateAppGroupDir(bundleInfoItem->second, userId);
+}
+
+ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId,
+    bool needCreateEl5Dir)
+{
+    if (dataGroupInfos.empty()) {
+        return ERR_OK;
+    }
+    std::vector<CreateDirParam> params;
+    for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
+        CreateDirParam param;
+        param.uuid = dataGroupInfo.uuid;
+        param.uid = dataGroupInfo.uid;
+        param.gid = dataGroupInfo.gid;
+        param.userId = dataGroupInfo.userId;
+        params.emplace_back(param);
+    }
+    ErrCode res = ERR_OK;
+    auto nonEl5Res = InstalldClient::GetInstance()->CreateDataGroupDirs(params);
+    if (nonEl5Res != ERR_OK) {
+        APP_LOGE("mkdir group dir failed %{public}d", nonEl5Res);
+        res = nonEl5Res;
+    }
+    if (!needCreateEl5Dir) {
+        return res;
+    }
+    auto el5Res = CreateEl5GroupDirs(dataGroupInfos, userId);
+    if (el5Res != ERR_OK) {
+        APP_LOGE("el5Res %{public}d", el5Res);
+        res = el5Res;
+    }
+    return res;
+}
+
+ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId)
+{
+    if (dataGroupInfos.empty()) {
+        return ERR_OK;
+    }
+    std::string parentDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId);
+    if (!BundleUtil::IsExistDir(parentDir)) {
+        APP_LOGE("parent dir(%{public}s) missing: el5", parentDir.c_str());
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    ErrCode res = ERR_OK;
+    for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
+        // create el5 group dirs
+        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        auto result = InstalldClient::GetInstance()->Mkdir(dir,
+            ServiceConstants::DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+        if (result != ERR_OK) {
+            APP_LOGW("id %{public}s group dir %{private}s userId %{public}d failed",
+                dataGroupInfo.dataGroupId.c_str(), dataGroupInfo.uuid.c_str(), userId);
+            res = result;
+        }
+        // set el5 group dirs encryption policy
+        EncryptionParam encryptionParam("", dataGroupInfo.uuid, dataGroupInfo.uid, userId, EncryptionDirType::GROUP);
+        std::string keyId = "";
+        auto setPolicyRes = InstalldClient::GetInstance()->SetEncryptionPolicy(encryptionParam, keyId);
+        if (setPolicyRes != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "SetEncryptionPolicy failed");
+            res = setPolicyRes;
+        }
+    }
+    return res;
+}
+
 ErrCode BundleDataMgr::GetSpecifiedDistributionType(
     const std::string &bundleName, std::string &specifiedDistributionType)
 {
@@ -7657,29 +7781,9 @@ void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
             GenerateDataGroupUuidAndUid(dataGroupInfo, userId, uniqueIdSet);
         }
         bundleInfoItem->second.AddDataGroupInfo(groupId, dataGroupInfo);
-        CreateGroupDirIfNotExist(dataGroupInfo);
     }
+    (void)CreateAppGroupDir(bundleInfoItem->second, userId);
     ProcessAllUserDataGroupInfosWhenBundleUpdate(bundleInfoItem->second);
-}
-
-void BundleDataMgr::CreateGroupDirIfNotExist(const DataGroupInfo &dataGroupInfo)
-{
-    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-        + std::to_string(dataGroupInfo.userId);
-    if (!BundleUtil::IsExistDirNoLog(parentDir)) {
-        APP_LOGE("group parent dir %{public}s not exist", parentDir.c_str());
-        return;
-    }
-    std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-    if (BundleUtil::IsExistDirNoLog(dir)) {
-        APP_LOGI("group dir exist, no need to create");
-        return;
-    }
-    auto result = InstalldClient::GetInstance()->Mkdir(dir, ServiceConstants::DATA_GROUP_DIR_MODE,
-        dataGroupInfo.uid, dataGroupInfo.gid);
-    if (result != ERR_OK) {
-        APP_LOGE("mkdir group dir failed, uid %{public}d err %{public}d", dataGroupInfo.uid, result);
-    }
 }
 
 void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId)
@@ -7724,6 +7828,7 @@ void BundleDataMgr::DeleteUserDataGroupInfos(const std::string &bundleName, int3
     if (dataGroupInfos.empty()) {
         return;
     }
+    std::vector<std::string> uuidList;
     for (const auto &dataItem : dataGroupInfos) {
         std::string groupId = dataItem.first;
         if (dataItem.second.empty()) {
@@ -7732,12 +7837,12 @@ void BundleDataMgr::DeleteUserDataGroupInfos(const std::string &bundleName, int3
         }
         bundleInfoItem->second.RemoveGroupInfos(userId, groupId);
         if (!keepData && !IsDataGroupIdExistNoLock(groupId, userId)) {
-            std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-                + std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + dataItem.second[0].uuid;
-            if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
-                APP_LOGE("remove group dir %{private}s failed", dir.c_str());
-            }
+            uuidList.emplace_back(dataItem.second[0].uuid);
         }
+    }
+    auto result = InstalldClient::GetInstance()->DeleteDataGroupDirs(uuidList, userId);
+    if (result != ERR_OK) {
+        APP_LOGE("delete group dir failed, err %{public}d", result);
     }
     if (!dataStorage_->SaveStorageBundleInfo(bundleInfoItem->second)) {
         APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
@@ -7809,42 +7914,6 @@ bool BundleDataMgr::IsDataGroupIdExistNoLock(const std::string &dataGroupId, int
     return false;
 }
 
-void BundleDataMgr::RemoveOldGroupDirs(const InnerBundleInfo &oldInfo) const
-{
-    //find ids existed in oldInfo, but not in newInfo when there is no others share this id
-    auto oldDatagroupInfos = oldInfo.GetDataGroupInfos();
-    if (oldDatagroupInfos.empty()) {
-        return;
-    }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    const auto bundleInfoItem = bundleInfos_.find(oldInfo.GetBundleName());
-    if (bundleInfoItem == bundleInfos_.end()) {
-        APP_LOGE("find bundle %{public}s failed", oldInfo.GetBundleName().c_str());
-        return;
-    }
-    auto newDataGroupInfos = bundleInfoItem->second.GetDataGroupInfos();
-    std::unordered_set<int32_t> userIds = bundleInfoItem->second.GetUsers();
-    for (const auto &oldDataItem : oldDatagroupInfos) {
-        std::string oldGroupId = oldDataItem.first;
-        if (oldDataItem.second.empty()) {
-            APP_LOGE("infos empty in %{public}s %{public}s", oldInfo.GetBundleName().c_str(), oldGroupId.c_str());
-            continue;
-        }
-        if (newDataGroupInfos.find(oldGroupId) != newDataGroupInfos.end()) {
-            continue;
-        }
-        std::string uuid = oldDataItem.second[0].uuid;
-        for (int32_t userId : userIds) {
-            std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
-                std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + uuid;
-            if (!IsDataGroupIdExistNoLock(oldGroupId, userId)) {
-                APP_LOGI("-u %{public}d remove group dir %{private}s", userId, oldGroupId.c_str());
-                (void)InstalldClient::GetInstance()->RemoveDir(dir);
-            }
-        }
-    }
-}
-
 void BundleDataMgr::DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId) const
 {
     //find ids existed in newInfo, but not in oldInfo when there is no others share this id
@@ -7859,6 +7928,7 @@ void BundleDataMgr::DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, 
         return;
     }
     auto oldDatagroupInfos = oldInfo.GetDataGroupInfos();
+    std::vector<std::string> uuidList;
     for (const auto &newDataItem : newDataGroupInfos) {
         std::string newGroupId = newDataItem.first;
         if (newDataItem.second.empty()) {
@@ -7869,12 +7939,11 @@ void BundleDataMgr::DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, 
             IsShareDataGroupIdNoLock(newGroupId, userId)) {
             continue;
         }
-        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
-            std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + newDataItem.second[0].uuid;
-        APP_LOGI("remove group dir %{private}s", dir.c_str());
-        if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
-            APP_LOGE("remove group dir %{private}s failed", dir.c_str());
-        }
+        uuidList.emplace_back(newDataItem.second[0].uuid);
+    }
+    auto result = InstalldClient::GetInstance()->DeleteDataGroupDirs(uuidList, userId);
+    if (result != ERR_OK) {
+        APP_LOGE("delete group dir failed, err %{public}d", result);
     }
 }
 
@@ -8315,41 +8384,6 @@ void BundleDataMgr::AddAppHspBundleName(const BundleType type, const std::string
     }
 }
 
-void BundleDataMgr::CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32_t userId) const
-{
-    std::vector<DataGroupInfo> infos;
-    auto dataGroupInfos = innerBundleInfo.GetDataGroupInfos();
-    for (const auto &item : dataGroupInfos) {
-        auto dataGroupIter = std::find_if(std::begin(item.second), std::end(item.second),
-            [userId](const DataGroupInfo &info) {
-            return info.userId == userId;
-        });
-        if (dataGroupIter != std::end(item.second)) {
-            infos.push_back(*dataGroupIter);
-        }
-    }
-    if (infos.empty()) {
-        return;
-    }
-
-    std::string parentDir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
-        + std::to_string(userId);
-    if (!BundleUtil::IsExistDir(parentDir)) {
-        APP_LOGE("parent dir(%{public}s) missing: group", parentDir.c_str());
-        return;
-    }
-    for (const DataGroupInfo &dataGroupInfo : infos) {
-        std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        APP_LOGD("create group dir: %{public}s", dir.c_str());
-        auto result = InstalldClient::GetInstance()->Mkdir(dir,
-            ServiceConstants::DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
-        if (result != ERR_OK) {
-            APP_LOGW("%{public}s group dir %{public}s userId %{public}d failed",
-                innerBundleInfo.GetBundleName().c_str(), dataGroupInfo.uuid.c_str(), userId);
-        }
-    }
-}
-
 ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
 {
     APP_LOGI("with -u %{public}d begin", userId);
@@ -8383,7 +8417,7 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
         if (it != reqPermissions.end()) {
             el5Params.emplace_back(createDirParam);
         }
-        CreateGroupDir(info, responseUserId);
+        CreateAppGroupDir(info, responseUserId);
     }
     lock.unlock();
     APP_LOGI("begin create dirs");
@@ -8488,7 +8522,8 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleI
     if (el5Param.appIndex > 0) {
         bundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, el5Param.appIndex);
     }
-    auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(uid, bundleName, el5Param.userId, keyId);
+    EncryptionParam encryptionParam(bundleName, "", uid, el5Param.userId, EncryptionDirType::APP);
+    auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(encryptionParam, keyId);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "SetEncryptionPolicy failed");
     }

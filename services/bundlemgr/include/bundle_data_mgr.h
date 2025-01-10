@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -942,6 +942,8 @@ public:
         std::unordered_set<int32_t> &uniqueIdSet) const;
     void GenerateDataGroupInfos(const std::string &bundleName,
         const std::unordered_set<std::string> &dataGroupIdList, int32_t userId);
+    bool CreateAppGroupDir(const std::string &bundleName, int32_t userId);
+    void CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId);
     void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
         std::unordered_set<int32_t> &uniqueIdSet) const;
     bool IsShareDataGroupIdNoLock(const std::string &dataGroupId, int32_t userId) const;
@@ -949,9 +951,7 @@ public:
     void DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData);
     bool IsDataGroupIdExistNoLock(const std::string &dataGroupId, int32_t userId) const;
     void ProcessAllUserDataGroupInfosWhenBundleUpdate(InnerBundleInfo &innerBundleInfo);
-    void RemoveOldGroupDirs(const InnerBundleInfo &oldInfo) const;
     void DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId) const;
-    void CreateGroupDirIfNotExist(const DataGroupInfo &dataGroupInfo);
     ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName, const std::string &moduleName,
         std::string &profile, int32_t userId) const;
     ErrCode GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
@@ -1144,7 +1144,6 @@ private:
 #endif
 
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;
-    void CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32_t userId) const;
     void InnerCreateEl5Dir(const CreateDirParam &el5Param);
     void SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSaveStorage);
     void SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleInfo &info);
@@ -1253,6 +1252,10 @@ private:
         int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const;
     void CreateNewDataGroupInfo(const std::string &groupId, const int32_t userId,
         const DataGroupInfo &oldDataGroupInfo, DataGroupInfo &newDataGroupInfo);
+    ErrCode CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId);
+    ErrCode CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId,
+        bool needCreateEl5Dir);
+    bool CreateAppGroupDir(const InnerBundleInfo &info, int32_t userId);
 
     void PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const;
     void PostProcessAnyUserFlags(int32_t flags, int32_t userId,
