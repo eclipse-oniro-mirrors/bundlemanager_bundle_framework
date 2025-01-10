@@ -939,24 +939,24 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
     return ERR_OK;
 }
 
-int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
+ErrCode InstalldHostImpl::GetDiskUsage(const std::string &dir, int64_t &statSize, bool isRealPath)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-
-    return InstalldOperator::GetDiskUsage(dir, isRealPath);
+    statSize = InstalldOperator::GetDiskUsage(dir, isRealPath);
+    return ERR_OK;
 }
 
-int64_t InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path)
+ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-
-    return InstalldOperator::GetDiskUsageFromPath(path);
+    statSize = InstalldOperator::GetDiskUsageFromPath(path);
+    return ERR_OK;
 }
 
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)

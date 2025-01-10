@@ -91,15 +91,17 @@ public:
      * @brief Get disk usage for dir.
      * @param dir Indicates the directory.
      * @param isRealPath Indicates isRealPath.
+     * @param statSize Indicates size of dir.
      * @return Returns true if successfully; returns false otherwise.
      */
-    int64_t GetDiskUsage(const std::string &dir, bool isRealPath = false);
+    ErrCode GetDiskUsage(const std::string &dir, int64_t &statSize, bool isRealPath = false);
     /**
      * @brief Get disk usage for dir.
      * @param path Indicates the directory vector.
+     * @param statSize Indicates size of path.
      * @return Returns true if successfully; returns false otherwise.
      */
-    int64_t GetDiskUsageFromPath(const std::vector<std::string> &path);
+    ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize);
     /**
      * @brief Clean all files in a bundle data directory.
      * @param bundleDir Indicates the data directory path that to be cleaned.
@@ -272,7 +274,6 @@ private:
         }
         return errCode;
     }
-
 private:
     bool loadSaFinished_;
     std::mutex mutex_;

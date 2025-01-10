@@ -106,12 +106,12 @@ ErrCode InstalldClient::RemoveDir(const std::string &dir)
     return 0;
 }
 
-int64_t InstalldClient::GetDiskUsage(const std::string &dir, bool isRealPath)
+ErrCode InstalldClient::GetDiskUsage(const std::string &dir, int64_t &statSize, bool isRealPath)
 {
     return 0;
 }
 
-int64_t InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path)
+ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
 {
     return 0;
 }

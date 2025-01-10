@@ -549,7 +549,8 @@ HWTEST_F(BmsBundleInstallerPermissionTest, GetDiskUsage_0100, Function | SmallTe
     InstalldHostImpl installdHostImpl;
     std::string dir;
     bool isRealPath = false;
-    auto ret = installdHostImpl.GetDiskUsage(dir, isRealPath);
+    int64_t statSize = 0;
+    ErrCode ret = installdHostImpl.GetDiskUsage(dir, statSize, isRealPath);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -562,7 +563,8 @@ HWTEST_F(BmsBundleInstallerPermissionTest, GetDiskUsageFromPath_0100, Function |
 {
     InstalldHostImpl installdHostImpl;
     std::vector<std::string> path;
-    auto ret = installdHostImpl.GetDiskUsageFromPath(path);
+    int64_t statSize = 0;
+    ErrCode ret = installdHostImpl.GetDiskUsageFromPath(path, statSize);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
