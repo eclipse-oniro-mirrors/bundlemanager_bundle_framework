@@ -3238,9 +3238,12 @@ ErrCode BundleMgrHostImpl::GetAllBundleCacheStat(const sptr<IProcessCacheCallbac
 
 ErrCode BundleMgrHostImpl::CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
 {
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != Constants::STORAGE_MANAGER_UID) {
-        APP_LOGE("invalid callinguid: %{public}d", callingUid);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("ohos.permission.PERMISSION_REMOVECACHEFILE permission denied");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
