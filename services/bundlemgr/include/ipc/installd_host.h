@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -148,7 +148,7 @@ private:
     bool HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
     bool HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply);
-    
+
     /**
      * @brief Handles the set dir apl function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
@@ -224,6 +224,10 @@ private:
     bool HandleAddUserDirDeleteDfx(MessageParcel &data, MessageParcel &reply);
 
     bool HandleMoveHapToCodeDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCreateDataGroupDirs(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleDeleteDataGroupDirs(MessageParcel &data, MessageParcel &reply);
 
     void AddCloseInstalldTask();
 

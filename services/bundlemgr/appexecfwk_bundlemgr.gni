@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -28,6 +28,7 @@ install_daemon_sources = [
   "${services_path}/bundlemgr/src/ipc/check_encryption_param.cpp",
   "${services_path}/bundlemgr/src/ipc/code_signature_param.cpp",
   "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
+  "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
   "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
   "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
@@ -58,9 +59,11 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/installd/installd_load_callback.cpp",
   "${services_path}/bundlemgr/src/installd_client.cpp",
   "${services_path}/bundlemgr/src/installd_death_recipient.cpp",
+  "${services_path}/bundlemgr/src/installer_bundle_tmp_info.cpp",
   "${services_path}/bundlemgr/src/ipc/check_encryption_param.cpp",
   "${services_path}/bundlemgr/src/ipc/code_signature_param.cpp",
   "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
+  "${services_path}/bundlemgr/src/ipc/encryption_param.cpp",
   "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
   "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_host.cpp",

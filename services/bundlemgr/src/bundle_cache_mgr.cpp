@@ -14,11 +14,12 @@
  */
 
 #include "bundle_cache_mgr.h"
+
+#include <cinttypes>
 #include "bundle_mgr_service.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-
 namespace {
 constexpr size_t INDEX_BUNDLE_NAME = 0;
 constexpr size_t INDEX_MODULE_NAMES = 1;
@@ -73,7 +74,14 @@ void BundleCacheMgr::GetBundleCacheSize(const std::vector<std::tuple<std::string
         std::vector<int32_t> allCloneAppIndex = std::get<INDEX_CLONE_APP_INDEX>(item);
         for (const auto &appIndex : allCloneAppIndex) {
             std::vector<std::string> cachePaths = GetBundleCachePath(bundleName, userId, appIndex, moduleNames);
-            int64_t cacheSize = InstalldClient::GetInstance()->GetDiskUsageFromPath(cachePaths);
+            int64_t cacheSize = 0;
+            ErrCode ret = InstalldClient::GetInstance()->GetDiskUsageFromPath(cachePaths, cacheSize);
+            if (ret != ERR_OK) {
+                APP_LOGW("BundleCache GetDiskUsageFromPath  failed for %{public}s", bundleName.c_str());
+                continue;
+            }
+            APP_LOGD("BundleCache stat: %{public}" PRId64 " bundlename: %{public}s",
+                cacheSize, bundleName.c_str());
             cacheStat += static_cast<uint64_t>(cacheSize);
         }
     }
@@ -94,39 +102,16 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
-    std::map<std::string, InnerBundleInfo> bundleInfos = dataMgr->GetAllInnerBundleInfos();
-    for (const auto &item : bundleInfos) {
-        const InnerBundleInfo &info = item.second;
-        std::string bundleName = info.GetBundleName();
-        std::vector<std::string> moduleNameList;
-        info.GetModuleNames(moduleNameList);
-        std::vector<int32_t> allAppIndexes = {0};
-        std::vector<int32_t> cloneAppIndexes = dataMgr->GetCloneAppIndexesByInnerBundleInfo(info, userId);
-        allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
-        validBundles.emplace_back(std::make_tuple(bundleName, moduleNameList, allAppIndexes));
-        // add atomic service
-        if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-            std::string atomicServiceName;
-            AccountSA::OhosAccountInfo accountInfo;
-            auto ret = dataMgr->GetDirForAtomicServiceByUserId(bundleName, userId, accountInfo, atomicServiceName);
-            if (ret != ERR_OK) {
-                APP_LOGW("GetDirForAtomicServiceByUserId failed bundleName: %{public}s", bundleName.c_str());
-                continue;
-            }
-            if (!atomicServiceName.empty()) {
-                validBundles.emplace_back(std::make_tuple(atomicServiceName, moduleNameList, allAppIndexes));
-                APP_LOGD("atomicServiceName: %{public}s", atomicServiceName.c_str());
-            }
-        }
+    dataMgr->GetBundleCacheInfos(userId, validBundles, false);
+    if (!validBundles.empty()) {
+        auto getAllBundleCache = [validBundles, userId, processCacheCallback]() {
+            uint64_t cacheStat = 0;
+            APP_LOGI("thread for GetBundleCacheSize start");
+            GetBundleCacheSize(validBundles, userId, cacheStat);
+            processCacheCallback->OnGetAllBundleCacheFinished(cacheStat);
+        };
+        std::thread(getAllBundleCache).detach();
     }
-
-    auto getAllBundleCache = [validBundles, userId, processCacheCallback]() {
-        uint64_t cacheStat = 0;
-        APP_LOGI("thread for GetBundleCacheSize start");
-        GetBundleCacheSize(validBundles, userId, cacheStat);
-        processCacheCallback->OnGetAllBundleCacheFinished(cacheStat);
-    };
-    std::thread(getAllBundleCache).detach();
     return ERR_OK;
 }
 
@@ -148,21 +133,22 @@ ErrCode BundleCacheMgr::CleanBundleCloneCache(const std::string &bundleName, int
 ErrCode BundleCacheMgr::CleanBundleCache(const std::vector<std::tuple<std::string,
     std::vector<std::string>, std::vector<int32_t>>> &validBundles, int32_t userId)
 {
-    int32_t ret = ERR_OK;
+    int32_t result = ERR_OK;
     for (const auto &item : validBundles) {
         // get cache path for every bundle(contains clone and module)
         std::string bundleName = std::get<INDEX_BUNDLE_NAME>(item);
         std::vector<std::string> moduleNames = std::get<INDEX_MODULE_NAMES>(item);
         std::vector<int32_t> allCloneAppIndex = std::get<INDEX_CLONE_APP_INDEX>(item);
         for (const auto &appIndex : allCloneAppIndex) {
-            ret = CleanBundleCloneCache(bundleName, userId, appIndex, moduleNames);
-            if (ERR_OK != ret) {
-                APP_LOGW("CleanNoRunningCloneCache %{public}s failed, userId: %{public}d, appIndex: %{public}d",
+            int32_t ret = CleanBundleCloneCache(bundleName, userId, appIndex, moduleNames);
+            if (ret != ERR_OK) {
+                result = ret;
+                APP_LOGW("CleanBundleCloneCache %{public}s failed, userId: %{public}d, appIndex: %{public}d",
                     bundleName.c_str(), userId, appIndex);
             }
         }
     }
-    return ret;
+    return result;
 }
  
 ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
@@ -177,14 +163,15 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
         APP_LOGE("Invalid userid: %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
+
     std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
-    dataMgr->GetCleanBundleCacheInfos(userId, validBundles);
+    dataMgr->GetBundleCacheInfos(userId, validBundles, true);
     if (!validBundles.empty()) {
         auto CleanAllBundleCache = [validBundles, userId, processCacheCallback]() {
-            bool succeed = true;
+            ErrCode result = ERR_OK;
             APP_LOGI("thread for CleanBundleCache start");
-            succeed = CleanBundleCache(validBundles, userId);
-            processCacheCallback->OnCleanAllBundleCacheFinished(succeed);
+            result = CleanBundleCache(validBundles, userId);
+            processCacheCallback->OnCleanAllBundleCacheFinished(result);
         };
         std::thread(CleanAllBundleCache).detach();
     }

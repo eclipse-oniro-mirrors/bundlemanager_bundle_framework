@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -158,24 +158,22 @@ ErrCode InstalldClient::RemoveDir(const std::string &dir)
     return CallService(&IInstalld::RemoveDir, dir);
 }
 
-int64_t InstalldClient::GetDiskUsage(const std::string &dir, bool isRealPath)
+ErrCode InstalldClient::GetDiskUsage(const std::string &dir, int64_t &statSize, bool isRealPath)
 {
     if (dir.empty()) {
         APP_LOGE("bundle dir is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-
-    return CallService(&IInstalld::GetDiskUsage, dir, isRealPath);
+    return CallService(&IInstalld::GetDiskUsage, dir, statSize, isRealPath);
 }
 
-int64_t InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path)
+ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
 {
     if (path.empty()) {
         APP_LOGE("path is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-
-    return CallService(&IInstalld::GetDiskUsageFromPath, path);
+    return CallService(&IInstalld::GetDiskUsageFromPath, path, statSize);
 }
 
 ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
@@ -534,23 +532,22 @@ ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, cons
     return CallService(&IInstalld::ExtractEncryptedSoFiles, hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid);
 }
 
-ErrCode InstalldClient::SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
-    const int32_t userId, std::string &keyId)
+ErrCode InstalldClient::SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
-    if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty");
+    if (encryptionParam.bundleName.empty() && encryptionParam.groupId.empty()) {
+        APP_LOGE("param error");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::SetEncryptionPolicy, uid, bundleName, userId, keyId);
+    return CallService(&IInstalld::SetEncryptionPolicy, encryptionParam, keyId);
 }
 
-ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId)
+ErrCode InstalldClient::DeleteEncryptionKeyId(const EncryptionParam &encryptionParam)
 {
-    if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty");
+    if (encryptionParam.bundleName.empty() && encryptionParam.groupId.empty()) {
+        APP_LOGE("param error");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::DeleteEncryptionKeyId, bundleName, userId);
+    return CallService(&IInstalld::DeleteEncryptionKeyId, encryptionParam);
 }
 
 ErrCode InstalldClient::RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs)
@@ -600,6 +597,24 @@ ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const st
     }
 
     return CallService(&IInstalld::MoveHapToCodeDir, originPath, targetPath);
+}
+
+ErrCode InstalldClient::CreateDataGroupDirs(const std::vector<CreateDirParam> &params)
+{
+    if (params.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::CreateDataGroupDirs, params);
+}
+
+ErrCode InstalldClient::DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId)
+{
+    if (uuidList.empty() || userId < 0) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::DeleteDataGroupDirs, uuidList, userId);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

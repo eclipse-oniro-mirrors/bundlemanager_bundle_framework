@@ -370,16 +370,16 @@ public:
 class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
 public:
     ProcessCacheCallbackImpl() : cacheStat_(std::make_shared<std::promise<uint64_t>>()),
-        succeed_(std::make_shared<std::promise<bool>>()) {}
+        cleanResult_(std::make_shared<std::promise<int32_t>>()) {}
     ~ProcessCacheCallbackImpl() override
     {}
     void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
-    void OnCleanAllBundleCacheFinished(bool succeed) override;
+    void OnCleanAllBundleCacheFinished(int32_t result) override;
     uint64_t GetCacheStat();
-    bool GetDelRet();
+    int32_t GetDelRet();
 private:
     std::shared_ptr<std::promise<uint64_t>> cacheStat_;
-    std::shared_ptr<std::promise<bool>> succeed_;
+    std::shared_ptr<std::promise<int32_t>> cleanResult_;
     DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackImpl);
 };
  
@@ -390,10 +390,10 @@ void ProcessCacheCallbackImpl::OnGetAllBundleCacheFinished(uint64_t cacheStat)
     }
 }
 
-void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(bool succeed)
+void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(int32_t result)
 {
-    if (succeed_ != nullptr) {
-        succeed_->set_value(succeed);
+    if (cleanResult_ != nullptr) {
+        cleanResult_->set_value(result);
     }
 }
  
@@ -410,17 +410,17 @@ uint64_t ProcessCacheCallbackImpl::GetCacheStat()
     return 0;
 };
 
-bool ProcessCacheCallbackImpl::GetDelRet()
+int32_t ProcessCacheCallbackImpl::GetDelRet()
 {
-    if (succeed_ != nullptr) {
-        auto future = succeed_->get_future();
+    if (cleanResult_ != nullptr) {
+        auto future = cleanResult_->get_future();
         std::chrono::milliseconds span(MAX_WAITING_TIME);
         if (future.wait_for(span) == std::future_status::timeout) {
-            return false;
+            return -1;
         }
         return future.get();
     }
-    return false;
+    return -1;
 };
 
 class ICleanCacheCallbackTest : public ICleanCacheCallback {
@@ -9400,6 +9400,25 @@ HWTEST_F(BmsBundleKitServiceTest, GetNameAndIndexForUidImpl_0100, Function | Sma
 }
 
 /**
+ * @tc.number: GetSimpleAppInfoForUid_0100
+ * @tc.name: test GetSimpleAppInfoForUid
+ * @tc.desc: 1.Test the GetSimpleAppInfoForUid by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSimpleAppInfoForUidImpl_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::int32_t> uids;
+    std::vector<SimpleAppInfo> simpleAppInfo;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    auto ret = hostImpl->GetSimpleAppInfoForUid(uids, simpleAppInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    uids.emplace_back(DEMO_UID);
+    ret = hostImpl->GetSimpleAppInfoForUid(uids, simpleAppInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: QueryAbilityInfoImpl_0100
  * @tc.name: test QueryAbilityInfo
  * @tc.desc: 1.Test the QueryAbilityInfo by BundleMgrHostImpl
@@ -10786,7 +10805,7 @@ HWTEST_F(BmsBundleKitServiceTest, SystemAbilityHelper_0400, Function | SmallTest
 {
     SystemAbilityHelper helper;
 
-    std::string bundleName ="com.ohos.settings" ;
+    std::string bundleName = "com.ohos.settings";
     int32_t uid = 1;
     int32_t appIndex = 100;
     bool ret = helper.UpgradeApp(bundleName, uid, appIndex);

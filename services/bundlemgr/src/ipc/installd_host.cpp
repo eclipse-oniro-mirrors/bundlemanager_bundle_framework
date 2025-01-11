@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,7 @@ constexpr int32_t UNLOAD_TIME = 3 * 60 * 1000; // 3 min for installd to unload
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 constexpr const char* UNLOAD_TASK_NAME = "UnloadInstalldTask";
 constexpr const char* UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
+constexpr uint16_t MAX_VEC_SIZE = 1024;
 }
 
 InstalldHost::InstalldHost()
@@ -219,6 +220,12 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_DISK_USAGE_FROM_PATH):
             result = HandleGetDiskUsageFromPath(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_DATA_GROUP_DIRS):
+            result = HandleCreateDataGroupDirs(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_DATA_GROUP_DIRS):
+            result = HandleDeleteDataGroupDirs(data, reply);
             break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
@@ -449,9 +456,13 @@ bool InstalldHost::HandleGetDiskUsage(MessageParcel &data, MessageParcel &reply)
 {
     std::string dir = Str16ToStr8(data.ReadString16());
     bool isRealPath = data.ReadBool();
-
-    ErrCode result = GetDiskUsage(dir, isRealPath);
+    int64_t statSize = 0;
+    ErrCode result = GetDiskUsage(dir, statSize, isRealPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteInt64(statSize)) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsage write failed");
+        return false;
+    }
     return true;
 }
 
@@ -469,11 +480,15 @@ bool InstalldHost::HandleGetDiskUsageFromPath(MessageParcel &data, MessageParcel
         READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, data, path);
         cachePaths.emplace_back(path);
     }
-    ErrCode result = GetDiskUsageFromPath(cachePaths);
+    int64_t statSize = 0;
+    ErrCode result = GetDiskUsageFromPath(cachePaths, statSize);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteInt64(statSize)) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsageFromPath write failed");
+        return false;
+    }
     return true;
 }
-
 
 bool InstalldHost::HandleCleanBundleDataDir(MessageParcel &data, MessageParcel &reply)
 {
@@ -854,12 +869,14 @@ bool InstalldHost::HandRemoveSignProfile(MessageParcel &data, MessageParcel &rep
 
 bool InstalldHost::HandleSetEncryptionDir(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t uid = data.ReadInt32();
-    std::string bundleName = Str16ToStr8(data.ReadString16());
-    int32_t userId = data.ReadInt32();
+    std::unique_ptr<EncryptionParam> info(data.ReadParcelable<EncryptionParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
     std::string keyId = "";
 
-    ErrCode result = SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    ErrCode result = SetEncryptionPolicy(*info, keyId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteString(keyId)) {
         APP_LOGE("write keyId failed");
@@ -870,10 +887,13 @@ bool InstalldHost::HandleSetEncryptionDir(MessageParcel &data, MessageParcel &re
 
 bool InstalldHost::HandleDeleteEncryptionKeyId(MessageParcel &data, MessageParcel &reply)
 {
-    std::string bundleName = Str16ToStr8(data.ReadString16());
-    int32_t userId = data.ReadInt32();
+    std::unique_ptr<EncryptionParam> info(data.ReadParcelable<EncryptionParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
 
-    ErrCode result = DeleteEncryptionKeyId(bundleName, userId);
+    ErrCode result = DeleteEncryptionKeyId(*info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -958,6 +978,50 @@ bool InstalldHost::HandleMoveHapToCodeDir(MessageParcel &data, MessageParcel &re
     std::string targetPath = Str16ToStr8(data.ReadString16());
 
     ErrCode result = MoveHapToCodeDir(originPath, targetPath);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCreateDataGroupDirs(MessageParcel &data, MessageParcel &reply)
+{
+    auto dataGroupSize = data.ReadUint32();
+    if (dataGroupSize == 0 || dataGroupSize > MAX_VEC_SIZE) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    std::vector<CreateDirParam> params;
+    for (int32_t index = 0; index < dataGroupSize; ++index) {
+        std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+        if (info == nullptr) {
+            LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+            return false;
+        }
+        params.emplace_back(*info);
+    }
+
+    ErrCode result = CreateDataGroupDirs(params);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleDeleteDataGroupDirs(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t uuidSize = data.ReadUint32();
+    if (uuidSize == 0 || uuidSize > MAX_VEC_SIZE) {
+        APP_LOGE("uuidSize count is error");
+        return false;
+    }
+    std::vector<std::string> uuidList;
+    for (int32_t i = 0; i < uuidSize; i++) {
+        std::string uuid = data.ReadString();
+        if (uuid.empty()) {
+            APP_LOGE("uuid %{public}d is empty", i);
+            return false;
+        }
+        uuidList.emplace_back(uuid);
+    }
+    int32_t userId = data.ReadInt32();
+    ErrCode result = DeleteDataGroupDirs(uuidList, userId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

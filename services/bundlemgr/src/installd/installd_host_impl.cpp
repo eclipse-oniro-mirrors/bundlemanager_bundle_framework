@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -590,7 +590,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
             return ret;
         }
-        
+
         std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
         std::string databaseDir = databaseParentDir + createDirParam.bundleName;
         mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG | S_ISGID);
@@ -939,24 +939,24 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
     return ERR_OK;
 }
 
-int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
+ErrCode InstalldHostImpl::GetDiskUsage(const std::string &dir, int64_t &statSize, bool isRealPath)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-
-    return InstalldOperator::GetDiskUsage(dir, isRealPath);
+    statSize = InstalldOperator::GetDiskUsage(dir, isRealPath);
+    return ERR_OK;
 }
 
-int64_t InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path)
+ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-
-    return InstalldOperator::GetDiskUsageFromPath(path);
+    statSize = InstalldOperator::GetDiskUsageFromPath(path);
+    return ERR_OK;
 }
 
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
@@ -1700,35 +1700,34 @@ bool InstalldHostImpl::CheckPathValid(const std::string &path, const std::string
     return true;
 }
 
-ErrCode InstalldHostImpl::SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
-    const int32_t userId, std::string &keyId)
+ErrCode InstalldHostImpl::SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (bundleName.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function SetEncryptionPolicy with invalid param");
+    if (encryptionParam.bundleName.empty() && encryptionParam.groupId.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldOperator::GenerateKeyIdAndSetPolicy(uid, bundleName, userId, keyId)) {
+    if (!InstalldOperator::GenerateKeyIdAndSetPolicy(encryptionParam, keyId)) {
         LOG_E(BMS_TAG_INSTALLD, "EncryptionPaths fail");
         return ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED;
     }
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::DeleteEncryptionKeyId(const std::string &bundleName, const int32_t userId)
+ErrCode InstalldHostImpl::DeleteEncryptionKeyId(const EncryptionParam &encryptionParam)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (bundleName.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function DeleteEncryptionKeyId with invalid param");
+    if (encryptionParam.bundleName.empty() && encryptionParam.groupId.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldOperator::DeleteKeyId(bundleName, userId)) {
+    if (!InstalldOperator::DeleteKeyId(encryptionParam)) {
         LOG_E(BMS_TAG_INSTALLD, "EncryptionPaths fail");
         return ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED;
     }
@@ -2094,6 +2093,118 @@ ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const 
     }
 #endif
     return ERR_OK;
+}
+
+std::string InstalldHostImpl::GetGroupDirPath(const std::string &el, int32_t userId, const std::string &uuid)
+{
+    return ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR + std::to_string(userId)
+        + ServiceConstants::DATA_GROUP_PATH + uuid;
+}
+
+ErrCode InstalldHostImpl::CreateDataGroupDirs(const std::vector<CreateDirParam> &params)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    ErrCode result = ERR_OK;
+    for (const CreateDirParam &param : params) {
+        if (CreateDataGroupDir(param) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "create group dir %{private}s failed", param.uuid.c_str());
+            result = ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+        }
+    }
+    return result;
+}
+
+ErrCode InstalldHostImpl::CreateDataGroupDir(const CreateDirParam &param)
+{
+    if (param.uuid.empty() || param.userId < 0 ||
+        param.uid < 0 || param.gid < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param, uuid %{private}s "
+            "-u %{public}d uid %{public}d gid %{public}d", param.uuid.c_str(),
+            param.userId, param.uid, param.gid);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    // create el2~el4 group dirs
+    ErrCode result = ERR_OK;
+    const std::vector<std::string> elList { "el2", "el3", "el4" };
+    for (const auto &el : elList) {
+        std::string userDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR +
+            el + ServiceConstants::PATH_SEPARATOR + std::to_string(param.userId);
+        if (access(userDir.c_str(), F_OK) != 0) {
+            LOG_W(BMS_TAG_INSTALLD, "user directory %{public}s does not existed", userDir.c_str());
+            result = ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+            continue;
+        }
+        std::string groupDir = userDir + ServiceConstants::DATA_GROUP_PATH + param.uuid;
+        if (!InstalldOperator::MkOwnerDir(
+            groupDir, ServiceConstants::DATA_GROUP_DIR_MODE, param.uid, param.gid)) {
+            LOG_E(BMS_TAG_INSTALLD, "create group dir failed error %{public}s", strerror(errno));
+            result = ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+            continue;
+        }
+    }
+    return result;
+}
+
+ErrCode InstalldHostImpl::DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (uuidList.empty() || userId < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param, uuidList size %{public}zu "
+            "-u %{public}d", uuidList.size(), userId);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    // remove el2~el4 group dirs
+    ErrCode result = ERR_OK;
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+        if (el == ServiceConstants::BUNDLE_EL[0]) {
+            continue;
+        }
+        for (const std::string &uuid : uuidList) {
+            std::string groupDir = GetGroupDirPath(el, userId, uuid);
+            if (!InstalldOperator::DeleteDir(groupDir)) {
+                LOG_E(BMS_TAG_INSTALLD, "remove dir %{private}s failed, errno is %{public}d", groupDir.c_str(), errno);
+                result = ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+            }
+        }
+    }
+
+    auto el5Res = DeleteEl5DataGroupDirs(uuidList, userId);
+    if (el5Res != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLD, "el5 group directory del failed, res %{public}d", el5Res);
+        result = el5Res;
+    }
+    return result;
+}
+
+ErrCode InstalldHostImpl::DeleteEl5DataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId)
+{
+    ErrCode result = ERR_OK;
+    for (const std::string &uuid : uuidList) {
+        std::string groupDir = GetGroupDirPath(ServiceConstants::DIR_EL5, userId, uuid);
+        if (access(groupDir.c_str(), F_OK) != 0) {
+            LOG_D(BMS_TAG_INSTALLD, "group directory %{private}s does not existed", groupDir.c_str());
+            continue;
+        }
+        // delete dir
+        if (!InstalldOperator::DeleteDir(groupDir)) {
+            LOG_E(BMS_TAG_INSTALLD, "remove dir %{private}s failed, errno is %{public}d", groupDir.c_str(), errno);
+            result = ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+            continue;
+        }
+        // delete key id
+        EncryptionParam encryptionParam("", uuid, 0, userId, EncryptionDirType::GROUP);
+        if (!InstalldOperator::DeleteKeyId(encryptionParam)) {
+            LOG_E(BMS_TAG_INSTALLD, "delete keyId fail");
+            result = ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED;
+        }
+    }
+    return result;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

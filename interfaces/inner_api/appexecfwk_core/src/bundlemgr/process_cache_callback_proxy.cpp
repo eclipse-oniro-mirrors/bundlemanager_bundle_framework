@@ -62,9 +62,9 @@ void ProcessCacheCallbackProxy::OnGetAllBundleCacheFinished(uint64_t cacheStat)
     }
 }
 
-void ProcessCacheCallbackProxy::OnCleanAllBundleCacheFinished(bool succeed)
+void ProcessCacheCallbackProxy::OnCleanAllBundleCacheFinished(int32_t result)
 {
-    APP_LOGI("process delete all bundle cache result: %{public}d", succeed);
+    APP_LOGI("process delete all bundle cache result: %{public}d", result);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -72,7 +72,7 @@ void ProcessCacheCallbackProxy::OnCleanAllBundleCacheFinished(bool succeed)
         APP_LOGE("fail to OnCleanAllBundleCacheFinished due to write MessageParcel fail");
         return;
     }
-    if (!data.WriteBool(succeed)) {
+    if (!data.WriteInt32(result)) {
         APP_LOGE("fail to call OnCleanAllBundleCacheFinished, for write parcel code failed");
         return;
     }

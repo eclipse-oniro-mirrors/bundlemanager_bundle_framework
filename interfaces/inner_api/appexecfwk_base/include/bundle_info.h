@@ -99,6 +99,18 @@ struct SignatureInfo : public Parcelable {
     static SignatureInfo *Unmarshalling(Parcel &parcel);
 };
 
+struct SimpleAppInfo : public Parcelable {
+    int32_t uid = -1;
+    std::string bundleName;
+    int32_t appIndex = -1;
+    ErrCode ret = ERR_OK;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static SimpleAppInfo *Unmarshalling(Parcel &parcel);
+    std::string ToString() const;
+};
+
 // configuration information about a bundle
 struct BundleInfo : public Parcelable {
     bool isNewVersion = false;

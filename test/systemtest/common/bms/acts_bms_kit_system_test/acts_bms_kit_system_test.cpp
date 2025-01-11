@@ -174,16 +174,16 @@ void BundleStatusCallbackImpl::OnBundleStateChanged(
 class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
 public:
     ProcessCacheCallbackImpl() : cacheStat_(std::make_shared<std::promise<uint64_t>>()),
-        succeed_(std::make_shared<std::promise<bool>>()) {}
+        cleanResult_(std::make_shared<std::promise<int32_t>>()) {}
     ~ProcessCacheCallbackImpl() override
     {}
     void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
-    void OnCleanAllBundleCacheFinished(bool succeed) override;
+    void OnCleanAllBundleCacheFinished(int32_t result) override;
     uint64_t GetCacheStat();
-    bool GetDelRet();
+    int32_t GetDelRet();
 private:
     std::shared_ptr<std::promise<uint64_t>> cacheStat_;
-    std::shared_ptr<std::promise<bool>> succeed_;
+    std::shared_ptr<std::promise<int32_t>> cleanResult_;
     DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackImpl);
 };
  
@@ -194,10 +194,10 @@ void ProcessCacheCallbackImpl::OnGetAllBundleCacheFinished(uint64_t cacheStat)
     }
 }
 
-void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(bool succeed)
+void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(int32_t result)
 {
-    if (succeed_ != nullptr) {
-        succeed_->set_value(succeed);
+    if (cleanResult_ != nullptr) {
+        cleanResult_->set_value(result);
     }
 }
  
@@ -214,17 +214,17 @@ uint64_t ProcessCacheCallbackImpl::GetCacheStat()
     return 0;
 };
 
-bool ProcessCacheCallbackImpl::GetDelRet()
+int32_t ProcessCacheCallbackImpl::GetDelRet()
 {
-    if (succeed_ != nullptr) {
-        auto future = succeed_->get_future();
+    if (cleanResult_ != nullptr) {
+        auto future = cleanResult_->get_future();
         std::chrono::milliseconds span(MAX_WAITING_TIME);
         if (future.wait_for(span) == std::future_status::timeout) {
-            return false;
+            return -1;
         }
         return future.get();
     }
-    return false;
+    return -1;
 };
 
 class CleanCacheCallBackImpl : public CleanCacheCallbackHost {
@@ -9988,14 +9988,15 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleCacheStat_0001, Function | MediumTest
         if (getCache == nullptr) {
             ret = bundleMgrProxy->GetAllBundleCacheStat(getCache);
             EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+        } else {
+            ret = bundleMgrProxy->GetAllBundleCacheStat(getCache);
+            EXPECT_EQ(ret, ERR_OK);
+            setuid(Constants::FOUNDATION_UID);
+            ret = bundleMgrProxy->GetAllBundleCacheStat(getCache);
+            EXPECT_EQ(ret, ERR_OK);
+            delete getCache;
+            getCache = nullptr;
         }
-        ret = bundleMgrProxy->GetAllBundleCacheStat(getCache);
-        EXPECT_EQ(ret, ERR_OK);
-        setuid(Constants::FOUNDATION_UID);
-        ret = bundleMgrProxy->GetAllBundleCacheStat(getCache);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
-        delete getCache;
-        getCache = nullptr;
     }
     std::cout << "END GetAllBundleCacheStat_0001" << std::endl;
 }
@@ -10017,14 +10018,15 @@ HWTEST_F(ActsBmsKitSystemTest, CleanAllBundleCache_0001, Function | MediumTest |
         if (delCache == nullptr) {
             ret = bundleMgrProxy->CleanAllBundleCache(delCache);
             EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+        } else {
+            ret = bundleMgrProxy->CleanAllBundleCache(delCache);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+            setuid(Constants::FOUNDATION_UID);
+            ret = bundleMgrProxy->CleanAllBundleCache(delCache);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+            delete delCache;
+            delCache = nullptr;
         }
-        ret = bundleMgrProxy->CleanAllBundleCache(delCache);
-        EXPECT_EQ(ret, ERR_OK);
-        setuid(Constants::FOUNDATION_UID);
-        ret = bundleMgrProxy->CleanAllBundleCache(delCache);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
-        delete delCache;
-        delCache = nullptr;
     }
     std::cout << "END CleanAllBundleCache_0001" << std::endl;
 }

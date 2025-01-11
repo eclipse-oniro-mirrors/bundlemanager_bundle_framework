@@ -1576,8 +1576,9 @@ HWTEST_F(BmsInstallDaemonTest, GetDiskUsage_0100, Function | SmallTest | Level0)
     InstalldHostImpl hostImpl;
     std::string dir = "dir/path/";
     bool isRealPath = true;
-    int64_t ret = hostImpl.GetDiskUsage(dir, isRealPath);
-    EXPECT_EQ(ret, 0);
+    int64_t statSize = 0;
+    ErrCode ret = hostImpl.GetDiskUsage(dir, statSize, isRealPath);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -1590,8 +1591,9 @@ HWTEST_F(BmsInstallDaemonTest, GetDiskUsageFromPath_0100, Function | SmallTest |
     InstalldHostImpl hostImpl;
     std::vector<std::string> path;
     path.emplace_back("dir/path/");
-    int64_t ret = hostImpl.GetDiskUsageFromPath(path);
-    EXPECT_EQ(ret, 0);
+    int64_t statSize = 0;
+    ErrCode ret = hostImpl.GetDiskUsageFromPath(path, statSize);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

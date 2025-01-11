@@ -51,8 +51,8 @@ int ProcessCacheCallbackHost::OnRemoteRequest(
             break;
         }
         case static_cast<uint32_t>(ProcessCacheCallbackInterfaceCode::CLEAN_ALL_BUNDLE_CACHE): {
-            bool succeed = data.ReadBool();
-            OnCleanAllBundleCacheFinished(succeed);
+            int32_t result = data.ReadInt32();
+            OnCleanAllBundleCacheFinished(result);
             break;
         }
         default:
@@ -60,5 +60,35 @@ int ProcessCacheCallbackHost::OnRemoteRequest(
     }
     return NO_ERROR;
 }
+
+void ProcessCacheCallbackHost::OnGetAllBundleCacheFinished(uint64_t cacheStat)
+{
+    std::lock_guard<std::mutex> lock(getAllMutex_);
+    if (getAllcomplete_) {
+        return;
+    }
+    getAllcomplete_ = true;
+    getAllPromise_.set_value(cacheStat);
+}
+
+uint64_t ProcessCacheCallbackHost::GetCacheStat()
+{
+    return getAllFuture_.get();
+};
+
+void ProcessCacheCallbackHost::OnCleanAllBundleCacheFinished(int32_t result)
+{
+    std::lock_guard<std::mutex> lock(cleanAllMutex_);
+    if (cleanAllcomplete_) {
+        return;
+    }
+    cleanAllcomplete_ = true;
+    cleanAllPromise_.set_value(result);
+}
+
+int32_t ProcessCacheCallbackHost::GetCleanRet()
+{
+    return cleanAllFuture_.get();
+};
 }  // namespace AppExecFwk
 }  // namespace OHOS

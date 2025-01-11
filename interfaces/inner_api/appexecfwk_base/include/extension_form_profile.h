@@ -33,6 +33,7 @@ constexpr const char* WINDOW = "window";
 constexpr const char* WINDOW_DESIGN_WIDTH = "designWidth";
 constexpr const char* WINDOW_AUTO_DESIGN_WIDTH = "autoDesignWidth";
 constexpr const char* COLOR_MODE = "colorMode";
+constexpr const char* RENDERING_MODE = "renderingMode";
 constexpr const char* FORM_CONFIG_ABILITY = "formConfigAbility";
 constexpr const char* TYPE = "type";
 constexpr const char* UI_SYNTAX = "uiSyntax";
@@ -55,6 +56,7 @@ constexpr const char* TRANSPARENCY_ENABLED = "transparencyEnabled";
 constexpr const char* PRIVACY_LEVEL = "privacyLevel";
 constexpr const char* FONT_SCALE_FOLLOW_SYSTEM = "fontScaleFollowSystem";
 constexpr const char* SUPPORT_SHAPES = "supportShapes";
+constexpr const char* ENABLE_BLUR_BACKGROUND = "enableBlurBackground";
 }
 
 class ExtensionFormProfile {

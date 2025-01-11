@@ -46,6 +46,16 @@ const FormsColorMode FORM_COLOR_MODE_MAP_VALUE[] = {
     FormsColorMode::DARK_MODE,
     FormsColorMode::LIGHT_MODE
 };
+constexpr const char* FORM_RENDERING_MODE_MAP_KEY[] = {
+    "autoColor",
+    "fullColor",
+    "singleColor"
+};
+const FormsRenderingMode FORM_RENDERING_MODE_MAP_VALUE[] = {
+    FormsRenderingMode::AUTO_COLOR,
+    FormsRenderingMode::FULL_COLOR,
+    FormsRenderingMode::SINGLE_COLOR
+};
 constexpr const char* DIMENSION_MAP_KEY[] = {
     "1*2",
     "2*2",
@@ -119,6 +129,7 @@ struct ExtensionFormProfileInfo {
     std::string src;
     Window window;
     std::string colorMode = "auto";
+    std::string renderingMode = "fullColor";
     std::string formConfigAbility;
     std::string type = "JS";
     std::string uiSyntax = "hml";
@@ -133,6 +144,7 @@ struct ExtensionFormProfileInfo {
     bool isDynamic = true;
     bool transparencyEnabled = false;
     bool fontScaleFollowSystem = true;
+    bool enableBlurBackground = false;
     std::vector<std::string> supportShapes {};
     std::vector<std::string> supportDimensions {};
     std::vector<std::string> conditionUpdate {};
@@ -220,6 +232,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         jsonObjectEnd,
         ExtensionFormProfileReader::COLOR_MODE,
         extensionFormProfileInfo.colorMode,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::RENDERING_MODE,
+        extensionFormProfileInfo.renderingMode,
         false,
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
@@ -348,6 +366,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         false,
         g_parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::ENABLE_BLUR_BACKGROUND,
+        extensionFormProfileInfo.enableBlurBackground,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
@@ -416,7 +440,9 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
         supportDimensionSet.emplace(dimensionItem);
     }
     for (i = 0; i < len; i++) {
-        if (DIMENSION_MAP_KEY[i] == form.defaultDimension) break;
+        if (DIMENSION_MAP_KEY[i] == form.defaultDimension) {
+            break;
+        }
     }
     if (i == len) {
         APP_LOGW("defaultDimension invalid form %{public}s", form.name.c_str());
@@ -531,6 +557,13 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
             info.colorMode = FORM_COLOR_MODE_MAP_VALUE[i];
     }
 
+    len = sizeof(FORM_RENDERING_MODE_MAP_KEY) / sizeof(FORM_RENDERING_MODE_MAP_KEY[0]);
+    for (size_t i = 0; i < len; i++) {
+        if (FORM_RENDERING_MODE_MAP_KEY[i] == form.renderingMode) {
+            info.renderingMode = FORM_RENDERING_MODE_MAP_VALUE[i];
+        }
+    }
+
     len = sizeof(FORM_TYPE_MAP_KEY) / sizeof(FORM_TYPE_MAP_KEY[0]);
     for (size_t i = 0; i < len; i++) {
         if (FORM_TYPE_MAP_KEY[i] == form.type)
@@ -562,6 +595,11 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     }
     if (!GetPreviewImages(form, info)) {
         return false;
+    }
+    info.enableBlurBackground = form.enableBlurBackground;
+    APP_LOGI("form name: %{public}s enableBlurBackground: %{public}d", info.name.c_str(), info.enableBlurBackground);
+    if (info.enableBlurBackground) {
+        info.transparencyEnabled = true;
     }
     return true;
 }
