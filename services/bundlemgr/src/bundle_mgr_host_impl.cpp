@@ -1415,7 +1415,12 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
             }
             APP_LOGI("bundleName : %{public}s, cleanCacheSize: %{public}" PRIu64 "",
                 useStat.bundleName_.c_str(), cleanCacheSize);
-            cleanCacheSum += cleanCacheSize;
+            if (cleanCacheSum <= std::numeric_limits<uint64_t>::max() - cleanCacheSize) {
+                cleanCacheSum += cleanCacheSize;
+            } else {
+                APP_LOGE("add overflow cleanCacheSum: %{public}" PRIu64 ", cleanCacheSize: %{public}" PRIu64 "",
+                    cleanCacheSum, cleanCacheSize);
+            }
             if (cleanCacheSum >= cacheSize) {
                 return ERR_OK;
             }
@@ -1512,7 +1517,16 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
                 APP_LOGE("CleanBundleDataDir failed, path: %{public}s", cache.c_str());
                 succeed = false;
             }
-            cleanCacheSize += static_cast<uint64_t>(cacheSize);
+            if (cacheSize < 0) {
+                APP_LOGW("cacheSize < 0");
+                continue;
+            }
+            if (cleanCacheSize <= std::numeric_limits<uint64_t>::max() - static_cast<uint64_t>(cacheSize)) {
+                cleanCacheSize += static_cast<uint64_t>(cacheSize);
+            } else {
+                APP_LOGE("add overflow cleanCacheSize: %{public}" PRIu64 ", cacheSize: %{public}" PRIu64 "",
+                    cleanCacheSize, cacheSize);
+            }
         }
     }
     EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed);
