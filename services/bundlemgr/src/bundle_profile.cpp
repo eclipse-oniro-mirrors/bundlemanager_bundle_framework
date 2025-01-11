@@ -221,7 +221,6 @@ struct Forms {
     std::vector<std::string> landscapeLayouts;
     std::vector<std::string> portraitLayouts;
     std::string scheduledUpdateTime = "";
-    std::string multiScheduledUpdateTime = "";
     std::string deepLink;
     std::string formConfigAbility;
     std::string jsComponentName;
@@ -1012,12 +1011,6 @@ void from_json(const nlohmann::json &jsonObject, Forms &forms)
         jsonObjectEnd,
         BUNDLE_MODULE_PROFILE_FORMS_SCHEDULED_UPDATE_TIME,
         forms.scheduledUpdateTime,
-        false,
-        g_parseResult);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_MODULE_PROFILE_FORMS_MULTI_SCHEDULED_UPDATE_TIME,
-        forms.multiScheduledUpdateTime,
         false,
         g_parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
