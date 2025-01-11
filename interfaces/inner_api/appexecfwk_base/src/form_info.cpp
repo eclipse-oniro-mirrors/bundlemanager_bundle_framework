@@ -32,6 +32,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const char* JSON_KEY_COLOR_MODE = "colorMode";
+const char* JSON_KEY_RENDERING_MODE = "renderingMode";
 const char* JSON_KEY_PACKAGE = "package";
 const char* JSON_KEY_SUPPORT_DIMENSIONS = "supportDimensions";
 const char* JSON_KEY_DEFAULT_DIMENSION = "defaultDimension";
@@ -108,6 +109,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     type = formInfo.type;
     uiSyntax = formInfo.uiSyntax;
     colorMode = formInfo.colorMode;
+    renderingMode = formInfo.renderingMode;
     for (const auto &dimension : formInfo.supportDimensions) {
         supportDimensions.push_back(dimension);
     }
@@ -178,6 +180,10 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     int32_t colorModeData;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, colorModeData);
     colorMode = static_cast<FormsColorMode>(colorModeData);
+
+    int32_t renderingModeData;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, renderingModeData);
+    renderingMode = static_cast<FormsRenderingMode>(renderingModeData);
 
     int32_t supportDimensionSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDimensionSize);
@@ -270,6 +276,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(uiSyntax));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(colorMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(renderingMode));
 
     const auto supportDimensionSize = static_cast<int32_t>(supportDimensions.size());
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDimensionSize);
@@ -372,6 +379,7 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_TYPE, formInfo.type},
         {JSON_KEY_UI_SYNTAX, formInfo.uiSyntax},
         {JSON_KEY_COLOR_MODE, formInfo.colorMode},
+        {JSON_KEY_RENDERING_MODE, formInfo.renderingMode},
         {JSON_KEY_SUPPORT_DIMENSIONS, formInfo.supportDimensions},
         {JSON_KEY_CUSTOMIZE_DATA, formInfo.customizeDatas},
         {JSON_KEY_LANDSCAPE_LAYOUTS, formInfo.landscapeLayouts},
@@ -589,6 +597,14 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         jsonObjectEnd,
         JSON_KEY_COLOR_MODE,
         formInfo.colorMode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<FormsRenderingMode>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_RENDERING_MODE,
+        formInfo.renderingMode,
         JsonType::NUMBER,
         false,
         parseResult,

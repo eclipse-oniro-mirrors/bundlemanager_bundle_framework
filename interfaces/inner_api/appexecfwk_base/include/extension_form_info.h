@@ -35,6 +35,7 @@ struct ExtensionFormInfo {
     int32_t updateDuration = 0;
     int32_t defaultDimension = 0;
     FormsColorMode colorMode = FormsColorMode::AUTO_MODE;
+    FormsRenderingMode renderingMode = FormsRenderingMode::FULL_COLOR;
     FormType type = FormType::JS;
     FormType uiSyntax = FormType::JS;
     std::string scheduledUpdateTime = "";

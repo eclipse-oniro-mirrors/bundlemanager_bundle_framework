@@ -26,6 +26,12 @@ enum class FormsColorMode : int8_t {
     LIGHT_MODE = 1,
 };
 
+enum class FormsRenderingMode : int8_t {
+    AUTO_COLOR = 0,
+    FULL_COLOR = 1,
+    SINGLE_COLOR = 2
+};
+
 struct FormCustomizeData {
     std::string name;
     std::string value;
