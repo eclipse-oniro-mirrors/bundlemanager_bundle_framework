@@ -65,6 +65,7 @@ constexpr const char* SHARE_ACTION_VALUE = "ohos.want.action.sendData";
 constexpr const char* WANT_PARAM_PICKER_SUMMARY = "ability.picker.summary";
 constexpr const char* WANT_PARAM_SUMMARY = "summary";
 constexpr const char* SUMMARY_TOTAL_COUNT = "totalCount";
+const int32_t ICON_ID = 2222;
 }  // namespace
 
 class BmsDataMgrTest : public testing::Test {
@@ -1761,9 +1762,9 @@ HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0006, Function | SmallTest | 
     EXPECT_NE(dataMgr, nullptr);
     if (dataMgr) {
         AbilityInfo abilityInfo;
-        abilityInfo.iconId = 2222;
+        abilityInfo.iconId = ICON_ID;
         dataMgr->ModifyLauncherAbilityInfo(true, abilityInfo);
-        EXPECT_EQ(abilityInfo.iconId, abilityInfo.iconId);
+        EXPECT_EQ(abilityInfo.iconId, ICON_ID);
     }
 }
 
@@ -1802,9 +1803,9 @@ HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0008, Function | SmallTest | 
     EXPECT_NE(dataMgr, nullptr);
     if (dataMgr) {
         AbilityInfo abilityInfo;
-        abilityInfo.iconId = 2222;
+        abilityInfo.iconId = ICON_ID;
         dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
-        EXPECT_EQ(abilityInfo.iconId, abilityInfo.iconId);
+        EXPECT_EQ(abilityInfo.iconId, ICON_ID);
     }
 }
 
