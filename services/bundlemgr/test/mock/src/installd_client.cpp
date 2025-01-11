@@ -480,14 +480,22 @@ ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
     return CallService(&IInstalld::AddUserDirDeleteDfx, userId);
 }
 
-int64_t InstalldClient::GetDiskUsage(const std::string& dir, bool isRealPath)
+ErrCode InstalldClient::GetDiskUsage(const std::string& dir, int64_t &statSize, bool isRealPath)
 {
-    return 0;
+    if (dir.empty()) {
+        APP_LOGE("dir is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::GetDiskUsage, dir, statSize, isRealPath);
 }
 
-int64_t InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path)
+ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
 {
-    return 0;
+    if (path.empty()) {
+        APP_LOGE("path is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::GetDiskUsageFromPath, path, statSize);
 }
 
 ErrCode InstalldClient::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)

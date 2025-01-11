@@ -456,9 +456,13 @@ bool InstalldHost::HandleGetDiskUsage(MessageParcel &data, MessageParcel &reply)
 {
     std::string dir = Str16ToStr8(data.ReadString16());
     bool isRealPath = data.ReadBool();
-
-    ErrCode result = GetDiskUsage(dir, isRealPath);
+    int64_t statSize = 0;
+    ErrCode result = GetDiskUsage(dir, statSize, isRealPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteInt64(statSize)) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsage write failed");
+        return false;
+    }
     return true;
 }
 
@@ -476,11 +480,15 @@ bool InstalldHost::HandleGetDiskUsageFromPath(MessageParcel &data, MessageParcel
         READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, data, path);
         cachePaths.emplace_back(path);
     }
-    ErrCode result = GetDiskUsageFromPath(cachePaths);
+    int64_t statSize = 0;
+    ErrCode result = GetDiskUsageFromPath(cachePaths, statSize);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteInt64(statSize)) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsageFromPath write failed");
+        return false;
+    }
     return true;
 }
-
 
 bool InstalldHost::HandleCleanBundleDataDir(MessageParcel &data, MessageParcel &reply)
 {

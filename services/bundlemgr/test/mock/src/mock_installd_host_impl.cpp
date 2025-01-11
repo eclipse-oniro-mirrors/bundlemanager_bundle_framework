@@ -92,14 +92,14 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
     return ERR_OK;
 }
 
-int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
+ErrCode InstalldHostImpl::GetDiskUsage(const std::string &dir, int64_t &statSize, bool isRealPath)
 {
-    return 0;
+    return ERR_OK;
 }
 
-int64_t InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path)
+ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
 {
-    return 0;
+    return ERR_OK;
 }
 
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)

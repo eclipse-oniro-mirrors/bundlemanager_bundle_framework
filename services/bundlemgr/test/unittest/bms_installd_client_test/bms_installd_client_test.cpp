@@ -1192,8 +1192,9 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsage_0100, TestSiz
 {
     std::string dir;
     bool isRealPath = true;
+    int64_t statSize = 0;
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetDiskUsage(dir, isRealPath);
+    ErrCode result = installClient_->GetDiskUsage(dir, statSize, isRealPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1206,8 +1207,9 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsage_0200, TestSiz
 {
     std::string dir = "disk.path";
     bool isRealPath = true;
+    int64_t statSize = 0;
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetDiskUsage(dir, isRealPath);
+    ErrCode result = installClient_->GetDiskUsage(dir, statSize, isRealPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
@@ -1219,8 +1221,9 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsage_0200, TestSiz
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsageFromPath_0100, TestSize.Level1)
 {
     std::vector<std::string> path;
+    int64_t statSize = 0;
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetDiskUsageFromPath(path);
+    ErrCode result = installClient_->GetDiskUsageFromPath(path, statSize);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1232,9 +1235,10 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsageFromPath_0100,
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsageFromPath_0200, TestSize.Level1)
 {
     std::vector<std::string> path;
+    int64_t statSize = 0;
     path.emplace_back("disk.path");
     ASSERT_NE(installClient_, nullptr);
-    ErrCode result = installClient_->GetDiskUsageFromPath(path);
+    ErrCode result = installClient_->GetDiskUsageFromPath(path, statSize);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 

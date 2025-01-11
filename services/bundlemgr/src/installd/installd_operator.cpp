@@ -25,6 +25,7 @@
 #endif
 #include <cerrno>
 #include <cstdio>
+#include <cinttypes>
 #include <dirent.h>
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -1063,6 +1064,7 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
         size += fileInfo.st_size;
     }
     closedir(dirPtr);
+    LOG_D(BMS_TAG_INSTALLD, "stat size: %{public}" PRId64 " %{public}s", size, dir.c_str());
     return size;
 }
 
@@ -1107,8 +1109,9 @@ int64_t InstalldOperator::GetDiskUsageFromPath(const std::vector<std::string> &p
 {
     int64_t fileSize = 0;
     for (auto &st : path) {
-        fileSize += GetDiskUsage(st);
-        LOG_D(BMS_TAG_INSTALLD, "GetBundleStats get cache size from: %{public}s", st.c_str());
+        int64_t pathSize = GetDiskUsage(st);
+        LOG_D(BMS_TAG_INSTALLD, "stat size:%{public}" PRId64, pathSize);
+        fileSize += pathSize;
     }
     return fileSize;
 }

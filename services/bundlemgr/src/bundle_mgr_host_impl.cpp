@@ -1501,8 +1501,13 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
     bool succeed = true;
     if (!caches.empty()) {
         for (const auto& cache : caches) {
-            int64_t cacheSize = InstalldClient::GetInstance()->GetDiskUsage(cache, true);
-            ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
+            int64_t cacheSize = 0;
+            ErrCode ret = InstalldClient::GetInstance()->GetDiskUsage(cache, cacheSize, true);
+            if (ret != ERR_OK) {
+                APP_LOGE("GetDiskUsage failed, path: %{public}s", cache.c_str());
+                succeed = false;
+            }
+            ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
             if (ret != ERR_OK) {
                 APP_LOGE("CleanBundleDataDir failed, path: %{public}s", cache.c_str());
                 succeed = false;
