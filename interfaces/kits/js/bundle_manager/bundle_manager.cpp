@@ -632,7 +632,8 @@ void GetAllBundleCacheSizeComplete(napi_env env, napi_status status, void *data)
             env, napi_create_int64(env, static_cast<int64_t>(asyncCallbackInfo->cacheSize), &result[ARGS_POS_ONE]));
     } else {
         APP_LOGE("GetAllBundleCacheSizeComplete failed");
-        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
+        result[0] = BusinessError::CreateCommonError(
+            env, asyncCallbackInfo->err, GET_ALL_BUNDLE_CACHE_SIZE, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     CommonFunc::NapiReturnDeferred<GetAllBundleCacheCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
@@ -703,7 +704,8 @@ void CleanAllBundleCacheComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
         APP_LOGE("asyncCallbackInfo is null");
-        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
+        result[0] = BusinessError::CreateCommonError(
+            env, asyncCallbackInfo->err, CLEAN_ALL_BUNDLE_CACHE, Constants::PERMISSION_REMOVECACHEFILE);
     }
     CommonFunc::NapiReturnDeferred<CleanAllBundleCacheCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
