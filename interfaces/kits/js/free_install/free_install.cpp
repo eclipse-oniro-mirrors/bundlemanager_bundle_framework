@@ -379,11 +379,6 @@ static void ConvertFormsInfo(napi_env env, napi_value &abilityObject,
             NAPI_AUTO_LENGTH, &scheduledUpdateTime));
         NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObject, "scheduledUpdateTime",
             scheduledUpdateTime));
-        napi_value multiScheduledUpdateTime;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, form.multiScheduledUpdateTime.c_str(),
-            NAPI_AUTO_LENGTH, &multiScheduledUpdateTime));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObject, "multiScheduledUpdateTime",
-            multiScheduledUpdateTime));
         napi_value updateDuration;
         NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, form.updateDuration, &updateDuration));
         NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, formObject, "updateDuration", updateDuration));
