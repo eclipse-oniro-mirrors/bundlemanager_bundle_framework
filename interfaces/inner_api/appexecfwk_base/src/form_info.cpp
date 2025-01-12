@@ -243,7 +243,12 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < supportShapeSize; i++) {
         supportShapes.emplace_back(parcel.ReadInt32());
     }
-
+    int32_t conditionUpdateSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, conditionUpdateSize);
+    CONTAINER_SECURITY_VERIFY(parcel, conditionUpdateSize, &conditionUpdate);
+    for (int32_t i = 0; i < conditionUpdateSize; i++) {
+        conditionUpdate.emplace_back(parcel.ReadInt32());
+    }
     versionCode = parcel.ReadUint32();
     int32_t bundleTypeData;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, bundleTypeData);
@@ -254,12 +259,6 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     CONTAINER_SECURITY_VERIFY(parcel, formPreviewImagesSize, &formPreviewImages);
     for (int32_t i = 0; i < formPreviewImagesSize; i++) {
         formPreviewImages.emplace_back(parcel.ReadUint32());
-    }
-    int32_t conditionUpdateSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, conditionUpdateSize);
-    CONTAINER_SECURITY_VERIFY(parcel, conditionUpdateSize, &conditionUpdate);
-    for (int32_t i = 0; i < conditionUpdateSize; i++) {
-        conditionUpdate.emplace_back(parcel.ReadInt32());
     }
     enableBlurBackground = parcel.ReadBool();
     return true;
@@ -343,7 +342,11 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     for (auto i = 0; i < supportShapeSize; i++) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportShapes[i]);
     }
-
+    const auto conditionUpdateSize = static_cast<int32_t>(conditionUpdate.size());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, conditionUpdateSize);
+    for (auto i = 0; i < conditionUpdateSize; i++) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, conditionUpdate[i]);
+    }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(bundleType));
 
@@ -351,12 +354,6 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, formPreviewImagesSize);
     for (auto i = 0; i < formPreviewImagesSize; i++) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, formPreviewImages[i]);
-    }
-
-    const auto conditionUpdateSize = static_cast<int32_t>(conditionUpdate.size());
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, conditionUpdateSize);
-    for (auto i = 0; i < conditionUpdateSize; i++) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, conditionUpdate[i]);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enableBlurBackground);
     return true;
