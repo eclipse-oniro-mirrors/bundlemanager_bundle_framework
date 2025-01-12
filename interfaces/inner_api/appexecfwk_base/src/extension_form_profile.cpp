@@ -29,6 +29,7 @@ std::mutex g_mutex;
 
 const int8_t MAX_FORM_NAME = 127;
 const int8_t DEFAULT_RECT_SHAPE = 1;
+const int8_t DEFAULT_CONDITION_TYPE = 0;
 #ifndef FORM_DIMENSION_2_3
 const int8_t DIMENSION_2_3 = 8;
 #endif
@@ -85,6 +86,12 @@ const int32_t SHAPE_MAP_VALUE[] = {
     1,
     2
 };
+constexpr const char* CONDITION_MAP_KEY[] = {
+    "network",
+};
+const int32_t CONDITION_MAP_VALUE[] = {
+    1,
+};
 constexpr const char* FORM_TYPE_MAP_KEY[] = {
     "JS",
     "eTS"
@@ -127,6 +134,7 @@ struct ExtensionFormProfileInfo {
     std::string type = "JS";
     std::string uiSyntax = "hml";
     std::string scheduledUpdateTime = "";
+    std::string multiScheduledUpdateTime = "";
     int32_t updateDuration = 0;
     std::string defaultDimension;
     bool formVisibleNotify = false;
@@ -139,6 +147,7 @@ struct ExtensionFormProfileInfo {
     bool enableBlurBackground = false;
     std::vector<std::string> supportShapes {};
     std::vector<std::string> supportDimensions {};
+    std::vector<std::string> conditionUpdate {};
     std::vector<Metadata> metadata {};
     std::vector<std::string> previewImages {};
 };
@@ -273,6 +282,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.scheduledUpdateTime,
         false,
         g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::MULTI_SCHEDULED_UPDATE_TIME,
+        extensionFormProfileInfo.multiScheduledUpdateTime,
+        false,
+        g_parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::UPDATE_DURATION,
@@ -331,6 +346,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         jsonObjectEnd,
         ExtensionFormProfileReader::SUPPORT_SHAPES,
         extensionFormProfileInfo.supportShapes,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::CONDITION_UPDATE,
+        extensionFormProfileInfo.conditionUpdate,
         JsonType::ARRAY,
         false,
         g_parseResult,
@@ -477,18 +500,56 @@ bool GetPreviewImages(const ExtensionFormProfileInfo &form, ExtensionFormInfo &i
     return true;
 }
 
-bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+bool GetConditionUpdate(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
-    if (!CheckFormNameIsValid(form.name)) {
-        APP_LOGE("form name is invalid");
-        return false;
+    std::set<int32_t> conditionUpdateSet {};
+    size_t len = sizeof(CONDITION_MAP_KEY) / sizeof(CONDITION_MAP_KEY[0]);
+    size_t i = 0;
+    for (const auto &conditionUpdate: form.conditionUpdate) {
+        for (i = 0; i < len; i++) {
+            if (CONDITION_MAP_KEY[i] == conditionUpdate) {
+                break;
+            }
+        }
+        if (i == len) {
+            APP_LOGW("conditionUpdate invalid form %{public}s", form.name.c_str());
+            continue;
+        }
+        conditionUpdateSet.emplace(CONDITION_MAP_VALUE[i]);
     }
+    if (conditionUpdateSet.empty()) {
+        conditionUpdateSet.emplace(DEFAULT_CONDITION_TYPE);
+    }
+    for (const auto &conditionUpdate: conditionUpdateSet) {
+        info.conditionUpdate.emplace_back(conditionUpdate);
+    }
+    return true;
+}
+
+void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
     info.name = form.name;
     info.description = form.description;
     info.displayName = form.displayName;
     info.src = form.src;
     info.window.autoDesignWidth = form.window.autoDesignWidth;
     info.window.designWidth = form.window.designWidth;
+    info.formConfigAbility = form.formConfigAbility;
+    info.formVisibleNotify = form.formVisibleNotify;
+    info.isDefault = form.isDefault;
+    info.updateEnabled = form.updateEnabled;
+    info.scheduledUpdateTime = form.scheduledUpdateTime;
+    info.multiScheduledUpdateTime = form.multiScheduledUpdateTime;
+    info.updateDuration = form.updateDuration;
+}
+
+bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
+    if (!CheckFormNameIsValid(form.name)) {
+        APP_LOGE("form name is invalid");
+        return false;
+    }
+    TransformToFormInfoExt(form, info);
 
     size_t len = sizeof(FORM_COLOR_MODE_MAP_KEY) / sizeof(FORM_COLOR_MODE_MAP_KEY[0]);
     for (size_t i = 0; i < len; i++) {
@@ -511,13 +572,6 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
             info.uiSyntax = UI_SYNTAX_MAP_VALUE[i];
     }
 
-    info.formConfigAbility = form.formConfigAbility;
-    info.formVisibleNotify = form.formVisibleNotify;
-    info.isDefault = form.isDefault;
-    info.updateEnabled = form.updateEnabled;
-    info.scheduledUpdateTime = form.scheduledUpdateTime;
-    info.updateDuration = form.updateDuration;
-
     if (!GetMetadata(form, info)) {
         return false;
     }
@@ -534,6 +588,9 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     info.fontScaleFollowSystem = form.fontScaleFollowSystem;
 
     if (!GetSupportShapes(form, info)) {
+        return false;
+    }
+    if (!GetConditionUpdate(form, info)) {
         return false;
     }
     if (!GetPreviewImages(form, info)) {

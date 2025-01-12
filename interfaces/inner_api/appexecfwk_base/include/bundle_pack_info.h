@@ -48,6 +48,7 @@ struct AbilityFormInfo {
     std::string name;
     std::string type;
     std::string scheduledUpdateTime;
+    std::string multiScheduledUpdateTime;
     std::string defaultDimension;
     std::vector<std::string> supportDimensions;
 };

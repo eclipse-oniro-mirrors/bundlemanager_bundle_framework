@@ -59,11 +59,13 @@ struct FormInfo : public Parcelable {
     std::string deepLink;
     std::string formConfigAbility;
     std::string scheduledUpdateTime = "";
+    std::string multiScheduledUpdateTime = "";
     std::string src;
     std::vector<int32_t> supportDimensions;
     std::vector<std::string> landscapeLayouts;
     std::vector<std::string> portraitLayouts;
     std::vector<FormCustomizeData> customizeDatas;
+    std::vector<int32_t> conditionUpdate;
     std::vector<int32_t> supportShapes;
     std::vector<uint32_t> formPreviewImages;
 
@@ -77,6 +79,8 @@ struct FormInfo : public Parcelable {
 
 private:
     bool ReadCustomizeData(Parcel &parcel);
+    void SetInfoByAbility(const ExtensionAbilityInfo &abilityInfo);
+    void SetInfoByFormExt(const ExtensionFormInfo &formInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
