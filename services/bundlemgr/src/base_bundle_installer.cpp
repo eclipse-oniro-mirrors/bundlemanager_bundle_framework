@@ -1253,6 +1253,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         LOG_D(BMS_TAG_INSTALLER, "begin to copy hap to install path");
         result = SaveHapToInstallPath(newInfos, oldInfo);
         CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
+    } else {
+        ClearEncryptionStatus();
     }
     // delete old native library path
     if (NeedDeleteOldNativeLib(newInfos, oldInfo)) {
@@ -5327,6 +5329,21 @@ void BaseBundleInstaller::UpdateEncryptionStatus(const std::unordered_map<std::s
         LOG_D(BMS_TAG_INSTALLER, "application does not contain encrypted module");
         newInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
     }
+}
+
+void BaseBundleInstaller::ClearEncryptionStatus()
+{
+    InnerBundleInfo newInfo;
+    if (dataMgr_ == nullptr || !dataMgr_->FetchInnerBundleInfo(bundleName_, newInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return;
+    }
+    newInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
+    if (!dataMgr_->UpdateInnerBundleInfo(newInfo, false)) {
+        LOG_E(BMS_TAG_INSTALLER, "UpdateInnerBundleInfo failed");
+        return;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "encryption status is cleared for: %{public}s", bundleName_.c_str());
 }
 
 bool BaseBundleInstaller::IsBundleEncrypted(const std::unordered_map<std::string, InnerBundleInfo> &infos,

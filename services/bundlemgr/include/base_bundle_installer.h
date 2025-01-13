@@ -637,6 +637,7 @@ private:
         const InnerBundleInfo &oldInfo);
     void UpdateEncryptionStatus(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo);
+    void ClearEncryptionStatus();
     bool IsBundleEncrypted(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
     void UpdateAppInstallControlled(int32_t userId);
