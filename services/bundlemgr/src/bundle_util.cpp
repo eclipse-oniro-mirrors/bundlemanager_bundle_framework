@@ -126,7 +126,7 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
             }
             return ret;
         } else {
-            APP_LOGE("bundlePath not existed with :%{public}s", bundlePaths.front().c_str());
+            APP_LOGE("bundlePath not existed with :%{public}s errno %{public}d", bundlePaths.front().c_str(), errno);
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
     } else {
