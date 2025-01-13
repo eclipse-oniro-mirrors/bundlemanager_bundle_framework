@@ -22,64 +22,11 @@
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t U32_AT_SIZE = 4;
-constexpr size_t MESSAGE_SIZE = 4;
-constexpr size_t DCAMERA_SHIFT_24 = 24;
-constexpr size_t DCAMERA_SHIFT_16 = 16;
-constexpr size_t DCAMERA_SHIFT_8 = 8;
 const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const uint32_t QUICK_FIX_VERSION_CODE = 1;
 const uint32_t BUNDLE_VERSION_CODE = 1;
 const std::string QUICK_FIX_VERSION_NAME = "1.0";
 const std::string BUNDLE_VERSION_NAME = "1.0";
-
-uint32_t GetU32Data(const char* ptr)
-{
-    return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
-}
-
-void DoSomething2(const char* data, size_t size)
-{
-    std::string targetPath(data, size);
-    std::vector<std::string> bundlePaths;
-    std::string hqfSoPath(data, size);
-    QuickFixDeployer quickFixDeployer(bundlePaths, false, hqfSoPath);
-    BundleInfo bundleInfo;
-    HapModuleInfo info;
-    info.moduleName = "entry";
-    bundleInfo.hapModuleInfos.emplace_back(info);
-    std::unordered_map<std::string, AppQuickFix> infos1;
-    const AppQuickFix &appQuickFix = infos1.begin()->second;
-    quickFixDeployer.ExtractQuickFixSoFile(appQuickFix, hqfSoPath, bundleInfo);
-    std::string bundleName(data, size);
-    std::string moduleName(data, size);
-    InnerBundleInfo innerBundleInfo;
-    quickFixDeployer.FetchInnerBundleInfo(bundleName, innerBundleInfo);
-    AppqfInfo appqfInfo;
-    HqfInfo hqfInfo;
-    bool isLibIsolated = false;
-    std::string nativeLibraryPath(data, size);
-    std::string cpuAbi(data, size);
-    quickFixDeployer.FetchPatchNativeSoAttrs(appqfInfo, hqfInfo, isLibIsolated,
-        nativeLibraryPath, cpuAbi);
-    quickFixDeployer.HasNativeSoInBundle(appQuickFix);
-    quickFixDeployer.SendQuickFixSystemEvent(innerBundleInfo);
-    quickFixDeployer.ExtractSoAndApplyDiff(appQuickFix, bundleInfo, hqfSoPath);
-    quickFixDeployer.ExtractSoFiles(bundleInfo, moduleName, hqfSoPath);
-    std::string oldSoPath(data, size);
-    quickFixDeployer.ProcessApplyDiffPatch(appQuickFix,
-        appQuickFix.deployingAppqfInfo.hqfInfos[0], oldSoPath, hqfSoPath, reinterpret_cast<uintptr_t>(data));
-    quickFixDeployer.ExtractEncryptedSoFiles(bundleInfo, moduleName, reinterpret_cast<uintptr_t>(data), oldSoPath);
-    bundleInfo.applicationInfo.compileSdkType = "";
-    CodeSignatureParam codeSignatureParam;
-    quickFixDeployer.PrepareCodeSignatureParam(appQuickFix, hqfInfo, bundleInfo, hqfSoPath, codeSignatureParam);
-    InnerAppQuickFix innerAppQuickFix;
-    innerAppQuickFix.SetAppQuickFix(appQuickFix);
-    quickFixDeployer.VerifyCodeSignatureForHqf(innerAppQuickFix, oldSoPath);
-    std::vector<std::string> bundleFilePaths;
-    bundleFilePaths.push_back(targetPath);
-    quickFixDeployer.CheckHqfResourceIsValid(bundleFilePaths, bundleInfo);
-    quickFixDeployer.ExtractQuickFixResFile(appQuickFix, bundleInfo);
-}
 
 AppQuickFix CreateAppQuickFix()
 {
@@ -141,7 +88,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     quickFixDeployer.ToDeployQuickFixResult(appQuickFix);
     quickFixDeployer.ProcessNativeLibraryPath(targetPath, innerAppQuickFix);
     quickFixDeployer.ResetNativeSoAttrs(infos1);
-    DoSomething2(data, size);
     return true;
 }
 }
