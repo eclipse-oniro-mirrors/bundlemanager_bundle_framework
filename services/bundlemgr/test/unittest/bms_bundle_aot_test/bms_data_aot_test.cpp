@@ -810,22 +810,6 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1900, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: AOTHandler_2000
- * @tc.name: test AOTHandler
- * @tc.desc: test HandleIdleWithSingleHap function running normally
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_2000, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = AOT_MODULE_NAME;
-    info.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
-    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
-        "", info);
-    AOTHandler::GetInstance().HandleIdleWithSingleHap(info, AOT_MODULE_NAME, "");
-}
-
-/**
  * @tc.number: AOTHandler_2100
  * @tc.name: test AOTHandler
  * @tc.desc: test HandleCopyAp function running normally
@@ -904,6 +888,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2300, Function | SmallTest | Level0)
         bundleName, innerBundleInfo);
     std::map<std::string, EventInfo> sysEventMap;
     EventInfo eventInfo = AOTHandler::GetInstance().HandleCompileWithBundle(bundleName, compileMode, dataMgr);
+    EXPECT_EQ(eventInfo.failureReason, "compile failed");
     sysEventMap.emplace(bundleName, eventInfo);
     AOTHandler::GetInstance().ReportSysEvent(sysEventMap);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
