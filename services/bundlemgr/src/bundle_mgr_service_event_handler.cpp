@@ -1304,7 +1304,8 @@ void BMSEventHandler::InnerProcessCheckAppDataDir()
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     for (const auto &userId : userIds) {
         std::vector<BundleInfo> bundleInfos;
-        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+        if (!dataMgr->GetBundleInfos(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+            bundleInfos, userId)) {
             LOG_W(BMS_TAG_DEFAULT, "UpdateAppDataDir GetAllBundleInfos failed");
             continue;
         }
@@ -1340,7 +1341,8 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
     for (auto &preInstallBundleInfo : preInstallBundleInfos) {
         BundleInfo bundleInfo;
         if (dataMgr->GetBundleInfo(preInstallBundleInfo.GetBundleName(),
-            BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, Constants::ALL_USERID)) {
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+            bundleInfo, Constants::ALL_USERID)) {
             preInstallBundleInfo.SetIconId(bundleInfo.applicationInfo.iconResource.id);
             preInstallBundleInfo.SetLabelId(bundleInfo.applicationInfo.labelResource.id);
             preInstallBundleInfo.SetModuleName(bundleInfo.applicationInfo.labelResource.moduleName);
@@ -1388,7 +1390,8 @@ void BMSEventHandler::InnerProcessCheckAppLogDir()
         return;
     }
     std::vector<BundleInfo> bundleInfos;
-    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, Constants::DEFAULT_USERID)) {
+    if (!dataMgr->GetBundleInfos(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+        bundleInfos, Constants::DEFAULT_USERID)) {
         LOG_E(BMS_TAG_DEFAULT, "GetAllBundleInfos failed");
         return;
     }
@@ -1416,7 +1419,8 @@ void BMSEventHandler::InnerProcessCheckAppFileManagerDir()
         return;
     }
     std::vector<BundleInfo> bundleInfos;
-    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, Constants::DEFAULT_USERID)) {
+    if (!dataMgr->GetBundleInfos(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+        bundleInfos, Constants::DEFAULT_USERID)) {
         LOG_E(BMS_TAG_DEFAULT, "GetAllBundleInfos failed");
         return;
     }
@@ -1496,7 +1500,8 @@ void BMSEventHandler::ProcessNewBackupDir()
             continue;
         }
         std::vector<BundleInfo> bundleInfos;
-        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+        if (!dataMgr->GetBundleInfos(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+            bundleInfos, userId)) {
             LOG_W(BMS_TAG_DEFAULT, "ProcessNewBackupDir GetAllBundleInfos failed");
             continue;
         }
@@ -1536,7 +1541,8 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
 
     BundleInfo info;
     auto hasBundleInstalled = dataMgr->GetBundleInfo(
-        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, info, Constants::ANY_USERID);
+        bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+        info, Constants::ANY_USERID);
     if (!hasBundleInstalled) {
         LOG_D(BMS_TAG_DEFAULT, "Obtain bundleInfo failed, bundleName: %{public}s not exist", bundleName.c_str());
         return;
@@ -1591,7 +1597,8 @@ void BMSEventHandler::InnerProcessCheckRecoverableApplicationInfo()
     for (auto &preInstallBundleInfo : preInstallBundleInfos) {
         BundleInfo bundleInfo;
         if (dataMgr->GetBundleInfo(preInstallBundleInfo.GetBundleName(),
-            BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, Constants::ALL_USERID)) {
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+            bundleInfo, Constants::ALL_USERID)) {
             preInstallBundleInfo.SetSystemApp(bundleInfo.applicationInfo.isSystemApp);
             if (bundleInfo.isNewVersion) {
                 preInstallBundleInfo.SetBundleType(bundleInfo.applicationInfo.bundleType);
@@ -1881,7 +1888,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             bundleName.c_str(), scanPathIter.c_str());
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
-            bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
+            bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+            hasInstalledInfo, Constants::ANY_USERID);
         if (!hasBundleInstalled && mapIter->second.IsUninstalled()) {
             LOG_W(BMS_TAG_DEFAULT, "app(%{public}s) has been uninstalled and do not OTA install",
                 bundleName.c_str());
@@ -2923,7 +2931,8 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
         std::string bundleName = loadIter.first;
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
-            bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
+            bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+            hasInstalledInfo, Constants::ANY_USERID);
         auto listIter = hapParseInfoMap_.find(bundleName);
         if (listIter == hapParseInfoMap_.end()) {
             LOG_I(BMS_TAG_DEFAULT, "ProcessRebootBundleUninstall OTA uninstall app(%{public}s)", bundleName.c_str());
@@ -3817,6 +3826,56 @@ void BMSEventHandler::InnerProcessStockBundleProvisionInfo()
     LOG_D(BMS_TAG_DEFAULT, "InnerProcessStockBundleProvisionInfo end");
 }
 
+void BMSEventHandler::ProcessBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::vector<BundleInfo> bundleInfos;
+    auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    if (dataMgr->GetBundleInfosV9(baseFlag, bundleInfos, Constants::ALL_USERID) != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetBundleInfos failed");
+        return;
+    }
+    for (const auto &bundleInfo : bundleInfos) {
+        // not exist in appProvisionInfo table, then parse profile info and save it
+        if ((allBundleNames.find(bundleInfo.name) == allBundleNames.end()) &&
+            !bundleInfo.hapModuleInfos.empty()) {
+            AddStockAppProvisionInfoByOTA(bundleInfo.name, bundleInfo.hapModuleInfos[0].hapPath);
+        }
+    }
+}
+
+void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::vector<SharedBundleInfo> shareBundleInfos;
+    if (dataMgr->GetAllSharedBundleInfo(shareBundleInfos) != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetAllSharedBundleInfo failed");
+        return;
+    }
+    for (const auto &sharedBundleInfo : shareBundleInfos) {
+        // not exist in appProvisionInfo table, then parse profile info and save it
+        if ((allBundleNames.find(sharedBundleInfo.name) == allBundleNames.end()) &&
+            !sharedBundleInfo.sharedModuleInfos.empty()) {
+            std::string hspPath = std::string(Constants::BUNDLE_CODE_DIR)
+                + ServiceConstants::PATH_SEPARATOR + sharedBundleInfo.name
+                + ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX
+                + std::to_string(sharedBundleInfo.sharedModuleInfos[0].versionCode) + ServiceConstants::PATH_SEPARATOR
+                + sharedBundleInfo.sharedModuleInfos[0].name + ServiceConstants::PATH_SEPARATOR
+                + sharedBundleInfo.sharedModuleInfos[0].name + ServiceConstants::HSP_FILE_SUFFIX;
+            AddStockAppProvisionInfoByOTA(sharedBundleInfo.name, hspPath);
+        }
+    }
+}
+
 void BMSEventHandler::InnerProcessStockBundleRouterInfo()
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -3827,8 +3886,9 @@ void BMSEventHandler::InnerProcessStockBundleRouterInfo()
     std::set<std::string> bundleNames;
     dataMgr->GetAllBundleNames(bundleNames);
     std::vector<BundleInfo> bundleInfos;
-    if (dataMgr->GetBundleInfosV9(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE),
-        bundleInfos, Constants::ALL_USERID) != ERR_OK) {
+    auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    if (dataMgr->GetBundleInfosV9(baseFlag, bundleInfos, Constants::ALL_USERID) != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GetBundleInfos failed");
         return;
     }
@@ -3930,7 +3990,8 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
         auto hapVersionCode = infos.begin()->second.GetVersionCode();
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
-            bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
+            bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+            hasInstalledInfo, Constants::ANY_USERID);
         if (!hasBundleInstalled) {
             LOG_W(BMS_TAG_DEFAULT, "obtain bundleInfo failed, bundleName :%{public}s not exist", bundleName.c_str());
             continue;
@@ -4188,8 +4249,9 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
     }
     for (const std::string &bundleName : bundleNameList_) {
         BundleInfo hasInstalledInfo;
-        auto hasBundleInstalled =
-            dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
+        auto hasBundleInstalled = dataMgr->GetBundleInfo(bundleName,
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+            hasInstalledInfo, Constants::ANY_USERID);
         if (!hasBundleInstalled) {
             LOG_W(BMS_TAG_DEFAULT, "obtain bundleInfo failed, bundleName :%{public}s not exist", bundleName.c_str());
             continue;
@@ -4288,7 +4350,8 @@ void BMSEventHandler::ProcessCheckAppEl1DirTask()
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     for (const auto &userId : userIds) {
         std::vector<BundleInfo> bundleInfos;
-        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+        if (!dataMgr->GetBundleInfos(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+            bundleInfos, userId)) {
             LOG_W(BMS_TAG_DEFAULT, "GetBundleInfos failed");
             continue;
         }
