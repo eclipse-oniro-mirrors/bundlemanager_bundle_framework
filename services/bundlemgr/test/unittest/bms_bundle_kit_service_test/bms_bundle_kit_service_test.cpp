@@ -1684,8 +1684,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllBundleCacheStat_0001, Function | MediumT
     }
     ret = MockGetAllBundleCacheStat(getCache);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
-    delete getCache;
-    getCache = nullptr;
     std::cout << "END GetAllBundleCacheStat_0001" << std::endl;
 }
 
