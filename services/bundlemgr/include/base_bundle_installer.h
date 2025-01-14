@@ -763,6 +763,9 @@ private:
     void SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,
         const UninstallBundleInfo &uninstallBundleInfo);
     void DeleteUninstallBundleInfo(const std::string &bundleName);
+    void SetFirstInstallTime(const std::string &bundleName, const int64_t &time, InnerBundleInfo &info);
+    bool SaveFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
+        bool isPreInstallApp, const InnerBundleUserInfo &innerBundleUserInfo);
     ErrCode MarkInstallFinish();
     bool IsArkWeb(const std::string &bundleName) const;
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,

@@ -8176,4 +8176,26 @@ HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0600, Function | Sma
         EXPECT_EQ(ERR_APPEXECFWK_INSTALL_OS_INTEGRATION_BUNDLE_NOT_ALLOWED_FOR_SHELL, ret);
     }
 }
+
+/**
+ * @tc.number: SetBundleFirstInstallTime_0100
+ * @tc.name: test SetFirstInstallTime
+ * @tc.desc: 1.Test setup bundle first installation time
+*/
+HWTEST_F(BmsBundleInstallerTest, SetBundleFirstInstallTime_0100, Function | MediumTest | Level1)
+{
+    ApplicationInfo applicationInfo;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(Constants::ALL_USERID);
+    innerBundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
+    BaseBundleInstaller installer;
+    installer.userId_ = Constants::ALL_USERID;
+    installer.dataMgr_ = GetBundleDataMgr();
+    int64_t time = 200;
+    installer.SetFirstInstallTime(BUNDLE_NAME, time, innerBundleInfo);
+    EXPECT_EQ(time, innerBundleInfo.innerBundleUserInfos_[key].firstInstallTime);
+}
 } // OHOS

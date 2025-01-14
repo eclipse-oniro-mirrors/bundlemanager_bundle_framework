@@ -1954,6 +1954,10 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
     NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, bundleInfo.installTime, &nInstallTime));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "installTime", nInstallTime));
 
+    napi_value nFirstInstallTime;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, bundleInfo.firstInstallTime, &nFirstInstallTime));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "firstInstallTime", nFirstInstallTime));
+
     napi_value nUpdateTime;
     NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, bundleInfo.updateTime, &nUpdateTime));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "updateTime", nUpdateTime));

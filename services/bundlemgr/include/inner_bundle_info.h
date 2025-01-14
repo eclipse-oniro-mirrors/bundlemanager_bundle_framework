@@ -433,6 +433,13 @@ public:
         return innerBundleUserInfo.updateTime;
     }
     /**
+     * @brief Set bundle first install time.
+     * @param time Indicates the first install time to set.
+     * @param userId Indicates the user ID.
+     * @return
+     */
+    void SetFirstInstallTime(const int64_t time, int32_t userId);
+    /**
      * @brief Get bundle name.
      * @return Return bundle name
      */

@@ -157,6 +157,12 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     int64_t now = BundleUtil::GetCurrentTime();
     newUserInfo.installTime = now;
     newUserInfo.updateTime = now;
+    FirstInstallBundleInfo firstInstallBundleInfo;
+    if (dataMgr_->GetFirstInstallBundleInfo(bundleName, userId, firstInstallBundleInfo)) {
+        newUserInfo.firstInstallTime = firstInstallBundleInfo.firstInstallTime;
+    } else {
+        newUserInfo.firstInstallTime = info.IsPreInstallApp() ? ServiceConstants::PREINSTALL_FIRST_INSTALL_TIME : now;
+    }
 
     ScopeGuard createUserDataDirGuard([&] { RemoveDataDir(bundleName, userId); });
     ErrCode result = CreateDataDir(info, userId, uid);

@@ -52,6 +52,7 @@ const char* BUNDLE_INFO_GID = "gid";
 const char* BUNDLE_INFO_SEINFO = "seInfo";
 const char* BUNDLE_INFO_INSTALL_TIME = "installTime";
 const char* BUNDLE_INFO_UPDATE_TIME = "updateTime";
+const char* BUNDLE_INFO_FIRST_INSTALL_TIME = "firstInstallTime";
 const char* BUNDLE_INFO_ENTRY_MODULE_NAME = "entryModuleName";
 const char* BUNDLE_INFO_ENTRY_INSTALLATION_FREE = "entryInstallationFree";
 const char* BUNDLE_INFO_REQ_PERMISSIONS = "reqPermissions";
@@ -287,6 +288,7 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
     gid = parcel.ReadInt32();
     installTime = parcel.ReadInt64();
     updateTime = parcel.ReadInt64();
+    firstInstallTime = parcel.ReadInt64();
 
     int32_t hapModuleNamesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapModuleNamesSize);
@@ -452,6 +454,7 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, installTime);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, updateTime);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, firstInstallTime);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapModuleNames.size());
     for (auto &hapModuleName : hapModuleNames) {
@@ -703,6 +706,7 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_SEINFO, bundleInfo.seInfo},
         {BUNDLE_INFO_INSTALL_TIME, bundleInfo.installTime},
         {BUNDLE_INFO_UPDATE_TIME, bundleInfo.updateTime},
+        {BUNDLE_INFO_FIRST_INSTALL_TIME, bundleInfo.firstInstallTime},
         {BUNDLE_INFO_ENTRY_MODULE_NAME, bundleInfo.entryModuleName},
         {BUNDLE_INFO_ENTRY_INSTALLATION_FREE, bundleInfo.entryInstallationFree},
         {BUNDLE_INFO_REQ_PERMISSIONS, bundleInfo.reqPermissions},
@@ -911,6 +915,14 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         jsonObjectEnd,
         BUNDLE_INFO_UPDATE_TIME,
         bundleInfo.updateTime,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int64_t>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_FIRST_INSTALL_TIME,
+        bundleInfo.firstInstallTime,
         JsonType::NUMBER,
         false,
         parseResult,

@@ -44,6 +44,7 @@
 #include "bundle_status_callback_interface.h"
 #include "common_event_data.h"
 #include "ffrt.h"
+#include "first_install_data_mgr_storage_rdb.h"
 #include "inner_bundle_clone_info.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
@@ -859,6 +860,12 @@ public:
     bool DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
     bool GetAllUninstallBundleInfo(std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos);
 
+    bool AddFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
+        const FirstInstallBundleInfo &firstInstallBundleInfo);
+    bool GetFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
+        FirstInstallBundleInfo &firstInstallBundleInfo);
+    bool DeleteFirstInstallBundleInfo(int32_t userId);
+
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
 
     void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
@@ -1287,6 +1294,7 @@ private:
     std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
     std::shared_ptr<IRouterDataStorage> routerStorage_;
     std::shared_ptr<UninstallDataMgrStorageRdb> uninstallDataMgr_;
+    std::shared_ptr<FirstInstallDataMgrStorageRdb> firstInstallDataMgr_;
     // use vector because these functions using for IPC, the bundleName may duplicate
     std::vector<sptr<IBundleStatusCallback>> callbackList_;
     // common event callback

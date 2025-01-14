@@ -1600,6 +1600,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     DeleteEncryptionKeyId(curInnerBundleUserInfo, installParam.isKeepData);
+    if (!installParam.isRemoveUser &&
+        !SaveFirstInstallBundleInfo(bundleName, userId_, oldInfo.IsPreInstallApp(), curInnerBundleUserInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "save first install bundle info failed");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
 
     if (isMultiUser) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
@@ -1846,6 +1851,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo, Constants::MAIN_APP_INDEX, userId_);
         }
 #endif
+        if (!installParam.isRemoveUser &&
+            !SaveFirstInstallBundleInfo(bundleName, userId_, oldInfo.IsPreInstallApp(), curInnerBundleUserInfo)) {
+            LOG_E(BMS_TAG_INSTALLER, "save first install bundle info failed");
+            return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        }
         if (onlyInstallInUser) {
             result = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
             if (result != ERR_OK) {
@@ -2204,7 +2214,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     }
 
     uid = info.GetUid(userId_);
-    info.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
+    int64_t currentTime = BundleUtil::GetCurrentTimeMs();
+    info.SetBundleInstallTime(currentTime, userId_);
+    SetFirstInstallTime(bundleName_, currentTime, info);
     tempInfo_.SetTempBundleInfo(info);
     stateGuard.Dismiss();
     bundleGuard.Dismiss();
@@ -3149,6 +3161,43 @@ void BaseBundleInstaller::DeleteUninstallBundleInfo(const std::string &bundleNam
     if (!dataMgr_->DeleteUninstallBundleInfo(bundleName, userId_)) {
         LOG_E(BMS_TAG_INSTALLER, "delete failed");
     }
+}
+
+void BaseBundleInstaller::SetFirstInstallTime(const std::string &bundleName, const int64_t &time,
+    InnerBundleInfo &info)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init data manager failed");
+        info.SetFirstInstallTime(time, userId_);
+        return;
+    }
+    FirstInstallBundleInfo firstInstallBundleInfo;
+    if (dataMgr_->GetFirstInstallBundleInfo(bundleName, userId_, firstInstallBundleInfo)) {
+        info.SetFirstInstallTime(firstInstallBundleInfo.firstInstallTime, userId_);
+        return;
+    }
+    info.SetFirstInstallTime(time, userId_);
+}
+
+bool BaseBundleInstaller::SaveFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
+    bool isPreInstallApp, const InnerBundleUserInfo &innerBundleUserInfo)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init data manager failed");
+        return false;
+    }
+    FirstInstallBundleInfo firstInstallInfo;
+    if (innerBundleUserInfo.firstInstallTime == ServiceConstants::DEFAULT_FIRST_INSTALL_TIME) {
+        firstInstallInfo.firstInstallTime = isPreInstallApp ?
+            ServiceConstants::PREINSTALL_FIRST_INSTALL_TIME : innerBundleUserInfo.installTime;
+    } else {
+        firstInstallInfo.firstInstallTime = innerBundleUserInfo.firstInstallTime;
+    }
+    if (!dataMgr_->AddFirstInstallBundleInfo(bundleName, userId, firstInstallInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to add first install info for bundle %{public}s", bundleName.c_str());
+        return false;
+    }
+    return true;
 }
 
 bool BaseBundleInstaller::CheckInstallOnKeepData(const std::string &bundleName, bool isOTA,
@@ -4406,7 +4455,9 @@ ErrCode BaseBundleInstaller::CreateBundleUserData(InnerBundleInfo &innerBundleIn
         return result;
     }
 
-    innerBundleInfo.SetBundleInstallTime(BundleUtil::GetCurrentTimeMs(), userId_);
+    int64_t currentTime = BundleUtil::GetCurrentTimeMs();
+    innerBundleInfo.SetBundleInstallTime(currentTime, userId_);
+    SetFirstInstallTime(innerBundleInfo.GetBundleName(), currentTime, innerBundleInfo);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!innerBundleInfo.GetInnerBundleUserInfo(userId_, innerBundleUserInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "oldInfo do not have user");
