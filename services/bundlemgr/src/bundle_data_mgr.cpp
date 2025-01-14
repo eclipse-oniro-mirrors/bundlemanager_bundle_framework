@@ -8430,41 +8430,35 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
 ErrCode BundleDataMgr::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl)
 {
     APP_LOGI("with -u %{public}d -el %{public}d begin", userId, static_cast<uint8_t>(dirEl));
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     std::vector<CreateDirParam> createDirParams;
-    for (const auto &item : bundleInfos_) {
-        const InnerBundleInfo &info = item.second;
-        int32_t responseUserId = info.GetResponseUserId(userId);
-        if (responseUserId == Constants::INVALID_USERID) {
-            APP_LOGW("bundle %{public}s is not installed in user %{public}d or 0",
-                info.GetBundleName().c_str(), userId);
-            continue;
-        }
-        if (dirEl == DataDirEl::EL5) {
-            std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
-            auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(),
-                [](const RequestPermission& permission) {
-                return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
-            });
-            if (it == reqPermissions.end()) {
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (const auto &item : bundleInfos_) {
+            const InnerBundleInfo &info = item.second;
+            if (!info.HasInnerBundleUserInfo(userId)) {
+                APP_LOGW("bundle %{public}s is not installed in user %{public}d or 0",
+                    info.GetBundleName().c_str(), userId);
                 continue;
             }
+            if (dirEl == DataDirEl::EL5 && !info.NeedCreateEl5Dir()) {
+                continue;
+            }
+            CreateDirParam createDirParam;
+            createDirParam.bundleName = info.GetBundleName();
+            createDirParam.userId = userId;
+            createDirParam.uid = info.GetUid(userId);
+            createDirParam.gid = info.GetGid(userId);
+            createDirParam.apl = info.GetAppPrivilegeLevel();
+            createDirParam.isPreInstallApp = info.IsPreInstallApp();
+            createDirParam.debug =
+                info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+            createDirParam.extensionDirs = info.GetAllExtensionDirs();
+            createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
+            createDirParam.dataDirEl = dirEl;
+            createDirParams.emplace_back(createDirParam);
+            CreateAppGroupDir(info, userId);
         }
-        CreateDirParam createDirParam;
-        createDirParam.bundleName = info.GetBundleName();
-        createDirParam.userId = responseUserId;
-        createDirParam.uid = info.GetUid(responseUserId);
-        createDirParam.gid = info.GetGid(responseUserId);
-        createDirParam.apl = info.GetAppPrivilegeLevel();
-        createDirParam.isPreInstallApp = info.IsPreInstallApp();
-        createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
-        createDirParam.extensionDirs = info.GetAllExtensionDirs();
-        createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
-        createDirParam.dataDirEl = dirEl;
-        createDirParams.emplace_back(createDirParam);
-        CreateAppGroupDir(info, responseUserId);
     }
-    lock.unlock();
     ErrCode res = ERR_OK;
     if (dirEl != DataDirEl::EL5) {
         res = InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams);

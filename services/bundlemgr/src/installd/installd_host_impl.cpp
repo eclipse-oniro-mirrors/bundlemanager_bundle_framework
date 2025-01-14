@@ -586,8 +586,6 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                 ServiceConstants::LOG_DIR_GID, true) != ERR_OK) {
                 LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
             }
-            std::string shareFilesDataDir = SHAREFILES_DATA_PATH_EL2;
-            shareFilesDataDir.replace(shareFilesDataDir.find("%"), 1, std::to_string(createDirParam.userId));
             CreateSharefilesDataDirEl2(createDirParam);
         }
         ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
@@ -672,7 +670,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
 ErrCode InstalldHostImpl::CreateBundleDataDirWithEl(const CreateDirParam &createDirParam)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_I(BMS_TAG_INSTALLD, "%{public}s begin, %{public}d, el %{public}d",
+    LOG_I(BMS_TAG_INSTALLD, "%{public}s begin, %{public}d, el %{public}" PRIu8 "",
         createDirParam.bundleName.c_str(), createDirParam.userId, static_cast<uint8_t>(createDirParam.dataDirEl));
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
@@ -722,7 +720,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithEl(const CreateDirParam &create
 ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirParam, const std::string &el)
 {
     if (createDirParam.dataDirEl == DataDirEl::NONE || createDirParam.dataDirEl == DataDirEl::EL5) {
-        LOG_I(BMS_TAG_INSTALLD, "el not support: %{public}d", static_cast<uint8_t>(createDirParam.dataDirEl));
+        LOG_I(BMS_TAG_INSTALLD, "el not support: %{public}" PRIu8 "", static_cast<uint8_t>(createDirParam.dataDirEl));
         return ERR_OK;
     }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
@@ -730,12 +728,13 @@ ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirPar
     std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::BASE;
     int mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IRWXO) : S_IRWXU;
 
-    // create base extension dir
+    // create base extension dir: /data/app/${elx}/${userId}/base/${extensionDir}
     if (CreateExtensionDir(createDirParam, bundleDataDir, mode, createDirParam.gid) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", bundleDataDir.c_str());
     }
     AclSetExtensionDirs(createDirParam.debug, bundleDataDir, createDirParam.extensionDirs, true, true);
 
+    // create base bundleName dir: /data/app/${elx}/${userId}/base/${bundleName}
     bundleDataDir += createDirParam.bundleName;
     if (!InstalldOperator::MkOwnerDir(bundleDataDir, mode, createDirParam.uid, createDirParam.gid)) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBundledatadir MkOwnerDir failed errno:%{public}d", errno);
@@ -749,6 +748,7 @@ ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirPar
         return ret;
     }
 
+    // create database bundleName dir: /data/app/${elx}/${userId}/database/${bundleName}
     std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
     std::string databaseDir = databaseParentDir + createDirParam.bundleName;
     mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG | S_ISGID);
@@ -765,7 +765,7 @@ ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirPar
         return ret;
     }
 
-    // create database extension dir
+    // create database extension dir: /data/app/${elx}/${userId}/database/${extensionDir}
     if (CreateExtensionDir(createDirParam, databaseParentDir, mode,
         ServiceConstants::DATABASE_DIR_GID) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
@@ -781,6 +781,7 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
         ServiceConstants::BASE + createDirParam.bundleName;
     int mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IRWXO) : S_IRWXU;
 
+    // create el2 sub dir: /data/app/el2/${userId}/base/${bundleName}/cache|files|temp|preferences|haps
     for (const auto &dir : BUNDLE_DATA_DIR) {
         if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, mode,
             createDirParam.uid, createDirParam.gid)) {
@@ -789,6 +790,7 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
         }
     }
 
+    // create log dir: /data/app/el2/${userId}/log/${bundleName}
     std::string logParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::LOG;
     std::string logDir = logParentDir + createDirParam.bundleName;
     if (!InstalldOperator::MkOwnerDir(
@@ -797,16 +799,16 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
 
-    // create log extension dir
+    // create log extension dir: /data/app/el2/${userId}/log/${extensionDir}
     if (CreateExtensionDir(createDirParam, logParentDir, S_IRWXU | S_IRWXG,
         ServiceConstants::LOG_DIR_GID, true) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
     }
 
-    std::string shareFilesDataDir = SHAREFILES_DATA_PATH_EL2;
-    shareFilesDataDir.replace(shareFilesDataDir.find("%"), 1, std::to_string(createDirParam.userId));
+    // create sharefiles dir: /data/app/el2/${userId}/sharefiles/${bundleName}
     CreateSharefilesDataDirEl2(createDirParam);
 
+    // /data/service/el2/${userId}/hmdfs/account/data/${bundleName}
     std::string distributedfile = DISTRIBUTED_FILE;
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
@@ -814,6 +816,7 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
         LOG_E(BMS_TAG_INSTALLD, "Failed to mk dir for distributedfile errno:%{public}d", errno);
     }
 
+    // /data/service/el2/${userId}/hmdfs/non_account/data/${bundleName}
     distributedfile = DISTRIBUTED_FILE_NON_ACCOUNT;
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
@@ -821,6 +824,7 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
         LOG_E(BMS_TAG_INSTALLD, "Failed to mk dir for non account distributedfile errno:%{public}d", errno);
     }
 
+    // /data/service/el2/${userId}/backup/bundles/${bundleName}
     std::string bundleBackupDir;
     CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir,
         DirType::DIR_EL2);
@@ -831,6 +835,7 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
         LOG_E(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
     }
 
+    // /data/app/el2/${userId}/base/${bundleName}/.backup
     std::string newBundleBackupDir;
     CreateNewBackupExtHomeDir(createDirParam.bundleName,
         createDirParam.userId, createDirParam.uid, newBundleBackupDir, DirType::DIR_EL2);
@@ -840,7 +845,10 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
         LOG_E(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
     }
 
+    // /data/service/el2/${userId}/share/${bundleName}
     CreateShareDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, createDirParam.gid);
+
+    // /data/service/el2/${userId}/hmdfs/cloud/data/${bundleName}
     CreateCloudDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, ServiceConstants::DFS_GID);
     return ERR_OK;
 }

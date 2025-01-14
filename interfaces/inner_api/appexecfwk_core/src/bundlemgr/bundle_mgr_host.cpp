@@ -246,7 +246,7 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             errCode = this->HandleCreateBundleDataDir(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_EL):
-            errCode = this->HandleCreateBundleDataDirWithEl(data, reply);
+            errCode = HandleCreateBundleDataDirWithEl(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_DATA_FILES):
             errCode = this->HandleCleanBundleDataFiles(data, reply);

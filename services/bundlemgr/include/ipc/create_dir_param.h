@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_CREATE_DIR_PARAM_H
 
 #include <string>
+
 #include "bundle_dir.h"
 #include "message_parcel.h"
 
