@@ -174,6 +174,7 @@ struct Ability {
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     int32_t priority = 0;
+    uint32_t startWindowId = 0;
     uint32_t startWindowIconId = 0;
     uint32_t startWindowBackgroundId = 0;
     uint32_t maxWindowWidth = 0;
@@ -193,6 +194,7 @@ struct Ability {
     std::vector<Metadata> metadata;
     std::vector<Skill> skills;
     std::vector<std::string> backgroundModes;
+    std::string startWindow;
     std::string startWindowIcon;
     std::string startWindowBackground;
     std::string orientation = "unspecified";
@@ -660,6 +662,20 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.process,
         false,
         g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ABILITY_START_WINDOW,
+        ability.startWindow,
+        false,
+        g_parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_START_WINDOW_ID,
+        ability.startWindowId,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Extension &extension)
@@ -1891,6 +1907,46 @@ void ToInnerProfileConfiguration(
     result = profileStream.str();
 }
 
+void ToAbilityStartWindow(
+    const BundleExtractor &bundleExtractor,
+    const std::string &startWindow,
+    StartWindowResource &startWindowResource)
+{
+    auto pos = startWindow.find(ServiceConstants::PROFILE_PREFIX);
+    if (pos == std::string::npos) {
+        APP_LOGE("invalid profile configuration");
+        return;
+    }
+    std::string startWindowName = startWindow.substr(pos + strlen(ServiceConstants::PROFILE_PREFIX));
+    std::string profilePath = ServiceConstants::PROFILE_PATH + startWindowName + ServiceConstants::JSON_SUFFIX;
+    if (!bundleExtractor.HasEntry(profilePath)) {
+        APP_LOGI("profile not exist");
+        return;
+    }
+    std::stringstream profileStream;
+    if (!bundleExtractor.ExtractByName(profilePath, profileStream)) {
+        APP_LOGE("extract profile failed");
+        return;
+    }
+    nlohmann::json profileJson = nlohmann::json::parse(profileStream.str(), nullptr, false);
+    if (profileJson.is_discarded()) {
+        APP_LOGE("bad profile file");
+        return;
+    }
+    startWindowResource.startWindowAppIconId = BundleUtil::ExtractNumberFromString(
+        profileJson, Profile::START_WINDOW_APP_ICON);
+    startWindowResource.startWindowIllustrationId = BundleUtil::ExtractNumberFromString(
+        profileJson, Profile::START_WINDOW_ILLUSTRATION);
+    startWindowResource.startWindowBrandingImageId = BundleUtil::ExtractNumberFromString(
+        profileJson, Profile::START_WINDOW_BRANDING_IMAGE);
+    startWindowResource.startWindowBackgroundColorId = BundleUtil::ExtractNumberFromString(
+        profileJson, Profile::START_WINDOW_BACKGROUND_COLOR);
+    startWindowResource.startWindowBackgroundImageId = BundleUtil::ExtractNumberFromString(
+        profileJson, Profile::START_WINDOW_BACKGROUND_IMAGE);
+    startWindowResource.startWindowBackgroundImageFitId = BundleUtil::ExtractNumberFromString(
+        profileJson, Profile::START_WINDOW_BACKGROUND_IMAGE_FIT);
+}
+
 bool ToApplicationInfo(
     const Profile::ModuleJson &moduleJson,
     const BundleExtractor &bundleExtractor,
@@ -2142,6 +2198,8 @@ bool ToAbilityInfo(
     abilityInfo.startWindowIconId = ability.startWindowIconId;
     abilityInfo.startWindowBackground = ability.startWindowBackground;
     abilityInfo.startWindowBackgroundId = ability.startWindowBackgroundId;
+    abilityInfo.startWindow = ability.startWindow;
+    abilityInfo.startWindowId = ability.startWindowId;
     abilityInfo.removeMissionAfterTerminate = ability.removeMissionAfterTerminate;
     abilityInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
     size_t len = sizeof(Profile::DISPLAY_ORIENTATION_MAP_KEY) /
@@ -2442,6 +2500,9 @@ bool ToInnerBundleInfo(
         innerModuleInfo.skillKeys.emplace_back(key);
         innerBundleInfo.InsertSkillInfo(key, ability.skills);
         ToAbilitySkills(ability.skills, abilityInfo);
+        if (abilityInfo.startWindow != Constants::EMPTY_STRING) {
+            ToAbilityStartWindow(bundleExtractor, abilityInfo.startWindow, abilityInfo.startWindowResource);
+        }
         innerBundleInfo.InsertAbilitiesInfo(key, abilityInfo);
         if (findEntry && !isMainElement) {
             continue;

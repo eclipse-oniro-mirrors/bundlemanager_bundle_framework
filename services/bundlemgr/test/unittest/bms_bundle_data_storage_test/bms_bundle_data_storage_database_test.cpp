@@ -823,10 +823,20 @@ protected:
                 "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility": {
                     "extensionAbilityType": 9,
                     "priority": 0,
+                    "startWindow": "",
+                    "startWindowId": 0,
                     "startWindowIcon":"",
                     "startWindowIconId":0,
                     "startWindowBackground":"",
                     "startWindowBackgroundId":0,
+                    "startWindowResource": {
+                        "startWindowAppIconId":0,
+                        "startWindowBackgroundColorId": 0,
+                        "startWindowBackgroundImageFitId": 0,
+                        "startWindowBackgroundImageId": 0,
+                        "startWindowBrandingImageId": 0,
+                        "startWindowIllustrationId": 0
+                    },
                     "supportWindowMode": [],
                     "maxWindowRatio":0,
                     "minWindowRatio":0,

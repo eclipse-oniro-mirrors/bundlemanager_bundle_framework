@@ -203,6 +203,11 @@ constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr const char* INSTALL_SOURCE_PREINSTALL = "pre-installed";
 constexpr const char* INSTALL_SOURCE_OTA = "ota";
 constexpr const char* INSTALL_SOURCE_RECOVERY = "recovery";
+
+//ability start window
+constexpr const char* PROFILE_PATH = "resources/base/profile/";
+constexpr const char* PROFILE_PREFIX = "$profile:";
+constexpr const char* JSON_SUFFIX = ".json";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS
