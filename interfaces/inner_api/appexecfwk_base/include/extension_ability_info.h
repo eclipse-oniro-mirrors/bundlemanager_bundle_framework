@@ -111,7 +111,8 @@ enum class ExtensionAbilityType {
     AUTO_FILL_SMART = 503,
     SYSPICKER_PHOTOEDITOR = 504,
     SYS_VISUAL = 505,
-    RECENT_PHOTO = 506
+    RECENT_PHOTO = 506,
+    FORM_EDIT = 507
 };
 
 enum class CompileMode {
