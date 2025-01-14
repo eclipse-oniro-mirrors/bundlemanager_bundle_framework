@@ -197,6 +197,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_ALL_BUNDLE_CACHE = 171,
     CLEAN_ALL_BUNDLE_CACHE = 172,
     GET_SIMPLE_APP_INFO_FOR_UID = 173,
+    CREATE_BUNDLE_DATA_DIR_WITH_EL = 174,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

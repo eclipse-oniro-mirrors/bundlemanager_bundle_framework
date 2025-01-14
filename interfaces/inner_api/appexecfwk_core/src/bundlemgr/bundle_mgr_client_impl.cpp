@@ -107,6 +107,18 @@ ErrCode BundleMgrClientImpl::CreateBundleDataDir(int32_t userId)
     return bundleMgr_->CreateBundleDataDir(userId);
 }
 
+ErrCode BundleMgrClientImpl::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl)
+{
+    APP_LOGD("enter");
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE("connect fail");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    return bundleMgr_->CreateBundleDataDirWithEl(userId, dirEl);
+}
+
 bool BundleMgrClientImpl::GetHapModuleInfo(const std::string &bundleName, const std::string &hapName,
     HapModuleInfo &hapModuleInfo)
 {
