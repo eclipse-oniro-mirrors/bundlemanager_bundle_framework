@@ -4399,7 +4399,7 @@ int32_t BaseBundleInstaller::GetConfirmUserId(
     bool isSingleton = newInfos.begin()->second.IsSingleton();
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "The userId is Unspecified and app is singleton(%{public}d) when install",
         static_cast<int32_t>(isSingleton));
-    if (isSingleton) {
+    if (isSingleton && !otaInstall_) {
         return Constants::DEFAULT_USERID;
     }
     if (userId != Constants::UNSPECIFIED_USERID || newInfos.size() <= 0) {
