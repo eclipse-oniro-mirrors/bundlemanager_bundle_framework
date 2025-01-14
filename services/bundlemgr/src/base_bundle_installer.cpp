@@ -1594,6 +1594,14 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::shared_ptr<BundleCloneInstaller> cloneInstaller = std::make_shared<BundleCloneInstaller>();
     cloneInstaller->UninstallAllCloneApps(bundleName, installParam.userId);
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
+    if (appControlMgr != nullptr) {
+        LOG_D(BMS_TAG_INSTALLER, "Delete disposed rule when bundleName :%{public}s uninstall", bundleName.c_str());
+        appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo, Constants::MAIN_APP_INDEX, userId_);
+    }
+#endif
+
     auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_, installParam.isKeepData);
     if (res != ERR_OK) {
         APP_LOGW("remove group dir failed for %{public}s", oldInfo.GetBundleName().c_str());
@@ -1671,13 +1679,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed", bundleName.c_str());
     }
-#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-    std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
-    if (appControlMgr != nullptr) {
-        LOG_D(BMS_TAG_INSTALLER, "Delete disposed rule when bundleName :%{public}s uninstall", bundleName.c_str());
-        appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo, Constants::MAIN_APP_INDEX, userId_);
-    }
-#endif
     LOG_D(BMS_TAG_INSTALLER, "finish to process %{public}s bundle uninstall", bundleName.c_str());
     RemoveDataPreloadHapFiles(bundleName);
 
