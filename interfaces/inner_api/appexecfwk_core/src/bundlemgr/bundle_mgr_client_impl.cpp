@@ -499,12 +499,12 @@ ErrCode BundleMgrClientImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t
 {
     APP_LOGD("GetSandboxExtensionAbilityInfos begin");
     if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
-        APP_LOGE("GetSandboxExtensionAbilityInfos params are invalid");
+        APP_LOGE("appIndex is invalid,: %{public}d,", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        APP_LOGE("connect fail");
+        APP_LOGE("connect fail: %{public}d", result);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
