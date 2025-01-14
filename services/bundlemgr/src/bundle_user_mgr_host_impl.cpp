@@ -444,7 +444,12 @@ void BundleUserMgrHostImpl::HandleNotifyBundleEventsAsync()
 void BundleUserMgrHostImpl::HandleNotifyBundleEvents()
 {
     APP_LOGI("HandleNotifyBundleEvents");
-    std::lock_guard<std::mutex> lock(bundleEventMutex_);
+    std::vector<NotifyBundleEvents> bundleEvents;
+    {
+        std::lock_guard<std::mutex> lock(bundleEventMutex_);
+        bundleEvents = bundleEvents_;
+        bundleEvents_.clear();
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -452,14 +457,12 @@ void BundleUserMgrHostImpl::HandleNotifyBundleEvents()
     }
 
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    for (size_t i = 0; i < bundleEvents_.size(); ++i) {
-        commonEventMgr->NotifyBundleStatus(bundleEvents_[i], dataMgr);
+    for (size_t i = 0; i < bundleEvents.size(); ++i) {
+        commonEventMgr->NotifyBundleStatus(bundleEvents[i], dataMgr);
         if ((i != 0) && (i % FACTOR == 0)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(INTERVAL));
         }
     }
-
-    bundleEvents_.clear();
 }
 
 void BundleUserMgrHostImpl::HandleSceneBoard(int32_t userId) const
