@@ -17,6 +17,7 @@ group("unittest") {
   testonly = true
 
   deps = [
+    "bundle_mgr_ext_test:BundleMgrExtTest",
     "bundle_mgr_proxy_test:BundleMgrProxyTest",
     "bundle_resource_host_test:BundleResourceHostTest",
     "bundle_resource_proxy_test:BundleResourceProxyTest",
