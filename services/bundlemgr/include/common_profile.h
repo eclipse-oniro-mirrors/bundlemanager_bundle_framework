@@ -422,6 +422,8 @@ constexpr const char* ABILITY_LAUNCH_TYPE = "launchType";
 constexpr const char* ABILITY_LAUNCH_TYPE_DEFAULT_VALUE = "singleton";
 constexpr const char* ABILITY_BACKGROUNDMODES = "backgroundModes";
 constexpr const char* ABILITY_CONTINUABLE = "continuable";
+constexpr const char* ABILITY_START_WINDOW = "startWindow";
+constexpr const char* ABILITY_START_WINDOW_ID = "startWindowId";
 constexpr const char* ABILITY_START_WINDOW_ICON = "startWindowIcon";
 constexpr const char* ABILITY_START_WINDOW_ICON_ID = "startWindowIconId";
 constexpr const char* ABILITY_START_WINDOW_BACKGROUND = "startWindowBackground";
@@ -523,6 +525,14 @@ constexpr const char* MODULE_ROUTER_MAP = "routerMap";
 constexpr const char* MODULE_APP_ENVIRONMENTS = "appEnvironments";
 //module packageName
 constexpr const char* MODULE_PACKAGE_NAME = "packageName";
+
+//ability start window
+constexpr const char* START_WINDOW_APP_ICON = "startWindowAppIcon";
+constexpr const char* START_WINDOW_ILLUSTRATION = "startWindowIllustration";
+constexpr const char* START_WINDOW_BRANDING_IMAGE = "startWindowBrandingImage";
+constexpr const char* START_WINDOW_BACKGROUND_COLOR = "startWindowBackgroundColor";
+constexpr const char* START_WINDOW_BACKGROUND_IMAGE = "startWindowBackgroundImage";
+constexpr const char* START_WINDOW_BACKGROUND_IMAGE_FIT = "startWindowBackgroundImageFit";
 }  // namespace Profile
 }  // namespace AppExecFwk
 }  // namespace OHOS

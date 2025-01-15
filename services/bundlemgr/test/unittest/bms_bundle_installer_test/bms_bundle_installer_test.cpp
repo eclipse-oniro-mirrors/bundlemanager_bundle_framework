@@ -8052,6 +8052,46 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0400, Function | SmallTest | L
     EXPECT_EQ(installSource, "unknown");
 }
 
+/**
+ * @tc.number: ExtractNumberFromString_0100
+ * @tc.name: test extract number from string
+ * @tc.desc: 1.test ExtractNumberFromString of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractNumberFromString_0100, Function | SmallTest | Level0)
+{
+    BundleUtil util;
+    std::string jsonString = R"(
+    {
+        "test1": "test1:12776",
+        "test2": "test2:57339",
+        "test3": "test3:67443"
+    })";
+    std::string key1 = "test1";
+    std::string key2 = "test2";
+    std::string key3 = "test3";
+    nlohmann::json json = nlohmann::json::parse(jsonString);
+    int64_t res1 = util.ExtractNumberFromString(json, key1);
+    EXPECT_EQ(res1, 12776);
+    int64_t res2 = util.ExtractNumberFromString(json, key2);
+    EXPECT_EQ(res2, 57339);
+    int64_t res3 = util.ExtractNumberFromString(json, key3);
+    EXPECT_EQ(res3, 67443);
+}
+
+/**
+ * @tc.number: StrToUint32_0100
+ * @tc.name: test str to uint32
+ * @tc.desc: 1.test StrToUint32 of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, StrToUint32_0100, Function | SmallTest | Level0)
+{
+    BundleUtil util;
+    std::string numberStr = "1567895";
+    uint32_t data = 0;
+    EXPECT_TRUE(util.StrToUint32(numberStr, data));
+    EXPECT_EQ(data, 1567895);
+}
+
 /*
  * @tc.number: CheckPreAppAllowHdcInstall_0100
  * @tc.name: test CheckPreAppAllowHdcInstall

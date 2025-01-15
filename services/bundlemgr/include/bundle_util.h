@@ -22,6 +22,7 @@
 
 #include "appexecfwk_errors.h"
 #include "application_info.h"
+#include "nlohmann/json.hpp"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -215,6 +216,8 @@ public:
     static std::string ToString(const std::vector<std::string> &vector);
     static std::string GetNoDisablingConfigPath();
     static std::string GenerateUuidByKey(const std::string &key);
+    static uint32_t ExtractNumberFromString(nlohmann::json &jsonObject, const std::string &key);
+    static bool StrToUint32(const std::string &str, uint32_t &value);
 private:
     static std::mutex g_mutex;
 };

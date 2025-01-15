@@ -64,6 +64,8 @@ const char* NO_DISABLING_CONFIG_PATH_DEFAULT =
     "/system/etc/ability_runtime/resident_process_in_extreme_memory.json";
 const std::string EMPTY_STRING = "";
 constexpr int64_t DISK_REMAINING_SIZE_LIMIT = 1024 * 1024 * 10; // 10M
+constexpr uint32_t ID_INVALID = 0;
+constexpr const char* COLON = ":";
 }
 
 std::mutex BundleUtil::g_mutex;
@@ -1028,6 +1030,59 @@ std::string BundleUtil::GetNoDisablingConfigPath()
 #else
     return NO_DISABLING_CONFIG_PATH_DEFAULT;
 #endif
+}
+
+uint32_t BundleUtil::ExtractNumberFromString(nlohmann::json &jsonObject, const std::string &key)
+{
+    std::string str;
+    if (jsonObject.find(key) == jsonObject.end()) {
+        APP_LOGE("not find key");
+        return ID_INVALID;
+    }
+    if (!jsonObject.at(key).is_string()) {
+        APP_LOGE("key is not string");
+        return ID_INVALID;
+    }
+    str = jsonObject.at(key).get<std::string>();
+    if (str.empty() || str.length() > Constants::MAX_JSON_STRING_LENGTH) {
+        APP_LOGE("exceeding the maximum string length");
+        return ID_INVALID;
+    }
+    size_t index = str.find(COLON);
+    if ((index == std::string::npos) || (index == str.length() - 1)) {
+        APP_LOGE("not find colon or format error");
+        return ID_INVALID;
+    }
+    std::string numberStr = str.substr(index + 1);
+    if (numberStr.empty()) {
+        APP_LOGE("number string is empty");
+        return ID_INVALID;
+    }
+    uint32_t data = 0;
+    if (!StrToUint32(numberStr, data)) {
+        APP_LOGE("conversion failure");
+        return ID_INVALID;
+    }
+    return data;
+}
+
+bool BundleUtil::StrToUint32(const std::string &str, uint32_t &value)
+{
+    if (str.empty() || !isdigit(str.front())) {
+        APP_LOGE("str is empty!");
+        return false;
+    }
+    char* end = nullptr;
+    errno = 0;
+    auto addr = str.c_str();
+    auto result = strtoul(addr, &end, 10); /* 10 means decimal */
+    if ((end == addr) || (end[0] != '\0') || (errno == ERANGE) ||
+        (result > UINT32_MAX)) {
+        APP_LOGE("the result was incorrect!");
+        return false;
+    }
+    value = static_cast<uint32_t>(result);
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
