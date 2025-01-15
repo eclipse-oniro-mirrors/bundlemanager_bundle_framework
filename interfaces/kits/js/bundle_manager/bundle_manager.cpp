@@ -301,7 +301,7 @@ static ErrCode InnerGetApplicationInfos(int32_t flags,
 static void ProcessApplicationInfos(
     napi_env env, napi_value result, const std::vector<ApplicationInfo> &appInfos)
 {
-    if (appInfos.size() == 0) {
+    if (appInfos.empty()) {
         APP_LOGD("appInfos is null");
         return;
     }

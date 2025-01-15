@@ -332,10 +332,6 @@ bool BundleResourceManager::AddResourceInfosByMap(
         return true;
     }
     std::shared_ptr<ThreadPool> threadPool = std::make_shared<ThreadPool>(THREAD_POOL_NAME);
-    if (threadPool == nullptr) {
-        APP_LOGE("threadPool is nullptr");
-        return false;
-    }
     threadPool->Start(MAX_TASK_NUMBER);
     threadPool->SetMaxTaskNum(MAX_TASK_NUMBER);
 

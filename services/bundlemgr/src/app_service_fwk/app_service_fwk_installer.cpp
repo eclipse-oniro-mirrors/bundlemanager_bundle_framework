@@ -30,7 +30,7 @@ constexpr const char* SHARED_MODULE_TYPE = "shared";
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
-const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
+constexpr const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 
 std::string ObtainTempSoPath(
     const std::string &moduleName, const std::string &nativeLibPath)

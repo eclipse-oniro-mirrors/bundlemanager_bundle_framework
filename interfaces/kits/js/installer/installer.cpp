@@ -1718,10 +1718,6 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
     APP_LOGI("begin to CreateAppClone");
     NapiArg args(env, info);
     std::unique_ptr<CreateAppCloneCallbackInfo> asyncCallbackInfo = std::make_unique<CreateAppCloneCallbackInfo>(env);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGW("asyncCallbackInfo is null");
-        return nullptr;
-    }
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGW("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);

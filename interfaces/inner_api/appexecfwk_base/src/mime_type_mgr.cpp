@@ -27,10 +27,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* ZIP_FORMAT = ".zip.";
-const char* ZIP_SUFFIX = ".zip";
-const char* FILE_7Z_FORMAT = ".7z.";
-const char* FILE_7Z_SUFFIX = ".7z";
+constexpr const char* ZIP_FORMAT = ".zip.";
+constexpr const char* ZIP_SUFFIX = ".zip";
+constexpr const char* FILE_7Z_FORMAT = ".7z.";
+constexpr const char* FILE_7Z_SUFFIX = ".7z";
 }
 
 bool MimeTypeMgr::GetMimeTypeByUri(const std::string &uri, std::vector<std::string> &mimeTypes)
