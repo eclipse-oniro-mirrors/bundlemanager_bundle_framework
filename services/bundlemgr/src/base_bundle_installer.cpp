@@ -2569,9 +2569,8 @@ ErrCode BaseBundleInstaller::ProcessDeployedHqfInfo(const std::string &nativeLib
     std::string newSoPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_ +
         ServiceConstants::PATH_SEPARATOR + ServiceConstants::PATCH_PATH +
         std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
-    bool isExist = false;
-    if ((InstalldClient::GetInstance()->IsExistDir(newSoPath, isExist) != ERR_OK) || !isExist) {
-        LOG_W(BMS_TAG_INSTALLER, "Patch no diff file");
+    if (!BundleUtil::IsExistDirNoLog(newSoPath)) {
+        LOG_E(BMS_TAG_INSTALLER, "Patch no diff file");
         return ERR_OK;
     }
 
@@ -2623,9 +2622,8 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
     std::string newSoPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_ +
         ServiceConstants::PATH_SEPARATOR + ServiceConstants::PATCH_PATH +
         std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
-    bool isExist = false;
-    if ((InstalldClient::GetInstance()->IsExistDir(newSoPath, isExist) != ERR_OK) || !isExist) {
-        LOG_W(BMS_TAG_INSTALLER, "Patch no diff file");
+    if (!BundleUtil::IsExistDirNoLog(newSoPath)) {
+        LOG_E(BMS_TAG_INSTALLER, "Patch no diff file");
         return ERR_OK;
     }
 
@@ -5870,28 +5868,19 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
                 .append(info.second.GetCurrentModulePackage())
                 .append(ServiceConstants::TMP_SUFFIX).append(ServiceConstants::PATH_SEPARATOR)
                 .append(nativeLibraryPath);
-            bool isDirExisted = false;
-            auto result = InstalldClient::GetInstance()->IsExistDir(tempSoDir, isDirExisted);
-            if (result != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLER, "check if dir existed failed %{public}d", result);
-                return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
-            }
+            bool isDirExisted = BundleUtil::IsExistDirNoLog(tempSoDir);
             if (!isDirExisted) {
                 LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s not existed not need move", tempSoDir.c_str());
                 continue;
             }
             std::string realSoDir = GetRealSoPath(bundleName, nativeLibraryPath, needDeleteOldLibraryPath);
             LOG_D(BMS_TAG_INSTALLER, "move file from %{public}s to %{public}s", tempSoDir.c_str(), realSoDir.c_str());
-            isDirExisted = false;
-            result = InstalldClient::GetInstance()->IsExistDir(realSoDir, isDirExisted);
-            if (result != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLER, "check if dir existed failed %{public}d", result);
-                return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
-            }
+            isDirExisted = BundleUtil::IsExistDirNoLog(realSoDir);
             if (!isDirExisted) {
+                LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s not existed", realSoDir.c_str());
                 InstalldClient::GetInstance()->CreateBundleDir(realSoDir);
             }
-            result = InstalldClient::GetInstance()->MoveFiles(tempSoDir, realSoDir);
+            auto result = InstalldClient::GetInstance()->MoveFiles(tempSoDir, realSoDir);
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "move file to real path failed %{public}d", result);
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
