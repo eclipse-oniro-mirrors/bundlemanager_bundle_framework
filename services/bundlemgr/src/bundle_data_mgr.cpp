@@ -3759,20 +3759,37 @@ void BundleDataMgr::GetBundleModuleNames(const std::string &bundleName,
 
 bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const
 {
-    std::vector<std::string> bundleNames;
     std::vector<int32_t> uids;
     int32_t responseUserId = userId;
-    GetBundleList(bundleNames, userId);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid userid :%{public}d", userId);
+        return false;
+    }
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        for (const auto &bundleName : bundleNames) {
-            auto infoItem = bundleInfos_.find(bundleName);
-            if (infoItem == bundleInfos_.end()) {
-                return false;
+        for (const auto &item : bundleInfos_) {
+            const InnerBundleInfo &info = item.second;
+            std::string bundleName = info.GetBundleName();
+            responseUserId = info.GetResponseUserId(requestUserId);
+            if (responseUserId == Constants::INVALID_USERID) {
+                APP_LOGD("bundle %{public}s is not installed in user %{public}d or 0", bundleName.c_str(), userId);
+                continue;
             }
-            responseUserId = infoItem->second.GetResponseUserId(userId);
-            int32_t uid = infoItem->second.GetUid(responseUserId);
-            uids.emplace_back(uid);
+            BundleType type = info.GetApplicationBundleType();
+            if (type != BundleType::ATOMIC_SERVICE && type != BundleType::APP) {
+                APP_LOGD("BundleType is invalid: %{public}d, bundname: %{public}s", type, bundleName.c_str());
+                continue;
+            }
+            std::vector<int32_t> allAppIndexes = {0};
+            if (type == BundleType::APP) {
+                std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, responseUserId);
+                allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
+            }
+            for (int32_t appIndex: allAppIndexes) {
+                int32_t uid = info.GetUid(responseUserId, appIndex);
+                uids.emplace_back(uid);
+            }
         }
     }
     if (InstalldClient::GetInstance()->GetAllBundleStats(responseUserId, bundleStats, uids) != ERR_OK) {
@@ -3785,7 +3802,6 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
     }
     return true;
 }
-
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
