@@ -49,7 +49,6 @@ constexpr int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
 constexpr int8_t SPACE_NEED_DOUBLE = 2;
 constexpr uint16_t UUID_LENGTH_MAX = 512;
 static std::string g_deviceUdid;
-static std::mutex g_mutex;
 // hmdfs and sharefs config
 constexpr const char* BUNDLE_ID_FILE = "appid";
 // single max hap size

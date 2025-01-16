@@ -131,7 +131,7 @@ constexpr const char* ERR_MSG_SCHEME_NOT_IN_QUERYSCHEMES =
     "The scheme of the specified link is not in the querySchemes.";
 constexpr const char* ERR_MSG_INVALID_DEVELOPER_ID =
     "The specified developerId is invalid.";
-constexpr const char* ERR_MSG_ENUM_EROOR =
+constexpr const char* ERR_MSG_ENUM_ERROR =
     "Parameter error. The value of $ is not a valid enum $.";
 constexpr const char* ERR_MSG_BUNDLE_CAN_NOT_BE_UNINSTALLED =
     "The specified application cannot be uninstalled.";
@@ -309,7 +309,7 @@ napi_value BusinessError::CreateEnumError(napi_env env,
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, std::to_string(ERROR_PARAM_CHECK_ERROR));
     }
-    errMessage += ERR_MSG_ENUM_EROOR;
+    errMessage += ERR_MSG_ENUM_ERROR;
     iter = errMessage.find("$");
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, parameter);

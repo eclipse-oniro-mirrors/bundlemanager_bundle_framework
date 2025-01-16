@@ -30,7 +30,7 @@ void BMSJsonUtil::GetStrValueIfFindKey(const nlohmann::json &jsonObject,
             return;
         }
         data = jsonObject.at(key).get<std::string>();
-        if (jsonObject.at(key).get<std::string>().length() > Constants::MAX_JSON_STRING_LENGTH) {
+        if (data.length() > Constants::MAX_JSON_STRING_LENGTH) {
             parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
         }
         return;

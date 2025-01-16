@@ -29,13 +29,13 @@
 #include "string_ex.h"
 
 namespace {
-const char* INSTALL_FILE_SUFFIX = ".hap";
-const char* HSP_FILE_SUFFIX = ".hsp";
-const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
-const char* CODE_SIGNATURE_SUFFIX = ".sig";
-const char* PGO_SUFFIX = ".ap";
-const char* ABC_FILE_SUFFIX = ".abc";
-const char* PATH_SEPARATOR = "/";
+constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
+constexpr const char* HSP_FILE_SUFFIX = ".hsp";
+constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
+constexpr const char* CODE_SIGNATURE_SUFFIX = ".sig";
+constexpr const char* PGO_SUFFIX = ".ap";
+constexpr const char* ABC_FILE_SUFFIX = ".abc";
+constexpr const char* PATH_SEPARATOR = "/";
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 constexpr int PATH_MAX_SIZE = 256;
