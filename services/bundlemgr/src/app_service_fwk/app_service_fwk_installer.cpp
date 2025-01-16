@@ -625,6 +625,7 @@ ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForHsp(
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = false;
+    codeSignatureParam.isCompressNativeLibrary = isCompressNativeLibs_;
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
@@ -685,7 +686,8 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
     if (!newInfo.FetchNativeSoAttrs(moduleName, cpuAbi_, nativeLibraryPath_)) {
         return ERR_OK;
     }
-    if (newInfo.IsCompressNativeLibs(moduleName)) {
+    isCompressNativeLibs_ = newInfo.IsCompressNativeLibs(moduleName);
+    if (isCompressNativeLibs_) {
         std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath_);
         if (tempNativeLibraryPath.empty()) {
             APP_LOGE("tempNativeLibraryPath is empty");

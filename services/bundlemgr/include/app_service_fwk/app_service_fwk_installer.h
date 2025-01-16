@@ -113,6 +113,7 @@ private:
     bool versionUpgrade_ = false;
     bool moduleUpdate_ = false;
     bool isEnterpriseBundle_ = false;
+    bool isCompressNativeLibs_ = true;
     uint32_t versionCode_ = 0;
     std::string bundleName_;
     std::string bundleMsg_;

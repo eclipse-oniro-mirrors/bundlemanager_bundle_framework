@@ -31,6 +31,7 @@ constexpr const char* CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE = "isEnterpriseBundle"
 constexpr const char* CODE_SIGNATURE_APP_IDENTIFIER = "appIdentifier";
 constexpr const char* CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE = "isPreInstalledBundle";
 constexpr const char* CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY = "isCompileSdkOpenHarmony";
+constexpr const char* CODE_SIGNATURE_IS_COMPRESS_NATIVE_LIBRARY = "isCompressNativeLibrary";
 } // namespace
 
 bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
@@ -43,6 +44,7 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
     appIdentifier = Str16ToStr8(parcel.ReadString16());
     isPreInstalledBundle = parcel.ReadBool();
     isCompileSdkOpenHarmony = parcel.ReadBool();
+    isCompressNativeLibrary = parcel.ReadBool();
     return true;
 }
 
@@ -56,6 +58,7 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPreInstalledBundle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isCompileSdkOpenHarmony);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isCompressNativeLibrary);
     return true;
 }
 
@@ -81,6 +84,7 @@ std::string CodeSignatureParam::ToString() const
         { CODE_SIGNATURE_APP_IDENTIFIER, appIdentifier },
         { CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE, isPreInstalledBundle },
         { CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY, isCompileSdkOpenHarmony },
+        { CODE_SIGNATURE_IS_COMPRESS_NATIVE_LIBRARY, isCompressNativeLibrary },
     };
     return codeSignatureParamJson.dump(Constants::DUMP_INDENT);
 }

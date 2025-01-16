@@ -1530,6 +1530,10 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
         LOG_D(BMS_TAG_INSTALLD, "code signature is not supported");
         return ret;
     }
+    uint32_t codeSignFlag = 0;
+    if (!codeSignatureParam.isCompressNativeLibrary) {
+        codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_UNCOMPRESSED_NATIVE_LIBS;
+    }
     if (codeSignatureParam.signatureFileDir.empty()) {
         std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
         Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
@@ -1537,10 +1541,11 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
         if (codeSignatureParam.isEnterpriseBundle) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
-                codeSignatureParam.modulePath, entryMap, fileType);
+                codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
         } else {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
-            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
+            ret = codeSignHelper->EnforceCodeSignForApp(
+                codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
         }
         LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd Verify code signature %{public}s",
             codeSignatureParam.modulePath.c_str());

@@ -703,7 +703,8 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
     if (!newInfo.FetchNativeSoAttrs(moduleName, cpuAbi, nativeLibraryPath_)) {
         return ERR_OK;
     }
-    if (newInfo.IsCompressNativeLibs(moduleName)) {
+    isCompressNativeLibs_ = newInfo.IsCompressNativeLibs(moduleName);
+    if (isCompressNativeLibs_) {
         std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath_);
         if (tempNativeLibraryPath.empty()) {
             APP_LOGE("tempNativeLibraryPath is empty");
@@ -749,6 +750,7 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForNativeFiles(const std:
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
+    codeSignatureParam.isCompressNativeLibrary = isCompressNativeLibs_;
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
