@@ -29,8 +29,8 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
         AppServiceFwkInstaller appServiceFwk;
-        std::string bundleName = std::string(data, size);
-        appServiceFwk.RemoveInfo(bundleName);
+        appServiceFwk.appIdentifier_ = std::string(data, size);
+        appServiceFwk.RemoveInfo("");
         return true;
     }
 }
