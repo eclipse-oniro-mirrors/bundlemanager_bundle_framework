@@ -68,6 +68,21 @@ public:
         const std::string &bundleName,
         Constants::AppType appType);
     /**
+     * @brief OTA Install preinstall app.
+     * @param filePath Indicates the filePaths.
+     * @param installParam Indicates the installParam.
+     * @param bundleName Indicates the bundleName.
+     * @param appType Indicates the bundle type.
+     * @param userIds Indicates the user to which the app needs to be installed.
+     * @return Returns true if this function called successfully; returns false otherwise.
+     */
+    ErrCode OTAInstallSystemBundleTargetUser(
+        const std::vector<std::string> &filePaths,
+        InstallParam &installParam,
+        const std::string &bundleName,
+        Constants::AppType appType,
+        const std::vector<int32_t> &userIds);
+    /**
      * @brief Uninstall preinstall app.
      * @param bundleName Indicates the bundle name.
      * @return Returns true if this function called successfully; returns false otherwise.

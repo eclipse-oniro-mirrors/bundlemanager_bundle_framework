@@ -37,9 +37,11 @@
 #include "dlp_permission_kit.h"
 #endif
 #include "hmp_bundle_installer.h"
+#include "inner_patch_info.h"
 #include "installd_client.h"
 #include "parameter.h"
 #include "parameters.h"
+#include "patch_data_mgr.h"
 #include "perf_profile.h"
 #ifdef WINDOW_ENABLE
 #include "scene_board_judgement.h"
@@ -1881,7 +1883,18 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             }
             continue;
         }
-
+        std::vector<int32_t> currentBundleUserIds;
+        if (HotPatchAppProcessing(bundleName, hasInstalledInfo.versionCode, hapVersionCode, currentBundleUserIds)) {
+            LOG_I(BMS_TAG_DEFAULT, "OTA Install prefab bundle(%{public}s) by path(%{public}s) for hotPatch upgrade",
+                bundleName.c_str(), scanPathIter.c_str());
+            // After the patch app is uninstalled, install the preconfigured app of the ota version.
+            std::vector<std::string> filePaths{scanPathIter};
+            if (!OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, currentBundleUserIds)) {
+                LOG_E(BMS_TAG_DEFAULT, "OTA install prefab bundle(%{public}s) error", bundleName.c_str());
+                SavePreInstallException(scanPathIter);
+            }
+            continue;
+        }
         std::vector<std::string> filePaths;
         bool updateSelinuxLabel = false;
         bool updateBundle = false;
@@ -1986,6 +1999,43 @@ bool BMSEventHandler::CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo
         }
     }
     return true;
+}
+
+bool BMSEventHandler::HotPatchAppProcessing(const std::string &bundleName, uint32_t hasInstallVersionCode,
+    uint32_t hapVersionCode, std::vector<int32_t> &userIds)
+{
+    if (bundleName.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s empty", bundleName.c_str());
+        return false;
+    }
+
+    if (IsQuickfixPatchApp(bundleName, hasInstallVersionCode)) {
+        LOG_I(BMS_TAG_DEFAULT, "hasInstallVersionCode: %{public}u, hapVersionCode: %{public}u",
+            hasInstallVersionCode, hapVersionCode);
+        // installed patch application version greater than or equal to OTA Preconfigured APP Version
+        if (hasInstallVersionCode >= hapVersionCode) {
+            // obtains the users to which the app is installed
+            LOG_I(BMS_TAG_DEFAULT, "get patch success, bundleName: %{public}s", bundleName.c_str());
+            auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+            if (dataMgr == nullptr) {
+                LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+                return false;
+            }
+            userIds = dataMgr->GetUserIds(bundleName);
+            // uninstall the patch app
+            SystemBundleInstaller installer;
+            if (!installer.UninstallSystemBundle(bundleName, true)) {
+                LOG_E(BMS_TAG_DEFAULT, "keep data to uninstall app failed, bundleName: %{public}s", bundleName.c_str());
+                return false;
+            }
+        }
+        // delete patch data
+        if (!PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName)) {
+            LOG_W(BMS_TAG_DEFAULT, "DeleteInnerPatchInfo failed, bundleName: %{public}s", bundleName.c_str());
+        }
+        return true;
+    }
+    return false;
 }
 
 bool BMSEventHandler::InnerMultiProcessBundleInstall(
@@ -3224,6 +3274,40 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
     return true;
 }
 
+bool BMSEventHandler::OTAInstallSystemBundleTargetUser(const std::vector<std::string> &filePaths,
+    const std::string &bundleName, Constants::AppType appType, bool removable, const std::vector<int32_t> &userIds)
+{
+    if (filePaths.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "File path is empty");
+        return false;
+    }
+    if (userIds.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "userIds is empty");
+        return false;
+    }
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.SetKillProcess(false);
+    installParam.needSendEvent = false;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.removable = removable;
+    installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
+    installParam.isOTA = true;
+    installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_OTA_INSTALLED;
+    SystemBundleInstaller installer;
+    ErrCode ret = installer.OTAInstallSystemBundleTargetUser(filePaths, installParam, bundleName, appType, userIds);
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "bundle %{public}s with return code: %{public}d", bundleName.c_str(), ret);
+    if ((ret != ERR_OK) && (ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
+        APP_LOGE("OTA bundle(%{public}s) failed, errCode:%{public}d", bundleName.c_str(), ret);
+        if (!filePaths.empty()) {
+            SavePreInstallException(filePaths[0]);
+        }
+        return false;
+    }
+    return true;
+}
+
 bool BMSEventHandler::OTAInstallSystemSharedBundle(
     const std::vector<std::string> &filePaths,
     Constants::AppType appType,
@@ -3833,6 +3917,7 @@ void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
         installParam.copyHapToInstallPath = true;
         installParam.needSavePreInstallInfo = false;
         installParam.isOTA = isOta;
+        installParam.isPatch = true;
         AppServiceFwkInstaller installer;
         std::vector<std::string> filePaths { scanPathIter };
         if (installer.Install(filePaths, installParam) != ERR_OK) {
@@ -3883,6 +3968,7 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
         installParam.copyHapToInstallPath = true;
         installParam.isOTA = isOta;
         installParam.withCopyHaps = true;
+        installParam.isPatch = true;
         SystemBundleInstaller installer;
         std::vector<std::string> filePaths { scanPathIter };
         if (installer.OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP) != ERR_OK) {
@@ -4050,17 +4136,28 @@ void BMSEventHandler::UpdatePreinstallDBForNotUpdatedBundle(const std::string &b
     }
 }
 
-bool BMSEventHandler::IsQuickfixFlagExsit(const BundleInfo &bundleInfo)
+bool BMSEventHandler::IsQuickfixPatchApp(const std::string &bundleName, uint32_t versionCode)
 {
-    // check the quickfix flag.
-    for (auto const & hapModuleInfo : bundleInfo.hapModuleInfos) {
-        for (auto const & metadata : hapModuleInfo.metadata) {
-            if (metadata.name.compare("ohos.app.quickfix") == 0) {
-                return true;
-            }
-        }
+    // 1. check whether a patch has been installed on the app
+    InnerPatchInfo innerPatchInfo;
+    if (!PatchDataMgr::GetInstance().GetInnerPatchInfo(bundleName, innerPatchInfo)) {
+        LOG_W(BMS_TAG_DEFAULT, "the app is not patch, bundleName: %{public}s", bundleName.c_str());
+        return false;
     }
-    return false;
+    // 2. check appType, current only Internal app types can be uninstall
+    if (innerPatchInfo.GetAppPatchType() != AppPatchType::INTERNAL) {
+        LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s, app patch type err", bundleName.c_str());
+        return false;
+    }
+    // 3. check version
+    if (innerPatchInfo.GetVersionCode() != versionCode) {
+        LOG_W(BMS_TAG_DEFAULT,
+            "bundleName: %{public}s is not patch app, patchVersionCode: %{public}u, versionCode: %{public}u",
+            bundleName.c_str(), innerPatchInfo.GetVersionCode(), versionCode);
+        return false;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "bundleName: %{public}s is patch app", bundleName.c_str());
+    return true;
 }
 
 bool BMSEventHandler::GetValueFromJson(nlohmann::json &jsonObject)
@@ -4118,7 +4215,7 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
             LOG_W(BMS_TAG_DEFAULT, "obtain bundleInfo failed, bundleName :%{public}s not exist", bundleName.c_str());
             continue;
         }
-        if (IsQuickfixFlagExsit(hasInstalledInfo)) {
+        if (IsQuickfixPatchApp(hasInstalledInfo.name, hasInstalledInfo.versionCode)) {
             // If metadata name has quickfix flag, it should be uninstall and recover.
             InstallParam installParam;
             installParam.SetIsUninstallAndRecover(true);

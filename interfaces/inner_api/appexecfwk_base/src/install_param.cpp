@@ -86,6 +86,7 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         std::string value = Str16ToStr8(parcel.ReadString16());
         parameters.emplace(key, value);
     }
+    isPatch = parcel.ReadBool();
     return true;
 }
 
@@ -141,6 +142,7 @@ bool InstallParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(parameter.first));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(parameter.second));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPatch);
     return true;
 }
 
