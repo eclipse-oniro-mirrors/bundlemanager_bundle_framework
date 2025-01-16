@@ -32,6 +32,7 @@ constexpr const char* THREAD_POOL_NAME = "InstallerThreadPool";
 constexpr unsigned int TIME_OUT_SECONDS = 60 * 25;
 constexpr int8_t MAX_TASK_NUMBER = 10;
 constexpr int8_t DELAY_INTERVAL_SECONDS = 60;
+static std::atomic<int32_t> g_taskCounter = 0;
 }
 
 BundleInstallerManager::BundleInstallerManager()
@@ -56,6 +57,7 @@ void BundleInstallerManager::CreateInstallTask(
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Install(bundleFilePath, installParam);
+        g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task, "InstallTask path:" + bundleFilePath);
@@ -73,6 +75,7 @@ void BundleInstallerManager::CreateRecoverTask(
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(RECOVER_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Recover(bundleName, installParam);
+        g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task, "RecoverTask -n " + bundleName);
@@ -90,6 +93,7 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Install(bundleFilePaths, installParam);
+        g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
     std::string paths;
@@ -112,6 +116,7 @@ void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bu
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->InstallByBundleName(bundleName, installParam);
+        g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task, "InstallTask -n " + bundleName);
@@ -129,6 +134,7 @@ void BundleInstallerManager::CreateUninstallTask(
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(bundleName, installParam);
+        g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task, "UninstallTask -n " + bundleName);
@@ -146,6 +152,7 @@ void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, 
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(bundleName, modulePackage, installParam);
+        g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task, "UninstallTask -n " + bundleName);
@@ -163,6 +170,7 @@ void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstall
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(uninstallParam);
+        g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task, "UninstallTask -n " + uninstallParam.bundleName);
@@ -180,6 +188,7 @@ void BundleInstallerManager::CreateUninstallAndRecoverTask(const std::string &bu
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->UninstallAndRecover(bundleName, installParam);
+        g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task, "UninstallAndRecover -n " + bundleName);
@@ -207,6 +216,7 @@ void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::stri
         t.detach();
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "add task taskName:%{public}s", taskName.c_str());
+    g_taskCounter++;
     threadPool_->AddTask(task);
 }
 
@@ -216,9 +226,10 @@ void BundleInstallerManager::DelayStopThreadPool()
     BundleMemoryGuard memoryGuard;
 
     do {
-        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "sleep for 60s");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "sleep for 60s runningTask %{public}d", g_taskCounter.load());
         std::this_thread::sleep_for(std::chrono::seconds(DELAY_INTERVAL_SECONDS));
-    } while (threadPool_ != nullptr && threadPool_->GetCurTaskNum() != 0);
+    } while (threadPool_ != nullptr && (threadPool_->GetCurTaskNum() != 0
+        || g_taskCounter.load() != 0));
 
     std::lock_guard<std::mutex> guard(mutex_);
     if (threadPool_ == nullptr) {
