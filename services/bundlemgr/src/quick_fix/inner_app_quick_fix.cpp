@@ -21,9 +21,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* APP_QUICK_FIX = "appQuickFix";
-const char* QUICK_FIX_MARK = "quickFixMark";
-const char* QUICK_FIX_MARK_STATUS = "status";
+constexpr const char* APP_QUICK_FIX = "appQuickFix";
+constexpr const char* QUICK_FIX_MARK = "quickFixMark";
+constexpr const char* QUICK_FIX_MARK_STATUS = "status";
 }
 
 InnerAppQuickFix::InnerAppQuickFix()

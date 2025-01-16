@@ -25,7 +25,6 @@
 #include "directory_ex.h"
 #include "zip_utils.h"
 
-using namespace std;
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
 namespace AppExecFwk {
@@ -405,7 +404,7 @@ bool FilePath::GetZipAllDirFiles(const std::string &path, std::vector<std::strin
         if ((strcmp(ptr->d_name, kCurrentDirectory) == 0) || (strcmp(ptr->d_name, kParentDirectory) == 0)) {
             continue;
         } else if (ptr->d_type == DT_DIR) {
-            pathStringWithDelimiter = IncludeTrailingPathDelimiter(path) + string(ptr->d_name);
+            pathStringWithDelimiter = IncludeTrailingPathDelimiter(path) + std::string(ptr->d_name);
             std::vector<std::string> itemFiles;
             GetZipAllDirFiles(pathStringWithDelimiter, itemFiles);
 
@@ -415,7 +414,7 @@ bool FilePath::GetZipAllDirFiles(const std::string &path, std::vector<std::strin
                 files.insert(files.end(), itemFiles.begin(), itemFiles.end());
             }
         } else {
-            files.push_back(IncludeTrailingPathDelimiter(path) + string(ptr->d_name));
+            files.push_back(IncludeTrailingPathDelimiter(path) + std::string(ptr->d_name));
         }
     }
     closedir(dir);
@@ -452,7 +451,7 @@ bool FilePath::HasRelativePathBaseOnAPIVersion(const std::string &path)
     if (!IsNeedCheckFilePathBaseOnAPIVersion()) {
         return false;
     }
-    if (path.find(RELATIVE_PATH_SYMBOL) != string::npos) {
+    if (path.find(RELATIVE_PATH_SYMBOL) != std::string::npos) {
         APP_LOGI("path constains ../");
         return true;
     }
@@ -465,7 +464,7 @@ bool FilePath::HasRelativePathBaseOnAPIVersion(const std::vector<std::string> &p
         return false;
     }
     for (const auto &path : paths) {
-        if (path.find(RELATIVE_PATH_SYMBOL) != string::npos) {
+        if (path.find(RELATIVE_PATH_SYMBOL) != std::string::npos) {
             APP_LOGI("path constains ../");
             return true;
         }

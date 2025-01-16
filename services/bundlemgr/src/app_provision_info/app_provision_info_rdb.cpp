@@ -64,25 +64,25 @@ AppProvisionInfoManagerRdb::AppProvisionInfoManagerRdb()
     APP_LOGD("create AppProvisionInfoManagerRdb");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
-    std::string appprovisioninfordbtablename = APP_PROVISION_INFO_RDB_TABLE_NAME;
-    bmsRdbConfig.tableName = appprovisioninfordbtablename;
+    std::string appProvisionInfoTableName = APP_PROVISION_INFO_RDB_TABLE_NAME;
+    bmsRdbConfig.tableName = appProvisionInfoTableName;
     bmsRdbConfig.createTableSql = std::string(
         "CREATE TABLE IF NOT EXISTS "
-        + appprovisioninfordbtablename
+        + appProvisionInfoTableName
         + "(BUNDLE_NAME TEXT PRIMARY KEY NOT NULL, "
         + "VERSION_CODE INTEGER, VERSION_NAME TEXT, UUID TEXT, "
         + "TYPE TEXT, APP_DISTRIBUTION_TYPE TEXT, DEVELOPER_ID TEXT, CERTIFICATE TEXT, "
         + "APL TEXT, ISSUER TEXT, VALIDITY_NOT_BEFORE INTEGER, VALIDITY_NOT_AFTER INTEGER);");
     // SPECIFIED_DISTRIBUTED_TYPE and ADDITIONAL_INFO insert to old database
-    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appprovisioninfordbtablename +
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appProvisionInfoTableName +
         " ADD SPECIFIED_DISTRIBUTED_TYPE TEXT;"));
-    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appprovisioninfordbtablename +
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appProvisionInfoTableName +
         " ADD ADDITIONAL_INFO TEXT;"));
-    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appprovisioninfordbtablename +
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appProvisionInfoTableName +
         " ADD APP_IDENTIFIER TEXT;"));
-    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appprovisioninfordbtablename +
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appProvisionInfoTableName +
         " ADD APP_SERVICE_CAPABILITIES TEXT;"));
-    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appprovisioninfordbtablename +
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appProvisionInfoTableName +
         " ADD ORGANIZATION TEXT;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();

@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::u16string SEEVICE_CENTER_CALLBACK_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstallCallback";
+const std::u16string SERVICE_CENTER_CALLBACK_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstallCallback";
 }
 
 ServiceCenterStatusCallbackStub::ServiceCenterStatusCallbackStub()
@@ -34,7 +34,7 @@ int32_t ServiceCenterStatusCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     BundleMemoryGuard memoryGuard;
-    if (data.ReadInterfaceToken() != SEEVICE_CENTER_CALLBACK_TOKEN) {
+    if (data.ReadInterfaceToken() != SERVICE_CENTER_CALLBACK_TOKEN) {
         LOG_E(BMS_TAG_DEFAULT, "verify interface token failed");
         return -1;
     }
