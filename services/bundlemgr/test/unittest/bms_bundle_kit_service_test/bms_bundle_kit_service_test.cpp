@@ -1684,8 +1684,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAllBundleCacheStat_0001, Function | MediumT
     }
     ret = MockGetAllBundleCacheStat(getCache);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
-    delete getCache;
-    getCache = nullptr;
     std::cout << "END GetAllBundleCacheStat_0001" << std::endl;
 }
 
@@ -13548,6 +13546,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoAdaptBundleClone_0002, Function |
     userInfo.uid = 100;
     userInfo.installTime = 200;
     userInfo.updateTime = 300;
+    userInfo.firstInstallTime = 400;
 
     int32_t appIndex = 0;
     BundleInfo bundleInfo;
@@ -13557,6 +13556,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoAdaptBundleClone_0002, Function |
     EXPECT_EQ(bundleInfo.uid, userInfo.uid);
     EXPECT_EQ(bundleInfo.installTime, userInfo.installTime);
     EXPECT_EQ(bundleInfo.updateTime, userInfo.updateTime);
+    EXPECT_EQ(bundleInfo.firstInstallTime, userInfo.firstInstallTime);
 }
 
 /**

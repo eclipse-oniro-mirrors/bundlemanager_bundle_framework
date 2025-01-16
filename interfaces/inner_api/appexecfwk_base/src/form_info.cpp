@@ -32,11 +32,14 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const char* JSON_KEY_COLOR_MODE = "colorMode";
+const char* JSON_KEY_RENDERING_MODE = "renderingMode";
 const char* JSON_KEY_PACKAGE = "package";
 const char* JSON_KEY_SUPPORT_DIMENSIONS = "supportDimensions";
 const char* JSON_KEY_DEFAULT_DIMENSION = "defaultDimension";
 const char* JSON_KEY_UPDATE_ENABLED = "updateEnabled";
 const char* JSON_KEY_SCHEDULED_UPDATE_TIME = "scheduledUpdateTime";
+const char* JSON_KEY_MULTI_SCHEDULED_UPDATE_TIME = "multiScheduledUpdateTime";
+const char* JSON_KEY_CONDITION_UPDATE = "conditionUpdate";
 const char* JSON_KEY_UPDATE_DURATION = "updateDuration";
 const char* JSON_KEY_DEEP_LINK = "deepLink";
 const char* JSON_KEY_JS_COMPONENT_NAME = "jsComponentName";
@@ -70,16 +73,12 @@ const char* JSON_KEY_SUPPORT_SHAPES = "supportShapes";
 const char* JSON_KEY_VERSION_CODE = "versionCode";
 const char* JSON_KEY_BUNDLE_TYPE = "bundleType";
 const char* JSON_KEY_PREVIEW_IMAGES = "previewImages";
+const char* JSON_KEY_ENABLE_BLUR_BACKGROUND = "enableBlurBackground";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
 {
-    package = abilityInfo.bundleName + abilityInfo.moduleName;
-    bundleName = abilityInfo.bundleName;
-    originalBundleName = abilityInfo.bundleName;
-    relatedBundleName = abilityInfo.bundleName;
-    moduleName = abilityInfo.moduleName;
-    abilityName = abilityInfo.name;
+    SetInfoByAbility(abilityInfo);
     name = formInfo.name;
     displayName = formInfo.displayName;
     description = formInfo.description;
@@ -87,6 +86,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     deepLink = "";
     formConfigAbility = formInfo.formConfigAbility;
     scheduledUpdateTime = formInfo.scheduledUpdateTime;
+    multiScheduledUpdateTime = formInfo.multiScheduledUpdateTime;
     src = formInfo.src;
     window.designWidth = formInfo.window.designWidth;
     window.autoDesignWidth = formInfo.window.autoDesignWidth;
@@ -108,14 +108,33 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     type = formInfo.type;
     uiSyntax = formInfo.uiSyntax;
     colorMode = formInfo.colorMode;
+    renderingMode = formInfo.renderingMode;
     for (const auto &dimension : formInfo.supportDimensions) {
         supportDimensions.push_back(dimension);
     }
     for (const auto &metadata : formInfo.metadata) {
         customizeDatas.push_back(metadata);
     }
+    SetInfoByFormExt(formInfo);
+}
+
+void FormInfo::SetInfoByAbility(const ExtensionAbilityInfo &abilityInfo)
+{
+    package = abilityInfo.bundleName + abilityInfo.moduleName;
+    bundleName = abilityInfo.bundleName;
+    originalBundleName = abilityInfo.bundleName;
+    relatedBundleName = abilityInfo.bundleName;
+    moduleName = abilityInfo.moduleName;
+    abilityName = abilityInfo.name;
+}
+
+void FormInfo::SetInfoByFormExt(const ExtensionFormInfo &formInfo)
+{
     for (const auto &previewImage : formInfo.previewImages) {
         formPreviewImages.push_back(previewImage);
+    }
+    for (const auto &conditionUpdateType : formInfo.conditionUpdate) {
+        conditionUpdate.push_back(conditionUpdateType);
     }
     dataProxyEnabled = formInfo.dataProxyEnabled;
     isDynamic = formInfo.isDynamic;
@@ -124,6 +143,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     for (const auto &shape : formInfo.supportShapes) {
         supportShapes.push_back(shape);
     }
+    enableBlurBackground = formInfo.enableBlurBackground;
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -153,6 +173,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     description = Str16ToStr8(parcel.ReadString16());
     formConfigAbility = Str16ToStr8(parcel.ReadString16());
     scheduledUpdateTime = Str16ToStr8(parcel.ReadString16());
+    multiScheduledUpdateTime = Str16ToStr8(parcel.ReadString16());
     jsComponentName = Str16ToStr8(parcel.ReadString16());
     relatedBundleName = Str16ToStr8(parcel.ReadString16());
     originalBundleName = Str16ToStr8(parcel.ReadString16());
@@ -178,6 +199,10 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     int32_t colorModeData;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, colorModeData);
     colorMode = static_cast<FormsColorMode>(colorModeData);
+
+    int32_t renderingModeData;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, renderingModeData);
+    renderingMode = static_cast<FormsRenderingMode>(renderingModeData);
 
     int32_t supportDimensionSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDimensionSize);
@@ -218,7 +243,12 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < supportShapeSize; i++) {
         supportShapes.emplace_back(parcel.ReadInt32());
     }
-
+    int32_t conditionUpdateSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, conditionUpdateSize);
+    CONTAINER_SECURITY_VERIFY(parcel, conditionUpdateSize, &conditionUpdate);
+    for (int32_t i = 0; i < conditionUpdateSize; i++) {
+        conditionUpdate.emplace_back(parcel.ReadInt32());
+    }
     versionCode = parcel.ReadUint32();
     int32_t bundleTypeData;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, bundleTypeData);
@@ -230,6 +260,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < formPreviewImagesSize; i++) {
         formPreviewImages.emplace_back(parcel.ReadUint32());
     }
+    enableBlurBackground = parcel.ReadBool();
     return true;
 }
 
@@ -254,6 +285,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(formConfigAbility));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(scheduledUpdateTime));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(multiScheduledUpdateTime));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(jsComponentName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(relatedBundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(originalBundleName));
@@ -270,6 +302,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(uiSyntax));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(colorMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(renderingMode));
 
     const auto supportDimensionSize = static_cast<int32_t>(supportDimensions.size());
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDimensionSize);
@@ -309,7 +342,11 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     for (auto i = 0; i < supportShapeSize; i++) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportShapes[i]);
     }
-
+    const auto conditionUpdateSize = static_cast<int32_t>(conditionUpdate.size());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, conditionUpdateSize);
+    for (auto i = 0; i < conditionUpdateSize; i++) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, conditionUpdate[i]);
+    }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(bundleType));
 
@@ -318,6 +355,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     for (auto i = 0; i < formPreviewImagesSize; i++) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, formPreviewImages[i]);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enableBlurBackground);
     return true;
 }
 
@@ -360,6 +398,8 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_SRC, formInfo.src},
         {JSON_KEY_FORMCONFIG_ABILITY, formInfo.formConfigAbility},
         {JSON_KEY_SCHEDULED_UPDATE_TIME, formInfo.scheduledUpdateTime},
+        {JSON_KEY_MULTI_SCHEDULED_UPDATE_TIME, formInfo.multiScheduledUpdateTime},
+        {JSON_KEY_CONDITION_UPDATE, formInfo.conditionUpdate},
         {JSON_KEY_ORIGINAL_BUNDLE_NAME, formInfo.originalBundleName},
         {JSON_KEY_DISPLAY_NAME_ID, formInfo.displayNameId},
         {JSON_KEY_DESCRIPTION_ID, formInfo.descriptionId},
@@ -372,6 +412,7 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_TYPE, formInfo.type},
         {JSON_KEY_UI_SYNTAX, formInfo.uiSyntax},
         {JSON_KEY_COLOR_MODE, formInfo.colorMode},
+        {JSON_KEY_RENDERING_MODE, formInfo.renderingMode},
         {JSON_KEY_SUPPORT_DIMENSIONS, formInfo.supportDimensions},
         {JSON_KEY_CUSTOMIZE_DATA, formInfo.customizeDatas},
         {JSON_KEY_LANDSCAPE_LAYOUTS, formInfo.landscapeLayouts},
@@ -385,7 +426,8 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_SUPPORT_SHAPES, formInfo.supportShapes},
         {JSON_KEY_VERSION_CODE, formInfo.versionCode},
         {JSON_KEY_BUNDLE_TYPE, formInfo.bundleType},
-        {JSON_KEY_PREVIEW_IMAGES, formInfo.formPreviewImages}
+        {JSON_KEY_PREVIEW_IMAGES, formInfo.formPreviewImages},
+        {JSON_KEY_ENABLE_BLUR_BACKGROUND, formInfo.enableBlurBackground}
     };
 }
 
@@ -511,6 +553,20 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
+        JSON_KEY_MULTI_SCHEDULED_UPDATE_TIME,
+        formInfo.multiScheduledUpdateTime,
+        false,
+        parseResult);
+    GetValueIfFindKey<std::vector<int32_t>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_CONDITION_UPDATE,
+        formInfo.conditionUpdate,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::NUMBER);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
         JSON_KEY_SRC,
         formInfo.src,
         false,
@@ -589,6 +645,14 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         jsonObjectEnd,
         JSON_KEY_COLOR_MODE,
         formInfo.colorMode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<FormsRenderingMode>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_RENDERING_MODE,
+        formInfo.renderingMode,
         JsonType::NUMBER,
         false,
         parseResult,
@@ -705,6 +769,12 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NUMBER);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_ENABLE_BLUR_BACKGROUND,
+        formInfo.enableBlurBackground,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formInfo jsonObject error : %{public}d", parseResult);
     }

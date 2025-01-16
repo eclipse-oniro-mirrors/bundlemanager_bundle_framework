@@ -2427,7 +2427,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_7100, Function | SmallTest 
         "bundleName", installParam, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
     InnerBundleInfo info;
-    bool res = installer.FetchInnerBundleInfo(info);
+    bool res = installer.GetTempBundleInfo(info);
     EXPECT_EQ(res, false);
     ResetDataMgr();
 
@@ -6527,10 +6527,11 @@ HWTEST_F(BmsBundleInstallerTest, SetEncryptionPolicy_0100, Function | SmallTest 
     std::string bundleName = "";
     int32_t userId = USERID;
     std::string keyId;
-    ErrCode ret = hostImpl.SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    EncryptionParam encryptionParam(bundleName, "", uid, userId, EncryptionDirType::APP);
+    ErrCode ret = hostImpl.SetEncryptionPolicy(encryptionParam, keyId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    bundleName = BUNDLE_NAME;
-    ret = hostImpl.SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    encryptionParam.bundleName = BUNDLE_NAME;
+    ret = hostImpl.SetEncryptionPolicy(encryptionParam, keyId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
 }
 
@@ -6544,10 +6545,11 @@ HWTEST_F(BmsBundleInstallerTest, DeleteEncryptionKeyId_0100, Function | SmallTes
     InstalldHostImpl hostImpl;
     std::string bundleName = "";
     int32_t userId = USERID;
-    ErrCode ret = hostImpl.DeleteEncryptionKeyId(bundleName, userId);
+    EncryptionParam encryptionParam(bundleName, "", 0, userId, EncryptionDirType::APP);
+    ErrCode ret = hostImpl.DeleteEncryptionKeyId(encryptionParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    bundleName = BUNDLE_NAME;
-    ret = hostImpl.DeleteEncryptionKeyId(bundleName, userId);
+    encryptionParam.bundleName = BUNDLE_NAME;
+    ret = hostImpl.DeleteEncryptionKeyId(encryptionParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED);
 }
 
@@ -8050,6 +8052,46 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0400, Function | SmallTest | L
     EXPECT_EQ(installSource, "unknown");
 }
 
+/**
+ * @tc.number: ExtractNumberFromString_0100
+ * @tc.name: test extract number from string
+ * @tc.desc: 1.test ExtractNumberFromString of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractNumberFromString_0100, Function | SmallTest | Level0)
+{
+    BundleUtil util;
+    std::string jsonString = R"(
+    {
+        "test1": "test1:12776",
+        "test2": "test2:57339",
+        "test3": "test3:67443"
+    })";
+    std::string key1 = "test1";
+    std::string key2 = "test2";
+    std::string key3 = "test3";
+    nlohmann::json json = nlohmann::json::parse(jsonString);
+    int64_t res1 = util.ExtractNumberFromString(json, key1);
+    EXPECT_EQ(res1, 12776);
+    int64_t res2 = util.ExtractNumberFromString(json, key2);
+    EXPECT_EQ(res2, 57339);
+    int64_t res3 = util.ExtractNumberFromString(json, key3);
+    EXPECT_EQ(res3, 67443);
+}
+
+/**
+ * @tc.number: StrToUint32_0100
+ * @tc.name: test str to uint32
+ * @tc.desc: 1.test StrToUint32 of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, StrToUint32_0100, Function | SmallTest | Level0)
+{
+    BundleUtil util;
+    std::string numberStr = "1567895";
+    uint32_t data = 0;
+    EXPECT_TRUE(util.StrToUint32(numberStr, data));
+    EXPECT_EQ(data, 1567895);
+}
+
 /*
  * @tc.number: CheckPreAppAllowHdcInstall_0100
  * @tc.name: test CheckPreAppAllowHdcInstall
@@ -8173,5 +8215,27 @@ HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0600, Function | Sma
     } else {
         EXPECT_EQ(ERR_APPEXECFWK_INSTALL_OS_INTEGRATION_BUNDLE_NOT_ALLOWED_FOR_SHELL, ret);
     }
+}
+
+/**
+ * @tc.number: SetBundleFirstInstallTime_0100
+ * @tc.name: test SetFirstInstallTime
+ * @tc.desc: 1.Test setup bundle first installation time
+*/
+HWTEST_F(BmsBundleInstallerTest, SetBundleFirstInstallTime_0100, Function | MediumTest | Level1)
+{
+    ApplicationInfo applicationInfo;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(Constants::ALL_USERID);
+    innerBundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
+    BaseBundleInstaller installer;
+    installer.userId_ = Constants::ALL_USERID;
+    installer.dataMgr_ = GetBundleDataMgr();
+    int64_t time = 200;
+    installer.SetFirstInstallTime(BUNDLE_NAME, time, innerBundleInfo);
+    EXPECT_EQ(time, innerBundleInfo.innerBundleUserInfos_[key].firstInstallTime);
 }
 } // OHOS

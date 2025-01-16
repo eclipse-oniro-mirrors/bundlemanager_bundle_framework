@@ -66,6 +66,7 @@ struct InstallParam : public Parcelable {
     bool concentrateSendEvent = false;
     bool isRemoveUser = false;
     bool allUser = false;
+    bool isPatch = false;
     bool isDataPreloadHap = false;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     InstallFlag installFlag = InstallFlag::NORMAL;

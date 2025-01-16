@@ -32,12 +32,15 @@ struct ExtensionFormInfo {
     bool isDynamic = true;
     bool transparencyEnabled = true;
     bool fontScaleFollowSystem = true;
+    bool enableBlurBackground = false;
     int32_t updateDuration = 0;
     int32_t defaultDimension = 0;
     FormsColorMode colorMode = FormsColorMode::AUTO_MODE;
+    FormsRenderingMode renderingMode = FormsRenderingMode::FULL_COLOR;
     FormType type = FormType::JS;
     FormType uiSyntax = FormType::JS;
     std::string scheduledUpdateTime = "";
+    std::string multiScheduledUpdateTime = "";
     std::string name;
     std::string displayName;
     std::string description;
@@ -46,6 +49,7 @@ struct ExtensionFormInfo {
     FormWindow window;
 
     std::vector<int32_t> supportDimensions {};
+    std::vector<int32_t> conditionUpdate {};
     std::vector<FormCustomizeData> metadata {};
     std::vector<int32_t> supportShapes {};
     std::vector<uint32_t> previewImages {};

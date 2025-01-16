@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -432,6 +432,13 @@ public:
         }
         return innerBundleUserInfo.updateTime;
     }
+    /**
+     * @brief Set bundle first install time.
+     * @param time Indicates the first install time to set.
+     * @param userId Indicates the user ID.
+     * @return
+     */
+    void SetFirstInstallTime(const int64_t time, int32_t userId);
     /**
      * @brief Get bundle name.
      * @return Return bundle name
@@ -2222,6 +2229,7 @@ public:
     bool IsAsanEnabled() const;
     bool IsGwpAsanEnabled() const;
     bool IsTsanEnabled() const;
+    bool NeedCreateEl5Dir() const;
     bool GetUninstallState() const;
     void SetUninstallState(const bool &uninstallState);
     bool IsNeedSendNotify() const;

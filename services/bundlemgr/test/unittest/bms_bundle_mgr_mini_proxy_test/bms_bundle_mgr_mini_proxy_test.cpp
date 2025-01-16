@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -131,6 +131,51 @@ HWTEST_F(BundleMgrMiniProxyTest, BundleMgrMiniProxy_0004, Function | SmallTest |
     std::string bundleName = "bundleNameTest";
     int32_t ret = bundleleMgrMiniProxyTest.GetUidByBundleName(bundleName, userId, appIndex);
     EXPECT_EQ(ret, 1);
+}
+
+/**
+ * @tc.number: BundleMgrMiniProxy_0005
+ * @tc.name: GetNameForUid
+ * @tc.desc: GetNameForUid
+ */
+HWTEST_F(BundleMgrMiniProxyTest, BundleMgrMiniProxy_0005, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    MockBundleMgrMiniProxy bundleMgr(impl);
+    int uid = 10008;
+    std::string name = "com.ohos.systemui";
+    auto ret = bundleMgr.GetNameForUid(uid, name);
+    EXPECT_NE(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrMiniProxy_0006
+ * @tc.name: GetAppIdByBundleName
+ * @tc.desc: GetAppIdByBundleName
+ */
+HWTEST_F(BundleMgrMiniProxyTest, BundleMgrMiniProxy_0006, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    MockBundleMgrMiniProxy bundleMgr(impl);
+    std::string bundleName = "com.ohos.systemui";
+    int userId = 100;
+    auto ret = bundleMgr.GetAppIdByBundleName(bundleName, userId);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: BundleMgrMiniProxy_0007
+ * @tc.name: GetUidByBundleName
+ * @tc.desc: GetUidByBundleName
+ */
+HWTEST_F(BundleMgrMiniProxyTest, BundleMgrMiniProxy_0007, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    MockBundleMgrMiniProxy bundleMgr(impl);
+    std::string bundleName = "com.ohos.systemui";
+    int userId = 10008;
+    auto ret = bundleMgr.GetUidByBundleName(bundleName, userId);
+    EXPECT_NE(ret, Constants::INVALID_UID);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

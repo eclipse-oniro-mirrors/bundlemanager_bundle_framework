@@ -14,11 +14,12 @@
  */
 
 #include "bundle_cache_mgr.h"
+
+#include <cinttypes>
 #include "bundle_mgr_service.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-
 namespace {
 constexpr size_t INDEX_BUNDLE_NAME = 0;
 constexpr size_t INDEX_MODULE_NAMES = 1;
@@ -73,7 +74,14 @@ void BundleCacheMgr::GetBundleCacheSize(const std::vector<std::tuple<std::string
         std::vector<int32_t> allCloneAppIndex = std::get<INDEX_CLONE_APP_INDEX>(item);
         for (const auto &appIndex : allCloneAppIndex) {
             std::vector<std::string> cachePaths = GetBundleCachePath(bundleName, userId, appIndex, moduleNames);
-            int64_t cacheSize = InstalldClient::GetInstance()->GetDiskUsageFromPath(cachePaths);
+            int64_t cacheSize = 0;
+            ErrCode ret = InstalldClient::GetInstance()->GetDiskUsageFromPath(cachePaths, cacheSize);
+            if (ret != ERR_OK) {
+                APP_LOGW("BundleCache GetDiskUsageFromPath  failed for %{public}s", bundleName.c_str());
+                continue;
+            }
+            APP_LOGD("BundleCache stat: %{public}" PRId64 " bundlename: %{public}s",
+                cacheSize, bundleName.c_str());
             cacheStat += static_cast<uint64_t>(cacheSize);
         }
     }

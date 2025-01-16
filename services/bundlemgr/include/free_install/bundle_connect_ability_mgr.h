@@ -275,10 +275,8 @@ private:
     int32_t connectState_ = ServiceCenterConnectState::DISCONNECTED;
     mutable std::atomic<int> transactId_ = 0;
     sptr<ServiceCenterConnection> serviceCenterConnection_;
-    sptr<IRemoteObject> serviceCenterRemoteObject_;
     // maintain the order of using locks. mutex_ >> remoteObejctMutex_ >> mapMutex_
     std::mutex mutex_;
-    std::mutex remoteObejctMutex_;
     std::mutex mapMutex_;
     std::condition_variable cv_;
     std::shared_ptr<SerialQueue> serialQueue_;

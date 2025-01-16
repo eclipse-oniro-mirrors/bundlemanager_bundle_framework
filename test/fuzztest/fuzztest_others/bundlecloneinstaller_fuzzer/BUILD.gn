@@ -21,6 +21,7 @@ module_output_path = fuzz_test_path
 
 ##############################fuzztest##########################################
 ohos_fuzztest("BundlecloneinstallerFuzzTest") {
+  use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
   fuzz_config_file =

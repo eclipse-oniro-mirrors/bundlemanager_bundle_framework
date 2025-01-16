@@ -1415,7 +1415,12 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
             }
             APP_LOGI("bundleName : %{public}s, cleanCacheSize: %{public}" PRIu64 "",
                 useStat.bundleName_.c_str(), cleanCacheSize);
-            cleanCacheSum += cleanCacheSize;
+            if (cleanCacheSum <= std::numeric_limits<uint64_t>::max() - cleanCacheSize) {
+                cleanCacheSum += cleanCacheSize;
+            } else {
+                APP_LOGE("add overflow cleanCacheSum: %{public}" PRIu64 ", cleanCacheSize: %{public}" PRIu64 "",
+                    cleanCacheSum, cleanCacheSize);
+            }
             if (cleanCacheSum >= cacheSize) {
                 return ERR_OK;
             }
@@ -1501,13 +1506,27 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
     bool succeed = true;
     if (!caches.empty()) {
         for (const auto& cache : caches) {
-            int64_t cacheSize = InstalldClient::GetInstance()->GetDiskUsage(cache, true);
-            ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
+            int64_t cacheSize = 0;
+            ErrCode ret = InstalldClient::GetInstance()->GetDiskUsage(cache, cacheSize, true);
+            if (ret != ERR_OK) {
+                APP_LOGE("GetDiskUsage failed, path: %{public}s", cache.c_str());
+                succeed = false;
+            }
+            ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
             if (ret != ERR_OK) {
                 APP_LOGE("CleanBundleDataDir failed, path: %{public}s", cache.c_str());
                 succeed = false;
             }
-            cleanCacheSize += static_cast<uint64_t>(cacheSize);
+            if (cacheSize < 0) {
+                APP_LOGW("cacheSize < 0");
+                continue;
+            }
+            if (cleanCacheSize <= std::numeric_limits<uint64_t>::max() - static_cast<uint64_t>(cacheSize)) {
+                cleanCacheSize += static_cast<uint64_t>(cacheSize);
+            } else {
+                APP_LOGE("add overflow cleanCacheSize: %{public}" PRIu64 ", cacheSize: %{public}" PRIu64 "",
+                    cleanCacheSize, cacheSize);
+            }
         }
     }
     EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed);
@@ -2772,7 +2791,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const ExtensionAbilityType &e
     }
     bool ret = dataMgr->QueryExtensionAbilityInfos(extensionType, userId, extensionInfos);
     if (!ret) {
-        LOG_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfos is failed");
+        LOG_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfos is failed, errno: %{public}d", ret);
         return false;
     }
 
@@ -3238,9 +3257,12 @@ ErrCode BundleMgrHostImpl::GetAllBundleCacheStat(const sptr<IProcessCacheCallbac
 
 ErrCode BundleMgrHostImpl::CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
 {
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != Constants::STORAGE_MANAGER_UID) {
-        APP_LOGE("invalid callinguid: %{public}d", callingUid);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("ohos.permission.PERMISSION_REMOVECACHEFILE permission denied");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
@@ -3861,7 +3883,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosOnlyWithTypeName(const std:
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = dataMgr->QueryExtensionAbilityInfosByExtensionTypeName(typeName, flags, userId, infos);
     if (ret != ERR_OK) {
-        APP_LOGE("QueryExtensionAbilityInfos is failed");
+        APP_LOGE("QueryExtensionAbilityInfosByExtensionTypeName is failed");
         return ret;
     }
     if ((flags &
@@ -3973,6 +3995,21 @@ ErrCode BundleMgrHostImpl::CreateBundleDataDir(int32_t userId)
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->CreateBundleDataDir(userId);
+}
+
+ErrCode BundleMgrHostImpl::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl)
+{
+    if (!BundlePermissionMgr::IsCallingUidValid(Constants::ROOT_UID)) {
+        APP_LOGE("IsCallingUidValid failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->CreateBundleDataDirWithEl(userId, dirEl);
 }
 
 ErrCode BundleMgrHostImpl::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)

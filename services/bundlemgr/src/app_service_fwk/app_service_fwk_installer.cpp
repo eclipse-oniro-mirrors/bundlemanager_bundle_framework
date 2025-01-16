@@ -17,8 +17,10 @@
 
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
+#include "inner_patch_info.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
+#include "patch_data_mgr.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -30,7 +32,7 @@ constexpr const char* SHARED_MODULE_TYPE = "shared";
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
-const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
+constexpr const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 
 std::string ObtainTempSoPath(
     const std::string &moduleName, const std::string &nativeLibPath)
@@ -325,11 +327,14 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
         }
     }
     SavePreInstallBundleInfo(result, newInfos, installParam);
+    PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, hspPaths,
+        newInfos.begin()->second.GetVersionCode(), AppPatchType::SERVICE_FWK, installParam.isPatch);
     // check mark install finish
     result = MarkInstallFinish();
     if (result != ERR_OK) {
         APP_LOGE("mark install finish failed %{public}d", result);
         RollBack();
+        PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
         return result;
     }
     return result;

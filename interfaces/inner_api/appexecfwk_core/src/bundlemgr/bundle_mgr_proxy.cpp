@@ -2923,6 +2923,7 @@ bool BundleMgrProxy::ImplicitQueryInfoByPriority(const Want &want, int32_t flags
 
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::IMPLICIT_QUERY_INFO_BY_PRIORITY, data, reply)) {
+        APP_LOGE("fail to ImplicitQueryInfoByPriority from server");
         return false;
     }
 
@@ -3401,7 +3402,7 @@ ErrCode BundleMgrProxy::GetSandboxExtAbilityInfos(const Want &want, int32_t appI
     APP_LOGD("begin to GetSandboxExtAbilityInfos");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
-        APP_LOGE("GetSandboxExtAbilityInfos params are invalid");
+        APP_LOGE("appIndex is invalid,: %{public}d,", appIndex);
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
     MessageParcel data;
@@ -4306,6 +4307,32 @@ ErrCode BundleMgrProxy::CreateBundleDataDir(int32_t userId)
 
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR, data, reply)) {
+        APP_LOGE("Call failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode BundleMgrProxy::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("Called. userId: %{public}d el: %{public}d", userId, static_cast<uint8_t>(dirEl));
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to CreateBundleDataDirWithEl due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint8(static_cast<uint8_t>(dirEl))) {
+        APP_LOGE("fail to CreateBundleDataDirWithEl due to write dirEl fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_EL, data, reply)) {
         APP_LOGE("Call failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

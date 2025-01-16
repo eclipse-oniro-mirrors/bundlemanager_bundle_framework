@@ -75,6 +75,9 @@ const char* JSON_KEY_ICON_ID = "iconId";
 const char* JSON_KEY_FORM_ENABLED = "formEnabled";
 const char* JSON_KEY_SRC_PATH = "srcPath";
 const char* JSON_KEY_SRC_LANGUAGE = "srcLanguage";
+const char* JSON_KEY_START_WINDOW = "startWindow";
+const char* JSON_KEY_START_WINDOW_ID = "startWindowId";
+const char* JSON_KEY_START_WINDOW_RESOURCE = "startWindowResource";
 const char* JSON_KEY_START_WINDOW_ICON = "startWindowIcon";
 const char* JSON_KEY_START_WINDOW_ICON_ID = "startWindowIconId";
 const char* JSON_KEY_START_WINDOW_BACKGROUND = "startWindowBackground";
@@ -112,6 +115,12 @@ const char* JSON_KEY_SKILLS = "skills";
 const char* JSON_KEY_ORIENTATION_ID = "orientationId";
 const char* JSON_KEY_CONTINUE_BUNDLE_NAME = "continueBundleName";
 const uint32_t ABILITY_CAPACITY = 204800; // 200K
+const char* START_WINDOW_APP_ICON_ID = "startWindowAppIconId";
+const char* START_WINDOW_ILLUSTRATION_ID = "startWindowIllustrationId";
+const char* START_WINDOW_BRANDING_IMAGE_ID = "startWindowBrandingImageId";
+const char* START_WINDOW_BACKGROUND_COLOR_ID = "startWindowBackgroundColorId";
+const char* START_WINDOW_BACKGROUND_IMAGE_ID = "startWindowBackgroundImageId";
+const char* START_WINDOW_BACKGROUND_IMAGE_FIT_ID = "startWindowBackgroundImageFitId";
 }  // namespace
 
 bool AbilityInfo::ReadFromParcel(Parcel &parcel)
@@ -225,6 +234,8 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     continuable = parcel.ReadBool();
     priority = parcel.ReadInt32();
 
+    startWindow = Str16ToStr8(parcel.ReadString16());
+    startWindowId = parcel.ReadUint32();
     startWindowIcon = Str16ToStr8(parcel.ReadString16());
     startWindowIconId = parcel.ReadUint32();
     startWindowBackground = Str16ToStr8(parcel.ReadString16());
@@ -327,6 +338,12 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     }
     appIndex = parcel.ReadInt32();
     orientationId = parcel.ReadUint32();
+    std::unique_ptr<StartWindowResource> startWindowResourcePtr(parcel.ReadParcelable<StartWindowResource>());
+    if (!startWindowResourcePtr) {
+        APP_LOGE("ReadParcelable<StartWindowResource> failed");
+        return false;
+    }
+    startWindowResource = *startWindowResourcePtr;
     return true;
 }
 
@@ -422,6 +439,8 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, continuable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, priority);
 
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(startWindow));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(startWindowIcon));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowIconId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(startWindowBackground));
@@ -501,6 +520,7 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, orientationId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &startWindowResource);
     return true;
 }
 
@@ -529,6 +549,63 @@ void AbilityInfo::Dump(std::string prefix, int fd)
         }
     }
     return;
+}
+
+void to_json(nlohmann::json &jsonObject, const StartWindowResource &startWindowResource)
+{
+    jsonObject = nlohmann::json {
+        {START_WINDOW_APP_ICON_ID, startWindowResource.startWindowAppIconId},
+        {START_WINDOW_ILLUSTRATION_ID, startWindowResource.startWindowIllustrationId},
+        {START_WINDOW_BRANDING_IMAGE_ID, startWindowResource.startWindowBrandingImageId},
+        {START_WINDOW_BACKGROUND_COLOR_ID, startWindowResource.startWindowBackgroundColorId},
+        {START_WINDOW_BACKGROUND_IMAGE_ID, startWindowResource.startWindowBackgroundImageId},
+        {START_WINDOW_BACKGROUND_IMAGE_FIT_ID, startWindowResource.startWindowBackgroundImageFitId},
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, StartWindowResource &startWindowResource)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
+        START_WINDOW_APP_ICON_ID,
+        startWindowResource.startWindowAppIconId,
+        JsonType::NUMBER, false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
+        START_WINDOW_ILLUSTRATION_ID,
+        startWindowResource.startWindowIllustrationId,
+        JsonType::NUMBER, false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
+        START_WINDOW_BRANDING_IMAGE_ID,
+        startWindowResource.startWindowBrandingImageId,
+        JsonType::NUMBER, false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
+        START_WINDOW_BACKGROUND_COLOR_ID,
+        startWindowResource.startWindowBackgroundColorId,
+        JsonType::NUMBER, false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
+        START_WINDOW_BACKGROUND_IMAGE_ID,
+        startWindowResource.startWindowBackgroundImageId,
+        JsonType::NUMBER, false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
+        START_WINDOW_BACKGROUND_IMAGE_FIT_ID,
+        startWindowResource.startWindowBackgroundImageFitId,
+        JsonType::NUMBER, false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read Resource error %{public}d", parseResult);
+    }
 }
 
 void to_json(nlohmann::json &jsonObject, const CustomizeData &customizeData)
@@ -611,6 +688,8 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {IS_STAGE_BASED_MODEL, abilityInfo.isStageBasedModel},
         {CONTINUABLE, abilityInfo.continuable},
         {PRIORITY, abilityInfo.priority},
+        {JSON_KEY_START_WINDOW, abilityInfo.startWindow},
+        {JSON_KEY_START_WINDOW_ID, abilityInfo.startWindowId},
         {JSON_KEY_START_WINDOW_ICON, abilityInfo.startWindowIcon},
         {JSON_KEY_START_WINDOW_ICON_ID, abilityInfo.startWindowIconId},
         {JSON_KEY_START_WINDOW_BACKGROUND, abilityInfo.startWindowBackground},
@@ -635,7 +714,8 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_CONTINUE_BUNDLE_NAME, abilityInfo.continueBundleNames},
         {JSON_KEY_SKILLS, abilityInfo.skills},
         {JSON_KEY_APP_INDEX, abilityInfo.appIndex},
-        {JSON_KEY_ORIENTATION_ID, abilityInfo.orientationId}
+        {JSON_KEY_ORIENTATION_ID, abilityInfo.orientationId},
+        {JSON_KEY_START_WINDOW_RESOURCE, abilityInfo.startWindowResource}
     };
     if (abilityInfo.maxWindowRatio == 0) {
         // maxWindowRatio in json string will be 0 instead of 0.0
@@ -1267,6 +1347,28 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_START_WINDOW,
+        abilityInfo.startWindow,
+        false,
+        parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_START_WINDOW_ID,
+        abilityInfo.startWindowId,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<StartWindowResource>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_START_WINDOW_RESOURCE,
+        abilityInfo.startWindowResource,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("AbilityInfo from_json error : %{public}d", parseResult);
     }
@@ -1324,6 +1426,39 @@ void AbilityInfo::ConvertToCompatiableAbilityInfo(CompatibleAbilityInfo& compati
     compatibleAbilityInfo.labelId = labelId;
     compatibleAbilityInfo.descriptionId = descriptionId;
     compatibleAbilityInfo.enabled = enabled;
+}
+
+bool StartWindowResource::ReadFromParcel(Parcel &parcel)
+{
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowAppIconId);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowIllustrationId);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBrandingImageId);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundColorId);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundImageId);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundImageFitId);
+    return true;
+}
+
+bool StartWindowResource::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowAppIconId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowIllustrationId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBrandingImageId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundColorId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundImageId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundImageFitId);
+    return true;
+}
+
+StartWindowResource *StartWindowResource::Unmarshalling(Parcel &parcel)
+{
+    StartWindowResource *startWindowResource = new (std::nothrow) StartWindowResource;
+    if (startWindowResource && !startWindowResource->ReadFromParcel(parcel)) {
+        APP_LOGE("read from parcel failed");
+        delete startWindowResource;
+        startWindowResource = nullptr;
+    }
+    return startWindowResource;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

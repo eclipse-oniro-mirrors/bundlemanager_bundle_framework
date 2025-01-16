@@ -861,6 +861,10 @@ ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, in
         LOG_E(BMS_TAG_INSTALLER, "UninstallCloneApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+    if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX;
+    }
     if (destroyAppCloneParam.IsVerifyUninstallRule() &&
         CheckUninstallDisposedRule(bundleName, userId, appIndex, IS_KEEP_DATA)) {
         LOG_W(BMS_TAG_INSTALLER, "CheckUninstallDisposedRule failed");

@@ -23,6 +23,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
+#include "first_install_bundle_info.h"
 #include "inner_bundle_user_info.h"
 #include "inner_bundle_info.h"
 #include "json_constants.h"
@@ -582,6 +583,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "entryInstallationFree":false,
         "entryModuleName":"entry",
         "extensionAbilityInfo":[],
+        "firstInstallTime":0,
         "gid":-1,
         "hapModuleInfos":[
 
@@ -689,6 +691,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
                 "enabled":true,
                 "userId":100
             },
+            "firstInstallTime":1678677771,
             "gids":[
                 20010065
             ],
@@ -823,10 +826,20 @@ protected:
                 "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility": {
                     "extensionAbilityType": 9,
                     "priority": 0,
+                    "startWindow": "",
+                    "startWindowId": 0,
                     "startWindowIcon":"",
                     "startWindowIconId":0,
                     "startWindowBackground":"",
                     "startWindowBackgroundId":0,
+                    "startWindowResource": {
+                        "startWindowAppIconId":0,
+                        "startWindowBackgroundColorId": 0,
+                        "startWindowBackgroundImageFitId": 0,
+                        "startWindowBackgroundImageId": 0,
+                        "startWindowBrandingImageId": 0,
+                        "startWindowIllustrationId": 0
+                    },
                     "supportWindowMode": [],
                     "maxWindowRatio":0,
                     "minWindowRatio":0,
@@ -1226,6 +1239,7 @@ protected:
                 "entryModuleName": "phone",
                 "extensionAbilityInfo": [
                 ],
+                "firstInstallTime": 0,
                 "gid": -1,
                 "hapModuleInfos": [
                 ],
@@ -1310,6 +1324,7 @@ protected:
                         "enabled": true,
                         "userId": 100
                     },
+                    "firstInstallTime": 1503988035,
                     "gids": [
                         20010012
                     ],
@@ -1601,6 +1616,12 @@ protected:
             "valueId": 218104525
         }
     )"_json;
+
+    nlohmann::json firstInstallBundleInfoJson_ = R"(
+        {
+            "firstInstallTime": 1501953431745
+        }
+    )"_json;
     const std::string BASE_ABILITY_INFO = "baseAbilityInfos";
     // need modify with innerBundleInfoJson_
     const std::string abilityName = "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility";
@@ -1889,6 +1910,35 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveMetadata_0200, Function | SmallTe
 }
 
 /**
+ * @tc.number: SaveFirstInstallBundle_0100
+ * @tc.name: save bundle first installation information to persist storage
+ * @tc.desc: 1.system running normally and no saved any bundle data
+ *           2.successfully save a new bundle installation information for the first time
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveFirstInstallBundle_0100, Function | SmallTest | Level0)
+{
+    FirstInstallBundleInfo firstInstallBundleInfo;
+    firstInstallBundleInfo.firstInstallTime = 1501953461745;
+    nlohmann::json jsonObject;
+    to_json(jsonObject, firstInstallBundleInfo);
+    EXPECT_EQ(jsonObject["firstInstallTime"], 1501953461745);
+}
+
+/**
+ * @tc.number: SaveFirstInstallBundle_0200
+ * @tc.name: save bundle first installation information to persist storage
+ * @tc.desc: 1.system running normally and no saved any bundle data
+ *           2.successfully save a new bundle installation information for the first time
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveFirstInstallBundle_0200, Function | SmallTest | Level0)
+{
+    FirstInstallBundleInfo firstInstallBundleInfo;
+    nlohmann::json jsonObject = firstInstallBundleInfoJson_;
+    from_json(jsonObject, firstInstallBundleInfo);
+    EXPECT_EQ(firstInstallBundleInfo.firstInstallTime, 1501953431745);
+}
+
+/**
  * @tc.number: SaveData_0100
  * @tc.name: save bundle installation information to persist storage
  * @tc.desc: 1.system running normally and no saved any bundle data
@@ -1929,6 +1979,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveData_0300, Function | SmallTest |
     userInfo.gids.push_back(0);
     userInfo.installTime = 0;
     userInfo.updateTime = 0;
+    userInfo.firstInstallTime = 0;
     userInfo.bundleUserInfo.userId = 100;
     to_json(jsonObject, userInfo);
     EXPECT_EQ(jsonObject[TEST_BUNDLE_NAME], TEST_BUNDLE_NAME);

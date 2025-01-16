@@ -22,6 +22,14 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+enum class DataDirEl : uint8_t {
+    NONE = 0,
+    EL1 = 1,
+    EL2 = 2,
+    EL3 = 3,
+    EL4 = 4,
+    EL5 = 5,
+};
 struct BundleDir : public Parcelable {
     int32_t appIndex = 0;
     std::string bundleName;

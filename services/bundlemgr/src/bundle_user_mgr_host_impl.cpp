@@ -318,6 +318,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
         RemoveAsanLogDirectory(userId);
         dataMgr->RemoveUserId(userId);
         dataMgr->RemoveAppInstallDir(userId);
+        dataMgr->DeleteFirstInstallBundleInfo(userId);
         return ERR_OK;
     }
 
@@ -327,6 +328,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
     RemoveAsanLogDirectory(userId);
     dataMgr->RemoveUserId(userId);
     dataMgr->RemoveAppInstallDir(userId);
+    dataMgr->DeleteFirstInstallBundleInfo(userId);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
 #endif

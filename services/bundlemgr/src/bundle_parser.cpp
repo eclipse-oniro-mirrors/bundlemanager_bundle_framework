@@ -33,12 +33,12 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 constexpr const char* SYSCAP_NAME = "rpcid.sc";
-static const char* ROUTER_MAP = "routerMap";
-static const char* ROUTER_MAP_DATA = "data";
-static const char* ROUTER_ITEM_KEY_CUSTOM_DATA = "customData";
-static const uint16_t DATA_MAX_LENGTH = 4096;
-const char* NO_DISABLING_CONFIG_KEY = "residentProcessInExtremeMemory";
-const char* NO_DISABLING_KEY_BUNDLE_NAME = "bundleName";
+static constexpr const char* ROUTER_MAP = "routerMap";
+static constexpr const char* ROUTER_MAP_DATA = "data";
+static constexpr const char* ROUTER_ITEM_KEY_CUSTOM_DATA = "customData";
+static constexpr const uint16_t DATA_MAX_LENGTH = 4096;
+constexpr const char* NO_DISABLING_CONFIG_KEY = "residentProcessInExtremeMemory";
+constexpr const char* NO_DISABLING_KEY_BUNDLE_NAME = "bundleName";
 
 bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std::string> &sysCaps)
 {

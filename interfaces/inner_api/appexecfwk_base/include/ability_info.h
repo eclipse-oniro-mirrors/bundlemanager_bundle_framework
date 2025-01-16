@@ -113,6 +113,19 @@ enum class LinkType : uint8_t {
 
 struct AbilityInfo;
 
+struct StartWindowResource : public Parcelable {
+    uint32_t startWindowAppIconId = 0;
+    uint32_t startWindowIllustrationId = 0;
+    uint32_t startWindowBrandingImageId = 0;
+    uint32_t startWindowBackgroundColorId = 0;
+    uint32_t startWindowBackgroundImageId = 0;
+    uint32_t startWindowBackgroundImageFitId = 0;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static StartWindowResource *Unmarshalling(Parcel &parcel);
+};
+
 /*
 * According to Ability profile 1.0
 */
@@ -208,6 +221,7 @@ struct AbilityInfo : public Parcelable {
     uint32_t orientationId = 0;
     uint32_t formEntity = 0;
     uint32_t backgroundModes = 0;
+    uint32_t startWindowId = 0;
     uint32_t startWindowIconId = 0;
     uint32_t startWindowBackgroundId = 0;
     uint32_t maxWindowWidth = 0;
@@ -261,6 +275,7 @@ struct AbilityInfo : public Parcelable {
     std::string srcEntrance;
 
     // configuration fields on startup page
+    std::string startWindow;
     std::string startWindowIcon;
     std::string startWindowBackground;
     std::string preferMultiWindowOrientation = "default";
@@ -295,6 +310,7 @@ struct AbilityInfo : public Parcelable {
     MetaData metaData;
     std::unordered_set<std::string> continueBundleNames;
     ApplicationInfo applicationInfo;
+    StartWindowResource startWindowResource;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

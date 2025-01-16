@@ -9994,8 +9994,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleCacheStat_0001, Function | MediumTest
             setuid(Constants::FOUNDATION_UID);
             ret = bundleMgrProxy->GetAllBundleCacheStat(getCache);
             EXPECT_EQ(ret, ERR_OK);
-            delete getCache;
-            getCache = nullptr;
         }
     }
     std::cout << "END GetAllBundleCacheStat_0001" << std::endl;
@@ -10018,14 +10016,13 @@ HWTEST_F(ActsBmsKitSystemTest, CleanAllBundleCache_0001, Function | MediumTest |
         if (delCache == nullptr) {
             ret = bundleMgrProxy->CleanAllBundleCache(delCache);
             EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+        } else {
+            ret = bundleMgrProxy->CleanAllBundleCache(delCache);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+            setuid(Constants::FOUNDATION_UID);
+            ret = bundleMgrProxy->CleanAllBundleCache(delCache);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
         }
-        ret = bundleMgrProxy->CleanAllBundleCache(delCache);
-        EXPECT_EQ(ret, ERR_OK);
-        setuid(Constants::FOUNDATION_UID);
-        ret = bundleMgrProxy->CleanAllBundleCache(delCache);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
-        delete delCache;
-        delCache = nullptr;
     }
     std::cout << "END CleanAllBundleCache_0001" << std::endl;
 }

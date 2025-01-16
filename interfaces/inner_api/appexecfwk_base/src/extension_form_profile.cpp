@@ -29,6 +29,7 @@ std::mutex g_mutex;
 
 const int8_t MAX_FORM_NAME = 127;
 const int8_t DEFAULT_RECT_SHAPE = 1;
+const int8_t DEFAULT_CONDITION_TYPE = 0;
 #ifndef FORM_DIMENSION_2_3
 const int8_t DIMENSION_2_3 = 8;
 #endif
@@ -44,6 +45,16 @@ const FormsColorMode FORM_COLOR_MODE_MAP_VALUE[] = {
     FormsColorMode::AUTO_MODE,
     FormsColorMode::DARK_MODE,
     FormsColorMode::LIGHT_MODE
+};
+constexpr const char* FORM_RENDERING_MODE_MAP_KEY[] = {
+    "autoColor",
+    "fullColor",
+    "singleColor"
+};
+const FormsRenderingMode FORM_RENDERING_MODE_MAP_VALUE[] = {
+    FormsRenderingMode::AUTO_COLOR,
+    FormsRenderingMode::FULL_COLOR,
+    FormsRenderingMode::SINGLE_COLOR
 };
 constexpr const char* DIMENSION_MAP_KEY[] = {
     "1*2",
@@ -74,6 +85,12 @@ constexpr const char* SHAPE_MAP_KEY[] = {
 const int32_t SHAPE_MAP_VALUE[] = {
     1,
     2
+};
+constexpr const char* CONDITION_MAP_KEY[] = {
+    "network",
+};
+const int32_t CONDITION_MAP_VALUE[] = {
+    1,
 };
 constexpr const char* FORM_TYPE_MAP_KEY[] = {
     "JS",
@@ -112,10 +129,12 @@ struct ExtensionFormProfileInfo {
     std::string src;
     Window window;
     std::string colorMode = "auto";
+    std::string renderingMode = "fullColor";
     std::string formConfigAbility;
     std::string type = "JS";
     std::string uiSyntax = "hml";
     std::string scheduledUpdateTime = "";
+    std::string multiScheduledUpdateTime = "";
     int32_t updateDuration = 0;
     std::string defaultDimension;
     bool formVisibleNotify = false;
@@ -125,8 +144,10 @@ struct ExtensionFormProfileInfo {
     bool isDynamic = true;
     bool transparencyEnabled = false;
     bool fontScaleFollowSystem = true;
+    bool enableBlurBackground = false;
     std::vector<std::string> supportShapes {};
     std::vector<std::string> supportDimensions {};
+    std::vector<std::string> conditionUpdate {};
     std::vector<Metadata> metadata {};
     std::vector<std::string> previewImages {};
 };
@@ -215,6 +236,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
+        ExtensionFormProfileReader::RENDERING_MODE,
+        extensionFormProfileInfo.renderingMode,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
         ExtensionFormProfileReader::FORM_CONFIG_ABILITY,
         extensionFormProfileInfo.formConfigAbility,
         false,
@@ -253,6 +280,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         jsonObjectEnd,
         ExtensionFormProfileReader::SCHEDULED_UPDATE_TIME,
         extensionFormProfileInfo.scheduledUpdateTime,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::MULTI_SCHEDULED_UPDATE_TIME,
+        extensionFormProfileInfo.multiScheduledUpdateTime,
         false,
         g_parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
@@ -319,12 +352,26 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         ArrayType::STRING);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
+        ExtensionFormProfileReader::CONDITION_UPDATE,
+        extensionFormProfileInfo.conditionUpdate,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
         ExtensionFormProfileReader::PREVIEW_IMAGES,
         extensionFormProfileInfo.previewImages,
         JsonType::ARRAY,
         false,
         g_parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::ENABLE_BLUR_BACKGROUND,
+        extensionFormProfileInfo.enableBlurBackground,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
@@ -453,23 +500,68 @@ bool GetPreviewImages(const ExtensionFormProfileInfo &form, ExtensionFormInfo &i
     return true;
 }
 
-bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+bool GetConditionUpdate(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
-    if (!CheckFormNameIsValid(form.name)) {
-        APP_LOGE("form name is invalid");
-        return false;
+    std::set<int32_t> conditionUpdateSet {};
+    size_t len = sizeof(CONDITION_MAP_KEY) / sizeof(CONDITION_MAP_KEY[0]);
+    size_t i = 0;
+    for (const auto &conditionUpdate: form.conditionUpdate) {
+        for (i = 0; i < len; i++) {
+            if (CONDITION_MAP_KEY[i] == conditionUpdate) {
+                break;
+            }
+        }
+        if (i == len) {
+            APP_LOGW("conditionUpdate invalid form %{public}s", form.name.c_str());
+            continue;
+        }
+        conditionUpdateSet.emplace(CONDITION_MAP_VALUE[i]);
     }
+    if (conditionUpdateSet.empty()) {
+        conditionUpdateSet.emplace(DEFAULT_CONDITION_TYPE);
+    }
+    for (const auto &conditionUpdate: conditionUpdateSet) {
+        info.conditionUpdate.emplace_back(conditionUpdate);
+    }
+    return true;
+}
+
+void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
     info.name = form.name;
     info.description = form.description;
     info.displayName = form.displayName;
     info.src = form.src;
     info.window.autoDesignWidth = form.window.autoDesignWidth;
     info.window.designWidth = form.window.designWidth;
+    info.formConfigAbility = form.formConfigAbility;
+    info.formVisibleNotify = form.formVisibleNotify;
+    info.isDefault = form.isDefault;
+    info.updateEnabled = form.updateEnabled;
+    info.scheduledUpdateTime = form.scheduledUpdateTime;
+    info.multiScheduledUpdateTime = form.multiScheduledUpdateTime;
+    info.updateDuration = form.updateDuration;
+}
+
+bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
+    if (!CheckFormNameIsValid(form.name)) {
+        APP_LOGE("form name is invalid");
+        return false;
+    }
+    TransformToFormInfoExt(form, info);
 
     size_t len = sizeof(FORM_COLOR_MODE_MAP_KEY) / sizeof(FORM_COLOR_MODE_MAP_KEY[0]);
     for (size_t i = 0; i < len; i++) {
         if (FORM_COLOR_MODE_MAP_KEY[i] == form.colorMode)
             info.colorMode = FORM_COLOR_MODE_MAP_VALUE[i];
+    }
+
+    len = sizeof(FORM_RENDERING_MODE_MAP_KEY) / sizeof(FORM_RENDERING_MODE_MAP_KEY[0]);
+    for (size_t i = 0; i < len; i++) {
+        if (FORM_RENDERING_MODE_MAP_KEY[i] == form.renderingMode) {
+            info.renderingMode = FORM_RENDERING_MODE_MAP_VALUE[i];
+        }
     }
 
     len = sizeof(FORM_TYPE_MAP_KEY) / sizeof(FORM_TYPE_MAP_KEY[0]);
@@ -479,13 +571,6 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
         if (UI_SYNTAX_MAP_KEY[i] == form.uiSyntax)
             info.uiSyntax = UI_SYNTAX_MAP_VALUE[i];
     }
-
-    info.formConfigAbility = form.formConfigAbility;
-    info.formVisibleNotify = form.formVisibleNotify;
-    info.isDefault = form.isDefault;
-    info.updateEnabled = form.updateEnabled;
-    info.scheduledUpdateTime = form.scheduledUpdateTime;
-    info.updateDuration = form.updateDuration;
 
     if (!GetMetadata(form, info)) {
         return false;
@@ -505,8 +590,16 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     if (!GetSupportShapes(form, info)) {
         return false;
     }
+    if (!GetConditionUpdate(form, info)) {
+        return false;
+    }
     if (!GetPreviewImages(form, info)) {
         return false;
+    }
+    info.enableBlurBackground = form.enableBlurBackground;
+    APP_LOGI("form name: %{public}s enableBlurBackground: %{public}d", info.name.c_str(), info.enableBlurBackground);
+    if (info.enableBlurBackground) {
+        info.transparencyEnabled = true;
     }
     return true;
 }

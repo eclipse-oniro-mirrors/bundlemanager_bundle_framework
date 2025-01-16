@@ -562,6 +562,12 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(const std::vector<std:
     return true;
 }
 
+bool BMSEventHandler::OTAInstallSystemBundleTargetUser(const std::vector<std::string> &filePaths,
+    const std::string &bundleName, Constants::AppType appType, bool removable, const std::vector<int32_t> &userIds)
+{
+    return true;
+}
+
 bool BMSEventHandler::OTAInstallSystemSharedBundle(
     const std::vector<std::string>& filePaths, Constants::AppType appType, bool removable)
 {
@@ -724,7 +730,7 @@ bool BMSEventHandler::IsHspPathExist(const InnerBundleInfo &innerBundleInfo)
 
 void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo& bundleInfo) {}
 
-bool BMSEventHandler::IsQuickfixFlagExsit(const BundleInfo& bundleInfo)
+bool BMSEventHandler::IsQuickfixPatchApp(const std::string &bundleName, uint32_t versionCode)
 {
     return true;
 }

@@ -33,6 +33,7 @@ constexpr const char* WINDOW = "window";
 constexpr const char* WINDOW_DESIGN_WIDTH = "designWidth";
 constexpr const char* WINDOW_AUTO_DESIGN_WIDTH = "autoDesignWidth";
 constexpr const char* COLOR_MODE = "colorMode";
+constexpr const char* RENDERING_MODE = "renderingMode";
 constexpr const char* FORM_CONFIG_ABILITY = "formConfigAbility";
 constexpr const char* TYPE = "type";
 constexpr const char* UI_SYNTAX = "uiSyntax";
@@ -40,9 +41,11 @@ constexpr const char* FORM_VISIBLE_NOTIFY = "formVisibleNotify";
 constexpr const char* IS_DEFAULT = "isDefault";
 constexpr const char* UPDATE_ENABLED = "updateEnabled";
 constexpr const char* SCHEDULED_UPDATE_TIME = "scheduledUpdateTime";
+constexpr const char* MULTI_SCHEDULED_UPDATE_TIME = "multiScheduledUpdateTime";
 constexpr const char* UPDATE_DURATION = "updateDuration";
 constexpr const char* DEFAULT_DIMENSION = "defaultDimension";
 constexpr const char* SUPPORT_DIMENSIONS = "supportDimensions";
+constexpr const char* CONDITION_UPDATE = "conditionUpdate";
 constexpr const char* METADATA = "metadata";
 constexpr const char* PREVIEW_IMAGES = "previewImages";
 constexpr const char* METADATA_NAME = "name";
@@ -53,6 +56,7 @@ constexpr const char* TRANSPARENCY_ENABLED = "transparencyEnabled";
 constexpr const char* PRIVACY_LEVEL = "privacyLevel";
 constexpr const char* FONT_SCALE_FOLLOW_SYSTEM = "fontScaleFollowSystem";
 constexpr const char* SUPPORT_SHAPES = "supportShapes";
+constexpr const char* ENABLE_BLUR_BACKGROUND = "enableBlurBackground";
 }
 
 class ExtensionFormProfile {

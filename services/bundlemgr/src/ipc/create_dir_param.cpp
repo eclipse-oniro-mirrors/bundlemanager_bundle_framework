@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,6 +39,8 @@ bool CreateDirParam::ReadFromParcel(Parcel &parcel)
     debug = parcel.ReadBool();
     isDlpSandbox = parcel.ReadBool();
     createDirFlag = static_cast<CreateDirFlag>(parcel.ReadInt32());
+    uuid = Str16ToStr8(parcel.ReadString16());
+    dataDirEl = static_cast<DataDirEl>(parcel.ReadUint8());
     return true;
 }
 
@@ -58,6 +60,8 @@ bool CreateDirParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, debug);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDlpSandbox);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(createDirFlag));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uuid));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(dataDirEl));
     return true;
 }
 
