@@ -4059,7 +4059,7 @@ ErrCode BundleMgrHost::HandleGetSignatureInfoByUid(MessageParcel &data, MessageP
     if (ret == ERR_OK) {
         return WriteParcelInfoIntelligent<SignatureInfo>(info, reply);
     }
-    APP_LOGI("errCode: %{public}d, uid: %{public}d", ret, uid);
+    APP_LOGE("errCode: %{public}d, uid: %{public}d", ret, uid);
     return ret;
 }
 
