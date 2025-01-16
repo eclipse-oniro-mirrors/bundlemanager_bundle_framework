@@ -7904,7 +7904,8 @@ void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName,
         DataGroupInfo dataGroupInfo;
         CreateNewDataGroupInfo(groupId, userId, dataItem.second[0], dataGroupInfo);
         bundleInfoItem->second.AddDataGroupInfo(groupId, dataGroupInfo);
-        // group dir not create
+        //need create group dir
+        (void)CreateAppGroupDir(bundleInfoItem->second, userId);
     }
     if (!dataStorage_->SaveStorageBundleInfo(bundleInfoItem->second)) {
         APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
