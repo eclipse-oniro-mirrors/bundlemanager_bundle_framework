@@ -777,16 +777,27 @@ bool BundleUtil::CreateDir(const std::string &dir)
 bool BundleUtil::RevertToRealPath(const std::string &sandBoxPath, const std::string &bundleName, std::string &realPath)
 {
     if (sandBoxPath.empty() || bundleName.empty() ||
-        sandBoxPath.find(ServiceConstants::SANDBOX_DATA_PATH) == std::string::npos) {
+        (sandBoxPath.find(ServiceConstants::SANDBOX_DATA_PATH) == std::string::npos &&
+        sandBoxPath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == std::string::npos)) {
         APP_LOGE("input sandboxPath or bundleName invalid");
         return false;
     }
 
     realPath = sandBoxPath;
-    std::string relaDataPath = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
-        + std::to_string(BundleUtil::GetUserIdByCallingUid()) + ServiceConstants::BASE + bundleName;
-    realPath.replace(realPath.find(ServiceConstants::SANDBOX_DATA_PATH),
-        std::string(ServiceConstants::SANDBOX_DATA_PATH).size(), relaDataPath);
+    if (sandBoxPath.find(ServiceConstants::SANDBOX_DATA_PATH) == 0) {
+        std::string relaDataPath = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
+            + std::to_string(BundleUtil::GetUserIdByCallingUid()) + ServiceConstants::BASE + bundleName;
+        realPath.replace(realPath.find(ServiceConstants::SANDBOX_DATA_PATH),
+            std::string(ServiceConstants::SANDBOX_DATA_PATH).size(), relaDataPath);
+    } else if (sandBoxPath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == 0) {
+        std::string relaDataPath = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+            ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(BundleUtil::GetUserIdByCallingUid());
+        realPath.replace(realPath.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH),
+            std::string(ServiceConstants::APP_INSTALL_SANDBOX_PATH).size(), relaDataPath);
+    } else {
+        APP_LOGE("input sandboxPath invalid");
+        return false;
+    }
     return true;
 }
 
@@ -825,7 +836,7 @@ int64_t BundleUtil::GetFileSize(const std::string &filePath)
 }
 
 std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
-    std::vector<std::string> &toDeletePaths)
+    std::vector<std::string> &toDeletePaths, bool rename)
 {
     APP_LOGD("the original dir is %{public}s", filePath.c_str());
     std::string destination = "";
@@ -873,9 +884,17 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
     if (destination.empty()) {
         return "";
     }
-    if (!CopyFileFast(filePath, destination)) {
-        APP_LOGE("copy file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
-        return "";
+    if (rename) {
+        APP_LOGD("rename file from %{public}s to %{public}s", filePath.c_str(), destination.c_str());
+        if (!RenameFile(filePath, destination)) {
+            APP_LOGE("rename file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
+            return "";
+        }
+    } else {
+        if (!CopyFileFast(filePath, destination)) {
+            APP_LOGE("copy file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
+            return "";
+        }
     }
     return destination;
 }

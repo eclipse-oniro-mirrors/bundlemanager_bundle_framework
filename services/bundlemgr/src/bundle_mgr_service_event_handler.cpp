@@ -264,6 +264,7 @@ void BMSEventHandler::AfterBmsStart()
     DelayedSingleton<QuickFixBootScanner>::GetInstance()->ProcessQuickFixBootUp();
 #endif
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
+    CreateAppInstallDir();
     SetAllInstallFlag();
     HandleSceneBoard();
     UpdateAppDataMgr::DeleteUninstallTmpDirs(Constants::DEFAULT_USERID);
@@ -1068,6 +1069,23 @@ void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &shared
     SystemBundleInstaller installer;
     if (!installer.InstallSystemSharedBundle(installParam, false, appType)) {
         LOG_W(BMS_TAG_DEFAULT, "install system shared bundle: %{public}s error", sharedBundlePath.c_str());
+    }
+}
+
+void BMSEventHandler::CreateAppInstallDir() const
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        if (userId == Constants::DEFAULT_USERID) {
+            continue;
+        }
+        dataMgr->CreateAppInstallDir(userId);
     }
 }
 

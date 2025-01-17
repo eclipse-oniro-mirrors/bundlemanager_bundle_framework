@@ -5090,6 +5090,28 @@ std::set<int32_t> BundleDataMgr::GetAllUser() const
     return multiUserIdsSet_;
 }
 
+void BundleDataMgr::CreateAppInstallDir(int32_t userId)
+{
+    std::string path = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId);
+    ErrCode ret = InstalldClient::GetInstance()->Mkdir(path,
+        S_IRWXU | S_IRWXG | S_IXOTH | S_ISGID,
+        Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID);
+    if (ret != ERR_OK) {
+        APP_LOGE("create app install %{public}d failed", userId);
+    }
+}
+
+void BundleDataMgr::RemoveAppInstallDir(int32_t userId)
+{
+    std::string path = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId);
+    ErrCode ret = InstalldClient::GetInstance()->RemoveDir(path);
+    if (ret != ERR_OK) {
+        APP_LOGE("remove app install %{public}d failed", userId);
+    }
+}
+
 bool BundleDataMgr::GetInnerBundleUserInfos(
     const std::string &bundleName, std::vector<InnerBundleUserInfo> &innerBundleUserInfos) const
 {

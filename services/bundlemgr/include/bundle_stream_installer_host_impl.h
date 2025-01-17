@@ -30,7 +30,8 @@ public:
     BundleStreamInstallerHostImpl(uint32_t installerId, int32_t installedUid);
     virtual ~BundleStreamInstallerHostImpl() override;
 
-    bool Init(const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver);
+    bool Init(const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver,
+        const std::vector<std::string> &originHapPaths);
     virtual void UnInit() override;
 
     virtual int32_t CreateStream(const std::string &fileName) override;
@@ -53,6 +54,7 @@ private:
     std::string tempSignatureFileDir_;
     std::string tempPgoFileDir_;
     std::mutex fdVecMutex_;
+    std::vector<std::string> originHapPaths_;
 };
 } // AppExecFwk
 } // OHOS

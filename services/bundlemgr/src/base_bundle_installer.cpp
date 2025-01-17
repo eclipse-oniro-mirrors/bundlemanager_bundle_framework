@@ -77,6 +77,7 @@ constexpr const char* LOG = "log";
 constexpr const char* HSP_VERSION_PREFIX = "v";
 constexpr const char* PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
+constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install/";
 const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
@@ -223,6 +224,8 @@ ErrCode BaseBundleInstaller::InstallBundle(
 
     if (result == ERR_OK) {
         OnSingletonChange(installParam.GetKillProcess());
+    } else {
+        RestoreHaps(bundlePaths, installParam);
     }
 
     if (!bundlePaths.empty()) {
@@ -1116,9 +1119,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = CheckUserId(userId_);
     CHECK_RESULT(result, "userId check failed %{public}d");
 
+    std::vector<std::string> parsedPaths;
+    result = ParseHapPaths(installParam, inBundlePaths, parsedPaths);
+    CHECK_RESULT(result, "hap file parse failed %{public}d");
+
     std::vector<std::string> bundlePaths;
     // check hap paths
-    result = BundleUtil::CheckFilePath(inBundlePaths, bundlePaths);
+    result = BundleUtil::CheckFilePath(parsedPaths, bundlePaths);
     CHECK_RESULT(result, "hap file check failed %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_BUNDLE_CHECKED);                  // ---- 5%
 
@@ -4620,6 +4627,31 @@ void BaseBundleInstaller::OnSingletonChange(bool killProcess)
     }
 }
 
+void BaseBundleInstaller::RestoreHaps(const std::vector<std::string> &bundlePaths, const InstallParam &installParam)
+{
+    if (!installParam.IsRenameInstall() || bundlePaths_.empty() || bundlePaths.empty()) {
+        LOG_I(BMS_TAG_INSTALLER, "No need to restore haps");
+        return;
+    }
+    const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR;
+    std::string targetDir = bundlePaths.front().substr(0, bundlePaths.front().find_last_of('/') + 1);
+    if (bundlePaths.front().find(APP_INSTALL_SANDBOX_PATH) == 0) {
+        targetDir = newPrefix + targetDir.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+    } else {
+        LOG_W(BMS_TAG_INSTALLER, "Invalid bundle path: %{public}s", bundlePaths.front().c_str());
+        return;
+    }
+
+    for (const auto &originPath : bundlePaths_) {
+        std::string targetPath = targetDir + originPath.substr(originPath.find_last_of('/') + 1);
+        LOG_I(BMS_TAG_INSTALLER, "Restore hap: %{public}s -> %{public}s", originPath.c_str(), targetPath.c_str());
+        if (!BundleUtil::RenameFile(originPath, targetPath)) {
+            LOG_W(BMS_TAG_INSTALLER, "failed: %{public}s -> %{public}s", originPath.c_str(), targetPath.c_str());
+        }
+    }
+}
+
 void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
     const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode)
 {
@@ -5164,7 +5196,7 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
             return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
         }
         auto destination = BundleUtil::CopyFileToSecurityDir(bundlePaths[index], DirType::STREAM_INSTALL_DIR,
-            toDeleteTempHapPath_);
+            toDeleteTempHapPath_, installParam.IsRenameInstall());
         if (destination.empty()) {
             LOG_E(BMS_TAG_INSTALLER, "copy file %{public}s to security dir failed", bundlePaths[index].c_str());
             return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
@@ -5175,6 +5207,35 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
         bundlePaths[index] = destination;
     }
     bundlePaths_ = bundlePaths;
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
+    const std::vector<std::string> &inBundlePaths, std::vector<std::string> &parsedPaths)
+{
+    parsedPaths.reserve(inBundlePaths.size());
+    if (!installParam.IsRenameInstall()) {
+        parsedPaths.assign(inBundlePaths.begin(), inBundlePaths.end());
+        return ERR_OK;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "rename install");
+    const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR;
+
+    for (const auto &bundlePath : inBundlePaths) {
+        if (bundlePath.find("..") != std::string::npos) {
+            LOG_E(BMS_TAG_INSTALLER, "path invalid: %{public}s", bundlePath.c_str());
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
+        if (bundlePath.find(APP_INSTALL_SANDBOX_PATH) == 0) {
+            std::string newPath = newPrefix + bundlePath.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+            parsedPaths.push_back(newPath);
+            LOG_D(BMS_TAG_INSTALLER, "parsed path: %{public}s", newPath.c_str());
+        } else {
+            LOG_E(BMS_TAG_INSTALLER, "path invalid: %{public}s", bundlePath.c_str());
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
+    }
     return ERR_OK;
 }
 
