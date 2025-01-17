@@ -60,7 +60,7 @@ bool NapiValue::TypeIsError(bool checkErrno) const
     return res;
 }
 
-tuple<bool, unique_ptr<char[]>, size_t> NapiValue::ToUTF8String() const
+std::tuple<bool, std::unique_ptr<char[]>, size_t> NapiValue::ToUTF8String() const
 {
     size_t strLen = 0;
     napi_status status = napi_get_value_string_utf8(env_, val_, nullptr, -1, &strLen);
@@ -69,22 +69,22 @@ tuple<bool, unique_ptr<char[]>, size_t> NapiValue::ToUTF8String() const
     }
 
     size_t bufLen = strLen + 1;
-    unique_ptr<char[]> str = make_unique<char[]>(bufLen);
+    std::unique_ptr<char[]> str = std::make_unique<char[]>(bufLen);
     status = napi_get_value_string_utf8(env_, val_, str.get(), bufLen, &strLen);
     return make_tuple(status == napi_ok, move(str), strLen);
 }
 
-tuple<bool, unique_ptr<char[]>, size_t> NapiValue::ToUTF8String(string_view defaultValue) const
+std::tuple<bool, std::unique_ptr<char[]>, size_t> NapiValue::ToUTF8String(string_view defaultValue) const
 {
     if (TypeIs(napi_undefined) || TypeIs(napi_function)) {
-        auto str = make_unique<char[]>(defaultValue.size() + 1);
+        auto str = std::make_unique<char[]>(defaultValue.size() + 1);
         copy(defaultValue.begin(), defaultValue.end(), str.get());
         return make_tuple(true, move(str), defaultValue.size());
     }
     return ToUTF8String();
 }
 
-tuple<bool, unique_ptr<char[]>, size_t> NapiValue::ToUTF16String() const
+std::tuple<bool, std::unique_ptr<char[]>, size_t> NapiValue::ToUTF16String() const
 {
 #ifdef FILE_SUBSYSTEM_DEBUG_LOCAL
     size_t strLen = 0;
@@ -93,7 +93,7 @@ tuple<bool, unique_ptr<char[]>, size_t> NapiValue::ToUTF16String() const
         return {false, nullptr, 0};
     }
 
-    auto str = make_unique<char16_t[]>(++strLen);
+    auto str = std::make_unique<char16_t[]>(++strLen);
     status = napi_get_value_string_utf16(env_, val_, str.get(), strLen, nullptr);
     if (status != napi_ok) {
         return {false, nullptr, 0};
@@ -108,33 +108,33 @@ tuple<bool, unique_ptr<char[]>, size_t> NapiValue::ToUTF16String() const
 #endif
 }
 
-tuple<bool, void *> NapiValue::ToPointer() const
+std::tuple<bool, void *> NapiValue::ToPointer() const
 {
     void *res = nullptr;
     napi_status status = napi_get_value_external(env_, val_, &res);
-    return make_tuple(status == napi_ok, res);
+    return std::make_tuple(status == napi_ok, res);
 }
 
-tuple<bool, bool> NapiValue::ToBool() const
+std::tuple<bool, bool> NapiValue::ToBool() const
 {
     bool flag = false;
     napi_status status = napi_get_value_bool(env_, val_, &flag);
-    return make_tuple(status == napi_ok, flag);
+    return std::make_tuple(status == napi_ok, flag);
 }
 
-tuple<bool, bool> NapiValue::ToBool(bool defaultValue) const
+std::tuple<bool, bool> NapiValue::ToBool(bool defaultValue) const
 {
     if (TypeIs(napi_undefined) || TypeIs(napi_function)) {
-        return make_tuple(true, defaultValue);
+        return std::make_tuple(true, defaultValue);
     }
     return ToBool();
 }
 
-tuple<bool, int32_t> NapiValue::ToInt32() const
+std::tuple<bool, int32_t> NapiValue::ToInt32() const
 {
     int32_t res = 0;
     napi_status status = napi_get_value_int32(env_, val_, &res);
-    return make_tuple(status == napi_ok, res);
+    return std::make_tuple(status == napi_ok, res);
 }
 
 tuple<bool, int32_t> NapiValue::ToInt32(int32_t defaultValue) const
@@ -160,21 +160,21 @@ tuple<bool, int64_t> NapiValue::ToInt64(int64_t defaultValue) const
     return ToInt64();
 }
 
-tuple<bool, uint32_t> NapiValue::ToUint32() const
+std::tuple<bool, uint32_t> NapiValue::ToUint32() const
 {
     uint32_t res = 0;
     napi_status status = napi_get_value_uint32(env_, val_, &res);
     return make_tuple(status == napi_ok, res);
 }
 
-tuple<bool, double> NapiValue::ToDouble() const
+std::tuple<bool, double> NapiValue::ToDouble() const
 {
     double res = 0;
     napi_status status = napi_get_value_double(env_, val_, &res);
     return make_tuple(status == napi_ok, res);
 }
 
-tuple<bool, uint64_t, bool> NapiValue::ToUint64() const
+std::tuple<bool, uint64_t, bool> NapiValue::ToUint64() const
 {
     uint64_t res = 0;
     bool lossless = false;
@@ -182,11 +182,11 @@ tuple<bool, uint64_t, bool> NapiValue::ToUint64() const
     return make_tuple(status == napi_ok, res, lossless);
 }
 
-tuple<bool, vector<string>, uint32_t> NapiValue::ToStringArray()
+std::tuple<bool, std::vector<string>, uint32_t> NapiValue::ToStringArray()
 {
     uint32_t size;
     napi_status status = napi_get_array_length(env_, val_, &size);
-    vector<string> stringArray;
+    std::vector<string> stringArray;
     napi_value result;
     for (uint32_t i = 0; i < size; i++) {
         status = napi_get_element(env_, val_, i, &result);
@@ -196,7 +196,7 @@ tuple<bool, vector<string>, uint32_t> NapiValue::ToStringArray()
     return make_tuple(status == napi_ok, stringArray, size);
 }
 
-tuple<bool, void *, size_t> NapiValue::ToArrayBuffer() const
+std::tuple<bool, void *, size_t> NapiValue::ToArrayBuffer() const
 {
     void *buf = nullptr;
     size_t bufLen = 0;
@@ -204,7 +204,7 @@ tuple<bool, void *, size_t> NapiValue::ToArrayBuffer() const
     return make_tuple(status == napi_ok, buf, bufLen);
 }
 
-tuple<bool, void *, size_t> NapiValue::ToTypedArray() const
+std::tuple<bool, void *, size_t> NapiValue::ToTypedArray() const
 {
     napi_typedarray_type type;
     napi_value in_array_buffer = nullptr;
@@ -216,7 +216,7 @@ tuple<bool, void *, size_t> NapiValue::ToTypedArray() const
     return make_tuple(status == napi_ok, data, length);
 }
 
-bool NapiValue::HasProp(const string& propName) const
+bool NapiValue::HasProp(const std::string& propName) const
 {
     bool res = false;
 
@@ -228,7 +228,7 @@ bool NapiValue::HasProp(const string& propName) const
     return (status == napi_ok) && res;
 }
 
-NapiValue NapiValue::GetProp(const string &propName) const
+NapiValue NapiValue::GetProp(const std::string &propName) const
 {
     if (!HasProp(propName)) {
         return {env_, nullptr};
@@ -259,7 +259,7 @@ bool NapiValue::AddProp(vector<napi_property_descriptor> &&propVec) const
     return true;
 }
 
-bool NapiValue::AddProp(const string &propName, napi_value val) const
+bool NapiValue::AddProp(const std::string &propName, napi_value val) const
 {
     if (!TypeIs(napi_valuetype::napi_object) || HasProp(propName)) {
         APP_LOGE("INNER BUG. Prop should only be added to objects");
@@ -360,7 +360,7 @@ NapiValue NapiValue::CreateUint8Array(napi_env env, void *buf, size_t bufLen)
     return {env, output_array};
 }
 
-NapiValue NapiValue::CreateArrayString(napi_env env, const vector<string> &strs)
+NapiValue NapiValue::CreateArrayString(napi_env env, const std::vector<string> &strs)
 {
     napi_value res = nullptr;
     napi_create_array(env, &res);
@@ -372,7 +372,7 @@ NapiValue NapiValue::CreateArrayString(napi_env env, const vector<string> &strs)
     return {env, res};
 }
 
-tuple<NapiValue, void *> NapiValue::CreateArrayBuffer(napi_env env, size_t len)
+std::tuple<NapiValue, void *> NapiValue::CreateArrayBuffer(napi_env env, size_t len)
 {
     napi_value val;
     void *buf = nullptr;

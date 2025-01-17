@@ -36,7 +36,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
-using namespace std;
 static constexpr int32_t ERROR_CODE = -5;
 static constexpr int32_t MIN_BITS = 0;
 static constexpr int32_t MAX_BITS = 16;
@@ -137,7 +136,7 @@ napi_value ZipNExporter::Constructor(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    unique_ptr<ZipEntity> zipEntity = make_unique<ZipEntity>();
+    std::unique_ptr<ZipEntity> zipEntity = std::make_unique<ZipEntity>();
     if (!NapiClass::SetEntityFor<ZipEntity>(env, funcArg.GetThisVar(), move(zipEntity))) {
         NapiBusinessError().ThrowErr(env, EFAULT);
         return nullptr;
@@ -145,9 +144,9 @@ napi_value ZipNExporter::Constructor(napi_env env, napi_callback_info info)
     return funcArg.GetThisVar();
 }
 
-vector<napi_property_descriptor> ZipNExporter::DeflateExport()
+std::vector<napi_property_descriptor> ZipNExporter::DeflateExport()
 {
-    vector<napi_property_descriptor> props = {
+    std::vector<napi_property_descriptor> props = {
         NapiValue::DeclareNapiFunction("deflateInit", DeflateInit),
         NapiValue::DeclareNapiFunction("deflateInit2", DeflateInit2),
         NapiValue::DeclareNapiFunction("deflate", Deflate),
@@ -167,9 +166,9 @@ vector<napi_property_descriptor> ZipNExporter::DeflateExport()
     return props;
 }
 
-vector<napi_property_descriptor> ZipNExporter::InflateExport()
+std::vector<napi_property_descriptor> ZipNExporter::InflateExport()
 {
-    vector<napi_property_descriptor> props = {
+    std::vector<napi_property_descriptor> props = {
         NapiValue::DeclareNapiFunction("inflateInit", InflateInit),
         NapiValue::DeclareNapiFunction("inflateInit2", InflateInit2),
         NapiValue::DeclareNapiFunction("inflateSync", InflateSync),
@@ -196,7 +195,7 @@ vector<napi_property_descriptor> ZipNExporter::InflateExport()
 
 bool ZipNExporter::Export()
 {
-    vector<napi_property_descriptor> props = {
+    std::vector<napi_property_descriptor> props = {
         NapiValue::DeclareNapiFunction("setZStream", SetZStream),
         NapiValue::DeclareNapiFunction("getZStream", GetZStream),
         NapiValue::DeclareNapiFunction("getZStreamSync", GetZStreamSync),
@@ -217,10 +216,10 @@ bool ZipNExporter::Export()
         props.push_back(prop);
     }
 
-    string className = GetClassName();
+    std::string className = GetClassName();
     bool succ = false;
     napi_value cls = nullptr;
-    tie(succ, cls) = NapiClass::DefineClass(exports_.env_, className, ZipNExporter::Constructor, move(props));
+    std::tie(succ, cls) = NapiClass::DefineClass(exports_.env_, className, ZipNExporter::Constructor, move(props));
     if (!succ) {
         NapiBusinessError().ThrowErr(exports_.env_, "Failed to define class");
         return false;
@@ -234,7 +233,7 @@ bool ZipNExporter::Export()
     return exports_.AddProp(className, cls);
 }
 
-string ZipNExporter::GetClassName()
+std::string ZipNExporter::GetClassName()
 {
     return ZipNExporter::className_;
 }
@@ -356,7 +355,7 @@ napi_value ZipNExporter::ZlibVersion(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg](napi_env env) -> NapiBusinessError {
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
@@ -372,7 +371,7 @@ napi_value ZipNExporter::ZlibVersion(napi_env env, napi_callback_info info)
         if (!arg) {
             return {NapiValue::CreateUndefined(env)};
         }
-        return {NapiValue::CreateUTF8String(env, string(reinterpret_cast<const char *>(arg->zliVersion)))};
+        return {NapiValue::CreateUTF8String(env, std::string(reinterpret_cast<const char *>(arg->zliVersion)))};
     };
 
     NapiValue thisVar(env, funcArg.GetThisVar());
@@ -400,12 +399,12 @@ napi_value ZipNExporter::ZError(napi_env env, napi_callback_info info)
 
     bool succ = false;
     int32_t zlibError = 0;
-    tie(succ, zlibError) = CommonFunc::GetZErrorArg(env, funcArg);
+    std::tie(succ, zlibError) = CommonFunc::GetZErrorArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zlibError](napi_env env) -> NapiBusinessError {
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
@@ -421,7 +420,7 @@ napi_value ZipNExporter::ZError(napi_env env, napi_callback_info info)
         if (!arg) {
             return {NapiValue::CreateUndefined(env)};
         }
-        return {NapiValue::CreateUTF8String(env, string(reinterpret_cast<const char *>(arg->zErrorMsg)))};
+        return {NapiValue::CreateUTF8String(env, std::string(reinterpret_cast<const char *>(arg->zErrorMsg)))};
     };
 
     NapiValue thisVar(env, funcArg.GetThisVar());
@@ -447,7 +446,7 @@ napi_value ZipNExporter::ZlibCompileFlags(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg](napi_env env) -> NapiBusinessError {
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
@@ -492,12 +491,12 @@ napi_value ZipNExporter::DeflateInit(napi_env env, napi_callback_info info)
     bool succ = false;
     z_stream zStream = {};
     int32_t level = 0;
-    tie(succ, zStream, level) = CommonFunc::GetDeflateInitArg(env, funcArg);
+    std::tie(succ, zStream, level) = CommonFunc::GetDeflateInitArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, zStream, level](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity) {
             return NapiBusinessError(EFAULT, true);
@@ -544,10 +543,10 @@ napi_value ZipNExporter::DeflateInit2(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     bool succ = false;
     z_stream zStream = {};
-    tie(succ, zStream, arg->level, arg->method, arg->windowBits, arg->memLevel, arg->strategy) =
+    std::tie(succ, zStream, arg->level, arg->method, arg->windowBits, arg->memLevel, arg->strategy) =
         CommonFunc::GetDeflateInit2Arg(env, funcArg);
     if (!succ) {
         return nullptr;
@@ -601,12 +600,12 @@ napi_value ZipNExporter::Deflate(napi_env env, napi_callback_info info)
 
     bool succ = false;
     int32_t flush = 0;
-    tie(succ, flush) = CommonFunc::GetDeflateArg(env, funcArg);
+    std::tie(succ, flush) = CommonFunc::GetDeflateArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, flush](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -656,7 +655,7 @@ napi_value ZipNExporter::DeflateEnd(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -707,12 +706,12 @@ napi_value ZipNExporter::DeflateBound(napi_env env, napi_callback_info info)
     }
 
     uint32_t sourceLen = 0;
-    tie(succ, sourceLen) = CommonFunc::UnwrapInt64Params(env, funcArg);
+    std::tie(succ, sourceLen) = CommonFunc::UnwrapInt64Params(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, sourceLen](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -759,7 +758,7 @@ napi_value ZipNExporter::DeflateReset(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -809,7 +808,7 @@ napi_value ZipNExporter::DeflateResetKeep(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -857,12 +856,12 @@ napi_value ZipNExporter::DeflateParams(napi_env env, napi_callback_info info)
     bool succ = false;
     int32_t level = 0;
     int32_t strategy = 0;
-    tie(succ, level, strategy) = CommonFunc::UnwrapTwoIntParams(env, funcArg);
+    std::tie(succ, level, strategy) = CommonFunc::UnwrapTwoIntParams(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, level, strategy](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -910,7 +909,7 @@ napi_value ZipNExporter::DeflatePrime(napi_env env, napi_callback_info info)
     bool succ = false;
     int32_t bits = 0;
     int32_t value = 0;
-    tie(succ, bits, value) = CommonFunc::UnwrapTwoIntParams(env, funcArg);
+    std::tie(succ, bits, value) = CommonFunc::UnwrapTwoIntParams(env, funcArg);
     if (!succ) {
         return nullptr;
     } else if (bits < MIN_BITS || bits > MAX_BITS) {
@@ -918,7 +917,7 @@ napi_value ZipNExporter::DeflatePrime(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, bits, value](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -968,12 +967,12 @@ napi_value ZipNExporter::DeflateTune(napi_env env, napi_callback_info info)
     int32_t maxLazy = 0;
     int32_t niceLength = 0;
     int32_t maxChain = 0;
-    tie(succ, goodLength, maxLazy, niceLength, maxChain) = CommonFunc::UnwrapDeflateTuneParams(env, funcArg);
+    std::tie(succ, goodLength, maxLazy, niceLength, maxChain) = CommonFunc::UnwrapDeflateTuneParams(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, goodLength, maxLazy, niceLength, maxChain](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -1021,12 +1020,12 @@ napi_value ZipNExporter::DeflateSetDictionary(napi_env env, napi_callback_info i
     bool succ = false;
     void *dictionary = nullptr;
     size_t dictionaryLen = 0;
-    tie(succ, dictionary, dictionaryLen) = CommonFunc::UnwrapArrayBufferParams(env, funcArg);
+    std::tie(succ, dictionary, dictionaryLen) = CommonFunc::UnwrapArrayBufferParams(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, dictionary, dictionaryLen](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -1074,8 +1073,8 @@ napi_value ZipNExporter::DeflateGetDictionary(napi_env env, napi_callback_info i
 
     bool succ = false;
     void *dictionary = nullptr;
-    auto arg = make_shared<AsyncZipArg>();
-    tie(succ, dictionary, arg->dictLength) = CommonFunc::UnwrapArrayBufferParams(env, funcArg);
+    auto arg = std::make_shared<AsyncZipArg>();
+    std::tie(succ, dictionary, arg->dictLength) = CommonFunc::UnwrapArrayBufferParams(env, funcArg);
 
     auto cbExec = [arg, zipEntity, dictionary](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
@@ -1129,12 +1128,12 @@ napi_value ZipNExporter::DeflateSetHeader(napi_env env, napi_callback_info info)
     }
 
     gz_header gzHeader = {};
-    tie(succ, gzHeader) = CommonFunc::GetGZHeaderArg(env, funcArg[ArgumentPosition::SECOND]);
+    std::tie(succ, gzHeader) = CommonFunc::GetGZHeaderArg(env, funcArg[ArgumentPosition::SECOND]);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, gzHeader](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -1184,7 +1183,7 @@ napi_value ZipNExporter::DeflatePending(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -1236,7 +1235,7 @@ napi_value ZipNExporter::DeflateCopy(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, srcZipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !srcZipEntity) {
             return NapiBusinessError(EFAULT, true);
@@ -1289,8 +1288,8 @@ napi_value ZipNExporter::Compress(napi_env env, napi_callback_info info)
     bool succ = false;
     void *dest = nullptr;
     void *source = nullptr;
-    auto arg = make_shared<AsyncZipArg>();
-    tie(succ, dest, arg->destLen, source, arg->sourceLen) = CommonFunc::GetCompressArg(env, funcArg);
+    auto arg = std::make_shared<AsyncZipArg>();
+    std::tie(succ, dest, arg->destLen, source, arg->sourceLen) = CommonFunc::GetCompressArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -1347,8 +1346,8 @@ napi_value ZipNExporter::Compress2(napi_env env, napi_callback_info info)
     bool succ = false;
     void *dest = nullptr;
     void *source = nullptr;
-    auto arg = make_shared<AsyncZipArg>();
-    tie(succ, dest, arg->destLen, source, arg->sourceLen, arg->level) = CommonFunc::GetCompress2Arg(env, funcArg);
+    auto arg = std::make_shared<AsyncZipArg>();
+    std::tie(succ, dest, arg->destLen, source, arg->sourceLen, arg->level) = CommonFunc::GetCompress2Arg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -1397,12 +1396,12 @@ napi_value ZipNExporter::CompressBound(napi_env env, napi_callback_info info)
 
     int32_t sourceLen = 0;
     bool succ = false;
-    tie(succ, sourceLen) = CommonFunc::UnwrapInt32Params(env, funcArg[ArgumentPosition::FIRST]);
+    std::tie(succ, sourceLen) = CommonFunc::UnwrapInt32Params(env, funcArg[ArgumentPosition::FIRST]);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, sourceLen](napi_env env) -> NapiBusinessError {
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
@@ -1447,8 +1446,8 @@ napi_value ZipNExporter::UnCompress(napi_env env, napi_callback_info info)
     bool succ = false;
     void *dest = nullptr;
     void *source = nullptr;
-    auto arg = make_shared<AsyncZipArg>();
-    tie(succ, dest, arg->destLen, source, arg->sourceLen) = CommonFunc::GetUnCompressArg(env, funcArg);
+    auto arg = std::make_shared<AsyncZipArg>();
+    std::tie(succ, dest, arg->destLen, source, arg->sourceLen) = CommonFunc::GetUnCompressArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -1505,8 +1504,8 @@ napi_value ZipNExporter::UnCompress2(napi_env env, napi_callback_info info)
     bool succ = false;
     void *dest = nullptr;
     void *source = nullptr;
-    auto arg = make_shared<AsyncZipArg>();
-    tie(succ, dest, arg->destLen, source, arg->sourceLen) = CommonFunc::GetUnCompressArg(env, funcArg);
+    auto arg = std::make_shared<AsyncZipArg>();
+    std::tie(succ, dest, arg->destLen, source, arg->sourceLen) = CommonFunc::GetUnCompressArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -1563,12 +1562,12 @@ napi_value ZipNExporter::InflateInit(napi_env env, napi_callback_info info)
     bool succ = false;
     z_stream zStream = {};
     HasZStreamMember hasZStreamMember = {};
-    tie(succ, zStream, hasZStreamMember) = CommonFunc::GetZstreamArg(env, funcArg[ArgumentPosition::FIRST]);
+    std::tie(succ, zStream, hasZStreamMember) = CommonFunc::GetZstreamArg(env, funcArg[ArgumentPosition::FIRST]);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, zStream](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity) {
             return NapiBusinessError(EFAULT, true);
@@ -1618,12 +1617,12 @@ napi_value ZipNExporter::InflateInit2(napi_env env, napi_callback_info info)
     bool succ = false;
     z_stream zStream = {};
     int32_t windowBits = 0;
-    tie(succ, zStream, windowBits) = CommonFunc::GetInflateInitArg(env, funcArg);
+    std::tie(succ, zStream, windowBits) = CommonFunc::GetInflateInitArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, zStream, windowBits](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity) {
             return NapiBusinessError(EFAULT, true);
@@ -1675,7 +1674,7 @@ napi_value ZipNExporter::InflateSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -1722,12 +1721,12 @@ napi_value ZipNExporter::Inflate(napi_env env, napi_callback_info info)
 
     bool succ = false;
     int32_t flush = 0;
-    tie(succ, flush) = CommonFunc::GetInflateArg(env, funcArg);
+    std::tie(succ, flush) = CommonFunc::GetInflateArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, flush](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -1777,7 +1776,7 @@ napi_value ZipNExporter::InflateEnd(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -1825,12 +1824,12 @@ napi_value ZipNExporter::InflateSetDictionary(napi_env env, napi_callback_info i
     bool succ = false;
     void *buf = nullptr;
     size_t bufLen = 0;
-    tie(succ, buf, bufLen) = CommonFunc::GetInflateSetDictionaryArg(env, funcArg);
+    std::tie(succ, buf, bufLen) = CommonFunc::GetInflateSetDictionaryArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, buf, bufLen](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -1868,7 +1867,7 @@ napi_value ZipNExporter::InflateGetDictionary(napi_env env, napi_callback_info i
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     /* To get entity */
     auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
     if (!arg ||!zipEntity) {
@@ -1878,7 +1877,7 @@ napi_value ZipNExporter::InflateGetDictionary(napi_env env, napi_callback_info i
 
     bool succ = false;
     void *buf = nullptr;
-    tie(succ, buf, arg->dictLength) = CommonFunc::GetInflateSetDictionaryArg(env, funcArg);
+    std::tie(succ, buf, arg->dictLength) = CommonFunc::GetInflateSetDictionaryArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -1933,7 +1932,7 @@ napi_value ZipNExporter::InflateResetKeep(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -1980,12 +1979,12 @@ napi_value ZipNExporter::InflateReset2(napi_env env, napi_callback_info info)
 
     bool succ = false;
     int32_t flush = 0;
-    tie(succ, flush) = CommonFunc::GetInflateReset2Arg(env, funcArg);
+    std::tie(succ, flush) = CommonFunc::GetInflateReset2Arg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, flush](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -2035,7 +2034,7 @@ napi_value ZipNExporter::InflateReset(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -2084,12 +2083,12 @@ napi_value ZipNExporter::InflateBackInit(napi_env env, napi_callback_info info)
     int32_t windowBits = 0;
     void *windowBuf = nullptr;
     size_t bufLen = 0;
-    tie(succ, windowBits, windowBuf, bufLen) = CommonFunc::GetInflateBackInitArg(env, funcArg);
+    std::tie(succ, windowBits, windowBuf, bufLen) = CommonFunc::GetInflateBackInitArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, windowBits, windowBuf](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -2151,7 +2150,7 @@ static unsigned InFunc(void *inDesc, unsigned char **buf)
     void *buffer = nullptr;
     size_t bufLen = 0;
     bool succ = false;
-    tie(succ, buffer, bufLen) = bufNVal.ToArrayBuffer();
+    std::tie(succ, buffer, bufLen) = bufNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(in->env, EINVAL);
         return 0;
@@ -2222,7 +2221,7 @@ napi_value ZipNExporter::InflateBack(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     /* To get entity */
     auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
     if (!arg || !zipEntity) {
@@ -2235,8 +2234,10 @@ napi_value ZipNExporter::InflateBack(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto inDesc = make_shared<InOutDesc>(env, funcArg[ArgumentPosition::SECOND], funcArg[ArgumentPosition::THIRD]);
-    auto outDesc = make_shared<InOutDesc>(env, funcArg[ArgumentPosition::FOURTH], funcArg[ArgumentPosition::FIFTH]);
+    auto inDesc = std::make_shared<InOutDesc>(
+        env, funcArg[ArgumentPosition::SECOND], funcArg[ArgumentPosition::THIRD]);
+    auto outDesc = std::make_shared<InOutDesc>(
+        env, funcArg[ArgumentPosition::FOURTH], funcArg[ArgumentPosition::FIFTH]);
     arg->errCode = inflateBack(zipEntity->zs.get(), InFunc, inDesc.get(), OutFunc, outDesc.get());
     auto cbExec = [arg](napi_env env) -> NapiBusinessError {
         if (!arg) {
@@ -2286,7 +2287,7 @@ napi_value ZipNExporter::InflateBackEnd(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -2336,7 +2337,7 @@ napi_value ZipNExporter::InflateCodesUsed(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -2381,12 +2382,12 @@ napi_value ZipNExporter::InflatePrime(napi_env env, napi_callback_info info)
     bool succ = false;
     int32_t bits = 0;
     int32_t value = 0;
-    tie(succ, bits, value) = CommonFunc::GetInflatePrimeArg(env, funcArg);
+    std::tie(succ, bits, value) = CommonFunc::GetInflatePrimeArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, bits, value](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -2436,7 +2437,7 @@ napi_value ZipNExporter::InflateMark(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -2480,12 +2481,12 @@ napi_value ZipNExporter::InflateValidate(napi_env env, napi_callback_info info)
 
     bool succ = false;
     int32_t check = 0;
-    tie(succ, check) = CommonFunc::GetInflateValidateArg(env, funcArg);
+    std::tie(succ, check) = CommonFunc::GetInflateValidateArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, check](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -2535,7 +2536,7 @@ napi_value ZipNExporter::InflateSyncPoint(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
@@ -2586,7 +2587,7 @@ napi_value ZipNExporter::InflateCopy(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, srcZipEntity](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !srcZipEntity) {
             return NapiBusinessError(EFAULT, true);
@@ -2638,12 +2639,12 @@ napi_value ZipNExporter::InflateGetHeader(napi_env env, napi_callback_info info)
 
     bool succ = false;
     gz_header gzHeader = {};
-    tie(succ, gzHeader) = CommonFunc::GetInflateGetHeaderArg(env, funcArg);
+    std::tie(succ, gzHeader) = CommonFunc::GetInflateGetHeaderArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncZipArg>();
+    auto arg = std::make_shared<AsyncZipArg>();
     auto cbExec = [arg, zipEntity, gzHeader](napi_env env) -> NapiBusinessError {
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
