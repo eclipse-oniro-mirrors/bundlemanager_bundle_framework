@@ -141,6 +141,10 @@ ErrCode BundleOverlayInstallChecker::CheckExternalBundle(const InnerBundleInfo &
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
     std::string moduleName = innerBundleInfo.GetCurrentModulePackage();
+    if (innerModuleInfos.count(moduleName) == 0) {
+        APP_LOGE("no module in the overlay hap");
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
+    }
     priority = innerModuleInfos.at(moduleName).targetPriority;
     if ((result = CheckTargetPriority(priority)) != ERR_OK) {
         APP_LOGE("target priority of module is invalid");

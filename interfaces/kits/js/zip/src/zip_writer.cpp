@@ -32,7 +32,7 @@ namespace {
 // Numbers of pending entries that trigger writting them to the ZIP file.
 constexpr size_t g_MaxPendingEntriesCount = 50;
 const std::string SEPARATOR = "/";
-std::mutex g_mutex;;
+std::mutex g_mutex;
 
 bool AddFileContentToZip(zipFile zip_file, FilePath &file_path)
 {

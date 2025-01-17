@@ -405,7 +405,7 @@ bool InstalldHost::HandleCreateBundleDataDir(MessageParcel &data, MessageParcel 
 bool InstalldHost::HandleCreateBundleDataDirWithVector(MessageParcel &data, MessageParcel &reply)
 {
     auto createDirParamSize = data.ReadInt32();
-    if (createDirParamSize == 0 || createDirParamSize > Constants::MAX_PARCEL_CAPACITY) {
+    if (createDirParamSize <= 0 || createDirParamSize > Constants::MAX_PARCEL_CAPACITY) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
@@ -437,9 +437,9 @@ bool InstalldHost::HandleRemoveBundleDataDir(MessageParcel &data, MessageParcel 
 
 bool InstalldHost::HandleRemoveModuleDataDir(MessageParcel &data, MessageParcel &reply)
 {
-    std::string moduleNmae = Str16ToStr8(data.ReadString16());
+    std::string moduleName = Str16ToStr8(data.ReadString16());
     int userid = data.ReadInt32();
-    ErrCode result = RemoveModuleDataDir(moduleNmae, userid);
+    ErrCode result = RemoveModuleDataDir(moduleName, userid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

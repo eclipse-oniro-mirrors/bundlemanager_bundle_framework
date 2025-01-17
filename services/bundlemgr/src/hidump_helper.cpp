@@ -286,7 +286,7 @@ ErrCode HidumpHelper::GetAllBundleInfo(std::string &result)
         BundleFlag::GET_BUNDLE_WITH_HASH_VALUE),
         bundleInfos, Constants::ANY_USERID)) {
         APP_LOGE("get bundleInfos failed");
-        return false;
+        return ERR_APPEXECFWK_HIDUMP_SERVICE_ERROR;
     }
 
     for (auto &info : bundleInfos) {
