@@ -116,7 +116,9 @@ bool SystemAbilityHelper::IsAppRunning(const sptr<IAppMgr> appMgrProxy,
         APP_LOGE("fail to find the app mgr service to check app is running");
         return running;
     }
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     int32_t result = appMgrProxy->IsAppRunning(bundleName, appCloneIndex, running);
+    IPCSkeleton::SetCallingIdentity(identity);
     if (result != 0) {
         APP_LOGW("IsAppRunning failed");
     }
