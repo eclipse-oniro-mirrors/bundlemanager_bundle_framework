@@ -3986,6 +3986,23 @@ ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetInnerBundleInfoWithSandboxByUid(const int uid, InnerBundleInfo &innerBundleInfo) const
+{
+    ErrCode ret = GetInnerBundleInfoByUid(uid, innerBundleInfo);
+    if (ret != ERR_OK) {
+        APP_LOGD("get innerBundleInfo from bundleInfo_ by uid failed");
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGW("sandboxAppHelper_ is nullptr");
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        }
+        if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
+            APP_LOGE("Call GetInnerBundleInfoByUid failed");
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        }
+    }
+    return ERR_OK;
+}
+
 bool BundleDataMgr::GetBundleGids(const std::string &bundleName, std::vector<int> &gids) const
 {
     int32_t requestUserId = GetUserId();
@@ -9442,6 +9459,20 @@ ErrCode BundleDataMgr::GetSignatureInfoByBundleName(const std::string &bundleNam
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
+    signatureInfo.appId = innerBundleInfo.GetBaseBundleInfo().appId;
+    signatureInfo.fingerprint = innerBundleInfo.GetBaseApplicationInfo().fingerprint;
+    signatureInfo.appIdentifier = innerBundleInfo.GetAppIdentifier();
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo) const
+{
+    InnerBundleInfo innerBundleInfo;
+    ErrCode errCode = GetInnerBundleInfoWithSandboxByUid(uid, innerBundleInfo);
+    if (errCode != ERR_OK) {
+        APP_LOGE("Get innerBundleInfo failed, uid:%{public}d", uid);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
     signatureInfo.appId = innerBundleInfo.GetBaseBundleInfo().appId;
     signatureInfo.fingerprint = innerBundleInfo.GetBaseApplicationInfo().fingerprint;
     signatureInfo.appIdentifier = innerBundleInfo.GetAppIdentifier();

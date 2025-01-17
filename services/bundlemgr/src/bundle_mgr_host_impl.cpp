@@ -4538,6 +4538,21 @@ ErrCode BundleMgrHostImpl::GetSignatureInfoByBundleName(const std::string &bundl
     return dataMgr->GetSignatureInfoByBundleName(bundleName, signatureInfo);
 }
 
+ErrCode BundleMgrHostImpl::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_SIGNATURE_INFO)) {
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetSignatureInfoByUid(uid, signatureInfo);
+}
+
 bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
 {
     std::vector<std::string> noDisablingList;

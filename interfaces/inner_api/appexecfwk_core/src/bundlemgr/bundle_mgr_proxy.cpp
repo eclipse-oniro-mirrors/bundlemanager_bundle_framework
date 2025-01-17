@@ -5148,6 +5148,23 @@ ErrCode BundleMgrProxy::GetSignatureInfoByBundleName(const std::string &bundleNa
     return GetParcelInfoIntelligent<SignatureInfo>(BundleMgrInterfaceCode::GET_SIGNATURE_INFO, data, signatureInfo);
 }
 
+ErrCode BundleMgrProxy::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin %{public}d", uid);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(uid)) {
+        APP_LOGE("write uid fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelInfoIntelligent<SignatureInfo>(
+        BundleMgrInterfaceCode::GET_SIGNATURE_INFO_BY_UID, data, signatureInfo);
+}
+
 ErrCode BundleMgrProxy::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

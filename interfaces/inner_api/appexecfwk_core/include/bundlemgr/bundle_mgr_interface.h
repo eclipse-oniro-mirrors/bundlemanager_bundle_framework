@@ -1597,6 +1597,11 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     /**
      * @brief Obtains BundleInfo of all continuable bundles available in the system.
      * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
