@@ -3906,7 +3906,6 @@ void BaseBundleInstaller::GenerateNewUserDataGroupInfos(InnerBundleInfo &info) c
         return;
     }
     dataMgr_->GenerateNewUserDataGroupInfos(info.GetBundleName(), userId_);
-    dataMgr_->CreateAppGroupDir(info.GetBundleName(), userId_);
 }
 
 void BaseBundleInstaller::GetCreateExtensionDirs(std::unordered_map<std::string, InnerBundleInfo> &newInfos)

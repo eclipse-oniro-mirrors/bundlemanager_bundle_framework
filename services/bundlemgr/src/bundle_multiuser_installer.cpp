@@ -222,10 +222,6 @@ void BundleMultiUserInstaller::CreateDataGroupDir(const std::string &bundleName,
         return;
     }
     dataMgr_->GenerateNewUserDataGroupInfos(bundleName, userId);
-    if (!dataMgr_->CreateAppGroupDir(bundleName, userId)) {
-        APP_LOGE("CreateAppGroupDir %{public}s in %{public}d failed", bundleName.c_str(), userId);
-        return;
-    }
 }
 
 void BundleMultiUserInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t userId, const int32_t &uid)
