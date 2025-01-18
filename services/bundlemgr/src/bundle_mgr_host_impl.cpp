@@ -1355,7 +1355,10 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
             uint64_t cleanCacheSize = 0; // The cache size of a single application cleaned up
             ErrCode ret = CleanBundleCacheFilesGetCleanSize(useStat.bundleName_, currentUserId, cleanCacheSize);
             if (ret != ERR_OK) {
-                return ret;
+                APP_LOGE("CleanBundleCacheFilesGetCleanSize failed,"
+                    "bundleName: %{public}s, currentUserId: %{public}d, ret: %{public}d",
+                    useStat.bundleName_.c_str(), currentUserId, ret);
+                continue;
             }
             APP_LOGI("bundleName : %{public}s, cleanCacheSize: %{public}" PRIu64 "",
                 useStat.bundleName_.c_str(), cleanCacheSize);
