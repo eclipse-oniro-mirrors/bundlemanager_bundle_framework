@@ -73,6 +73,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "staticSubscriber", ExtensionAbilityType::STATICSUBSCRIBER },
     { "wallpaper", ExtensionAbilityType::WALLPAPER },
     { "backup", ExtensionAbilityType::BACKUP },
+    { "distributed", ExtensionAbilityType::DISTRIBUTED },
     { "window", ExtensionAbilityType::WINDOW },
     { "enterpriseAdmin", ExtensionAbilityType::ENTERPRISE_ADMIN },
     { "fileAccess", ExtensionAbilityType::FILEACCESS_EXTENSION },
