@@ -394,6 +394,10 @@ private:
 
     ErrCode CheckShellInstall(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
+#ifdef X86_EMULATOR_MODE
+    ErrCode CheckShellInstallForEmulator(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+#endif
+
     ErrCode CheckShellInstallInOobe();
 
     ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,

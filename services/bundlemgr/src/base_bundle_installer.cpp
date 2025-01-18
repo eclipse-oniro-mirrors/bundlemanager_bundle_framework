@@ -3762,6 +3762,9 @@ ErrCode BaseBundleInstaller::CheckMultipleHapsSignInfo(
 
 ErrCode BaseBundleInstaller::CheckShellInstall(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
 {
+#ifdef X86_EMULATOR_MODE
+    return CheckShellInstallForEmulator(hapVerifyRes);
+#else
     if (sysEventInfo_.callingUid != ServiceConstants::SHELL_UID || hapVerifyRes.empty()) {
         return ERR_OK;
     }
@@ -3771,7 +3774,33 @@ ErrCode BaseBundleInstaller::CheckShellInstall(std::vector<Security::Verify::Hap
         return ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL;
     }
     return ERR_OK;
+#endif
 }
+
+#ifdef X86_EMULATOR_MODE
+ErrCode BaseBundleInstaller::CheckShellInstallForEmulator(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    if (hapVerifyRes.empty()) {
+        return ERR_OK;
+    }
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
+    if (provisionInfo.distributionType != Security::Verify::AppDistType::APP_GALLERY ||
+        provisionInfo.type != Security::Verify::ProvisionType::RELEASE) {
+        return ERR_OK;
+    }
+#ifdef BUILD_VARIANT_USER
+    if (sysEventInfo_.callingUid == ServiceConstants::SHELL_UID ||
+        sysEventInfo_.callingUid == Constants::ROOT_UID) {
+        return ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL;
+    }
+#else
+    if (sysEventInfo_.callingUid == ServiceConstants::SHELL_UID && !IsRdDevice()) {
+        return ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL;
+    }
+#endif
+    return ERR_OK;
+}
+#endif
 
 ErrCode BaseBundleInstaller::CheckShellInstallInOobe()
 {
