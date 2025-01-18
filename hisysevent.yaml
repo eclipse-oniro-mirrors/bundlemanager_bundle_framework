@@ -26,6 +26,7 @@ BUNDLE_INSTALL_EXCEPTION:
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
   SCENE: {type: STRING, desc: boot reboot or createUser}
   ERROR_CODE: {type: INT32, desc: error code}
+  APP_INDEX: {type: INT32, desc: app index}
 
 BUNDLE_UNINSTALL_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle uninstall}
@@ -36,6 +37,7 @@ BUNDLE_UNINSTALL_EXCEPTION:
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
   ERROR_CODE: {type: INT32, desc: error code}
+  APP_INDEX: {type: INT32, desc: app index}
 
 BUNDLE_UPDATE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle update}
@@ -107,6 +109,7 @@ BUNDLE_INSTALL:
   FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hap file}
   HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hap file}
   INSTALL_TIME: {type: INT64, desc: the install time or the bundle}
+  APP_INDEX: {type: INT32, desc: app index}
 
 BUNDLE_UNINSTALL:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle uninstall}
@@ -119,6 +122,7 @@ BUNDLE_UNINSTALL:
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_APP_ID: {type: STRING, desc: calling appId}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  APP_INDEX: {type: INT32, desc: app index}
 
 BUNDLE_UPDATE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle update}

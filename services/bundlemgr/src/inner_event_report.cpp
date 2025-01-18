@@ -313,7 +313,8 @@ void InnerEventReport::InnerSendBundleInstallExceptionEvent(const EventInfo& eve
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
         EVENT_PARAM_SCENE, std::to_string(eventInfo.callingUid),
-        EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
+        EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
 void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& eventInfo)
@@ -332,7 +333,8 @@ void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& e
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_INSTALL_TYPE, std::to_string(eventInfo.callingUid),
-        EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
+        EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
 void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& eventInfo)
@@ -432,7 +434,8 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_FINGERPRINT, eventInfo.fingerprint,
         EVENT_PARAM_HIDE_DESKTOP_ICON, eventInfo.hideDesktopIcon,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
-        EVENT_PARAM_SCENE, GetInstallScene(eventInfo));
+        EVENT_PARAM_SCENE, GetInstallScene(eventInfo),
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
 void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
@@ -448,7 +451,8 @@ void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
-        EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo));
+        EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
 void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
