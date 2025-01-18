@@ -246,14 +246,14 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
     LOG_D(BMS_TAG_QUERY, "GetBundleInfoV9, bundleName:%{public}s, flags:%{public}d, userId:%{public}d",
         bundleName.c_str(), flags, userId);
     bool permissionVerify = [bundleName]() {
-        if (BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
-            return true;
-        }
         if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
             return true;
         }
         if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
             BundlePermissionMgr::IsSystemApp()) {
+            return true;
+        }
+        if (BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
             return true;
         }
         return false;
@@ -1657,7 +1657,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
                 }
             }
         }
-        
+
         EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed);
         APP_LOGD("CleanBundleCacheFiles with succeed %{public}d", succeed);
         cleanCacheCallback->OnCleanCacheFinished(succeed);
