@@ -133,7 +133,7 @@ napi_value ChecksumNExporter::Constructor(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    unique_ptr<ChecksumEntity> checksumEntity = make_unique<ChecksumEntity>();
+    std::unique_ptr<ChecksumEntity> checksumEntity = std::make_unique<ChecksumEntity>();
     if (!NapiClass::SetEntityFor<ChecksumEntity>(env, funcArg.GetThisVar(), move(checksumEntity))) {
         NapiBusinessError().ThrowErr(env, EFAULT);
         return nullptr;
@@ -143,7 +143,7 @@ napi_value ChecksumNExporter::Constructor(napi_env env, napi_callback_info info)
 
 bool ChecksumNExporter::Export()
 {
-    vector<napi_property_descriptor> props = {
+    std::vector<napi_property_descriptor> props = {
         NapiValue::DeclareNapiFunction("adler32", Adler32),
         NapiValue::DeclareNapiFunction("adler32Combine", Adler32Combine),
         NapiValue::DeclareNapiFunction("adler32Combine64", Adler32Combine64),
@@ -155,7 +155,7 @@ bool ChecksumNExporter::Export()
         NapiValue::DeclareNapiFunction("crc64", Crc64),
     };
 
-    string className = GetClassName();
+    std::string className = GetClassName();
     bool succ = false;
     napi_value cls = nullptr;
     tie(succ, cls) = NapiClass::DefineClass(exports_.env_, className, ChecksumNExporter::Constructor, move(props));
@@ -172,7 +172,7 @@ bool ChecksumNExporter::Export()
     return exports_.AddProp(className, cls);
 }
 
-string ChecksumNExporter::GetClassName()
+std::string ChecksumNExporter::GetClassName()
 {
     return ChecksumNExporter::className_;
 }
@@ -207,7 +207,7 @@ napi_value ChecksumNExporter::Adler32(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncChecksumArg>();
+    auto arg = std::make_shared<AsyncChecksumArg>();
     auto cbExec = [arg, adler, buf, len](napi_env env) -> NapiBusinessError {
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
@@ -261,7 +261,7 @@ napi_value ChecksumNExporter::Adler32Combine(napi_env env, napi_callback_info in
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncChecksumArg>();
+    auto arg = std::make_shared<AsyncChecksumArg>();
     auto cbExec = [arg, adler1, adler2, len](napi_env env) -> NapiBusinessError {
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
@@ -319,7 +319,7 @@ napi_value ChecksumNExporter::Adler32Combine64(napi_env env, napi_callback_info 
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncChecksumArg>();
+    auto arg = std::make_shared<AsyncChecksumArg>();
     auto cbExec = [arg, adler1, adler2, len](napi_env env) -> NapiBusinessError {
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
@@ -373,7 +373,7 @@ napi_value ChecksumNExporter::Crc32(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncChecksumArg>();
+    auto arg = std::make_shared<AsyncChecksumArg>();
     auto cbExec = [arg, adler, buf, len](napi_env env) -> NapiBusinessError {
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
@@ -427,7 +427,7 @@ napi_value ChecksumNExporter::Crc32Combine(napi_env env, napi_callback_info info
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncChecksumArg>();
+    auto arg = std::make_shared<AsyncChecksumArg>();
     auto cbExec = [arg, adler1, adler2, len](napi_env env) -> NapiBusinessError {
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
@@ -486,7 +486,7 @@ napi_value ChecksumNExporter::Crc32Combine64(napi_env env, napi_callback_info in
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncChecksumArg>();
+    auto arg = std::make_shared<AsyncChecksumArg>();
     auto cbExec = [arg, adler1, adler2, len](napi_env env) -> NapiBusinessError {
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
@@ -525,7 +525,7 @@ napi_value ChecksumNExporter::GetCrcTable(napi_env env, napi_callback_info info)
     }
 
     size_t tableSize = 256;
-    auto arg = make_shared<AsyncChecksumArg>();
+    auto arg = std::make_shared<AsyncChecksumArg>();
     auto cbExec = [arg](napi_env env) -> NapiBusinessError {
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
@@ -576,7 +576,7 @@ napi_value ChecksumNExporter::Crc64(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncChecksumArg>();
+    auto arg = std::make_shared<AsyncChecksumArg>();
     auto cbExec = [arg, crc64, buf, len](napi_env env) -> NapiBusinessError {
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
@@ -615,7 +615,7 @@ napi_value ChecksumNExporter::GetCrc64Table(napi_env env, napi_callback_info inf
     }
 
     size_t tableSize = 256;
-    auto arg = make_shared<AsyncChecksumArg>();
+    auto arg = std::make_shared<AsyncChecksumArg>();
     auto cbExec = [](napi_env env) -> NapiBusinessError {
         return NapiBusinessError(ERRNO_NOERR);
     };

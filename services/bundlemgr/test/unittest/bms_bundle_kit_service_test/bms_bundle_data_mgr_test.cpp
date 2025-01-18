@@ -5410,7 +5410,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryLauncherAbility_0001, Function | MediumTest 
     EXPECT_NE(ret, ERR_OK);
 
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    bmsExtensionClient->bmsExtensionImpl_ = make_shared<BmsExtensionDataMgr>(bmsExtensionDataMgr);
+    bmsExtensionClient->bmsExtensionImpl_ = std::make_shared<BmsExtensionDataMgr>(bmsExtensionDataMgr);
     ret = bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos);
     EXPECT_NE(ret, ERR_OK);
 }

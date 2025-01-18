@@ -25,9 +25,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
-using namespace std;
 
-static napi_value GenerateBusinessError(napi_env env, int32_t errCode, string errMsg)
+static napi_value GenerateBusinessError(napi_env env, int32_t errCode, std::string errMsg)
 {
     napi_value businessError = nullptr;
     napi_value code = nullptr;
@@ -107,7 +106,7 @@ napi_value NapiBusinessError::GetNapiErr(napi_env env)
         return GetNapiErr(env, GetDefaultErrstr());
     }
     int32_t code = 0;
-    string msg;
+    std::string msg;
     if (errCodeTable.find(errCode) != errCodeTable.end()) {
         code = errCodeTable.at(errCode).first;
         msg = errCodeTable.at(errCode).second;
@@ -118,7 +117,7 @@ napi_value NapiBusinessError::GetNapiErr(napi_env env)
     return GenerateBusinessError(env, code, msg);
 }
 
-napi_value NapiBusinessError::GetNapiErr(napi_env env, const string &errMsg)
+napi_value NapiBusinessError::GetNapiErr(napi_env env, const std::string &errMsg)
 {
     napi_value msg = NapiValue::CreateUTF8String(env, errMsg).val_;
     napi_value res = nullptr;
@@ -134,7 +133,7 @@ void NapiBusinessError::ThrowErr(napi_env env)
     napi_value tmp = nullptr;
     napi_get_and_clear_last_exception(env, &tmp);
     int32_t code = 0;
-    string msg;
+    std::string msg;
     napi_status throwStatus = napi_ok;
     if (errCodeTable.find(errno_) != errCodeTable.end()) {
         code = errCodeTable.at(errno_).first;
@@ -170,7 +169,7 @@ void NapiBusinessError::ThrowErr(napi_env env, int32_t code)
     }
 }
 
-void NapiBusinessError::ThrowErr(napi_env env, const string &errMsg)
+void NapiBusinessError::ThrowErr(napi_env env, const std::string &errMsg)
 {
     napi_value tmp = nullptr;
     napi_get_and_clear_last_exception(env, &tmp);

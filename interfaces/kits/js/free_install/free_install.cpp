@@ -320,7 +320,7 @@ static void ConvertModulesApiVersion(
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, modulesObject, "apiVersion", apiVersion));
 }
 
-static void ConvertDeviceType(napi_env env, napi_value &Object, std::vector<std::string> deviceTypes)
+static void ConvertDeviceType(napi_env env, napi_value &object, std::vector<std::string> deviceTypes)
 {
     napi_value nDeviceTypes;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nDeviceTypes));
@@ -331,7 +331,7 @@ static void ConvertDeviceType(napi_env env, napi_value &Object, std::vector<std:
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nDeviceTypes, typeIndex, typeValue));
         typeIndex++;
     }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, Object, "deviceTypes", nDeviceTypes));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, object, "deviceTypes", nDeviceTypes));
 }
 
 static void ConvertDistro(napi_env env, napi_value &modulesObject, const PackageModule &module)

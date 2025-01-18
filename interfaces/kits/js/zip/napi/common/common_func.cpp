@@ -33,22 +33,20 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
-using namespace std;
-
 static constexpr uint8_t MIN_NUMBER = 1;
 static constexpr uint8_t MIN_ASCII = 0;
 static constexpr uint8_t MAX_ASCII = 255;
 static constexpr uint8_t MIN_WINDOWBITS = 8;
 static constexpr uint8_t MAX_WINDOWBITS = 15;
 
-tuple<bool, int64_t, void *, size_t> CommonFunc::GetAdler32Arg(napi_env env, const NapiFuncArg &funcArg)
+std::tuple<bool, int64_t, void *, size_t> CommonFunc::GetAdler32Arg(napi_env env, const NapiFuncArg &funcArg)
 {
     bool succ = false;
     int64_t adler = 0U;
 
     // The first argument
     NapiValue adlerNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, adler) = adlerNVal.ToInt64();
+    std::tie(succ, adler) = adlerNVal.ToInt64();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, nullptr, 0};
@@ -58,7 +56,7 @@ tuple<bool, int64_t, void *, size_t> CommonFunc::GetAdler32Arg(napi_env env, con
     NapiValue bufNVal(env, funcArg[ArgumentPosition::SECOND]);
     void *buf = nullptr;
     size_t bufLen = 0;
-    tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
+    std::tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, nullptr, 0};
@@ -67,14 +65,14 @@ tuple<bool, int64_t, void *, size_t> CommonFunc::GetAdler32Arg(napi_env env, con
     return {true, adler, buf, bufLen};
 }
 
-tuple<bool, int64_t, void *, size_t> CommonFunc::GetCrc64Arg(napi_env env, const NapiFuncArg &funcArg)
+std::tuple<bool, int64_t, void *, size_t> CommonFunc::GetCrc64Arg(napi_env env, const NapiFuncArg &funcArg)
 {
     bool succ = false;
     int64_t crc64 = 0U;
 
     // The first argument
     NapiValue crc64NVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, crc64) = crc64NVal.ToInt64();
+    std::tie(succ, crc64) = crc64NVal.ToInt64();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, nullptr, 0};
@@ -84,7 +82,7 @@ tuple<bool, int64_t, void *, size_t> CommonFunc::GetCrc64Arg(napi_env env, const
     NapiValue bufNVal(env, funcArg[ArgumentPosition::SECOND]);
     void *buf = nullptr;
     size_t bufLen = 0;
-    tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
+    std::tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, nullptr, 0};
@@ -93,7 +91,7 @@ tuple<bool, int64_t, void *, size_t> CommonFunc::GetCrc64Arg(napi_env env, const
     return {true, crc64, buf, bufLen};
 }
 
-tuple<bool, unsigned long, unsigned long, int64_t> CommonFunc::GetAdler32CombineArg(
+std::tuple<bool, unsigned long, unsigned long, int64_t> CommonFunc::GetAdler32CombineArg(
     napi_env env, const NapiFuncArg &funcArg)
 {
     bool succ = false;
@@ -102,21 +100,21 @@ tuple<bool, unsigned long, unsigned long, int64_t> CommonFunc::GetAdler32Combine
     int64_t len = 0;
 
     NapiValue adler1NVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, adler1) = adler1NVal.ToInt64();
+    std::tie(succ, adler1) = adler1NVal.ToInt64();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0, 0};
     }
 
     NapiValue adler2NVal(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, adler2) = adler2NVal.ToInt64();
+    std::tie(succ, adler2) = adler2NVal.ToInt64();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0, 0};
     }
 
     NapiValue bufLenNVal(env, funcArg[ArgumentPosition::THIRD]);
-    tie(succ, len) = bufLenNVal.ToInt64();
+    std::tie(succ, len) = bufLenNVal.ToInt64();
     if (!succ || len < 0) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0, 0};
@@ -155,7 +153,7 @@ bool CommonFunc::SetZStreamValue(napi_env env, const NapiFuncArg &funcArg)
     bool succ = false;
     z_stream zs = {};
     HasZStreamMember hasZStreamMember;
-    tie(succ, zs, hasZStreamMember) = CommonFunc::GetZstreamArg(env, funcArg[ArgumentPosition::FIRST]);
+    std::tie(succ, zs, hasZStreamMember) = CommonFunc::GetZstreamArg(env, funcArg[ArgumentPosition::FIRST]);
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return succ;
@@ -186,7 +184,7 @@ static bool GetZStreamInValue(napi_env env, NapiValue zstreamNVal, HasZStreamMem
         !zstreamNVal.GetProp("nextIn").TypeIs(napi_null)) {
         void *buf = nullptr;
         size_t bufLen = 0;
-        tie(succ, buf, bufLen) = zstreamNVal.GetProp("nextIn").ToArrayBuffer();
+        std::tie(succ, buf, bufLen) = zstreamNVal.GetProp("nextIn").ToArrayBuffer();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -198,7 +196,7 @@ static bool GetZStreamInValue(napi_env env, NapiValue zstreamNVal, HasZStreamMem
     if (zstreamNVal.HasProp("availableIn") && !zstreamNVal.GetProp("availableIn").TypeIs(napi_undefined) &&
         !zstreamNVal.GetProp("availableIn").TypeIs(napi_null)) {
         uint32_t availableIn = 0U;
-        tie(succ, availableIn) = zstreamNVal.GetProp("availableIn").ToInt32();
+        std::tie(succ, availableIn) = zstreamNVal.GetProp("availableIn").ToInt32();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -210,7 +208,7 @@ static bool GetZStreamInValue(napi_env env, NapiValue zstreamNVal, HasZStreamMem
     if (zstreamNVal.HasProp("totalIn") && !zstreamNVal.GetProp("totalIn").TypeIs(napi_undefined) &&
         !zstreamNVal.GetProp("totalIn").TypeIs(napi_null)) {
         uint64_t totalIn = 0U;
-        tie(succ, totalIn) = zstreamNVal.GetProp("totalIn").ToInt64();
+        std::tie(succ, totalIn) = zstreamNVal.GetProp("totalIn").ToInt64();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -228,7 +226,7 @@ static bool GetZStreamOtherValue(napi_env env, NapiValue zstreamNVal, HasZStream
     if (zstreamNVal.HasProp("dataType") && !zstreamNVal.GetProp("dataType").TypeIs(napi_undefined) &&
         !zstreamNVal.GetProp("dataType").TypeIs(napi_null)) {
         int32_t dataType = 0;
-        tie(succ, dataType) = zstreamNVal.GetProp("dataType").ToInt32();
+        std::tie(succ, dataType) = zstreamNVal.GetProp("dataType").ToInt32();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -240,7 +238,7 @@ static bool GetZStreamOtherValue(napi_env env, NapiValue zstreamNVal, HasZStream
     if (zstreamNVal.HasProp("adler") && !zstreamNVal.GetProp("adler").TypeIs(napi_undefined) &&
         !zstreamNVal.GetProp("adler").TypeIs(napi_null)) {
         uint64_t adler = 0;
-        tie(succ, adler) = zstreamNVal.GetProp("adler").ToInt64();
+        std::tie(succ, adler) = zstreamNVal.GetProp("adler").ToInt64();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -274,7 +272,7 @@ std::tuple<bool, z_stream, HasZStreamMember> CommonFunc::GetZstreamArg(napi_env 
         !zstreamNVal.GetProp("nextOut").TypeIs(napi_null)) {
         void *buf = nullptr;
         size_t bufLen = 0;
-        tie(succ, buf, bufLen) = zstreamNVal.GetProp("nextOut").ToArrayBuffer();
+        std::tie(succ, buf, bufLen) = zstreamNVal.GetProp("nextOut").ToArrayBuffer();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return {false, {}, {}};
@@ -286,7 +284,7 @@ std::tuple<bool, z_stream, HasZStreamMember> CommonFunc::GetZstreamArg(napi_env 
     if (zstreamNVal.HasProp("availableOut") && !zstreamNVal.GetProp("availableOut").TypeIs(napi_undefined) &&
         !zstreamNVal.GetProp("availableOut").TypeIs(napi_null)) {
         uint32_t availableOut = 0U;
-        tie(succ, availableOut) = zstreamNVal.GetProp("availableOut").ToInt32();
+        std::tie(succ, availableOut) = zstreamNVal.GetProp("availableOut").ToInt32();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return {false, {}, {}};
@@ -298,7 +296,7 @@ std::tuple<bool, z_stream, HasZStreamMember> CommonFunc::GetZstreamArg(napi_env 
     if (zstreamNVal.HasProp("totalOut") && !zstreamNVal.GetProp("totalOut").TypeIs(napi_undefined) &&
         !zstreamNVal.GetProp("totalOut").TypeIs(napi_null)) {
         uint64_t totalOut = 0U;
-        tie(succ, totalOut) = zstreamNVal.GetProp("totalOut").ToInt64();
+        std::tie(succ, totalOut) = zstreamNVal.GetProp("totalOut").ToInt64();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return {false, {}, {}};
@@ -322,7 +320,7 @@ static bool GetGZHeadValue(napi_env env, const NapiValue &gzHeaderNVal, gz_heade
     if (gzHeaderNVal.HasProp("isText") && !gzHeaderNVal.GetProp("isText").TypeIs(napi_undefined) &&
         !gzHeaderNVal.GetProp("isText").TypeIs(napi_null)) {
         bool text = false;
-        tie(succ, text) = gzHeaderNVal.GetProp("isText").ToBool();
+        std::tie(succ, text) = gzHeaderNVal.GetProp("isText").ToBool();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -333,7 +331,7 @@ static bool GetGZHeadValue(napi_env env, const NapiValue &gzHeaderNVal, gz_heade
     if (gzHeaderNVal.HasProp("time") && !gzHeaderNVal.GetProp("time").TypeIs(napi_undefined) &&
         !gzHeaderNVal.GetProp("time").TypeIs(napi_null)) {
         uint64_t time = 0U;
-        tie(succ, time) = gzHeaderNVal.GetProp("time").ToInt64();
+        std::tie(succ, time) = gzHeaderNVal.GetProp("time").ToInt64();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -344,7 +342,7 @@ static bool GetGZHeadValue(napi_env env, const NapiValue &gzHeaderNVal, gz_heade
     if (gzHeaderNVal.HasProp("xflags") && !gzHeaderNVal.GetProp("xflags").TypeIs(napi_undefined) &&
         !gzHeaderNVal.GetProp("xflags").TypeIs(napi_null)) {
         int32_t xflags = 0;
-        tie(succ, xflags) = gzHeaderNVal.GetProp("xflags").ToInt32();
+        std::tie(succ, xflags) = gzHeaderNVal.GetProp("xflags").ToInt32();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -355,7 +353,7 @@ static bool GetGZHeadValue(napi_env env, const NapiValue &gzHeaderNVal, gz_heade
     if (gzHeaderNVal.HasProp("os") && !gzHeaderNVal.GetProp("os").TypeIs(napi_undefined) &&
         !gzHeaderNVal.GetProp("os").TypeIs(napi_null)) {
         int32_t os = 0;
-        tie(succ, os) = gzHeaderNVal.GetProp("os").ToInt32();
+        std::tie(succ, os) = gzHeaderNVal.GetProp("os").ToInt32();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -372,7 +370,7 @@ static bool UnwrapGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &
         !gzHeaderNVal.GetProp("extra").TypeIs(napi_null)) {
         void *extra = nullptr;
         size_t extraLen = 0;
-        tie(succ, extra, extraLen) = gzHeaderNVal.GetProp("extra").ToArrayBuffer();
+        std::tie(succ, extra, extraLen) = gzHeaderNVal.GetProp("extra").ToArrayBuffer();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -383,7 +381,7 @@ static bool UnwrapGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &
     if (gzHeaderNVal.HasProp("done") && !gzHeaderNVal.GetProp("done").TypeIs(napi_undefined) &&
         !gzHeaderNVal.GetProp("done").TypeIs(napi_null)) {
         bool done = false;
-        tie(succ, done) = gzHeaderNVal.GetProp("done").ToBool();
+        std::tie(succ, done) = gzHeaderNVal.GetProp("done").ToBool();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -394,7 +392,7 @@ static bool UnwrapGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &
     if (gzHeaderNVal.HasProp("hcrc") && !gzHeaderNVal.GetProp("hcrc").TypeIs(napi_undefined) &&
         !gzHeaderNVal.GetProp("hcrc").TypeIs(napi_null)) {
         bool hcrc = false;
-        tie(succ, hcrc) = gzHeaderNVal.GetProp("hcrc").ToBool();
+        std::tie(succ, hcrc) = gzHeaderNVal.GetProp("hcrc").ToBool();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -425,7 +423,7 @@ std::tuple<bool, gz_header> CommonFunc::GetGZHeaderArg(napi_env env, napi_value 
     if (gzHeaderNVal.HasProp("extraLen") && !gzHeaderNVal.GetProp("extraLen").TypeIs(napi_undefined) &&
         !gzHeaderNVal.GetProp("extraLen").TypeIs(napi_null)) {
         uint32_t extraLen = 0U;
-        tie(succ, extraLen) = gzHeaderNVal.GetProp("extraLen").ToInt32();
+        std::tie(succ, extraLen) = gzHeaderNVal.GetProp("extraLen").ToInt32();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return {false, {}};
@@ -437,7 +435,7 @@ std::tuple<bool, gz_header> CommonFunc::GetGZHeaderArg(napi_env env, napi_value 
         !gzHeaderNVal.GetProp("name").TypeIs(napi_null)) {
         void *name = nullptr;
         size_t nameLen = 0;
-        tie(succ, name, nameLen) = gzHeaderNVal.GetProp("name").ToArrayBuffer();
+        std::tie(succ, name, nameLen) = gzHeaderNVal.GetProp("name").ToArrayBuffer();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return {false, {}};
@@ -449,7 +447,7 @@ std::tuple<bool, gz_header> CommonFunc::GetGZHeaderArg(napi_env env, napi_value 
         !gzHeaderNVal.GetProp("comment").TypeIs(napi_null)) {
         void *comment = nullptr;
         size_t commentLen = 0;
-        tie(succ, comment, commentLen) = gzHeaderNVal.GetProp("comment").ToArrayBuffer();
+        std::tie(succ, comment, commentLen) = gzHeaderNVal.GetProp("comment").ToArrayBuffer();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return {false, {}};
@@ -473,7 +471,7 @@ std::tuple<bool, z_stream, int32_t> CommonFunc::GetInflateInitArg(napi_env env, 
     // The first argument
     z_stream zs = {};
     HasZStreamMember hasZStreamMember = {};
-    tie(succ, zs, hasZStreamMember) = GetZstreamArg(env, funcArg[ArgumentPosition::FIRST]);
+    std::tie(succ, zs, hasZStreamMember) = GetZstreamArg(env, funcArg[ArgumentPosition::FIRST]);
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, {}, 0};
@@ -482,7 +480,7 @@ std::tuple<bool, z_stream, int32_t> CommonFunc::GetInflateInitArg(napi_env env, 
     // The second argument
     NapiValue bufNVal(env, funcArg[ArgumentPosition::SECOND]);
     int32_t windowBits = 0;
-    tie(succ, windowBits) = bufNVal.ToInt32();
+    std::tie(succ, windowBits) = bufNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, {}, 0};
@@ -498,7 +496,7 @@ std::tuple<bool, z_stream, int32_t> CommonFunc::GetDeflateInitArg(napi_env env, 
     // The first argument
     z_stream zs = {};
     HasZStreamMember hasZStreamMember = {};
-    tie(succ, zs, hasZStreamMember) = GetZstreamArg(env, funcArg[ArgumentPosition::FIRST]);
+    std::tie(succ, zs, hasZStreamMember) = GetZstreamArg(env, funcArg[ArgumentPosition::FIRST]);
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, {}, 0};
@@ -507,7 +505,7 @@ std::tuple<bool, z_stream, int32_t> CommonFunc::GetDeflateInitArg(napi_env env, 
     // The second argument
     NapiValue levelNVal(env, funcArg[ArgumentPosition::SECOND]);
     int32_t level = 0;
-    tie(succ, level) = levelNVal.ToInt32();
+    std::tie(succ, level) = levelNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, {}, 0};
@@ -524,7 +522,7 @@ std::tuple<bool, z_stream, int32_t, int32_t, int32_t, int32_t, int32_t> CommonFu
     // The first argument
     z_stream zs = {};
     HasZStreamMember hasZStreamMember = {};
-    tie(succ, zs, hasZStreamMember) = GetZstreamArg(env, funcArg[ArgumentPosition::FIRST]);
+    std::tie(succ, zs, hasZStreamMember) = GetZstreamArg(env, funcArg[ArgumentPosition::FIRST]);
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, {}, 0, 0, 0, 0, 0};
@@ -533,7 +531,7 @@ std::tuple<bool, z_stream, int32_t, int32_t, int32_t, int32_t, int32_t> CommonFu
     // The second argument
     NapiValue levelNVal(env, funcArg[ArgumentPosition::SECOND]);
     int32_t level = 0;
-    tie(succ, level) = levelNVal.ToInt32();
+    std::tie(succ, level) = levelNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, {}, 0, 0, 0, 0, 0};
@@ -542,7 +540,7 @@ std::tuple<bool, z_stream, int32_t, int32_t, int32_t, int32_t, int32_t> CommonFu
     // The third argument
     NapiValue methodNVal(env, funcArg[ArgumentPosition::THIRD]);
     int32_t method = 0;
-    tie(succ, method) = methodNVal.ToInt32();
+    std::tie(succ, method) = methodNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, {}, 0, 0, 0, 0, 0};
@@ -551,7 +549,7 @@ std::tuple<bool, z_stream, int32_t, int32_t, int32_t, int32_t, int32_t> CommonFu
     // The fourth argument
     NapiValue windowBitsNVal(env, funcArg[ArgumentPosition::FOURTH]);
     int32_t windowBits = 0;
-    tie(succ, windowBits) = windowBitsNVal.ToInt32();
+    std::tie(succ, windowBits) = windowBitsNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, {}, 0, 0, 0, 0, 0};
@@ -560,7 +558,7 @@ std::tuple<bool, z_stream, int32_t, int32_t, int32_t, int32_t, int32_t> CommonFu
     // The fifth argument
     NapiValue memLevelNVal(env, funcArg[ArgumentPosition::FIFTH]);
     int32_t memLevel = 0;
-    tie(succ, memLevel) = memLevelNVal.ToInt32();
+    std::tie(succ, memLevel) = memLevelNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, {}, 0, 0, 0, 0, 0};
@@ -569,7 +567,7 @@ std::tuple<bool, z_stream, int32_t, int32_t, int32_t, int32_t, int32_t> CommonFu
     // The sixth argument
     NapiValue strategyNVal(env, funcArg[ArgumentPosition::SIXTH]);
     int32_t strategy = 0;
-    tie(succ, strategy) = strategyNVal.ToInt32();
+    std::tie(succ, strategy) = strategyNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, {}, 0, 0, 0, 0, 0};
@@ -589,7 +587,7 @@ std::tuple<bool, int32_t> CommonFunc::GetDeflateArg(napi_env env, const NapiFunc
     // The second argument
     NapiValue flushNVal(env, funcArg[ArgumentPosition::SECOND]);
     int32_t flush = 0;
-    tie(succ, flush) = flushNVal.ToInt32();
+    std::tie(succ, flush) = flushNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0};
@@ -604,7 +602,7 @@ std::tuple<bool, void *, size_t, void *, int64_t> CommonFunc::GetCompressArg(nap
     void *dest = nullptr;
     size_t destLen = 0;
     NapiValue destNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, dest, destLen) = destNVal.ToArrayBuffer();
+    std::tie(succ, dest, destLen) = destNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, nullptr, 0};
@@ -613,7 +611,7 @@ std::tuple<bool, void *, size_t, void *, int64_t> CommonFunc::GetCompressArg(nap
     void *source = nullptr;
     int64_t sourceLen = 0;
     NapiValue sourceNVal(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, source, sourceLen) = sourceNVal.ToArrayBuffer();
+    std::tie(succ, source, sourceLen) = sourceNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, nullptr, 0};
@@ -622,7 +620,7 @@ std::tuple<bool, void *, size_t, void *, int64_t> CommonFunc::GetCompressArg(nap
     if (funcArg.GetArgc() == ArgumentCount::THREE) {
         int64_t sourceLenIn = 0;
         NapiValue sourceLenNVal(env, funcArg[ArgumentPosition::THIRD]);
-        tie(succ, sourceLenIn) = sourceLenNVal.ToInt64(sourceLen);
+        std::tie(succ, sourceLenIn) = sourceLenNVal.ToInt64(sourceLen);
         if (!succ || sourceLenIn < 0) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return { false, nullptr, 0, nullptr, 0 };
@@ -640,7 +638,7 @@ std::tuple<bool, void *, size_t, void *, size_t, int32_t> CommonFunc::GetCompres
     void *dest = nullptr;
     size_t destLen = 0;
     NapiValue destNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, dest, destLen) = destNVal.ToArrayBuffer();
+    std::tie(succ, dest, destLen) = destNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, nullptr, 0, 0};
@@ -649,7 +647,7 @@ std::tuple<bool, void *, size_t, void *, size_t, int32_t> CommonFunc::GetCompres
     void *source = nullptr;
     int64_t sourceLen = 0;
     NapiValue sourceNVal(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, source, sourceLen) = sourceNVal.ToArrayBuffer();
+    std::tie(succ, source, sourceLen) = sourceNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, nullptr, 0, 0};
@@ -657,7 +655,7 @@ std::tuple<bool, void *, size_t, void *, size_t, int32_t> CommonFunc::GetCompres
 
     int32_t level = 0;
     NapiValue levelNVal(env, funcArg[ArgumentPosition::THIRD]);
-    tie(succ, level) = levelNVal.ToInt32();
+    std::tie(succ, level) = levelNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, nullptr, 0, 0};
@@ -666,7 +664,7 @@ std::tuple<bool, void *, size_t, void *, size_t, int32_t> CommonFunc::GetCompres
     if (funcArg.GetArgc() == ArgumentCount::FOUR) {
         int64_t sourceLenIn = 0;
         NapiValue sourceLenNVal(env, funcArg[ArgumentPosition::FOURTH]);
-        tie(succ, sourceLenIn) = sourceLenNVal.ToInt64(sourceLen);
+        std::tie(succ, sourceLenIn) = sourceLenNVal.ToInt64(sourceLen);
         if (!succ || sourceLenIn < 0) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return {false, nullptr, 0, nullptr, 0, 0};
@@ -683,7 +681,7 @@ std::tuple<bool, void *, size_t, void *, int64_t> CommonFunc::GetUnCompressArg(n
     void *dest = nullptr;
     size_t destLen = 0;
     NapiValue destNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, dest, destLen) = destNVal.ToArrayBuffer();
+    std::tie(succ, dest, destLen) = destNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, nullptr, 0};
@@ -692,7 +690,7 @@ std::tuple<bool, void *, size_t, void *, int64_t> CommonFunc::GetUnCompressArg(n
     void *source = nullptr;
     int64_t sourceLen = 0;
     NapiValue sourceNVal(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, source, sourceLen) = sourceNVal.ToArrayBuffer();
+    std::tie(succ, source, sourceLen) = sourceNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, nullptr, 0};
@@ -701,7 +699,7 @@ std::tuple<bool, void *, size_t, void *, int64_t> CommonFunc::GetUnCompressArg(n
     if (funcArg.GetArgc() == ArgumentCount::THREE) {
         int64_t sourceLenIn = 0;
         NapiValue sourceLenNVal(env, funcArg[ArgumentPosition::THIRD]);
-        tie(succ, sourceLenIn) = sourceLenNVal.ToInt64(sourceLen);
+        std::tie(succ, sourceLenIn) = sourceLenNVal.ToInt64(sourceLen);
         if (!succ || sourceLenIn < 0) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return { false, nullptr, 0, nullptr, 0 };
@@ -717,7 +715,7 @@ std::tuple<bool, int32_t> CommonFunc::GetZErrorArg(napi_env env, const NapiFuncA
     bool succ = false;
     NapiValue errNVal(env, funcArg[ArgumentPosition::FIRST]);
     int32_t zlibError = 0;
-    tie(succ, zlibError) = errNVal.ToInt32();
+    std::tie(succ, zlibError) = errNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0};
@@ -737,7 +735,7 @@ std::tuple<bool, void *, size_t> CommonFunc::GetInflateSetDictionaryArg(napi_env
     NapiValue bufNVal(env, funcArg[ArgumentPosition::SECOND]);
     void *buf = nullptr;
     size_t bufLen = 0;
-    tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
+    std::tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0};
@@ -756,7 +754,7 @@ std::tuple<bool, int32_t> CommonFunc::GetInflateArg(napi_env env, const NapiFunc
 
     NapiValue flushNVal(env, funcArg[ArgumentPosition::SECOND]);
     int32_t flush = 0;
-    tie(succ, flush) = flushNVal.ToInt32();
+    std::tie(succ, flush) = flushNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0};
@@ -775,7 +773,7 @@ std::tuple<bool, int32_t> CommonFunc::GetInflateReset2Arg(napi_env env, const Na
 
     NapiValue flushNVal(env, funcArg[ArgumentPosition::SECOND]);
     int32_t flush = 0;
-    tie(succ, flush) = flushNVal.ToInt32();
+    std::tie(succ, flush) = flushNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0};
@@ -795,7 +793,7 @@ std::tuple<bool, unsigned long, void*, size_t> CommonFunc::GetInflateBackInitArg
 
     int32_t windowBits = 0;
     NapiValue windowBitsNVal(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, windowBits) = windowBitsNVal.ToInt64();
+    std::tie(succ, windowBits) = windowBitsNVal.ToInt64();
     if (!succ || windowBits < MIN_WINDOWBITS || windowBits > MAX_WINDOWBITS) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, nullptr, 0};
@@ -804,7 +802,7 @@ std::tuple<bool, unsigned long, void*, size_t> CommonFunc::GetInflateBackInitArg
     NapiValue bufNVal(env, funcArg[ArgumentPosition::THIRD]);
     void *buf = nullptr;
     size_t bufLen = 0;
-    tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
+    std::tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, nullptr, 0};
@@ -823,7 +821,7 @@ std::tuple<bool, int32_t, int32_t> CommonFunc::GetInflatePrimeArg(napi_env env, 
 
     NapiValue bitsNVal(env, funcArg[ArgumentPosition::SECOND]);
     int32_t bits = 0;
-    tie(succ, bits) = bitsNVal.ToInt32();
+    std::tie(succ, bits) = bitsNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0};
@@ -832,7 +830,7 @@ std::tuple<bool, int32_t, int32_t> CommonFunc::GetInflatePrimeArg(napi_env env, 
     // The third argument
     NapiValue valueNVal(env, funcArg[ArgumentPosition::THIRD]);
     int32_t value = 0;
-    tie(succ, value) = valueNVal.ToInt32();
+    std::tie(succ, value) = valueNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0};
@@ -850,7 +848,7 @@ std::tuple<bool, int32_t> CommonFunc::GetInflateValidateArg(napi_env env, const 
 
     NapiValue checkNVal(env, funcArg[ArgumentPosition::SECOND]);
     int32_t check = 0;
-    tie(succ, check) = checkNVal.ToInt32();
+    std::tie(succ, check) = checkNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0};
@@ -868,7 +866,7 @@ std::tuple<bool, gz_header> CommonFunc::GetInflateGetHeaderArg(napi_env env, con
     }
 
     gz_header gzHeader = {};
-    tie(succ, gzHeader) = CommonFunc::GetGZHeaderArg(env, funcArg[ArgumentPosition::SECOND]);
+    std::tie(succ, gzHeader) = CommonFunc::GetGZHeaderArg(env, funcArg[ArgumentPosition::SECOND]);
     if (!succ) {
         return {false, {}};
     }
@@ -883,7 +881,7 @@ std::tuple<bool, int32_t> CommonFunc::UnwrapInt32Params(napi_env env, napi_value
     // The first argument
     NapiValue valueNVal(env, value);
     int32_t valueInt = 0;
-    tie(succ, valueInt) = valueNVal.ToInt32();
+    std::tie(succ, valueInt) = valueNVal.ToInt32();
     if (!succ || valueInt < 0) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0};
@@ -903,7 +901,7 @@ std::tuple<bool, uint32_t> CommonFunc::UnwrapInt64Params(napi_env env, const Nap
     // The first argument
     NapiValue valueNVal(env, funcArg[ArgumentPosition::SECOND]);
     int64_t valueInt = 0;
-    tie(succ, valueInt) = valueNVal.ToInt64();
+    std::tie(succ, valueInt) = valueNVal.ToInt64();
     if (!succ || valueInt < 0) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0};
@@ -923,7 +921,7 @@ std::tuple<bool, int32_t, int32_t, int32_t, int32_t> CommonFunc::UnwrapDeflateTu
     // The first argument
     NapiValue goodLengthNVal(env, funcArg[ArgumentPosition::SECOND]);
     int32_t goodLength = 0;
-    tie(succ, goodLength) = goodLengthNVal.ToInt32();
+    std::tie(succ, goodLength) = goodLengthNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0, 0, 0};
@@ -931,7 +929,7 @@ std::tuple<bool, int32_t, int32_t, int32_t, int32_t> CommonFunc::UnwrapDeflateTu
 
     NapiValue maxLazyNVal(env, funcArg[ArgumentPosition::THIRD]);
     int32_t maxLazy = 0;
-    tie(succ, maxLazy) = maxLazyNVal.ToInt32();
+    std::tie(succ, maxLazy) = maxLazyNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0, 0, 0};
@@ -939,7 +937,7 @@ std::tuple<bool, int32_t, int32_t, int32_t, int32_t> CommonFunc::UnwrapDeflateTu
 
     NapiValue niceLengthNVal(env, funcArg[ArgumentPosition::FOURTH]);
     int32_t niceLength = 0;
-    tie(succ, niceLength) = niceLengthNVal.ToInt32();
+    std::tie(succ, niceLength) = niceLengthNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0, 0, 0};
@@ -947,7 +945,7 @@ std::tuple<bool, int32_t, int32_t, int32_t, int32_t> CommonFunc::UnwrapDeflateTu
 
     NapiValue maxChainNVal(env, funcArg[ArgumentPosition::FIFTH]);
     int32_t maxChain = 0;
-    tie(succ, maxChain) = maxChainNVal.ToInt32();
+    std::tie(succ, maxChain) = maxChainNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0, 0, 0};
@@ -966,7 +964,7 @@ std::tuple<bool, void *, size_t> CommonFunc::UnwrapArrayBufferParams(napi_env en
     NapiValue bufNVal(env, funcArg[ArgumentPosition::SECOND]);
     void *buf = nullptr;
     size_t bufLen = 0;
-    tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
+    std::tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0};
@@ -985,7 +983,7 @@ std::tuple<bool, int32_t, int32_t> CommonFunc::UnwrapTwoIntParams(napi_env env, 
     // The first argument
     NapiValue firstNVal(env, funcArg[ArgumentPosition::SECOND]);
     int32_t oneInt = 0;
-    tie(succ, oneInt) = firstNVal.ToInt32();
+    std::tie(succ, oneInt) = firstNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0};
@@ -994,7 +992,7 @@ std::tuple<bool, int32_t, int32_t> CommonFunc::UnwrapTwoIntParams(napi_env env, 
     // The second argument
     NapiValue secondNVal(env, funcArg[ArgumentPosition::THIRD]);
     int32_t twoInt = 0;
-    tie(succ, twoInt) = secondNVal.ToInt32();
+    std::tie(succ, twoInt) = secondNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0};
@@ -1009,7 +1007,7 @@ std::tuple<bool, void *, size_t> CommonFunc::GzipUnwrapArrayBufferParams(napi_en
     void *buf = nullptr;
     size_t bufLen = 0;
     NapiValue bufNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
+    std::tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0};
@@ -1025,7 +1023,7 @@ std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> CommonFunc::G
     std::unique_ptr<char[]> path = nullptr;
     size_t bufferLen = 0;
     NapiValue pathNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, path, bufferLen) = pathNVal.ToUTF8String();
+    std::tie(succ, path, bufferLen) = pathNVal.ToUTF8String();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, nullptr};
@@ -1034,7 +1032,7 @@ std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> CommonFunc::G
     std::unique_ptr<char[]> mode = nullptr;
     bufferLen = 0;
     NapiValue modeNVal(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, mode, bufferLen) = modeNVal.ToUTF8String();
+    std::tie(succ, mode, bufferLen) = modeNVal.ToUTF8String();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, nullptr};
@@ -1047,7 +1045,7 @@ std::tuple<bool, int32_t, std::unique_ptr<char[]>> CommonFunc::GetGZDOpenArg(nap
     bool succ = false;
     int32_t fd = -1;
     NapiValue fdNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, fd) = fdNVal.ToInt32();
+    std::tie(succ, fd) = fdNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, -1, nullptr};
@@ -1056,7 +1054,7 @@ std::tuple<bool, int32_t, std::unique_ptr<char[]>> CommonFunc::GetGZDOpenArg(nap
     std::unique_ptr<char[]> mode = nullptr;
     size_t bufferLen = 0;
     NapiValue modeNVal(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, mode, bufferLen) = modeNVal.ToUTF8String();
+    std::tie(succ, mode, bufferLen) = modeNVal.ToUTF8String();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, -1, nullptr};
@@ -1073,7 +1071,7 @@ std::tuple<bool, gzFile_s, HasGZFileMember> CommonFunc::GetGZFileArg(napi_env en
 
     if (gzFileNVal.HasProp("have") && !gzFileNVal.GetProp("have").TypeIs(napi_undefined)) {
         uint32_t have = 0;
-        tie(succ, have) = gzFileNVal.GetProp("have").ToUint32();
+        std::tie(succ, have) = gzFileNVal.GetProp("have").ToUint32();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return {false, {}, {}};
@@ -1085,7 +1083,7 @@ std::tuple<bool, gzFile_s, HasGZFileMember> CommonFunc::GetGZFileArg(napi_env en
     if (gzFileNVal.HasProp("next") && !gzFileNVal.GetProp("next").TypeIs(napi_undefined)) {
         void *buf = nullptr;
         size_t bufLen = 0;
-        tie(succ, buf, bufLen) = gzFileNVal.GetProp("next").ToArrayBuffer();
+        std::tie(succ, buf, bufLen) = gzFileNVal.GetProp("next").ToArrayBuffer();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return {false, {}, {}};
@@ -1096,7 +1094,7 @@ std::tuple<bool, gzFile_s, HasGZFileMember> CommonFunc::GetGZFileArg(napi_env en
 
     if (gzFileNVal.HasProp("pos") && !gzFileNVal.GetProp("pos").TypeIs(napi_undefined)) {
         uint64_t pos = 0U;
-        tie(succ, pos) = gzFileNVal.GetProp("pos").ToInt64();
+        std::tie(succ, pos) = gzFileNVal.GetProp("pos").ToInt64();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return {false, {}, {}};
@@ -1112,7 +1110,7 @@ std::tuple<bool, uint32_t> CommonFunc::GetGZBufferArg(napi_env env, const NapiFu
     bool succ = false;
     uint32_t size = 0;
     NapiValue sizeNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, size) = sizeNVal.ToUint32();
+    std::tie(succ, size) = sizeNVal.ToUint32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0};
@@ -1125,7 +1123,7 @@ std::tuple<bool, void *, uint32_t> CommonFunc::GetGZReadArg(napi_env env, const 
     bool succ = false;
     void *buf = nullptr;
     size_t len = 0;
-    tie(succ, buf, len) = GzipUnwrapArrayBufferParams(env, funcArg);
+    std::tie(succ, buf, len) = GzipUnwrapArrayBufferParams(env, funcArg);
     if (!succ || len == 0) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0};
@@ -1138,7 +1136,7 @@ std::tuple<bool, void *, int64_t, int64_t> CommonFunc::GetGZFReadArg(napi_env en
     bool succ = false;
     void *buf = nullptr;
     size_t len = 0;
-    tie(succ, buf, len) = GzipUnwrapArrayBufferParams(env, funcArg);
+    std::tie(succ, buf, len) = GzipUnwrapArrayBufferParams(env, funcArg);
     if (!succ || len == 0) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, 0};
@@ -1146,7 +1144,7 @@ std::tuple<bool, void *, int64_t, int64_t> CommonFunc::GetGZFReadArg(napi_env en
 
     int64_t size = 0;
     NapiValue sizeNVal(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, size) = sizeNVal.ToInt64();
+    std::tie(succ, size) = sizeNVal.ToInt64();
     if (!succ || size < 0) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, 0};
@@ -1154,7 +1152,7 @@ std::tuple<bool, void *, int64_t, int64_t> CommonFunc::GetGZFReadArg(napi_env en
 
     int64_t nitems = 0;
     NapiValue nitemsNVal(env, funcArg[ArgumentPosition::THIRD]);
-    tie(succ, nitems) = nitemsNVal.ToInt64();
+    std::tie(succ, nitems) = nitemsNVal.ToInt64();
     if (!succ || nitems < 0) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, 0};
@@ -1167,14 +1165,14 @@ std::tuple<bool, void *, int64_t> CommonFunc::GetGZWriteArg(napi_env env, const 
     bool succ = false;
     void *buf = nullptr;
     size_t bufLen = 0;
-    tie(succ, buf, bufLen) = GzipUnwrapArrayBufferParams(env, funcArg);
+    std::tie(succ, buf, bufLen) = GzipUnwrapArrayBufferParams(env, funcArg);
     if (!succ || bufLen == 0) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0};
     }
     int64_t len = 0;
     NapiValue sizeNVal(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, len) = sizeNVal.ToInt64();
+    std::tie(succ, len) = sizeNVal.ToInt64();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0};
@@ -1187,7 +1185,7 @@ std::tuple<bool, void *, int64_t, int64_t> CommonFunc::GetGZFWriteArg(napi_env e
     bool succ = false;
     void *buf = nullptr;
     size_t len = 0;
-    tie(succ, buf, len) = GzipUnwrapArrayBufferParams(env, funcArg);
+    std::tie(succ, buf, len) = GzipUnwrapArrayBufferParams(env, funcArg);
     if (!succ || len == 0) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, 0};
@@ -1195,7 +1193,7 @@ std::tuple<bool, void *, int64_t, int64_t> CommonFunc::GetGZFWriteArg(napi_env e
 
     int64_t size = 0;
     NapiValue sizeNVal(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, size) = sizeNVal.ToInt64();
+    std::tie(succ, size) = sizeNVal.ToInt64();
     if (!succ || size < 0) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, 0};
@@ -1203,7 +1201,7 @@ std::tuple<bool, void *, int64_t, int64_t> CommonFunc::GetGZFWriteArg(napi_env e
 
     int64_t nitems = 0;
     NapiValue nitemsNVal(env, funcArg[ArgumentPosition::THIRD]);
-    tie(succ, nitems) = nitemsNVal.ToInt64();
+    std::tie(succ, nitems) = nitemsNVal.ToInt64();
     if (!succ || nitems < 0) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, 0};
@@ -1216,7 +1214,7 @@ std::tuple<bool, int32_t> CommonFunc::GetGZPutCArg(napi_env env, const NapiFuncA
     bool succ = false;
     int32_t c = 0;
     NapiValue cNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, c) = cNVal.ToInt32();
+    std::tie(succ, c) = cNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0};
@@ -1234,7 +1232,7 @@ std::tuple<bool, std::unique_ptr<char[]>> CommonFunc::GetGZPutSArg(napi_env env,
     std::unique_ptr<char[]> s = nullptr;
     size_t len = 0;
     NapiValue sNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, s, len) = sNVal.ToUTF8String();
+    std::tie(succ, s, len) = sNVal.ToUTF8String();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr};
@@ -1247,7 +1245,7 @@ std::tuple<bool, int32_t, int32_t> CommonFunc::GetGzSetParamsArg(napi_env env, c
     bool succ = false;
     int32_t level = 0;
     NapiValue levelNapiValue(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, level) = levelNapiValue.ToInt32();
+    std::tie(succ, level) = levelNapiValue.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, -1, -1};
@@ -1255,7 +1253,7 @@ std::tuple<bool, int32_t, int32_t> CommonFunc::GetGzSetParamsArg(napi_env env, c
 
     int32_t strategy = 0;
     NapiValue strategyNapiValue(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, strategy) = strategyNapiValue.ToInt32();
+    std::tie(succ, strategy) = strategyNapiValue.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, -1, -1};
@@ -1263,7 +1261,8 @@ std::tuple<bool, int32_t, int32_t> CommonFunc::GetGzSetParamsArg(napi_env env, c
     return {true, level, strategy};
 }
 
-void CommonFunc::GetLogContent(string &formatStr, const vector<NapiParam> &params, string &ret, uint32_t &pos)
+void CommonFunc::GetLogContent(std::string &formatStr,
+    const std::vector<NapiParam> &params, std::string &ret, uint32_t &pos)
 {
     uint32_t count = 0;
     for (; pos < formatStr.size(); ++pos) {
@@ -1314,7 +1313,7 @@ void CommonFunc::GetLogContent(string &formatStr, const vector<NapiParam> &param
     return;
 }
 
-void CommonFunc::ParseLogContent(string &formatStr, vector<NapiParam> &params, string &logContent)
+void CommonFunc::ParseLogContent(std::string &formatStr, std::vector<NapiParam> &params, std::string &logContent)
 {
     std::string &ret = logContent;
     if (params.empty()) {
@@ -1330,13 +1329,13 @@ void CommonFunc::ParseLogContent(string &formatStr, vector<NapiParam> &params, s
     return;
 }
 
-void CommonFunc::ParseNapiValue(napi_env env, napi_value element, vector<NapiParam> &params)
+void CommonFunc::ParseNapiValue(napi_env env, napi_value element, std::vector<NapiParam> &params)
 {
     bool succ = false;
     napi_valuetype type;
     NapiParam res = {napi_null, ""};
     napi_status typeStatus = napi_typeof(env, element, &type);
-    unique_ptr<char[]> name;
+    std::unique_ptr<char[]> name;
     size_t len = 0;
     if (typeStatus != napi_ok) {
         NapiBusinessError().ThrowErr(env, EINVAL);
@@ -1351,14 +1350,14 @@ void CommonFunc::ParseNapiValue(napi_env env, napi_value element, vector<NapiPar
             return;
         }
         NapiValue elmNVal(env, elmString);
-        tie(succ, name, len) = elmNVal.ToUTF8String();
+        std::tie(succ, name, len) = elmNVal.ToUTF8String();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return;
         }
     } else if (type == napi_string) {
         NapiValue elmNVal(env, element);
-        tie(succ, name, len) = elmNVal.ToUTF8String();
+        std::tie(succ, name, len) = elmNVal.ToUTF8String();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return;
@@ -1374,7 +1373,7 @@ void CommonFunc::ParseNapiValue(napi_env env, napi_value element, vector<NapiPar
     return;
 }
 
-bool CommonFunc::ParseNapiValueFromArray(napi_env env, vector<NapiParam> &params, const NapiFuncArg &funcArg)
+bool CommonFunc::ParseNapiValueFromArray(napi_env env, std::vector<NapiParam> &params, const NapiFuncArg &funcArg)
 {
     napi_value array = funcArg[ArgumentPosition::SECOND];
     if (funcArg.GetArgc() != MIN_NUMBER + 1) {
@@ -1405,7 +1404,7 @@ std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> CommonFunc::G
     std::unique_ptr<char[]> fmtChar = nullptr;
     size_t len = 0;
     NapiValue formatNapiValue(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, fmtChar, len) = formatNapiValue.ToUTF8String();
+    std::tie(succ, fmtChar, len) = formatNapiValue.ToUTF8String();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, nullptr};
@@ -1416,7 +1415,7 @@ std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> CommonFunc::G
     napi_value array = funcArg[ArgumentPosition::SECOND];
     napi_is_array(env, array, &res);
     std::string printContent;
-    vector<NapiParam> params;
+    std::vector<NapiParam> params;
     if (!res) {
         for (size_t i = MIN_NUMBER; i < funcArg.GetArgc(); i++) {
             napi_value argsVal = funcArg[i];
@@ -1432,10 +1431,10 @@ std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> CommonFunc::G
 
     std::unique_ptr<char[]> formatChar = nullptr;
     NapiValue formatNVal = NapiValue::CreateUTF8String(env, "%s");
-    tie(succ, formatChar, len) = formatNVal.ToUTF8String();
+    std::tie(succ, formatChar, len) = formatNVal.ToUTF8String();
     std::unique_ptr<char[]> argsChar = nullptr;
     NapiValue printNVal = NapiValue::CreateUTF8String(env, printContent);
-    tie(succ, argsChar, len) = printNVal.ToUTF8String();
+    std::tie(succ, argsChar, len) = printNVal.ToUTF8String();
     return {true, std::move(formatChar), std::move(argsChar)};
 }
 
@@ -1445,7 +1444,7 @@ std::tuple<bool, void *, size_t> CommonFunc::GetGZGetSArg(napi_env env, const Na
     void *buffer = nullptr;
     size_t bufferLen = 0;
     NapiValue bufferNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, buffer, bufferLen) = bufferNVal.ToArrayBuffer();
+    std::tie(succ, buffer, bufferLen) = bufferNVal.ToArrayBuffer();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0};
@@ -1458,7 +1457,7 @@ std::tuple<bool, int64_t, int32_t> CommonFunc::GetGZSeekArg(napi_env env, const 
     bool succ = false;
     int64_t offset = 0;
     NapiValue offsetNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, offset) = offsetNVal.ToInt64();
+    std::tie(succ, offset) = offsetNVal.ToInt64();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0};
@@ -1466,7 +1465,7 @@ std::tuple<bool, int64_t, int32_t> CommonFunc::GetGZSeekArg(napi_env env, const 
 
     int32_t whence = 0;
     NapiValue whenceNVal(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, whence) = whenceNVal.ToInt32();
+    std::tie(succ, whence) = whenceNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0};
@@ -1479,7 +1478,7 @@ std::tuple<bool, int32_t> CommonFunc::GetGZUnGetCArg(napi_env env, const NapiFun
     bool succ = false;
     int32_t c = 0;
     NapiValue cNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, c) = cNVal.ToInt32();
+    std::tie(succ, c) = cNVal.ToInt32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0};
@@ -1496,7 +1495,7 @@ std::tuple<bool, uint32_t> CommonFunc::SetGZFlushArg(napi_env env, const NapiFun
     bool succ = false;
     uint32_t flush = 0;
     NapiValue sizeNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, flush) = sizeNVal.ToUint32();
+    std::tie(succ, flush) = sizeNVal.ToUint32();
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0};
