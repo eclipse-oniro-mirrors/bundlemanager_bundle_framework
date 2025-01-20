@@ -2240,6 +2240,8 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     appInfo.appIndex = appIndex;
     // The label and icon are first used under main ability
     AdaptMainLauncherResourceInfo(appInfo);
+
+    GetPreInstallApplicationFlags(appInfo);
 }
 
 ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, ApplicationInfo &appInfo,
@@ -2296,7 +2298,26 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
     // The label and icon are first used under main ability
     AdaptMainLauncherResourceInfo(appInfo);
+
+    GetPreInstallApplicationFlags(appInfo);
     return ERR_OK;
+}
+
+void InnerBundleInfo::GetPreInstallApplicationFlags(ApplicationInfo &appInfo) const
+{
+    if (IsPreInstallApp()) {
+        uint32_t applicationFlags = static_cast<uint32_t>(appInfo.applicationFlags);
+        applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PRE_INSTALL_APP);
+        appInfo.applicationFlags = static_cast<int32_t>(applicationFlags);
+        for (const auto &moduleEnt: innerModuleInfos_) {
+            const auto &hapPath = moduleEnt.second.hapPath;
+            if (hapPath.find(Constants::BUNDLE_CODE_DIR) != 0) {
+                return;
+            }
+        }
+        applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PRE_INSTALL_APP_UPDATED);
+        appInfo.applicationFlags = static_cast<int32_t>(applicationFlags);
+    }
 }
 
 bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32_t userId, int32_t appIndex) const
