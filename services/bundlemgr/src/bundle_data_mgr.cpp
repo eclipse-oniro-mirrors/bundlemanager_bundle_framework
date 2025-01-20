@@ -9487,7 +9487,7 @@ ErrCode BundleDataMgr::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &s
     ErrCode errCode = GetInnerBundleInfoWithSandboxByUid(uid, innerBundleInfo);
     if (errCode != ERR_OK) {
         APP_LOGE("Get innerBundleInfo failed, uid:%{public}d", uid);
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return errCode;
     }
     signatureInfo.appId = innerBundleInfo.GetBaseBundleInfo().appId;
     signatureInfo.fingerprint = innerBundleInfo.GetBaseApplicationInfo().fingerprint;

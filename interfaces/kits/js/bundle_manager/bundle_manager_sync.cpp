@@ -984,16 +984,11 @@ napi_value GetSignatureInfoSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     int32_t uid = -1;
-    napi_valuetype valueType = napi_undefined;
-    napi_typeof(env, args[ARGS_POS_ZERO], &valueType);
-    if (valueType == napi_number) {
-        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], uid)) {
-            APP_LOGE("uid invalid");
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, UID, TYPE_NUMBER);
-            return nullptr;
-        }
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], uid)) {
+        APP_LOGE("uid invalid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, UID, TYPE_NUMBER);
+        return nullptr;
     }
-
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
