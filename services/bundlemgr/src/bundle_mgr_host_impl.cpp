@@ -1585,7 +1585,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE) &&
-        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName, appIndex)) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
