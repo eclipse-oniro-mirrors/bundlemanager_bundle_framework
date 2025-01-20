@@ -16,12 +16,15 @@
 #include "aot/aot_handler.h"
 
 #include <dlfcn.h>
+#include <filesystem>
 #include <sys/stat.h>
+#include <tuple>
 
 #include "account_helper.h"
 #ifdef CODE_SIGNATURE_ENABLE
 #include "aot/aot_sign_data_cache_mgr.h"
 #endif
+#include "bundle_mgr_service_event_handler.h"
 #include "scope_guard.h"
 #include "installd_client.h"
 #include "parameter.h"
@@ -86,6 +89,8 @@ constexpr const char* AOT_VERSION_FUNC_NAME = "GetAOTVersion";
 constexpr const char* BM_AOT_TEST = "bm.aot.test";
 const std::string AOT_VERSION = "aot_version";
 
+constexpr const char* DEPRECATED_ARK_CACHE_PATH = "/data/local/ark-cache";
+constexpr const char* DEPRECATED_ARK_PROFILE_PATH = "/data/local/ark-profile";
 }
 
 AOTHandler::AOTHandler()
@@ -97,6 +102,24 @@ AOTHandler& AOTHandler::GetInstance()
 {
     static AOTHandler handler;
     return handler;
+}
+
+std::string AOTHandler::BuildArkProfilePath(
+    const int32_t userId, const std::string &bundleName, const std::string &moduleName)
+{
+    std::filesystem::path path("/data/app/el1");
+    path /= std::to_string(userId);
+    path /= "aot_compiler/ark_profile";
+
+    if (bundleName.empty()) {
+        return path.string();
+    }
+    path /= bundleName;
+    if (moduleName.empty()) {
+        return path.string();
+    }
+    path /= moduleName;
+    return path.string();
 }
 
 bool AOTHandler::IsSupportARM64() const
@@ -112,9 +135,9 @@ bool AOTHandler::IsSupportARM64() const
     return std::find(abiList.begin(), abiList.end(), ServiceConstants::ARM64_V8A) != abiList.end();
 }
 
-std::string AOTHandler::GetArkProfilePath(const std::string &bundleName, const std::string &moduleName) const
+std::string AOTHandler::FindArkProfilePath(const std::string &bundleName, const std::string &moduleName) const
 {
-    APP_LOGD("GetArkProfilePath begin");
+    APP_LOGD("FindArkProfilePath begin");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr) {
         APP_LOGE("dataMgr is null");
@@ -124,17 +147,14 @@ std::string AOTHandler::GetArkProfilePath(const std::string &bundleName, const s
     if (userId <= 0) {
         userId = Constants::START_USERID;
     }
-    std::string path;
-    path.append(ServiceConstants::ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName)
-        .append(ServiceConstants::PATH_SEPARATOR).append(moduleName).append(ServiceConstants::AP_SUFFIX);
+    std::string path = BuildArkProfilePath(userId, bundleName, moduleName + ServiceConstants::AP_SUFFIX);
     APP_LOGD("path : %{public}s", path.c_str());
     bool isExistFile = false;
     (void)InstalldClient::GetInstance()->IsExistApFile(path, isExistFile);
     if (isExistFile) {
         return path;
     }
-    APP_LOGD("GetArkProfilePath failed");
+    APP_LOGD("FindArkProfilePath failed");
     return Constants::EMPTY_STRING;
 }
 
@@ -145,7 +165,7 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, con
     aotArgs.bundleName = info.GetBundleName();
     aotArgs.moduleName = moduleName;
     if (compileMode == ServiceConstants::COMPILE_PARTIAL) {
-        aotArgs.arkProfilePath = GetArkProfilePath(aotArgs.bundleName, aotArgs.moduleName);
+        aotArgs.arkProfilePath = FindArkProfilePath(aotArgs.bundleName, aotArgs.moduleName);
         if (aotArgs.arkProfilePath.empty()) {
             APP_LOGD("compile mode is partial, but ap not exist, no need to AOT");
             return std::nullopt;
@@ -316,9 +336,7 @@ void AOTHandler::ClearArkAp(const std::string &oldAOTVersion, const std::string 
 
 void AOTHandler::DeleteArkAp(const BundleInfo &bundleInfo, const int32_t userId) const
 {
-    std::string arkProfilePath;
-    arkProfilePath.append(ServiceConstants::ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(ServiceConstants::PATH_SEPARATOR).append(bundleInfo.name).append(ServiceConstants::PATH_SEPARATOR);
+    std::string arkProfilePath = BuildArkProfilePath(userId, bundleInfo.name) + ServiceConstants::PATH_SEPARATOR;
     for (const auto &moduleName : bundleInfo.moduleNames) {
         std::string runtimeAp = arkProfilePath;
         std::string mergedAp = arkProfilePath;
@@ -443,9 +461,7 @@ std::string AOTHandler::GetSouceAp(const std::string &mergedAp, const std::strin
 void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInfo &bundleInfo,
     const int32_t userId, std::vector<std::string> &results) const
 {
-    std::string arkProfilePath;
-    arkProfilePath.append(ServiceConstants::ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName).append(ServiceConstants::PATH_SEPARATOR);
+    std::string arkProfilePath = BuildArkProfilePath(userId, bundleName) + ServiceConstants::PATH_SEPARATOR;
     ErrCode errCode;
     for (const auto &moduleName : bundleInfo.moduleNames) {
         std::string mergedAp = arkProfilePath + PGO_MERGED_AP_PREFIX + moduleName + ServiceConstants::AP_SUFFIX;
@@ -485,14 +501,15 @@ void AOTHandler::ResetAOTFlags() const
 
 void AOTHandler::HandleOTA()
 {
-    APP_LOGI("HandleOTA begin");
+    APP_LOGI("AOTHandler OTA begin");
+    ResetAOTFlags();
+    HandleArkPathsChange();
     ClearArkCacheDir();
     std::string curAOTVersion = GetCurAOTVersion();
     std::string oldAOTVersion;
     (void)GetOldAOTVersion(oldAOTVersion);
     ClearArkAp(oldAOTVersion, curAOTVersion);
     SaveAOTVersion(curAOTVersion);
-    ResetAOTFlags();
     HandleOTACompile();
 }
 
@@ -960,6 +977,43 @@ void AOTHandler::SaveAOTVersion(const std::string &curAOTVersion) const
         return;
     }
     bmsPara->SaveBmsParam(AOT_VERSION, curAOTVersion);
+}
+
+void AOTHandler::HandleArkPathsChange() const
+{
+    bool isHandled = false;
+    (void)BMSEventHandler::CheckOtaFlag(OTAFlag::DELETE_DEPRECATED_ARK_PATHS, isHandled);
+    if (isHandled) {
+        return;
+    }
+    APP_LOGI("HandleArkPathsChange begin");
+    DelDeprecatedArkPaths();
+    CreateArkProfilePaths();
+    APP_LOGI("HandleArkPathsChange end");
+    (void)BMSEventHandler::UpdateOtaFlag(OTAFlag::DELETE_DEPRECATED_ARK_PATHS);
+}
+
+void AOTHandler::DelDeprecatedArkPaths() const
+{
+    (void)InstalldClient::GetInstance()->RemoveDir(DEPRECATED_ARK_CACHE_PATH);
+    (void)InstalldClient::GetInstance()->RemoveDir(DEPRECATED_ARK_PROFILE_PATH);
+}
+
+void AOTHandler::CreateArkProfilePaths() const
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr null");
+        return;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const int32_t &userId : userIds) {
+        auto bundles = dataMgr->GetAllLiteBundleInfo(userId);
+        for (const auto &[bundleName, uid, gid] : bundles) {
+            std::string arkProfilePath = BuildArkProfilePath(userId, bundleName);
+            (void)InstalldClient::GetInstance()->Mkdir(arkProfilePath, S_IRWXU, uid, gid);
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

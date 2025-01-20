@@ -538,10 +538,10 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_0900, Function | SmallTest | Level0)
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
     ClearDataMgr();
-    auto ret = AOTHandler::GetInstance().GetArkProfilePath(AOT_BUNDLE_NAME, AOT_MODULE_NAME);
+    auto ret = AOTHandler::GetInstance().FindArkProfilePath(AOT_BUNDLE_NAME, AOT_MODULE_NAME);
     EXPECT_EQ(ret, "");
     ResetDataMgr();
-    ret = AOTHandler::GetInstance().GetArkProfilePath(AOT_BUNDLE_NAME, AOT_MODULE_NAME);
+    ret = AOTHandler::GetInstance().FindArkProfilePath(AOT_BUNDLE_NAME, AOT_MODULE_NAME);
     EXPECT_EQ(ret, "");
     auto iterator = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
     if (iterator != dataMgr->bundleInfos_.end()) {
@@ -1384,11 +1384,9 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3200, Function | SmallTest | Level0)
  */
 HWTEST_F(BmsAOTMgrTest, AOTHandler_3300, Function | SmallTest | Level0)
 {
-    std::string bundleName = "bundleName";
-    std::string arkProfilePath;
     int32_t userId = 100;
-    arkProfilePath.append(ServiceConstants::ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName).append(ServiceConstants::PATH_SEPARATOR);
+    std::string bundleName = "bundleName";
+    std::string arkProfilePath = AOTHandler::BuildArkProfilePath(userId, bundleName) + ServiceConstants::PATH_SEPARATOR;
     std::string mergedAp = arkProfilePath + "merged_" + bundleName + ServiceConstants::AP_SUFFIX;
     std::string rtAp = arkProfilePath + "rt_" + bundleName + ServiceConstants::AP_SUFFIX;
     std::string result = AOTHandler::GetInstance().GetSouceAp(mergedAp, rtAp);

@@ -16,6 +16,7 @@
 #include "bundle_data_mgr.h"
 
 #include <sys/stat.h>
+#include <tuple>
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
@@ -7300,6 +7301,25 @@ std::vector<std::string> BundleDataMgr::GetAllBundleName() const
         return item.first;
     });
     return bundleNames;
+}
+
+std::vector<std::tuple<std::string, int32_t, int32_t>> BundleDataMgr::GetAllLiteBundleInfo(const int32_t userId) const
+{
+    std::set<int32_t> userIds = GetAllUser();
+    if (userIds.find(userId) == userIds.end()) {
+        APP_LOGW("invalid userId");
+        return {};
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::vector<std::tuple<std::string, int32_t, int32_t>> bundles;
+    for (const auto &[bundleName, innerBundleInfo] : bundleInfos_) {
+        auto installedUsers = innerBundleInfo.GetUsers();
+        if (installedUsers.find(userId) == installedUsers.end()) {
+            continue;
+        }
+        bundles.emplace_back(bundleName, innerBundleInfo.GetUid(userId), innerBundleInfo.GetGid(userId));
+    }
+    return bundles;
 }
 
 std::vector<std::string> BundleDataMgr::GetAllDriverBundleName() const

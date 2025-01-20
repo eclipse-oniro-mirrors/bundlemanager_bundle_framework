@@ -15,6 +15,7 @@
 
 #include "bundle_user_mgr_host_impl.h"
 
+#include "aot_handler.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
 #include "bundle_mgr_service.h"
@@ -32,7 +33,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 std::atomic_uint g_installedHapNum = 0;
-constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
 constexpr const char* DATA_PRELOAD_APP = "/data/preload/app/";
 constexpr uint8_t FACTOR = 8;
 constexpr uint8_t INTERVAL = 6;
@@ -340,8 +340,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
 
 void BundleUserMgrHostImpl::RemoveArkProfile(int32_t userId)
 {
-    std::string arkProfilePath;
-    arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId));
+    std::string arkProfilePath = AOTHandler::BuildArkProfilePath(userId);
     APP_LOGI("DeleteArkProfile %{public}s when remove user", arkProfilePath.c_str());
     InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
 }

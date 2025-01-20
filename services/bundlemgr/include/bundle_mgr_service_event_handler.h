@@ -53,6 +53,7 @@ enum OTAFlag : uint32_t {
     CHECK_BACK_UP_DIR = 0x00001000,
     CHECK_RECOVERABLE_APPLICATION_INFO = 0x00002000,
     CHECK_INSTALL_SOURCE = 0x00004000,
+    DELETE_DEPRECATED_ARK_PATHS = 0x00008000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -129,6 +130,9 @@ public:
         Constants::AppType appType,
         int32_t userId = Constants::UNSPECIFIED_USERID);
 
+    static bool CheckOtaFlag(OTAFlag flag, bool &result);
+
+    static bool UpdateOtaFlag(OTAFlag flag);
 private:
     /**
      * @brief Before Bms start.
@@ -527,8 +531,6 @@ private:
         const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap,
         Constants::AppType appType);
 
-    bool CheckOtaFlag(OTAFlag flag, bool &result);
-    bool UpdateOtaFlag(OTAFlag flag);
     void ProcessCheckAppDataDir();
     void InnerProcessCheckAppDataDir();
 
