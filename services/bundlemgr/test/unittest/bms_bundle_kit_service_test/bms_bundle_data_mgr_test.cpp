@@ -7973,7 +7973,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetSignatureInfo_0001, Function | MediumTest | Le
     EXPECT_NE(localBundleDataMgr, nullptr);
     SignatureInfo signatureInfo;
     ErrCode ret = localBundleDataMgr->GetSignatureInfoByUid(100, signatureInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
@@ -8003,6 +8003,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetSignatureInfo_0003, Function | MediumTest | Le
 {
     SignatureInfo signatureInfo;
     ErrCode ret = bundleMgrHostImpl_->GetSignatureInfoByUid(100, signatureInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 } // OHOS
