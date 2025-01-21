@@ -1728,7 +1728,7 @@ void BundleDataMgr::EmplaceAbilityInfo(const InnerBundleInfo &info, const std::v
     if ((static_cast<uint32_t>(flags) &
         static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) ==
         static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) {
-        info.GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT),
+        info.GetApplicationInfoV9(static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT),
             userId, abilityInfo.applicationInfo, appIndex);
     }
     if ((static_cast<uint32_t>(flags) &
@@ -2472,7 +2472,7 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
     int32_t flag = 0;
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
         == static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE)) {
-        flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+        flag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
     }
     auto ret = GetInnerBundleInfoWithBundleFlagsV9(appName, flag, innerBundleInfo, requestUserId, appIndex);
     if (ret != ERR_OK) {
@@ -2504,7 +2504,7 @@ ErrCode BundleDataMgr::GetApplicationInfoWithResponseId(
     int32_t flag = 0;
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
         == static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE)) {
-        flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+        flag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
     }
     auto ret = GetInnerBundleInfoWithBundleFlagsV9(appName, flag, innerBundleInfo, requestUserId);
     if (ret != ERR_OK) {
@@ -2752,8 +2752,8 @@ bool BundleDataMgr::GetBundleInfo(
     }
     if ((static_cast<uint32_t>(flags) & BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP) ==
         BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP) {
-        ProcessBundleRouterMap(bundleInfo, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
-            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP));
+        ProcessBundleRouterMap(bundleInfo, static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP));
     }
     LOG_D(BMS_TAG_QUERY, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
         bundleName.c_str(), userId);
@@ -3000,7 +3000,7 @@ void BundleDataMgr::GetAllBundleNames(std::set<std::string> &bundleNames)
 void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const
 {
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0) {
-        flags = static_cast<int32_t>(
+        flags = static_cast<uint32_t>(
             static_cast<uint32_t>(flags) | static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE));
         std::vector<InnerBundleUserInfo> innerBundleUserInfos;
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
@@ -3625,13 +3625,13 @@ ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bun
         if (!OHOS::StrToInt(index, appIndex)) {
             return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
-        
+
         auto clonePos = keyName.find(CLONE_BUNDLE_PREFIX);
         if (clonePos != std::string::npos && clonePos == pos) {
             bundleName = keyName.substr(clonePos + strlen(CLONE_BUNDLE_PREFIX));
             return ERR_OK;
         }
-        
+
         auto sandboxPos = keyName.find(Constants::FILE_UNDERLINE);
         if (sandboxPos != std::string::npos && sandboxPos == pos) {
             bundleName = keyName.substr(sandboxPos + strlen(Constants::FILE_UNDERLINE));
