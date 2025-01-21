@@ -618,6 +618,33 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
     return true;
 }
 
+bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, const int32_t &appIndex)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    LOG_D(BMS_TAG_DEFAULT, "start, callingUid: %{public}d", callingUid);
+    std::string callingBundleName;
+    int32_t callerAppIndex = 0;
+    ErrCode ret = dataMgr->GetBundleNameAndIndexForUid(callingUid, callingBundleName, callerAppIndex);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "failed, code: %{public}d", ret);
+        return false;
+    }
+    LOG_D(BMS_TAG_DEFAULT,
+        "bundleName :%{public}s, callingBundleName : %{public}s appIndex: %{public}d callerAppIndex: %{public}d",
+        bundleName.c_str(), callingBundleName.c_str(), appIndex, callerAppIndex);
+    if (bundleName != callingBundleName || appIndex != callerAppIndex) {
+        LOG_W(BMS_TAG_DEFAULT, "failed, callingUid: %{public}d", callingUid);
+        return false;
+    }
+    LOG_D(BMS_TAG_DEFAULT, "end, verify success");
+    return true;
+}
+
 bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
