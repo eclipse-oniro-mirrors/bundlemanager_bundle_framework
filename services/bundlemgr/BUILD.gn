@@ -256,6 +256,10 @@ ohos_shared_library("libbms") {
     defines += [ "X86_EMULATOR_MODE" ]
   }
 
+  if (build_variant == "user") {
+    defines += [ "BUILD_VARIANT_USER" ]
+  }
+
   configs = [ ":bundlemgr_common_config" ]
   cflags = [
     "-fvisibility=hidden",
