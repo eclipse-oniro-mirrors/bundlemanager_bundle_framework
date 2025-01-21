@@ -1756,7 +1756,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0600, Function | SmallTest 
     installer.userId_ = Constants::ALL_USERID;
     installer.dataMgr_ = GetBundleDataMgr();
     ret = installer.RemoveBundleUserData(innerBundleInfo, needRemoveData);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_RMV_USERINFO_ERROR);
 }
 
 /**
@@ -2055,10 +2055,10 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2200, Function | SmallTest 
     InnerBundleInfo info;
     installer.InitDataMgr();
     ErrCode res = installer.RemoveBundle(info, false);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 
     res = installer.RemoveBundle(info, true);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 }
 
 /**
@@ -4642,7 +4642,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallHspVersion_0010, TestSize.Level1)
     std::string uninstallDir;
     installer.InitDataMgr();
     auto ret = installer.UninstallHspVersion(uninstallDir, versionCode, info);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 }
 
 /**
@@ -4784,7 +4784,7 @@ HWTEST_F(BmsBundleInstallerTest, InnerProcessBundleInstall_0010, TestSize.Level1
     ClearDataMgr();
     auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     installer.RollBack(newInfos, oldInfo);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
     ResetDataMgr();
 }
 
