@@ -5399,11 +5399,12 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     if (iter == infos.end()) {
         return ERR_OK;
     }
-    std::string moduleName = (iter->second).GetCurModuleName();
+    const auto &info = iter->second;
+    std::string moduleName = info.GetCurModuleName();
     std::string cpuAbi;
     std::string nativeLibraryPath;
-    (iter->second).FetchNativeSoAttrs((iter->second).GetCurrentModulePackage(), cpuAbi, nativeLibraryPath);
-    const std::string compileSdkType = (iter->second).GetBaseApplicationInfo().compileSdkType;
+    info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath);
+    const std::string compileSdkType = info.GetBaseApplicationInfo().compileSdkType;
     std::string signatureFileDir = "";
     auto ret = FindSignatureFileDir(moduleName, signatureFileDir);
     if (ret != ERR_OK) {
@@ -5421,7 +5422,8 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
-    codeSignatureParam.isPreInstalledBundle = IsDataPreloadHap(realHapPath) ? false : (iter->second).IsPreInstallApp();
+    codeSignatureParam.isPreInstalledBundle = IsDataPreloadHap(realHapPath) ? false : info.IsPreInstallApp();
+    codeSignatureParam.isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 

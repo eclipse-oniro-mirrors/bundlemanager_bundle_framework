@@ -25,6 +25,7 @@ struct CodeSignatureParam : public Parcelable {
     bool isPreInstalledBundle = false;
     bool isCompileSdkOpenHarmony = false;
     bool isInternaltestingBundle = false;
+    bool isCompressNativeLibrary = true;
     std::string modulePath;
     std::string cpuAbi;
     std::string targetSoPath;
