@@ -9005,9 +9005,7 @@ void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
     }
     if (want.GetUriString().rfind(SCHEME_HTTPS, 0) != 0) {
         APP_LOGD("scheme is not https");
-        if ((static_cast<uint32_t>(flags) &
-            static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
-            static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
+        if (HasAppLinkingFlag(static_cast<uint32_t>(flags))) {
             APP_LOGI("using app linking flag and scheme is not https, return empty list");
             abilityInfos.clear();
         }
@@ -9022,9 +9020,7 @@ void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
         APP_LOGE("FilterAbilities failed");
     }
     IPCSkeleton::SetCallingIdentity(identity);
-    if ((static_cast<uint32_t>(flags) &
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
+    if (HasAppLinkingFlag(static_cast<uint32_t>(flags))) {
         APP_LOGD("return filteredAbilityInfos");
         abilityInfos = filteredAbilityInfos;
         for (auto &abilityInfo : abilityInfos) {
@@ -9044,8 +9040,18 @@ void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
     return;
 #else
     APP_LOGI("AppDomainVerify is not enabled");
+    if (HasAppLinkingFlag(static_cast<uint32_t>(flags))) {
+        APP_LOGI("has flag and return empty list");
+        abilityInfos.clear();
+    }
     return;
 #endif
+}
+
+bool BundleDataMgr::HasAppLinkingFlag(uint32_t flags)
+{
+    return (flags & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING);
 }
 
 ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex)

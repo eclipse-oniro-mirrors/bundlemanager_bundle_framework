@@ -1322,6 +1322,8 @@ private:
     // save all created users.
     std::set<int32_t> multiUserIdsSet_;
     std::set<std::string> appServiceHspBundleName_;
+
+    static bool HasAppLinkingFlag(uint32_t flags);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
