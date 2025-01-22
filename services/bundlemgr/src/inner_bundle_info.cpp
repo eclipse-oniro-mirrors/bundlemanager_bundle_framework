@@ -2307,7 +2307,7 @@ void InnerBundleInfo::GetPreInstallApplicationFlags(ApplicationInfo &appInfo) co
 {
     if (IsPreInstallApp()) {
         uint32_t applicationFlags = static_cast<uint32_t>(appInfo.applicationFlags);
-        applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PRE_INSTALL_APP);
+        applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP);
         appInfo.applicationFlags = static_cast<int32_t>(applicationFlags);
         for (const auto &moduleEnt: innerModuleInfos_) {
             const auto &hapPath = moduleEnt.second.hapPath;
@@ -2315,7 +2315,7 @@ void InnerBundleInfo::GetPreInstallApplicationFlags(ApplicationInfo &appInfo) co
                 return;
             }
         }
-        applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PRE_INSTALL_APP_UPDATED);
+        applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP_UPDATE);
         appInfo.applicationFlags = static_cast<int32_t>(applicationFlags);
     }
 }
