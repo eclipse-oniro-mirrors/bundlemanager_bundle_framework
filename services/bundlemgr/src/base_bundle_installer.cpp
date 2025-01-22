@@ -1697,7 +1697,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // remove drive so file
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     driverInstaller->RemoveDriverSoFile(oldInfo, "", false);
-    if (oldInfo.IsPreInstallApp()) {
+    if (oldInfo.IsPreInstallApp() && oldInfo.IsRemovable()) {
         LOG_I(BMS_TAG_INSTALLER, "Pre-installed app %{public}s detected, Marking as uninstalled", bundleName.c_str());
         MarkPreInstallState(bundleName, true);
     }
@@ -1901,7 +1901,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             }
 
             RemoveDataPreloadHapFiles(bundleName);
-            if (oldInfo.IsPreInstallApp()) {
+            if (oldInfo.IsPreInstallApp() && oldInfo.IsRemovable()) {
                 LOG_I(BMS_TAG_INSTALLER, "%{public}s detected, Marking as uninstalled", bundleName.c_str());
                 MarkPreInstallState(bundleName, true);
             }
