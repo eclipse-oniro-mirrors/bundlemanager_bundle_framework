@@ -581,7 +581,7 @@ private:
     void ProcessSystemHspInstall(const PreScanInfo &preScanInfo);
     bool ProcessSystemHspInstall(const std::string &systemHspDir);
 
-    void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
+    static void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
         bool isPreInstall, bool debug);
     static bool IsQuickfixPatchApp(const std::string &bundleName, uint32_t versionCode);
@@ -644,9 +644,7 @@ private:
     void ListeningUserUnlocked() const;
     void RemoveUnreservedSandbox() const;
     void HandleSceneBoard() const;
-    void InnerProcessStockBundleProvisionInfo();
-    void ProcessBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);
-    void ProcessSharedBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);
+    void static InnerProcessStockBundleProvisionInfo();
     bool UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const;
     bool IsNeedToUpdateSharedAppByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void CheckALLResourceInfo();
@@ -668,6 +666,7 @@ private:
     void CleanAllBundleShaderCache() const;
     void CleanTempDir() const;
     bool CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo);
+    void CheckBundleProvisionInfo();
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
     // Used to notify bundle scan status

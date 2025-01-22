@@ -645,7 +645,7 @@ void BMSEventHandler::RemoveUnreservedSandbox() const {}
 void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string& bundleName, const std::string& filePath)
 {
     Security::Verify::HapVerifyResult hapVerifyResult;
-    auto ret = BundleVerifyMgr::ParseHapProfile(filePath, hapVerifyResult);
+    auto ret = BundleVerifyMgr::ParseHapProfile(filePath, hapVerifyResult, true);
     if (ret != ERR_OK) {
         return;
     }
@@ -664,48 +664,6 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(
 void BMSEventHandler::HandleSceneBoard() const {}
 
 void BMSEventHandler::InnerProcessStockBundleProvisionInfo() {}
-
-void BMSEventHandler::ProcessBundleProvisionInfo(const std::unordered_set<std::string>& allBundleNames)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        return;
-    }
-    std::vector<BundleInfo> bundleInfos;
-    if (dataMgr->GetBundleInfosV9(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE),
-        bundleInfos, Constants::ALL_USERID) != ERR_OK) {
-        return;
-    }
-    for (const auto& bundleInfo : bundleInfos) {
-        if ((allBundleNames.find(bundleInfo.name) == allBundleNames.end()) && !bundleInfo.hapModuleInfos.empty()) {
-            AddStockAppProvisionInfoByOTA(bundleInfo.name, bundleInfo.hapModuleInfos[0].hapPath);
-        }
-    }
-}
-
-void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<std::string>& allBundleNames)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        return;
-    }
-    std::vector<SharedBundleInfo> shareBundleInfos;
-    if (dataMgr->GetAllSharedBundleInfo(shareBundleInfos) != ERR_OK) {
-        return;
-    }
-    for (const auto& sharedBundleInfo : shareBundleInfos) {
-        if ((allBundleNames.find(sharedBundleInfo.name) == allBundleNames.end()) &&
-            !sharedBundleInfo.sharedModuleInfos.empty()) {
-            std::string hspPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
-                                  sharedBundleInfo.name + ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX +
-                                  std::to_string(sharedBundleInfo.sharedModuleInfos[0].versionCode) +
-                                  ServiceConstants::PATH_SEPARATOR + sharedBundleInfo.sharedModuleInfos[0].name +
-                                  ServiceConstants::PATH_SEPARATOR + sharedBundleInfo.sharedModuleInfos[0].name +
-                                  ServiceConstants::HSP_FILE_SUFFIX;
-            AddStockAppProvisionInfoByOTA(sharedBundleInfo.name, hspPath);
-        }
-    }
-}
 
 void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string& path, bool isOta) {}
 
