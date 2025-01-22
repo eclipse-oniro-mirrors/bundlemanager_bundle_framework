@@ -824,6 +824,10 @@ ErrCode AppServiceFwkInstaller::UpdateAppService(
     }
     if (!uninstallModuleVec_.empty()) {
         result = UninstallLowerVersion(uninstallModuleVec_);
+        if (result != ERR_OK) {
+            APP_LOGE("UninstallLowerVersion failed %{public}d", result);
+            return result;
+        }
     }
     if (oldVersionCode < versionCode_) {
         RemoveLowerVersionSoDir(oldVersionCode);
