@@ -2547,7 +2547,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_5300, Function | SmallTest | Level1)
 /**
  * @tc.name: TestParse_5400
  * @tc.desc: 1. system running normally
- *           2. test parsing failed when deviceType is empty in the config.json
+ *           2. test parsing succeed when deviceType is empty in the config.json
  * @tc.type: FUNC
  * @tc.require: issueI5MZ3F
  */
@@ -2566,7 +2566,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_5400, Function | SmallTest | Level1)
     BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
-    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
 }
 
 /**

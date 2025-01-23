@@ -1747,10 +1747,6 @@ bool CheckModuleNameIsValid(const std::string &moduleName)
 
 bool CheckModuleInfosIsValid(ProfileReader::ConfigJson &configJson)
 {
-    if (configJson.module.deviceType.empty()) {
-        APP_LOGE("module deviceType invalid");
-        return false;
-    }
     if (!configJson.module.abilities.empty()) {
         for (const auto &ability : configJson.module.abilities) {
             if (ability.name.empty() || ability.type.empty()) {
