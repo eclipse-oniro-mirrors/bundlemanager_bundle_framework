@@ -220,9 +220,9 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         .userId = userId,
         .appIndex = appIndex,
         .uid = uid,
-        .gids = tmpUserInfo.gids,
         .accessTokenId = newTokenIdEx.tokenIdExStruct.tokenID,
         .accessTokenIdEx = newTokenIdEx.tokenIDEx,
+        .gids = tmpUserInfo.gids,
     };
     uid_ = uid;
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;

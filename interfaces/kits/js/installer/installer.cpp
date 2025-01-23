@@ -631,9 +631,9 @@ static bool ParseBundleName(napi_env env, napi_value args, std::string &bundleNa
 {
     APP_LOGD("start to parse bundleName");
     PropertyInfo propertyInfo = {
-        .propertyName = BUNDLE_NAME,
         .isNecessary = true,
-        .propertyType = napi_string
+        .propertyType = napi_string,
+        .propertyName = BUNDLE_NAME
     };
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
@@ -655,9 +655,9 @@ static bool ParseModuleName(napi_env env, napi_value args, std::string &moduleNa
 {
     APP_LOGD("start to parse moduleName");
     PropertyInfo propertyInfo = {
-        .propertyName = MODULE_NAME,
         .isNecessary = false,
-        .propertyType = napi_string
+        .propertyType = napi_string,
+        .propertyName = MODULE_NAME
     };
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
@@ -678,9 +678,9 @@ static bool ParseVersionCode(napi_env env, napi_value args, int32_t &versionCode
 {
     APP_LOGD("start to parse versionCode");
     PropertyInfo propertyInfo = {
-        .propertyName = VERSION_CODE,
         .isNecessary = false,
-        .propertyType = napi_number
+        .propertyType = napi_number,
+        .propertyName = VERSION_CODE
     };
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
@@ -699,9 +699,9 @@ static bool ParseUserId(napi_env env, napi_value args, int32_t &userId)
 {
     APP_LOGD("start to parse userId");
     PropertyInfo propertyInfo = {
-        .propertyName = USER_ID,
         .isNecessary = false,
-        .propertyType = napi_number
+        .propertyType = napi_number,
+        .propertyName = USER_ID
     };
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
@@ -720,9 +720,9 @@ static bool ParseAppIndex(napi_env env, napi_value args, int32_t &appIndex)
 {
     APP_LOGD("start to parse appIndex");
     PropertyInfo propertyInfo = {
-        .propertyName = APP_INDEX,
         .isNecessary = true,
-        .propertyType = napi_number
+        .propertyType = napi_number,
+        .propertyName = APP_INDEX
     };
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
@@ -741,9 +741,9 @@ static bool ParseInstallFlag(napi_env env, napi_value args, InstallFlag &install
 {
     APP_LOGD("start to parse installFlag");
     PropertyInfo propertyInfo = {
-        .propertyName = INSTALL_FLAG,
         .isNecessary = false,
-        .propertyType = napi_number
+        .propertyType = napi_number,
+        .propertyName = INSTALL_FLAG
     };
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
@@ -771,9 +771,9 @@ static bool ParseIsKeepData(napi_env env, napi_value args, bool &isKeepData)
 {
     APP_LOGD("start to parse isKeepData");
     PropertyInfo propertyInfo = {
-        .propertyName = IS_KEEP_DATA,
         .isNecessary = false,
-        .propertyType = napi_boolean
+        .propertyType = napi_boolean,
+        .propertyName = IS_KEEP_DATA
     };
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
@@ -792,9 +792,9 @@ static bool ParseCrowdtestDeadline(napi_env env, napi_value args, int64_t &crowd
 {
     APP_LOGD("start to parse crowdtestDeadline");
     PropertyInfo propertyInfo = {
-        .propertyName = CROWD_TEST_DEADLINE,
         .isNecessary = false,
-        .propertyType = napi_number
+        .propertyType = napi_number,
+        .propertyName = CROWD_TEST_DEADLINE
     };
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
@@ -836,9 +836,9 @@ static bool ParseSpecifiedDistributionType(napi_env env, napi_value args, std::s
 {
     APP_LOGD("start to parse specifiedDistributionType");
     PropertyInfo propertyInfo = {
-        .propertyName = SPECIFIED_DISTRIBUTION_TYPE,
         .isNecessary = false,
-        .propertyType = napi_string
+        .propertyType = napi_string,
+        .propertyName = SPECIFIED_DISTRIBUTION_TYPE
     };
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
@@ -860,9 +860,9 @@ static bool ParseAdditionalInfo(napi_env env, napi_value args, std::string &addi
 {
     APP_LOGD("start to parse the additionalInfo");
     PropertyInfo propertyInfo = {
-        .propertyName = ADDITIONAL_INFO,
         .isNecessary = false,
-        .propertyType = napi_string
+        .propertyType = napi_string,
+        .propertyName = ADDITIONAL_INFO
     };
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
