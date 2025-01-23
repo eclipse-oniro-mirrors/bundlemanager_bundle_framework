@@ -17,6 +17,7 @@
 
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
+#include "ipc_skeleton.h"
 #include "installd_client.h"
 #include "scope_guard.h"
 
@@ -909,6 +910,7 @@ void AppServiceFwkInstaller::SendBundleSystemEvent(
     sysEventInfo.versionCode = versionCode_;
     sysEventInfo.preBundleScene = preBundleScene;
     sysEventInfo.filePath = hspPaths;
+    sysEventInfo.callingUid = IPCSkeleton::GetCallingUid();
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
 }
 
