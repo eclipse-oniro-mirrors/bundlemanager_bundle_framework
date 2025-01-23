@@ -274,7 +274,7 @@ void InnerEventReport::InnerSendBundleInstallExceptionEvent(const EventInfo& eve
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
-        EVENT_PARAM_SCENE, GetInstallScene(eventInfo),
+        EVENT_PARAM_SCENE, std::to_string(eventInfo.callingUid),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
 }
 
@@ -288,7 +288,7 @@ void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& e
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
-        EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
+        EVENT_PARAM_INSTALL_TYPE, std::to_string(eventInfo.callingUid),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
 }
 
@@ -302,7 +302,7 @@ void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& even
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
-        EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
+        EVENT_PARAM_INSTALL_TYPE, std::to_string(eventInfo.callingUid),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
 }
 
