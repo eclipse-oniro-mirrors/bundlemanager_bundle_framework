@@ -15,6 +15,7 @@
 
 #include "bundle_permission_mgr.h"
 
+#include "access_token_error.h"
 #include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
@@ -676,6 +677,12 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
     AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, dlpType);
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo);
     auto ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx);
+    if (AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL == ret ||
+        AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED == ret ||
+        AccessToken::AccessTokenError::ERR_READ_PARCEL_FAILED == ret) {
+        // try again
+        ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx);
+    }
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_E(BMS_TAG_DEFAULT, "InitHapToken failed, bundleName:%{public}s errCode:%{public}d",
             innerBundleInfo.GetBundleName().c_str(), ret);
@@ -699,6 +706,11 @@ int32_t BundlePermissionMgr::UpdateHapToken(
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo);
 
     auto ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy);
+    if (AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL == ret ||
+        AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED == ret) {
+        // try again
+        ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy);
+    }
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_E(BMS_TAG_DEFAULT, "UpdateHapToken failed, bundleName:%{public}s errCode:%{public}d",
             innerBundleInfo.GetBundleName().c_str(), ret);

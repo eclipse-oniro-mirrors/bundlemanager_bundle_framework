@@ -217,12 +217,21 @@ bool InstalldOperator::MkRecursiveDir(const std::string &path, bool isReadByOthe
 
 bool InstalldOperator::DeleteDir(const std::string &path)
 {
+    bool res = true;
     if (IsExistFile(path)) {
-        return OHOS::RemoveFile(path);
+        res = OHOS::RemoveFile(path);
+        if (!res && errno == ENOENT) {
+            return true;
+        }
+        return res;
     }
     if (IsExistDir(path)) {
         LOG_NOFUNC_I(BMS_TAG_COMMON, "del %{public}s", path.c_str());
-        return OHOS::ForceRemoveDirectory(path);
+        res = OHOS::ForceRemoveDirectory(path);
+        if (!res && errno == ENOENT) {
+            return true;
+        }
+        return res;
     }
     return true;
 }
