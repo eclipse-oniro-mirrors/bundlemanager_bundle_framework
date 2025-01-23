@@ -2030,7 +2030,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7100, Function | Sma
     rdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
     appControlManager.appControlManagerDb_ = rdb;
     auto res = appControlManager.DeleteAllDisposedRuleByBundle(bundleInfo, APP_INDEX, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
