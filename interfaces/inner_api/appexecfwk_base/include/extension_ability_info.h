@@ -75,6 +75,7 @@ enum class ExtensionAbilityType {
     FENCE = 24,
     CALLER_INFO_QUERY = 25,
     ASSET_ACCELERATION = 26,
+    FORM_EDIT = 27,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
