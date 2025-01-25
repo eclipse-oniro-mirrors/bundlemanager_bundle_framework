@@ -3766,8 +3766,8 @@ void BundleDataMgr::GetBundleCacheInfos(const int32_t userId, std::vector<std::t
         return;
     }
 #endif
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    for (const auto &item : bundleInfos_) {
+    std::map<std::string, InnerBundleInfo> infos = GetAllInnerBundleInfos();
+    for (const auto &item : infos) {
         const InnerBundleInfo &info = item.second;
         std::string bundleName = info.GetBundleName();
         // std::string bundleNameDir = bundleName;
