@@ -600,8 +600,8 @@ ErrCode AppControlManager::DeleteUninstallDisposedRule(
 void AppControlManager::PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules)
 {
     for (const auto &rule : disposedRules) {
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "control rule caller:%{public}s time:%{public}" PRId64 " rule:%{public}s",
-        rule.callerName.c_str(), rule.setTime, rule.ToString().c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "control rule caller:%{public}s time:%{public}" PRId64,
+        rule.callerName.c_str(), rule.setTime);
     }
 }
 }
