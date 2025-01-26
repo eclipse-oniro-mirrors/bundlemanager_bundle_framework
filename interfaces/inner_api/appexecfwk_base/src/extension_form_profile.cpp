@@ -598,9 +598,6 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     }
     info.enableBlurBackground = form.enableBlurBackground;
     APP_LOGI("form name: %{public}s enableBlurBackground: %{public}d", info.name.c_str(), info.enableBlurBackground);
-    if (info.enableBlurBackground) {
-        info.transparencyEnabled = true;
-    }
     return true;
 }
 
