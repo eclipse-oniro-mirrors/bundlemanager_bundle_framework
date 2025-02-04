@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <string>
 
 #include "bundle_profile.h"
 #include "bundle_service_constants.h"
@@ -356,8 +357,14 @@ ErrCode BundleParser::ParseRouterArray(
         }
         from_json(object, routerItem);
         if (object.find(ROUTER_ITEM_KEY_CUSTOM_DATA) != object.end()) {
-            if (object[ROUTER_ITEM_KEY_CUSTOM_DATA].dump().size() <= DATA_MAX_LENGTH) {
-                routerItem.customData = object[ROUTER_ITEM_KEY_CUSTOM_DATA].dump();
+            std::string customData;
+            try {
+                customData = object[ROUTER_ITEM_KEY_CUSTOM_DATA].dump();
+            } catch (const nlohmann::json::type_error &e) {
+                APP_LOGE("json dump failed: %{public}s", e.what());
+            }
+            if (customData.size() <= DATA_MAX_LENGTH) {
+                routerItem.customData = customData;
             } else {
                 APP_LOGE("customData in routerMap profile is too long");
             }

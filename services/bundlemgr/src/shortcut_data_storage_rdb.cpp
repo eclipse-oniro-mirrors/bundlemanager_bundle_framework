@@ -64,7 +64,13 @@ bool ShortcutDataStorageRdb::AddDesktopShortcutInfo(const ShortcutInfo &shortcut
     }
     nlohmann::json jsonObject;
     to_json(jsonObject, shortcutInfo);
-    std::string value = jsonObject.dump();
+    std::string value;
+    try {
+        value = jsonObject.dump();
+    } catch (const nlohmann::json::type_error &e) {
+        APP_LOGE("json dump failed: %{public}s", e.what());
+        return false;
+    }
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BUNDLE_NAME, shortcutInfo.bundleName);
     valuesBucket.PutString(SHORTCUT_ID, shortcutInfo.id);

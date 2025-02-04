@@ -102,7 +102,11 @@ void BundleUserInfo::Dump(const std::string &prefix, int fd)
         nlohmann::json jsonObject = *this;
         std::string result;
         result.append(prefix);
-        result.append(jsonObject.dump(Constants::DUMP_INDENT));
+        try {
+            result.append(jsonObject.dump(Constants::DUMP_INDENT));
+        } catch (const nlohmann::json::type_error &e) {
+            APP_LOGE("json dump failed: %{public}s", e.what());
+        }
         int ret = TEMP_FAILURE_RETRY(write(fd, result.c_str(), result.size()));
         if (ret < 0) {
             APP_LOGE("BundleUserInfo write error %{public}s", strerror(errno));

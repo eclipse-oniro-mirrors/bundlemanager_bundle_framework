@@ -217,7 +217,12 @@ std::string SimpleAppInfo::ToString() const
 {
     nlohmann::json jsonObject;
     to_json(jsonObject, *this);
-    return jsonObject.dump();
+    try {
+        return jsonObject.dump();
+    } catch (const nlohmann::json::type_error &e) {
+        APP_LOGE("json dump failed: %{public}s", e.what());
+        return "";
+    }
 }
 
 bool BundleInfo::ReadFromParcel(Parcel &parcel)

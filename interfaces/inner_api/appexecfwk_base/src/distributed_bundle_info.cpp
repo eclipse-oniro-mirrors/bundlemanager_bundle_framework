@@ -113,7 +113,12 @@ std::string DistributedBundleInfo::ToString() const
     jsonObject[JSON_KEY_ENABLED] = enabled;
     jsonObject[JSON_KEY_ACCESS_TOKEN_ID] = accessTokenId;
     jsonObject[JSON_KEY_UPDATE_TIME] = updateTime;
-    return jsonObject.dump();
+    try {
+        return jsonObject.dump();
+    } catch (const nlohmann::json::type_error &e) {
+        APP_LOGE("json dump failed: %{public}s", e.what());
+        return "";
+    }
 }
 
 bool DistributedBundleInfo::FromJsonString(const std::string &jsonString)

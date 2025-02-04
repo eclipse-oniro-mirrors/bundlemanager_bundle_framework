@@ -368,7 +368,14 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
             APP_LOGE("bad profile file");
             return false;
         }
-        profileInfos.emplace_back(profileJson.dump());
+        std::string profile;
+        try {
+            profile = profileJson.dump();
+        } catch (const nlohmann::json::type_error &e) {
+            APP_LOGE("json dump failed: %{public}s", e.what());
+            return false;
+        }
+        profileInfos.emplace_back(profile);
         return true;
     }
     // hap is decompressed status, get file path then read file.
@@ -430,7 +437,13 @@ bool BundleMgrClientImpl::TransformFileToJsonString(const std::string &resPath, 
         in.close();
         return false;
     }
-    profile = profileJson.dump();
+    try {
+        profile = profileJson.dump();
+    } catch (const nlohmann::json::type_error &e) {
+        APP_LOGE("json dump failed: %{public}s", e.what());
+        in.close();
+        return false;
+    }
     in.close();
     return true;
 }

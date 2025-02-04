@@ -159,7 +159,12 @@ template<typename T>
 const std::string GetJsonStrFromInfo(T &t)
 {
     nlohmann::json json = t;
-    return json.dump();
+    try {
+        return json.dump();
+    } catch (const nlohmann::json::type_error &e) {
+        APP_LOGE("json dump failed: %{public}s", e.what());
+        return "";
+    }
 }
 
 template<typename T>
