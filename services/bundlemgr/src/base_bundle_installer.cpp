@@ -1599,7 +1599,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     std::shared_ptr<BundleCloneInstaller> cloneInstaller = std::make_shared<BundleCloneInstaller>();
-    cloneInstaller->UninstallAllCloneApps(bundleName, installParam.userId);
+    cloneInstaller->UninstallAllCloneApps(bundleName, installParam.isRemoveUser, installParam.userId);
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
