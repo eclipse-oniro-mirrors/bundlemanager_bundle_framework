@@ -183,6 +183,10 @@ const std::set<std::string> ALLOW_MULTI_ICON_BUNDLE = {
 constexpr const char* CALLER_NAME_BMS = "bms";
 // group
 constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
+//install source
+constexpr const char* INSTALL_SOURCE_PREINSTALL = "pre-installed";
+constexpr const char* INSTALL_SOURCE_OTA = "ota";
+constexpr const char* INSTALL_SOURCE_RECOVERY = "recovery";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

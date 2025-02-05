@@ -1377,4 +1377,46 @@ HWTEST_F(BmsEventHandlerTest, InnerMultiProcessBundleInstall_0100, Function | Sm
         EXPECT_TRUE(ret);
     }
 }
+
+/**
+ * @tc.number: ConvertApplicationFlagToInstallSource_0100
+ * @tc.name: ConvertApplicationFlagToInstallSource
+ * @tc.desc: test ConvertApplicationFlagToInstallSource
+ */
+HWTEST_F(BmsEventHandlerTest, ConvertApplicationFlagToInstallSource_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::string installSource = handler->ConvertApplicationFlagToInstallSource(
+        static_cast<int32_t>(ApplicationInfoFlag::FLAG_BOOT_INSTALLED));
+    EXPECT_EQ(installSource, "pre-installed");
+}
+
+/**
+ * @tc.number: ConvertApplicationFlagToInstallSource_0200
+ * @tc.name: ConvertApplicationFlagToInstallSource
+ * @tc.desc: test ConvertApplicationFlagToInstallSource
+ */
+HWTEST_F(BmsEventHandlerTest, ConvertApplicationFlagToInstallSource_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::string installSource = handler->ConvertApplicationFlagToInstallSource(
+        static_cast<int32_t>(ApplicationInfoFlag::FLAG_OTA_INSTALLED));
+    EXPECT_EQ(installSource, "ota");
+}
+
+/**
+ * @tc.number: ConvertApplicationFlagToInstallSource_0300
+ * @tc.name: ConvertApplicationFlagToInstallSource
+ * @tc.desc: test ConvertApplicationFlagToInstallSource
+ */
+HWTEST_F(BmsEventHandlerTest, ConvertApplicationFlagToInstallSource_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::string installSource = handler->ConvertApplicationFlagToInstallSource(
+        static_cast<int32_t>(ApplicationInfoFlag::FLAG_RECOVER_INSTALLED));
+    EXPECT_EQ(installSource, "recovery");
+}
 } // OHOS
