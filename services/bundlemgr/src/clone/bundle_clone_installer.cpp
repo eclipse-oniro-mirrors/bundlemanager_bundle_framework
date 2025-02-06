@@ -82,14 +82,14 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
 }
 
 ErrCode BundleCloneInstaller::UninstallCloneApp(
-    const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+    const std::string &bundleName, const int32_t userId, const int32_t appIndex, bool sync)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("UninstallCloneApp %{public}s _ %{public}d begin", bundleName.c_str(), appIndex);
 
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
-    ErrCode result = ProcessCloneBundleUninstall(bundleName, userId, appIndex);
+    ErrCode result = ProcessCloneBundleUninstall(bundleName, userId, appIndex, sync);
     NotifyBundleEvents installRes = {
         .type = NotifyType::UNINSTALL_BUNDLE,
         .resultCode = result,
@@ -115,7 +115,7 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
     return result;
 }
 
-ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleName, int32_t userId)
+ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleName, bool sync, int32_t userId)
 {
     // All clone will be uninstalled when the original application is updated or uninstalled
     APP_LOGI_NOFUNC("UninstallAllCloneApps begin");
@@ -144,7 +144,7 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
     }
     ErrCode result = ERR_OK;
     for (auto it = userInfo.cloneInfos.begin(); it != userInfo.cloneInfos.end(); it++) {
-        if (UninstallCloneApp(bundleName, userId, atoi(it->first.c_str())) != ERR_OK) {
+        if (UninstallCloneApp(bundleName, userId, atoi(it->first.c_str()), sync) != ERR_OK) {
             APP_LOGE("UninstallCloneApp failed, appIndex %{public}s", it->first.c_str());
             result = ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
         }
@@ -230,7 +230,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     appId_ = info.GetAppId();
     appIdentifier_ = info.GetAppIdentifier();
 
-    ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex); });
+    ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex, true); });
     ErrCode result = CreateCloneDataDir(info, userId, uid, appIndex);
     if (result != ERR_OK) {
         APP_LOGE("InstallCloneApp create clone dir failed");
@@ -267,7 +267,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
 }
 
 ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bundleName,
-    int32_t userId, int32_t appIndex)
+    int32_t userId, int32_t appIndex, bool sync)
 {
     if (bundleName.empty()) {
         APP_LOGE("UninstallCloneApp failed due to empty bundle name");
@@ -318,7 +318,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         APP_LOGE("RemoveCloneBundle failed");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
     }
-    if (RemoveCloneDataDir(bundleName, userId, appIndex) != ERR_OK) {
+    if (RemoveCloneDataDir(bundleName, userId, appIndex, sync) != ERR_OK) {
         APP_LOGW("RemoveCloneDataDir failed");
     }
     RemoveEl5Dir(userInfo, uid_, userId, appIndex);
@@ -393,10 +393,11 @@ ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,
     return result;
 }
 
-ErrCode BundleCloneInstaller::RemoveCloneDataDir(const std::string bundleName, int32_t userId, int32_t appIndex)
+ErrCode BundleCloneInstaller::RemoveCloneDataDir(
+    const std::string bundleName, int32_t userId, int32_t appIndex, bool sync)
 {
     std::string key = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
-    if (InstalldClient::GetInstance()->RemoveBundleDataDir(key, userId) != ERR_OK) {
+    if (InstalldClient::GetInstance()->RemoveBundleDataDir(key, userId, false, !sync) != ERR_OK) {
         APP_LOGW("CloneApp cannot remove the data dir");
         return ERR_APPEXECFWK_CLONE_INSTALL_INTERNAL_ERROR;
     }

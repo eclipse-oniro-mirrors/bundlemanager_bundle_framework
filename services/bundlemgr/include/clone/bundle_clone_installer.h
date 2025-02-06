@@ -45,18 +45,20 @@ public:
      * @param userId Indicates the clone app will be uninstalled under which user id.
      * @return Returns ERR_OK if the clone app uninstall successfully; returns error code otherwise.
      */
-    ErrCode UninstallCloneApp(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+    ErrCode UninstallCloneApp(const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex, bool sync);
     /**
      * @brief The main function for clone app uninstalling.
      * @param bundleName Indicates the bundleName of the clone applications to uninstall.
      * @return Returns ERR_OK if the clone apps uninstall successfully; returns error code otherwise.
      */
-    ErrCode UninstallAllCloneApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
+    ErrCode UninstallAllCloneApps(const std::string &bundleName, bool sync,
+        int32_t userId = Constants::INVALID_USERID);
 
 private:
     ErrCode CreateCloneDataDir(
         InnerBundleInfo &info, const int32_t userId, const int32_t &uid, const int32_t &appIndex) const;
-    ErrCode RemoveCloneDataDir(const std::string bundleName, int32_t userId, int32_t appIndex);
+    ErrCode RemoveCloneDataDir(const std::string bundleName, int32_t userId, int32_t appIndex, bool sync);
     void CreateEl5Dir(InnerBundleInfo &info, const int32_t userId, const int32_t uid, const int32_t appIndex);
     void RemoveEl5Dir(InnerBundleUserInfo &userInfo, const int32_t uid, int32_t userId, const int32_t appIndex);
     ErrCode GetDataMgr();
@@ -64,7 +66,7 @@ private:
         const InnerBundleInfo& innerBundleInfo);
 
     ErrCode ProcessCloneBundleInstall(const std::string &bundleName, const int32_t userId, int32_t &appIndex);
-    ErrCode ProcessCloneBundleUninstall(const std::string &bundleName, int32_t userId, int32_t appIndex);
+    ErrCode ProcessCloneBundleUninstall(const std::string &bundleName, int32_t userId, int32_t appIndex, bool sync);
 
     void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
         int32_t userId, int32_t appIndex, bool isPreInstallApp, bool isFreeInstallMode,

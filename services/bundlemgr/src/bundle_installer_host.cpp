@@ -871,7 +871,7 @@ ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, in
         return ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED;
     }
     std::shared_ptr<BundleCloneInstaller> installer = std::make_shared<BundleCloneInstaller>();
-    return installer->UninstallCloneApp(bundleName, userId, appIndex);
+    return installer->UninstallCloneApp(bundleName, userId, appIndex, false);
 }
 
 void BundleInstallerHost::HandleUninstallCloneApp(MessageParcel &data, MessageParcel &reply)
