@@ -36,6 +36,8 @@ static std::atomic<int64_t> g_lastReportTime = 0;
 constexpr int64_t REPORTING_INTERVAL = 1000 * 60 * 30; // 30min
 constexpr int32_t RETRY_TIMES = 3;
 constexpr int32_t RETRY_INTERVAL = 500; // 500ms
+constexpr const char* INTEGRITY_CHECK = "PRAGMA integrity_check";
+constexpr const char* CHECK_OK = "ok";
 }
 
 std::mutex RdbDataManager::restoreRdbMutex_;
@@ -66,10 +68,6 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
     rdbStoreConfig.SetAllowRebuild(true);
-    if (!isInitial_) {
-        rdbStoreConfig.SetIntegrityCheck(NativeRdb::IntegrityCheck::FULL);
-        isInitial_ = true;
-    }
     // for check db exist or not
     bool isNeedRebuildDb = false;
     std::string rdbFilePath = bmsRdbConfig_.dbPath + std::string("/") + std::string(BMS_BACK_UP_RDB_NAME);
@@ -434,17 +432,17 @@ void RdbDataManager::DelayCloseRdbStore()
 
 bool RdbDataManager::RdbIntegrityCheckNeedRestore()
 {
-    APP_LOGI("start check");
+    APP_LOGI("integrity check start");
     if (rdbStore_ == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
     }
-    auto [ret, outValue] = rdbStore_->Execute("PRAGMA integrity_check");
-    if (ret == NativeRdb::E_OK) {
+    auto [ret, outValue] = rdbStore_->Execute(INTEGRITY_CHECK);
+    if (NativeRdb::E_OK == ret) {
         std::string outputResult;
         outValue.GetString(outputResult);
-        if (outputResult != "OK") {
-            APP_LOGI("need restore %{public}s", outputResult.c_str());
+        if (CHECK_OK != outputResult) {
+            APP_LOGW("need restore %{public}s", outputResult.c_str());
             return true;
         }
         APP_LOGI("rdb integrity check succeed");

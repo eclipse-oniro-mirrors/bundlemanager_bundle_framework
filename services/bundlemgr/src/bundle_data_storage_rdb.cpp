@@ -133,7 +133,9 @@ bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBun
     APP_LOGI("rdb SaveStorageBundleInfo -n %{public}s", innerBundleInfo.GetBundleName().c_str());
     bool ret = rdbDataManager_->InsertData(
         innerBundleInfo.GetBundleName(), innerBundleInfo.ToString());
-    BackupRdb();
+    if (ret) {
+        BackupRdb();
+    }
     return ret;
 }
 
@@ -146,7 +148,9 @@ bool BundleDataStorageRdb::DeleteStorageBundleInfo(const InnerBundleInfo &innerB
 
     bool ret = rdbDataManager_->DeleteData(innerBundleInfo.GetBundleName());
     APP_LOGD("DeleteStorageBundleInfo %{public}d", ret);
-    BackupRdb();
+    if (ret) {
+        BackupRdb();
+    }
     return ret;
 }
 
