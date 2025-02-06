@@ -981,7 +981,7 @@ static std::shared_ptr<Media::PixelMap> LoadImageFile(const uint8_t *data, size_
     uint32_t errorCode = 0;
     Media::SourceOptions opts;
     std::unique_ptr<Media::ImageSource> imageSource = Media::ImageSource::CreateImageSource(data, len, opts, errorCode);
-    if (errorCode != 0 || imageSource == nullptr) {
+    if ((errorCode != 0) || (imageSource == nullptr)) {
         APP_LOGE("failed to create image source err is %{public}d", errorCode);
         return nullptr;
     }
