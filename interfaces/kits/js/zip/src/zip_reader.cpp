@@ -306,7 +306,7 @@ bool ZipParallelReader::GotoEntry(unzFile &zipFile, unz_file_pos filePos)
     if (zipFile == nullptr) {
         return false;
     }
-    if (filePos.num_of_file >= ZipReader::num_entries()) {
+    if (static_cast<int>(filePos.num_of_file) >= ZipReader::num_entries()) {
         return false;
     }
 
