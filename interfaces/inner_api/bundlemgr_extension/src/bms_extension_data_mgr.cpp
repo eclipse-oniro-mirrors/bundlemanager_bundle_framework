@@ -345,7 +345,8 @@ bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName, const 
     return bundleMgrExtPtr->IsAppInBlocklist(bundleName, userId);
 }
 
-bool BmsExtensionDataMgr::CheckWhetherCanBeUninstalled(const std::string &bundleName)
+bool BmsExtensionDataMgr::CheckWhetherCanBeUninstalled(const std::string &bundleName,
+    const std::string &appIdentifier)
 {
     if ((Init() != ERR_OK) || handler_ == nullptr) {
         APP_LOGW("link failed");
@@ -357,7 +358,7 @@ bool BmsExtensionDataMgr::CheckWhetherCanBeUninstalled(const std::string &bundle
         APP_LOGW("GetBundleMgrExt failed");
         return true;
     }
-    return bundleMgrExtPtr->CheckWhetherCanBeUninstalled(bundleName);
+    return bundleMgrExtPtr->CheckWhetherCanBeUninstalled(bundleName, appIdentifier);
 }
 
 ErrCode BmsExtensionDataMgr::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
