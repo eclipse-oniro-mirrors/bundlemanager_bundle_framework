@@ -6174,10 +6174,11 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         if (uerInfo.second.accessTokenId == 0) {
             continue;
         }
+        int32_t userId = uerInfo.second.bundleUserInfo.userId;
         Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
         Security::AccessToken::HapInfoCheckResult checkResult;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, checkResult) != ERR_OK) {
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, userId, checkResult) != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -6191,7 +6192,7 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             Security::AccessToken::AccessTokenIDEx cloneAccessTokenIdEx;
             cloneAccessTokenIdEx.tokenIDEx = cloneInfoPair.second.accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
-            if (BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo, checkResult) != ERR_OK) {
+            if (BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo, userId, checkResult) != ERR_OK) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
                 SetVerifyPermissionResult(checkResult);
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -6758,7 +6759,7 @@ bool BaseBundleInstaller::RecoverHapToken(const std::string &bundleName, const i
             uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenId;
         accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
         Security::AccessToken::HapInfoCheckResult checkResult;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, checkResult) == ERR_OK) {
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId, checkResult) == ERR_OK) {
             return true;
         } else {
             LOG_W(BMS_TAG_INSTALLER, "bundleName:%{public}s UpdateHapToken failed", bundleName.c_str());

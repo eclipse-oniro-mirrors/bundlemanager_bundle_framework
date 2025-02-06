@@ -308,7 +308,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
 }
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-    const InnerBundleInfo &innerBundleInfo, Security::AccessToken::HapInfoCheckResult &checkResult)
+    const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult)
 {
     return 0;
 }

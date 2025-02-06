@@ -294,7 +294,7 @@ bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, co
             uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenId;
         accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
         Security::AccessToken::HapInfoCheckResult checkResult;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, checkResult) == ERR_OK) {
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId, checkResult) == ERR_OK) {
             return true;
         } else {
             auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
