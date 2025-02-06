@@ -990,7 +990,7 @@ bool InstalldHost::HandleCreateDataGroupDirs(MessageParcel &data, MessageParcel 
         return false;
     }
     std::vector<CreateDirParam> params;
-    for (int32_t index = 0; index < dataGroupSize; ++index) {
+    for (uint32_t index = 0; index < dataGroupSize; ++index) {
         std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
         if (info == nullptr) {
             LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
@@ -1006,7 +1006,7 @@ bool InstalldHost::HandleCreateDataGroupDirs(MessageParcel &data, MessageParcel 
 
 bool InstalldHost::HandleDeleteDataGroupDirs(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t uuidSize = data.ReadUint32();
+    uint32_t uuidSize = data.ReadUint32();
     if (uuidSize == 0 || uuidSize > MAX_VEC_SIZE) {
         APP_LOGE("uuidSize count is error");
         return false;
