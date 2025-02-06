@@ -4862,8 +4862,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0001, Function | SmallTest 
 {
     auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
-    bundleUserMgrHostImpl_->OnCreateNewUser(USERID, false);
-    bundleUserMgrHostImpl_->RemoveUser(USERID);
+    int32_t userId = 101;
+    bundleUserMgrHostImpl_->OnCreateNewUser(userId, false);
+    bundleUserMgrHostImpl_->RemoveUser(userId);
     ASSERT_NE(bundleInstaller, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
 }
@@ -4878,8 +4879,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0002, Function | SmallTest 
 {
     auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
-    bundleUserMgrHostImpl_->OnCreateNewUser(USERID, false, DISALLOWLIST);
-    bundleUserMgrHostImpl_->RemoveUser(USERID);
+    int32_t userId = 101;
+    bundleUserMgrHostImpl_->OnCreateNewUser(userId, false, DISALLOWLIST);
+    bundleUserMgrHostImpl_->RemoveUser(userId);
     ASSERT_NE(bundleInstaller, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
 }

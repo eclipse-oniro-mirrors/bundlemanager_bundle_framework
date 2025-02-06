@@ -112,7 +112,7 @@ HWTEST_F(BmsBundleDataGroupTest, RemoveDataGroupDirs_0010, Function | SmallTest 
 {
     BaseBundleInstaller installer;
     auto result = installer.RemoveDataGroupDirs(BUNDLE_NAME, USERID);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    EXPECT_EQ(result, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**
