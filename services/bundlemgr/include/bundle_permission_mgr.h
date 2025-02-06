@@ -65,7 +65,8 @@ public:
         Security::AccessToken::HapInfoCheckResult &checkResult);
 
     static int32_t UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-        const InnerBundleInfo &innerBundleInfo, Security::AccessToken::HapInfoCheckResult &checkResult);
+        const InnerBundleInfo &innerBundleInfo, int32_t userId,
+        Security::AccessToken::HapInfoCheckResult &checkResult);
 
     static std::string GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult);
 
