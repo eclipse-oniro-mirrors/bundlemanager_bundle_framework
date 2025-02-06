@@ -493,7 +493,7 @@ ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
     }
     std::unique_ptr<Want> temp(Want::FromString(wantString));
     if (!temp) {
-        LOG_E("BMS_TAG_DEFAULT", "want is null");
+        LOG_E(BMS_TAG_DEFAULT, "temp is null");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     want = *temp;
