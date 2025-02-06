@@ -988,7 +988,7 @@ static std::shared_ptr<Media::PixelMap> LoadImageFile(const uint8_t *data, size_
 
     Media::DecodeOptions decodeOpts;
     auto pixelMapPtr = imageSource->CreatePixelMap(decodeOpts, errorCode);
-    if (errorCode != 0 ) {
+    if (errorCode != 0) {
         APP_LOGE("failed to create pixelmap err %{public}d", errorCode);
         return nullptr;
     }
