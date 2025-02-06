@@ -31,6 +31,7 @@ BundleStatusCallback::~BundleStatusCallback()
     napi_get_uv_event_loop(env_, &loop);
     uv_work_t* work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
+        ReleaseAll();
         return;
     }
     DelRefCallbackInfo* delRefCallbackInfo = new (std::nothrow) DelRefCallbackInfo {
@@ -41,6 +42,7 @@ BundleStatusCallback::~BundleStatusCallback()
     };
     if (delRefCallbackInfo == nullptr) {
         delete work;
+        ReleaseAll();
         return;
     }
     work->data = reinterpret_cast<void*>(delRefCallbackInfo);
@@ -265,4 +267,14 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
         delete asyncCallbackInfo;
         delete work;
     }
+}
+
+void BundleStatusCallback::ReleaseAll()
+{
+    napi_delete_reference(env_, removeCallback_);
+    removeCallback_ = nullptr;
+    napi_delete_reference(env_, updatedCallback_);
+    updatedCallback_ = nullptr;
+    napi_delete_reference(env_, addedCallback_);
+    addedCallback_ = nullptr;
 }

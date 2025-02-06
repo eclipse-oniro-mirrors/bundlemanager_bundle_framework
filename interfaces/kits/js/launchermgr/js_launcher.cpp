@@ -111,6 +111,8 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_typeof(env, updateValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("update param type mismatch");
+        napi_delete_reference(env, addCallback);
+        addCallback = nullptr;
         return false;
     }
     napi_create_reference(env, updateValue, NAPI_RETURN_ONE, &updateCallback);
@@ -123,6 +125,10 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_typeof(env, removeValue, &valueType);
     if (valueType != napi_function) {
         APP_LOGE("remove param type mismatch");
+        napi_delete_reference(env, updateCallback);
+        updateCallback = nullptr;
+        napi_delete_reference(env, addCallback);
+        addCallback = nullptr;
         return false;
     }
     napi_create_reference(env, removeValue, NAPI_RETURN_ONE, &removeCallback);
@@ -130,6 +136,12 @@ static bool ParseBundleStatusCallback(napi_env env,
     bundleStatusCallback = new (std::nothrow) BundleStatusCallback(env, addCallback, updateCallback, removeCallback);
     if (bundleStatusCallback == nullptr) {
         APP_LOGE("new BundleStatusCallback failed");
+        napi_delete_reference(env, removeCallback);
+        removeCallback = nullptr;
+        napi_delete_reference(env, updateCallback);
+        updateCallback = nullptr;
+        napi_delete_reference(env, addCallback);
+        addCallback = nullptr;
         return false;
     }
     APP_LOGD("parse bundleStatusCallback end");

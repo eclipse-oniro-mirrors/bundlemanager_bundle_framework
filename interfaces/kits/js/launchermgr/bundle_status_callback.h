@@ -41,6 +41,7 @@ private:
     napi_ref updatedCallback_;
     napi_ref removeCallback_;
     DISALLOW_COPY_AND_MOVE(BundleStatusCallback);
+    void ReleaseAll();
 };
 
 struct AsyncCallbackInfo {
