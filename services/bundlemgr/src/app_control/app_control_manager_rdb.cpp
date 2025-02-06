@@ -491,7 +491,12 @@ ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
         LOG_E(BMS_TAG_DEFAULT, "GetString DisposedStatus failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-    want = *Want::FromString(wantString);
+    std::unique_ptr<Want> temp(Want::FromString(wantString));
+    if (!temp) {
+        LOG_E(BMS_TAG_DEFAULT, "temp is null");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    want = *temp;
     return ERR_OK;
 }
 
