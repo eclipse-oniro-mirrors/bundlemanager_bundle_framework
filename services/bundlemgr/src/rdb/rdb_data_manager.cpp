@@ -89,11 +89,11 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
         return nullptr;
     }
+    CheckSystemSizeAndHisysEvent(bmsRdbConfig_.dbPath, bmsRdbConfig_.dbName);
     if (!isInitial_ && !isNeedRebuildDb) {
         isNeedRebuildDb = RdbIntegrityCheckNeedRestore();
         isInitial_ = true;
     }
-    CheckSystemSizeAndHisysEvent(bmsRdbConfig_.dbPath, bmsRdbConfig_.dbName);
     NativeRdb::RebuiltType rebuildType = NativeRdb::RebuiltType::NONE;
     int32_t rebuildCode = rdbStore_->GetRebuilt(rebuildType);
     if (rebuildType == NativeRdb::RebuiltType::REBUILT || isNeedRebuildDb) {
@@ -438,11 +438,11 @@ bool RdbDataManager::RdbIntegrityCheckNeedRestore()
         return false;
     }
     auto [ret, outValue] = rdbStore_->Execute(INTEGRITY_CHECK);
-    if (NativeRdb::E_OK == ret) {
+    if (ret == NativeRdb::E_OK) {
         std::string outputResult;
         outValue.GetString(outputResult);
-        if (CHECK_OK != outputResult) {
-            APP_LOGW("need restore %{public}s", outputResult.c_str());
+        if (outputResult != CHECK_OK) {
+            APP_LOGW("rdb error need to restore");
             return true;
         }
         APP_LOGI("rdb integrity check succeed");
