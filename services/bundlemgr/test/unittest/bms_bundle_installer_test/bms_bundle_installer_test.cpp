@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -660,6 +660,12 @@ HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0400, Function | SmallTest | L
  */
 HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0100, Function | SmallTest | Level0)
 {
+    auto dataMgr = GetBundleDataMgr();
+    if (dataMgr != nullptr) {
+        PreInstallBundleInfo preInfo;
+        preInfo.SetBundleName(BUNDLE_NAME);
+        dataMgr->DeletePreInstallBundleInfo(BUNDLE_NAME, preInfo);
+    }
     CreateInstallerManager();
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
     EXPECT_NE(receiver, nullptr);
@@ -4065,6 +4071,12 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4900, Function | SmallTest 
 */
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5000, Function | SmallTest | Level0)
 {
+    auto dataMgr = GetBundleDataMgr();
+    if (dataMgr != nullptr) {
+        PreInstallBundleInfo preInfo;
+        preInfo.SetBundleName(BUNDLE_NAME);
+        dataMgr->DeletePreInstallBundleInfo(BUNDLE_NAME, preInfo);
+    }
     BaseBundleInstaller installer;
     std::vector<std::string> inBundlePaths;
     auto bundleFile = RESOURCE_ROOT_PATH + FIRST_RIGHT_HAP;

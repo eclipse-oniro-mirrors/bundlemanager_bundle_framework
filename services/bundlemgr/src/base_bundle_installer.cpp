@@ -199,7 +199,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
 
     int32_t uid = Constants::INVALID_UID;
-    ErrCode result = ProcessBundleInstall(bundlePaths, installParam, appType, uid);
+    ErrCode result = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
     if (result != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON && result != ERR_OK &&
         installParam.isDataPreloadHap && GetUserId(installParam.userId) == Constants::DEFAULT_USERID) {
         LOG_E(BMS_TAG_INSTALLER, "set parameter BMS_DATA_PRELOAD false");
@@ -1110,7 +1110,7 @@ ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const i
 }
 
 ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string> &inBundlePaths,
-    const InstallParam &installParam, const Constants::AppType appType, int32_t &uid)
+    const InstallParam &installParam, const Constants::AppType appType, int32_t &uid, bool isRecover)
 {
     LOG_D(BMS_TAG_INSTALLER, "ProcessBundleInstall bundlePath install paths=%{private}s, hspPaths=%{private}s",
         GetJsonStrFromInfo(inBundlePaths).c_str(), GetJsonStrFromInfo(installParam.sharedBundleDirPaths).c_str());
@@ -1193,6 +1193,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
     result = CheckShellCanInstallPreApp(newInfos);
     CHECK_RESULT(result, "check shell can install pre app failed %{public}d");
+    CheckPreBundle(newInfos, installParam, isRecover);
     result = CheckInstallPermission(installParam, hapVerifyResults);
     CHECK_RESULT(result, "check install permission failed %{public}d");
     result = CheckInstallCondition(hapVerifyResults, newInfos, isSysCapValid);
@@ -2103,7 +2104,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     innerInstallParam.removable = preInstallBundleInfo.IsRemovable();
     innerInstallParam.copyHapToInstallPath = false;
     innerInstallParam.isDataPreloadHap = IsDataPreloadHap(pathVec.empty() ? "" : pathVec.front());
-    ErrCode resultCode = ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid);
+    ErrCode resultCode = ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid, true);
     if (resultCode != ERR_OK && innerInstallParam.isDataPreloadHap) {
         LOG_E(BMS_TAG_INSTALLER, "set parameter BMS_DATA_PRELOAD false");
         OHOS::system::SetParameter(ServiceConstants::BMS_DATA_PRELOAD, BMS_FALSE);
@@ -6702,6 +6703,60 @@ void BaseBundleInstaller::ProcessAddResourceInfo(const InstallParam &installPara
         return;
     }
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+}
+
+void BaseBundleInstaller::CheckPreBundle(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InstallParam &installParam, bool isRecover)
+{
+    if (newInfos.empty() || isRecover || installParam.isPreInstallApp) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "newInfos is null or no need to check");
+        return;
+    }
+    // check is system app or not
+    const auto &newInfo = newInfos.begin()->second;
+    std::string bundleName = newInfo.GetBundleName();
+    if (!newInfo.IsSystemApp()) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s not system app", bundleName.c_str());
+        return;
+    }
+    // check is uninstalled preset app or not
+    if (dataMgr_->IsBundleExist(bundleName)) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s has installed", bundleName.c_str());
+        return;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s not preset app", bundleName.c_str());
+        return;
+    }
+    if (preInstallBundleInfo.GetBundlePaths().empty()) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "preset app bundle path empty");
+        return;
+    }
+    // check identifier and appId
+    std::string hapPath = preInstallBundleInfo.GetBundlePaths().front();
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    ErrCode result = BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult);
+    if (result != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "get preset app's appId fail %{public}s", hapPath.c_str());
+        return;
+    }
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyResult.GetProvisionInfo();
+    if (CheckAppIdentifier(provisionInfo.bundleInfo.appIdentifier, newInfo.GetAppIdentifier(),
+        provisionInfo.appId, newInfo.GetProvisionId())) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s need recover before install", bundleName.c_str());
+        InstallParam userInstallParam;
+        userInstallParam.userId = installParam.userId;
+        userInstallParam.installFlag = InstallFlag::REPLACE_EXISTING;
+        BaseBundleInstaller installer;
+        result = installer.Recover(bundleName, userInstallParam);
+        if (result != ERR_OK) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "recover before install result: %{public}d", result);
+        }
+        return;
+    }
+    LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s appId or appIdentifier not same with preset app, need not recover",
+        bundleName.c_str());
 }
 
 ErrCode BaseBundleInstaller::CheckShellCanInstallPreApp(
