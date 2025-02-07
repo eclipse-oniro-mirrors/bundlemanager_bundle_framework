@@ -193,6 +193,9 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_BUNDLE_NAME_BY_APP_ID_OR_APP_IDENTIFIER = 168,
     GET_DIR_BY_BUNDLENAME_AND_APPINDEX = 169,
     GET_ALL_BUNDLE_DIRS = 170,
+    GET_ALL_BUNDLE_CACHE = 171,
+    CLEAN_ALL_BUNDLE_CACHE = 172,
+    GET_SIMPLE_APP_INFO_FOR_UID = 173,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

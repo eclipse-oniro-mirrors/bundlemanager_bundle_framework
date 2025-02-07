@@ -592,6 +592,46 @@ ErrCode BundleMgrHostImpl::GetNameAndIndexForUid(const int uid, std::string &bun
     return dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
 }
 
+ErrCode BundleMgrHostImpl::GetSimpleAppInfoForUid(
+    const std::vector<std::int32_t> &uids, std::vector<SimpleAppInfo> &simpleAppInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("start GetSimpleAppInfoForUid");
+    bool permissionVerify = []() {
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            return true;
+        }
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+            BundlePermissionMgr::IsSystemApp()) {
+            return true;
+        }
+        return false;
+    }();
+    if (!permissionVerify) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    SimpleAppInfo info;
+    for (size_t i = 0; i < uids.size(); i++) {
+        auto ret = dataMgr->GetBundleNameAndIndexForUid(uids[i], info.bundleName, info.appIndex);
+        if (ret != ERR_OK) {
+            APP_LOGW("get name and index for uid failed, uid : %{public}d ret : %{public}d", uids[i], ret);
+            info.bundleName = "";
+            info.appIndex = -1;
+        }
+        info.uid = uids[i];
+        info.ret = ret;
+        simpleAppInfo.emplace_back(info);
+    }
+    return ERR_OK;
+}
+
 bool BundleMgrHostImpl::GetBundleGids(const std::string &bundleName, std::vector<int> &gids)
 {
     APP_LOGD("start GetBundleGids, bundleName : %{public}s", bundleName.c_str());

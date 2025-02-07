@@ -832,6 +832,29 @@ ErrCode BundleMgrProxy::GetNameAndIndexForUid(const int32_t uid, std::string &bu
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::GetSimpleAppInfoForUid(
+    const std::vector<std::int32_t> &uids, std::vector<SimpleAppInfo> &simpleAppInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetSimpleAppInfoForUid list");
+    if (uids.empty()) {
+        APP_LOGE("failed to GetSimpleAppInfoForUid list due to uids empty");
+        return ERR_APPEXECFWK_INVALID_UID;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetSimpleAppInfoForUid list due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32Vector(uids)) {
+        APP_LOGE("write uids count failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfosWithErrCode<SimpleAppInfo>(
+        BundleMgrInterfaceCode::GET_SIMPLE_APP_INFO_FOR_UID, data, simpleAppInfo);
+}
+
 bool BundleMgrProxy::GetBundleGids(const std::string &bundleName, std::vector<int> &gids)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
