@@ -278,9 +278,7 @@ private:
         return errCode;
     }
 private:
-    bool loadSaFinished_;
     std::mutex mutex_;
-    std::mutex loadSaMutex_;
     std::mutex getProxyMutex_;
     std::condition_variable loadSaCondition_;
     sptr<IInstalld> installdProxy_;
