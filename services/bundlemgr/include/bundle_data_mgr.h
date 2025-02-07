@@ -795,6 +795,9 @@ public:
     void GetBundleCacheInfos(
         const int32_t userId, std::vector<std::tuple<std::string, std::vector<std::string>,
         std::vector<int32_t>>> &validBundles, bool isClean = false) const;
+    void BundleDataMgr::GetBundleCacheInfos(const sptr<IAppMgr> &appMgrProxy, const InnerBundleInfo &info,
+        std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> &validBundles,
+        bool isClean) const;
     bool GetBundleStats(const std::string &bundleName,
         const int32_t userId, std::vector<int64_t> &bundleStats,
         const int32_t appIndex = 0, const uint32_t statFlag = 0) const;

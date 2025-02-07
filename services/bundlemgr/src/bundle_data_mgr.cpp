@@ -3756,6 +3756,38 @@ std::vector<int32_t> BundleDataMgr::GetNoRunningBundleCloneIndexes(const sptr<IA
 }
 #endif
 
+void BundleDataMgr::GetBundleCacheInfos(const sptr<IAppMgr> &appMgrProxy, const InnerBundleInfo &info,
+    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> &validBundles, bool isClean)
+{
+    std::string bundleName = info.GetBundleName();
+    // std::string bundleNameDir = bundleName;
+    if (isClean && !info.GetBaseApplicationInfo().userDataClearable) {
+        APP_LOGW("Not clearable:%{public}s, userid:%{public}d", bundleName.c_str(), userId);
+        continue;
+    }
+    std::vector<std::string> moduleNameList;
+    info.GetModuleNames(moduleNameList);
+    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, userId);
+    cloneAppIndexes.emplace_back(0);
+    std::vector<int32_t> allAppIndexes = cloneAppIndexes;
+    if (isClean && appMgrProxy != nullptr) {
+#ifdef ABILITY_RUNTIME_ENABLE
+        allAppIndexes = GetNoRunningBundleCloneIndexes(appMgrProxy, bundleName, cloneAppIndexes);
+#endif
+    }
+    validBundles.emplace_back(std::make_tuple(bundleName, moduleNameList, allAppIndexes));
+    // add atomic service
+    if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
+        std::string atomicServiceName;
+        AccountSA::OhosAccountInfo accountInfo;
+        auto ret = GetDirForAtomicServiceByUserId(bundleName, userId, accountInfo, atomicServiceName);
+        if (ret == ERR_OK && !atomicServiceName.empty()) {
+            APP_LOGD("atomicServiceName: %{public}s", atomicServiceName.c_str());
+            validBundles.emplace_back(std::make_tuple(atomicServiceName, moduleNameList, allAppIndexes));
+        }
+    }
+}
+
 void BundleDataMgr::GetBundleCacheInfos(const int32_t userId, std::vector<std::tuple<std::string,
     std::vector<std::string>, std::vector<int32_t>>> &validBundles, bool isClean) const
 {
@@ -3768,34 +3800,7 @@ void BundleDataMgr::GetBundleCacheInfos(const int32_t userId, std::vector<std::t
 #endif
     std::map<std::string, InnerBundleInfo> infos = GetAllInnerBundleInfos();
     for (const auto &item : infos) {
-        const InnerBundleInfo &info = item.second;
-        std::string bundleName = info.GetBundleName();
-        // std::string bundleNameDir = bundleName;
-        if (isClean && !info.GetBaseApplicationInfo().userDataClearable) {
-            APP_LOGW("Not clearable:%{public}s, userid:%{public}d", bundleName.c_str(), userId);
-            continue;
-        }
-        std::vector<std::string> moduleNameList;
-        info.GetModuleNames(moduleNameList);
-        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, userId);
-        cloneAppIndexes.emplace_back(0);
-        std::vector<int32_t> allAppIndexes = cloneAppIndexes;
-        if (isClean) {
-#ifdef ABILITY_RUNTIME_ENABLE
-            allAppIndexes = GetNoRunningBundleCloneIndexes(appMgrProxy, bundleName, cloneAppIndexes);
-#endif
-        }
-        validBundles.emplace_back(std::make_tuple(bundleName, moduleNameList, allAppIndexes));
-        // add atomic service
-        if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-            std::string atomicServiceName;
-            AccountSA::OhosAccountInfo accountInfo;
-            auto ret = GetDirForAtomicServiceByUserId(bundleName, userId, accountInfo, atomicServiceName);
-            if (ret == ERR_OK && !atomicServiceName.empty()) {
-                APP_LOGD("atomicServiceName: %{public}s", atomicServiceName.c_str());
-                validBundles.emplace_back(std::make_tuple(atomicServiceName, moduleNameList, allAppIndexes));
-            }
-        }
+        GetBundleCacheInfos(item.second, validBundles, isClean);
     }
     return;
 }
