@@ -109,7 +109,6 @@ const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.FusionSearch"
 };
 constexpr const char* DATA_EXTENSION_PATH = "/extension/";
-const std::string INSTALL_SOURCE_PREINSTALL = "pre-installed";
 const std::string INSTALL_SOURCE_UNKNOWN = "unknown";
 const std::string ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
 const char* OLD_ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
@@ -876,7 +875,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         LOG_I(BMS_TAG_INSTALLER, "SetIsFreeInstallApp(%{public}d)",
             InstallFlag::FREE_INSTALL == installParam.installFlag);
         newInfo.SetIsFreeInstallApp(InstallFlag::FREE_INSTALL == installParam.installFlag);
-        SetApplicationFlagsForPreinstallSource(newInfos, installParam);
+        SetApplicationFlagsAndInstallSource(newInfos, installParam);
         result = ProcessBundleInstallStatus(newInfo, uid);
         CHECK_RESULT(result, "ProcessBundleInstallStatus failed %{public}d");
 
@@ -3582,7 +3581,6 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     SetAppDistributionType(infos);
     UpdateExtensionSandboxInfo(infos, hapVerifyRes);
-    SetInstallSourceToAppInfo(infos, installParam);
     return ret;
 }
 
@@ -3765,7 +3763,16 @@ void BaseBundleInstaller::RemoveOldExtensionDirs() const
 std::string BaseBundleInstaller::GetInstallSource(const InstallParam &installParam) const
 {
     if (installParam.isPreInstallApp) {
-        return INSTALL_SOURCE_PREINSTALL;
+        switch (installParam.preinstallSourceFlag) {
+            case ApplicationInfoFlag::FLAG_BOOT_INSTALLED:
+                return ServiceConstants::INSTALL_SOURCE_PREINSTALL;
+            case ApplicationInfoFlag::FLAG_OTA_INSTALLED:
+                return ServiceConstants::INSTALL_SOURCE_OTA;
+            case ApplicationInfoFlag::FLAG_RECOVER_INSTALLED:
+                return ServiceConstants::INSTALL_SOURCE_RECOVERY;
+            default:
+                return ServiceConstants::INSTALL_SOURCE_PREINSTALL;
+        }
     }
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -3781,21 +3788,13 @@ std::string BaseBundleInstaller::GetInstallSource(const InstallParam &installPar
     return callingBundleName;
 }
 
-void BaseBundleInstaller::SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
-    const InstallParam &installParam) const
-{
-    std::string installSource = GetInstallSource(installParam);
-    for (auto &info : infos) {
-        info.second.SetInstallSource(installSource);
-    }
-}
-
-void BaseBundleInstaller::SetApplicationFlagsForPreinstallSource(
+void BaseBundleInstaller::SetApplicationFlagsAndInstallSource(
     std::unordered_map<std::string, InnerBundleInfo> &infos, const InstallParam &installParam) const
 {
     std::string installSource = GetInstallSource(installParam);
     for (auto &info : infos) {
         info.second.SetApplicationFlags(installParam.preinstallSourceFlag);
+        info.second.SetInstallSource(installSource);
     }
 }
 

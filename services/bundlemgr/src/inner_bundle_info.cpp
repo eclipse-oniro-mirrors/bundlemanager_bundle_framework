@@ -1888,7 +1888,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->multiProjects = applicationInfo.multiProjects;
     baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
     baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
-    baseApplicationInfo_->installSource = applicationInfo.installSource;
     baseApplicationInfo_->configuration = applicationInfo.configuration;
 }
 

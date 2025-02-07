@@ -2221,6 +2221,10 @@ public:
     std::set<int32_t> GetCloneBundleAppIndexes() const;
     static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
     void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
+    int32_t GetApplicationFlags() const
+    {
+        return baseApplicationInfo_->applicationFlags;
+    }
 
 private:
     bool IsExistLauncherAbility() const;
