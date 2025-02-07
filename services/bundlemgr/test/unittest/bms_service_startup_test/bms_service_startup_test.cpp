@@ -975,6 +975,32 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3400, Function | SmallTest |
 }
 
 /**
+ * @tc.number: BundlePermissionMgr_3800
+ * @tc.name: test IsBundleSelfCalling
+ * @tc.desc: 1.test IsBundleSelfCalling of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3800, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    ret = BundlePermissionMgr::IsBundleSelfCalling("", 0);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_3900
+ * @tc.name: test IsBundleSelfCalling
+ * @tc.desc: 1.test IsBundleSelfCalling of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3900, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    std::string bundleName;
+    ret = BundlePermissionMgr::IsBundleSelfCalling(bundleName, 0);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: AbilityManagerHelper_0100
  * @tc.name: test IsRunning
  * @tc.desc: 1.test IsRunning of AbilityManagerHelper

@@ -102,6 +102,7 @@ public:
     static void AddPermissionUsedRecord(const std::string &permission, int32_t successCount, int32_t failCount);
 
     static bool IsBundleSelfCalling(const std::string &bundleName);
+    static bool IsBundleSelfCalling(const std::string &bundleName, const int32_t &appIndex);
 
     // for old api
     static bool VerifyCallingBundleSdkVersion(int32_t beginApiVersion = Constants::INVALID_API_VERSION);
