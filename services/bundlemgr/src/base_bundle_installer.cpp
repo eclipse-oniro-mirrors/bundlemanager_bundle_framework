@@ -6721,8 +6721,6 @@ void BaseBundleInstaller::CheckPreBundle(const std::unordered_map<std::string, I
     }
     // check is uninstalled preset app or not
     if (dataMgr_->IsBundleExist(bundleName)) {
-
-
         LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s has installed", bundleName.c_str());
         return;
     }
@@ -6752,7 +6750,6 @@ void BaseBundleInstaller::CheckPreBundle(const std::unordered_map<std::string, I
         userInstallParam.installFlag = InstallFlag::REPLACE_EXISTING;
         BaseBundleInstaller installer;
         result = installer.Recover(bundleName, userInstallParam);
-
         if (result != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "recover before install result: %{public}d", result);
         }
