@@ -1492,23 +1492,18 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
 {
     InnerBundleInfo info;
     auto dataMgr = GetDataMgrFromService();
-    auto ret = dataMgr->FetchInnerBundleInfo(bundleName, info);
-    if (ret != ERR_OK) {
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
         APP_LOGE("can not get bundleinfo of %{public}s", bundleName.c_str());
         EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
         return;
     }
     std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
-    // 
-    dataMgr->GetBundleCacheInfos(nullptr ,info, validBundles, false);
+    dataMgr->GetBundleCacheInfo([](std::string &bundleName, std::vector<int32_t> &allidx) {
+            return allidx;
+        }, info, validBundles, userId, false);
     uint64_t cleanSize;
-    ret = BundleCacheMgr().GetBundleCacheSize(validBundles, userId, cleanSize);
-    if (ret != ERR_OK) {
-        APP_LOGE("can not get GetBundleCacheSize of %{public}s", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
-        return;
-    }
-    ret = BundleCacheMgr().CleanBundleCache(validBundles, userId);
+    BundleCacheMgr().GetBundleCacheSize(validBundles, userId, cleanSize);
+    auto ret = BundleCacheMgr().CleanBundleCache(validBundles, userId);
     if (ret != ERR_OK) {
         APP_LOGE("can not get CleanBundleCache of %{public}s", bundleName.c_str());
         EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);

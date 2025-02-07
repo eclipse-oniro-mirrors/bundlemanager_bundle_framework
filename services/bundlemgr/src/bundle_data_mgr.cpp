@@ -3756,24 +3756,24 @@ std::vector<int32_t> BundleDataMgr::GetNoRunningBundleCloneIndexes(const sptr<IA
 }
 #endif
 
-void BundleDataMgr::GetBundleCacheInfos(const sptr<IAppMgr> &appMgrProxy, const InnerBundleInfo &info,
-    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> &validBundles, bool isClean)
+void BundleDataMgr::GetBundleCacheInfo(
+    std::function<std::vector<int32_t>(std::string&, std::vector<int32_t>&)> idxFilter,
+    const InnerBundleInfo &info,
+    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> &validBundles,
+    const int32_t userId, bool isClean) const
 {
     std::string bundleName = info.GetBundleName();
-    // std::string bundleNameDir = bundleName;
     if (isClean && !info.GetBaseApplicationInfo().userDataClearable) {
         APP_LOGW("Not clearable:%{public}s, userid:%{public}d", bundleName.c_str(), userId);
-        continue;
+        return;
     }
     std::vector<std::string> moduleNameList;
     info.GetModuleNames(moduleNameList);
     std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, userId);
     cloneAppIndexes.emplace_back(0);
     std::vector<int32_t> allAppIndexes = cloneAppIndexes;
-    if (isClean && appMgrProxy != nullptr) {
-#ifdef ABILITY_RUNTIME_ENABLE
-        allAppIndexes = GetNoRunningBundleCloneIndexes(appMgrProxy, bundleName, cloneAppIndexes);
-#endif
+    if (isClean) {
+        allAppIndexes = idxFilter(bundleName, cloneAppIndexes);
     }
     validBundles.emplace_back(std::make_tuple(bundleName, moduleNameList, allAppIndexes));
     // add atomic service
@@ -3797,10 +3797,17 @@ void BundleDataMgr::GetBundleCacheInfos(const int32_t userId, std::vector<std::t
         APP_LOGE("CleanBundleCache fail to find the app mgr service to check app is running");
         return;
     }
+    auto idxFiltor = [&appMgrProxy, this](std::string &bundleName, std::vector<int32_t> &allidx) {
+        return this->GetNoRunningBundleCloneIndexes(appMgrProxy, bundleName, allidx);
+    };
+#else
+    auto idxFiltor = [](std::string &bundleName, std::vector<int32_t> &allidx) {
+        return allidx;
+    };
 #endif
     std::map<std::string, InnerBundleInfo> infos = GetAllInnerBundleInfos();
     for (const auto &item : infos) {
-        GetBundleCacheInfos(item.second, validBundles, isClean);
+        GetBundleCacheInfo(idxFiltor, item.second, validBundles, userId, isClean);
     }
     return;
 }
