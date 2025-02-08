@@ -19,10 +19,12 @@
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
+#include "bundle_service_constants.h"
 #include "datetime_ex.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "inner_bundle_clone_common.h"
+#include "parameters.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "ipc_skeleton.h"
@@ -315,8 +317,30 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         appControlMgr->DeleteAllDisposedRuleByBundle(info, appIndex, userId);
     }
 #endif
+    UninstallDebugAppSandbox(bundleName, uid_, appIndex, info);
     APP_LOGI("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
+}
+
+void BundleCloneInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
+    int32_t appIndex, const InnerBundleInfo& innerBundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("call UninstallDebugAppSandbox start");
+    bool isDebugApp = innerBundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    bool isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    if (isDeveloperMode && isDebugApp) {
+        AppSpawnRemoveSandboxDirMsg removeSandboxDirMsg;
+        removeSandboxDirMsg.code = MSG_UNINSTALL_DEBUG_HAP;
+        removeSandboxDirMsg.bundleName = bundleName;
+        removeSandboxDirMsg.bundleIndex = appIndex;
+        removeSandboxDirMsg.uid = uid;
+        removeSandboxDirMsg.flags = APP_FLAGS_CLONE_ENABLE;
+        if (BundleAppSpawnClient::GetInstance().RemoveSandboxDir(removeSandboxDirMsg) != 0) {
+            APP_LOGE("RemoveSandboxDir failed");
+        }
+    }
+    APP_LOGD("call UninstallDebugAppSandbox end");
 }
 
 ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,

@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "bundle_app_spawn_client.h"
 #include "bundle_data_mgr.h"
 #include "inner_bundle_info.h"
 #include "event_report.h"
@@ -57,6 +58,8 @@ private:
         InnerBundleInfo &info, const int32_t userId, const int32_t &uid, const int32_t &appIndex) const;
     ErrCode RemoveCloneDataDir(const std::string bundleName, int32_t userId, int32_t appIndex);
     ErrCode GetDataMgr();
+    void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid, int32_t appIndex,
+        const InnerBundleInfo& innerBundleInfo);
 
     ErrCode ProcessCloneBundleInstall(const std::string &bundleName, const int32_t userId, int32_t &appIndex);
     ErrCode ProcessCloneBundleUninstall(const std::string &bundleName, int32_t userId, int32_t appIndex);

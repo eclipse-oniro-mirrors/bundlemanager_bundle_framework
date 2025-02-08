@@ -23,6 +23,7 @@
 #include "nocopyable.h"
 
 #include "access_token.h"
+#include "bundle_app_spawn_client.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_install_checker.h"
@@ -739,6 +740,8 @@ private:
     bool DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo);
     ErrCode MarkInstallFinish();
     bool IsArkWeb(const std::string &bundleName) const;
+    void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
+        const InnerBundleInfo& innerBundleInfo);
 #ifdef WEBVIEW_ENABLE
     ErrCode VerifyArkWebInstall(const std::string &bundleName);
 #endif
