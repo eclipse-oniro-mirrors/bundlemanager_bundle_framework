@@ -9510,6 +9510,7 @@ ErrCode BundleDataMgr::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &s
     signatureInfo.appId = innerBundleInfo.GetBaseBundleInfo().appId;
     signatureInfo.fingerprint = innerBundleInfo.GetBaseApplicationInfo().fingerprint;
     signatureInfo.appIdentifier = innerBundleInfo.GetAppIdentifier();
+    signatureInfo.certificate = innerBundleInfo.GetCertificate();
     return ERR_OK;
 }
 
