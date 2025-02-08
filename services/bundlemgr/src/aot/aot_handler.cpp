@@ -1008,6 +1008,11 @@ void AOTHandler::CreateArkProfilePaths() const
     }
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     for (const int32_t &userId : userIds) {
+        std::string userIdPath = BuildArkProfilePath(userId);
+        if (!BundleUtil::IsExistDir(userIdPath)) {
+            APP_LOGE("userIdPath %{public}s not exist", userIdPath.c_str());
+            continue;
+        }
         auto bundles = dataMgr->GetAllLiteBundleInfo(userId);
         for (const auto &[bundleName, uid, gid] : bundles) {
             std::string arkProfilePath = BuildArkProfilePath(userId, bundleName);
