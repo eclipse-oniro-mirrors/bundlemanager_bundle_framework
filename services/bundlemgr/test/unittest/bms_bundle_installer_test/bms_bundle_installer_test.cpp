@@ -6285,7 +6285,7 @@ HWTEST_F(BmsBundleInstallerTest, AddBundleStatus_0100, Function | SmallTest | Le
     NotifyBundleEvents installRes;
     installRes.abilityName = "testAbilityName";
     installer.AddBundleStatus(installRes);
-    EXPECT_NE(installer.bundleEvents_.end().base()->abilityName.c_str(),
+    EXPECT_NE(installer.bundleEvents_.rbegin()->abilityName.c_str(),
         installRes.abilityName.c_str());
 }
 
