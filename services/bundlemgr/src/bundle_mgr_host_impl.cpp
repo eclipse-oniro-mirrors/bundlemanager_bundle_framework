@@ -1490,48 +1490,28 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesGetCleanSize(const std::string &
 void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bundleName,
     int32_t userId, uint64_t &cleanCacheSize)
 {
-    std::vector<std::string> rootDir;
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el +
-            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleName;
-        rootDir.emplace_back(dataDir);
+    InnerBundleInfo info;
+    auto dataMgr = GetDataMgrFromService();
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("can not get bundleinfo of %{public}s", bundleName.c_str());
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        return;
     }
-
-    std::vector<std::string> caches;
-    for (const auto &st : rootDir) {
-        std::vector<std::string> cache;
-        if (InstalldClient::GetInstance()->GetBundleCachePath(st, cache) != ERR_OK) {
-            APP_LOGE("GetBundleCachePath failed, path: %{public}s", st.c_str());
-        }
-        std::copy(cache.begin(), cache.end(), std::back_inserter(caches));
+    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
+    dataMgr->GetBundleCacheInfo([](std::string &bundleName, std::vector<int32_t> &allidx) {
+            return allidx;
+        }, info, validBundles, userId, false);
+    uint64_t cleanSize;
+    BundleCacheMgr().GetBundleCacheSize(validBundles, userId, cleanSize);
+    auto ret = BundleCacheMgr().CleanBundleCache(validBundles, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("can not get CleanBundleCache of %{public}s", bundleName.c_str());
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        return;
     }
-
+    cleanCacheSize = cleanSize;
     bool succeed = true;
-    if (!caches.empty()) {
-        for (const auto& cache : caches) {
-            int64_t cacheSize = 0;
-            ErrCode ret = InstalldClient::GetInstance()->GetDiskUsage(cache, cacheSize, true);
-            if (ret != ERR_OK) {
-                APP_LOGE("GetDiskUsage failed, path: %{public}s", cache.c_str());
-                succeed = false;
-            }
-            ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
-            if (ret != ERR_OK) {
-                APP_LOGE("CleanBundleDataDir failed, path: %{public}s", cache.c_str());
-                succeed = false;
-            }
-            if (cacheSize < 0) {
-                APP_LOGW("cacheSize < 0");
-                continue;
-            }
-            if (cleanCacheSize <= std::numeric_limits<uint64_t>::max() - static_cast<uint64_t>(cacheSize)) {
-                cleanCacheSize += static_cast<uint64_t>(cacheSize);
-            } else {
-                APP_LOGE("add overflow cleanCacheSize: %{public}" PRIu64 ", cacheSize: %{public}" PRIu64 "",
-                    cleanCacheSize, cacheSize);
-            }
-        }
-    }
+
     EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed);
     APP_LOGI("CleanBundleCacheFiles with succeed %{public}d", succeed);
     InnerBundleUserInfo innerBundleUserInfo;
