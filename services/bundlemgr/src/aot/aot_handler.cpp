@@ -1009,7 +1009,9 @@ void AOTHandler::CreateArkProfilePaths() const
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     for (const int32_t &userId : userIds) {
         std::string userIdPath = BuildArkProfilePath(userId);
-        if (!BundleUtil::IsExistDir(userIdPath)) {
+        bool isExist = false;
+        (void)InstalldClient::GetInstance()->IsExistDir(userIdPath, isExist);
+        if (!isExist) {
             APP_LOGE("userIdPath %{public}s not exist", userIdPath.c_str());
             continue;
         }
