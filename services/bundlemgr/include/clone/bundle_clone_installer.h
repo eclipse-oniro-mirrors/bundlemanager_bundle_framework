@@ -72,6 +72,8 @@ private:
     int32_t uid_ = 0;
     uint32_t accessTokenId_ = 0;
     uint32_t versionCode_ = 0;
+    std::string appId_;
+    std::string appIdentifier_;
 };
 } // AppExecFwk
 } // OHOS

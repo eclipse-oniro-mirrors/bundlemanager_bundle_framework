@@ -59,6 +59,8 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
         .uid = uid_,
         .accessTokenId = accessTokenId_,
         .appIndex = appIndex,
+        .appId = appId_,
+        .appIdentifier = appIdentifier_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -88,6 +90,8 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
         .uid = uid_,
         .accessTokenId = accessTokenId_,
         .appIndex = appIndex,
+        .appId = appId_,
+        .appIdentifier = appIdentifier_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -213,6 +217,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     uid_ = uid;
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
     versionCode_ = info.GetVersionCode();
+    appId_ = info.GetAppId();
+    appIdentifier_ = info.GetAppIdentifier();
 
     ErrCode result = CreateCloneDataDir(info, userId, uid, appIndex);
     if (result != ERR_OK) {
@@ -284,6 +290,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     uid_ = it->second.uid;
     accessTokenId_ = it->second.accessTokenId;
     versionCode_ = info.GetVersionCode();
+    appId_ = info.GetAppId();
+    appIdentifier_ = info.GetAppIdentifier();
     if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete AT failed clone");
@@ -407,6 +415,8 @@ void BundleCloneInstaller::ResetInstallProperties()
     uid_ = 0;
     accessTokenId_ = 0;
     versionCode_ = 0;
+    appId_ = "";
+    appIdentifier_ = "";
 }
 } // AppExecFwk
 } // OHOS
