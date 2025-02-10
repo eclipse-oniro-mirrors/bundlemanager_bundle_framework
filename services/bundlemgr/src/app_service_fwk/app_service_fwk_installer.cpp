@@ -746,7 +746,7 @@ ErrCode AppServiceFwkInstaller::SaveBundleInfoToStorage()
         dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_START);
         dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_SUCCESS);
         APP_LOGE("Save bundle failed %{public}s", bundleName_.c_str());
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_ADD_BUNDLE_ERROR;
     }
 
     return ERR_OK;
@@ -1140,19 +1140,19 @@ ErrCode AppServiceFwkInstaller::MarkInstallFinish()
 {
     if (dataMgr_ == nullptr) {
         APP_LOGE("dataMgr_ is nullptr");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     InnerBundleInfo info;
     if (!dataMgr_->FetchInnerBundleInfo(bundleName_, info)) {
         APP_LOGE("mark finish failed, -n %{public}s not exist", bundleName_.c_str());
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
         if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
             APP_LOGE("save mark failed, -n %{public}s", bundleName_.c_str());
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
         }
     }
     return ERR_OK;

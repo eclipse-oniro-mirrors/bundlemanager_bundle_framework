@@ -1106,7 +1106,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, SaveBundleInfoToStorage_0010, Func
     installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, info);
 
     auto res = installer.SaveBundleInfoToStorage();
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ADD_BUNDLE_ERROR);
 
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
