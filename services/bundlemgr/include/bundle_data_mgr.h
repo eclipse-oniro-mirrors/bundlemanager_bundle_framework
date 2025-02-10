@@ -933,6 +933,12 @@ public:
     ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         int32_t triggerMode);
     std::vector<std::string> GetAllBundleName() const;
+    /**
+     * @brief Get lite bundleInfo of all bundles under the specified user
+     * @param userId Indicates the user ID
+     * @return Returns lite bundleInfo list, tuple format : {bundleName, uid, gid}
+     */
+    std::vector<std::tuple<std::string, int32_t, int32_t>> GetAllLiteBundleInfo(const int32_t userId) const;
     std::vector<std::string> GetAllDriverBundleName() const;
     bool IsBundleExist(const std::string &bundleName) const;
     bool QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const;

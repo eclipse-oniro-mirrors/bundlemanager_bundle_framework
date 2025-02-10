@@ -33,6 +33,8 @@ namespace AppExecFwk {
 class AOTHandler final {
 public:
     static AOTHandler& GetInstance();
+    static std::string BuildArkProfilePath(
+        const int32_t userId, const std::string &bundleName = "", const std::string &moduleName = "");
     void HandleInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     void HandleOTA();
     void HandleIdle() const;
@@ -50,7 +52,7 @@ private:
         const int32_t userId, std::vector<std::string> &results) const;
     std::string GetSouceAp(const std::string &mergedAp, const std::string &rtAp) const;
     bool IsSupportARM64() const;
-    std::string GetArkProfilePath(const std::string &bundleName, const std::string &moduleName) const;
+    std::string FindArkProfilePath(const std::string &bundleName, const std::string &moduleName) const;
     std::optional<AOTArgs> BuildAOTArgs(const InnerBundleInfo &info, const std::string &moduleName,
         const std::string &compileMode, bool isEnableBaselinePgo = false) const;
     void HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const;
@@ -78,12 +80,15 @@ private:
     bool GetUserBehaviourAppList(std::vector<std::string> &bundleNames, int32_t size) const;
     bool IsOTACompileSwitchOn() const;
     void ReportSysEvent(const std::map<std::string, EventInfo> &sysEventMap) const;
-    
+
     void DeleteArkAp(const BundleInfo &bundleInfo, const int32_t userId) const;
     void ClearArkAp(const std::string &oldAOTVersion, const std::string &curAOTVersion) const;
     std::string GetCurAOTVersion() const;
     bool GetOldAOTVersion(std::string &oldAOTVersion) const;
     void SaveAOTVersion(const std::string &curAOTVersion) const;
+    void HandleArkPathsChange() const;
+    void DelDeprecatedArkPaths() const;
+    void CreateArkProfilePaths() const;
 private:
     std::atomic<bool> OTACompileDeadline_ { false };
     mutable std::mutex executeMutex_;

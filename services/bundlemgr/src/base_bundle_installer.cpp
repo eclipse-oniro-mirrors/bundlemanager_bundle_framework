@@ -74,9 +74,7 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
 namespace {
-constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
 constexpr const char* DATA_PRELOAD_APP = "/data/preload/app/";
-constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* LOG = "log";
 constexpr const char* HSP_VERSION_PREFIX = "v";
@@ -820,7 +818,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     GetExtensionDirsChange(newInfos, oldInfo);
 
     if (isAppExist_) {
-        (void)InstalldClient::GetInstance()->RemoveDir(ARK_CACHE_PATH + oldInfo.GetBundleName());
+        (void)InstalldClient::GetInstance()->RemoveDir(ServiceConstants::ARK_CACHE_PATH + oldInfo.GetBundleName());
         SetAtomicServiceModuleUpgrade(oldInfo);
         if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
             LOG_E(BMS_TAG_INSTALLER, "old bundle info is shared package");
@@ -3305,9 +3303,7 @@ ErrCode BaseBundleInstaller::CreateArkProfile(
         return result;
     }
 
-    std::string arkProfilePath;
-    arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName);
+    std::string arkProfilePath = AOTHandler::BuildArkProfilePath(userId, bundleName);
     LOG_D(BMS_TAG_INSTALLER, "CreateArkProfile %{public}s", arkProfilePath.c_str());
     int32_t mode = (uid == gid) ? S_IRWXU : (S_IRWXU | S_IRGRP | S_IXGRP);
     return InstalldClient::GetInstance()->Mkdir(arkProfilePath, mode, uid, gid);
@@ -3315,9 +3311,7 @@ ErrCode BaseBundleInstaller::CreateArkProfile(
 
 ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int32_t userId) const
 {
-    std::string arkProfilePath;
-    arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName);
+    std::string arkProfilePath = AOTHandler::BuildArkProfilePath(userId, bundleName);
     LOG_D(BMS_TAG_INSTALLER, "DeleteArkProfile %{public}s", arkProfilePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
 }
@@ -3497,7 +3491,7 @@ ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const s
     std::string arkNativeFilePath;
     arkNativeFilePath.append(ServiceConstants::ABI_MAP.at(cpuAbi)).append(ServiceConstants::PATH_SEPARATOR);
     std::string targetPath;
-    targetPath.append(ARK_CACHE_PATH).append(info.GetBundleName())
+    targetPath.append(ServiceConstants::ARK_CACHE_PATH).append(info.GetBundleName())
         .append(ServiceConstants::PATH_SEPARATOR).append(arkNativeFilePath);
     LOG_D(BMS_TAG_INSTALLER, "Begin extract an modulePath: %{public}s targetPath: %{public}s cpuAbi: %{public}s",
         modulePath.c_str(), targetPath.c_str(), cpuAbi.c_str());
@@ -3558,11 +3552,8 @@ ErrCode BaseBundleInstaller::CopyPgoFile(
     const std::string &bundleName,
     int32_t userId) const
 {
-    std::string targetPath;
-    targetPath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName)
-        .append(ServiceConstants::PATH_SEPARATOR).append(moduleName)
-        .append(ServiceConstants::AP_SUFFIX);
+    std::string targetPath =
+        AOTHandler::BuildArkProfilePath(userId, bundleName, moduleName + ServiceConstants::AP_SUFFIX);
     if (InstalldClient::GetInstance()->CopyFile(pgoPath, targetPath) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "copy file from %{public}s to %{public}s failed", pgoPath.c_str(), targetPath.c_str());
         return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
@@ -3575,9 +3566,7 @@ ErrCode BaseBundleInstaller::ExtractArkProfileFile(
     const std::string &bundleName,
     int32_t userId) const
 {
-    std::string targetPath;
-    targetPath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName);
+    std::string targetPath = AOTHandler::BuildArkProfilePath(userId, bundleName);
     LOG_D(BMS_TAG_INSTALLER, "Begin to extract ap file, modulePath : %{public}s, targetPath : %{public}s",
         modulePath.c_str(), targetPath.c_str());
     ExtractParam extractParam;
@@ -3596,7 +3585,7 @@ ErrCode BaseBundleInstaller::ExtractArkProfileFile(
 ErrCode BaseBundleInstaller::DeleteOldArkNativeFile(const InnerBundleInfo &oldInfo)
 {
     std::string targetPath;
-    targetPath.append(ARK_CACHE_PATH).append(oldInfo.GetBundleName());
+    targetPath.append(ServiceConstants::ARK_CACHE_PATH).append(oldInfo.GetBundleName());
     auto result = InstalldClient::GetInstance()->RemoveDir(targetPath);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove arkNativeFilePath %{public}s, error is %{public}d",

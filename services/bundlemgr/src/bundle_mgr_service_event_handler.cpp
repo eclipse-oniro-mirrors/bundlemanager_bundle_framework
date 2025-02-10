@@ -352,6 +352,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_BACK_UP_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
     UpdateOtaFlag(OTAFlag::CHECK_INSTALL_SOURCE);
+    UpdateOtaFlag(OTAFlag::DELETE_DEPRECATED_ARK_PATHS);
     PerfProfile::GetInstance().Dump();
 }
 
