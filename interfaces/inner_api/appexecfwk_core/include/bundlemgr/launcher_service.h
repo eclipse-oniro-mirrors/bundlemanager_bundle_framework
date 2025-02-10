@@ -28,7 +28,6 @@
 #include "bundle_monitor.h"
 #include "bundle_status_callback_interface.h"
 #include "launcher_ability_info.h"
-#include "launcher_shortcut_info.h"
 #include "ability_info.h"
 #include "application_info.h"
 #include "want.h"
@@ -66,7 +65,7 @@ public:
     /**
      * @brief Obtains information about the shortcuts of the application.
      * @param bundleName Indicates the bundle name of the application.
-     * @param launcherShortcutInfo List of LauncherShortcutInfo objects if obtained.
+     * @param ShortcutInfo List of ShortcutInfo objects if obtained.
      * @return Returns true if the function is successfully called; returns false otherwise.
      */
     virtual ErrCode GetShortcutInfos(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfo);
@@ -96,7 +95,7 @@ public:
     /**
      * @brief Obtains information about the shortcuts of the application.
      * @param bundleName Indicates the bundle name of the application.
-     * @param launcherShortcutInfo List of LauncherShortcutInfo objects if obtained.
+     * @param ShortcutInfo List of ShortcutInfo objects if obtained.
      * @return Returns err code of result.
      */
     ErrCode GetShortcutInfoV9(const std::string &bundleName,
