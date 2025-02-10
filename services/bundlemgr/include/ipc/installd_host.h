@@ -229,6 +229,8 @@ private:
 
     bool HandleDeleteDataGroupDirs(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleBackUpFirstBootLog(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();

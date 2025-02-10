@@ -43,6 +43,7 @@ public:
     void SavePreInstallException(const std::string &bundleName);
 
 private:
+    void CheckBackUpFirstBootLog();
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
     const sptr<IBundleInstaller> GetBundleInstaller();
     void InnerUninstallBundle(int32_t userId, const std::vector<BundleInfo> &bundleInfos);

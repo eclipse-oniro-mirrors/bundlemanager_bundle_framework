@@ -1017,6 +1017,15 @@ ErrCode InstalldProxy::DeleteDataGroupDirs(const std::vector<std::string> &uuidL
     return TransactInstalldCmd(InstalldInterfaceCode::DELETE_DATA_GROUP_DIRS, data, reply, option);
 }
 
+ErrCode InstalldProxy::BackUpFirstBootLog()
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::BACK_UP_FIRST_BOOT_LOG, data, reply, option);
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {

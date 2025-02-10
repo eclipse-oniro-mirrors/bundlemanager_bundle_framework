@@ -227,6 +227,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_DATA_GROUP_DIRS):
             result = HandleDeleteDataGroupDirs(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::BACK_UP_FIRST_BOOT_LOG):
+            result = HandleBackUpFirstBootLog(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1045,6 +1048,16 @@ void InstalldHost::AddCloseInstalldTask()
     };
     handler_->PostTask(task, UNLOAD_TASK_NAME, UNLOAD_TIME);
     LOG_D(BMS_TAG_INSTALLD, "send unload task successfully");
+}
+
+bool InstalldHost::HandleBackUpFirstBootLog(MessageParcel &data, MessageParcel &reply)
+{
+    ErrCode result = BackUpFirstBootLog();
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (result != ERR_OK) {
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

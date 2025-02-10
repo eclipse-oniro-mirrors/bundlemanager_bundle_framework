@@ -82,6 +82,13 @@ constexpr const char* AI_SUFFIX = ".ai";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* BUNDLE_BACKUP_KEEP_DIR = "/.backup";
 constexpr const char* ATOMIC_SERVICE_PATH = "+auid-";
+constexpr const char* SEPARATOR = "/";
+constexpr const char* EVENT_LOG = "/data/log/eventlog/";
+const std::vector<std::string> EVENT_LOG_FILE_HEADS = {"SERVICE_BLOCK", "SERVICE_WARNING",
+    "SERVICE_TIMEOUT", "IPC_FULL", "HUNGTASK", "SERIAL_TASK_TIMEOUT", "THREAD_BLOCK"};
+constexpr const char* HILOG_LOG = "/data/log/hilog/";
+const std::vector<std::string> HILOG_FILE_HEAD = {"hilog."};
+constexpr const char* LOG_PATH = "/log/";
 const std::vector<std::string> DRIVER_EXECUTE_DIR {
     "/print_service/cups/serverbin/filter", "/print_service/cups/datadir/model", "/print_service/sane/backend"
 };
@@ -2415,5 +2422,84 @@ bool InstalldOperator::EnforceEncryption(std::unordered_map<std::string, std::st
     return true;
 }
 #endif
+
+std::string InstalldOperator::IncludeTrailingPathDelimiter(const std::string& path)
+{
+    if (path.empty()) {
+        return  SEPARATOR;
+    }
+    if (path.rfind(SEPARATOR) != path.size() - 1) {
+        return path + SEPARATOR;
+    }
+ 
+    return path;
+}
+ 
+std::string InstalldOperator::GetFileName(const std::string &sourcePath)
+{
+    size_t pos = sourcePath.find_last_of(SEPARATOR);
+    if (pos == std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid sourcePath %{public}s", sourcePath.c_str());
+        return sourcePath;
+    }
+    return sourcePath.substr(pos + 1);
+}
+ 
+void InstalldOperator::GetDirFiles (const std::string& path, std::vector<std::string>&files, bool isRecursive)
+{
+    LOG_I(BMS_TAG_INSTALLD, "start for dir %{public}s", path.c_str());
+    DIR* dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid dir %{public}s, errorNo: %{public}d:%{public}s",
+            path.c_str(), errno, strerror(errno));
+        return;
+    }
+
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        // current dir or parent dir
+        if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
+            LOG_W(BMS_TAG_INSTALLD, "current dir or parent dir %{public}s", ptr->d_name);
+            continue;
+        } else if (ptr->d_type == DT_DIR && isRecursive) {
+            std::string pathStringWithDelimiter = IncludeTrailingPathDelimiter(path) + std::string(ptr->d_name);
+            LOG_W(BMS_TAG_INSTALLD, "%{public}s is DT_DIR, continue", pathStringWithDelimiter.c_str());
+            GetDirFiles(pathStringWithDelimiter, files);
+        } else {
+            std::string file = IncludeTrailingPathDelimiter(path) + std::string(ptr->d_name);
+            files.push_back(file);
+            LOG_W(BMS_TAG_INSTALLD, "get file %{public}s, continue", file.c_str());
+        }
+    }
+    LOG_I(BMS_TAG_INSTALLD, "end for dir %{public}s", path.c_str());
+    closedir(dir);
+}
+ 
+std::vector<std::string> InstalldOperator::GetLogPath(const std::string& logDir,
+    const std::vector<std::string>& fileHeads)
+{
+    std::vector<std::string> logPaths;
+    std::vector<std::string> files;
+    GetDirFiles(logDir, files);
+    for (const auto& file : files) {
+        for (const auto& fileHead : fileHeads) {
+            if (file.find(fileHead) == std::string::npos) {
+                continue;
+            }
+            logPaths.push_back(file);
+        }
+    }
+    return logPaths;
+}
+ 
+std::vector<std::string> InstalldOperator::GetFirstBootLogFile()
+{
+    std::vector<std::string> logPaths;
+    std::vector<std::string> path = GetLogPath(EVENT_LOG, EVENT_LOG_FILE_HEADS);
+    logPaths.insert(logPaths.end(), path.begin(), path.end());
+    path = GetLogPath(HILOG_LOG, HILOG_FILE_HEAD);
+    logPaths.insert(logPaths.end(), path.begin(), path.end());
+    return logPaths;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
