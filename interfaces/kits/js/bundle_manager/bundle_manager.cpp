@@ -3343,6 +3343,18 @@ void CreateApplicationInfoFlagObject(napi_env env, napi_value value)
         ApplicationInfoFlag::FLAG_OTHER_INSTALLED), &nApplicationInfoFlagOtherInstalled));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLAG_OTHER_INSTALLED",
         nApplicationInfoFlagOtherInstalled));
+
+    napi_value nApplicationInfoFlagPreinstalledApp;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        ApplicationInfoFlag::FLAG_PREINSTALLED_APP), &nApplicationInfoFlagPreinstalledApp));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLAG_PREINSTALLED_APP",
+        nApplicationInfoFlagPreinstalledApp));
+
+    napi_value nApplicationInfoFlagPreinstalledAppUpdate;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        ApplicationInfoFlag::FLAG_PREINSTALLED_APP_UPDATE), &nApplicationInfoFlagPreinstalledAppUpdate));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLAG_PREINSTALLED_APP_UPDATE",
+        nApplicationInfoFlagPreinstalledAppUpdate));
 }
 
 void CreateAppDistributionTypeObject(napi_env env, napi_value value)

@@ -2250,6 +2250,7 @@ private:
         std::vector<RequestPermission> &requestPermissions) const;
     void PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_t appIndex,
         const std::string &bundleName, const std::string &caller) const;
+    void GetPreInstallApplicationFlags(ApplicationInfo &appInfo) const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
