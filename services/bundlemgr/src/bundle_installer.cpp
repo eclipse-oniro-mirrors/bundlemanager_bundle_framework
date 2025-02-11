@@ -51,7 +51,7 @@ void BundleInstaller::Install(const std::string &bundleFilePath, const InstallPa
     } else {
         resultCode = InstallBundle(
             bundleFilePath, installParam, Constants::AppType::THIRD_PARTY_APP);
-        InstallDriverForAllUsers(installParam);
+        InstallForAllUsers(installParam);
     }
     std::string resultMsg = GetCheckResultMsg();
     SetCheckResultMsg("");
@@ -98,7 +98,7 @@ void BundleInstaller::Install(const std::vector<std::string> &bundleFilePaths, c
         NotifyAllBundleStatus();
     } else {
         resultCode = InstallBundle(bundleFilePaths, installParam, Constants::AppType::THIRD_PARTY_APP);
-        InstallDriverForAllUsers(installParam);
+        InstallForAllUsers(installParam);
     }
     std::string resultMsg = GetCheckResultMsg();
     SetCheckResultMsg("");
@@ -219,14 +219,14 @@ std::set<int32_t> BundleInstaller::GetExistsCommonUserIds()
     return userIds;
 }
 
-void BundleInstaller::InstallDriverForAllUsers(const InstallParam &installParam)
+void BundleInstaller::InstallForAllUsers(const InstallParam &installParam)
 {
     std::string bundleName = GetCurrentBundleName();
-    if (!HasDriverExtensionAbility(bundleName)) {
+    if (!HasDriverExtensionAbility(bundleName) && !IsEnterpriseForAllUser(installParam, bundleName)) {
         APP_LOGD("bundle %{public}s has no driver extension ability", bundleName.c_str());
         return;
     }
-    APP_LOGI("bundle %{public}s has driver extension ability, need to install for all users", bundleName.c_str());
+    APP_LOGI("bundle %{public}s need to install for all users", bundleName.c_str());
     ResetInstallProperties();
     auto userInstallParam = installParam;
     for (auto userId : GetExistsCommonUserIds()) {
@@ -238,7 +238,7 @@ void BundleInstaller::InstallDriverForAllUsers(const InstallParam &installParam)
         ErrCode resultCode = InstallBundleByBundleName(bundleName, userInstallParam);
         ResetInstallProperties();
         if (resultCode != ERR_OK) {
-            APP_LOGE("install driver for user %{public}d failed, resultCode: %{public}d", userId, resultCode);
+            APP_LOGE("install for user %{public}d failed, resultCode: %{public}d", userId, resultCode);
         }
     }
     NotifyAllBundleStatus();

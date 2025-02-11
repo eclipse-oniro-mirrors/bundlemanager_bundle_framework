@@ -217,7 +217,8 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .abilityName = mainAbility_,
             .appDistributionType = appDistributionType_,
         };
-        if (installParam.allUser || HasDriverExtensionAbility(bundleName_)) {
+        if (installParam.allUser || HasDriverExtensionAbility(bundleName_) ||
+            IsEnterpriseForAllUser(installParam, bundleName_)) {
             AddBundleStatus(installRes);
         } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
@@ -265,7 +266,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
         };
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
-        } else if (HasDriverExtensionAbility(bundleName)) {
+        } else if (HasDriverExtensionAbility(bundleName) || IsEnterpriseForAllUser(installParam, bundleName)) {
             AddBundleStatus(installRes);
         } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
@@ -3817,6 +3818,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     checkParam.specifiedDistributionType = installParam.specifiedDistributionType;
     checkParam.appType = appType;
     checkParam.removable = installParam.removable;
+    checkParam.isInstalledForAllUser = installParam.IsEnterpriseForAllUser();
     ErrCode ret = bundleInstallChecker_->ParseHapFiles(
         bundlePaths, checkParam, hapVerifyRes, infos);
     if (ret != ERR_OK) {
@@ -6577,6 +6579,33 @@ bool BaseBundleInstaller::HasDriverExtensionAbility(const std::string &bundleNam
             }
         }
     }
+    return false;
+}
+
+bool BaseBundleInstaller::IsEnterpriseForAllUser(const InstallParam &installParam, const std::string &bundleName)
+{
+    if (!installParam.IsEnterpriseForAllUser()) {
+        return false;
+    }
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false)) {
+        LOG_W(BMS_TAG_INSTALLER, "not enterprise device, bundleName: %{public}s", bundleName.c_str());
+        return false;
+    }
+    if (!InitDataMgr()) {
+        return false;
+    }
+    InnerBundleInfo info;
+    bool isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName, info);
+    if (isAppExist) {
+        std::string appDistributionType = info.GetAppDistributionType();
+        if (Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM != appDistributionType &&
+            Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL != appDistributionType) {
+            LOG_W(BMS_TAG_INSTALLER, "not enterprise app, bundleName: %{public}s", bundleName.c_str());
+            return false;
+        }
+        return info.IsInstalledForAllUser();
+    }
+    LOG_W(BMS_TAG_INSTALLER, "app not exist: %{public}s", bundleName.c_str());
     return false;
 }
 

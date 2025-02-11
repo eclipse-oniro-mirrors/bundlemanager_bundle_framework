@@ -1224,7 +1224,8 @@ protected:
                 "installSource": "unknown",
                 "configuration":"",
                 "cloudFileSyncEnabled": false,
-                "applicationFlags":1
+                "applicationFlags":1,
+                "installedForAllUser": false
             },
             "baseBundleInfo": {
                 "abilityInfos": [

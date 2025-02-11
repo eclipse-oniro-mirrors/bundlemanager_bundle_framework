@@ -69,6 +69,7 @@ const char* APPLICATION_API_RELEASETYPE = "apiReleaseType";
 const char* APPLICATION_DEBUG = "debug";
 const char* APPLICATION_DEVICE_ID = "deviceId";
 const char* APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED = "distributedNotificationEnabled";
+const char* APPLICATION_INSTALLED_FOR_ALL_USER = "installedForAllUser";
 const char* APPLICATION_ENTITY_TYPE = "entityType";
 const char* APPLICATION_PROCESS = "process";
 const char* APPLICATION_SUPPORTED_MODES = "supportedModes";
@@ -429,6 +430,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     debug = parcel.ReadBool();
     deviceId = Str16ToStr8(parcel.ReadString16());
     distributedNotificationEnabled = parcel.ReadBool();
+    installedForAllUser = parcel.ReadBool();
     allowEnableNotification = parcel.ReadBool();
     entityType = Str16ToStr8(parcel.ReadString16());
     process = Str16ToStr8(parcel.ReadString16());
@@ -661,6 +663,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, debug);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceId));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, distributedNotificationEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, installedForAllUser);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowEnableNotification);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(entityType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
@@ -957,6 +960,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_DEBUG, applicationInfo.debug},
         {APPLICATION_DEVICE_ID, applicationInfo.deviceId},
         {APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED, applicationInfo.distributedNotificationEnabled},
+        {APPLICATION_INSTALLED_FOR_ALL_USER, applicationInfo.installedForAllUser},
         {APPLICATION_ALLOW_ENABLE_NOTIFICATION, applicationInfo.allowEnableNotification},
         {APPLICATION_ENTITY_TYPE, applicationInfo.entityType},
         {APPLICATION_PROCESS, applicationInfo.process},
@@ -1098,6 +1102,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.deviceId, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED,
         applicationInfo.distributedNotificationEnabled, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_INSTALLED_FOR_ALL_USER,
+        applicationInfo.installedForAllUser, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ENABLE_NOTIFICATION,
         applicationInfo.allowEnableNotification, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ENTITY_TYPE,

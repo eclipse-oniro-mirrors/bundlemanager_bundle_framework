@@ -159,7 +159,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBu
         APP_LOGE("GetAllPreInstallBundleInfos failed %{public}d", userId);
         return;
     }
-    GetAllDriverBundleInfos(preInstallBundleInfos);
+    GetAdditionalBundleInfos(preInstallBundleInfos);
     g_installedHapNum = 0;
     std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
     int32_t totalHapNum = static_cast<int32_t>(preInstallBundleInfos.size());
@@ -169,7 +169,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBu
     for (const auto &info : preInstallBundleInfos) {
         InstallParam installParam;
         installParam.userId = userId;
-        installParam.isPreInstallApp = !info.GetIsNonPreDriverApp();
+        installParam.isPreInstallApp = !info.GetIsAdditionalApp();
         installParam.installFlag = InstallFlag::NORMAL;
         installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
         sptr<UserReceiverImpl> userReceiverImpl(
@@ -243,7 +243,7 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
     return !preInstallBundleInfos.empty();
 }
 
-void BundleUserMgrHostImpl::GetAllDriverBundleInfos(std::set<PreInstallBundleInfo> &preInstallBundleInfos)
+void BundleUserMgrHostImpl::GetAdditionalBundleInfos(std::set<PreInstallBundleInfo> &preInstallBundleInfos)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -251,11 +251,11 @@ void BundleUserMgrHostImpl::GetAllDriverBundleInfos(std::set<PreInstallBundleInf
         return;
     }
     // get all non pre-installed driver apps to install for new user
-    std::vector<std::string> driverBundleNames = dataMgr->GetAllDriverBundleName();
-    for (auto &driverBundleName : driverBundleNames) {
+    std::vector<std::string> bundleNames = dataMgr->GetBundleNamesForNewUser();
+    for (auto &bundleName : bundleNames) {
         PreInstallBundleInfo preInstallBundleInfo;
-        preInstallBundleInfo.SetBundleName(driverBundleName);
-        preInstallBundleInfo.SetIsNonPreDriverApp(true);
+        preInstallBundleInfo.SetBundleName(bundleName);
+        preInstallBundleInfo.SetIsAdditionalApp(true);
         preInstallBundleInfos.insert(preInstallBundleInfo);
     }
 }

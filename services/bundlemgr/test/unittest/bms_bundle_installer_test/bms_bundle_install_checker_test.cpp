@@ -27,6 +27,7 @@
 #include "bundle_util.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
+#include "parameters.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -2495,6 +2496,39 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAllowEnterpriseBundle_0100, Function 
     BundleInstallChecker installChecker;
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
     auto ret = installChecker.CheckAllowEnterpriseBundle(hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckEnterpriseForAllUser_0100
+ * @tc.name: Test CheckEnterpriseForAllUser
+ * @tc.desc: 1.Test CheckEnterpriseForAllUser
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckEnterpriseForAllUser_0100, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InstallCheckParam checkParam;
+    checkParam.isInstalledForAllUser = false;
+    std::string distributionType = Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION;
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
+    auto ret = installChecker.CheckEnterpriseForAllUser(infos, checkParam, distributionType);
+    EXPECT_EQ(ret, ERR_OK);
+
+    checkParam.isInstalledForAllUser = true;
+    ret = installChecker.CheckEnterpriseForAllUser(infos, checkParam, distributionType);
+    EXPECT_EQ(ret, ERR_OK);
+
+    distributionType = Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL;
+    ret = installChecker.CheckEnterpriseForAllUser(infos, checkParam, distributionType);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED);
+
+    distributionType = Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM;
+    ret = installChecker.CheckEnterpriseForAllUser(infos, checkParam, distributionType);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED);
+
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    ret = installChecker.CheckEnterpriseForAllUser(infos, checkParam, distributionType);
     EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS

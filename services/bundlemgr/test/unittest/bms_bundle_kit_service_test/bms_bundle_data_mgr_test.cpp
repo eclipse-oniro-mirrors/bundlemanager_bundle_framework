@@ -7865,11 +7865,11 @@ HWTEST_F(BmsBundleDataMgrTest, InnerGetBigString_0100, Function | SmallTest | Le
 }
 
 /**
- * @tc.number: GetAllDriverBundleInfos_0100
- * @tc.name: test GetAllDriverBundleInfos
- * @tc.desc: test GetAllDriverBundleInfos
+ * @tc.number: GetAdditionalBundleInfos_0100
+ * @tc.name: test GetAdditionalBundleInfos
+ * @tc.desc: test GetAdditionalBundleInfos
  */
-HWTEST_F(BmsBundleDataMgrTest, GetAllDriverBundleInfos_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleDataMgrTest, GetAdditionalBundleInfos_0100, Function | SmallTest | Level0)
 {
     ASSERT_NE(bundleUserMgrHostImpl_, nullptr);
     auto dataMgr = bundleUserMgrHostImpl_->GetDataMgrFromService();
@@ -7880,7 +7880,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllDriverBundleInfos_0100, Function | SmallTes
     innerBundleInfo.baseExtensionInfos_.emplace(BUNDLE_TEST2, info);
     dataMgr->bundleInfos_[BUNDLE_TEST1] = innerBundleInfo;
     std::set<PreInstallBundleInfo> preInstallBundleInfos;
-    bundleUserMgrHostImpl_->GetAllDriverBundleInfos(preInstallBundleInfos);
+    bundleUserMgrHostImpl_->GetAdditionalBundleInfos(preInstallBundleInfos);
     EXPECT_FALSE(preInstallBundleInfos.empty());
 }
 

@@ -113,7 +113,8 @@ private:
 
 public:
     static constexpr const char* RENAME_INSTALL_KEY = "ohos.bms.param.renameInstall";
-    static constexpr const char* RENAME_INSTALL_ENABLE_VALUE = "true";
+    static constexpr const char* ENTERPRISE_FOR_ALL_USER_KEY = "ohos.bms.param.enterpriseForAllUser";
+    static constexpr const char* PARAMETERS_VALUE_TRUE = "true";
 
     bool GetForceExecuted() const
     {
@@ -154,13 +155,19 @@ public:
     bool IsRenameInstall() const
     {
         return parameters.find(RENAME_INSTALL_KEY) != parameters.end() &&
-            parameters.at(RENAME_INSTALL_KEY) == RENAME_INSTALL_ENABLE_VALUE;
+            parameters.at(RENAME_INSTALL_KEY) == PARAMETERS_VALUE_TRUE;
     }
 
     bool IsVerifyUninstallRule() const
     {
         return parameters.find(Constants::VERIFY_UNINSTALL_RULE_KEY) != parameters.end() &&
-               parameters.at(Constants::VERIFY_UNINSTALL_RULE_KEY) == Constants::VERIFY_UNINSTALL_RULE_VALUE;
+            parameters.at(Constants::VERIFY_UNINSTALL_RULE_KEY) == Constants::VERIFY_UNINSTALL_RULE_VALUE;
+    }
+
+    bool IsEnterpriseForAllUser() const
+    {
+        return parameters.find(ENTERPRISE_FOR_ALL_USER_KEY) != parameters.end() &&
+            parameters.at(ENTERPRISE_FOR_ALL_USER_KEY) == PARAMETERS_VALUE_TRUE;
     }
 
 private:
