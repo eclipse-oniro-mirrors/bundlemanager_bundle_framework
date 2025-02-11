@@ -16,6 +16,7 @@
 #include "bundle_resource_param.h"
 
 #include "app_log_wrapper.h"
+#include "locale_config.h"
 #include "parameter.h"
 
 namespace OHOS {
