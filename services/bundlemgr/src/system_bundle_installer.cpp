@@ -109,6 +109,9 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
     for (auto userId : currentBundleUserIds) {
         userIdSet.insert(userId);
     }
+    if (!installParam.removable) {
+        userIdSet.insert(Constants::START_USERID);
+    }
     if (userIdSet.empty() || (userIdSet.find(Constants::DEFAULT_USERID) != userIdSet.end())) {
         // for singleton hap or no user
         userIdSet = dataMgr->GetAllUser();
