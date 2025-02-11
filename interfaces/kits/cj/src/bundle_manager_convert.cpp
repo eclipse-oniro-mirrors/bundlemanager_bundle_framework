@@ -554,6 +554,29 @@ RetHapModuleInfo ConvertHapModuleInfo(const AppExecFwk::HapModuleInfo& hapModule
     return hapInfo;
 }
 
+extern "C" {
+#define EXPORT __attribute__((visibility("default")))
+EXPORT RetAbilityInfo OHOS_ConvertAbilityInfo(void* param)
+{
+    RetAbilityInfo retInfo;
+    auto abilityInfo = reinterpret_cast<AppExecFwk::AbilityInfo*>(param);
+    if (abilityInfo == nullptr) {
+        return retInfo;
+    }
+    return ConvertAbilityInfo(*abilityInfo);
+}
+
+EXPORT RetHapModuleInfo OHOS_ConvertHapInfo(void* param)
+{
+    RetHapModuleInfo retInfo;
+    auto hapModuleInfo = reinterpret_cast<AppExecFwk::HapModuleInfo*>(param);
+    if (hapModuleInfo == nullptr) {
+        return retInfo;
+    }
+    return ConvertHapModuleInfo(*hapModuleInfo);
+}
+}
+
 CArrHapInfo ConvertArrHapInfo(const std::vector<AppExecFwk::HapModuleInfo>& hapModuleInfos)
 {
     CArrHapInfo hapInfos;
