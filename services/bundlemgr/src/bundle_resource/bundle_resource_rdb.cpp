@@ -550,7 +550,9 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
         }
         absRdbPredicates.Clear();
     }
-    BackupRdb();
+    if (ret) {
+        BackupRdb();
+    }
     return ret;
 }
 
