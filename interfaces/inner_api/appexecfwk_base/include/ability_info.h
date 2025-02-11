@@ -119,7 +119,7 @@ struct StartWindowResource : public Parcelable {
     uint32_t startWindowBrandingImageId = 0;
     uint32_t startWindowBackgroundColorId = 0;
     uint32_t startWindowBackgroundImageId = 0;
-    uint32_t startWindowBackgroundImageFitId = 0;
+    std::string startWindowBackgroundImageFit = "Cover";
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

@@ -65,6 +65,7 @@ const std::string EMPTY_STRING = "";
 constexpr int64_t DISK_REMAINING_SIZE_LIMIT = 1024 * 1024 * 10; // 10M
 constexpr uint32_t ID_INVALID = 0;
 constexpr const char* COLON = ":";
+constexpr const char* DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE = "Cover";
 }
 
 std::mutex BundleUtil::g_mutex;
@@ -1082,6 +1083,25 @@ bool BundleUtil::StrToUint32(const std::string &str, uint32_t &value)
     }
     value = static_cast<uint32_t>(result);
     return true;
+}
+
+std::string BundleUtil::ExtractStringFromJson(nlohmann::json &jsonObject, const std::string &key)
+{
+    std::string str = DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE;
+    if (jsonObject.find(key) == jsonObject.end()) {
+        APP_LOGW("the default value is Cover");
+        return str;
+    }
+    if (!jsonObject.at(key).is_string()) {
+        APP_LOGE("key is not string");
+        return str;
+    }
+    str = jsonObject.at(key).get<std::string>();
+    if (str.empty() || str.length() > Constants::MAX_JSON_STRING_LENGTH) {
+        APP_LOGE("exceeding the maximum string length");
+        return DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE;
+    }
+    return str;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
