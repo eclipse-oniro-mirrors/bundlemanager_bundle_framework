@@ -1174,11 +1174,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // hapVerifyResults at here will not be empty
     verifyRes_ = hapVerifyResults[0];
 
-    Security::Verify::ProvisionInfo provisionInfo = verifyRes_.GetProvisionInfo();
-    if (provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING) {
-        result = DeliveryProfileToCodeSign();
-        CHECK_RESULT(result, "delivery profile failed %{public}d");
-    }
+    result = DeliveryProfileToCodeSign();
+    CHECK_RESULT(result, "delivery profile failed %{public}d");
 
     UpdateInstallerState(InstallerState::INSTALL_PARSED);                          // ---- 20%
 
@@ -2064,10 +2061,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
         LOG_E(BMS_TAG_INSTALLER, "create bundle and data dir failed");
         return result;
     }
-
-    // delivery sign profile to code signature
-    result = DeliveryProfileToCodeSign();
-    CHECK_RESULT(result, "delivery profile failed %{public}d");
 
     ScopeGuard bundleGuard([&] { RemoveBundleAndDataDir(info, false); });
     std::string modulePath = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_;
