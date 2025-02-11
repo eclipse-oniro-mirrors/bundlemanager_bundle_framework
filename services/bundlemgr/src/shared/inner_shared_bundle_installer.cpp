@@ -152,7 +152,7 @@ ErrCode InnerSharedBundleInstaller::NotifyBundleStatusOfShared(const NotifyBundl
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
@@ -269,7 +269,7 @@ ErrCode InnerSharedBundleInstaller::CheckAppLabelInfo()
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     isBundleExist_ = dataMgr->FetchInnerBundleInfo(bundleName_, oldBundleInfo_);
@@ -437,7 +437,7 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("get dataMgr failed");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     PreInstallBundleInfo preInstallBundleInfo;
@@ -473,13 +473,13 @@ ErrCode InnerSharedBundleInstaller::SaveBundleInfoToStorage()
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("get dataMgr failed");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     if (isBundleExist_) {
         if (!dataMgr->UpdateInnerBundleInfo(newBundleInfo_, false)) {
             APP_LOGE("save bundle failed : %{public}s", bundleName_.c_str());
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
         }
         return ERR_OK;
     }
@@ -488,7 +488,7 @@ ErrCode InnerSharedBundleInstaller::SaveBundleInfoToStorage()
     if (!dataMgr->AddInnerBundleInfo(bundleName_, newBundleInfo_)) {
         dataMgr->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_FAIL);
         APP_LOGE("save bundle failed : %{public}s", bundleName_.c_str());
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_ADD_BUNDLE_ERROR;
     }
     dataMgr->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_SUCCESS);
     return ERR_OK;
@@ -809,19 +809,19 @@ ErrCode InnerSharedBundleInstaller::MarkInstallFinish()
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     InnerBundleInfo info;
     if (!dataMgr->FetchInnerBundleInfo(bundleName_, info)) {
         APP_LOGE("mark finish failed, -n %{public}s not exist", bundleName_.c_str());
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_FETCH_BUNDLE_ERROR;
     }
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!dataMgr->UpdateInnerBundleInfo(info, true)) {
         if (!dataMgr->UpdateInnerBundleInfo(info, true)) {
             APP_LOGE("save mark failed, -n %{public}s", bundleName_.c_str());
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
         }
     }
     return ERR_OK;
