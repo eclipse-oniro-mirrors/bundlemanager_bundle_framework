@@ -83,7 +83,6 @@ private:
         const InstallParam &installParam) const;
 
     void RollBack();
-    ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
     void RemoveInfo(const std::string &bundleName);
     void SavePreInstallBundleInfo(ErrCode installResult,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InstallParam &installParam);

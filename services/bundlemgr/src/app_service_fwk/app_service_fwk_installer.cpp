@@ -133,6 +133,14 @@ ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName, bool is
         APP_LOGE("uninstall already start");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
+    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
+        APP_LOGE("delete inner info failed for bundle %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    }
     std::string bundleDir =
         std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
         AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName;
@@ -143,14 +151,6 @@ ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName, bool is
     }
     if (!isKeepData) {
         InstalldClient::GetInstance()->RemoveBundleDataDir(bundleName, 0, false);
-    }
-    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
-        APP_LOGE("delete inner info failed for bundle %{public}s", bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
-    PreInstallBundleInfo preInstallBundleInfo;
-    if (dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
-        dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
     }
     return ERR_OK;
 }
@@ -333,7 +333,9 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
     result = MarkInstallFinish();
     if (result != ERR_OK) {
         APP_LOGE("mark install finish failed %{public}d", result);
-        RollBack();
+        if (!versionUpgrade_ && !moduleUpdate_) {
+            RollBack();
+        }
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
         return result;
     }
@@ -802,10 +804,8 @@ void AppServiceFwkInstaller::RollBack()
         APP_LOGW("pre bundle: %{public}s no rollback due to no space", bundleName_.c_str());
         return;
     }
-    // 1.RemoveBundleDir
-    RemoveBundleCodeDir(newInnerBundleInfo_);
 
-    // 2.RemoveCache
+    // RemoveCache
     RemoveInfo(bundleName_);
 }
 
@@ -976,16 +976,6 @@ bool AppServiceFwkInstaller::GetInnerBundleInfoWithDisable(InnerBundleInfo &info
     }
     isAppExist = dataMgr_->GetInnerBundleInfoWithDisable(bundleName_, info);
     return true;
-}
-
-ErrCode AppServiceFwkInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info) const
-{
-    auto result = InstalldClient::GetInstance()->RemoveDir(info.GetAppCodePath());
-    if (result != ERR_OK) {
-        APP_LOGE("Fail remove dir %{public}s, err %{public}d",
-            info.GetAppCodePath().c_str(), result);
-    }
-    return result;
 }
 
 void AppServiceFwkInstaller::RemoveInfo(const std::string &bundleName)
