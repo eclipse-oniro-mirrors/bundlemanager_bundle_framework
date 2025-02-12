@@ -799,6 +799,7 @@ public:
     ErrCode GetInnerBundleInfoWithBundleFlagsV9(const std::string &bundleName, int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     std::shared_ptr<BundleSandboxAppHelper> GetSandboxAppHelper() const;
+    ErrCode GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo);
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     bool QueryInfoAndSkillsByElement(int32_t userId, const Element& element,
