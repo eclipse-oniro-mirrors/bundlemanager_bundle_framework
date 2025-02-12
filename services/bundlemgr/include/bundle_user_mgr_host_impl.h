@@ -46,7 +46,8 @@ private:
     void InnerUninstallBundle(int32_t userId, const std::vector<BundleInfo> &bundleInfos);
     ErrCode CheckInitialUser();
     void BeforeCreateNewUser(int32_t userId);
-    void OnCreateNewUser(int32_t userId, const std::vector<std::string> &disallowList = {});
+    void OnCreateNewUser(int32_t userId, bool needToSkipPreBundleInstall,
+        const std::vector<std::string> &disallowList = {});
     void AfterCreateNewUser(int32_t userId);
     void RemoveArkProfile(int32_t userId);
     void RemoveAsanLogDirectory(int32_t userId);
@@ -57,8 +58,12 @@ private:
     bool GetAllPreInstallBundleInfos(
         const std::vector<std::string> &disallowList,
         int32_t userId,
+        bool needToSkipPreBundleInstall,
         std::set<PreInstallBundleInfo> &preInstallBundleInfos);
-    void UninstallBackupUninstallList(int32_t userId);
+    void UninstallBackupUninstallList(int32_t userId, bool needToSkipPreBundleInstall);
+
+    bool InnerProcessSkipPreInstallBundles(
+        const std::set<std::string> &uninstallList, bool needToSkipPreBundleInstall);
 
     std::mutex bundleUserMgrMutex_;
 

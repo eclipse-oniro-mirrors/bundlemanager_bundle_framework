@@ -99,6 +99,8 @@ const std::string CREATE_START = "CreateUserStart";
 const std::string CREATE_END = "CreateUserEnd";
 const std::string REMOVE_START = "RemoveUserStart";
 const std::string REMOVE_END = "RemoveUserEnd";
+const char* CREATE_WITH_SKIP_PRE_INSTALL_START = "CreateUserWithSkipPreInstallStart";
+const char* CREATE_WITH_SKIP_PRE_INSTALL_END = "CreateUserWithSkipPreInstallEnd";
 // AOT
 const std::string TOTAL_BUNDLE_NAMES = "totalBundleNames";
 const std::string TOTAL_SIZE = "totalSize";
@@ -124,6 +126,8 @@ const std::unordered_map<UserEventType, std::string> USER_TYPE_STR_MAP = {
     { UserEventType::CREATE_END, CREATE_END },
     { UserEventType::REMOVE_START, REMOVE_START },
     { UserEventType::REMOVE_END, REMOVE_END },
+    { UserEventType::CREATE_WITH_SKIP_PRE_INSTALL_START, CREATE_WITH_SKIP_PRE_INSTALL_START},
+    { UserEventType::CREATE_WITH_SKIP_PRE_INSTALL_END, CREATE_WITH_SKIP_PRE_INSTALL_END},
 };
 
 std::string GetInstallType(const EventInfo& eventInfo)

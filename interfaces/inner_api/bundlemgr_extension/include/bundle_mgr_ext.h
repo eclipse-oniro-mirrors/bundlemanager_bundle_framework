@@ -156,6 +156,10 @@ public:
     {
         return GetDeviceType();
     }
+    virtual bool IsNeedToSkipPreBundleInstall()
+    {
+        return false;
+    }
 };
 
 } // AppExecFwk

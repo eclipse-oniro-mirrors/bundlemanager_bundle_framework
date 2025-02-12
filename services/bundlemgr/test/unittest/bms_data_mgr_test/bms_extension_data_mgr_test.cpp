@@ -816,4 +816,16 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0028, Function | SmallTest
     EXPECT_NE(res, ERR_OK);
 #endif
 }
+
+/**
+ * @tc.number: BundleMgrExt_0035
+ * @tc.name: IsNeedToSkipPreBundleInstall
+ * @tc.desc: IsNeedToSkipPreBundleInstall
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0035, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    bool res = bundleMgrExtTest.IsNeedToSkipPreBundleInstall();
+    EXPECT_FALSE(res);
+}
 } // OHOS
