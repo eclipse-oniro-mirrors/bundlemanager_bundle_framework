@@ -75,6 +75,7 @@ void to_json(nlohmann::json &jsonObject, const RequestPermissionUsedScene &usedS
 void from_json(const nlohmann::json &jsonObject, RequestPermissionUsedScene &usedScene);
 void to_json(nlohmann::json &jsonObject, const RequestPermission &requestPermission);
 void from_json(const nlohmann::json &jsonObject, RequestPermission &requestPermission);
+void to_json(nlohmann::json &jsonObject, const SimpleAppInfo &simpleAppInfo);
 void to_json(nlohmann::json& jsonObject, const DistributedAbilityInfo& distributedAbilityInfo);
 void from_json(const nlohmann::json& jsonObject, DistributedAbilityInfo& distributedAbilityInfo);
 void to_json(nlohmann::json& jsonObject, const DistributedModuleInfo& distributedModuleInfo);
