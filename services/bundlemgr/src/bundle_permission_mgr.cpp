@@ -693,8 +693,8 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
     return ERR_OK;
 }
 
-int32_t BundlePermissionMgr::UpdateHapToken(
-    Security::AccessToken::AccessTokenIDEx& tokenIdeEx, const InnerBundleInfo &innerBundleInfo)
+int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
+    const InnerBundleInfo &innerBundleInfo, int32_t userId)
 {
     LOG_I(BMS_TAG_DEFAULT, "start, update hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::UpdateHapInfoParams updateHapInfoParams;
@@ -710,6 +710,12 @@ int32_t BundlePermissionMgr::UpdateHapToken(
         AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED == ret) {
         // try again
         ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy);
+    }
+    if (AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST == ret) {
+        AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, 0);
+        hapInfo.isRestore = true;
+        hapInfo.tokenID = tokenIdeEx.tokenIdExStruct.tokenID;
+        ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx);
     }
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_E(BMS_TAG_DEFAULT, "UpdateHapToken failed, bundleName:%{public}s errCode:%{public}d",

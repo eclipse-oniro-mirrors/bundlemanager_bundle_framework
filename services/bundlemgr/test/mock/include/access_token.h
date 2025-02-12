@@ -26,6 +26,7 @@ typedef unsigned int AccessTokenID;
 typedef unsigned int AccessTokenAttr;
 static const int DEFAULT_TOKEN_VERSION = 1;
 static const int FIRSTCALLER_TOKENID_DEFAULT = 0;
+static AccessTokenID INVALID_TOKENID = 0;
 
 enum AccessTokenKitRet {
     RET_FAILED = -1,
@@ -136,6 +137,8 @@ public:
     bool isSystemApp;
     /* app type */
     std::string appDistributionType;
+    bool isRestore = false;
+    AccessTokenID tokenID = INVALID_TOKENID;
 };
 
 /**

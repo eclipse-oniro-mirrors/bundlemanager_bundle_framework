@@ -63,8 +63,8 @@ public:
     static int32_t InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx);
 
-    static int32_t UpdateHapToken(
-        Security::AccessToken::AccessTokenIDEx& tokenIdeEx, const InnerBundleInfo &innerBundleInfo);
+    static int32_t UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
+        const InnerBundleInfo &innerBundleInfo, int32_t userId);
 
     static int32_t DeleteAccessTokenId(const Security::AccessToken::AccessTokenID tokenId);
 
