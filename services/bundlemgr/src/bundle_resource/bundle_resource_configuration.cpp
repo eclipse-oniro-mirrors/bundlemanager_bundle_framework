@@ -45,7 +45,7 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
 
 #ifdef GLOBAL_I18_ENABLE
     std::map<std::string, std::string> configs;
-    OHOS::Global::I18n::LocaleInfo locale(Global::I18n::LocaleConfig::GetSystemLocale(), configs);
+    OHOS::Global::I18n::LocaleInfo locale(Global::I18n::LocaleConfig::GetEffectiveLanguage(), configs);
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
     resConfig->SetScreenDensityDpi(Global::Resource::ScreenDensity::SCREEN_DENSITY_XXXLDPI);
@@ -80,7 +80,7 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
 
 #ifdef GLOBAL_I18_ENABLE
     std::map<std::string, std::string> configs;
-    OHOS::Global::I18n::LocaleInfo locale(Global::I18n::LocaleConfig::GetSystemLocale(), configs);
+    OHOS::Global::I18n::LocaleInfo locale(Global::I18n::LocaleConfig::GetEffectiveLanguage(), configs);
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
     resConfig->SetScreenDensityDpi(Global::Resource::ScreenDensity::SCREEN_DENSITY_XXXLDPI);

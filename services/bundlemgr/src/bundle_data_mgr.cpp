@@ -6501,7 +6501,7 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
 #ifdef GLOBAL_I18_ENABLE
     std::map<std::string, std::string> configs;
     OHOS::Global::I18n::LocaleInfo locale(
-        localeInfo.empty() ? Global::I18n::LocaleConfig::GetSystemLocale() : localeInfo, configs);
+        localeInfo.empty() ? Global::I18n::LocaleConfig::GetEffectiveLanguage() : localeInfo, configs);
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
     resourceManager->UpdateResConfig(*resConfig);
