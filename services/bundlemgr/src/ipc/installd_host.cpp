@@ -1012,7 +1012,7 @@ bool InstalldHost::HandleDeleteDataGroupDirs(MessageParcel &data, MessageParcel 
         return false;
     }
     std::vector<std::string> uuidList;
-    for (int32_t i = 0; i < uuidSize; i++) {
+    for (uint32_t i = 0; i < uuidSize; i++) {
         std::string uuid = data.ReadString();
         if (uuid.empty()) {
             APP_LOGE("uuid %{public}d is empty", i);
