@@ -1560,11 +1560,6 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    if (!CheckAppIndex(bundleName, userId, appIndex)) {
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
-        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
-    }
-
     if (bundleName.empty() || !cleanCacheCallback) {
         APP_LOGE("the cleanCacheCallback is nullptr or bundleName empty");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
@@ -1572,7 +1567,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE) &&
-        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName, appIndex)) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -1596,6 +1591,11 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
         return ret;
+    }
+
+    if (!CheckAppIndex(bundleName, userId, appIndex)) {
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
 
     if (!applicationInfo.userDataClearable) {

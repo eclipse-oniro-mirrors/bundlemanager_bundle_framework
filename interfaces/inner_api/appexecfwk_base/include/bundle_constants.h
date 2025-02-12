@@ -149,6 +149,7 @@ constexpr const char* SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 
 // clone application
 constexpr int32_t MAIN_APP_INDEX = 0;
+constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -98,6 +98,7 @@ struct ExtensionCallbackInfo : public BaseCallbackInfo {
 struct CleanBundleCacheCallbackInfo : public BaseCallbackInfo {
     explicit CleanBundleCacheCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
+    int32_t appIndex = 0;
     OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
 };
 

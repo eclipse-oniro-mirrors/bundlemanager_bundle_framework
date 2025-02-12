@@ -65,6 +65,11 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
 {
     return false;
 }
+
+bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, const int32_t &appIndex)
+{
+    return false;
+}
 #else
 
 bool BundlePermissionMgr::VerifyCallingUid()
@@ -108,6 +113,11 @@ bool BundlePermissionMgr::VerifyUninstallPermission()
 }
 
 bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, const int32_t &appIndex)
 {
     return true;
 }

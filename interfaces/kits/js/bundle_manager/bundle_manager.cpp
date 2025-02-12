@@ -2078,7 +2078,7 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
 }
 
 static ErrCode InnerCleanBundleCacheCallback(
-    const std::string& bundleName, const OHOS::sptr<CleanCacheCallback> cleanCacheCallback)
+    const std::string &bundleName, int32_t appIndex, const OHOS::sptr<CleanCacheCallback> cleanCacheCallback)
 {
     if (cleanCacheCallback == nullptr) {
         APP_LOGE("callback nullptr");
@@ -2090,10 +2090,10 @@ static ErrCode InnerCleanBundleCacheCallback(
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    ErrCode result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
+    ErrCode result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId, appIndex);
     if (result != ERR_OK) {
-        APP_LOGE("CleanBundleDataFiles call error, bundleName is %{public}s, userId is %{public}d",
-            bundleName.c_str(), userId);
+        APP_LOGE("call error, bundleName is %{public}s, userId is %{public}d, appIndex is %{public}d",
+            bundleName.c_str(), userId, appIndex);
     }
     return CommonFunc::ConvertErrCode(result);
 }
@@ -2108,8 +2108,8 @@ void CleanBundleCacheFilesExec(napi_env env, void *data)
     if (asyncCallbackInfo->cleanCacheCallback == nullptr) {
         asyncCallbackInfo->cleanCacheCallback = new (std::nothrow) CleanCacheCallback();
     }
-    asyncCallbackInfo->err =
-        InnerCleanBundleCacheCallback(asyncCallbackInfo->bundleName, asyncCallbackInfo->cleanCacheCallback);
+    asyncCallbackInfo->err = InnerCleanBundleCacheCallback(
+        asyncCallbackInfo->bundleName, asyncCallbackInfo->appIndex, asyncCallbackInfo->cleanCacheCallback);
     if ((asyncCallbackInfo->err == NO_ERROR) && (asyncCallbackInfo->cleanCacheCallback != nullptr)) {
         // wait for OnCleanCacheFinished
         APP_LOGI("clean exec wait");
@@ -2139,6 +2139,21 @@ void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
     CommonFunc::NapiReturnDeferred<CleanBundleCacheCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
+bool ParseCleanBundleCacheFilesAppIndex(napi_env env, napi_value args, int32_t &appIndex)
+{
+    if (!CommonFunc::ParseInt(env, args, appIndex)) {
+        APP_LOGE("parse appIndex failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
+        return false;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("appIndex: %{public}d not in valid range", appIndex);
+        BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
+        return false;
+    }
+    return true;
+}
+
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
 {
     APP_LOGD("napi begin to CleanBundleCacheFiles");
@@ -2155,25 +2170,29 @@ napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
         return nullptr;
     }
     size_t maxArgc = args.GetMaxArgc();
-    if (maxArgc >= ARGS_SIZE_ONE) {
-        if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
-            APP_LOGE("CleanBundleCacheFiles bundleName is not a string");
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETER_BUNDLE_NAME, TYPE_STRING);
-            return nullptr;
-        }
-        if (maxArgc >= ARGS_SIZE_TWO) {
-            napi_valuetype valueType = napi_undefined;
-            napi_typeof(env, args[ARGS_POS_ONE], &valueType);
-            if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
-                    NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            }
-        }
-    } else {
+    if (maxArgc < ARGS_SIZE_ONE) {
         APP_LOGE("param error");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
+        APP_LOGE("CleanBundleCacheFiles bundleName is not a string");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETER_BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (maxArgc >= ARGS_SIZE_TWO) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[ARGS_POS_ONE], &valueType);
+        if (valueType == napi_function) {
+            NAPI_CALL(
+                env, napi_create_reference(env, args[ARGS_POS_ONE], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else if (valueType == napi_number) {
+            if (!ParseCleanBundleCacheFilesAppIndex(env, args[ARGS_POS_ONE], asyncCallbackInfo->appIndex)) {
+                return nullptr;
+            }
+        }
+    }
+
     auto promise = CommonFunc::AsyncCallNativeMethod<CleanBundleCacheCallbackInfo>(
         env, asyncCallbackInfo, "CleanBundleCacheFiles", CleanBundleCacheFilesExec, CleanBundleCacheFilesComplete);
     callbackPtr.release();
