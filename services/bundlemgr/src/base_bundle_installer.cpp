@@ -1929,7 +1929,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             // extract ap file
             result = ExtractAllArkProfileFile(oldInfo);
             if (result != ERR_OK) {
-                return result;
+                LOG_W(BMS_TAG_INSTALLER, "ExtractAllArkProfileFile failed -n %{public}s", bundleName_.c_str());
             }
 
             userGuard.Dismiss();
