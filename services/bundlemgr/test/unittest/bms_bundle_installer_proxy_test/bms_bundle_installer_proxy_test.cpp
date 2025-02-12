@@ -518,7 +518,7 @@ HWTEST_F(BmsBundleInstallerProxyTest, WriteHapFileToStream_0100, Function | Medi
     sptr<IBundleStreamInstaller> streamInstaller = nullptr;
     std::string path = "path";
     auto res = bundleInstallerProxy.WriteHapFileToStream(streamInstaller, path);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**
@@ -556,7 +556,7 @@ HWTEST_F(BmsBundleInstallerProxyTest, WriteSignatureFileToStream_0100, Function 
     std::string path = "path";
     std::string moduleName = "moduleName";
     auto res = bundleInstallerProxy.WriteSignatureFileToStream(streamInstaller, path, moduleName);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**
@@ -595,7 +595,7 @@ HWTEST_F(BmsBundleInstallerProxyTest, WriteSharedFileToStream_0100, Function | M
     std::string path = "path";
     uint32_t index = 1;
     auto res = bundleInstallerProxy.WriteSharedFileToStream(streamInstaller, path, index);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**
@@ -634,7 +634,7 @@ HWTEST_F(BmsBundleInstallerProxyTest, WritePgoFileToStream_0100, Function | Medi
     std::string path = "path";
     std::string moduleName = "moduleName";
     auto res = bundleInstallerProxy.WritePgoFileToStream(streamInstaller, path, moduleName);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**
@@ -672,7 +672,7 @@ HWTEST_F(BmsBundleInstallerProxyTest, CopySignatureFileToService_0100, Function 
     sptr<IBundleStreamInstaller> streamInstaller = nullptr;
     InstallParam installParam;
     auto res = bundleInstallerProxy.CopySignatureFileToService(streamInstaller, installParam);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**
@@ -734,7 +734,7 @@ HWTEST_F(BmsBundleInstallerProxyTest, CopyPgoFileToService_0100, Function | Medi
     sptr<IBundleStreamInstaller> streamInstaller = nullptr;
     InstallParam installParam;
     auto res = bundleInstallerProxy.CopyPgoFileToService(streamInstaller, installParam);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**

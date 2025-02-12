@@ -1563,7 +1563,7 @@ HWTEST_F(BmsBundleFreeInstallTest, WriteFileToStream_0100, Function | SmallTest 
     sptr<IBundleStreamInstaller> streamInstaller;
     std::string path = "";
     ErrCode ret = installerProxy.WriteHapFileToStream(streamInstaller, path);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 
     streamInstaller = iface_cast<IBundleStreamInstaller>(remoteObject);
     EXPECT_NE(streamInstaller, nullptr);
