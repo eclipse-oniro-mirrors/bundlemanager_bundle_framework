@@ -279,29 +279,29 @@ sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const I
     bool ret = data.WriteInterfaceToken(GetDescriptor());
     if (!ret) {
         LOG_E(BMS_TAG_INSTALLER, "fail to write interface token into the parcel");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_PARCEL_ERROR, "");
         return nullptr;
     }
     ret = data.WriteParcelable(&installParam);
     if (!ret) {
         LOG_E(BMS_TAG_INSTALLER, "fail to write parameter into the parcel");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_PARCEL_ERROR, "");
         return nullptr;
     }
     if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
         LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_PARCEL_ERROR, "");
         return nullptr;
     }
     if (!data.WriteStringVector(originHapPaths)) {
         LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_PARCEL_ERROR, "");
         return nullptr;
     }
     bool res = SendInstallRequest(BundleInstallerInterfaceCode::CREATE_STREAM_INSTALLER, data, reply, option);
     if (!res) {
         LOG_E(BMS_TAG_INSTALLER, "CreateStreamInstaller failed due to send request fail");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_PARCEL_ERROR, "");
         return nullptr;
     }
     if (!reply.ReadBool()) {
@@ -441,8 +441,8 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     if (!streamInstaller->Install()) {
         LOG_E(BMS_TAG_INSTALLER, "stream install failed");
         DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_FAILED_STREAM_INSTALL, "");
+        return ERR_APPEXECFWK_INSTALL_FAILED_STREAM_INSTALL;
     }
     LOG_D(BMS_TAG_INSTALLER, "stream install end");
     return ERR_OK;
@@ -500,7 +500,7 @@ ErrCode BundleInstallerProxy::WriteHapFileToStream(sptr<IBundleStreamInstaller> 
 {
     if (streamInstaller == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to nullptr stream installer");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     std::string fileName;
     ErrCode ret = ERR_OK;
@@ -528,7 +528,7 @@ ErrCode BundleInstallerProxy::WriteSignatureFileToStream(sptr<IBundleStreamInsta
 {
     if (streamInstaller == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to nullptr stream installer");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     std::string fileName;
     ErrCode ret = ERR_OK;
@@ -556,7 +556,7 @@ ErrCode BundleInstallerProxy::WriteSharedFileToStream(sptr<IBundleStreamInstalle
 {
     if (streamInstaller == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to nullptr stream installer");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     std::string hspName;
@@ -585,7 +585,7 @@ ErrCode BundleInstallerProxy::WritePgoFileToStream(sptr<IBundleStreamInstaller> 
 {
     if (streamInstaller == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to nullptr stream installer");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     std::string fileName;
@@ -614,7 +614,7 @@ ErrCode BundleInstallerProxy::CopySignatureFileToService(sptr<IBundleStreamInsta
 {
     if (streamInstaller == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "copy file failed due to nullptr stream installer");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     if (installParam.verifyCodeParams.empty()) {
@@ -643,7 +643,7 @@ ErrCode BundleInstallerProxy::CopyPgoFileToService(sptr<IBundleStreamInstaller> 
 {
     if (streamInstaller == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "copy file failed due to nullptr stream installer");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     if (installParam.pgoParams.empty()) {
         return ERR_OK;

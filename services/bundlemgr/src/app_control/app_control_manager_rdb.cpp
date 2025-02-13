@@ -633,14 +633,14 @@ ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
     }
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
     int32_t count;
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GetRowCount failed, ret: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
     if (count == 0) {
         LOG_D(BMS_TAG_DEFAULT, "GetDisposedRule size 0");
@@ -649,13 +649,13 @@ ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
     ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GoToFirstRow failed, ret: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
     std::string ruleString;
     ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, ruleString);
     if (ret != NativeRdb::E_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GetString DisposedStatus failed, ret: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
     DisposedRule::FromString(ruleString, rule);
     return ERR_OK;
@@ -675,14 +675,14 @@ ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
     }
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
     int32_t count;
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GetRowCount failed, ret: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
     if (count == 0) {
         LOG_D(BMS_TAG_DEFAULT, "GetDisposedRule size 0");
@@ -691,7 +691,7 @@ ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
     ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GoToFirstRow failed, ret: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
     do {
         ret = GetDisposedRuleFromResultSet(absSharedResultSet, disposedRules);
@@ -707,13 +707,13 @@ ErrCode AppControlManagerRdb::GetDisposedRuleFromResultSet(
 {
     if (absSharedResultSet == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
     }
     std::string ruleString;
     ErrCode ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, ruleString);
     if (ret != NativeRdb::E_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GetString appId failed, ret: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
     std::string callerName;
     ret = absSharedResultSet->GetString(CALLING_NAME_INDEX, callerName);
@@ -763,7 +763,7 @@ ErrCode AppControlManagerRdb::SetUninstallDisposedRule(const std::string &callin
     if (!ret) {
         LOG_E(BMS_TAG_DEFAULT, "callingName:%{public}s appIdentifier:%{private}s failed.",
             callingName.c_str(), appIdentifier.c_str());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_UPDATE_ERROR;
     }
     return ERR_OK;
 }
@@ -782,7 +782,7 @@ ErrCode AppControlManagerRdb::DeleteUninstallDisposedRule(const std::string &cal
     if (!ret) {
         LOG_E(BMS_TAG_DEFAULT, "callingName:%{public}s appIdentifier:%{private}s failed",
             callingName.c_str(), appIdentifier.c_str());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
     }
     return ERR_OK;
 }
@@ -801,14 +801,14 @@ ErrCode AppControlManagerRdb::GetUninstallDisposedRule(const std::string &appIde
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "null absSharedResultSet");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
     }
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
     int32_t count;
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GetRowCount failed, ret: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
     if (count == 0) {
         LOG_D(BMS_TAG_DEFAULT, "count size 0");
@@ -817,13 +817,13 @@ ErrCode AppControlManagerRdb::GetUninstallDisposedRule(const std::string &appIde
     ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GoToFirstRow failed, ret: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
     std::string ruleString;
     ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, ruleString);
     if (ret != NativeRdb::E_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GetString failed, ret: %{public}d", ret);
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
     UninstallDisposedRule::FromString(ruleString, rule);
     return ERR_OK;

@@ -325,7 +325,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0160, Function | Smal
     rdb.rdbDataManager_->bmsRdbConfig_.tableName = TARGET_BUNDLE_NAME;
     std::vector<DisposedRule> disposedRules;
     auto res = rdb.GetAbilityRunningControlRule(APPID, APP_INDEX, USERID, disposedRules);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 
 /**
@@ -352,7 +352,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0010, Functio
 {
     AppJumpInterceptorManagerRdb rdb;
     auto res = rdb.DeleteRuleByTargetBundleName("", USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -428,7 +428,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0060, Functio
     AppJumpControlRule controlRule;
     controlRules.push_back(controlRule);
     auto res = rdb->DeleteAppJumpControlRule(controlRules, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -445,7 +445,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0070, Functio
     AppJumpControlRule controlRule;
     controlRules.push_back(controlRule);
     auto res = rdb->AddAppJumpControlRule(controlRules, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR);
 }
 
 /**
@@ -457,7 +457,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0080, Functio
 {
     AppJumpInterceptorManagerRdb rdb;
     auto res = rdb.DeleteRuleByCallerBundleName(CALLER_BUNDLE_NAME, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
