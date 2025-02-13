@@ -17,7 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MGR_HOST_IMPL_H
 
 #include <atomic>
-
+#include "bundle_cache_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "bundle_connect_ability_mgr.h"
 #endif
@@ -867,6 +867,10 @@ public:
 
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
 
+    virtual ErrCode GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback) override;
+
+    virtual ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback) override;
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif
@@ -1070,8 +1074,6 @@ private:
     bool VerifyDependency(const std::string &sharedBundleName);
     void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId, int32_t appIndex = 0);
-    void GetAppCachePaths(const std::string &suffixName,
-        const int32_t userId, const std::vector<std::string> &moduleNameList, std::vector<std::string> &cachePaths);
     ErrCode CleanBundleCacheFilesGetCleanSize(const std::string &bundleName,
         int32_t userId, uint64_t &cleanCacheSize);
     void CleanBundleCacheTaskGetCleanSize(const std::string &bundleName,

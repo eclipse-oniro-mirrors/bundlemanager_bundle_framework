@@ -1614,15 +1614,9 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     int32_t userId, int32_t appIndex)
 {
     std::vector<std::string> rootDir;
-    std::string suffixName = bundleName;
-    if (appIndex > 0) {
-        suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
-    }
     std::vector<std::string> moduleNameList;
     dataMgr->GetBundleModuleNames(bundleName, moduleNameList);
-    std::vector<std::string> bundleEls = ServiceConstants::BUNDLE_EL;
-    bundleEls.push_back(ServiceConstants::DIR_EL5);
-    GetAppCachePaths(suffixName, userId, moduleNameList, rootDir);
+    rootDir = BundleCacheMgr().GetBundleCachePath(bundleName, userId, appIndex, moduleNameList);
 
     auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, appIndex, this]() {
         std::vector<std::string> caches = rootDir;
@@ -1678,25 +1672,6 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
         NotifyBundleStatus(installRes);
     };
     ffrt::submit(cleanCache);
-}
-
-void BundleMgrHostImpl::GetAppCachePaths(const std::string &suffixName,
-    const int32_t userId, const std::vector<std::string> &moduleNameList, std::vector<std::string> &cachePaths)
-{
-    std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
-    elPath.push_back(ServiceConstants::DIR_EL5);
-    for (const auto &el : elPath) {
-        cachePaths.push_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
-            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE +
-            suffixName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
-        for (const auto &moduleName : moduleNameList) {
-            std::string moduleCachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
-                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + suffixName +
-                ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
-            cachePaths.push_back(moduleCachePath);
-            APP_LOGD("add module cache path: %{public}s", moduleCachePath.c_str());
-        }
-    }
 }
 
 bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId, const int appIndex)
@@ -3175,6 +3150,42 @@ bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &
         return false;
     }
     return dataMgr->GetAllBundleStats(userId, bundleStats);
+}
+
+ErrCode BundleMgrHostImpl::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("ohos.permission.PERMISSION_GET_BUNDLE_INFO_PRIVILEGED permission denied");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    if (processCacheCallback == nullptr) {
+        APP_LOGE("the processCacheCallback is nullptr");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    return BundleCacheMgr().GetAllBundleCacheStat(processCacheCallback);
+}
+
+ErrCode BundleMgrHostImpl::CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("ohos.permission.PERMISSION_REMOVECACHEFILE permission denied");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    if (processCacheCallback == nullptr) {
+        APP_LOGE("the processCacheCallback is nullptr");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    return BundleCacheMgr().CleanAllBundleCache(processCacheCallback);
 }
 
 std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, const std::string &moduleName,

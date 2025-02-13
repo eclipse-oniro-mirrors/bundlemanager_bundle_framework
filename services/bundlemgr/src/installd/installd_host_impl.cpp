@@ -841,6 +841,16 @@ int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
     return InstalldOperator::GetDiskUsage(dir, isRealPath);
 }
 
+ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    statSize = InstalldOperator::GetDiskUsageFromPath(path);
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldHostImpl::CleanBundleDataDir start");
@@ -944,7 +954,6 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
                 ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir +
                 ServiceConstants::HAPS + moduleName + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
             cachePaths.push_back(moduleCachePath);
-            LOG_D(BMS_TAG_INSTALLD, "GetBundleStats, add module cache path: %{public}s", moduleCachePath.c_str());
         }
     }
     return InstalldOperator::GetDiskUsageFromPath(cachePaths);

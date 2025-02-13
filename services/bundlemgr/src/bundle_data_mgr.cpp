@@ -62,6 +62,8 @@
 #endif
 
 #include "shortcut_data_storage_rdb.h"
+#include "system_ability_definition.h"
+#include "system_ability_helper.h"
 #include "ohos_account_kits.h"
 
 namespace OHOS {
@@ -3489,6 +3491,71 @@ bool BundleDataMgr::HasUserInstallInBundle(
     }
 
     return infoItem->second.HasInnerBundleUserInfo(userId);
+}
+
+#ifdef ABILITY_RUNTIME_ENABLE
+std::vector<int32_t> BundleDataMgr::GetNoRunningBundleCloneIndexes(const sptr<IAppMgr> appMgrProxy,
+    const std::string &bundleName, const std::vector<int32_t> &cloneAppIndexes) const
+{
+    std::vector<int32_t> noRunningCloneAppIndexes;
+    if (appMgrProxy == nullptr) {
+        APP_LOGW("CleanBundleCache fail to find the app mgr service to check app is running");
+        return noRunningCloneAppIndexes;
+    }
+
+    for (const auto &appIndex : cloneAppIndexes) {
+        bool running = SystemAbilityHelper::IsAppRunning(appMgrProxy, bundleName, appIndex);
+        if (running) {
+            APP_LOGW("No del cache for %{public}s[%{public}d]: is running", bundleName.c_str(), appIndex);
+            continue;
+        }
+        noRunningCloneAppIndexes.emplace_back(appIndex);
+    }
+    return noRunningCloneAppIndexes;
+}
+#endif
+
+void BundleDataMgr::GetBundleCacheInfos(const int32_t userId, std::vector<std::tuple<std::string,
+    std::vector<std::string>, std::vector<int32_t>>> &validBundles, bool isClean) const
+{
+#ifdef ABILITY_RUNTIME_ENABLE
+    sptr<IAppMgr> appMgrProxy = iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
+    if (appMgrProxy == nullptr) {
+        APP_LOGE("CleanBundleCache fail to find the app mgr service to check app is running");
+        return;
+    }
+#endif
+    std::map<std::string, InnerBundleInfo> infos = GetAllInnerBundleInfos();
+    for (const auto &item : infos) {
+        const InnerBundleInfo &info = item.second;
+        std::string bundleName = info.GetBundleName();
+        if (isClean && !info.GetBaseApplicationInfo().userDataClearable) {
+            APP_LOGW("Not clearable:%{public}s, userid:%{public}d", bundleName.c_str(), userId);
+            continue;
+        }
+        std::vector<std::string> moduleNameList;
+        info.GetModuleNames(moduleNameList);
+        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(bundleName, userId);
+        cloneAppIndexes.emplace_back(0);
+        std::vector<int32_t> allAppIndexes = cloneAppIndexes;
+        if (isClean) {
+#ifdef ABILITY_RUNTIME_ENABLE
+            allAppIndexes = GetNoRunningBundleCloneIndexes(appMgrProxy, bundleName, cloneAppIndexes);
+#endif
+        }
+        validBundles.emplace_back(std::make_tuple(bundleName, moduleNameList, allAppIndexes));
+        // add atomic service
+        if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
+            std::string atomicServiceName;
+            AccountSA::OhosAccountInfo accountInfo;
+            auto ret = GetDirForAtomicServiceByUserId(bundleName, userId, accountInfo, atomicServiceName);
+            if (ret == ERR_OK && !atomicServiceName.empty()) {
+                APP_LOGD("atomicServiceName: %{public}s", atomicServiceName.c_str());
+                validBundles.emplace_back(std::make_tuple(atomicServiceName, moduleNameList, allAppIndexes));
+            }
+        }
+    }
+    return;
 }
 
 bool BundleDataMgr::GetBundleStats(const std::string &bundleName,

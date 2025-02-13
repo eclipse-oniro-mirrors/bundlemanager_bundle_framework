@@ -268,6 +268,12 @@ enum class CleanCacheCallbackInterfaceCode : uint8_t {
     ON_CLEAN_CACHE_CALLBACK,
 };
 
+/* SAID: 401-27 Interface No.26 subservice also provides the following interfaces */
+enum class ProcessCacheCallbackInterfaceCode : uint8_t {
+    GET_ALL_BUNDLE_CACHE = 0,
+    CLEAN_ALL_BUNDLE_CACHE = 1,
+};
+
 /* SAID: 401-43 Interface No.43 subservice also provides the following interfaces */
 enum class StatusReceiverInterfaceCode : uint8_t {
     ON_STATUS_NOTIFY,

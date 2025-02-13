@@ -25,6 +25,7 @@
 #include "ability_info.h"
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
+#include "bundle_cache_mgr.h"
 #include "bundle_data_mgr.h"
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
@@ -48,6 +49,7 @@
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
 #include "perf_profile.h"
+#include "process_cache_callback_host.h"
 #include "scope_guard.h"
 #include "service_control.h"
 #include "shortcut_info.h"
@@ -260,6 +262,7 @@ const std::string UTD_GENERAL_VIDEO = "general.video";
 constexpr const char* APP_LINKING = "applinking";
 const int32_t APP_INDEX = 1;
 const std::string CALLER_NAME_UT = "ut";
+const int32_t MAX_WAITING_TIME = 600;
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -348,6 +351,9 @@ public:
     void QueryCloneAbilityInfosV9WithDisable(const Want &want);
     Skill MockAbilitySkillInfo() const;
     Skill MockExtensionSkillInfo() const;
+    int32_t MockGetCurrentActiveUserId();
+    ErrCode MockGetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback);
+    ErrCode MockCleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback);
 
 public:
     static std::shared_ptr<InstalldService> installdService_;
@@ -357,6 +363,62 @@ public:
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr_ = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleUserMgrHostImpl> bundleUserMgrHostImpl_ = std::make_shared<BundleUserMgrHostImpl>();
     NotifyBundleEvents installRes_;
+};
+
+class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
+public:
+    ProcessCacheCallbackImpl() : cacheStat_(std::make_shared<std::promise<uint64_t>>()),
+        cleanResult_(std::make_shared<std::promise<int32_t>>()) {}
+    ~ProcessCacheCallbackImpl() override
+    {}
+    void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
+    void OnCleanAllBundleCacheFinished(int32_t result) override;
+    uint64_t GetCacheStat();
+    int32_t GetDelRet();
+private:
+    std::shared_ptr<std::promise<uint64_t>> cacheStat_;
+    std::shared_ptr<std::promise<int32_t>> cleanResult_;
+    DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackImpl);
+};
+
+void ProcessCacheCallbackImpl::OnGetAllBundleCacheFinished(uint64_t cacheStat)
+{
+    if (cacheStat_ != nullptr) {
+        cacheStat_->set_value(cacheStat);
+    }
+}
+
+void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(int32_t result)
+{
+    if (cleanResult_ != nullptr) {
+        cleanResult_->set_value(result);
+    }
+}
+
+uint64_t ProcessCacheCallbackImpl::GetCacheStat()
+{
+    if (cacheStat_ != nullptr) {
+        auto future = cacheStat_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return 0;
+        }
+        return future.get();
+    }
+    return 0;
+};
+
+int32_t ProcessCacheCallbackImpl::GetDelRet()
+{
+    if (cleanResult_ != nullptr) {
+        auto future = cleanResult_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return -1;
+        }
+        return future.get();
+    }
+    return -1;
 };
 
 class ICleanCacheCallbackTest : public ICleanCacheCallback {
@@ -1563,6 +1625,84 @@ void BmsBundleKitServiceTest::QueryCloneAbilityInfosV9WithDisable(const Want &wa
             EXPECT_EQ(info.appIndex, index++);
         }
     }
+}
+
+int32_t BmsBundleKitServiceTest::MockGetCurrentActiveUserId()
+{
+    return Constants::DEFAULT_USERID;
+}
+
+ErrCode BmsBundleKitServiceTest::MockGetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)
+{
+    APP_LOGI("start");
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    auto userId = MockGetCurrentActiveUserId();
+    if (userId <= Constants::DEFAULT_USERID) {
+        APP_LOGE("Invalid userid: %{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    return ERR_OK;
+}
+
+ErrCode BmsBundleKitServiceTest::MockCleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
+{
+    APP_LOGI("start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    auto userId = MockGetCurrentActiveUserId();
+    if (userId <= Constants::DEFAULT_USERID) {
+        APP_LOGE("Invalid userid: %{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    return ERR_OK;
+}
+
+/**
+ * @tc.number: GetAllBundleCacheStat_0001
+ * @tc.name: test GetAllBundleCacheStat interface
+ * @tc.desc: 1. call GetAllBundleCacheStat
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllBundleCacheStat_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllBundleCacheStat_0001" << std::endl;
+    sptr<ProcessCacheCallbackImpl> getCache = new (std::nothrow) ProcessCacheCallbackImpl();
+    ErrCode ret;
+    if (getCache == nullptr) {
+        ret = MockGetAllBundleCacheStat(getCache);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    }
+    ret = MockGetAllBundleCacheStat(getCache);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    std::cout << "END GetAllBundleCacheStat_0001" << std::endl;
+}
+
+/**
+ * @tc.number: CleanAllBundleCache_0001
+ * @tc.name: test CleanAllBundleCache interface
+ * @tc.desc: 1. call CleanAllBundleCache
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanAllBundleCache_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START CleanAllBundleCache_0001" << std::endl;
+    sptr<ProcessCacheCallbackImpl> delCache = new (std::nothrow) ProcessCacheCallbackImpl();
+    ErrCode ret;
+    if (delCache == nullptr) {
+        ret = MockCleanAllBundleCache(delCache);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    }
+    ret = MockCleanAllBundleCache(delCache);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    delCache = nullptr;
+    std::cout << "END CleanAllBundleCache_0001" << std::endl;
 }
 
 /**

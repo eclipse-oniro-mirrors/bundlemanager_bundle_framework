@@ -118,6 +118,7 @@
                         "bundlemgr/bundle_mgr_interface.h",
                         "bundlemgr/bundle_status_callback_interface.h",
                         "bundlemgr/clean_cache_callback_interface.h",
+                        "bundlemgr/process_cache_callback_interface.h",
                         "bundlemgr/status_receiver_interface.h",
                         "bundlemgr/bundle_installer_proxy.h",
                         "bundlemgr/bundle_mgr_proxy.h",
@@ -125,6 +126,7 @@
                         "bundlemgr/bundle_stream_installer_proxy.h",
                         "bundlemgr/bundle_user_mgr_proxy.h",
                         "bundlemgr/clean_cache_callback_proxy.h",
+                        "bundlemgr/process_cache_callback_proxy.h",
                         "bundlemgr/bundle_mgr_client_impl.h"
                       ]
                     },

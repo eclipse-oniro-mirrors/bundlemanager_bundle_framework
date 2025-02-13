@@ -1339,6 +1339,21 @@ HWTEST_F(BmsInstallDaemonTest, GetDiskUsage_0100, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: GetDiskUsageFromPath_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test GetDiskUsageFromPath
+*/
+HWTEST_F(BmsInstallDaemonTest, GetDiskUsageFromPath_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<std::string> path;
+    path.emplace_back("dir/path/");
+    int64_t statSize = 0;
+    ErrCode ret = hostImpl.GetDiskUsageFromPath(path, statSize);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: GetAllBundleStats_0100
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. test GetAllBundleStats

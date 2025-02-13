@@ -32,6 +32,10 @@
 #include "aot/aot_args.h"
 #include "application_info.h"
 #include "app_provision_info.h"
+#ifdef ABILITY_RUNTIME_ENABLE
+#include "app_mgr_interface.h"
+#include "running_process_info.h"
+#endif
 #include "bundle_data_storage_interface.h"
 #include "bundle_event_callback_interface.h"
 #include "bundle_promise.h"
@@ -770,6 +774,13 @@ public:
         std::map<std::string, std::vector<std::string>> &freeInstallModules) const;
 #endif
 
+#ifdef ABILITY_RUNTIME_ENABLE
+    std::vector<int32_t> GetNoRunningBundleCloneIndexes(const sptr<IAppMgr> appMgrProxy, const std::string &bundleName,
+        const std::vector<int32_t> &cloneAppIndexes) const;
+#endif
+    void GetBundleCacheInfos(
+        const int32_t userId, std::vector<std::tuple<std::string, std::vector<std::string>,
+        std::vector<int32_t>>> &validBundles, bool isClean = false) const;
     bool GetBundleStats(const std::string &bundleName,
         const int32_t userId, std::vector<int64_t> &bundleStats,
         const int32_t appIndex = 0, const uint32_t statFlag = 0) const;

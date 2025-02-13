@@ -40,6 +40,7 @@
 #include "nativetoken_kit.h"
 #include "nlohmann/json.hpp"
 #include "status_receiver_host.h"
+#include "process_cache_callback_host.h"
 #include "system_ability_definition.h"
 #include "testConfigParser.h"
 #include "token_setproc.h"
@@ -102,6 +103,7 @@ const size_t ODID_LENGTH = 36;
 const int32_t TEST_INSTALLER_UID = 100;
 const int32_t TEST_APP_INDEX1 = 1;
 const int32_t TEST_APP_INDEX2 = 2;
+const int32_t MAX_WAITING_TIME = 600;
 }  // namespace
 
 namespace OHOS {
@@ -168,6 +170,62 @@ void BundleStatusCallbackImpl::OnBundleStateChanged(
         resultMsg.c_str(),
         bundleName.c_str());
 }
+
+class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
+public:
+    ProcessCacheCallbackImpl() : cacheStat_(std::make_shared<std::promise<uint64_t>>()),
+        cleanResult_(std::make_shared<std::promise<int32_t>>()) {}
+    ~ProcessCacheCallbackImpl() override
+    {}
+    void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
+    void OnCleanAllBundleCacheFinished(int32_t result) override;
+    uint64_t GetCacheStat();
+    int32_t GetDelRet();
+private:
+    std::shared_ptr<std::promise<uint64_t>> cacheStat_;
+    std::shared_ptr<std::promise<int32_t>> cleanResult_;
+    DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackImpl);
+};
+
+void ProcessCacheCallbackImpl::OnGetAllBundleCacheFinished(uint64_t cacheStat)
+{
+    if (cacheStat_ != nullptr) {
+        cacheStat_->set_value(cacheStat);
+    }
+}
+
+void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(int32_t result)
+{
+    if (cleanResult_ != nullptr) {
+        cleanResult_->set_value(result);
+    }
+}
+
+uint64_t ProcessCacheCallbackImpl::GetCacheStat()
+{
+    if (cacheStat_ != nullptr) {
+        auto future = cacheStat_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return 0;
+        }
+        return future.get();
+    }
+    return 0;
+};
+
+int32_t ProcessCacheCallbackImpl::GetDelRet()
+{
+    if (cleanResult_ != nullptr) {
+        auto future = cleanResult_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return -1;
+        }
+        return future.get();
+    }
+    return -1;
+};
 
 class CleanCacheCallBackImpl : public CleanCacheCallbackHost {
 public:
@@ -9757,6 +9815,62 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleNameByAppId_0002, Function | MediumTest 
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetBundleNameByAppId_0002" << std::endl;
+}
+
+/**
+ * @tc.number: GetAllBundleCacheStat_0001
+ * @tc.name: test GetAllBundleCacheStat interface
+ * @tc.desc: 1. call GetAllBundleCacheStat
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleCacheStat_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllBundleCacheStat_0001" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        setuid(Constants::STORAGE_MANAGER_UID);
+        sptr<ProcessCacheCallbackImpl> getCache = new (std::nothrow) ProcessCacheCallbackImpl();
+        ErrCode ret;
+        if (getCache == nullptr) {
+            ret = bundleMgrProxy->GetAllBundleCacheStat(getCache);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+        } else {
+            ret = bundleMgrProxy->GetAllBundleCacheStat(getCache);
+            EXPECT_EQ(ret, ERR_OK);
+            setuid(Constants::FOUNDATION_UID);
+            ret = bundleMgrProxy->GetAllBundleCacheStat(getCache);
+            EXPECT_EQ(ret, ERR_OK);
+        }
+    }
+    std::cout << "END GetAllBundleCacheStat_0001" << std::endl;
+}
+
+/**
+ * @tc.number: CleanAllBundleCache_0001
+ * @tc.name: test CleanAllBundleCache interface
+ * @tc.desc: 1. call CleanAllBundleCache
+ */
+HWTEST_F(ActsBmsKitSystemTest, CleanAllBundleCache_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START CleanAllBundleCache_0001" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        setuid(Constants::STORAGE_MANAGER_UID);
+        sptr<ProcessCacheCallbackImpl> delCache = new (std::nothrow) ProcessCacheCallbackImpl();
+        ErrCode ret;
+        if (delCache == nullptr) {
+            ret = bundleMgrProxy->CleanAllBundleCache(delCache);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+        } else {
+            ret = bundleMgrProxy->CleanAllBundleCache(delCache);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+            setuid(Constants::FOUNDATION_UID);
+            ret = bundleMgrProxy->CleanAllBundleCache(delCache);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        }
+    }
+    std::cout << "END CleanAllBundleCache_0001" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
