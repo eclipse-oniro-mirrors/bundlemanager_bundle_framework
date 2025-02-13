@@ -1300,6 +1300,18 @@ bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &
     return true;
 }
 
+ErrCode BundleDataMgr::IsSystemApp(const std::string &bundleName, bool &isSystemApp)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto bundleInfoItem = bundleInfos_.find(bundleName);
+    if (bundleInfoItem == bundleInfos_.end()) {
+        APP_LOGW("%{public}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    isSystemApp = bundleInfoItem->second.IsSystemApp();
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityInfo> &option,
     int32_t flags, int32_t userId, const InnerBundleInfo &innerBundleInfo, AbilityInfo &info,
     int32_t appIndex) const
@@ -7684,6 +7696,13 @@ bool BundleDataMgr::QueryAppGalleryAbilityName(std::string &bundleName, std::str
     if (bundleName.empty() || abilityName.empty()) {
         APP_LOGW("bundleName: %{public}s or abilityName: %{public}s is empty()",
             bundleName.c_str(), abilityName.c_str());
+        return false;
+    }
+    bool isSystemApp = false;
+    if (IsSystemApp(bundleName, isSystemApp) != ERR_OK || !isSystemApp) {
+        APP_LOGW("%{public}s is not systemApp", bundleName.c_str());
+        bundleName.clear();
+        abilityName.clear();
         return false;
     }
     APP_LOGD("QueryAppGalleryAbilityName bundleName: %{public}s, abilityName: %{public}s",
