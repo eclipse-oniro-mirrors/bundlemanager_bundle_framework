@@ -70,7 +70,8 @@ HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_0100, Function | S
     std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
     int32_t userId = 0;
     DataDirEl dirEl = DataDirEl::EL5;
-    EXPECT_NO_THROW(bundleMgrClientImpl->CreateBundleDataDirWithEl(userId, dirEl));
+    auto ret = bundleMgrClientImpl->CreateBundleDataDirWithEl(userId, dirEl);
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // AppExecFwk
 } // OHOS

@@ -192,7 +192,8 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_0800, Function | SmallTest | 
 {
     sptr<IRemoteObject> impl = nullptr;
     BundleMgrProxy bundleMgrProxy(impl);
-    EXPECT_NO_THROW(bundleMgrProxy.GetBundleUserMgr());
+    auto ret = bundleMgrProxy.GetBundleUserMgr();
+    EXPECT_EQ(ret, nullptr);
 }
 
 /**
@@ -310,7 +311,8 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_1600, Function | SmallTest | 
 {
     sptr<IRemoteObject> impl = nullptr;
     BundleMgrProxy bundleMgrProxy(impl);
-    EXPECT_NO_THROW(bundleMgrProxy.GetExtendResourceManager());
+    auto ret = bundleMgrProxy.GetExtendResourceManager();
+    EXPECT_EQ(ret, nullptr);
 }
 
 /**
@@ -326,7 +328,8 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_1700, Function | SmallTest | 
     int32_t missionId = 0;
     int32_t userId = 0;
     sptr<IRemoteObject> callback = nullptr;
-    EXPECT_NO_THROW(bundleMgrProxy.CheckAbilityEnableInstall(want, missionId, userId, callback));
+    auto ret = bundleMgrProxy.CheckAbilityEnableInstall(want, missionId, userId, callback);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -357,7 +360,8 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_1900, Function | SmallTest | 
     sptr<IRemoteObject> impl = nullptr;
     BundleMgrProxy bundleMgrProxy(impl);
     std::vector<SharedBundleInfo> sharedBundles;
-    EXPECT_NO_THROW(bundleMgrProxy.GetAllSharedBundleInfo(sharedBundles));
+    auto ret = bundleMgrProxy.GetAllSharedBundleInfo(sharedBundles);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -372,7 +376,8 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_2000, Function | SmallTest | 
     std::string bundleName;
     std::string moduleName;
     std::vector<SharedBundleInfo> sharedBundles;
-    EXPECT_NO_THROW(bundleMgrProxy.GetSharedBundleInfo(bundleName, moduleName, sharedBundles));
+    auto ret = bundleMgrProxy.GetSharedBundleInfo(bundleName, moduleName, sharedBundles);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -386,7 +391,8 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_2100, Function | SmallTest | 
     BundleMgrProxy bundleMgrProxy(impl);
     std::vector<ProxyData> proxyDatas;
     int32_t userId = 0;
-    EXPECT_NO_THROW(bundleMgrProxy.GetAllProxyDataInfos(proxyDatas, userId));
+    auto ret = bundleMgrProxy.GetAllProxyDataInfos(proxyDatas, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -420,8 +426,9 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_2300, Function | SmallTest | 
     int32_t flag = 0;
     int32_t userId = 0;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    EXPECT_NO_THROW(
-        bundleMgrProxy.QueryExtensionAbilityInfosWithTypeName(want, extensionTypeName, flag, userId, extensionInfos));
+    auto ret = bundleMgrProxy.QueryExtensionAbilityInfosWithTypeName(
+        want, extensionTypeName, flag, userId, extensionInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -452,7 +459,8 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_2500, Function | SmallTest | 
     std::string bundleName;
     bool isExisted = true;
     int32_t appIndex = 0;
-    EXPECT_NO_THROW(bundleMgrProxy.UpdateAppEncryptedStatus(bundleName, isExisted, appIndex));
+    auto ret = bundleMgrProxy.UpdateAppEncryptedStatus(bundleName, isExisted, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
 }
 
 /**
@@ -465,7 +473,8 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_2600, Function | SmallTest | 
     sptr<IRemoteObject> impl = nullptr;
     BundleMgrProxy bundleMgrProxy(impl);
     std::string odid;
-    EXPECT_NO_THROW(bundleMgrProxy.GetOdid(odid));
+    auto ret = bundleMgrProxy.GetOdid(odid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -481,7 +490,8 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_2700, Function | SmallTest | 
     std::string continueType;
     AbilityInfo abilityInfo;
     int32_t userId = 0;
-    EXPECT_NO_THROW(bundleMgrProxy.QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId));
+    auto ret = bundleMgrProxy.QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -495,7 +505,8 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_2800, Function | SmallTest | 
     BundleMgrProxy bundleMgrProxy(impl);
     std::string bundleName;
     std::string odid;
-    EXPECT_NO_THROW(bundleMgrProxy.GetOdidByBundleName(bundleName, odid));
+    auto ret = bundleMgrProxy.GetOdidByBundleName(bundleName, odid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -509,7 +520,8 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_2900, Function | SmallTest | 
     BundleMgrProxy bundleMgrProxy(impl);
     std::string bundleName;
     std::string deviceType;
-    EXPECT_NO_THROW(bundleMgrProxy.GetCompatibleDeviceType(bundleName, deviceType));
+    auto ret = bundleMgrProxy.GetCompatibleDeviceType(bundleName, deviceType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
 }
 
 /**
