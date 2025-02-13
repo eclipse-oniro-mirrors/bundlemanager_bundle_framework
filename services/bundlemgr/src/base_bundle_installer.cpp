@@ -1563,6 +1563,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return res;
         }
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+        UninstallDebugAppSandbox(bundleName, uid, oldInfo);
         return ERR_OK;
     }
     dataMgr_->DisableBundle(bundleName);
@@ -1646,7 +1647,34 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     RemoveProfileFromCodeSign(bundleName);
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
     SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+    UninstallDebugAppSandbox(bundleName, uid, oldInfo);
     return ERR_OK;
+}
+
+void BaseBundleInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
+    const InnerBundleInfo& innerBundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    LOG_D(BMS_TAG_INSTALLER, "call UninstallDebugAppSandbox start");
+    bool isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
+    bool isDebugApp = innerBundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    if (isDeveloperMode && isDebugApp) {
+        int32_t flagIndex = 0;
+        AppSpawnRemoveSandboxDirMsg removeSandboxDirMsg;
+        removeSandboxDirMsg.code = MSG_UNINSTALL_DEBUG_HAP;
+        removeSandboxDirMsg.bundleName = bundleName;
+        removeSandboxDirMsg.bundleIndex = innerBundleInfo.GetAppIndex();
+        removeSandboxDirMsg.uid = uid;
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
+            removeSandboxDirMsg.flags = APP_FLAGS_ATOMIC_SERVICE;
+        } else {
+            removeSandboxDirMsg.flags = static_cast<AppFlagsIndex>(flagIndex);
+        }
+        if (BundleAppSpawnClient::GetInstance().RemoveSandboxDir(removeSandboxDirMsg) != 0) {
+            LOG_E(BMS_TAG_INSTALLER, "removeSandboxDir failed");
+        }
+    }
+    LOG_D(BMS_TAG_INSTALLER, "call UninstallDebugAppSandbox end");
 }
 
 ErrCode BaseBundleInstaller::ProcessBundleUninstall(
@@ -1787,7 +1815,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 MarkPreInstallState(bundleName, true);
             }
             SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
-
+            UninstallDebugAppSandbox(bundleName, uid, oldInfo);
             return ERR_OK;
         }
         auto removeRes = RemoveBundleUserData(oldInfo, installParam.isKeepData);
@@ -1795,6 +1823,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return removeRes;
         }
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+        UninstallDebugAppSandbox(bundleName, uid, oldInfo);
         return ERR_OK;
     }
 
