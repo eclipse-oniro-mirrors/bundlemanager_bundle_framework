@@ -835,7 +835,7 @@ protected:
                     "startWindowResource": {
                         "startWindowAppIconId":0,
                         "startWindowBackgroundColorId": 0,
-                        "startWindowBackgroundImageFitId": 0,
+                        "startWindowBackgroundImageFit": "Cover",
                         "startWindowBackgroundImageId": 0,
                         "startWindowBrandingImageId": 0,
                         "startWindowIllustrationId": 0

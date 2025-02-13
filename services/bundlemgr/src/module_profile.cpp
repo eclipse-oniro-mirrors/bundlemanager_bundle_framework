@@ -1943,7 +1943,7 @@ void ToAbilityStartWindow(
         profileJson, Profile::START_WINDOW_BACKGROUND_COLOR);
     startWindowResource.startWindowBackgroundImageId = BundleUtil::ExtractNumberFromString(
         profileJson, Profile::START_WINDOW_BACKGROUND_IMAGE);
-    startWindowResource.startWindowBackgroundImageFitId = BundleUtil::ExtractNumberFromString(
+    startWindowResource.startWindowBackgroundImageFit = BundleUtil::ExtractStringFromJson(
         profileJson, Profile::START_WINDOW_BACKGROUND_IMAGE_FIT);
 }
 
