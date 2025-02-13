@@ -53,6 +53,8 @@ public:
 
     void BackupRdb();
 
+    bool RdbIntegrityCheckNeedRestore();
+
     void CheckSystemSizeAndHisysEvent(const std::string &path, const std::string &fileName);
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
