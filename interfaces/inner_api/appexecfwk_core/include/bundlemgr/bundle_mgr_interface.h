@@ -43,6 +43,7 @@
 #include "hap_module_info.h"
 #include "permission_define.h"
 #include "preinstalled_application_info.h"
+#include "process_cache_callback_interface.h"
 #include "recoverable_application_info.h"
 #include "shared/base_shared_bundle_info.h"
 #include "shared/shared_bundle_info.h"
@@ -1248,6 +1249,16 @@ public:
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
     {
         return false;
+    }
+
+    virtual ErrCode GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     virtual sptr<IExtendResourceManager> GetExtendResourceManager()

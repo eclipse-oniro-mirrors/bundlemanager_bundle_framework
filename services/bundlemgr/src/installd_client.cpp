@@ -168,6 +168,15 @@ int64_t InstalldClient::GetDiskUsage(const std::string &dir, bool isRealPath)
     return CallService(&IInstalld::GetDiskUsage, dir, isRealPath);
 }
 
+ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
+{
+    if (path.empty()) {
+        APP_LOGE("path is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::GetDiskUsageFromPath, path, statSize);
+}
+
 ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
 {
     if (bundleDir.empty()) {

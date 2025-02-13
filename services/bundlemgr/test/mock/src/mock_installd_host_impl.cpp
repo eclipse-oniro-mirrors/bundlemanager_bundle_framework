@@ -92,6 +92,11 @@ int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
     return 0;
 }
 
+ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 {
     return ERR_OK;

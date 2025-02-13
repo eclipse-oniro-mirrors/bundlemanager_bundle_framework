@@ -214,6 +214,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_UNINSTALL_TMP_DIRS):
             result = this->HandleDeleteUninstallTmpDirs(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_DISK_USAGE_FROM_PATH):
+            result = HandleGetDiskUsageFromPath(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -446,6 +449,28 @@ bool InstalldHost::HandleGetDiskUsage(MessageParcel &data, MessageParcel &reply)
 
     ErrCode result = GetDiskUsage(dir, isRealPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleGetDiskUsageFromPath(MessageParcel &data, MessageParcel &reply)
+{
+    auto cachePathSize = data.ReadUint32();
+    if (cachePathSize == 0 || cachePathSize > Constants::MAX_CACHE_DIR_SIZE) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    std::vector<std::string> cachePaths;
+    if (!data.ReadStringVector(&cachePaths)) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsageFromPath ReadStringVector failed");
+        return false;
+    }
+    int64_t statSize = 0;
+    ErrCode result = GetDiskUsageFromPath(cachePaths, statSize);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteInt64(statSize)) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsageFromPath write failed");
+        return false;
+    }
     return true;
 }
 

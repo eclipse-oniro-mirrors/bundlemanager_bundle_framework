@@ -1199,4 +1199,106 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6700, Function | Sma
     ErrCode res = hostImpl->PrepareEntryMap(codeSignatureParam, entryMap);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: InstalldHostImplTest_7000
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling IsExistFile of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7000, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    bool isExist = false;
+    ErrCode res = hostImpl->IsExistFile("", isExist);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling VerifyCodeSignatureForHap of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7100, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    CodeSignatureParam codeSignatureParam;
+    ErrCode res = hostImpl->VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7200
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling DeliverySignProfile of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7200, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode res = hostImpl->DeliverySignProfile("", 0, nullptr);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7300
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling RemoveSignProfile of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7300, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode res = hostImpl->RemoveSignProfile("");
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7400
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetExtensionSandboxTypeList of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7400, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> typeList;
+    ErrCode res = hostImpl->GetExtensionSandboxTypeList(typeList);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7500
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetDiskUsageFromPath of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7500, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(installdProxy, nullptr);
+
+    std::vector<std::string> path;
+    int64_t statSize = 0;
+    ErrCode res = installdProxy->GetDiskUsageFromPath(path, statSize);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7600
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetDiskUsage of hostImpl
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7600, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(installdProxy, nullptr);
+
+    std::vector<std::string> path;
+    path.emplace_back("com.acts.example");
+    int64_t statSize = 0;
+    ErrCode res = installdProxy->GetDiskUsageFromPath(path, statSize);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
 } // OHOS

@@ -618,6 +618,12 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_DIRS):
             errCode = HandleGetAllBundleDirs(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_CACHE):
+            errCode = HandleGetAllBundleCacheStat(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_ALL_BUNDLE_CACHE):
+            errCode = HandleCleanAllBundleCache(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -4228,6 +4234,48 @@ ErrCode BundleMgrHost::HandleGetAllBundleDirs(MessageParcel &data, MessageParcel
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllBundleCacheStat(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("read failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<IProcessCacheCallback> processCacheCallback = iface_cast<IProcessCacheCallback>(object);
+    if (processCacheCallback == nullptr) {
+        APP_LOGE("params error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    ErrCode ret = GetAllBundleCacheStat(processCacheCallback);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCleanAllBundleCache(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("read failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<IProcessCacheCallback> processCacheCallback = iface_cast<IProcessCacheCallback>(object);
+    if (processCacheCallback == nullptr) {
+        APP_LOGE("params error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    ErrCode ret = CleanAllBundleCache(processCacheCallback);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
