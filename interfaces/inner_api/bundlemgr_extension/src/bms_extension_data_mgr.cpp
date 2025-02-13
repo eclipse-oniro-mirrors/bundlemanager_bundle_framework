@@ -49,7 +49,7 @@ ErrCode BmsExtensionDataMgr::Init()
         APP_LOGD("parse bms-extension.json success, which is: %{public}s", bmsExtension_.ToString().c_str());
         if (!OpenHandler()) {
             APP_LOGW("dlopen bms-extension so failed");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            return ERR_APPEXECFWK_NULL_PTR;
         }
     }
     return ERR_OK;
@@ -107,7 +107,7 @@ ErrCode BmsExtensionDataMgr::HapVerify(const std::string &filePath, Security::Ve
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr == nullptr) {
             APP_LOGW("bundleMgrExtPtr is nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            return ERR_APPEXECFWK_NULL_PTR;
         }
         return bundleMgrExtPtr->HapVerify(filePath, hapVerifyResult);
     }
@@ -138,7 +138,7 @@ ErrCode BmsExtensionDataMgr::QueryAbilityInfos(const Want &want, int32_t userId,
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr == nullptr) {
             LOG_W(BMS_TAG_QUERY, "bundleMgrExtPtr is nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            return ERR_APPEXECFWK_NULL_PTR;
         }
         return bundleMgrExtPtr->QueryAbilityInfos(want, userId, abilityInfos);
     }
@@ -154,7 +154,7 @@ ErrCode BmsExtensionDataMgr::QueryAbilityInfosWithFlag(const Want &want, int32_t
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr == nullptr) {
             LOG_W(BMS_TAG_QUERY, "bundleMgrExtPtr is nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            return ERR_APPEXECFWK_NULL_PTR;
         }
         return bundleMgrExtPtr->QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos, isNewVersion);
     }
@@ -170,7 +170,7 @@ ErrCode BmsExtensionDataMgr::GetBundleInfos(int32_t flags, std::vector<BundleInf
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr == nullptr) {
             LOG_W(BMS_TAG_QUERY, "bundleMgrExtPtr is nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            return ERR_APPEXECFWK_NULL_PTR;
         }
         return bundleMgrExtPtr->GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
     }
@@ -186,7 +186,7 @@ ErrCode BmsExtensionDataMgr::GetBundleInfo(const std::string &bundleName, int32_
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr == nullptr) {
             LOG_W(BMS_TAG_QUERY, "bundleMgrExtPtr is nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            return ERR_APPEXECFWK_NULL_PTR;
         }
         return bundleMgrExtPtr->GetBundleInfo(bundleName, flags, userId, bundleInfo, isNewVersion);
     }
@@ -201,7 +201,7 @@ ErrCode BmsExtensionDataMgr::Uninstall(const std::string &bundleName)
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr == nullptr) {
             APP_LOGW("bundleMgrExtPtr is nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            return ERR_APPEXECFWK_NULL_PTR;
         }
         return bundleMgrExtPtr->Uninstall(bundleName);
     }
