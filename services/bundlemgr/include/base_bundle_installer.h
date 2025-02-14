@@ -565,7 +565,7 @@ private:
     ErrCode CheckNativeFileWithOldInfo(
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool HasAllOldModuleUpdate(
-        const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+        const InnerBundleInfo &oldInfo, const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode CheckArkNativeFileWithOldInfo(
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode CheckNativeSoWithOldInfo(
@@ -645,7 +645,10 @@ private:
     bool IsBundleEncrypted(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
     void UpdateAppInstallControlled(int32_t userId);
-    ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        bool needDeleteOldLibraryPath);
+    ErrCode FinalProcessHapAndSoForBundleUpdate(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        bool needCopyHapToInstallPath, bool needDeleteOldLibraryPath);
     void GetDataGroupIds(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_set<std::string> &groupIds);
     void GenerateNewUserDataGroupInfos(InnerBundleInfo &info) const;
@@ -655,7 +658,7 @@ private:
     ErrCode CreateDataGroupDirs(
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, const InnerBundleInfo &oldInfo);
     bool NeedDeleteOldNativeLib(
-        std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const InnerBundleInfo &oldInfo);
     ErrCode UninstallBundleFromBmsExtension(const std::string &bundleName);
     ErrCode CheckBundleInBmsExtension(const std::string &bundleName, int32_t userId);
@@ -680,6 +683,8 @@ private:
     ErrCode ExtractHnpFileDir(const std::string &cpuAbi, const std::string &hnpPackageInfoString,
         const std::string &modulePath) const;
     void DeleteOldNativeLibraryPath() const;
+    std::string GetRealSoPath(const std::string &bundleName, const std::string &nativeLibraryPath,
+        bool isNeedDeleteOldPath) const;
     void RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &innerBundleInfo) const;
     void GenerateOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
