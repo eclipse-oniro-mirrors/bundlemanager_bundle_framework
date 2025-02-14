@@ -1293,6 +1293,7 @@ private:
     std::string TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,
         const AbilityInfo &abilityInfo) const;
     void RestoreUidAndGidFromUninstallInfo();
+    ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
 private:
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
