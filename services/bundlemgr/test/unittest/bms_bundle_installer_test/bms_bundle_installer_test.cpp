@@ -5560,7 +5560,7 @@ HWTEST_F(BmsBundleInstallerTest, BeforeInstall_0100, Function | SmallTest | Leve
 
     ClearDataMgr();
     res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
     ResetDataMgr();
 }
 
