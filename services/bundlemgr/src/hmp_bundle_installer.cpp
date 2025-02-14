@@ -109,7 +109,7 @@ ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir, 
         return ret;
     }
     if (!InitDataMgr()) {
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     if (dataMgr_->IsSystemHsp(bundleName)) {
         APP_LOGE("install hmp system hsp %{public}s error with code: %{public}d", bundleDir.c_str(), ret);
