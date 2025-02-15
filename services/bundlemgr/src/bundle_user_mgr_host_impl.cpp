@@ -22,6 +22,7 @@
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
+#include "parameters.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
@@ -39,6 +40,7 @@ constexpr uint8_t INTERVAL = 6;
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold";
 constexpr const char* ACCESSTOKEN_PROCESS_NAME = "accesstoken_service";
 constexpr const char* PRELOAD_APP = "/preload/app/";
+constexpr const char* MULTIUSER_INSTALL_THIRD_PRELOAD_APP = "const.bms.multiUserInstallThirdPreloadApp";
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
@@ -232,6 +234,12 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
         if (!isStartUser && !preInfo.GetBundlePaths().empty() &&
             (preInfo.GetBundlePaths().front().find(DATA_PRELOAD_APP) == 0)) {
             APP_LOGW("data preload app only install in 100 ,bundleName: %{public}s", preInfo.GetBundleName().c_str());
+            continue;
+        }
+        bool installThirdPreloadApp = OHOS::system::GetBoolParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, true);
+        if (!isStartUser && !installThirdPreloadApp && !preInfo.GetBundlePaths().empty() &&
+            (preInfo.GetBundlePaths().front().find(PRELOAD_APP) == 0)) {
+            APP_LOGI("-n %{public}s -u %{public}d not install preload app", preInfo.GetBundleName().c_str(), userId);
             continue;
         }
         if (isStartUser) {
