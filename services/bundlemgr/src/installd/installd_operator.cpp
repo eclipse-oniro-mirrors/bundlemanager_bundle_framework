@@ -2028,6 +2028,7 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     std::string newfilePath;
     if (!PathToRealPath(filePath, newfilePath)) {
         LOG_E(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", filePath.c_str());
+        close(dev_fd);
         return result;
     }
     auto fd = open(newfilePath.c_str(), O_RDONLY);
