@@ -6689,6 +6689,61 @@ bool BaseBundleInstaller::DeleteDisposedRuleWhenBundleUninstallEnd(
 #endif
 }
 
+bool BaseBundleInstaller::AddAppGalleryHapToTempPath(const bool isPreInstall,
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if ((dataMgr_ == nullptr) || isPreInstall || infos.empty()) {
+        LOG_D(BMS_TAG_INSTALLER, "no need to process");
+        return false;
+    }
+    const InnerBundleInfo &bundleInfo = infos.begin()->second;
+    if (!bundleInfo.IsSystemApp()) {
+        LOG_D(BMS_TAG_INSTALLER, "not system app");
+        return false;
+    }
+    std::string bundleName;
+    std::string abilityName;
+    if (!dataMgr_->QueryAppGalleryAbilityName(bundleName, abilityName)) {
+        LOG_W(BMS_TAG_INSTALLER, "appGallery not exist");
+        return false;
+    }
+    if (bundleInfo.GetBundleName() != bundleName) {
+        LOG_D(BMS_TAG_INSTALLER, "bundle %{public}s is not appGallery", bundleInfo.GetBundleName().c_str());
+        return false;
+    }
+    std::string targetPath = BundleUtil::CreateTempDir(ServiceConstants::BMS_APP_TEMP_PATH);
+    if (targetPath.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "app temp path create failed %{public}d", errno);
+        return false;
+    }
+    needDeleteAppTempPath_ = true;
+    for (const auto &item : infos) {
+        auto pos = item.first.rfind(ServiceConstants::FILE_SEPARATOR_CHAR);
+        if (pos == std::string::npos) {
+            LOG_E(BMS_TAG_INSTALLER, "path %{public}s may error", item.first.c_str());
+            continue;
+        }
+        if (!BundleUtil::CopyFileFast(item.first, targetPath + item.first.substr(pos))) {
+            LOG_E(BMS_TAG_INSTALLER, "copy hap %{public}s failed err %{public}d", item.first.c_str(), errno);
+        }
+    }
+    LOG_I(BMS_TAG_INSTALLER, "copy hap file to app_temp end");
+    return true;
+}
+
+bool BaseBundleInstaller::DeleteAppGalleryHapFromTempPath()
+{
+    if (!needDeleteAppTempPath_) {
+        return true;
+    }
+    if (!BundleUtil::DeleteDir(ServiceConstants::BMS_APP_TEMP_PATH)) {
+        LOG_E(BMS_TAG_INSTALLER, "delete app_temp failed %{public}d", errno);
+        return false;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "delete app_temp file end");
+    return true;
+}
+
 void BaseBundleInstaller::ProcessAddResourceInfo(const InstallParam &installParam,
     const std::string &bundleName, int32_t userId)
 {
@@ -6924,61 +6979,6 @@ ErrCode BaseBundleInstaller::CheckPreAppAllowHdcInstall(const InstallParam &inst
         return ERR_OK;
     }
     return ERR_APPEXECFWK_INSTALL_OS_INTEGRATION_BUNDLE_NOT_ALLOWED_FOR_SHELL;
-}
-
-bool BaseBundleInstaller::AddAppGalleryHapToTempPath(const bool isPreInstall,
-    const std::unordered_map<std::string, InnerBundleInfo> &infos)
-{
-    if ((dataMgr_ == nullptr) || isPreInstall || infos.empty()) {
-        LOG_D(BMS_TAG_INSTALLER, "no need to process");
-        return false;
-    }
-    const InnerBundleInfo &bundleInfo = infos.begin()->second;
-    if (!bundleInfo.IsSystemApp()) {
-        LOG_D(BMS_TAG_INSTALLER, "not system app");
-        return false;
-    }
-    std::string bundleName;
-    std::string abilityName;
-    if (!dataMgr_->QueryAppGalleryAbilityName(bundleName, abilityName)) {
-        LOG_W(BMS_TAG_INSTALLER, "appGallery not exist");
-        return false;
-    }
-    if (bundleInfo.GetBundleName() != bundleName) {
-        LOG_D(BMS_TAG_INSTALLER, "bundle %{public}s is not appGallery", bundleInfo.GetBundleName().c_str());
-        return false;
-    }
-    std::string targetPath = BundleUtil::CreateTempDir(ServiceConstants::BMS_APP_TEMP_PATH);
-    if (targetPath.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "app temp path create failed %{public}d", errno);
-        return false;
-    }
-    needDeleteAppTempPath_ = true;
-    for (const auto &item : infos) {
-        auto pos = item.first.rfind(ServiceConstants::FILE_SEPARATOR_CHAR);
-        if (pos == std::string::npos) {
-            LOG_E(BMS_TAG_INSTALLER, "path %{public}s may error", item.first.c_str());
-            continue;
-        }
-        if (!BundleUtil::CopyFileFast(item.first, targetPath + item.first.substr(pos))) {
-            LOG_E(BMS_TAG_INSTALLER, "copy hap %{public}s failed err %{public}d", item.first.c_str(), errno);
-        }
-    }
-    LOG_I(BMS_TAG_INSTALLER, "copy hap file to app_temp end");
-    return true;
-}
-
-bool BaseBundleInstaller::DeleteAppGalleryHapFromTempPath()
-{
-    if (!needDeleteAppTempPath_) {
-        return true;
-    }
-    if (!BundleUtil::DeleteDir(ServiceConstants::BMS_APP_TEMP_PATH)) {
-        LOG_E(BMS_TAG_INSTALLER, "delete app_temp failed %{public}d", errno);
-        return false;
-    }
-    LOG_I(BMS_TAG_INSTALLER, "delete app_temp file end");
-    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
