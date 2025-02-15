@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -183,6 +183,8 @@ void BundleStatusCallbackProxy::InitResultMap()
             "ERR_APPEXECFWK_INSTALL_OS_INTEGRATION_BUNDLE_NOT_ALLOWED_FOR_SHELL"},
         {ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL,
                 "ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL"},
+        {ERR_APPEXECFWK_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED,
+            "ERR_APPEXECFWK_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED"},
     };
 }
 

@@ -810,6 +810,7 @@ private:
     void UpdateKillApplicationProcess(const InnerBundleInfo &innerBundleInfo);
     ErrCode CheckPreAppAllowHdcInstall(const InstallParam &installParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+    void CheckPreBundleRecoverResult(ErrCode &result);
 
     bool IsAllowEnterPrise();
 
@@ -879,6 +880,8 @@ private:
     EventInfo sysEventInfo_;
     Security::Verify::HapVerifyResult verifyRes_;
     InstallerBundleTempInfo tempInfo_;
+    // indicates whether the application has been restored to the preinstall
+    bool isPreBundleRecovered_ = false;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

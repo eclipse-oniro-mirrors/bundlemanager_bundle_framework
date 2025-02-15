@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -419,7 +419,9 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_UNINSTALL_CONTROLLED, ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED },
         { IStatusReceiver::ERR_INSTALL_DEBUG_ENCRYPTED_BUNDLE_FAILED, ERROR_INSTALL_PARSE_FAILED },
         { IStatusReceiver::ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL_ISR,
-            ERROR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL}
+            ERROR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL},
+        { IStatusReceiver::ERR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED,
+            ERROR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED },
     };
 }
 

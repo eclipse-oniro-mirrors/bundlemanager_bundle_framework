@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -221,6 +221,7 @@ public:
         ERR_INSTALL_BUNDLE_NOT_ALLOWED_FOR_SHELL_IN_OOBE = 9568419,
         ERR_APPEXECFWK_INSTALL_OS_INTEGRATION_BUNDLE_NOT_ALLOWED_FOR_SHELL = 9568420,
         ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL_ISR = 9568421,
+        ERR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED = 9568422,
 
         ERR_RECOVER_GET_BUNDLEPATH_ERROR = 201,
         ERR_RECOVER_INVALID_BUNDLE_NAME,

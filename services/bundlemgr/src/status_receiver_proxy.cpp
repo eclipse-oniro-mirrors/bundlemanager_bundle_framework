@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -239,6 +239,8 @@ const char* MSG_ERR_INSTALL_OS_INTEGRATION_BUNDLE_NOT_ALLOWED_FOR_SHELL  =
     "[MSG_ERR_INSTALL_OS_INTEGRATION_BUNDLE_NOT_ALLOWED_FOR_SHELL ]";
 const char* MSG_ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL =
     "[MSG_ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL]";
+const char* MSG_ERR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED  =
+    "[MSG_ERR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED]";
 
 const std::unordered_map<int32_t, struct ReceivedResult> MAP_RECEIVED_RESULTS {
     {ERR_OK, {IStatusReceiver::SUCCESS, MSG_SUCCESS}},
@@ -676,6 +678,9 @@ const std::unordered_map<int32_t, struct ReceivedResult> MAP_RECEIVED_RESULTS {
     {ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL,
         {IStatusReceiver::ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL_ISR,
             MSG_ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL}},
+    {ERR_APPEXECFWK_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED,
+        {IStatusReceiver::ERR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED,
+            MSG_ERR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED}},
 };
 }  // namespace
 

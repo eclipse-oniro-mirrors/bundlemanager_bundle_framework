@@ -204,6 +204,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
         LOG_E(BMS_TAG_INSTALLER, "set parameter BMS_DATA_PRELOAD false");
         OHOS::system::SetParameter(ServiceConstants::BMS_DATA_PRELOAD, BMS_FALSE);
     }
+    CheckPreBundleRecoverResult(result);
     if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty()) {
         NotifyBundleEvents installRes = {
             .isModuleUpdate = isModuleUpdate_,
@@ -5011,6 +5012,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     existBeforeKeepDataApp_ = false;
     needSetDisposeRule_ = false;
     needDeleteAppTempPath_ = false;
+    isPreBundleRecovered_ = false;
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool killProcess)
@@ -6859,7 +6861,8 @@ void BaseBundleInstaller::CheckPreBundle(const std::unordered_map<std::string, I
         userInstallParam.installFlag = InstallFlag::REPLACE_EXISTING;
         BaseBundleInstaller installer;
         result = installer.Recover(bundleName, userInstallParam);
-        if (result != ERR_OK) {
+        isPreBundleRecovered_ = (result == ERR_OK);
+        if (!isPreBundleRecovered_) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "recover before install result: %{public}d", result);
         }
         return;
@@ -7053,6 +7056,15 @@ bool BaseBundleInstaller::IsAllowEnterPrise()
         return false;
     }
     return true;
+}
+
+void BaseBundleInstaller::CheckPreBundleRecoverResult(ErrCode &result)
+{
+    if (isPreBundleRecovered_ && result != ERR_OK && sysEventInfo_.callingUid != ServiceConstants::SHELL_UID &&
+        sysEventInfo_.callingUid != Constants::ROOT_UID) {
+        LOG_E(BMS_TAG_INSTALLER, "install failed, result = %{public}d, only restore to preinstalled", result);
+        result = ERR_APPEXECFWK_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED;
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
