@@ -656,6 +656,7 @@ private:
     void ProcessAllBundleDataGroupInfo();
     // Used to send update failed event
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo);
+    void ProcessAppTmpPath();
     void UpdatePreinstallDB(const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap);
     void UpdatePreinstallDBForNotUpdatedBundle(const std::string &bundleName,
         const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos);

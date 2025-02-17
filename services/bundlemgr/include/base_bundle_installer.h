@@ -788,6 +788,9 @@ private:
         const std::string &appId, bool isMultiUser);
     bool DeleteDisposedRuleWhenBundleUninstallEnd(const std::string &bundleName,
         const std::string &appId, bool isMultiUser);
+    bool AddAppGalleryHapToTempPath(const bool isPreInstallApp,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    bool DeleteAppGalleryHapFromTempPath();
     void ProcessAddResourceInfo(const InstallParam &installParam, const std::string &bundleName, int32_t userId);
     bool GetTempBundleInfo(InnerBundleInfo &info) const;
     bool InitTempBundleFromCache(InnerBundleInfo &info, bool &isAppExist, std::string bundleName = "");
@@ -821,6 +824,7 @@ private:
     bool existBeforeKeepDataApp_ = false;
     bool copyHapToInstallPath_ = false;
     bool needSetDisposeRule_ = false;
+    bool needDeleteAppTempPath_ = false;
     InstallerState state_ = InstallerState::INSTALL_START;
     uint32_t versionCode_ = 0;
     uint32_t accessTokenId_ = 0;

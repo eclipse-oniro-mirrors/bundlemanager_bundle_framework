@@ -210,6 +210,9 @@ constexpr const char* INSTALL_SOURCE_RECOVERY = "recovery";
 constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
+
+// app temp path
+constexpr const char* BMS_APP_TEMP_PATH = "/data/service/el1/public/bms/bundle_manager_service/app_temp";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS
