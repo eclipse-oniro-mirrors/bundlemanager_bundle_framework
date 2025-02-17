@@ -748,10 +748,11 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1700, Function | SmallTest |
 HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1800, Function | SmallTest | Level0)
 {
     bool ret = BundlePermissionMgr::Init();
+    int32_t userId = 0;
     InnerBundleInfo innerBundleInfo;
     Security::AccessToken::AccessTokenIDEx tokenIdeEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo, checkResult);
+    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo, userId, checkResult);
     EXPECT_EQ(checkResult.permCheckResult.permissionName, "test");
     EXPECT_EQ(ret, false);
 }
@@ -1030,6 +1031,32 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3700, Function | SmallTest |
     
     bool result = BundlePermissionMgr::IsShellTokenType();
     EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_3800
+ * @tc.name: test IsBundleSelfCalling
+ * @tc.desc: 1.test IsBundleSelfCalling of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3800, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    ret = BundlePermissionMgr::IsBundleSelfCalling("", 0);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_3900
+ * @tc.name: test IsBundleSelfCalling
+ * @tc.desc: 1.test IsBundleSelfCalling of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3900, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    std::string bundleName;
+    ret = BundlePermissionMgr::IsBundleSelfCalling(bundleName, 0);
+    EXPECT_EQ(ret, false);
 }
 
 /**

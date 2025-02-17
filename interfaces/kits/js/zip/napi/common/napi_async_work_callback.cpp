@@ -58,7 +58,7 @@ static void CallbackComplete(napi_env env, napi_status status, void *data)
         ctx->cbComplete_ = nullptr;
     }
 
-    vector<napi_value> argv;
+    std::vector<napi_value> argv;
     if (!ctx->res_.TypeIsError(true)) {
         argv = {NapiBusinessError(ERRNO_NOERR).GetNapiErr(env), ctx->res_.val_};
     } else {

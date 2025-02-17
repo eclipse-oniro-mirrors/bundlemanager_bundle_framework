@@ -20,7 +20,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
-using namespace std;
 
 NapiFuncArg::NapiFuncArg(napi_env env, napi_callback_info info) : env_(env), info_(info)
 {}
@@ -71,7 +70,7 @@ bool NapiFuncArg::InitArgs(std::function<bool()> argcChecker)
     }
 
     if (argc) {
-        argv_ = make_unique<napi_value[]>(argc);
+        argv_ = std::make_unique<napi_value[]>(argc);
         status = napi_get_cb_info(env_, info_, &argc, argv_.get(), &thisVar, nullptr);
         if (status != napi_ok) {
             APP_LOGE("Cannot get func args for %{public}d", status);

@@ -31,13 +31,13 @@ struct AppSpawnRemoveSandboxDirMsg {
     int32_t uid = 0;
     int32_t code = 0;
     int32_t bundleIndex = 0;
-    AppFlagsIndex flags;
+    AppFlagsIndex flags = AppFlagsIndex::APP_FLAGS_COLD_BOOT;
 };
 
 class BundleAppSpawnClient {
 public:
     static BundleAppSpawnClient& GetInstance();
-    virtual int32_t RemoveSandboxDir(const AppSpawnRemoveSandboxDirMsg &removeSandboxDirMsg);
+    int32_t RemoveSandboxDir(const AppSpawnRemoveSandboxDirMsg &removeSandboxDirMsg);
 private:
     DISALLOW_COPY_AND_MOVE(BundleAppSpawnClient);
     BundleAppSpawnClient();

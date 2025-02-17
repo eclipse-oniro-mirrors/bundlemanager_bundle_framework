@@ -21,15 +21,15 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
-using namespace std;
 NapiClass &NapiClass::GetInstance()
 {
     static thread_local NapiClass nClass;
     return nClass;
 }
 
-tuple<bool, napi_value> NapiClass::DefineClass(
-    napi_env env, const string &className, napi_callback constructor, vector<napi_property_descriptor> &&properties)
+std::tuple<bool, napi_value> NapiClass::DefineClass(
+    napi_env env, const std::string &className, napi_callback constructor,
+    std::vector<napi_property_descriptor> &&properties)
 {
     napi_value classVal = nullptr;
     napi_status stat = napi_define_class(env,
@@ -46,10 +46,10 @@ tuple<bool, napi_value> NapiClass::DefineClass(
     return {stat == napi_ok, classVal};
 }
 
-bool NapiClass::SaveClass(napi_env env, const string &className, napi_value exClass)
+bool NapiClass::SaveClass(napi_env env, const std::string &className, napi_value exClass)
 {
     NapiClass &nClass = NapiClass::GetInstance();
-    lock_guard(nClass.exClassMapLock);
+    std::lock_guard(nClass.exClassMapLock);
 
     if (nClass.exClassMap.find(className) != nClass.exClassMap.end()) {
         return true;
@@ -66,10 +66,10 @@ bool NapiClass::SaveClass(napi_env env, const string &className, napi_value exCl
     return res == napi_ok;
 }
 
-napi_value NapiClass::InstantiateClass(napi_env env, const string &className, const vector<napi_value> &args)
+napi_value NapiClass::InstantiateClass(napi_env env, const std::string &className, const std::vector<napi_value> &args)
 {
     NapiClass &nClass = NapiClass::GetInstance();
-    lock_guard(nClass.exClassMapLock);
+    std::lock_guard(nClass.exClassMapLock);
     auto it = nClass.exClassMap.find(className);
     if (it == nClass.exClassMap.end()) {
         APP_LOGE("Class %{public}s hasn't been saved yet", className.c_str());

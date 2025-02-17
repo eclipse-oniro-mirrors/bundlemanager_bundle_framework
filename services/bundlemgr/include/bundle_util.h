@@ -218,6 +218,7 @@ public:
     static std::string GenerateUuidByKey(const std::string &key);
     static uint32_t ExtractNumberFromString(nlohmann::json &jsonObject, const std::string &key);
     static bool StrToUint32(const std::string &str, uint32_t &value);
+    static std::string ExtractStringFromJson(nlohmann::json &jsonObject, const std::string &key);
 private:
     static std::mutex g_mutex;
 };

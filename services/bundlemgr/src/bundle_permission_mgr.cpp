@@ -618,6 +618,33 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
     return true;
 }
 
+bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, const int32_t &appIndex)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    LOG_D(BMS_TAG_DEFAULT, "start, callingUid: %{public}d", callingUid);
+    std::string callingBundleName;
+    int32_t callerAppIndex = 0;
+    ErrCode ret = dataMgr->GetBundleNameAndIndexForUid(callingUid, callingBundleName, callerAppIndex);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "failed, code: %{public}d", ret);
+        return false;
+    }
+    LOG_D(BMS_TAG_DEFAULT,
+        "bundleName :%{public}s, callingBundleName : %{public}s appIndex: %{public}d callerAppIndex: %{public}d",
+        bundleName.c_str(), callingBundleName.c_str(), appIndex, callerAppIndex);
+    if (bundleName != callingBundleName || appIndex != callerAppIndex) {
+        LOG_W(BMS_TAG_DEFAULT, "failed, callingUid: %{public}d", callingUid);
+        return false;
+    }
+    LOG_D(BMS_TAG_DEFAULT, "end, verify success");
+    return true;
+}
+
 bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -692,7 +719,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
 }
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
-    const InnerBundleInfo &innerBundleInfo, Security::AccessToken::HapInfoCheckResult &checkResult)
+    const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult)
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "start UpdateHapToken -n %{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::UpdateHapInfoParams updateHapInfoParams;
@@ -708,6 +735,12 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
         AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED == ret) {
         // try again
         ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy, checkResult);
+    }
+    if (AccessToken::AccessTokenError::ERR_TOKENID_NOT_EXIST == ret) {
+        AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, 0);
+        hapInfo.isRestore = true;
+        hapInfo.tokenID = tokenIdeEx.tokenIdExStruct.tokenID;
+        ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx, checkResult);
     }
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_NOFUNC_E(BMS_TAG_DEFAULT, "UpdateHapToken failed, bundleName:%{public}s errCode:%{public}d",

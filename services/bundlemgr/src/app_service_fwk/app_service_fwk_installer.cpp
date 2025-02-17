@@ -131,7 +131,15 @@ ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName, bool is
     }
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
         APP_LOGE("uninstall already start");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
+    }
+    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
+        APP_LOGE("delete inner info failed for bundle %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
     }
     std::string bundleDir =
         std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
@@ -143,14 +151,6 @@ ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName, bool is
     }
     if (!isKeepData) {
         InstalldClient::GetInstance()->RemoveBundleDataDir(bundleName, 0, false);
-    }
-    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
-        APP_LOGE("delete inner info failed for bundle %{public}s", bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
-    PreInstallBundleInfo preInstallBundleInfo;
-    if (dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
-        dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
     }
     return ERR_OK;
 }
@@ -190,7 +190,7 @@ ErrCode AppServiceFwkInstaller::UnInstall(
     }
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
         APP_LOGE("uninstall already start");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
     ScopeGuard stateGuard([&] { dataMgr_->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS); });
     auto result = UnInstall(bundleName, moduleName, info);
@@ -234,7 +234,7 @@ ErrCode AppServiceFwkInstaller::UnInstall(
     APP_LOGI("start to remove module info of %{public}s in %{public}s ", moduleName.c_str(), bundleName.c_str());
     if (!dataMgr_->RemoveModuleInfo(bundleName, moduleName, oldInfo)) {
         APP_LOGE("RemoveModuleInfo failed");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_RMV_MODULE_ERROR;
     }
     RemoveModuleDataDir(bundleName, moduleName, oldInfo);
     return ERR_OK;
@@ -266,7 +266,7 @@ ErrCode AppServiceFwkInstaller::BeforeInstall(
     dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr_ == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     return ERR_OK;
@@ -282,7 +282,7 @@ ErrCode AppServiceFwkInstaller::BeforeUninstall(const std::string &bundleName)
     dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr_ == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     BundleType type;
@@ -333,7 +333,9 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
     result = MarkInstallFinish();
     if (result != ERR_OK) {
         APP_LOGE("mark install finish failed %{public}d", result);
-        RollBack();
+        if (!versionUpgrade_ && !moduleUpdate_) {
+            RollBack();
+        }
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
         return result;
     }
@@ -630,6 +632,7 @@ ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForHsp(
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = false;
+    codeSignatureParam.isCompressNativeLibrary = isCompressNativeLibs_;
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
@@ -690,7 +693,8 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
     if (!newInfo.FetchNativeSoAttrs(moduleName, cpuAbi_, nativeLibraryPath_)) {
         return ERR_OK;
     }
-    if (newInfo.IsCompressNativeLibs(moduleName)) {
+    isCompressNativeLibs_ = newInfo.IsCompressNativeLibs(moduleName);
+    if (isCompressNativeLibs_) {
         std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath_);
         if (tempNativeLibraryPath.empty()) {
             APP_LOGE("tempNativeLibraryPath is empty");
@@ -744,7 +748,7 @@ ErrCode AppServiceFwkInstaller::SaveBundleInfoToStorage()
         dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_START);
         dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_SUCCESS);
         APP_LOGE("Save bundle failed %{public}s", bundleName_.c_str());
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_ADD_BUNDLE_ERROR;
     }
 
     return ERR_OK;
@@ -800,10 +804,8 @@ void AppServiceFwkInstaller::RollBack()
         APP_LOGW("pre bundle: %{public}s no rollback due to no space", bundleName_.c_str());
         return;
     }
-    // 1.RemoveBundleDir
-    RemoveBundleCodeDir(newInnerBundleInfo_);
 
-    // 2.RemoveCache
+    // RemoveCache
     RemoveInfo(bundleName_);
 }
 
@@ -886,7 +888,7 @@ ErrCode AppServiceFwkInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
         APP_LOGE("old module update state failed");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
 
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), Constants::DEFAULT_USERID);
@@ -918,14 +920,14 @@ ErrCode AppServiceFwkInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
         APP_LOGE("new moduleupdate state failed");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
 
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), Constants::DEFAULT_USERID);
     if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo)) {
         APP_LOGE(
             "add module %{public}s to innerBundleInfo %{public}s failed", moduleName.c_str(), bundleName_.c_str());
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_ADD_MODULE_ERROR;
     }
     return ERR_OK;
 }
@@ -941,7 +943,7 @@ ErrCode AppServiceFwkInstaller::UninstallLowerVersion(const std::vector<std::str
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_START)) {
         APP_LOGE("uninstall already start");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
 
     std::vector<std::string> moduleVec = info.GetModuleNameVec();
@@ -951,14 +953,14 @@ ErrCode AppServiceFwkInstaller::UninstallLowerVersion(const std::vector<std::str
             APP_LOGI("uninstall package %{public}s", package.c_str());
             if (!dataMgr_->RemoveModuleInfo(bundleName_, package, info)) {
                 APP_LOGE("RemoveModuleInfo failed");
-                return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+                return ERR_APPEXECFWK_RMV_MODULE_ERROR;
             }
         }
     }
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_SUCCESS)) {
         APP_LOGE("uninstall already start");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
     return ERR_OK;
 }
@@ -974,16 +976,6 @@ bool AppServiceFwkInstaller::GetInnerBundleInfoWithDisable(InnerBundleInfo &info
     }
     isAppExist = dataMgr_->GetInnerBundleInfoWithDisable(bundleName_, info);
     return true;
-}
-
-ErrCode AppServiceFwkInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info) const
-{
-    auto result = InstalldClient::GetInstance()->RemoveDir(info.GetAppCodePath());
-    if (result != ERR_OK) {
-        APP_LOGE("Fail remove dir %{public}s, err %{public}d",
-            info.GetAppCodePath().c_str(), result);
-    }
-    return result;
 }
 
 void AppServiceFwkInstaller::RemoveInfo(const std::string &bundleName)
@@ -1138,19 +1130,19 @@ ErrCode AppServiceFwkInstaller::MarkInstallFinish()
 {
     if (dataMgr_ == nullptr) {
         APP_LOGE("dataMgr_ is nullptr");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     InnerBundleInfo info;
     if (!dataMgr_->FetchInnerBundleInfo(bundleName_, info)) {
         APP_LOGE("mark finish failed, -n %{public}s not exist", bundleName_.c_str());
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_FETCH_BUNDLE_ERROR;
     }
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
         if (!dataMgr_->UpdateInnerBundleInfo(info, true)) {
             APP_LOGE("save mark failed, -n %{public}s", bundleName_.c_str());
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
         }
     }
     return ERR_OK;

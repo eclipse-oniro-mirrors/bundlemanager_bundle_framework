@@ -65,7 +65,8 @@ public:
         Security::AccessToken::HapInfoCheckResult &checkResult);
 
     static int32_t UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-        const InnerBundleInfo &innerBundleInfo, Security::AccessToken::HapInfoCheckResult &checkResult);
+        const InnerBundleInfo &innerBundleInfo, int32_t userId,
+        Security::AccessToken::HapInfoCheckResult &checkResult);
 
     static std::string GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult);
 
@@ -105,6 +106,7 @@ public:
     static void AddPermissionUsedRecord(const std::string &permission, int32_t successCount, int32_t failCount);
 
     static bool IsBundleSelfCalling(const std::string &bundleName);
+    static bool IsBundleSelfCalling(const std::string &bundleName, const int32_t &appIndex);
 
     // for old api
     static bool VerifyCallingBundleSdkVersion(int32_t beginApiVersion = Constants::INVALID_API_VERSION);

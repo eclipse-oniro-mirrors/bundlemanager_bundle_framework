@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_DATA_MGR_H
 
 #include <atomic>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -795,6 +796,11 @@ public:
     void GetBundleCacheInfos(
         const int32_t userId, std::vector<std::tuple<std::string, std::vector<std::string>,
         std::vector<int32_t>>> &validBundles, bool isClean = false) const;
+    void GetBundleCacheInfo(
+        std::function<std::vector<int32_t>(std::string&, std::vector<int32_t>&)> idxFilter,
+        const InnerBundleInfo &info,
+        std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> &validBundles,
+        const int32_t userId, bool isClean) const;
     bool GetBundleStats(const std::string &bundleName,
         const int32_t userId, std::vector<int64_t> &bundleStats,
         const int32_t appIndex = 0, const uint32_t statFlag = 0) const;
@@ -927,6 +933,12 @@ public:
     ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         int32_t triggerMode);
     std::vector<std::string> GetAllBundleName() const;
+    /**
+     * @brief Get lite bundleInfo of all bundles under the specified user
+     * @param userId Indicates the user ID
+     * @return Returns lite bundleInfo list, tuple format : {bundleName, uid, gid}
+     */
+    std::vector<std::tuple<std::string, int32_t, int32_t>> GetAllLiteBundleInfo(const int32_t userId) const;
     std::vector<std::string> GetAllDriverBundleName() const;
     bool IsBundleExist(const std::string &bundleName) const;
     bool QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const;
@@ -1281,6 +1293,7 @@ private:
     std::string TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,
         const AbilityInfo &abilityInfo) const;
     void RestoreUidAndGidFromUninstallInfo();
+    ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
 private:
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
@@ -1322,6 +1335,8 @@ private:
     // save all created users.
     std::set<int32_t> multiUserIdsSet_;
     std::set<std::string> appServiceHspBundleName_;
+
+    static bool HasAppLinkingFlag(uint32_t flags);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -71,7 +71,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundle(
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     ErrCode result = ERR_OK;
@@ -102,7 +102,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     auto currentBundleUserIds = dataMgr->GetUserIds(bundleName);
@@ -145,7 +145,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleTargetUser(const std::vecto
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     std::set<int32_t> userIdSet;

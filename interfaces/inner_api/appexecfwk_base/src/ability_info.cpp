@@ -120,7 +120,7 @@ const char* START_WINDOW_ILLUSTRATION_ID = "startWindowIllustrationId";
 const char* START_WINDOW_BRANDING_IMAGE_ID = "startWindowBrandingImageId";
 const char* START_WINDOW_BACKGROUND_COLOR_ID = "startWindowBackgroundColorId";
 const char* START_WINDOW_BACKGROUND_IMAGE_ID = "startWindowBackgroundImageId";
-const char* START_WINDOW_BACKGROUND_IMAGE_FIT_ID = "startWindowBackgroundImageFitId";
+const char* START_WINDOW_BACKGROUND_IMAGE_FIT = "startWindowBackgroundImageFit";
 }  // namespace
 
 bool AbilityInfo::ReadFromParcel(Parcel &parcel)
@@ -559,7 +559,7 @@ void to_json(nlohmann::json &jsonObject, const StartWindowResource &startWindowR
         {START_WINDOW_BRANDING_IMAGE_ID, startWindowResource.startWindowBrandingImageId},
         {START_WINDOW_BACKGROUND_COLOR_ID, startWindowResource.startWindowBackgroundColorId},
         {START_WINDOW_BACKGROUND_IMAGE_ID, startWindowResource.startWindowBackgroundImageId},
-        {START_WINDOW_BACKGROUND_IMAGE_FIT_ID, startWindowResource.startWindowBackgroundImageFitId},
+        {START_WINDOW_BACKGROUND_IMAGE_FIT, startWindowResource.startWindowBackgroundImageFit}
     };
 }
 
@@ -597,12 +597,11 @@ void from_json(const nlohmann::json &jsonObject, StartWindowResource &startWindo
         JsonType::NUMBER, false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd,
-        START_WINDOW_BACKGROUND_IMAGE_FIT_ID,
-        startWindowResource.startWindowBackgroundImageFitId,
-        JsonType::NUMBER, false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
+        START_WINDOW_BACKGROUND_IMAGE_FIT,
+        startWindowResource.startWindowBackgroundImageFit,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read Resource error %{public}d", parseResult);
     }
@@ -1435,7 +1434,9 @@ bool StartWindowResource::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBrandingImageId);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundColorId);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundImageId);
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundImageFitId);
+    std::u16string startWindowBackgroundImageFitVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, startWindowBackgroundImageFitVal);
+    startWindowBackgroundImageFit = Str16ToStr8(startWindowBackgroundImageFitVal);
     return true;
 }
 
@@ -1446,7 +1447,7 @@ bool StartWindowResource::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBrandingImageId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundColorId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundImageId);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, startWindowBackgroundImageFitId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(startWindowBackgroundImageFit));
     return true;
 }
 

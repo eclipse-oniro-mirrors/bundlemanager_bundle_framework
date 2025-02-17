@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -201,10 +201,11 @@ private:
      * @param installParam Indicates the install parameters.
      * @param appType Indicates the application type.
      * @param uid Indicates the uid of the application.
+     * @param isRecover Indicates whether this is a recovery scenario.
      * @return Returns ERR_OK if the bundle install successfully; returns error code otherwise.
      */
     ErrCode ProcessBundleInstall(const std::vector<std::string> &bundlePaths, const InstallParam &installParam,
-        const Constants::AppType appType, int32_t &uid);
+        const Constants::AppType appType, int32_t &uid, bool isRecover = false);
 
     ErrCode InnerProcessBundleInstall(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid);
@@ -393,6 +394,10 @@ private:
         std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     ErrCode CheckShellInstall(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
+#ifdef X86_EMULATOR_MODE
+    ErrCode CheckShellInstallForEmulator(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+#endif
 
     ErrCode CheckShellInstallInOobe();
 
@@ -787,6 +792,8 @@ private:
     bool GetTempBundleInfo(InnerBundleInfo &info) const;
     bool InitTempBundleFromCache(InnerBundleInfo &info, bool &isAppExist, std::string bundleName = "");
     ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex);
+    void CheckPreBundle(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const InstallParam &installParam, bool isRecover);
     ErrCode CheckShellCanInstallPreApp(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,

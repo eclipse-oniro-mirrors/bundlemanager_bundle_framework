@@ -100,11 +100,11 @@ ErrCode AppJumpInterceptorManagerRdb::AddAppJumpControlRule(const std::vector<Ap
     bool ret = rdbDataManager_->BatchInsert(insertNum, valuesBuckets);
     if (!ret) {
         LOG_E(BMS_TAG_DEFAULT, "BatchInsert AddAppJumpControlRule failed");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
     }
     if (valuesBuckets.size() != static_cast<uint64_t>(insertNum)) {
         LOG_E(BMS_TAG_DEFAULT, "BatchInsert size not expected");
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
     }
     return ERR_OK;
 }
@@ -125,7 +125,7 @@ ErrCode AppJumpInterceptorManagerRdb::DeleteAppJumpControlRule(const std::vector
             result = false;
         }
     }
-    return result ? ERR_OK : ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    return result ? ERR_OK : ERR_APPEXECFWK_DB_DELETE_ERROR;
 }
 
 ErrCode AppJumpInterceptorManagerRdb::DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId)
@@ -137,7 +137,7 @@ ErrCode AppJumpInterceptorManagerRdb::DeleteRuleByCallerBundleName(const std::st
     if (!ret) {
         LOG_E(BMS_TAG_DEFAULT, "DeleteRuleByCallerBundleName callerBundleName:%{public}s, failed",
             callerBundleName.c_str());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
     }
     return ERR_OK;
 }
@@ -151,7 +151,7 @@ ErrCode AppJumpInterceptorManagerRdb::DeleteRuleByTargetBundleName(const std::st
     if (!ret) {
         LOG_E(BMS_TAG_DEFAULT, "DeleteRuleByTargetBundleName targetBundleName:%{public}s, failed",
             targetBundleName.c_str());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
     }
     return ERR_OK;
 }

@@ -27,7 +27,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
-using namespace std;
 
 static NapiValue InstantiateGZip(napi_env env)
 {

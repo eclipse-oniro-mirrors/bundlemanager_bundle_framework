@@ -36,7 +36,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
-using namespace std;
 
 static constexpr int MIN_NUMBER = 1;
 static constexpr int MAX_NUMBER = 101;
@@ -89,7 +88,7 @@ napi_value GZipNExporter::Constructor(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    unique_ptr<GZipEntity> gzipEntity = make_unique<GZipEntity>();
+    std::unique_ptr<GZipEntity> gzipEntity = std::make_unique<GZipEntity>();
     if (!NapiClass::SetEntityFor<GZipEntity>(env, funcArg.GetThisVar(), move(gzipEntity))) {
         NapiBusinessError(EIO).ThrowErr(env, "Failed to wrap entity for obj gzip");
         return nullptr;
@@ -99,7 +98,7 @@ napi_value GZipNExporter::Constructor(napi_env env, napi_callback_info info)
 
 bool GZipNExporter::Export()
 {
-    vector<napi_property_descriptor> props = {
+    std::vector<napi_property_descriptor> props = {
         NapiValue::DeclareNapiFunction("gzdopen", GZDopen),
         NapiValue::DeclareNapiFunction("gzopen", GZOpen),
         NapiValue::DeclareNapiFunction("gzclose", GZClose),
@@ -128,10 +127,10 @@ bool GZipNExporter::Export()
         NapiValue::DeclareNapiFunction("gzflush", GZFlush),
     };
 
-    string className = GetClassName();
+    std::string className = GetClassName();
     bool succ = false;
     napi_value cls = nullptr;
-    tie(succ, cls) = NapiClass::DefineClass(exports_.env_, className, GZipNExporter::Constructor, move(props));
+    std::tie(succ, cls) = NapiClass::DefineClass(exports_.env_, className, GZipNExporter::Constructor, move(props));
     if (!succ) {
         NapiBusinessError().ThrowErr(exports_.env_, "Failed to define class");
         return false;
@@ -145,7 +144,7 @@ bool GZipNExporter::Export()
     return exports_.AddProp(className, cls);
 }
 
-string GZipNExporter::GetClassName()
+std::string GZipNExporter::GetClassName()
 {
     return GZipNExporter::className_;
 }
@@ -164,7 +163,7 @@ napi_value GZipNExporter::GZDopen(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -173,7 +172,7 @@ napi_value GZipNExporter::GZDopen(napi_env env, napi_callback_info info)
     }
 
     bool succ = false;
-    tie(succ, arg->fd, arg->mode) = CommonFunc::GetGZDOpenArg(env, funcArg);
+    std::tie(succ, arg->fd, arg->mode) = CommonFunc::GetGZDOpenArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -213,7 +212,7 @@ napi_value GZipNExporter::GZOpen(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -222,7 +221,7 @@ napi_value GZipNExporter::GZOpen(napi_env env, napi_callback_info info)
     }
 
     bool succ = false;
-    tie(succ, arg->path, arg->mode) = CommonFunc::GetGZOpenArg(env, funcArg);
+    std::tie(succ, arg->path, arg->mode) = CommonFunc::GetGZOpenArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -267,7 +266,7 @@ napi_value GZipNExporter::GZCloseW(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -311,7 +310,7 @@ napi_value GZipNExporter::GZBuffer(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -321,7 +320,7 @@ napi_value GZipNExporter::GZBuffer(napi_env env, napi_callback_info info)
 
     bool succ = false;
     uint32_t size = 0;
-    tie(succ, size) = CommonFunc::GetGZBufferArg(env, funcArg);
+    std::tie(succ, size) = CommonFunc::GetGZBufferArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -361,7 +360,7 @@ napi_value GZipNExporter::GZRead(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -371,7 +370,7 @@ napi_value GZipNExporter::GZRead(napi_env env, napi_callback_info info)
 
     bool succ = false;
     void *buffer = nullptr;
-    tie(succ, buffer, arg->bufLen) = CommonFunc::GetGZReadArg(env, funcArg);
+    std::tie(succ, buffer, arg->bufLen) = CommonFunc::GetGZReadArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -413,7 +412,7 @@ napi_value GZipNExporter::GZFRead(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -423,7 +422,7 @@ napi_value GZipNExporter::GZFRead(napi_env env, napi_callback_info info)
 
     bool succ = false;
     void *buffer = nullptr;
-    tie(succ, buffer, arg->size, arg->nitems) = CommonFunc::GetGZFReadArg(env, funcArg);
+    std::tie(succ, buffer, arg->size, arg->nitems) = CommonFunc::GetGZFReadArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -465,7 +464,7 @@ napi_value GZipNExporter::GZWrite(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -474,7 +473,7 @@ napi_value GZipNExporter::GZWrite(napi_env env, napi_callback_info info)
     }
 
     bool succ = false;
-    tie(succ, arg->buf, arg->bufLen) = CommonFunc::GetGZWriteArg(env, funcArg);
+    std::tie(succ, arg->buf, arg->bufLen) = CommonFunc::GetGZWriteArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -515,7 +514,7 @@ napi_value GZipNExporter::GZFWrite(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -524,7 +523,7 @@ napi_value GZipNExporter::GZFWrite(napi_env env, napi_callback_info info)
     }
 
     bool succ = false;
-    tie(succ, arg->buf, arg->size, arg->nitems) = CommonFunc::GetGZFWriteArg(env, funcArg);
+    std::tie(succ, arg->buf, arg->size, arg->nitems) = CommonFunc::GetGZFWriteArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -566,7 +565,7 @@ napi_value GZipNExporter::GZPutC(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -575,7 +574,7 @@ napi_value GZipNExporter::GZPutC(napi_env env, napi_callback_info info)
     }
 
     bool succ = false;
-    tie(succ, arg->c) = CommonFunc::GetGZPutCArg(env, funcArg);
+    std::tie(succ, arg->c) = CommonFunc::GetGZPutCArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -616,7 +615,7 @@ napi_value GZipNExporter::GZPutS(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -625,7 +624,7 @@ napi_value GZipNExporter::GZPutS(napi_env env, napi_callback_info info)
     }
 
     bool succ = false;
-    tie(succ, arg->s) = CommonFunc::GetGZPutSArg(env, funcArg);
+    std::tie(succ, arg->s) = CommonFunc::GetGZPutSArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -666,7 +665,7 @@ napi_value GZipNExporter::GZTell(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -718,7 +717,7 @@ napi_value GZipNExporter::GZSetParams(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -727,7 +726,7 @@ napi_value GZipNExporter::GZSetParams(napi_env env, napi_callback_info info)
     }
 
     bool succ = false;
-    tie(succ, arg->level, arg->strategy) = CommonFunc::GetGzSetParamsArg(env, funcArg);
+    std::tie(succ, arg->level, arg->strategy) = CommonFunc::GetGzSetParamsArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -768,7 +767,7 @@ napi_value GZipNExporter::GZPrintF(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -777,7 +776,7 @@ napi_value GZipNExporter::GZPrintF(napi_env env, napi_callback_info info)
     }
 
     bool succ = false;
-    tie(succ, arg->format, arg->args) = CommonFunc::GetGZPrintFArg(env, funcArg);
+    std::tie(succ, arg->format, arg->args) = CommonFunc::GetGZPrintFArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -814,7 +813,7 @@ napi_value GZipNExporter::GZClose(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -858,7 +857,7 @@ napi_value GZipNExporter::GZCloseR(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -901,7 +900,7 @@ napi_value GZipNExporter::GZGetS(napi_env env, napi_callback_info info)
         NapiBusinessError().ThrowErr(env, EINVAL);
         return nullptr;
     }
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -910,7 +909,7 @@ napi_value GZipNExporter::GZGetS(napi_env env, napi_callback_info info)
     }
     bool succ = false;
     void *buffer = nullptr;
-    tie(succ, buffer, arg->bufLen) = CommonFunc::GetGZGetSArg(env, funcArg);
+    std::tie(succ, buffer, arg->bufLen) = CommonFunc::GetGZGetSArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -952,7 +951,7 @@ napi_value GZipNExporter::GZGetC(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -996,7 +995,7 @@ napi_value GZipNExporter::GZRewind(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -1039,14 +1038,14 @@ napi_value GZipNExporter::GZSeek(napi_env env, napi_callback_info info)
         NapiBusinessError().ThrowErr(env, EINVAL);
         return nullptr;
     }
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return nullptr;
     }
     bool succ = false;
-    tie(succ, arg->seekOffset, arg->seekWhence) = CommonFunc::GetGZSeekArg(env, funcArg);
+    std::tie(succ, arg->seekOffset, arg->seekWhence) = CommonFunc::GetGZSeekArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -1091,7 +1090,7 @@ napi_value GZipNExporter::GZOffset(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -1143,7 +1142,7 @@ napi_value GZipNExporter::GZUnGetC(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
         NapiBusinessError().ThrowErr(env, EINVAL);
@@ -1152,7 +1151,7 @@ napi_value GZipNExporter::GZUnGetC(napi_env env, napi_callback_info info)
 
     int32_t ascii = -1;
     bool succ = false;
-    tie(succ, ascii) = CommonFunc::GetGZUnGetCArg(env, funcArg);
+    std::tie(succ, ascii) = CommonFunc::GetGZUnGetCArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }
@@ -1192,7 +1191,7 @@ napi_value GZipNExporter::GZClearerr(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -1233,7 +1232,7 @@ napi_value GZipNExporter::GZDirect(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -1277,7 +1276,7 @@ napi_value GZipNExporter::GZeof(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -1339,7 +1338,7 @@ napi_value GZipNExporter::GZError(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -1383,7 +1382,7 @@ napi_value GZipNExporter::GZFlush(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto arg = make_shared<AsyncGZipArg>();
+    auto arg = std::make_shared<AsyncGZipArg>();
     /* To get entity */
     auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
     if (!gzipEntity) {
@@ -1393,7 +1392,7 @@ napi_value GZipNExporter::GZFlush(napi_env env, napi_callback_info info)
 
     bool succ = false;
     uint32_t flush = 0;
-    tie(succ, flush) = CommonFunc::SetGZFlushArg(env, funcArg);
+    std::tie(succ, flush) = CommonFunc::SetGZFlushArg(env, funcArg);
     if (!succ) {
         return nullptr;
     }

@@ -152,8 +152,7 @@ constexpr int32_t DEFAULT_OVERLAY_DISABLE_STATUS = 0;
 constexpr int32_t OVERLAY_MINIMUM_PRIORITY = 1;
 // ark compile mode
 constexpr const char* COMPILE_PARTIAL = "partial";
-constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
-constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
+constexpr const char* ARK_CACHE_PATH = "/data/app/el1/public/aot_compiler/ark_cache/";
 // code signature
 constexpr const char* CODE_SIGNATURE_FILE_SUFFIX = ".sig";
 constexpr const char* CODE_SIGNATURE_HAP = "Hap";

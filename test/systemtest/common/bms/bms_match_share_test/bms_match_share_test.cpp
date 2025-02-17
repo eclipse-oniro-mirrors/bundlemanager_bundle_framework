@@ -327,6 +327,7 @@ HWTEST_F(BmsMatchShareTest, MatchShareTest_0100, Function | MediumTest | Level1)
 
     std::map<std::string, int32_t> utds4 = {{"general.png", 18}};
     AAFwk::Want want4 = CreateWantForMatchShareTest(utds4);
+    want4.SetBundle("com.example.matchshare.test");
     std::vector<AbilityInfo> abilityInfos4;
     ErrCode ret4 = bundleMgrProxy->QueryAbilityInfosV9(
         want4, static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), USERID, abilityInfos4);
@@ -386,6 +387,7 @@ HWTEST_F(BmsMatchShareTest, MatchShareTest_0200, Function | MediumTest | Level1)
 
     std::map<std::string, int32_t> utds4 = {{"general.object", 40}};
     AAFwk::Want want4 = CreateWantForMatchShareTest(utds4);
+    want4.SetBundle("com.example.matchshare.test2");
     std::vector<AbilityInfo> abilityInfos4;
     ErrCode ret4 = bundleMgrProxy->QueryAbilityInfosV9(
         want4, static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), USERID, abilityInfos4);
@@ -445,6 +447,7 @@ HWTEST_F(BmsMatchShareTest, MatchShareTest_0300, Function | MediumTest | Level1)
 
     std::map<std::string, int32_t> utds4 = {{"general.media", 70}};
     AAFwk::Want want4 = CreateWantForMatchShareTest(utds4);
+    want4.SetBundle("com.example.matchshare.test3");
     std::vector<AbilityInfo> abilityInfos4;
     ErrCode ret4 = bundleMgrProxy->QueryAbilityInfosV9(
         want4, static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), USERID, abilityInfos4);

@@ -2084,7 +2084,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0040, Function | MediumTest | Level
     BundleInfo bundleInfo;
     bool isNewVersion = true;
     ErrCode res = bmsExtensionClient->GetBundleInfo(bundleName, 0, bundleInfo, userId, isNewVersion);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**
@@ -4862,8 +4862,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0001, Function | SmallTest 
 {
     auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
-    bundleUserMgrHostImpl_->OnCreateNewUser(USERID, false);
-    bundleUserMgrHostImpl_->RemoveUser(USERID);
+    int32_t userId = 101;
+    bundleUserMgrHostImpl_->OnCreateNewUser(userId, false);
+    bundleUserMgrHostImpl_->RemoveUser(userId);
     ASSERT_NE(bundleInstaller, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
 }
@@ -4878,8 +4879,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0002, Function | SmallTest 
 {
     auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
-    bundleUserMgrHostImpl_->OnCreateNewUser(USERID, false, DISALLOWLIST);
-    bundleUserMgrHostImpl_->RemoveUser(USERID);
+    int32_t userId = 101;
+    bundleUserMgrHostImpl_->OnCreateNewUser(userId, false, DISALLOWLIST);
+    bundleUserMgrHostImpl_->RemoveUser(userId);
     ASSERT_NE(bundleInstaller, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
 }
@@ -5410,7 +5412,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryLauncherAbility_0001, Function | MediumTest 
     EXPECT_NE(ret, ERR_OK);
 
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    bmsExtensionClient->bmsExtensionImpl_ = make_shared<BmsExtensionDataMgr>(bmsExtensionDataMgr);
+    bmsExtensionClient->bmsExtensionImpl_ = std::make_shared<BmsExtensionDataMgr>(bmsExtensionDataMgr);
     ret = bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos);
     EXPECT_NE(ret, ERR_OK);
 }
@@ -7973,7 +7975,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetSignatureInfo_0001, Function | MediumTest | Le
     EXPECT_NE(localBundleDataMgr, nullptr);
     SignatureInfo signatureInfo;
     ErrCode ret = localBundleDataMgr->GetSignatureInfoByUid(100, signatureInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
@@ -8003,6 +8005,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetSignatureInfo_0003, Function | MediumTest | Le
 {
     SignatureInfo signatureInfo;
     ErrCode ret = bundleMgrHostImpl_->GetSignatureInfoByUid(100, signatureInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 } // OHOS

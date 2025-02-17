@@ -72,11 +72,11 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     int32_t userId = static_cast<int32_t>(GetU32Data(data));
     int32_t appIndex = static_cast<int32_t>(GetU32Data(data));
     bundleCloneInstall->InstallCloneApp(bundleName, userId, appIndex);
-    bundleCloneInstall->UninstallCloneApp(bundleName, userId, appIndex);
-    bundleCloneInstall->UninstallAllCloneApps(bundleName, userId);
+    bundleCloneInstall->UninstallCloneApp(bundleName, userId, appIndex, true);
+    bundleCloneInstall->UninstallAllCloneApps(bundleName, true, userId);
     InnerBundleInfo info;
     bundleCloneInstall->CreateCloneDataDir(info, userId, UID, appIndex);
-    bundleCloneInstall->RemoveCloneDataDir(bundleName, userId, appIndex);
+    bundleCloneInstall->RemoveCloneDataDir(bundleName, userId, appIndex, true);
     return true;
 }
 }

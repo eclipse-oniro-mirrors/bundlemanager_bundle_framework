@@ -1036,36 +1036,13 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
         LOG_D(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", dir.c_str());
         return 0;
     }
-    DIR *dirPtr = opendir(filePath.c_str());
-    if (dirPtr == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "GetDiskUsage open file dir:%{public}s is failure, errno:%{public}d",
-            filePath.c_str(), errno);
+    uint64_t size = GetFolderSize(filePath);
+    if (size > std::numeric_limits<int64_t>::max()) {
+        LOG_E(BMS_TAG_INSTALLD, "GetFolderSize overflow:%{public}s", filePath.c_str());
         return 0;
+    } else {
+        return static_cast<int64_t>(size);
     }
-    if (filePath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
-        filePath.push_back(ServiceConstants::FILE_SEPARATOR_CHAR);
-    }
-    struct dirent *entry = nullptr;
-    int64_t size = 0;
-    while ((entry = readdir(dirPtr)) != nullptr) {
-        if ((strcmp(entry->d_name, ".") == 0) || (strcmp(entry->d_name, "..") == 0)) {
-            continue;
-        }
-        std::string path = filePath + entry->d_name;
-        if (entry->d_type == DT_DIR) {
-            size += GetDiskUsage(path, true);
-            continue;
-        }
-        struct stat fileInfo = {0};
-        if (stat(path.c_str(), &fileInfo) != 0) {
-            LOG_E(BMS_TAG_INSTALLD, "call stat error %{public}s, errno:%{public}d", path.c_str(), errno);
-            fileInfo.st_size = 0;
-        }
-        size += fileInfo.st_size;
-    }
-    closedir(dirPtr);
-    LOG_D(BMS_TAG_INSTALLD, "stat size: %{public}" PRId64 " %{public}s", size, dir.c_str());
-    return size;
 }
 
 void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, std::vector<std::string> &cacheDirs)
@@ -1530,6 +1507,10 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
         LOG_D(BMS_TAG_INSTALLD, "code signature is not supported");
         return ret;
     }
+    uint32_t codeSignFlag = 0;
+    if (!codeSignatureParam.isCompressNativeLibrary) {
+        codeSignFlag |= Security::CodeSign::CodeSignInfoFlag::IS_UNCOMPRESSED_NATIVE_LIBS;
+    }
     if (codeSignatureParam.signatureFileDir.empty()) {
         std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
         Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
@@ -1537,10 +1518,11 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
         if (codeSignatureParam.isEnterpriseBundle) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
-                codeSignatureParam.modulePath, entryMap, fileType);
+                codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
         } else {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
-            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
+            ret = codeSignHelper->EnforceCodeSignForApp(
+                codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
         }
         LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd Verify code signature %{public}s",
             codeSignatureParam.modulePath.c_str());
@@ -2046,6 +2028,7 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     std::string newfilePath;
     if (!PathToRealPath(filePath, newfilePath)) {
         LOG_E(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", filePath.c_str());
+        close(dev_fd);
         return result;
     }
     auto fd = open(newfilePath.c_str(), O_RDONLY);

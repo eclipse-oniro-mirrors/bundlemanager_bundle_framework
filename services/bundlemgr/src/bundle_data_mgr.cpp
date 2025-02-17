@@ -16,6 +16,7 @@
 #include "bundle_data_mgr.h"
 
 #include <sys/stat.h>
+#include <tuple>
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
@@ -1299,6 +1300,18 @@ bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &
     return true;
 }
 
+ErrCode BundleDataMgr::IsSystemApp(const std::string &bundleName, bool &isSystemApp)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto bundleInfoItem = bundleInfos_.find(bundleName);
+    if (bundleInfoItem == bundleInfos_.end()) {
+        APP_LOGW("%{public}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    isSystemApp = bundleInfoItem->second.IsSystemApp();
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityInfo> &option,
     int32_t flags, int32_t userId, const InnerBundleInfo &innerBundleInfo, AbilityInfo &info,
     int32_t appIndex) const
@@ -1728,7 +1741,7 @@ void BundleDataMgr::EmplaceAbilityInfo(const InnerBundleInfo &info, const std::v
     if ((static_cast<uint32_t>(flags) &
         static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) ==
         static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) {
-        info.GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT),
+        info.GetApplicationInfoV9(static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT),
             userId, abilityInfo.applicationInfo, appIndex);
     }
     if ((static_cast<uint32_t>(flags) &
@@ -2472,7 +2485,7 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
     int32_t flag = 0;
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
         == static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE)) {
-        flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+        flag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
     }
     auto ret = GetInnerBundleInfoWithBundleFlagsV9(appName, flag, innerBundleInfo, requestUserId, appIndex);
     if (ret != ERR_OK) {
@@ -2504,7 +2517,7 @@ ErrCode BundleDataMgr::GetApplicationInfoWithResponseId(
     int32_t flag = 0;
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
         == static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE)) {
-        flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+        flag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
     }
     auto ret = GetInnerBundleInfoWithBundleFlagsV9(appName, flag, innerBundleInfo, requestUserId);
     if (ret != ERR_OK) {
@@ -2752,8 +2765,8 @@ bool BundleDataMgr::GetBundleInfo(
     }
     if ((static_cast<uint32_t>(flags) & BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP) ==
         BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP) {
-        ProcessBundleRouterMap(bundleInfo, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
-            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP));
+        ProcessBundleRouterMap(bundleInfo, static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP));
     }
     LOG_D(BMS_TAG_QUERY, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
         bundleName.c_str(), userId);
@@ -3000,7 +3013,7 @@ void BundleDataMgr::GetAllBundleNames(std::set<std::string> &bundleNames)
 void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const
 {
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0) {
-        flags = static_cast<int32_t>(
+        flags = static_cast<uint32_t>(
             static_cast<uint32_t>(flags) | static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE));
         std::vector<InnerBundleUserInfo> innerBundleUserInfos;
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
@@ -3625,13 +3638,13 @@ ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bun
         if (!OHOS::StrToInt(index, appIndex)) {
             return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
-        
+
         auto clonePos = keyName.find(CLONE_BUNDLE_PREFIX);
         if (clonePos != std::string::npos && clonePos == pos) {
             bundleName = keyName.substr(clonePos + strlen(CLONE_BUNDLE_PREFIX));
             return ERR_OK;
         }
-        
+
         auto sandboxPos = keyName.find(Constants::FILE_UNDERLINE);
         if (sandboxPos != std::string::npos && sandboxPos == pos) {
             bundleName = keyName.substr(sandboxPos + strlen(Constants::FILE_UNDERLINE));
@@ -3756,6 +3769,38 @@ std::vector<int32_t> BundleDataMgr::GetNoRunningBundleCloneIndexes(const sptr<IA
 }
 #endif
 
+void BundleDataMgr::GetBundleCacheInfo(
+    std::function<std::vector<int32_t>(std::string&, std::vector<int32_t>&)> idxFilter,
+    const InnerBundleInfo &info,
+    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> &validBundles,
+    const int32_t userId, bool isClean) const
+{
+    std::string bundleName = info.GetBundleName();
+    if (isClean && !info.GetBaseApplicationInfo().userDataClearable) {
+        APP_LOGW("Not clearable:%{public}s, userid:%{public}d", bundleName.c_str(), userId);
+        return;
+    }
+    std::vector<std::string> moduleNameList;
+    info.GetModuleNames(moduleNameList);
+    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, userId);
+    cloneAppIndexes.emplace_back(0);
+    std::vector<int32_t> allAppIndexes = cloneAppIndexes;
+    if (isClean) {
+        allAppIndexes = idxFilter(bundleName, cloneAppIndexes);
+    }
+    validBundles.emplace_back(std::make_tuple(bundleName, moduleNameList, allAppIndexes));
+    // add atomic service
+    if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
+        std::string atomicServiceName;
+        AccountSA::OhosAccountInfo accountInfo;
+        auto ret = GetDirForAtomicServiceByUserId(bundleName, userId, accountInfo, atomicServiceName);
+        if (ret == ERR_OK && !atomicServiceName.empty()) {
+            APP_LOGD("atomicServiceName: %{public}s", atomicServiceName.c_str());
+            validBundles.emplace_back(std::make_tuple(atomicServiceName, moduleNameList, allAppIndexes));
+        }
+    }
+}
+
 void BundleDataMgr::GetBundleCacheInfos(const int32_t userId, std::vector<std::tuple<std::string,
     std::vector<std::string>, std::vector<int32_t>>> &validBundles, bool isClean) const
 {
@@ -3765,37 +3810,17 @@ void BundleDataMgr::GetBundleCacheInfos(const int32_t userId, std::vector<std::t
         APP_LOGE("CleanBundleCache fail to find the app mgr service to check app is running");
         return;
     }
+    auto idxFiltor = [&appMgrProxy, this](std::string &bundleName, std::vector<int32_t> &allidx) {
+        return this->GetNoRunningBundleCloneIndexes(appMgrProxy, bundleName, allidx);
+    };
+#else
+    auto idxFiltor = [](std::string &bundleName, std::vector<int32_t> &allidx) {
+        return allidx;
+    };
 #endif
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    for (const auto &item : bundleInfos_) {
-        const InnerBundleInfo &info = item.second;
-        std::string bundleName = info.GetBundleName();
-        // std::string bundleNameDir = bundleName;
-        if (isClean && !info.GetBaseApplicationInfo().userDataClearable) {
-            APP_LOGW("Not clearable:%{public}s, userid:%{public}d", bundleName.c_str(), userId);
-            continue;
-        }
-        std::vector<std::string> moduleNameList;
-        info.GetModuleNames(moduleNameList);
-        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, userId);
-        cloneAppIndexes.emplace_back(0);
-        std::vector<int32_t> allAppIndexes = cloneAppIndexes;
-        if (isClean) {
-#ifdef ABILITY_RUNTIME_ENABLE
-            allAppIndexes = GetNoRunningBundleCloneIndexes(appMgrProxy, bundleName, cloneAppIndexes);
-#endif
-        }
-        validBundles.emplace_back(std::make_tuple(bundleName, moduleNameList, allAppIndexes));
-        // add atomic service
-        if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-            std::string atomicServiceName;
-            AccountSA::OhosAccountInfo accountInfo;
-            auto ret = GetDirForAtomicServiceByUserId(bundleName, userId, accountInfo, atomicServiceName);
-            if (ret == ERR_OK && !atomicServiceName.empty()) {
-                APP_LOGD("atomicServiceName: %{public}s", atomicServiceName.c_str());
-                validBundles.emplace_back(std::make_tuple(atomicServiceName, moduleNameList, allAppIndexes));
-            }
-        }
+    std::map<std::string, InnerBundleInfo> infos = GetAllInnerBundleInfos();
+    for (const auto &item : infos) {
+        GetBundleCacheInfo(idxFiltor, item.second, validBundles, userId, isClean);
     }
     return;
 }
@@ -3855,20 +3880,37 @@ void BundleDataMgr::GetBundleModuleNames(const std::string &bundleName,
 
 bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const
 {
-    std::vector<std::string> bundleNames;
     std::vector<int32_t> uids;
     int32_t responseUserId = userId;
-    GetBundleList(bundleNames, userId);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid userid :%{public}d", userId);
+        return false;
+    }
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        for (const auto &bundleName : bundleNames) {
-            auto infoItem = bundleInfos_.find(bundleName);
-            if (infoItem == bundleInfos_.end()) {
-                return false;
+        for (const auto &item : bundleInfos_) {
+            const InnerBundleInfo &info = item.second;
+            std::string bundleName = info.GetBundleName();
+            responseUserId = info.GetResponseUserId(requestUserId);
+            if (responseUserId == Constants::INVALID_USERID) {
+                APP_LOGD("bundle %{public}s is not installed in user %{public}d or 0", bundleName.c_str(), userId);
+                continue;
             }
-            responseUserId = infoItem->second.GetResponseUserId(userId);
-            int32_t uid = infoItem->second.GetUid(responseUserId);
-            uids.emplace_back(uid);
+            BundleType type = info.GetApplicationBundleType();
+            if (type != BundleType::ATOMIC_SERVICE && type != BundleType::APP) {
+                APP_LOGD("BundleType is invalid: %{public}d, bundname: %{public}s", type, bundleName.c_str());
+                continue;
+            }
+            std::vector<int32_t> allAppIndexes = {0};
+            if (type == BundleType::APP) {
+                std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, responseUserId);
+                allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
+            }
+            for (int32_t appIndex: allAppIndexes) {
+                int32_t uid = info.GetUid(responseUserId, appIndex);
+                uids.emplace_back(uid);
+            }
         }
     }
     if (InstalldClient::GetInstance()->GetAllBundleStats(responseUserId, bundleStats, uids) != ERR_OK) {
@@ -3881,7 +3923,6 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
     }
     return true;
 }
-
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
@@ -6472,7 +6513,7 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
 #ifdef GLOBAL_I18_ENABLE
     std::map<std::string, std::string> configs;
     OHOS::Global::I18n::LocaleInfo locale(
-        localeInfo.empty() ? Global::I18n::LocaleConfig::GetSystemLocale() : localeInfo, configs);
+        localeInfo.empty() ? Global::I18n::LocaleConfig::GetEffectiveLanguage() : localeInfo, configs);
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
     resourceManager->UpdateResConfig(*resConfig);
@@ -7286,6 +7327,25 @@ std::vector<std::string> BundleDataMgr::GetAllBundleName() const
     return bundleNames;
 }
 
+std::vector<std::tuple<std::string, int32_t, int32_t>> BundleDataMgr::GetAllLiteBundleInfo(const int32_t userId) const
+{
+    std::set<int32_t> userIds = GetAllUser();
+    if (userIds.find(userId) == userIds.end()) {
+        APP_LOGW("invalid userId");
+        return {};
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::vector<std::tuple<std::string, int32_t, int32_t>> bundles;
+    for (const auto &[bundleName, innerBundleInfo] : bundleInfos_) {
+        auto installedUsers = innerBundleInfo.GetUsers();
+        if (installedUsers.find(userId) == installedUsers.end()) {
+            continue;
+        }
+        bundles.emplace_back(bundleName, innerBundleInfo.GetUid(userId), innerBundleInfo.GetGid(userId));
+    }
+    return bundles;
+}
+
 std::vector<std::string> BundleDataMgr::GetAllDriverBundleName() const
 {
     APP_LOGD("GetAllDriverBundleName begin");
@@ -7636,6 +7696,13 @@ bool BundleDataMgr::QueryAppGalleryAbilityName(std::string &bundleName, std::str
     if (bundleName.empty() || abilityName.empty()) {
         APP_LOGW("bundleName: %{public}s or abilityName: %{public}s is empty()",
             bundleName.c_str(), abilityName.c_str());
+        return false;
+    }
+    bool isSystemApp = false;
+    if (IsSystemApp(bundleName, isSystemApp) != ERR_OK || !isSystemApp) {
+        APP_LOGW("%{public}s is not systemApp", bundleName.c_str());
+        bundleName.clear();
+        abilityName.clear();
         return false;
     }
     APP_LOGD("QueryAppGalleryAbilityName bundleName: %{public}s, abilityName: %{public}s",
@@ -8989,9 +9056,7 @@ void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
     }
     if (want.GetUriString().rfind(SCHEME_HTTPS, 0) != 0) {
         APP_LOGD("scheme is not https");
-        if ((static_cast<uint32_t>(flags) &
-            static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
-            static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
+        if (HasAppLinkingFlag(static_cast<uint32_t>(flags))) {
             APP_LOGI("using app linking flag and scheme is not https, return empty list");
             abilityInfos.clear();
         }
@@ -9006,9 +9071,7 @@ void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
         APP_LOGE("FilterAbilities failed");
     }
     IPCSkeleton::SetCallingIdentity(identity);
-    if ((static_cast<uint32_t>(flags) &
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
+    if (HasAppLinkingFlag(static_cast<uint32_t>(flags))) {
         APP_LOGD("return filteredAbilityInfos");
         abilityInfos = filteredAbilityInfos;
         for (auto &abilityInfo : abilityInfos) {
@@ -9028,8 +9091,18 @@ void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
     return;
 #else
     APP_LOGI("AppDomainVerify is not enabled");
+    if (HasAppLinkingFlag(static_cast<uint32_t>(flags))) {
+        APP_LOGI("has flag and return empty list");
+        abilityInfos.clear();
+    }
     return;
 #endif
+}
+
+bool BundleDataMgr::HasAppLinkingFlag(uint32_t flags)
+{
+    return (flags & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING);
 }
 
 ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex)
@@ -9471,11 +9544,12 @@ ErrCode BundleDataMgr::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &s
     ErrCode errCode = GetInnerBundleInfoWithSandboxByUid(uid, innerBundleInfo);
     if (errCode != ERR_OK) {
         APP_LOGE("Get innerBundleInfo failed, uid:%{public}d", uid);
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return errCode;
     }
     signatureInfo.appId = innerBundleInfo.GetBaseBundleInfo().appId;
     signatureInfo.fingerprint = innerBundleInfo.GetBaseApplicationInfo().fingerprint;
     signatureInfo.appIdentifier = innerBundleInfo.GetAppIdentifier();
+    signatureInfo.certificate = innerBundleInfo.GetCertificate();
     return ERR_OK;
 }
 

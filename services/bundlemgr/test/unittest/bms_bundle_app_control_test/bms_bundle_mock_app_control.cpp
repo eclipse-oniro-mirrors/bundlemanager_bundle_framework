@@ -114,7 +114,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0010, Function | Smal
     AppControlManagerRdb rdb;
     std::vector<std::string> appIds;
     auto res = rdb.AddAppInstallControlRule("", appIds, "", USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR);
 }
 
 /**
@@ -128,7 +128,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0020, Function | Smal
     std::vector<std::string> appIds;
     appIds.push_back("appId");
     auto res = rdb.AddAppInstallControlRule("", appIds, "", USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -142,7 +142,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0030, Function | Smal
     std::vector<std::string> appIds;
     appIds.push_back("appId");
     auto res = rdb.DeleteAppInstallControlRule("", "", appIds, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -154,7 +154,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0040, Function | Smal
 {
     AppControlManagerRdb rdb;
     auto res = rdb.DeleteAppInstallControlRule("", "", USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -167,7 +167,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0050, Function | Smal
     AppControlManagerRdb rdb;
     std::vector<std::string> appIds;
     auto res = rdb.GetAppInstallControlRule("", "", USERID, appIds);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 
 /**
@@ -182,7 +182,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0060, Function | Smal
     AppRunningControlRule appRunningControlRule;
     controlRules.push_back(appRunningControlRule);
     ErrCode res = rdb.AddAppRunningControlRule("", controlRules, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -195,7 +195,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0070, Function | Smal
     AppControlManagerRdb rdb;
     std::vector<AppRunningControlRule> controlRules;
     ErrCode res = rdb.AddAppRunningControlRule("", controlRules, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR);
 }
 
 /**
@@ -210,7 +210,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0080, Function | Smal
     AppRunningControlRule appRunningControlRule;
     controlRules.push_back(appRunningControlRule);
     ErrCode res = rdb.DeleteAppRunningControlRule("", controlRules, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -222,7 +222,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0090, Function | Smal
 {
     AppControlManagerRdb rdb;
     ErrCode res = rdb.DeleteAppRunningControlRule("", USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -236,7 +236,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0100, Function | Smal
     std::vector<std::string> appIds;
     appIds.push_back("appId");
     auto res = rdb.GetAppRunningControlRule("", USERID, appIds);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 
 /**
@@ -251,7 +251,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0110, Function | Smal
     appIds.push_back("appId");
     AppRunningControlRuleResult controlRuleResult;
     auto res = rdb.GetAppRunningControlRule("", USERID, controlRuleResult);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 
 /**
@@ -265,7 +265,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0120, Function | Smal
     Want want;
     AppRunningControlRuleResult controlRuleResult;
     auto res = rdb.SetDisposedStatus("", "", want, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -278,7 +278,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0130, Function | Smal
     AppControlManagerRdb rdb;
     AppRunningControlRuleResult controlRuleResult;
     auto res = rdb.DeleteDisposedStatus("", "", USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -292,7 +292,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0140, Function | Smal
     Want want;
     AppRunningControlRuleResult controlRuleResult;
     auto res = rdb.GetDisposedStatus("", "", want, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 
 /**
@@ -310,7 +310,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0150, Function | Smal
     int32_t appIndex = 0;
     int32_t userId = 100;
     ErrCode res = rdb.SetDisposedRule(callingName, appId, rule, appIndex, userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -325,7 +325,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0160, Function | Smal
     rdb.rdbDataManager_->bmsRdbConfig_.tableName = TARGET_BUNDLE_NAME;
     std::vector<DisposedRule> disposedRules;
     auto res = rdb.GetAbilityRunningControlRule(APPID, APP_INDEX, USERID, disposedRules);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 
 /**
@@ -340,7 +340,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0170, Function | Smal
     rdb.rdbDataManager_->bmsRdbConfig_.tableName = TARGET_BUNDLE_NAME;
     std::vector<DisposedRule> disposedRules;
     auto res = rdb.DeleteAllDisposedRuleByBundle(APPID, APP_INDEX, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -352,7 +352,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0010, Functio
 {
     AppJumpInterceptorManagerRdb rdb;
     auto res = rdb.DeleteRuleByTargetBundleName("", USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -428,7 +428,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0060, Functio
     AppJumpControlRule controlRule;
     controlRules.push_back(controlRule);
     auto res = rdb->DeleteAppJumpControlRule(controlRules, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -445,7 +445,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0070, Functio
     AppJumpControlRule controlRule;
     controlRules.push_back(controlRule);
     auto res = rdb->AddAppJumpControlRule(controlRules, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR);
 }
 
 /**
@@ -457,7 +457,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppJumpInterceptorManagerRdb_0080, Functio
 {
     AppJumpInterceptorManagerRdb rdb;
     auto res = rdb.DeleteRuleByCallerBundleName(CALLER_BUNDLE_NAME, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -526,7 +526,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManager_0050, Function | SmallTe
     int32_t appIndex = 0;
     int32_t userId = 100;
     ErrCode ret = mgr.SetDisposedRule(callerName, appId, rule, appIndex, userId);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -626,7 +626,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0070, Function |
     AppControlManagerHostImpl impl;
     Want want;
     auto res = impl.SetDisposedStatus("", want, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -639,7 +639,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0080, Function |
     AppControlManagerHostImpl impl;
     Want want;
     auto res = impl.DeleteDisposedStatus("", USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -652,7 +652,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0090, Function |
     AppControlManagerHostImpl impl;
     Want want;
     auto res = impl.GetDisposedStatus("", want, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 
 /**
@@ -680,7 +680,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0110, Function |
     DisposedRule rule;
     setuid(AppControlConstants::EDM_UID);
     auto res = impl.SetDisposedRule(APPID, rule, Constants::UNSPECIFIED_USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -709,7 +709,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0130, Function |
     DisposedRule rule;
     setuid(AppControlConstants::EDM_UID);
     auto ret = impl.SetDisposedRuleForCloneApp(APPID, rule, Constants::MAIN_APP_INDEX, Constants::UNSPECIFIED_USERID);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -722,6 +722,6 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0140, Function |
     AppControlManagerHostImpl impl;
     setuid(AppControlConstants::EDM_UID);
     auto ret = impl.DeleteDisposedRuleForCloneApp(APPID, Constants::MAIN_APP_INDEX, Constants::UNSPECIFIED_USERID);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 } // OHOS

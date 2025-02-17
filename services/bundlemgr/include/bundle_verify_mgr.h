@@ -31,7 +31,8 @@ public:
     static ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
     static void EnableDebug();
     static void DisableDebug();
-    static ErrCode ParseHapProfile(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
+    static ErrCode ParseHapProfile(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,
+        bool readFile = false);
 
 private:
     static bool isDebug_;

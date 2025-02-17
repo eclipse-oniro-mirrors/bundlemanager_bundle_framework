@@ -53,6 +53,7 @@ enum OTAFlag : uint32_t {
     CHECK_BACK_UP_DIR = 0x00001000,
     CHECK_RECOVERABLE_APPLICATION_INFO = 0x00002000,
     CHECK_INSTALL_SOURCE = 0x00004000,
+    DELETE_DEPRECATED_ARK_PATHS = 0x00008000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -129,6 +130,9 @@ public:
         Constants::AppType appType,
         int32_t userId = Constants::UNSPECIFIED_USERID);
 
+    static bool CheckOtaFlag(OTAFlag flag, bool &result);
+
+    static bool UpdateOtaFlag(OTAFlag flag);
 private:
     /**
      * @brief Before Bms start.
@@ -527,8 +531,6 @@ private:
         const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap,
         Constants::AppType appType);
 
-    bool CheckOtaFlag(OTAFlag flag, bool &result);
-    bool UpdateOtaFlag(OTAFlag flag);
     void ProcessCheckAppDataDir();
     void InnerProcessCheckAppDataDir();
 
@@ -581,7 +583,7 @@ private:
     void ProcessSystemHspInstall(const PreScanInfo &preScanInfo);
     bool ProcessSystemHspInstall(const std::string &systemHspDir);
 
-    void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
+    static void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
         bool isPreInstall, bool debug);
     static bool IsQuickfixPatchApp(const std::string &bundleName, uint32_t versionCode);
@@ -644,9 +646,7 @@ private:
     void ListeningUserUnlocked() const;
     void RemoveUnreservedSandbox() const;
     void HandleSceneBoard() const;
-    void InnerProcessStockBundleProvisionInfo();
-    void ProcessBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);
-    void ProcessSharedBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);
+    void static InnerProcessStockBundleProvisionInfo();
     bool UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const;
     bool IsNeedToUpdateSharedAppByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void CheckALLResourceInfo();
@@ -668,6 +668,7 @@ private:
     void CleanAllBundleShaderCache() const;
     void CleanTempDir() const;
     bool CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo);
+    void CheckBundleProvisionInfo();
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
     // Used to notify bundle scan status

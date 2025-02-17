@@ -334,7 +334,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, BeforeInstall_0100, Function | Sma
 
     ClearDataMgr();
     auto res3 = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
-    EXPECT_EQ(res3, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res3, ERR_APPEXECFWK_NULL_PTR);
 
     std::vector<std::string> emptyVector;
     auto res4 = appServiceFwkInstaller.BeforeInstall(emptyVector, installParam);
@@ -687,24 +687,6 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0600, Function | S
 }
 
 /**
- * @tc.number: RemoveBundleCodeDir_0010
- * @tc.name: test RemoveBundleCodeDir
- * @tc.desc: 1.Test the RemoveBundleCodeDir
-*/
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RemoveBundleCodeDir_0010, Function | SmallTest | Level0)
-{
-    AppServiceFwkInstaller appServiceFwkInstaller;
-
-    InnerBundleInfo info;
-    auto res = appServiceFwkInstaller.RemoveBundleCodeDir(info);
-    if (appServiceFwkInstaller.dataMgr_ == nullptr) {
-        appServiceFwkInstaller.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    }
-    appServiceFwkInstaller.RemoveInfo(EMPTY_STRING);
-    EXPECT_NE(res, ERR_OK);
-}
-
-/**
  * @tc.number: GetInnerBundleInfo_0010
  * @tc.name: test GetInnerBundleInfo
  * @tc.desc: 1.Test the GetInnerBundleInfo
@@ -897,7 +879,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0080, Functi
 
     std::vector<std::string> moduleNameList{MODULE_NAME_LIBRARY_ONE};
     auto res = appServiceFwkInstaller.UninstallLowerVersion(moduleNameList);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
@@ -1106,7 +1088,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, SaveBundleInfoToStorage_0010, Func
     installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, info);
 
     auto res = installer.SaveBundleInfoToStorage();
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_ADD_BUNDLE_ERROR);
 
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
@@ -1656,10 +1638,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RollBack_0010, Function | SmallTes
     dataMgr->installStates_[BUNDLE_NAME] = InstallState::INSTALL_SUCCESS;
 
     appServiceFwkInstaller.RollBack();
-    InnerBundleInfo innerBundleInfo;
-    auto res = appServiceFwkInstaller.RemoveBundleCodeDir(innerBundleInfo);
     appServiceFwkInstaller.RemoveInfo(EMPTY_STRING);
-    EXPECT_NE(res, ERR_OK);
 
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
@@ -1754,7 +1733,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0020, Function | SmallTe
     installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
 
     auto res = installer.UnInstall(BUNDLE_NAME);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
@@ -1779,7 +1758,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0030, Function | SmallTe
     installer.dataMgr_->transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::UNINSTALL_START);
 
     auto res = installer.UnInstall(BUNDLE_NAME);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 
     installer.dataMgr_->transferStates_.clear();
     DeleteBundleInfo(BUNDLE_NAME);
@@ -1856,7 +1835,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0070, Function | SmallTe
     installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
 
     auto res = installer.UnInstall(BUNDLE_NAME, MODULE_NAME_TEST);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
@@ -1904,7 +1883,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0090, Function | SmallTe
     }
     InnerBundleInfo innerBundleInfo;
     auto res = installer.UnInstall(BUNDLE_NAME, MODULE_NAME_TEST, innerBundleInfo);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_RMV_MODULE_ERROR);
 }
 
 /**

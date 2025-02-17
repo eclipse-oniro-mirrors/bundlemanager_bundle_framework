@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -660,6 +660,12 @@ HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0400, Function | SmallTest | L
  */
 HWTEST_F(BmsBundleInstallerTest, CreateInstallTask_0100, Function | SmallTest | Level0)
 {
+    auto dataMgr = GetBundleDataMgr();
+    if (dataMgr != nullptr) {
+        PreInstallBundleInfo preInfo;
+        preInfo.SetBundleName(BUNDLE_NAME);
+        dataMgr->DeletePreInstallBundleInfo(BUNDLE_NAME, preInfo);
+    }
     CreateInstallerManager();
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
     EXPECT_NE(receiver, nullptr);
@@ -1756,7 +1762,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0600, Function | SmallTest 
     installer.userId_ = Constants::ALL_USERID;
     installer.dataMgr_ = GetBundleDataMgr();
     ret = installer.RemoveBundleUserData(innerBundleInfo, needRemoveData);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_RMV_USERINFO_ERROR);
 }
 
 /**
@@ -2055,10 +2061,10 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2200, Function | SmallTest 
     InnerBundleInfo info;
     installer.InitDataMgr();
     ErrCode res = installer.RemoveBundle(info, false);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 
     res = installer.RemoveBundle(info, true);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 }
 
 /**
@@ -4065,6 +4071,12 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4900, Function | SmallTest 
 */
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5000, Function | SmallTest | Level0)
 {
+    auto dataMgr = GetBundleDataMgr();
+    if (dataMgr != nullptr) {
+        PreInstallBundleInfo preInfo;
+        preInfo.SetBundleName(BUNDLE_NAME);
+        dataMgr->DeletePreInstallBundleInfo(BUNDLE_NAME, preInfo);
+    }
     BaseBundleInstaller installer;
     std::vector<std::string> inBundlePaths;
     auto bundleFile = RESOURCE_ROOT_PATH + FIRST_RIGHT_HAP;
@@ -4642,7 +4654,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallHspVersion_0010, TestSize.Level1)
     std::string uninstallDir;
     installer.InitDataMgr();
     auto ret = installer.UninstallHspVersion(uninstallDir, versionCode, info);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
 }
 
 /**
@@ -4784,7 +4796,7 @@ HWTEST_F(BmsBundleInstallerTest, InnerProcessBundleInstall_0010, TestSize.Level1
     ClearDataMgr();
     auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     installer.RollBack(newInfos, oldInfo);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
     ResetDataMgr();
 }
 
@@ -5548,7 +5560,7 @@ HWTEST_F(BmsBundleInstallerTest, BeforeInstall_0100, Function | SmallTest | Leve
 
     ClearDataMgr();
     res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
     ResetDataMgr();
 }
 
@@ -6273,7 +6285,7 @@ HWTEST_F(BmsBundleInstallerTest, AddBundleStatus_0100, Function | SmallTest | Le
     NotifyBundleEvents installRes;
     installRes.abilityName = "testAbilityName";
     installer.AddBundleStatus(installRes);
-    EXPECT_NE(installer.bundleEvents_.end().base()->abilityName.c_str(),
+    EXPECT_NE(installer.bundleEvents_.rbegin()->abilityName.c_str(),
         installRes.abilityName.c_str());
 }
 

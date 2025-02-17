@@ -100,9 +100,11 @@ void BundleVerifyMgr::DisableDebug()
     isDebug_ = false;
 }
 
-ErrCode BundleVerifyMgr::ParseHapProfile(const std::string &filePath, HapVerifyResult &hapVerifyResult)
+ErrCode BundleVerifyMgr::ParseHapProfile(const std::string &filePath, HapVerifyResult &hapVerifyResult,
+    bool readFile)
 {
-    auto ret = Security::Verify::ParseHapProfile(filePath, hapVerifyResult);
+    auto ret = Security::Verify::ParseHapProfile(filePath, hapVerifyResult,
+        readFile);
     APP_LOGI("ParseHapProfile result %{public}d", ret);
     size_t len = sizeof(HAP_VERIFY_ERR_MAP_KEY) / sizeof(HAP_VERIFY_ERR_MAP_KEY[0]);
     for (size_t i = 0; i < len; i++) {

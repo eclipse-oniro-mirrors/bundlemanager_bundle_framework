@@ -1976,7 +1976,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6800, Function | Sma
     rdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
     appControlManager.appControlManagerDb_ = rdb;
     auto res = appControlManager.GetDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, APP_INDEX, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 
 /**
@@ -2012,7 +2012,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7000, Function | Sma
     rdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
     appControlManager.appControlManagerDb_ = rdb;
     auto res = appControlManager.GetDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, APP_INDEX, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 
 /**
@@ -2030,7 +2030,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7100, Function | Sma
     rdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
     appControlManager.appControlManagerDb_ = rdb;
     auto res = appControlManager.DeleteAllDisposedRuleByBundle(bundleInfo, APP_INDEX, USERID);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
 /**
@@ -2165,7 +2165,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7800, Function | Sma
     appControlManager.appControlManagerDb_ = rdb;
     std::vector<DisposedRule> disposedRules;
     auto res = appControlManager.GetAbilityRunningControlRule(BUNDLE_NAME, APP_INDEX, USERID, disposedRules);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 
 /**

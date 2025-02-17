@@ -981,7 +981,7 @@ static std::shared_ptr<Media::PixelMap> LoadImageFile(const uint8_t *data, size_
     uint32_t errorCode = 0;
     Media::SourceOptions opts;
     std::unique_ptr<Media::ImageSource> imageSource = Media::ImageSource::CreateImageSource(data, len, opts, errorCode);
-    if (errorCode != 0) {
+    if ((errorCode != 0) || (imageSource == nullptr)) {
         APP_LOGE("failed to create image source err is %{public}d", errorCode);
         return nullptr;
     }
@@ -3479,6 +3479,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::ASSET_ACCELERATION), &nAssetAcceleration));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ASSET_ACCELERATION", nAssetAcceleration));
+
+    napi_value nFormEdit;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::FORM_EDIT), &nFormEdit));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FORM_EDIT", nFormEdit));
 }
 
 void CreateApplicationFlagObject(napi_env env, napi_value value)
@@ -3521,6 +3526,18 @@ void CreateApplicationInfoFlagObject(napi_env env, napi_value value)
         ApplicationInfoFlag::FLAG_OTHER_INSTALLED), &nApplicationInfoFlagOtherInstalled));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLAG_OTHER_INSTALLED",
         nApplicationInfoFlagOtherInstalled));
+
+    napi_value nApplicationInfoFlagPreinstalledApp;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        ApplicationInfoFlag::FLAG_PREINSTALLED_APP), &nApplicationInfoFlagPreinstalledApp));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLAG_PREINSTALLED_APP",
+        nApplicationInfoFlagPreinstalledApp));
+
+    napi_value nApplicationInfoFlagPreinstalledAppUpdate;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        ApplicationInfoFlag::FLAG_PREINSTALLED_APP_UPDATE), &nApplicationInfoFlagPreinstalledAppUpdate));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLAG_PREINSTALLED_APP_UPDATE",
+        nApplicationInfoFlagPreinstalledAppUpdate));
 }
 
 void CreateAppDistributionTypeObject(napi_env env, napi_value value)

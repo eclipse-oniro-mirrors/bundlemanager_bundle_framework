@@ -16,6 +16,7 @@
 #include "bundle_resource_param.h"
 
 #include "app_log_wrapper.h"
+#include "locale_config.h"
 #include "parameter.h"
 
 namespace OHOS {
@@ -29,7 +30,7 @@ constexpr const char* DEFAULT_COLOR_MODE_LIGHT = "light";
 
 std::string BundleResourceParam::GetSystemLanguage()
 {
-    std::string language = GetSystemParam(SYSTEM_LANGUAGE);
+    std::string language = Global::I18n::LocaleConfig::GetEffectiveLanguage();
     return language.empty() ? DEFAULT_LANGUAGE : language;
 }
 
