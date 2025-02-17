@@ -98,6 +98,7 @@ private:
     void DeleteAbilityRunningRuleCache(std::string &key);
     void DeleteAbilityRunningRuleBmsCache(const std::string &appId);
     bool CheckCanDispose(const std::string &appId, int32_t userId);
+    void PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules);
 
     bool isAppInstallControlEnabled_ = false;
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
