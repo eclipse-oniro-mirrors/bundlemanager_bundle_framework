@@ -12628,7 +12628,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetLauncherAbilityByBundleName_0006, Function 
     std::vector<AbilityInfo> abilityInfos;
     ErrCode res = dataMgr->GetLauncherAbilityByBundleName(
         want, abilityInfos, DEFAULT_USER_ID_TEST, DEFAULT_USER_ID_TEST);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_DISABLED);
     dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
 }
 

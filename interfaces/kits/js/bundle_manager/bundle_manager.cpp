@@ -5490,7 +5490,8 @@ static ErrCode InnerGetAllAppCloneBundleInfo(const std::string &bundleName, int3
     if (ret == ERR_OK) {
         bundleInfos.emplace_back(bundleInfoMain);
     }
-    if (ret != ERR_OK && ret != ERR_BUNDLE_MANAGER_APPLICATION_DISABLED) {
+    if (ret != ERR_OK && ret != ERR_BUNDLE_MANAGER_APPLICATION_DISABLED &&
+        ret != ERR_BUNDLE_MANAGER_BUNDLE_DISABLED) {
         return CommonFunc::ConvertErrCode(ret);
     }
     // handle clone apps
