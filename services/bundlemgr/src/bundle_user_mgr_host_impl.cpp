@@ -236,9 +236,9 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
             APP_LOGW("data preload app only install in 100 ,bundleName: %{public}s", preInfo.GetBundleName().c_str());
             continue;
         }
-        bool installThirdPreloadApp = OHOS::system::GetBoolParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, true);
-        if (!isStartUser && !installThirdPreloadApp && !preInfo.GetBundlePaths().empty() &&
-            (preInfo.GetBundlePaths().front().find(PRELOAD_APP) == 0)) {
+        if (!isStartUser && !preInfo.GetBundlePaths().empty() &&
+            (preInfo.GetBundlePaths().front().find(PRELOAD_APP) == 0) &&
+            !OHOS::system::GetBoolParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, true)) {
             APP_LOGI("-n %{public}s -u %{public}d not install preload app", preInfo.GetBundleName().c_str(), userId);
             continue;
         }
