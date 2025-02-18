@@ -44,6 +44,8 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "parameter.h"
+#include "parameters.h"
 #include "scope_guard.h"
 #include "shared/shared_bundle_installer.h"
 #include "system_bundle_installer.h"
@@ -102,6 +104,7 @@ const std::string ATOMIC_ENTRY_V1_HAP = "versionUpdateTest5.hap";
 const std::string ATOMIC_FEATURE_V1_HAP = "versionUpdateTest6.hap";
 const std::string ATOMIC_FEATURE_V2_HAP = "versionUpdateTest7.hap";
 const std::string VERSION_UPDATE_BUNDLE_NAME = "com.example.versiontest";
+const std::string UNINSTALL_PREINSTALL_BUNDLE_NAME = "com.ohos.telephonydataability";
 const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
 const int32_t ZERO_CODE = 0;
@@ -146,10 +149,13 @@ public:
     void SetUp();
     void TearDown();
     bool InstallSystemBundle(const std::string &filePath) const;
+    bool InstallSystemBundle(const std::string &filePath, bool isRemovable) const;
     bool OTAInstallSystemBundle(const std::string &filePath) const;
     ErrCode InstallThirdPartyBundle(const std::string &filePath) const;
     ErrCode UpdateThirdPartyBundle(const std::string &filePath) const;
     ErrCode UnInstallBundle(const std::string &bundleName) const;
+    ErrCode UnInstallBundle(const std::string &bundleName, const InstallParam &installParam) const;
+    ErrCode RecoverBundle(const std::string &bundleName, const InstallParam &installParam) const;
     void CheckFileExist() const;
     void CheckFileNonExist() const;
     void CheckShareFilesDataDirsExist(const std::string &bundleName) const;
@@ -218,6 +224,24 @@ bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath)
         filePaths, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
 }
 
+bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath, bool isRemovable) const
+{
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = std::make_unique<SystemBundleInstaller>();
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.isPreInstallApp = true;
+    setuid(Constants::FOUNDATION_UID);
+    installParam.SetKillProcess(false);
+    setuid(Constants::ROOT_UID);
+    installParam.needSendEvent = false;
+    installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
+    installParam.removable = isRemovable;
+    return installer->InstallSystemBundle(
+        filePath, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
+}
+
 ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &filePath) const
 {
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
@@ -279,6 +303,42 @@ ErrCode BmsBundleInstallerTest::UnInstallBundle(const std::string &bundleName) c
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::NORMAL;
     bool result = installer->Uninstall(bundleName, installParam, receiver);
+    EXPECT_TRUE(result);
+    return receiver->GetResultCode();
+}
+
+ErrCode BmsBundleInstallerTest::UnInstallBundle(const std::string &bundleName, const InstallParam &installParam) const
+{
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
+    if (!installer) {
+        EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    if (!receiver) {
+        EXPECT_FALSE(true) << "the receiver is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    bool result = installer->Uninstall(bundleName, installParam, receiver);
+    EXPECT_TRUE(result);
+    return receiver->GetResultCode();
+}
+
+ErrCode BmsBundleInstallerTest::RecoverBundle(const std::string &bundleName, const InstallParam &installParam) const
+{
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
+    if (!installer) {
+        EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    if (!receiver) {
+        EXPECT_FALSE(true) << "the receiver is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    bool result = installer->Recover(bundleName, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
 }
@@ -440,6 +500,42 @@ void BmsBundleInstallerTest::ClearBundleInfo()
     // clear innerBundleInfo from data storage
     bool result = dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
     EXPECT_TRUE(result) << "the bundle info in db clear fail: " << BUNDLE_NAME;
+}
+
+/**
+ * @tc.number: UninstallPreInstallBundle_0100
+ * @tc.name: test unisntall  preinstall bundle
+ * @tc.desc: 1.uninstall the hap
+ *           2.query bundle is revoverable or not
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0100, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    InstallParam installParam;
+    installParam.userId = USERID;
+    ErrCode uninstallRes = UnInstallBundle(UNINSTALL_PREINSTALL_BUNDLE_NAME, installParam);
+    EXPECT_EQ(uninstallRes, ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
+}
+
+/**
+ * @tc.number: UninstallPreInstallBundle_0200
+ * @tc.name: test unisntall  preinstall bundle
+ * @tc.desc: 1.uninstall the hap
+ *           2.query bundle is revoverable or not
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0200, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.parameters.emplace(Constants::VERIFY_UNINSTALL_FORCED_KEY,
+        Constants::VERIFY_UNINSTALL_FORCED_VALUE);
+    ErrCode uninstallRes = UnInstallBundle(UNINSTALL_PREINSTALL_BUNDLE_NAME, installParam);
+    EXPECT_EQ(uninstallRes, ERR_OK);
+    uninstallRes = RecoverBundle(UNINSTALL_PREINSTALL_BUNDLE_NAME, installParam);
+    EXPECT_NE(uninstallRes, ERR_OK);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
 }
 
 /**
