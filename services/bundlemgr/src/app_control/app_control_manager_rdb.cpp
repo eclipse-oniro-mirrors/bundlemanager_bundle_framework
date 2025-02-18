@@ -595,32 +595,48 @@ ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     do {
-        std::string ruleString;
-        ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, ruleString);
-        if (ret != NativeRdb::E_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "GetString appId failed, ret: %{public}d", ret);
-            return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        ret = GetDisposedRuleFromResultSet(absSharedResultSet, disposedRules);
+        if (ret != ERR_OK) {
+            return ret;
         }
-        DisposedRule rule;
-        bool parseRet = DisposedRule::FromString(ruleString, rule);
-        if (!parseRet) {
-            LOG_W(BMS_TAG_DEFAULT, "parse DisposedRule failed");
-        }
-        disposedRules.push_back(rule);
-        PrintDisposedRuleInfo(absSharedResultSet, rule);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     return ERR_OK;
 }
 
-void AppControlManagerRdb::PrintDisposedRuleInfo(
-    const std::shared_ptr<NativeRdb::ResultSet> absSharedResultSet, const DisposedRule &rule)
+ErrCode AppControlManagerRdb::GetDisposedRuleFromResultSet(
+    std::shared_ptr<NativeRdb::ResultSet> absSharedResultSet, std::vector<DisposedRule> &disposedRules)
 {
+    if (absSharedResultSet == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    std::string ruleString;
+    ErrCode ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, ruleString);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetString appId failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
     std::string callerName;
-    absSharedResultSet->GetString(CALLING_NAME_INDEX, callerName);
-    int32_t setRuleTime = 0;
-    absSharedResultSet->GetInt(TIME_STAMP_INDEX, setRuleTime);
-    LOG_NOFUNC_W(BMS_TAG_DEFAULT, "control rule caller:%{public}s time:%{public}d rule:%{public}s",
-        callerName.c_str(), setRuleTime, rule.ToString().c_str());
+    ret = absSharedResultSet->GetString(CALLING_NAME_INDEX, callerName);
+    if (ret != NativeRdb::E_OK) {
+        callerName = "";
+        LOG_I(BMS_TAG_DEFAULT, "GetString callerName failed, ret: %{public}d", ret);
+    }
+    int32_t setTime = 0;
+    ret = absSharedResultSet->GetInt(TIME_STAMP_INDEX, setTime);
+    if (ret != NativeRdb::E_OK) {
+        setTime = 0;
+        LOG_I(BMS_TAG_DEFAULT, "GetInt setTime failed, ret: %{public}d", ret);
+    }
+    DisposedRule rule;
+    bool parseRet = DisposedRule::FromString(ruleString, rule);
+    if (!parseRet) {
+        LOG_W(BMS_TAG_DEFAULT, "parse DisposedRule failed");
+    }
+    rule.callerName = callerName;
+    rule.setTime = setTime;
+    disposedRules.push_back(rule);
+    return ERR_OK;
 }
 }
 }

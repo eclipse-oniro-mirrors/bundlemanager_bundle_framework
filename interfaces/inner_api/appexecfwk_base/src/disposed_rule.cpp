@@ -146,7 +146,10 @@ void from_json(const nlohmann::json &jsonObject, ElementName &elementName)
 
 void to_json(nlohmann::json &jsonObject, const DisposedRule &disposedRule)
 {
-    std::string wantString = disposedRule.want->ToString();
+    std::string wantString;
+    if (disposedRule.want != nullptr) {
+        wantString = disposedRule.want->ToString();
+    }
     jsonObject = nlohmann::json {
         {WANT, wantString},
         {COMPONENT_TYPE, disposedRule.componentType},
