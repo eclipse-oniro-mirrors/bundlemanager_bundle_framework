@@ -2727,7 +2727,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3800, Function | Smal
     abilityInfo.moduleName = MODULE_NAME_TEST;
     bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, abilityInfo));
     auto ret = bundleInfo.SetCloneAbilityEnabled(MODULE_NAME_TEST, ABILITY_NAME, true, userId, appIndex);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     bundleInfo.baseAbilityInfos_.clear();
     AbilityInfo abilityInfo2;
     abilityInfo2.name = ABILITY_NAME;
@@ -2741,7 +2741,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3800, Function | Smal
     abilityInfo3.moduleName = MODULE_NAME_TEST;
     bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, abilityInfo3));
     ret = bundleInfo.SetCloneAbilityEnabled("", ABILITY_NAME, true, userId, appIndex);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -2868,7 +2868,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4500, Function | Smal
     InnerBundleUserInfo innerBundleUserInfo;
     bundleInfo.innerBundleUserInfos_.insert(std::make_pair(MODULE_NAME, innerBundleUserInfo));
     auto ret = bundleInfo.SetCloneApplicationEnabled(true, appIndex, CALLER_NAME_UT, userId);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
