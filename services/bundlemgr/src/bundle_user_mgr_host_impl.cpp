@@ -37,6 +37,7 @@ const uint32_t FACTOR = 8;
 const uint32_t INTERVAL = 6;
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold";
 constexpr const char* ACCESSTOKEN_PROCESS_NAME = "accesstoken_service";
+constexpr const char* PRELOAD_APP = "/preload/app/";
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
@@ -93,19 +94,30 @@ private:
 ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList)
 {
     HITRACE_METER(HITRACE_TAG_APP);
-    EventReport::SendUserSysEvent(UserEventType::CREATE_START, userId);
     EventReport::SendCpuSceneEvent(ACCESSTOKEN_PROCESS_NAME, 1 << 1); // second scene
     APP_LOGI("CreateNewUser user(%{public}d) start", userId);
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bool needToSkipPreBundleInstall = bmsExtensionDataMgr.IsNeedToSkipPreBundleInstall();
+    if (needToSkipPreBundleInstall) {
+        APP_LOGI("need to skip pre bundle install");
+        EventReport::SendUserSysEvent(UserEventType::CREATE_WITH_SKIP_PRE_INSTALL_START, userId);
+    } else {
+        EventReport::SendUserSysEvent(UserEventType::CREATE_START, userId);
+    }
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
     if (CheckInitialUser() != ERR_OK) {
         APP_LOGE("CheckInitialUser failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BeforeCreateNewUser(userId);
-    OnCreateNewUser(userId, disallowList);
-    UninstallBackupUninstallList(userId);
+    OnCreateNewUser(userId, needToSkipPreBundleInstall, disallowList);
+    UninstallBackupUninstallList(userId, needToSkipPreBundleInstall);
     AfterCreateNewUser(userId);
-    EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
+    if (needToSkipPreBundleInstall) {
+        EventReport::SendUserSysEvent(UserEventType::CREATE_WITH_SKIP_PRE_INSTALL_END, userId);
+    } else {
+        EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
+    }
     APP_LOGI("CreateNewUser end userId: (%{public}d)", userId);
     return ERR_OK;
 }
@@ -115,7 +127,8 @@ void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
     ClearBundleEvents();
 }
 
-void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<std::string> &disallowList)
+void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBundleInstall,
+    const std::vector<std::string> &disallowList)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -137,7 +150,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
     dataMgr->AddUserId(userId);
     dataMgr->CreateAppInstallDir(userId);
     std::set<PreInstallBundleInfo> preInstallBundleInfos;
-    if (!GetAllPreInstallBundleInfos(disallowList, userId, preInstallBundleInfos)) {
+    if (!GetAllPreInstallBundleInfos(disallowList, userId, needToSkipPreBundleInstall, preInstallBundleInfos)) {
         APP_LOGE("GetAllPreInstallBundleInfos failed %{public}d", userId);
         return;
     }
@@ -174,6 +187,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
 bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
     const std::vector<std::string> &disallowList,
     int32_t userId,
+    bool needToSkipPreBundleInstall,
     std::set<PreInstallBundleInfo> &preInstallBundleInfos)
 {
     auto dataMgr = GetDataMgrFromService();
@@ -195,6 +209,11 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
         if (std::find(disallowList.begin(), disallowList.end(),
             preInfo.GetBundleName()) != disallowList.end()) {
             APP_LOGI("BundleName is same as black list %{public}s", preInfo.GetBundleName().c_str());
+            continue;
+        }
+        if (needToSkipPreBundleInstall && !preInfo.GetBundlePaths().empty() &&
+            (preInfo.GetBundlePaths().front().find(PRELOAD_APP) == 0)) {
+            APP_LOGI("-n %{public}s -u %{public}d skip install", preInfo.GetBundleName().c_str(), userId);
             continue;
         }
         if (isStartUser) {
@@ -408,7 +427,39 @@ void BundleUserMgrHostImpl::HandleSceneBoard(int32_t userId) const
 #endif
 }
 
-void BundleUserMgrHostImpl::UninstallBackupUninstallList(int32_t userId)
+bool BundleUserMgrHostImpl::InnerProcessSkipPreInstallBundles(
+    const std::set<std::string> &uninstallList, bool needToSkipPreBundleInstall)
+{
+    if (uninstallList.empty() || !needToSkipPreBundleInstall) {
+        return true;
+    }
+    APP_LOGI("process skip pre bundle install start");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    bool ret = true;
+    for (const auto &name : uninstallList) {
+        PreInstallBundleInfo preInfo;
+        preInfo.SetBundleName(name);
+        if (!dataMgr->GetPreInstallBundleInfo(name, preInfo)) {
+            APP_LOGI("no pre bundleInfo %{public}s in db", name.c_str());
+            continue;
+        }
+        if (!preInfo.GetBundlePaths().empty() && (preInfo.GetBundlePaths().front().find(PRELOAD_APP) == 0)) {
+            preInfo.SetIsUninstalled(true);
+            if (!dataMgr->SavePreInstallBundleInfo(name, preInfo)) {
+                APP_LOGE("save pre bundle %{public}s failed", name.c_str());
+                ret = false;
+            }
+        }
+    }
+    APP_LOGI("process skip pre bundle install end");
+    return ret;
+}
+
+void BundleUserMgrHostImpl::UninstallBackupUninstallList(int32_t userId, bool needToSkipPreBundleInstall)
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
     std::set<std::string> uninstallList;
@@ -443,6 +494,7 @@ void BundleUserMgrHostImpl::UninstallBackupUninstallList(int32_t userId)
     }
     IPCSkeleton::SetCallingIdentity(identity);
     bmsExtensionDataMgr.ClearBackupUninstallFile(userId);
+    (void)InnerProcessSkipPreInstallBundles(uninstallList, needToSkipPreBundleInstall);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

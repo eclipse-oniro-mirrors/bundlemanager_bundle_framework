@@ -6351,6 +6351,24 @@ HWTEST_F(BmsBundleInstallerTest, GetValidDataGroupIds_0100, Function | SmallTest
 }
 
 /**
+ * @tc.number: BundleUserMgrHostImpl_0200
+ * @tc.name: test InnerProcessSkipPreInstallBundles
+ * @tc.desc: 1.Test InnerProcessSkipPreInstallBundles
+*/
+HWTEST_F(BmsBundleInstallerTest, BundleUserMgrHostImpl_0200, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+    std::set<std::string> uninstallList;
+    bool ret = host.InnerProcessSkipPreInstallBundles(uninstallList, false);
+    EXPECT_TRUE(ret);
+    uninstallList.insert(SYSTEMFIEID_NAME);
+    ret = host.InnerProcessSkipPreInstallBundles(uninstallList, false);
+    EXPECT_TRUE(ret);
+    ret = host.InnerProcessSkipPreInstallBundles(uninstallList, true);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: SetDisposedRuleWhenBundleUpdateStart_0010
  * @tc.name: test SetDisposedRuleWhenBundleUpdateStart
  * @tc.desc: 1.SetDisposedRuleWhenBundleUpdateStart

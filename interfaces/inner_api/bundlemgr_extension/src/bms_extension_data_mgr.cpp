@@ -563,5 +563,20 @@ std::string BmsExtensionDataMgr::GetCompatibleDeviceType(const std::string &bund
     APP_LOGW("access bms-extension failed");
     return GetDeviceType();
 }
+
+bool BmsExtensionDataMgr::IsNeedToSkipPreBundleInstall()
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return false;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return false;
+    }
+    return bundleMgrExtPtr->IsNeedToSkipPreBundleInstall();
+}
 } // AppExecFwk
 } // OHOS
