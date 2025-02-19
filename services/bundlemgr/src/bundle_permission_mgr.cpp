@@ -701,6 +701,13 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
     LOG_I(BMS_TAG_DEFAULT, "start, init hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, dlpType);
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo);
+#ifdef X86_EMULATOR_MODE
+    std::string appId = innerBundleInfo.GetAppId();
+    if (appId == (innerBundleInfo.GetBundleName() + "_")) {
+        LOG_I(BMS_TAG_DEFAULT, "UnSignatureHap checkIgnore");
+        hapPolicy.checkIgnore = AccessToken::HapPolicyCheckIgnore::ACL_IGNORE_CHECK;
+    }
+#endif
     auto ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx, checkResult);
     if (AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL == ret ||
         AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED == ret ||
@@ -729,7 +736,13 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
     updateHapInfoParams.appDistributionType = innerBundleInfo.GetAppDistributionType();
 
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo);
-
+#ifdef X86_EMULATOR_MODE
+    std::string appId = innerBundleInfo.GetAppId();
+    if (appId == (innerBundleInfo.GetBundleName() + "_")) {
+        LOG_I(BMS_TAG_DEFAULT, "UnSignatureHap checkIgnore");
+        hapPolicy.checkIgnore = AccessToken::HapPolicyCheckIgnore::ACL_IGNORE_CHECK;
+    }
+#endif
     auto ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy, checkResult);
     if (AccessToken::AccessTokenError::ERR_SERVICE_ABNORMAL == ret ||
         AccessToken::AccessTokenError::ERR_WRITE_PARCEL_FAILED == ret) {

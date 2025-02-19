@@ -163,6 +163,11 @@ int AccessTokenKit::GetNativeTokenInfo(AccessTokenID tokenID, NativeTokenInfo &n
 int32_t AccessTokenKit::InitHapToken(const HapInfoParams& info, HapPolicyParams& policy,
     AccessTokenIDEx& fullTokenId, HapInfoCheckResult& checkResult)
 {
+#ifdef X86_EMULATOR_MODE
+    if (policy.checkIgnore != HapPolicyCheckIgnore::ACL_IGNORE_CHECK) {
+        return -1;
+    }
+#endif
     fullTokenId.tokenIDEx = 1;
     checkResult.permCheckResult.permissionName = "test"; // invalid Name
     return 0;
@@ -171,6 +176,11 @@ int32_t AccessTokenKit::InitHapToken(const HapInfoParams& info, HapPolicyParams&
 int32_t AccessTokenKit::UpdateHapToken(AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info,
     const HapPolicyParams& policy, HapInfoCheckResult& checkResult)
 {
+#ifdef X86_EMULATOR_MODE
+    if (policy.checkIgnore != HapPolicyCheckIgnore::ACL_IGNORE_CHECK) {
+        return -1;
+    }
+#endif
     if (info.isSystemApp) {
         tokenIdEx.tokenIdExStruct.tokenAttr = 1;
     } else {
