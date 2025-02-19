@@ -78,8 +78,6 @@ private:
         int32_t userId, const std::string& normalizedType, const Element& element) const;
     ErrCode ResetDefaultApplicationInternal(int32_t userId, const std::string& normalizedType) const;
 
-    std::string GetAnonymizeType(const std::string& type) const;
-
     std::shared_ptr<IDefaultAppDb> defaultAppDb_;
     mutable std::mutex mutex_;
 };
