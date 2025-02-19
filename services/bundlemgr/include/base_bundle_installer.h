@@ -741,6 +741,9 @@ private:
         const InnerBundleInfo &oldBundleInfo, bool isPreInstallApp);
 
     bool DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo);
+    bool AddAppGalleryHapToTempPath(const bool isPreInstallApp,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    bool DeleteAppGalleryHapFromTempPath();
     ErrCode MarkInstallFinish();
     bool IsArkWeb(const std::string &bundleName) const;
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
@@ -772,6 +775,7 @@ private:
     std::vector<std::string> uninstallModuleVec_;
     // for quick fix
     bool needDeleteQuickFixInfo_ = false;
+    bool needDeleteAppTempPath_ = false;
 
     int32_t userId_ = Constants::INVALID_USERID;
     bool hasInstalledInUser_ = false;

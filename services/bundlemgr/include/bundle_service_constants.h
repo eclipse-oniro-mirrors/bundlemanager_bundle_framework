@@ -188,6 +188,9 @@ constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 constexpr const char* INSTALL_SOURCE_PREINSTALL = "pre-installed";
 constexpr const char* INSTALL_SOURCE_OTA = "ota";
 constexpr const char* INSTALL_SOURCE_RECOVERY = "recovery";
+
+// app temp path
+constexpr const char* BMS_APP_TEMP_PATH = "/data/service/el1/public/bms/bundle_manager_service/app_temp";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS
