@@ -28,6 +28,7 @@ public:
     virtual ~QuickFixDeleter() = default;
 
     virtual ErrCode Execute() override;
+    ErrCode DeleteQuickFix(InnerBundleInfo &innerBundleInfo);
 
 private:
     ErrCode DeleteQuickFix();
