@@ -49,7 +49,8 @@ enum class BMSEventType {
     AOT_COMPILE_RECORD,
     QUERY_OF_CONTINUE_TYPE,
     FREE_INSTALL_EVENT,
-    BMS_DISK_SPACE
+    BMS_DISK_SPACE,
+    APP_CONTROL_RULE
 };
 
 enum class BundleEventType {
@@ -144,6 +145,10 @@ struct EventInfo {
     std::string fileName;
     int64_t freeSize = 0;
     int32_t operationType = 0;
+    std::vector<std::string> appIds;
+    std::string callingName;
+    int32_t actionType = 0;
+    std::string rule;
 
     void Reset()
     {
@@ -185,6 +190,10 @@ struct EventInfo {
         fileName.clear();
         freeSize = 0;
         operationType = 0;
+        appIds.clear();
+        callingName.clear();
+        actionType = 0;
+        rule.clear();
     }
 };
 
@@ -283,6 +292,12 @@ public:
      */
     static void SendDiskSpaceEvent(const std::string &fileName,
         int64_t freeSize, int32_t operationType);
+
+    /**
+     * @brief Send info when add or remove app contitol rule.
+     * @param eventInfo report info.
+     */
+    static void SendAppControlRuleEvent(const EventInfo& eventInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
