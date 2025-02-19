@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H
 
 #include "base_cb_info.h"
+#include "clone_param.h"
 #include "install_param.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -81,6 +82,7 @@ struct CreateAppCloneCallbackInfo : public BaseCallbackInfo {
     std::string bundleName;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     int32_t appIndex = Constants::INITIAL_APP_INDEX;
+    OHOS::AppExecFwk::DestroyAppCloneParam destroyAppCloneParam;
 };
 
 struct InstallPreexistingAppCallbackInfo : public BaseCallbackInfo {

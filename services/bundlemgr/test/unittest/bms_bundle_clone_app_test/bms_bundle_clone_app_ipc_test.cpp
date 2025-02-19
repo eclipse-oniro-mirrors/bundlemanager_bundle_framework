@@ -295,7 +295,8 @@ HWTEST_F(BmsBundleCloneAppIPCTest, UninstallCloneAppTest001_AppNotExist, Functio
     const std::string bundleName = "";
     const int32_t userId = 100;
     int32_t appIndex = 1;
-    auto result = installerProxy->UninstallCloneApp(bundleName, userId, appIndex);
+    DestroyAppCloneParam destroyAppCloneParam;
+    auto result = installerProxy->UninstallCloneApp(bundleName, userId, appIndex, destroyAppCloneParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
 }
 

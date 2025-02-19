@@ -115,7 +115,8 @@ public:
 
     virtual ErrCode InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex) override;
 
-    virtual ErrCode UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex) override;
+    virtual ErrCode UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex,
+                                      const DestroyAppCloneParam &destroyAppCloneParam) override;
 
     virtual ErrCode InstallExisted(const std::string &bundleName, int32_t userId) override;
 private:

@@ -154,6 +154,12 @@ public:
             parameters.at(RENAME_INSTALL_KEY) == RENAME_INSTALL_ENABLE_VALUE;
     }
 
+    bool IsVerifyUninstallRule() const
+    {
+        return parameters.find(Constants::VERIFY_UNINSTALL_RULE_KEY) != parameters.end() &&
+               parameters.at(Constants::VERIFY_UNINSTALL_RULE_KEY) == Constants::VERIFY_UNINSTALL_RULE_VALUE;
+    }
+
 private:
     bool CheckPermission() const;
 };

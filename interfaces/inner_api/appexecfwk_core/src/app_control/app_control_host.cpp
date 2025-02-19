@@ -97,6 +97,12 @@ int AppControlHost::OnRemoteRequest(
             return HandleSetDisposedRuleForCloneApp(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_DISPOSED_RULE_FOR_CLONE_APP):
             return HandleDeleteDisposedRuleForCloneApp(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_UNINSTALL_DISPOSED_RULE):
+            return HandleSetUninstallDisposedRule(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_UNINSTALL_DISPOSED_RULE):
+            return HandleGetUninstallDisposedRule(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_UNINSTALL_DISPOSED_RULE):
+            return HandleDeleteUninstallDisposedRule(data, reply);
         default:
             LOG_W(BMS_TAG_DEFAULT, "AppControlHost receive unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -525,6 +531,57 @@ ErrCode AppControlHost::ReadParcelableVector(MessageParcel &data, std::vector<T>
         parcelableInfos.emplace_back(*info);
     }
     LOG_D(BMS_TAG_DEFAULT, "read parcelable infos success");
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleGetUninstallDisposedRule(MessageParcel& data, MessageParcel& reply)
+{
+    std::string appIdentifier = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    UninstallDisposedRule rule;
+    ErrCode ret = GetUninstallDisposedRule(appIdentifier, appIndex, userId, rule);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteParcelable(&rule)) {
+            LOG_E(BMS_TAG_DEFAULT, "write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleSetUninstallDisposedRule(MessageParcel& data, MessageParcel& reply)
+{
+    std::string appIdentifier = data.ReadString();
+    std::unique_ptr<UninstallDisposedRule> uninstallDisposedRule(data.ReadParcelable<UninstallDisposedRule>());
+    if (uninstallDisposedRule == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<uninstalldisposedRule> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    ErrCode ret = SetUninstallDisposedRule(appIdentifier, *uninstallDisposedRule, appIndex, userId);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleDeleteUninstallDisposedRule(MessageParcel& data, MessageParcel& reply)
+{
+    std::string appIdentifier = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    ErrCode ret = DeleteUninstallDisposedRule(appIdentifier, appIndex, userId);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 } // AppExecFwk

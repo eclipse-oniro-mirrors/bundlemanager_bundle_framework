@@ -28,6 +28,7 @@ namespace {
     const std::string APP_CONTROL_RDB_TABLE_NAME = "app_control";
     const std::string RUNNING_CONTROL = "RunningControl";
     const std::string DISPOSED_RULE = "DisposedRule";
+    constexpr const char* UNINSTALL_DISPOSED_RULE = "UninstallDisposedRule";
     const std::string APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
     const std::string DEFAULT = "default";
     const int32_t CALLING_NAME_INDEX = 1;
@@ -497,7 +498,7 @@ ErrCode AppControlManagerRdb::DeleteDisposedRule(const std::string &callingName,
 ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t appIndex, int32_t userId)
 {
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
-    std::vector<std::string> controlList = {DISPOSED_RULE, RUNNING_CONTROL};
+    std::vector<std::string> controlList = {DISPOSED_RULE, RUNNING_CONTROL, UNINSTALL_DISPOSED_RULE};
     absRdbPredicates.In(APP_CONTROL_LIST, controlList);
     absRdbPredicates.EqualTo(APP_ID, appId);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
@@ -636,6 +637,97 @@ ErrCode AppControlManagerRdb::GetDisposedRuleFromResultSet(
     rule.callerName = callerName;
     rule.setTime = setTime;
     disposedRules.push_back(rule);
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::SetUninstallDisposedRule(const std::string &callingName,
+    const std::string &appIdentifier, const UninstallDisposedRule &rule, int32_t appIndex, int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(CALLING_NAME, callingName);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, UNINSTALL_DISPOSED_RULE);
+    absRdbPredicates.EqualTo(APP_ID, appIdentifier);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
+
+    int64_t timeStamp = BundleUtil::GetCurrentTime();
+    NativeRdb::ValuesBucket valuesBucket;
+    valuesBucket.PutString(CALLING_NAME, callingName);
+    valuesBucket.PutString(APP_CONTROL_LIST, UNINSTALL_DISPOSED_RULE);
+    valuesBucket.PutString(APP_ID, appIdentifier);
+    valuesBucket.PutString(DISPOSED_STATUS, rule.ToString());
+    valuesBucket.PutInt(PRIORITY, rule.priority);
+    valuesBucket.PutInt(TIME_STAMP, timeStamp);
+    valuesBucket.PutString(USER_ID, std::to_string(userId));
+    valuesBucket.PutString(APP_INDEX, std::to_string(appIndex));
+    bool ret = rdbDataManager_->UpdateOrInsertData(valuesBucket, absRdbPredicates);
+    if (!ret) {
+        LOG_E(BMS_TAG_DEFAULT, "callingName:%{public}s appIdentifier:%{private}s failed.",
+            callingName.c_str(), appIdentifier.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::DeleteUninstallDisposedRule(const std::string &callingName,
+    const std::string &appIdentifier, int32_t appIndex, int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(CALLING_NAME, callingName);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, UNINSTALL_DISPOSED_RULE);
+    absRdbPredicates.EqualTo(APP_ID, appIdentifier);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
+    bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
+    if (!ret) {
+        LOG_E(BMS_TAG_DEFAULT, "callingName:%{public}s appIdentifier:%{private}s failed",
+            callingName.c_str(), appIdentifier.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::GetUninstallDisposedRule(const std::string &appIdentifier,
+    int32_t appIndex, int32_t userId, UninstallDisposedRule &rule)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, UNINSTALL_DISPOSED_RULE);
+    absRdbPredicates.EqualTo(APP_ID, appIdentifier);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
+    absRdbPredicates.OrderByAsc(PRIORITY);
+    absRdbPredicates.OrderByAsc(TIME_STAMP);
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "null absSharedResultSet");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetRowCount failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    if (count == 0) {
+        LOG_D(BMS_TAG_DEFAULT, "count size 0");
+        return ERR_OK;
+    }
+    ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GoToFirstRow failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    std::string ruleString;
+    ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, ruleString);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetString failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    UninstallDisposedRule::FromString(ruleString, rule);
     return ERR_OK;
 }
 }

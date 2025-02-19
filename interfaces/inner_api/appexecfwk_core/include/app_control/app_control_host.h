@@ -64,6 +64,10 @@ private:
     ErrCode HandleSetDisposedRuleForCloneApp(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleDeleteDisposedRuleForCloneApp(MessageParcel& data, MessageParcel& reply);
 
+    ErrCode HandleGetUninstallDisposedRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleSetUninstallDisposedRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleDeleteUninstallDisposedRule(MessageParcel& data, MessageParcel& reply);
+
     DISALLOW_COPY_AND_MOVE(AppControlHost);
 };
 } // namespace AppExecFwk

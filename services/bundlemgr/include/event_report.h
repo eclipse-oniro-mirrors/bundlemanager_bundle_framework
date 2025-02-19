@@ -84,6 +84,19 @@ enum class UserEventType {
     REMOVE_END,
 };
 
+enum class ACTION_TYPE_ENUM : uint8_t {
+    ACTION_TYPE_OF_INSTALL = 1,
+    ACTION_TYPE_OF_RUNUING = 2,
+    ACTION_TYPE_DISPOSE_STATUS = 3,
+    ACTION_TYPE_DISPOSE_RULE = 4,
+    ACTION_TYPE_UNINSTALL_DISPOSE_RULE = 5,
+};
+
+enum class OPERATION_TYPE_ENUM : uint8_t {
+    OPERATION_TYPE_ADD_RULE = 1,
+    OPERATION_TYPE_REMOVE_RULE = 2,
+};
+
 struct EventInfo {
     int32_t userId = Constants::INVALID_USERID;
     std::string bundleName;
