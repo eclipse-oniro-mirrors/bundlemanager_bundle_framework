@@ -18,6 +18,7 @@ config("appexecfwk_base_sdk_config") {
   include_dirs = [
     "include",
     "include/bundle_resource",
+    "include/clone",
     "include/distributed_manager",
     "include/free_install",
     "include/overlay",
@@ -30,6 +31,7 @@ config("bundle_all_dependent_config") {
   include_dirs = [
     "//base/notification/common_event_service/interfaces/inner_api",
     "include",
+    "include/clone",
   ]
 }
 
@@ -49,6 +51,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/bundle_resource/bundle_system_state.cpp",
     "src/bundle_resource/launcher_ability_resource_info.cpp",
     "src/bundle_user_info.cpp",
+    "src/clone/clone_param.cpp",
     "src/common_event_info.cpp",
     "src/compatible_ability_info.cpp",
     "src/compatible_application_info.cpp",

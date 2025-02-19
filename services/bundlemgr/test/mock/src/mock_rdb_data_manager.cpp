@@ -101,5 +101,11 @@ std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryByStep(
 {
     return nullptr;
 }
+
+bool RdbDataManager::UpdateOrInsertData(const NativeRdb::ValuesBucket &valuesBucket,
+    const NativeRdb::AbsRdbPredicates &absRdbPredicates)
+{
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

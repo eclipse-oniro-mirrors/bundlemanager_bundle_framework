@@ -5597,9 +5597,9 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfos_0300, Function | MediumTest | L
         EXPECT_EQ(item.appIndex, index++);
     }
 
-    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex2);
+    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex2, DestroyAppCloneParam());
     EXPECT_EQ(ret, ERR_OK);
-    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex1);
+    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex1, DestroyAppCloneParam());
     EXPECT_EQ(ret, ERR_OK);
 
     resvec.clear();
@@ -5692,9 +5692,10 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfosV9_0200, Function | MediumTest |
         EXPECT_EQ(item.appIndex, index++);
     }
 
-    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex2);
+    DestroyAppCloneParam destroyAppCloneParam;
+    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex2, destroyAppCloneParam);
     EXPECT_EQ(ret, ERR_OK);
-    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex1);
+    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex1, destroyAppCloneParam);
     EXPECT_EQ(ret, ERR_OK);
 
     resvec.clear();
@@ -6188,7 +6189,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleStats_0200, Function | SmallTest | Level
     auto res = bundleMgrProxy->GetBundleStats(appName, USERID, bundleStats, appIndex1);
     EXPECT_TRUE(res);
 
-    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex1);
+    DestroyAppCloneParam destroyAppCloneParam;
+    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex1, destroyAppCloneParam);
     EXPECT_EQ(ret, ERR_OK);
 
     resvec.clear();
@@ -9376,7 +9378,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetCloneAppIndexes_0001, Function | MediumTest | 
     EXPECT_EQ(ret, ERR_OK) << "GetCloneAppIndexes fail!";
     EXPECT_EQ(appIndexes.size(), 1);
 
-    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex);
+    DestroyAppCloneParam destroyAppCloneParam;
+    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex, destroyAppCloneParam);
     EXPECT_EQ(ret, ERR_OK);
 
     resvec.clear();

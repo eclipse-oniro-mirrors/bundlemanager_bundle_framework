@@ -26,6 +26,7 @@ namespace AppExecFwk {
 namespace {
 const char* WANT = "want";
 const char* COMPONENT_TYPE = "componentType";
+const char* UNINSTALL_COMPONENT_TYPE = "uninstallComponentType";
 const char* DISPOSED_TYPE = "disposedType";
 const char* CONTROL_TYPE = "controlType";
 const char* ELEMENT_LIST = "elementList";
@@ -236,6 +237,101 @@ std::string DisposedRule::ToString() const
 }
 
 bool DisposedRule::FromString(const std::string &ruleString, DisposedRule &rule)
+{
+    APP_LOGD("FromString %{public}s", ruleString.c_str());
+    nlohmann::json jsonObject = nlohmann::json::parse(ruleString, nullptr, false);
+    if (jsonObject.is_discarded()) {
+        APP_LOGE("failed parse ruleString: %{public}s", ruleString.c_str());
+        return false;
+    }
+    from_json(jsonObject, rule);
+    return true;
+}
+
+bool UninstallDisposedRule::ReadFromParcel(Parcel &parcel)
+{
+    want.reset(parcel.ReadParcelable<AAFwk::Want>());
+    uninstallComponentType = static_cast<UninstallComponentType>(parcel.ReadInt32());
+    priority = parcel.ReadInt32();
+    return true;
+}
+
+bool UninstallDisposedRule::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, want.get());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(uninstallComponentType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, priority);
+
+    return true;
+}
+
+UninstallDisposedRule *UninstallDisposedRule::Unmarshalling(Parcel &parcel)
+{
+    UninstallDisposedRule *info = new (std::nothrow) UninstallDisposedRule();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const UninstallDisposedRule &uninstallDisposedRule)
+{
+    std::string wantString = "";
+    if (uninstallDisposedRule.want != nullptr) {
+        wantString = uninstallDisposedRule.want->ToString();
+    }
+    jsonObject = nlohmann::json {
+        {WANT, wantString},
+        {UNINSTALL_COMPONENT_TYPE, uninstallDisposedRule.uninstallComponentType},
+        {PRIORITY, uninstallDisposedRule.priority},
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, UninstallDisposedRule &uninstallDisposedRule)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    std::string wantString;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        WANT,
+        wantString,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    uninstallDisposedRule.want.reset(AAFwk::Want::FromString(wantString));
+    GetValueIfFindKey<UninstallComponentType>(jsonObject,
+        jsonObjectEnd,
+        UNINSTALL_COMPONENT_TYPE,
+        uninstallDisposedRule.uninstallComponentType,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        PRIORITY,
+        uninstallDisposedRule.priority,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read uninstallDisposedRule error : %{public}d", parseResult);
+    }
+}
+
+std::string UninstallDisposedRule::ToString() const
+{
+    nlohmann::json jsonObject;
+    to_json(jsonObject, *this);
+    return jsonObject.dump();
+}
+
+bool UninstallDisposedRule::FromString(const std::string &ruleString, UninstallDisposedRule &rule)
 {
     APP_LOGD("FromString %{public}s", ruleString.c_str());
     nlohmann::json jsonObject = nlohmann::json::parse(ruleString, nullptr, false);

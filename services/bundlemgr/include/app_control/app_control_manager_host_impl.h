@@ -86,6 +86,15 @@ public:
 
     virtual ErrCode DeleteDisposedRuleForCloneApp(
         const std::string &appId, int32_t appIndex, int32_t userId) override;
+    
+    virtual ErrCode GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
+        int32_t userId, UninstallDisposedRule &rule) override;
+    
+    virtual ErrCode SetUninstallDisposedRule(const std::string &appIdentifier, const UninstallDisposedRule &rule,
+        int32_t appIndex, int32_t userId) override;
+    
+    virtual ErrCode DeleteUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
+        int32_t userId) override;
 
 private:
     int32_t GetCallingUserId();

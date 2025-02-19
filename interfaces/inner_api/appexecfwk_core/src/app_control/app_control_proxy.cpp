@@ -765,5 +765,110 @@ int32_t AppControlProxy::SendRequest(AppControlManagerInterfaceCode code, Messag
     }
     return result;
 }
+
+ErrCode AppControlProxy::SetUninstallDisposedRule(const std::string &appIdentifier,
+    const UninstallDisposedRule &uninstallDisposedRule, int32_t appIndex, int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appIdentifier)) {
+        LOG_E(BMS_TAG_DEFAULT, "write appIdentifier failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&uninstallDisposedRule)) {
+        LOG_E(BMS_TAG_DEFAULT, "write uninstallDisposedRule failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_DEFAULT, "write appIndex failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ErrCode ret = SendRequest(AppControlManagerInterfaceCode::SET_UNINSTALL_DISPOSED_RULE, data, reply);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlProxy::GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
+    int32_t userId, UninstallDisposedRule &rule)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appIdentifier)) {
+        LOG_E(BMS_TAG_DEFAULT, "write appIdentifier failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_DEFAULT, "write appIndex failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = GetParcelableInfo<UninstallDisposedRule>(
+        AppControlManagerInterfaceCode::GET_UNINSTALL_DISPOSED_RULE, data, rule);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlProxy::DeleteUninstallDisposedRule(const std::string &appIdentifier,
+    int32_t appIndex, int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appIdentifier)) {
+        LOG_E(BMS_TAG_DEFAULT, "write appIdentifier failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_DEFAULT, "write appIndex failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ErrCode ret = SendRequest(
+        AppControlManagerInterfaceCode::DELETE_UNINSTALL_DISPOSED_RULE, data, reply);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
 } // AppExecFwk
 } // OHOS

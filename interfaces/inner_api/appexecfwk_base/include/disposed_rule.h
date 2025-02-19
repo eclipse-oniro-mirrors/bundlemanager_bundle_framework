@@ -30,6 +30,10 @@ enum class ComponentType {
     UI_EXTENSION = 2,
 };
 
+enum class UninstallComponentType {
+    EXTENSION = 1,
+};
+
 enum class DisposedType {
     BLOCK_APPLICATION = 1,
     BLOCK_ABILITY = 2,
@@ -60,6 +64,20 @@ public:
     static DisposedRule *Unmarshalling(Parcel &parcel);
 
     static bool FromString(const std::string &ruleString, DisposedRule &rule);
+    std::string ToString() const;
+};
+
+struct UninstallDisposedRule : public Parcelable {
+public:
+    std::shared_ptr<AAFwk::Want> want = nullptr;
+    UninstallComponentType uninstallComponentType = UninstallComponentType::EXTENSION;
+    int32_t priority = 0;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static UninstallDisposedRule *Unmarshalling(Parcel &parcel);
+
+    static bool FromString(const std::string &ruleString, UninstallDisposedRule &rule);
     std::string ToString() const;
 };
 }  // namespace AppExecFwk

@@ -39,7 +39,11 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info);
 napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info);
 napi_value GetDisposedRule(napi_env env, napi_callback_info info);
 napi_value SetDisposedRule(napi_env env, napi_callback_info info);
+napi_value GetUninstallDisposedRule(napi_env env, napi_callback_info info);
+napi_value SetUninstallDisposedRule(napi_env env, napi_callback_info info);
+napi_value DeleteUninstallDisposedRule(napi_env env, napi_callback_info info);
 void CreateComponentType(napi_env env, napi_value value);
+void CreateUninstallComponentType(napi_env env, napi_value value);
 void CreateDisposedType(napi_env env, napi_value value);
 void CreateControlType(napi_env env, napi_value value);
 }  // namespace AppExecFwk

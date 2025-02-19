@@ -159,6 +159,21 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+    virtual ErrCode GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
+        int32_t userId, UninstallDisposedRule &rule)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode SetUninstallDisposedRule(const std::string &appIdentifier, const UninstallDisposedRule &rule,
+        int32_t appIndex, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode DeleteUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
+        int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 } // namespace AppExecFwk
 } // namespace OHOS
