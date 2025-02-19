@@ -245,6 +245,8 @@ public:
     virtual ErrCode CreateDataGroupDirs(const std::vector<CreateDirParam> &params) override;
 
     virtual ErrCode DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId) override;
+
+    virtual ErrCode BackUpFirstBootLog() override;
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

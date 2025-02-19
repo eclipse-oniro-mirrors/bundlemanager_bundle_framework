@@ -336,5 +336,10 @@ ErrCode InstalldHostImpl::DeleteDataGroupDirs(const std::vector<std::string> &uu
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::BackUpFirstBootLog()
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

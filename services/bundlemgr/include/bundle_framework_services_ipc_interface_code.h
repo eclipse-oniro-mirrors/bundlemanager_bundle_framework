@@ -81,7 +81,8 @@ enum class InstalldInterfaceCode : uint32_t {
     DELETE_UNINSTALL_TMP_DIRS = 53,
     GET_DISK_USAGE_FROM_PATH = 54,
     CREATE_DATA_GROUP_DIRS = 55,
-    DELETE_DATA_GROUP_DIRS = 56
+    DELETE_DATA_GROUP_DIRS = 56,
+    BACK_UP_FIRST_BOOT_LOG = 57
 };
 
 } // namespace AppExecFwk
