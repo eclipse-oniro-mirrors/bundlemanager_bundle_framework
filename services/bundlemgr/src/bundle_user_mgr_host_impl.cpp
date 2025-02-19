@@ -41,6 +41,7 @@ constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold"
 constexpr const char* ACCESSTOKEN_PROCESS_NAME = "accesstoken_service";
 constexpr const char* PRELOAD_APP = "/preload/app/";
 constexpr const char* MULTIUSER_INSTALL_THIRD_PRELOAD_APP = "const.bms.multiUserInstallThirdPreloadApp";
+constexpr const char* LOG_PATH = "/log/";
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
@@ -122,6 +123,9 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
         EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
     }
     APP_LOGI("CreateNewUser end userId: (%{public}d)", userId);
+    if (userId == Constants::START_USERID) {
+        CheckBackUpFirstBootLog();
+    }
     return ERR_OK;
 }
 
@@ -576,6 +580,13 @@ void BundleUserMgrHostImpl::SavePreInstallException(const std::string &bundleNam
     }
 
     preInstallExceptionMgr->SavePreInstallExceptionBundleName(bundleName);
+}
+
+void BundleUserMgrHostImpl::CheckBackUpFirstBootLog()
+{
+    APP_LOGI("start");
+    InstalldClient::GetInstance()->BackUpFirstBootLog();
+    return;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
