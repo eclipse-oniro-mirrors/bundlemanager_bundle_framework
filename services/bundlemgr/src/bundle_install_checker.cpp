@@ -111,6 +111,21 @@ const std::unordered_map<std::string, void (*)(AppPrivilegeCapability &appPrivil
                 } },
         };
 
+static std::map<std::string, AppDistributionTypeEnum> AppDistributionTypeEnumMap = {
+    { Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY,
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_APP_GALLERY },
+    { Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE,
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_ENTERPRISE },
+    { Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL,
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL },
+    { Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM,
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM },
+    { Constants::APP_DISTRIBUTION_TYPE_INTERNALTESTING,
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_INTERNALTESTING },
+    { Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING,
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_CROWDTESTING },
+};
+
 std::string GetAppDistributionType(const Security::Verify::AppDistType &type)
 {
     auto typeIter = APP_DISTRIBUTION_TYPE_MAPS.find(type);
@@ -1597,6 +1612,47 @@ ErrCode BundleInstallChecker::CheckAllowEnterpriseBundle(
         }
     }
     return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckAppDistributionType(const Security::Verify::AppDistType type)
+{
+    return CheckAppDistributionType(GetAppDistributionType(type));
+}
+
+ErrCode BundleInstallChecker::CheckAppDistributionType(const std::string distributionType)
+{
+    if (distributionType == Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION) {
+        APP_LOGD("os_integration is pass");
+        return ERR_OK;
+    }
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGW("bmsPara is nullptr");
+        return ERR_OK;
+    }
+    std::string val;
+    bmsPara->GetBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, val);
+    if (val.length() <= 0) {
+        APP_LOGE("GetBmsParam is null or exsit");
+        return ERR_OK;
+    }
+    int32_t appDisnTypeEnum = GetAppDistributionTypeEnum(distributionType);
+    std::vector<std::string> appDistributionTypeEnums;
+    OHOS::SplitStr(val, Constants::SUPPORT_APP_TYPES_SEPARATOR, appDistributionTypeEnums);
+    if (std::find(appDistributionTypeEnums.begin(), appDistributionTypeEnums.end(), std::to_string(appDisnTypeEnum))
+        == appDistributionTypeEnums.end()) {
+        APP_LOGE("bmsParam %{public}s not allow %{public}s install", val.c_str(), distributionType.c_str());
+        return ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL;
+    }
+    return ERR_OK;
+}
+
+int32_t BundleInstallChecker::GetAppDistributionTypeEnum(const std::string distributionType) const
+{
+    if (AppDistributionTypeEnumMap.find(distributionType) != AppDistributionTypeEnumMap.end()) {
+        return static_cast<int32_t>(AppDistributionTypeEnumMap[distributionType]);
+    }
+    return 0;
 }
 
 bool BundleInstallChecker::CheckEnterpriseBundle(Security::Verify::HapVerifyResult &hapVerifyRes) const

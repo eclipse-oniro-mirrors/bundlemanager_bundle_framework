@@ -92,7 +92,11 @@ public:
     ErrCode NotifyBundleStatusOfShared(const NotifyBundleEvents &installRes);
 
     ErrCode DeliveryProfileToCodeSign(std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const;
+    
+    ErrCode CheckAppDistributionType(const Security::Verify::AppDistType type);
 
+    ErrCode CheckAppDistributionType(
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults);
 private:
     ErrCode CheckAppLabelInfo();
     ErrCode CheckBundleTypeWithInstalledVersion();

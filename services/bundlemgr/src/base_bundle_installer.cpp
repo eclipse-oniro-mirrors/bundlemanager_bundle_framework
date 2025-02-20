@@ -1270,6 +1270,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!InitTempBundleFromCache(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INIT_INSTALL_TEMP_BUNDLE_ERROR;
     }
+    // check AppDistributionType
+    result = CheckAppDistributionType();
+    CHECK_RESULT(result, "check app distribution type info failed %{public}d");
+
     // when bundle update start, bms need set disposed rule to forbidden app running.
     (void)SetDisposedRuleWhenBundleUpdateStart(newInfos, oldInfo, installParam.isPreInstallApp);
     // when bundle update end, bms need delete disposed rule.
@@ -1392,6 +1396,20 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     return result;
+}
+
+ErrCode BaseBundleInstaller::CheckAppDistributionType()
+{
+    if (isAppExist_) {
+        LOG_D(BMS_TAG_INSTALLER, "no check appDisType when bundle update");
+        return ERR_OK;
+    }
+    auto res = bundleInstallChecker_->CheckAppDistributionType(appDistributionType_);
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "check appDisType failed when bundles installed %{public}d", res);
+        return ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL;
+    }
+    return ERR_OK;
 }
 
 void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,

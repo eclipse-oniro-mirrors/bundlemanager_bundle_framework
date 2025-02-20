@@ -15,6 +15,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <set>
 
 #include "bundle_mgr_proxy.h"
 
@@ -338,6 +339,9 @@ namespace OHOS {
         bundleMgrProxy.GetDirByBundleNameAndAppIndex(bundleName, 0, dataDir);
         std::vector<BundleDir> bundleDirs;
         bundleMgrProxy.GetAllBundleDirs(reinterpret_cast<uintptr_t>(data), bundleDirs);
+        std::set<AppDistributionTypeEnum> appDistributionTypeEnums{
+            AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_APP_GALLERY};
+        bundleMgrProxy.SetAppDistributionTypes(appDistributionTypeEnums);
         return true;
     }
 }

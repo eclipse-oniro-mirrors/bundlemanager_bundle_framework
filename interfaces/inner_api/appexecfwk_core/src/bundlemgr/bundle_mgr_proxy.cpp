@@ -5531,6 +5531,43 @@ ErrCode BundleMgrProxy::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to set appDistributionTypes");
+    if (appDistributionTypeEnums.size() <= 0) {
+        LOG_E(BMS_TAG_QUERY, "fail to SetAppDistributionTypes due size not satisfied");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "fail to SetAppDistributionTypes due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appDistributionTypeEnums.size())) {
+        APP_LOGE("fail to SetAppDistributionTypes due to write count fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (AppDistributionTypeEnum item : appDistributionTypeEnums) {
+        int32_t itemSize =  static_cast<int>(item);
+        if (!data.WriteInt32(itemSize)) {
+            APP_LOGE("write appDistributionType %{public}d failed", itemSize);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_APP_DISTRIBUTION_TYPES, data, reply)) {
+        APP_LOGE("fail to CleanAllBundleCache from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    ErrCode res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("fail to SetAppDistributionTypes from reply: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

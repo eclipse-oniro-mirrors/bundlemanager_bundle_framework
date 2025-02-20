@@ -1059,6 +1059,7 @@ public:
     virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir) override;
     virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) override;
+    virtual ErrCode SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

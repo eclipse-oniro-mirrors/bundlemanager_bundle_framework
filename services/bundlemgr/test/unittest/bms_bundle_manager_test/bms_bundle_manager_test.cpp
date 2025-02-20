@@ -6764,4 +6764,24 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_4800, Function | MediumTest | L
     ErrCode retCode = hostImpl->GetBundleNameByAppId(appId, bundleName);
     EXPECT_EQ(retCode, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: BundleMgrHostImpl_4900
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test SetAppDistributionTypes
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_4900, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::set<AppDistributionTypeEnum> appDistributionTypeEnums{
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_APP_GALLERY,
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_ENTERPRISE,
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL,
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM,
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_INTERNALTESTING,
+        AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_CROWDTESTING
+    };
+    ErrCode retCode = hostImpl->SetAppDistributionTypes(appDistributionTypeEnums);
+    EXPECT_EQ(retCode, ERR_OK);
+}
 } // OHOS

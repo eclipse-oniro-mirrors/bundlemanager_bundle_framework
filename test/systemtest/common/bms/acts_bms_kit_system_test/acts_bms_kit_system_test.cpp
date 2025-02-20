@@ -9939,6 +9939,24 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleDirs_0001, Function | MediumTest | Le
     std::cout << "END GetAllBundleDirs_0001" << std::endl;
 }
 
+/**
+ * @tc.number: SetAppDistributionTypes_0001
+ * @tc.name: test SetAppDistributionTypes interface
+ * @tc.desc: 1. call SetAppDistributionTypes
+ */
+HWTEST_F(ActsBmsKitSystemTest, SetAppDistributionTypes_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START SetAppDistributionTypes_0001" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        std::set<AppDistributionTypeEnum> appDistributionTypeEnums{
+            AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_APP_GALLERY};
+        ErrCode ret =bundleMgrProxy->SetAppDistributionTypes(appDistributionTypeEnums);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    }
+    std::cout << "END SetAppDistributionTypes_0001" << std::endl;
+}
 
 /**
  * @tc.number: GetAllBundleDirs_0002

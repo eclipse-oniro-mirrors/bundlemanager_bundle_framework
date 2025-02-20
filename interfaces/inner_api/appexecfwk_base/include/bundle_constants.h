@@ -166,6 +166,9 @@ constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 //param key-value
 constexpr const char* VERIFY_UNINSTALL_RULE_KEY = "ohos.bms.param.verifyUninstallRule";
 constexpr const char* VERIFY_UNINSTALL_RULE_VALUE = "true";
+
+constexpr const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
+constexpr const char* APP_DISTRIBUTION_TYPE_WHITE_LIST = "appDistributionTypeWhiteList";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS
