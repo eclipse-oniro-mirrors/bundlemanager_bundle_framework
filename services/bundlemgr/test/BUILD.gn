@@ -106,6 +106,9 @@ group("unittest") {
       "unittest/bms_service_startup_test:unittest",
       "unittest/bms_syscap_tool_test:unittest",
     ]
+    if (is_emulator) {
+      deps += [ "unittest/bms_service_startup_emulator_test:unittest" ]
+    }
     if (bundle_framework_default_app) {
       deps += [ "unittest/bms_bundle_default_app_test:unittest" ]
     }

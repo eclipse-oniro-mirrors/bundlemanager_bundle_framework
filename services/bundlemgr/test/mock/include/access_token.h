@@ -161,6 +161,17 @@ public:
     /** Whether the pre-authorization is non-cancelable */
     bool userCancelable = false;
 };
+
+/**
+ * @brief Whether acl check
+ */
+typedef enum HapPolicyCheckIgnoreType {
+    /** normal */
+    None = 0,
+    /** ignore acl check */
+    ACL_IGNORE_CHECK,
+} HapPolicyCheckIgnore;
+
 class HapPolicyParams final {
 public:
     /**
@@ -173,6 +184,7 @@ public:
     std::vector<PermissionStateFull> permStateList;
     std::vector<std::string> aclRequestedList;
     std::vector<PreAuthorizationInfo> preAuthorizationInfo;
+    HapPolicyCheckIgnore checkIgnore = HapPolicyCheckIgnore::None;
 };
 
 /**
