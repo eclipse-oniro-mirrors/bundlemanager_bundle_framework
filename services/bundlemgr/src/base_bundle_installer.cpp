@@ -1346,13 +1346,16 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     if (needDeleteQuickFixInfo_) {
         LOG_D(BMS_TAG_INSTALLER, "module update, quick fix old patch need to delete:%{public}s", bundleName_.c_str());
+        InnerBundleInfo cacheInfo;
+        tempInfo_.GetTempBundleInfo(cacheInfo);
         if (!oldInfo.GetAppQuickFix().deployedAppqfInfo.hqfInfos.empty()) {
             LOG_D(BMS_TAG_INSTALLER, "quickFixInfo need disable, bundleName:%{public}s", bundleName_.c_str());
             auto quickFixSwitcher = std::make_unique<QuickFixSwitcher>(bundleName_, false);
-            quickFixSwitcher->Execute();
+            quickFixSwitcher->DisableQuickFix(cacheInfo);
         }
         auto quickFixDeleter = std::make_unique<QuickFixDeleter>(bundleName_);
-        quickFixDeleter->Execute();
+        quickFixDeleter->DeleteQuickFix(cacheInfo);
+        tempInfo_.SetTempBundleInfo(cacheInfo);
     }
 #endif
     DeleteUninstallBundleInfo(bundleName_);

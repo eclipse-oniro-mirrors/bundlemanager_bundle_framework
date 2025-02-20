@@ -28,11 +28,14 @@ public:
     virtual ~QuickFixSwitcher() = default;
 
     virtual ErrCode Execute() override;
+    ErrCode DisableQuickFix(InnerBundleInfo &innerBundleInfo);
 
 private:
     ErrCode SwitchQuickFix();
     ErrCode EnableQuickFix(const std::string &bundleName);
     ErrCode DisableQuickFix(const std::string &bundleName);
+    ErrCode InnerSwitchQuickFix(InnerBundleInfo &innerBundleInfo,
+        const InnerAppQuickFix &innerAppQuickFix, bool enable);
     ErrCode InnerSwitchQuickFix(const std::string &bundleName, const InnerAppQuickFix &innerAppQuickFix, bool enable);
     ErrCode CreateInnerAppqf(const InnerBundleInfo &innerBundleInfo, bool enable, InnerAppQuickFix &innerAppQuickFix);
     ErrCode GetDataMgr();

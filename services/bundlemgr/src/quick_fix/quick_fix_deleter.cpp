@@ -87,6 +87,49 @@ ErrCode QuickFixDeleter::DeleteQuickFix()
     return ERR_OK;
 }
 
+ErrCode QuickFixDeleter::DeleteQuickFix(InnerBundleInfo &innerBundleInfo)
+{
+    if (GetQuickFixDataMgr() != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "quickFixDataMgr is nullptr");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    InnerAppQuickFix innerAppQuickFix;
+    // 1. query quick fix info form db
+    if (!quickFixDataMgr_->QueryInnerAppQuickFix(bundleName_, innerAppQuickFix)) {
+        LOG_I(BMS_TAG_DEFAULT, "no patch in the db");
+        return ERR_OK;
+    }
+    // 2. update quick fix status
+    if (!quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::DELETE_START, innerAppQuickFix)) {
+        LOG_E(BMS_TAG_DEFAULT, "update quickfix status %{public}d failed", QuickFixStatus::DELETE_START);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS;
+    }
+    // 3. utilize stateGuard to rollback quick fix info status in db
+    ScopeGuard stateGuard([&] {
+        quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::SWITCH_END, innerAppQuickFix);
+    });
+
+    // 4. to delete patch path
+    ErrCode errCode = ToDeletePatchDir(innerAppQuickFix);
+    if (errCode != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "ToDeletePatchDir failed");
+        return errCode;
+    }
+    // 5. to remove deployingAppqfInfo from cache
+    AppQuickFix appQuickFix = innerBundleInfo.GetAppQuickFix();
+    if (!appQuickFix.deployingAppqfInfo.hqfInfos.empty()) {
+        appQuickFix.deployingAppqfInfo = AppqfInfo();
+        innerBundleInfo.SetAppQuickFix(appQuickFix);
+    }
+    // 6. to remove old patch info from db
+    if (!quickFixDataMgr_->DeleteInnerAppQuickFix(bundleName_)) {
+        LOG_E(BMS_TAG_DEFAULT, "InnerDeleteQuickFix failed");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    stateGuard.Dismiss();
+    return ERR_OK;
+}
+
 ErrCode QuickFixDeleter::ToDeletePatchDir(const InnerAppQuickFix &innerAppQuickFix)
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "start to delete patch dir");

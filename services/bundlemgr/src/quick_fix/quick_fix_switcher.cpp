@@ -128,6 +128,48 @@ ErrCode QuickFixSwitcher::DisableQuickFix(const std::string &bundleName)
     return ERR_OK;
 }
 
+ErrCode QuickFixSwitcher::DisableQuickFix(InnerBundleInfo &innerBundleInfo)
+{
+    if (GetQuickFixDataMgr() != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "quickFixDataMgr is nullptr");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    InnerAppQuickFix innerAppQuickFix;
+    std::string bundleName = innerBundleInfo.GetBundleName();
+    // 1. query quick fix info from db, if quick fix info exists, use it to disable quick fix
+    bool isExisted = quickFixDataMgr_->QueryInnerAppQuickFix(bundleName, innerAppQuickFix);
+    if (!isExisted) {
+        LOG_W(BMS_TAG_DEFAULT, "no patch in the db");
+        // 1.1 if quick fix info does not exist, use the temporary quick fix info to mark disable-status in db
+        QuickFixMark fixMark = { .status = QuickFixStatus::DEPLOY_END };
+        AppQuickFix appQuickFix;
+        appQuickFix.bundleName = bundleName;
+        innerAppQuickFix.SetAppQuickFix(appQuickFix);
+        innerAppQuickFix.SetQuickFixMark(fixMark);
+    }
+    // 2. update disable-status in db
+    if (!quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::SWITCH_DISABLE_START, innerAppQuickFix)) {
+        LOG_E(BMS_TAG_DEFAULT, "update quickfix status %{public}d failed", QuickFixStatus::SWITCH_DISABLE_START);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS;
+    }
+    // 3. if quick fix exist, stateGuard is utilized to rollback quick fix info in db
+    ScopeGuard stateGuard([&] {
+        if (isExisted) {
+            quickFixDataMgr_->UpdateQuickFixStatus(QuickFixStatus::DEPLOY_END, innerAppQuickFix);
+        } else {
+            quickFixDataMgr_->DeleteInnerAppQuickFix(bundleName);
+        }
+    });
+
+    ErrCode res = InnerSwitchQuickFix(innerBundleInfo, innerAppQuickFix, false);
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "InnerSwitchQuickFix failed %{public}d", res);
+        return res;
+    }
+    stateGuard.Dismiss();
+    return ERR_OK;
+}
+
 ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, const InnerAppQuickFix &innerAppQuickFix,
     bool enable)
 {
@@ -148,6 +190,20 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
         return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
     }
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName_); });
+    auto result = InnerSwitchQuickFix(innerBundleInfo, innerAppQuickFix, enable);
+    if (result != ERR_OK) {
+        return result;
+    }
+    if (!dataMgr_->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo)) {
+        LOG_E(BMS_TAG_DEFAULT, "update quickfix innerbundleInfo failed");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode QuickFixSwitcher::InnerSwitchQuickFix(InnerBundleInfo &innerBundleInfo,
+    const InnerAppQuickFix &innerAppQuickFix, bool enable)
+{
     // utilize appQuickFix to rollback
     AppQuickFix oldAppQuickFix = innerBundleInfo.GetAppQuickFix();
     if (!enable && oldAppQuickFix.deployedAppqfInfo.hqfInfos.empty()) {
@@ -161,21 +217,8 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
         LOG_E(BMS_TAG_DEFAULT, "CreateInnerAppqf failed");
         return errCode;
     }
-    // 6. update innerBundleInfo in memory cache and db
     AppQuickFix newAppQuickFix = innerAppQuickFix.GetAppQuickFix();
     newAppQuickFix.deployingAppqfInfo = enable ? AppqfInfo() : oldAppQuickFix.deployingAppqfInfo;
-    innerBundleInfo.SetAppQuickFix(newAppQuickFix);
-    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-    if (!dataMgr_->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo)) {
-        LOG_E(BMS_TAG_DEFAULT, "update quickfix innerbundleInfo failed");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
-    }
-
-    // 7. utilize innerBundleInfoGuard to rollback inner bundle info in db and memory cache
-    ScopeGuard innerBundleInfoGuard([&] {
-        innerBundleInfo.SetAppQuickFix(oldAppQuickFix);
-        dataMgr_->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo);
-    });
 
     if (GetQuickFixDataMgr() != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "GetQuickFixDataMgr failed");
@@ -183,6 +226,7 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
     }
     // 8. update quick fix info status of SWITCH_END
     auto appQuickFix = oldInnerAppQuickFix.GetAppQuickFix();
+    std::string bundleName = innerBundleInfo.GetBundleName();
     if (appQuickFix.deployedAppqfInfo.hqfInfos.empty() && appQuickFix.deployingAppqfInfo.hqfInfos.empty()) {
         quickFixDataMgr_->DeleteInnerAppQuickFix(bundleName);
     } else {
@@ -191,7 +235,8 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
             return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS;
         }
     }
-    innerBundleInfoGuard.Dismiss();
+    innerBundleInfo.SetAppQuickFix(newAppQuickFix);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     return ERR_OK;
 }
 
