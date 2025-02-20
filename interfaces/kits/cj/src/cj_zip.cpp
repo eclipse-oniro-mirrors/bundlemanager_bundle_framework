@@ -205,10 +205,10 @@ int32_t Zip(const std::string &srcPath, const std::string &destPath, const OPTIO
     FilePath srcDir(srcPath);
     FilePath destFile(destPath);
 
-    if (srcDir.Value().size() == 0) {
+    if (srcDir.Value().size() == 0 || FilePath::HasRelativePathBaseOnAPIVersion(srcPath)) {
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
-    if (destFile.Value().size() == 0) {
+    if (destFile.Value().size() == 0 || FilePath::HasRelativePathBaseOnAPIVersion(destPath)) {
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
 
@@ -276,7 +276,7 @@ ErrCode UnzipWithFilterCallback(
 
     FilePath dest = destDir;
 
-    APP_LOGI("srcFile=%{private}s, destFile=%{private}s", src.Value().c_str(), dest.Value().c_str());
+    APP_LOGD("srcFile=%{private}s, destFile=%{private}s", src.Value().c_str(), dest.Value().c_str());
 
     if (!FilePath::PathIsValid(srcFile)) {
         APP_LOGI("PathIsValid return value is false");
@@ -301,10 +301,10 @@ int32_t UnZip(const std::string &srcFile, const std::string &destFile, OPTIONS o
 {
     FilePath srcFileDir(srcFile);
     FilePath destDir(destFile);
-    if (destDir.Value().size() == 0) {
+    if (destDir.Value().size() == 0 || FilePath::HasRelativePathBaseOnAPIVersion(destFile)) {
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
-    if (srcFileDir.Value().size() == 0) {
+    if (srcFileDir.Value().size() == 0 || FilePath::HasRelativePathBaseOnAPIVersion(srcFile)) {
         APP_LOGI("srcFile isn't Exist");
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
