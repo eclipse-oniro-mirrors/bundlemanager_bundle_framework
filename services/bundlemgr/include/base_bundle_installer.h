@@ -775,6 +775,7 @@ private:
     bool IsArkWeb(const std::string &bundleName) const;
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
         const InnerBundleInfo& innerBundleInfo);
+    ErrCode CheckAppDistributionType();
 #ifdef WEBVIEW_ENABLE
     ErrCode VerifyArkWebInstall();
 #endif

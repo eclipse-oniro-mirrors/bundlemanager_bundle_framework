@@ -31,6 +31,15 @@ enum ProfileType : int8_t {
     PKG_CONTEXT_PROFILE = 5
 };
 
+enum AppDistributionTypeEnum : int8_t {
+    APP_DISTRIBUTION_TYPE_APP_GALLERY = 1,
+    APP_DISTRIBUTION_TYPE_ENTERPRISE = 2,
+    APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL = 3,
+    APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM = 4,
+    APP_DISTRIBUTION_TYPE_INTERNALTESTING = 5,
+    APP_DISTRIBUTION_TYPE_CROWDTESTING = 6,
+};
+
 // stores module information about an application
 struct ModuleInfo : public Parcelable {
     std::string moduleName;  // the "name" in module part in config.json

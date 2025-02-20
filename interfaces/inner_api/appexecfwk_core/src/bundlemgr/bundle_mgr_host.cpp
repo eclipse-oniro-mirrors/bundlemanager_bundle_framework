@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cinttypes>
 #include <unistd.h>
+#include <set>
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
@@ -632,6 +633,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_ALL_BUNDLE_CACHE):
             errCode = HandleCleanAllBundleCache(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_APP_DISTRIBUTION_TYPES):
+            errCode = HandleSetAppDistributionTypes(data, reply);
             break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
@@ -4333,6 +4337,27 @@ ErrCode BundleMgrHost::HandleGetAllBundleDirs(MessageParcel &data, MessageParcel
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetAppDistributionTypes(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t typesCount = data.ReadInt32();
+    if (typesCount <= 0) {
+        APP_LOGE("typesCount is error");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::set<AppDistributionTypeEnum> appDistributionTypeEnums;
+    for (int32_t i = 0; i < typesCount; i++) {
+        AppDistributionTypeEnum appDistributionType = static_cast<AppDistributionTypeEnum>(data.ReadInt32());
+        appDistributionTypeEnums.insert(appDistributionType);
+    }
+    auto ret = SetAppDistributionTypes(appDistributionTypeEnums);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

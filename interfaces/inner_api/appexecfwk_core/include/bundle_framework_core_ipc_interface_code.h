@@ -199,6 +199,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_SIMPLE_APP_INFO_FOR_UID = 173,
     CREATE_BUNDLE_DATA_DIR_WITH_EL = 174,
     GET_SIGNATURE_INFO_BY_UID = 175,
+    SET_APP_DISTRIBUTION_TYPES = 176,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

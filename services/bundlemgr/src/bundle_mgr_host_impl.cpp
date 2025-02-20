@@ -4817,5 +4817,36 @@ ErrCode BundleMgrHostImpl::GetAllBundleDirs(int32_t userId, std::vector<BundleDi
     }
     return dataMgr->GetAllBundleDirs(userId, bundleDirs);
 }
+
+ErrCode BundleMgrHostImpl::SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    std::string value = "";
+    for (auto it = appDistributionTypeEnums.begin(); it != appDistributionTypeEnums.end(); ++it) {
+        if (it == appDistributionTypeEnums.begin()) {
+            value += std::to_string(static_cast<int>(*it));
+        } else {
+            value += Constants::SUPPORT_APP_TYPES_SEPARATOR + std::to_string(static_cast<int>(*it));
+        }
+    }
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE("bmsPara is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    if (!bmsPara->SaveBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, value)) {
+        APP_LOGE("SaveBmsParam failed");
+        return ERR_BMS_PARAM_SET_PARAM_ERROR;
+    }
+    APP_LOGI("save bms param success %{public}s", value.c_str());
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

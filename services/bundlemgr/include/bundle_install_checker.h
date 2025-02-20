@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "app_privilege_capability.h"
 #include "app_provision_info.h"
@@ -179,6 +180,11 @@ public:
 
     void SetCheckResultMsg(const std::string checkResultMsg);
 
+    ErrCode CheckAppDistributionType(const Security::Verify::AppDistType type);
+
+    ErrCode CheckAppDistributionType(const std::string distributionType);
+
+    int32_t GetAppDistributionTypeEnum(const std::string distributionType) const;
 private:
 
     ErrCode ParseBundleInfo(

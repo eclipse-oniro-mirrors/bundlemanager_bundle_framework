@@ -104,6 +104,10 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     result = CheckAppLabelInfo();
     CHECK_RESULT(result, "check label info failed %{public}d");
 
+    // check AppDistributionType
+    result = CheckAppDistributionType(hapVerifyResults);
+    CHECK_RESULT(result, "check app distribution type info failed %{public}d");
+
     // delivery sign profile to code signature
     result = DeliveryProfileToCodeSign(hapVerifyResults);
     CHECK_RESULT(result, "delivery sign profile failed %{public}d");
@@ -121,6 +125,25 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
         (parsedBundles_.begin()->second).GetBaseApplicationInfo().compileSdkType;
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo());
     return result;
+}
+
+ErrCode InnerSharedBundleInstaller::CheckAppDistributionType(
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults)
+{
+    if (isBundleExist_) {
+        LOG_I(BMS_TAG_INSTALLER, "no check appDisType when cross-app shared bundles update");
+        return ERR_OK;
+    }
+    for (uint32_t i = 0; i < hapVerifyResults.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyResults[i].GetProvisionInfo();
+        auto res = bundleInstallChecker_->CheckAppDistributionType(provisionInfo.distributionType);
+        if (res != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER,
+                "check appDisType failed when cross-app shared bundles installed %{public}d", res);
+            return ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL;
+        }
+    }
+    return ERR_OK;
 }
 
 void InnerSharedBundleInstaller::sendStartSharedBundleInstallNotify(const InstallCheckParam &installCheckParam,
