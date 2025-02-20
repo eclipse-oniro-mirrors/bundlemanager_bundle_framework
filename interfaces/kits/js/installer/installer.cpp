@@ -413,6 +413,7 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_CODE_APP_CONTROLLED_FAILED, ERROR_INSTALL_FAILED_CONTROLLED},
         { IStatusReceiver::ERR_INSTALL_NATIVE_FAILED, ERROR_INSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_UNINSTALL_NATIVE_FAILED, ERROR_UNINSTALL_NATIVE_FAILED},
+        { IStatusReceiver::ERR_UNINSTALL_DISPOSED_RULE_DENIED, ERROR_APPLICATION_UNINSTALL},
         { IStatusReceiver::ERR_NATIVE_HNP_EXTRACT_FAILED, ERROR_INSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_UNINSTALL_CONTROLLED, ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED },
         { IStatusReceiver::ERR_INSTALL_DEBUG_ENCRYPTED_BUNDLE_FAILED, ERROR_INSTALL_PARSE_FAILED }
@@ -1755,7 +1756,8 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerDestroyAppClone(std::string &bundleName, int32_t userId, int32_t appIndex)
+static ErrCode InnerDestroyAppClone(std::string &bundleName, int32_t userId, int32_t appIndex,
+                                    DestroyAppCloneParam &destroyAppCloneParam)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -1767,7 +1769,7 @@ static ErrCode InnerDestroyAppClone(std::string &bundleName, int32_t userId, int
         APP_LOGE("can not get iBundleInstaller");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode result = iBundleInstaller->UninstallCloneApp(bundleName, userId, appIndex);
+    ErrCode result = iBundleInstaller->UninstallCloneApp(bundleName, userId, appIndex, destroyAppCloneParam);
     APP_LOGD("UninstallCloneApp result is %{public}d", result);
     return result;
 }
@@ -1784,7 +1786,8 @@ void DestroyAppCloneExec(napi_env env, void *data)
         asyncCallbackInfo->userId,
         asyncCallbackInfo->appIndex);
     asyncCallbackInfo->err =
-        InnerDestroyAppClone(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
+    InnerDestroyAppClone(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId,
+                         asyncCallbackInfo->appIndex, asyncCallbackInfo->destroyAppCloneParam);
 }
 
 void DestroyAppCloneComplete(napi_env env, napi_status status, void *data)
@@ -1807,6 +1810,24 @@ void DestroyAppCloneComplete(napi_env env, napi_status status, void *data)
             DESTROY_APP_CLONE, Constants::PERMISSION_UNINSTALL_CLONE_BUNDLE);
     }
     CommonFunc::NapiReturnDeferred<CreateAppCloneCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+static bool ParseDestroyAppCloneParam(napi_env env, napi_value args, napi_valuetype valueType, int32_t &userId,
+                                      DestroyAppCloneParam &destroyAppCloneParam)
+{
+    if (valueType == napi_number && !CommonFunc::ParseInt(env, args, userId)) {
+        APP_LOGW("parse userId failed,set this parameter to the caller userId");
+    } else if (valueType == napi_object) {
+        if (!ParseUserId(env, args, destroyAppCloneParam.userId)) {
+            APP_LOGW("parse userId failed,using default value");
+        } else {
+            userId = destroyAppCloneParam.userId;
+        }
+        if (!ParseParameters(env, args, destroyAppCloneParam.parameters)) {
+            APP_LOGW("parse parameters failed,using default value");
+        }
+    }
+    return true;
 }
 
 napi_value DestroyAppClone(napi_env env, napi_callback_info info)
@@ -1840,8 +1861,9 @@ napi_value DestroyAppClone(napi_env env, napi_callback_info info)
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
-            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
+            if (!ParseDestroyAppCloneParam(
+                env, args[i], valueType, asyncCallbackInfo->userId, asyncCallbackInfo->destroyAppCloneParam)) {
+                APP_LOGW("parse destroyAppCloneParam failed");
             }
         } else {
             APP_LOGE("The number of parameters is incorrect");

@@ -37,6 +37,7 @@
 #include "bundle_status_callback_proxy.h"
 #include "bundle_stream_installer_host_impl.h"
 #include "clean_cache_callback_proxy.h"
+#include "clone_param.h"
 #include "directory_ex.h"
 #include "hidump_helper.h"
 #include "install_param.h"
@@ -13613,7 +13614,8 @@ HWTEST_F(BmsBundleKitServiceTest, UninstallCloneApp_0100, Function | SmallTest |
 {
     std::shared_ptr<IBundleInstaller> bundleInstaller = std::make_shared<IBundleInstallerTest>();
     ASSERT_NE(bundleInstaller, nullptr);
-    auto ret = bundleInstaller->UninstallCloneApp("", DEFAULT_USERID, APP_INDEX);
+    DestroyAppCloneParam destroyAppCloneParam;
+    auto ret = bundleInstaller->UninstallCloneApp("", DEFAULT_USERID, APP_INDEX, destroyAppCloneParam);
     EXPECT_EQ(ret, ERR_OK);
 }
 }

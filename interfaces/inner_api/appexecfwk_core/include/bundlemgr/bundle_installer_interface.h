@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "bundle_stream_installer_interface.h"
+#include "clone_param.h"
 #include "status_receiver_interface.h"
 #include "install_param.h"
 
@@ -138,7 +139,8 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex)
+    virtual ErrCode UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex,
+                                      const DestroyAppCloneParam &destroyAppCloneParam)
     {
         return ERR_OK;
     }
