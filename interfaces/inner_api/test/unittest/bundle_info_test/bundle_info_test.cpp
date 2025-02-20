@@ -59,7 +59,8 @@ void BundleInfoTest::TearDown()
 HWTEST_F(BundleInfoTest, Bundle_Info_Test_0100, Function | SmallTest | Level0)
 {
     Parcel parcel;
-    EXPECT_NO_THROW(SimpleAppInfo::Unmarshalling(parcel));
+    auto ret = SimpleAppInfo::Unmarshalling(parcel);
+    EXPECT_NE(ret, nullptr);
 }
 } // AppExecFwk
 } // OHOS
