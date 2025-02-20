@@ -26,7 +26,7 @@
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t U32_AT_SIZE = 4;
-constexpr uint32_t CODE_MAX = 51;
+constexpr uint32_t CODE_MAX = 56;
 static InstalldHost installdHost;
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
