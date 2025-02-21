@@ -159,6 +159,13 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:utd_client" ]
   }
+
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    include_dirs += [ "${services_path}/bundlemgr/include/user_auth" ]
+    sources += user_auth
+  }
 }
 
 ohos_unittest("BmsBundleOverlayInfoTest") {
@@ -380,6 +387,14 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:utd_client" ]
   }
+
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    include_dirs += [ "${services_path}/bundlemgr/include/user_auth" ]
+    sources += user_auth
+  }
+
   if (code_signature_enable) {
     sources +=
         [ "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp" ]
@@ -526,6 +541,12 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:utd_client" ]
+  }
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    include_dirs += [ "${services_path}/bundlemgr/include/user_auth" ]
+    sources += user_auth
   }
   if (code_signature_enable) {
     sources +=
@@ -675,6 +696,12 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:utd_client" ]
   }
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    include_dirs += [ "${services_path}/bundlemgr/include/user_auth" ]
+    sources += user_auth
+  }
   if (code_signature_enable) {
     sources +=
         [ "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp" ]
@@ -823,6 +850,12 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:utd_client" ]
+  }
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    include_dirs += [ "${services_path}/bundlemgr/include/user_auth" ]
+    sources += user_auth
   }
   if (code_signature_enable) {
     sources +=

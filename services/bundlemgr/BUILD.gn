@@ -65,6 +65,10 @@ config("overlay_installation_config") {
   include_dirs = [ "include/overlay" ]
 }
 
+config("user_auth_config") {
+  include_dirs = [ "include/user_auth" ]
+}
+
 bundlemgr_parser_common_config = [ ":bundlemgr_common_config" ]
 
 ohos_source_set("parser_common") {
@@ -494,6 +498,13 @@ ohos_shared_library("libbms") {
   if (webview_enable) {
     external_deps += [ "webview:app_fwk_update_service" ]
     defines += [ "WEBVIEW_ENABLE" ]
+  }
+
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    configs += [ ":user_auth_config" ]
+    sources += user_auth
   }
 
   subsystem_name = "bundlemanager"

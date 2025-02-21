@@ -19,9 +19,11 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
+#include <random>
 #include <sstream>
 #include <sys/sendfile.h>
 #include <sys/statfs.h>
+#include <vector>
 
 #include "bundle_service_constants.h"
 #ifdef CONFIG_POLOCY_ENABLE
@@ -63,6 +65,8 @@ const char* NO_DISABLING_CONFIG_PATH_DEFAULT =
     "/system/etc/ability_runtime/resident_process_in_extreme_memory.json";
 const std::string EMPTY_STRING = "";
 constexpr int64_t DISK_REMAINING_SIZE_LIMIT = 1024 * 1024 * 10; // 10M
+constexpr uint32_t RANDOM_NUMBER_LENGTH = 255;
+constexpr uint32_t SANDBOX_PATH_INDEX = 0;
 constexpr uint32_t ID_INVALID = 0;
 constexpr const char* COLON = ":";
 constexpr const char* DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE = "Cover";
@@ -805,6 +809,15 @@ bool BundleUtil::RevertToRealPath(const std::string &sandBoxPath, const std::str
     return true;
 }
 
+bool BundleUtil::IsSandBoxPath(const std::string &path)
+{
+    if (path.empty()) {
+        return false;
+    }
+    return path.find(ServiceConstants::SANDBOX_DATA_PATH) == SANDBOX_PATH_INDEX ||
+           path.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == SANDBOX_PATH_INDEX;
+}
+
 bool BundleUtil::StartWith(const std::string &source, const std::string &prefix)
 {
     if (source.empty() || prefix.empty()) {
@@ -987,6 +1000,21 @@ std::string BundleUtil::GenerateUuidByKey(const std::string &key)
         uuid.insert(index, 1, UUID_SEPARATOR);
     }
     return uuid;
+}
+
+std::vector<uint8_t> BundleUtil::GenerateRandomNumbers(uint8_t size, uint8_t lRange, uint8_t rRange)
+{
+    std::vector<uint8_t> rangeV;
+    if (size == 0 || size > RANDOM_NUMBER_LENGTH) {
+        return rangeV;
+    }
+    rangeV.resize(size);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint8_t> distributionNum(lRange, rRange);
+
+    std::generate(rangeV.begin(), rangeV.end(), [&]() { return distributionNum(gen); });
+    return rangeV;
 }
 
 std::string BundleUtil::ExtractGroupIdByDevelopId(const std::string &developerId)

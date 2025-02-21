@@ -230,6 +230,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::BACK_UP_FIRST_BOOT_LOG):
             result = HandleBackUpFirstBootLog(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::MIGRATE_DATA):
+            result = HandleMigrateData(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1025,6 +1028,22 @@ bool InstalldHost::HandleDeleteDataGroupDirs(MessageParcel &data, MessageParcel 
     }
     int32_t userId = data.ReadInt32();
     ErrCode result = DeleteDataGroupDirs(uuidList, userId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleMigrateData(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t size = data.ReadInt32();
+    std::vector<std::string> sourcePaths;
+    CONTAINER_SECURITY_VERIFY(data, size, &sourcePaths);
+    for (int32_t index = 0; index < size; ++index) {
+        std::string path = Str16ToStr8(data.ReadString16());
+        sourcePaths.emplace_back(path);
+    }
+    std::string destinationPath = Str16ToStr8(data.ReadString16());
+    ErrCode result = MigrateData(sourcePaths, destinationPath);
+
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

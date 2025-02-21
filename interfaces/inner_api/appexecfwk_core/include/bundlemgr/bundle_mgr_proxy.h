@@ -1023,6 +1023,9 @@ public:
     virtual ErrCode UpdateAppEncryptedStatus(const std::string &bundleName,
         bool isExisted, int32_t appIndex = 0) override;
 
+    virtual ErrCode MigrateData(
+        const std::vector<std::string> &sourcePaths, const std::string &destinationPath) override;
+
     /**
      * @brief Check whether the link can be opened.
      * @param link Indicates the link to be opened.

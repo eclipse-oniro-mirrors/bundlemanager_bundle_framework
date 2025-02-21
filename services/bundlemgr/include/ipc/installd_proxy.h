@@ -238,6 +238,9 @@ public:
 
     virtual ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList) override;
 
+    virtual ErrCode MigrateData(
+        const std::vector<std::string> &sourcePaths, const std::string &destinationPath) override;
+
     virtual ErrCode AddUserDirDeleteDfx(int32_t userId) override;
 
     virtual ErrCode MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath) override;

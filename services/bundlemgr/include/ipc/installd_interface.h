@@ -449,6 +449,11 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId)
     {
         return ERR_OK;

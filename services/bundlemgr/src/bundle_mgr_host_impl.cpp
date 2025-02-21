@@ -36,8 +36,15 @@
 #include "bundle_active_client.h"
 #include "bundle_active_period_stats.h"
 #endif
+#include "directory_ex.h"
+#ifdef BMS_USER_AUTH_FRAMEWORK_ENABLED
+#include "migrate_data_user_auth_callback.h"
+#endif
 #include "system_ability_definition.h"
 #include "scope_guard.h"
+#ifdef BMS_USER_AUTH_FRAMEWORK_ENABLED
+#include "user_auth_client_impl.h"
+#endif
 #include "xcollie_helper.h"
 
 namespace OHOS {
@@ -61,6 +68,9 @@ const std::string FUNCTION_GET_BUNDLE_INFO_V9 = "BundleMgrHostImpl::GetBundleInf
 const std::string FUNCTION_GET_BUNDLE_INFO_FOR_SELF = "BundleMgrHostImpl::GetBundleInfoForSelf";
 const std::string CLONE_APP_DIR_PREFIX = "+clone-";
 const std::string PLUS = "+";
+const std::string AUTH_TITLE = "      ";
+const uint64_t BAD_CONTEXT_ID = 0;
+const uint64_t VECTOR_SIZE_MAX = 200;
 }
 
 bool BundleMgrHostImpl::GetApplicationInfo(
@@ -4009,6 +4019,160 @@ ErrCode BundleMgrHostImpl::UpdateAppEncryptedStatus(const std::string &bundleNam
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->UpdateAppEncryptedStatus(bundleName, isExisted, appIndex);
+}
+
+ErrCode BundleMgrHostImpl::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
+{
+    APP_LOGD("MigrateData start");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MIGRATE_DATA)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    std::vector<std::string> inspectionPassedSourcePaths = sourcePaths;
+    std::string inspectionPassedDestPath = destinationPath;
+    auto result = MigrateDataParameterCheck(inspectionPassedSourcePaths, inspectionPassedDestPath);
+    if (result != ERR_OK) {
+        APP_LOGE("migrate data parameter check err:%{public}d", result);
+        return result;
+    }
+
+    result = MigrateDataUserAuthentication();
+    if (result != ERR_OK) {
+        APP_LOGE("migrate data user authentication err:%{public}d", result);
+        return result;
+    }
+
+    auto installdClient = InstalldClient::GetInstance();
+    if (installdClient == nullptr) {
+        APP_LOGE("get install client err");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
+    }
+
+    result = installdClient->MigrateData(inspectionPassedSourcePaths, inspectionPassedDestPath);
+    if (result != ERR_OK) {
+        APP_LOGE("migrate data filesd, errcode:%{public}d", result);
+    }
+    return result;
+}
+
+ErrCode BundleMgrHostImpl::MigrateDataParameterCheck(
+    std::vector<std::string> &sourcePaths, std::string &destinationPath)
+{
+    if (sourcePaths.size() > VECTOR_SIZE_MAX) {
+        APP_LOGE("source paths size out of range");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    auto checkPath = [](const auto &path) { return path.find(ServiceConstants::RELATIVE_PATH) != std::string::npos; };
+    if (sourcePaths.empty() || std::any_of(sourcePaths.begin(), sourcePaths.end(), checkPath)) {
+        APP_LOGE("source paths check err");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    if (destinationPath.empty() || checkPath(destinationPath)) {
+        APP_LOGE("destinationPath err: %{private}s", destinationPath.c_str());
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+    return CheckSandboxPath(sourcePaths, destinationPath);
+}
+
+ErrCode BundleMgrHostImpl::CheckSandboxPath(std::vector<std::string> &sourcePaths, std::string &destinationPath)
+{
+    bool sourcePathCheck = std::any_of(
+        sourcePaths.begin(), sourcePaths.end(), [](const auto &path) { return BundleUtil::IsSandBoxPath(path); });
+    if (!sourcePathCheck && !BundleUtil::IsSandBoxPath(destinationPath)) {
+        APP_LOGD("the current paths does not involve sandbox path");
+        return ERR_OK;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
+    }
+    auto uid = IPCSkeleton::GetCallingUid();
+    std::string bundleName;
+    if (!dataMgr->GetBundleNameForUid(uid, bundleName)) {
+        APP_LOGE("GetBundleNameForUid failed uid:%{public}d", uid);
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
+    }
+    std::string realPath{ "" };
+    for (int index = 0; index < sourcePaths.size(); ++index) {
+        if (!BundleUtil::IsSandBoxPath(sourcePaths[index])) {
+            continue;
+        }
+        if (BundleUtil::RevertToRealPath(sourcePaths[index], bundleName, realPath)) {
+            APP_LOGD("convert source sandbox path[%{public}s] to read path[%{public}s]", sourcePaths[index].c_str(),
+                realPath.c_str());
+            sourcePaths[index] = realPath;
+        }
+    }
+    if (BundleUtil::IsSandBoxPath(destinationPath)) {
+        if (BundleUtil::RevertToRealPath(destinationPath, bundleName, realPath)) {
+            APP_LOGD("convert destination sandbox path[%{public}s] to read path[%{public}s]", destinationPath.c_str(),
+                realPath.c_str());
+            destinationPath = realPath;
+        } else {
+            APP_LOGE("destination path[%{public}s] revert to real path invalid", destinationPath.c_str());
+            return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+        }
+    }
+    return ERR_OK;
+}
+
+
+ErrCode BundleMgrHostImpl::MigrateDataUserAuthentication()
+{
+#ifdef BMS_USER_AUTH_FRAMEWORK_ENABLED
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGE("userId %{public}d is invalid", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::vector<UserIam::UserAuth::AuthType> authTypes{ UserIam::UserAuth::AuthType::PIN,
+        UserIam::UserAuth::AuthType::FACE, UserIam::UserAuth::AuthType::FINGERPRINT };
+    u_int8_t keyLength{ 32 };
+    u_int8_t keyMinValue{ 0 };
+    u_int8_t keyMaxValue{ 9 };
+
+    UserIam::UserAuth::WidgetAuthParam authParam;
+    authParam.userId = userId;
+    authParam.challenge = BundleUtil::GenerateRandomNumbers(keyLength, keyMinValue, keyMaxValue);
+    authParam.authTypes = authTypes;
+    authParam.authTrustLevel = UserIam::UserAuth::AuthTrustLevel::ATL3;
+
+    UserIam::UserAuth::WidgetParam widgetInfo;
+    widgetInfo.title = AUTH_TITLE;
+    widgetInfo.windowMode = UserIam::UserAuth::WindowModeType::UNKNOWN_WINDOW_MODE;
+
+    std::shared_ptr<MigrateDataUserAuthCallback> userAuthaCallback = std::make_shared<MigrateDataUserAuthCallback>();
+    if (userAuthaCallback == nullptr) {
+        APP_LOGE("make shared err!");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED;
+    }
+    auto contextId =
+        UserIam::UserAuth::UserAuthClientImpl::GetInstance().BeginWidgetAuth(authParam, widgetInfo, userAuthaCallback);
+    if (contextId == BAD_CONTEXT_ID) {
+        APP_LOGE("begin user auth err: %{public}llu", contextId);
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED;
+    }
+    auto result = userAuthaCallback->GetUserAuthResult();
+    if (result != ERR_OK) {
+        APP_LOGE("user auth err:%{public}d", result);
+        if (result == ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_TIME_OUT) {
+            UserIam::UserAuth::UserAuthClientImpl::GetInstance().CancelAuthentication(contextId);
+            return result;
+        }
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED;
+    }
+    return ERR_OK;
+#else
+    APP_LOGE("user auth framework is not enabled");
+    return ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED;
+#endif
 }
 
 sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()

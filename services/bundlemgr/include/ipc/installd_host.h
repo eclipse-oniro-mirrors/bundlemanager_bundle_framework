@@ -225,6 +225,8 @@ private:
 
     bool HandleMoveHapToCodeDir(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleMigrateData(MessageParcel &data, MessageParcel &reply);
+
     bool HandleCreateDataGroupDirs(MessageParcel &data, MessageParcel &reply);
 
     bool HandleDeleteDataGroupDirs(MessageParcel &data, MessageParcel &reply);

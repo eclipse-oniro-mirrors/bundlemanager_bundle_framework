@@ -82,6 +82,7 @@ constexpr const char* EXTENSION_CONFIG_NAME = "ams_extension_config";
 constexpr const char* EXTENSION_TYPE_NAME = "extension_type_name";
 constexpr const char* EXTENSION_SERVICE_NEED_CREATE_SANDBOX = "need_create_sandbox";
 constexpr const char* SHELL_ENTRY_TXT = "g:2000:rwx";
+constexpr uint64_t VECTOR_SIZE_MAX = 200;
 constexpr int32_t INSTALLS_UID = 3060;
 constexpr const char* LOG_PATH = "/log/";
 constexpr const char* FIRST_BOOT_LOG_BACK_UP_PATH = "/log/bms/firstboot/";
@@ -2258,6 +2259,26 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (sourcePaths.size() > VECTOR_SIZE_MAX) {
+        LOG_E(BMS_TAG_INSTALLD, "source paths size out of range");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    auto checkPath = [](const auto &path) { return path.find(ServiceConstants::RELATIVE_PATH) != std::string::npos; };
+    if (sourcePaths.empty() || std::any_of(sourcePaths.begin(), sourcePaths.end(), checkPath)) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    if (destinationPath.empty() || checkPath(destinationPath)) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+    return InstalldOperator::MigrateData(sourcePaths, destinationPath);
 }
 
 ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const std::string &targetPath)

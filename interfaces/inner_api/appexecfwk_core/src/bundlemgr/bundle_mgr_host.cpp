@@ -637,6 +637,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_APP_DISTRIBUTION_TYPES):
             errCode = HandleSetAppDistributionTypes(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::MIGRATE_DATA):
+            errCode = HandleMigrateData(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -3594,6 +3597,25 @@ ErrCode BundleMgrHost::HandleSetAdditionalInfo(MessageParcel &data, MessageParce
     std::string bundleName = data.ReadString();
     std::string additionalInfo = data.ReadString();
     ErrCode ret = SetAdditionalInfo(bundleName, additionalInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleMigrateData(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGI("HandleMigrateData called");
+    std::vector<std::string> sourcePaths;
+    if (!data.ReadStringVector(&sourcePaths)) {
+        APP_LOGE("fail to HandleMigrateData from reply");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    std::string destinationPath = data.ReadString();
+
+    ErrCode ret = MigrateData(sourcePaths, destinationPath);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write reply failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

@@ -200,6 +200,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     CREATE_BUNDLE_DATA_DIR_WITH_EL = 174,
     GET_SIGNATURE_INFO_BY_UID = 175,
     SET_APP_DISTRIBUTION_TYPES = 176,
+    MIGRATE_DATA = 177,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

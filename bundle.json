@@ -88,7 +88,8 @@
                 "zlib",
                 "appspawn",
                 "bounds_checking_function",
-                "webview"
+                "webview",
+                "user_auth_framework"
             ],
             "third_party": [
                 "libuv",

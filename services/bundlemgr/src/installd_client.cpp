@@ -541,6 +541,19 @@ ErrCode InstalldClient::SetEncryptionPolicy(const EncryptionParam &encryptionPar
     return CallService(&IInstalld::SetEncryptionPolicy, encryptionParam, keyId);
 }
 
+ErrCode InstalldClient::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
+{
+    if (sourcePaths.empty()) {
+        APP_LOGE("sourcePaths param is invalid");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    if (destinationPath.empty()) {
+        APP_LOGE("destinationPath param is invalid");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+    return CallService(&IInstalld::MigrateData, sourcePaths, destinationPath);
+}
+
 ErrCode InstalldClient::DeleteEncryptionKeyId(const EncryptionParam &encryptionParam)
 {
     if (encryptionParam.bundleName.empty() && encryptionParam.groupId.empty()) {

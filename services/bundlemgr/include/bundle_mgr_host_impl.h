@@ -968,6 +968,9 @@ public:
 
     virtual ErrCode CreateBundleDataDir(int32_t userId) override;
 
+    virtual ErrCode MigrateData(
+        const std::vector<std::string> &sourcePaths, const std::string &destinationPath) override;
+
     virtual ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl) override;
 
     /**
@@ -1062,6 +1065,9 @@ public:
     virtual ErrCode SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums) override;
 
 private:
+    ErrCode MigrateDataUserAuthentication();
+    ErrCode MigrateDataParameterCheck(std::vector<std::string> &sourcePaths, std::string &destinationPath);
+    ErrCode CheckSandboxPath(std::vector<std::string> &sourcePaths, std::string &destinationPath);
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
     const OHOS::sptr<IDistributedBms> GetDistributedBundleMgrService();

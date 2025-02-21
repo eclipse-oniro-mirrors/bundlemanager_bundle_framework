@@ -207,6 +207,12 @@ struct AsyncPermissionDefineCallbackInfo : public BaseCallbackInfo {
     OHOS::AppExecFwk::PermissionDef permissionDef;
 };
 
+struct MigrateDataCallbackInfo : public BaseCallbackInfo {
+    explicit MigrateDataCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::vector<std::string> sourcePaths;
+    std::string destinationPath;
+};
+
 struct Query {
     std::string bundleName_;
     std::string interfaceType_;
@@ -356,6 +362,7 @@ napi_value GetAppCloneIdentity(napi_env env, napi_callback_info info);
 napi_value GetAllBundleCacheSize(napi_env env, napi_callback_info info);
 napi_value CleanAllBundleCache(napi_env env, napi_callback_info info);
 napi_value GetLaunchWant(napi_env env, napi_callback_info info);
+napi_value MigrateData(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);

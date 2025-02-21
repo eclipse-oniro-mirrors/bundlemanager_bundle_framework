@@ -65,6 +65,8 @@ constexpr const char* ICON_ID = "iconId";
 constexpr const char* LABEL_ID = "labelId";
 constexpr const char* STATE = "state";
 constexpr const char* APP_INDEX = "appIndex";
+constexpr const char* SOURCE_PATHS = "sourcePaths";
+constexpr const char* DESTINATION_PATHS = "destinationPath";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string GET_APP_CLONE_IDENTITY = "getAppCloneIdentity";
@@ -108,6 +110,7 @@ const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
 const std::string SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
 const std::string GET_APP_CLONE_BUNDLE_INFO = "GetAppCloneBundleInfo";
 const std::string GET_ALL_APP_CLONE_BUNDLE_INFO = "GetAllAppCloneBundleInfo";
+const std::string MIGRATE_DATA = "MigrateData";
 const std::string CLONE_BUNDLE_PREFIX = "clone_";
 constexpr int32_t ENUM_ONE = 1;
 constexpr int32_t ENUM_TWO = 2;
@@ -5620,5 +5623,79 @@ void CreateMultiAppModeTypeObject(napi_env env, napi_value value)
         &nAppClone));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, APP_CLONE, nAppClone));
 }
+
+void MigrateDataExec(napi_env env, void *data)
+{
+    MigrateDataCallbackInfo *asyncCallbackInfo = reinterpret_cast<MigrateDataCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        asyncCallbackInfo->err = CommonFunc::ConvertErrCode(ERROR_BUNDLE_SERVICE_EXCEPTION);
+        return;
+    }
+
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(iBundleMgr->MigrateData(
+        asyncCallbackInfo->sourcePaths, asyncCallbackInfo->destinationPath));
 }
+
+void MigrateDataComplete(napi_env env, napi_status status, void *data)
+{
+    MigrateDataCallbackInfo *asyncCallbackInfo = reinterpret_cast<MigrateDataCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+
+    std::unique_ptr<MigrateDataCallbackInfo> callbackPtr{ asyncCallbackInfo };
+    napi_value result[ARGS_SIZE_ONE] = { 0 };
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else {
+        APP_LOGE("MigrateData err! code :%{public}d", asyncCallbackInfo->err);
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
+    }
+    CommonFunc::NapiReturnDeferred<MigrateDataCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
+
+napi_value MigrateData(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to MigrateData");
+    NapiArg args(env, info);
+    MigrateDataCallbackInfo *asyncCallbackInfo = new (std::nothrow) MigrateDataCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("VerifyCallbackInfo asyncCallbackInfo is null");
+        return nullptr;
+    }
+
+    std::unique_ptr<MigrateDataCallbackInfo> callbackPtr{ asyncCallbackInfo };
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("MigrateData napi func init failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    if (!CommonFunc::ParseStringArray(env, asyncCallbackInfo->sourcePaths, args[ARGS_POS_ZERO])) {
+        APP_LOGE("ParseStringArray invalid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, SOURCE_PATHS, TYPE_ARRAY);
+        return nullptr;
+    }
+
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], asyncCallbackInfo->destinationPath)) {
+        APP_LOGE("ParseString invalid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DESTINATION_PATHS, TYPE_STRING);
+        return nullptr;
+    }
+
+    auto promise = CommonFunc::AsyncCallNativeMethod<MigrateDataCallbackInfo>(
+        env, asyncCallbackInfo, MIGRATE_DATA, MigrateDataExec, MigrateDataComplete);
+    callbackPtr.release();
+    APP_LOGD("call MigrateData done");
+    return promise;
+}
+} // namespace AppExecFwk
+} // namespace OHOS

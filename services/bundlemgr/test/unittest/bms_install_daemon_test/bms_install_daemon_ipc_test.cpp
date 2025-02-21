@@ -1286,4 +1286,21 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6900, Function | SmallTest |
     auto ret = proxy->AddUserDirDeleteDfx(userId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
+
+/**
+ * @tc.number: InstalldProxyTest_5000
+ * @tc.name: test Marshalling function of MigrateData
+ * @tc.desc: 1. calling MigrateData of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7000, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+    std::vector<std::string> sourcePaths;
+    sourcePaths.push_back("xxx");
+    std::string destPath = "yyy";
+
+    auto ret = installdProxy->MigrateData(sourcePaths, destPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
 } // OHOS

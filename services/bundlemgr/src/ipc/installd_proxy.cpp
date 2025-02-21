@@ -981,6 +981,25 @@ ErrCode InstalldProxy::MoveHapToCodeDir(const std::string &originPath, const std
     return TransactInstalldCmd(InstalldInterfaceCode::MOVE_HAP_TO_CODE_DIR, data, reply, option);
 }
 
+ErrCode InstalldProxy::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(sourcePaths.size()));
+    for (auto &path : sourcePaths) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(path));
+    }
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(destinationPath));
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::MIGRATE_DATA, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::CreateDataGroupDirs(const std::vector<CreateDirParam> &params)
 {
     MessageParcel data;
