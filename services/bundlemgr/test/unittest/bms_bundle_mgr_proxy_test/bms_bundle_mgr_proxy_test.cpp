@@ -493,7 +493,7 @@ HWTEST_F(BmsBundleMgrProxyTest, GetNameForUid_0100, Function | MediumTest | Leve
     int uid = 100;
     std::string name;
     auto res = bundleMgrProxy.GetNameForUid(uid, name);
-    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**

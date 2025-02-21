@@ -43,6 +43,11 @@ namespace AppExecFwk {
 namespace {
 constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
+const std::unordered_map<int32_t, int32_t> IPC_ERR_MAP = {
+    {29201, ERR_APPEXECFWK_IPC_REPLY_ERROR},
+    {29202, ERR_APPEXECFWK_IPC_REMOTE_FROZEN_ERROR},
+    {29189, ERR_APPEXECFWK_IPC_REMOTE_DEAD_ERROR}
+};
 
 bool GetData(void *&buffer, size_t size, const void *data)
 {
@@ -793,11 +798,12 @@ ErrCode BundleMgrProxy::GetNameForUid(const int uid, std::string &name)
     }
 
     MessageParcel reply;
-    if (!SendTransactCmdWithLog(BundleMgrInterfaceCode::GET_NAME_FOR_UID, data, reply)) {
-        APP_LOGE("fail to GetNameForUid from server");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    ErrCode ret = SendTransactCmdWithLogErrCode(BundleMgrInterfaceCode::GET_NAME_FOR_UID, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE("fail to GetNameForUid from server, %{public}d", ret);
+        return ret;
     }
-    ErrCode ret = reply.ReadInt32();
+    ret = reply.ReadInt32();
     if (ret != ERR_OK) {
         return ret;
     }
@@ -4528,11 +4534,12 @@ ErrCode BundleMgrProxy::GetParcelInfoIntelligent(
     BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo)
 {
     MessageParcel reply;
-    if (!SendTransactCmd(code, data, reply)) {
+    ErrCode ret = SendTransactCmdWithErrCode(code, data, reply);
+    if (ret != ERR_OK) {
         APP_LOGE("SendTransactCmd failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+        return ret;
     }
-    ErrCode ret = reply.ReadInt32();
+    ret = reply.ReadInt32();
     if (ret != ERR_OK) {
         APP_LOGE_NOFUNC("reply ErrCode: %{public}d", ret);
         return ret;
@@ -4661,7 +4668,56 @@ bool BundleMgrProxy::SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel 
     return true;
 }
 
-bool BundleMgrProxy::SendTransactCmdWithLog(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply)
+ErrCode BundleMgrProxy::SendTransactCmdWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data,
+    MessageParcel &reply)
+{
+    MessageOption option(MessageOption::TF_SYNC);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("fail send transact cmd %{public}d due remote object", code);
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
+        if (IPC_ERR_MAP.find(result) != IPC_ERR_MAP.end()) {
+            return IPC_ERR_MAP.at(result);
+        }
+        return result;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::SendTransactCmdWithLogErrCode(BundleMgrInterfaceCode code, MessageParcel &data,
+    MessageParcel &reply)
+{
+    MessageOption option(MessageOption::TF_SYNC);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("fail send transact cmd %{public}d due remote object", code);
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    int32_t sptrRefCount = remote->GetSptrRefCount();
+    int32_t wptrRefCount = remote->GetWptrRefCount();
+    if (sptrRefCount <= 0 || wptrRefCount <= 0) {
+        APP_LOGI("SendRequest before sptrRefCount: %{public}d wptrRefCount: %{public}d",
+            sptrRefCount, wptrRefCount);
+    }
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
+        if (IPC_ERR_MAP.find(result) != IPC_ERR_MAP.end()) {
+            return IPC_ERR_MAP.at(result);
+        }
+        return result;
+    }
+    return ERR_OK;
+}
+
+bool BundleMgrProxy::SendTransactCmdWithLog(BundleMgrInterfaceCode code, MessageParcel &data,
+    MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
 

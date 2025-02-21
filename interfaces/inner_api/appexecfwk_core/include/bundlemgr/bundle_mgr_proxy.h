@@ -1151,7 +1151,8 @@ private:
      * @return Returns true if message send successfully; returns false otherwise.
      */
     bool SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
-
+    ErrCode SendTransactCmdWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+    ErrCode SendTransactCmdWithLogErrCode(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Send a command message from the proxy object and  printf log.
      * @param code Indicates the message code to be sent.
