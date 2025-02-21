@@ -2122,6 +2122,21 @@ public:
         baseApplicationInfo_->installSource = installSource;
     }
 
+    bool IsInstalledForAllUser() const
+    {
+        return baseApplicationInfo_->installedForAllUser;
+    }
+
+    void SetInstalledForAllUser(bool installedForAllUser) const
+    {
+        // only update from false to true
+        if (baseApplicationInfo_->installedForAllUser && !installedForAllUser) {
+            APP_LOGI("origin value is true, return");
+            return;
+        }
+        baseApplicationInfo_->installedForAllUser = installedForAllUser;
+    }
+
     void SetApplicationFlags(ApplicationInfoFlag flag);
 
     void UpdateExtensionSandboxInfo(const std::vector<std::string> &typeList);

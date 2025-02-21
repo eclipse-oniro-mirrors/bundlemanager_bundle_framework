@@ -64,7 +64,7 @@ private:
         bool needToSkipPreBundleInstall,
         std::set<PreInstallBundleInfo> &preInstallBundleInfos);
     void UninstallBackupUninstallList(int32_t userId, bool needToSkipPreBundleInstall);
-    void GetAllDriverBundleInfos(std::set<PreInstallBundleInfo> &preInstallBundleInfos);
+    void GetAdditionalBundleInfos(std::set<PreInstallBundleInfo> &preInstallBundleInfos);
 
     bool InnerProcessSkipPreInstallBundles(
         const std::set<std::string> &uninstallList, bool needToSkipPreBundleInstall);

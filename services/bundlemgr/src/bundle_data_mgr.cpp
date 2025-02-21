@@ -401,6 +401,7 @@ bool BundleDataMgr::AddNewModuleInfo(const InnerBundleInfo &newInfo, InnerBundle
     oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
     oldInfo.UpdateOdidByBundleInfo(newInfo);
     oldInfo.SetDFXParamStatus();
+    oldInfo.SetInstalledForAllUser(newInfo.IsInstalledForAllUser());
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
         oldInfo.SetOverlayType(newInfo.GetOverlayType());
@@ -729,6 +730,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleI
     oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
     oldInfo.SetAppProvisionMetadata(newInfo.GetAppProvisionMetadata());
     oldInfo.UpdateOdidByBundleInfo(newInfo);
+    oldInfo.SetInstalledForAllUser(newInfo.IsInstalledForAllUser());
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     if (newInfo.GetIsNewVersion() && newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
         if (!UpdateOverlayInfo(newInfo, oldInfo)) {
@@ -7346,9 +7348,9 @@ std::vector<std::tuple<std::string, int32_t, int32_t>> BundleDataMgr::GetAllLite
     return bundles;
 }
 
-std::vector<std::string> BundleDataMgr::GetAllDriverBundleName() const
+std::vector<std::string> BundleDataMgr::GetBundleNamesForNewUser() const
 {
-    APP_LOGD("GetAllDriverBundleName begin");
+    APP_LOGD("begin");
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     std::vector<std::string> bundleNames;
     for (const auto &item : bundleInfos_) {
@@ -7358,16 +7360,22 @@ std::vector<std::string> BundleDataMgr::GetAllDriverBundleName() const
                 item.second.GetBundleName().c_str());
             continue;
         }
-        // this function is used to install driver bundle in new user, so ignore pre-install app
+        // this function is used to install additional bundle in new user, so ignore pre-install app
         if (item.second.IsPreInstallApp()) {
             APP_LOGD("app %{public}s is pre-install app, ignore", item.second.GetBundleName().c_str());
             continue;
         }
+        if (item.second.IsInstalledForAllUser() &&
+            OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false)) {
+            APP_LOGI("%{public}s is installed for all user", item.second.GetBundleName().c_str());
+            bundleNames.emplace_back(item.second.GetBundleName());
+            continue;
+        }
         const auto extensions = item.second.GetInnerExtensionInfos();
-        for (const auto &item : extensions) {
-            if (item.second.type == ExtensionAbilityType::DRIVER) {
-                bundleNames.emplace_back(item.second.bundleName);
-                APP_LOGI("driver bundle found: %{public}s", item.second.bundleName.c_str());
+        for (const auto &extensionItem : extensions) {
+            if (extensionItem.second.type == ExtensionAbilityType::DRIVER) {
+                bundleNames.emplace_back(extensionItem.second.bundleName);
+                APP_LOGI("driver bundle found: %{public}s", extensionItem.second.bundleName.c_str());
                 break;
             }
         }

@@ -264,14 +264,14 @@ public:
         bundleType_ = bundleType;
     }
 
-    bool GetIsNonPreDriverApp() const
+    bool GetIsAdditionalApp() const
     {
-        return isNonPreDriverApp_;
+        return isAdditionalApp_;
     }
 
-    void SetIsNonPreDriverApp(bool isNonPreDriverApp)
+    void SetIsAdditionalApp(bool isAdditionalApp)
     {
-        isNonPreDriverApp_ = isNonPreDriverApp;
+        isAdditionalApp_ = isAdditionalApp;
     }
 
 private:
@@ -279,7 +279,7 @@ private:
     bool isUninstalled_ = false;
     bool systemApp_ = false;
     // non pre-installed driver app also need to be pre-installed for new user
-    bool isNonPreDriverApp_ = false;
+    bool isAdditionalApp_ = false;
     uint32_t versionCode_;
     uint32_t labelId_ = 0;
     uint32_t iconId_ = 0;

@@ -212,6 +212,7 @@ struct ApplicationInfo : public Parcelable {
     bool asanEnabled = false;
     bool debug = false;
     bool distributedNotificationEnabled = true;
+    bool installedForAllUser = false;
 
     bool allowEnableNotification = false;
     bool allowMultiProcess = false;

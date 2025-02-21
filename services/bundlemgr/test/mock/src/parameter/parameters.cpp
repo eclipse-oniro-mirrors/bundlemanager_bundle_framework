@@ -33,7 +33,11 @@ bool GetBoolParameter(const std::string& key, bool def)
 #ifndef GET_BOOL_PARAMETER_TRUE
     return false;
 #else
-    return true;
+    auto item = paramMap.find(key);
+    if (item == paramMap.end()) {
+        return true;
+    }
+    return "true" == item->second;
 #endif
 }
 

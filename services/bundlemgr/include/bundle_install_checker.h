@@ -37,6 +37,7 @@ struct InstallCheckParam {
     bool needSendEvent = true;
     // is shell token
     bool isCallByShell = false;
+    bool isInstalledForAllUser = false;
     // status of install bundle permission
     PermissionStatus installBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of install enterprise bundle permission
@@ -133,6 +134,9 @@ public:
     {
         return isContainEntry_;
     }
+
+    ErrCode CheckEnterpriseForAllUser(std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const InstallCheckParam &checkParam, const std::string &distributionType);
 
     ErrCode CheckHspInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 

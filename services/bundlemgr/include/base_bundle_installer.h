@@ -193,6 +193,8 @@ protected:
 
     bool HasDriverExtensionAbility(const std::string &bundleName);
 
+    bool IsEnterpriseForAllUser(const InstallParam &installParam, const std::string &bundleName);
+
 private:
     /**
      * @brief The real procedure for system and normal bundle install.

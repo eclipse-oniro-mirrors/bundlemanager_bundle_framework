@@ -446,6 +446,10 @@ ErrCode BundleInstallChecker::ParseHapFiles(
                 info.second.SetMultiAppMode(multiAppMode);
             }
         }
+        result = CheckEnterpriseForAllUser(infos, checkParam, first.GetAppDistributionType());
+        if (result != ERR_OK) {
+            return result;
+        }
     }
 
     if ((result = CheckModuleNameForMulitHaps(infos)) != ERR_OK) {
@@ -454,6 +458,28 @@ ErrCode BundleInstallChecker::ParseHapFiles(
     }
     LOG_D(BMS_TAG_INSTALLER, "finish parse hap file");
     return result;
+}
+
+ErrCode BundleInstallChecker::CheckEnterpriseForAllUser(std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const InstallCheckParam &checkParam, const std::string &distributionType)
+{
+    if (!checkParam.isInstalledForAllUser) {
+        return ERR_OK;
+    }
+    if (Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL != distributionType &&
+        Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM != distributionType) {
+        LOG_W(BMS_TAG_INSTALLER, "param is true, but not enterprise bundle");
+        return ERR_OK;
+    }
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false)) {
+        LOG_E(BMS_TAG_INSTALLER, "not enterprise device");
+        return ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED;
+    }
+    for (auto &info : infos) {
+        info.second.SetInstalledForAllUser(checkParam.isInstalledForAllUser);
+    }
+    LOG_I(BMS_TAG_INSTALLER, "install enterprise bundle for all user");
+    return ERR_OK;
 }
 
 ErrCode BundleInstallChecker::CheckHspInstallCondition(
