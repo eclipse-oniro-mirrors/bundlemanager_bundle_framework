@@ -342,6 +342,9 @@ void BMSEventHandler::BundleRebootStartEvent()
     // need process main bundle status
     BmsKeyEventMgr::ProcessMainBundleStatusFinally();
 
+    // need check /data/service/el1/public/bms/bundle_manager_service/app_temp
+    ProcessAppTmpPath();
+
     needNotifyBundleScanStatus_ = true;
 }
 
@@ -3428,6 +3431,31 @@ bool BMSEventHandler::InnerProcessUninstallForExistPreBundle(const BundleInfo &i
         }
     }
     return isUpdated;
+}
+
+void BMSEventHandler::ProcessAppTmpPath()
+{
+    if (!BundleUtil::IsExistDirNoLog(ServiceConstants::BMS_APP_TEMP_PATH)) {
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "process app_temp start");
+    InstallParam installParam;
+    installParam.SetKillProcess(false);
+    installParam.needSendEvent = false;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.copyHapToInstallPath = true;
+    installParam.isOTA = false;
+    installParam.withCopyHaps = true;
+    SystemBundleInstaller installer;
+    std::vector<std::string> filePaths { ServiceConstants::BMS_APP_TEMP_PATH };
+    if (installer.OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP) != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "app_temp path install failed");
+        return;
+    }
+    if (!BundleUtil::DeleteDir(ServiceConstants::BMS_APP_TEMP_PATH)) {
+        LOG_E(BMS_TAG_INSTALLER, "delete app_temp failed %{public}d", errno);
+    }
+    LOG_I(BMS_TAG_DEFAULT, "process app_temp end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

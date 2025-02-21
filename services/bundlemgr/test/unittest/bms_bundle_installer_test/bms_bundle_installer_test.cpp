@@ -6597,4 +6597,54 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallSource_0400, Function | SmallTest | L
     std::string installSource = installer.GetInstallSource(installParam);
     EXPECT_EQ(installSource, "unknown");
 }
+
+/**
+ * @tc.number: AddAppGalleryHapToTempPath_0010
+ * @tc.name: test AddAppGalleryHapToTempPath
+ * @tc.desc: AddAppGalleryHapToTempPath
+ */
+HWTEST_F(BmsBundleInstallerTest, AddAppGalleryHapToTempPath_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    installer.dataMgr_ = nullptr;
+    bool ret = installer.AddAppGalleryHapToTempPath(false, infos);
+    EXPECT_FALSE(ret);
+
+    installer.dataMgr_ = GetBundleDataMgr();
+    ret = installer.AddAppGalleryHapToTempPath(true, infos);
+    EXPECT_FALSE(ret);
+
+    ret = installer.AddAppGalleryHapToTempPath(false, infos);
+    EXPECT_FALSE(ret);
+
+    InnerBundleInfo innerBundleInfo;
+    infos["/data/xxx.hap"] = innerBundleInfo;
+
+    ret = installer.AddAppGalleryHapToTempPath(false, infos);
+    EXPECT_FALSE(ret);
+
+    innerBundleInfo.baseApplicationInfo_->isSystemApp = true;
+    infos["/data/xxx.hap"] = innerBundleInfo;
+
+    ret = installer.AddAppGalleryHapToTempPath(false, infos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DeleteAppGalleryHapFromTempPath_0010
+ * @tc.name: test DeleteAppGalleryHapFromTempPath
+ * @tc.desc: DeleteAppGalleryHapFromTempPath
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteAppGalleryHapFromTempPath_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.needDeleteAppTempPath_ = false;
+    bool ret = installer.DeleteAppGalleryHapFromTempPath();
+    EXPECT_TRUE(ret);
+
+    installer.needDeleteAppTempPath_ = true;
+    ret = installer.DeleteAppGalleryHapFromTempPath();
+    EXPECT_TRUE(ret);
+}
 } // OHOS
