@@ -615,7 +615,7 @@ private:
     ErrCode CreateArkProfile(
         const std::string &bundleName, int32_t userId, int32_t uid, int32_t gid) const;
     ErrCode DeleteArkProfile(const std::string &bundleName, int32_t userId) const;
-    bool RemoveDataPreloadHapFiles(const std::string &bundleName) const;
+    bool RemoveDataPreloadHapFiles(const std::string &bundleName, bool forceRemove = false) const;
     bool IsDataPreloadHap(const std::string &path) const;
     ErrCode ExtractArkProfileFile(const std::string &modulePath, const std::string &bundleName,
         int32_t userId) const;
@@ -810,6 +810,8 @@ private:
     void UpdateKillApplicationProcess(const InnerBundleInfo &innerBundleInfo);
     ErrCode CheckPreAppAllowHdcInstall(const InstallParam &installParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
+    bool IsAllowEnterPrise();
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

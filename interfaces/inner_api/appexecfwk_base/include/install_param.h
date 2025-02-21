@@ -170,6 +170,12 @@ public:
             parameters.at(ENTERPRISE_FOR_ALL_USER_KEY) == PARAMETERS_VALUE_TRUE;
     }
 
+    bool isForcedUninstall() const
+    {
+        return parameters.find(Constants::VERIFY_UNINSTALL_FORCED_KEY) != parameters.end() &&
+               parameters.at(Constants::VERIFY_UNINSTALL_FORCED_KEY) == Constants::VERIFY_UNINSTALL_FORCED_VALUE;
+    }
+
 private:
     bool CheckPermission() const;
 };

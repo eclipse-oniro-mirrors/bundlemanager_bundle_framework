@@ -1587,20 +1587,26 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     uid = curInnerBundleUserInfo.uid;
     if (!installParam.GetForceExecuted() &&
         !oldInfo.IsRemovable() && installParam.GetKillProcess() && !installParam.GetIsUninstallAndRecover()) {
-        LOG_E(BMS_TAG_INSTALLER, "uninstall system app");
-        return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
+        if (!installParam.isForcedUninstall() || !IsAllowEnterPrise()) {
+            LOG_E(BMS_TAG_INSTALLER, "uninstall system app");
+            return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
+        }
     }
 
     if (!installParam.GetForceExecuted() &&
         !oldInfo.GetUninstallState() && installParam.GetKillProcess() && !installParam.GetIsUninstallAndRecover()) {
-        LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
-            bundleName.c_str(), oldInfo.GetUninstallState());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+        if (!installParam.isForcedUninstall() || !IsAllowEnterPrise()) {
+            LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
+                bundleName.c_str(), oldInfo.GetUninstallState());
+            return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+        }
     }
 
     if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
-        LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s is not allow uninstall", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+        if (!installParam.isForcedUninstall() || !IsAllowEnterPrise()) {
+            LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s is not allow uninstall", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+        }
     }
 
     if (!CheckWhetherCanBeUninstalled(bundleName)) {
@@ -1717,7 +1723,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed", bundleName.c_str());
     }
     LOG_D(BMS_TAG_INSTALLER, "finish to process %{public}s bundle uninstall", bundleName.c_str());
-    RemoveDataPreloadHapFiles(bundleName);
+    RemoveDataPreloadHapFiles(bundleName, installParam.isForcedUninstall() && IsAllowEnterPrise());
 
     // remove drive so file
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
@@ -3342,7 +3348,7 @@ ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int
     return InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
 }
 
-bool BaseBundleInstaller::RemoveDataPreloadHapFiles(const std::string &bundleName) const
+bool BaseBundleInstaller::RemoveDataPreloadHapFiles(const std::string &bundleName, bool forceRemove) const
 {
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "null dataMgr_");
@@ -3361,18 +3367,20 @@ bool BaseBundleInstaller::RemoveDataPreloadHapFiles(const std::string &bundleNam
     }
 
     auto preinstalledAppPath = preInstallBundleInfo.GetBundlePaths().front();
-    LOG_D(BMS_TAG_INSTALLER, "removeDataPreloadHapFiles %{public}s", preinstalledAppPath.c_str());
-    if (IsDataPreloadHap(preinstalledAppPath)) {
+    LOG_D(BMS_TAG_INSTALLER, "preinstalledAppPath %{public}s", preinstalledAppPath.c_str());
+    bool isPreLoad = IsDataPreloadHap(preinstalledAppPath);
+    if (isPreLoad) {
         std::filesystem::path apFilePath(preinstalledAppPath);
         std::string delDir = apFilePath.parent_path().string();
         if (InstalldClient::GetInstance()->RemoveDir(delDir) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "removeDir failed :%{public}s", delDir.c_str());
         }
+    }
+    if (isPreLoad || forceRemove) {
         if (!dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
             LOG_E(BMS_TAG_INSTALLER, "deletePreInfoInDb bundle %{public}s failed", bundleName.c_str());
         }
     }
-
     return true;
 }
 
@@ -7029,6 +7037,16 @@ ErrCode BaseBundleInstaller::CheckPreAppAllowHdcInstall(const InstallParam &inst
         return ERR_OK;
     }
     return ERR_APPEXECFWK_INSTALL_OS_INTEGRATION_BUNDLE_NOT_ALLOWED_FOR_SHELL;
+}
+
+bool BaseBundleInstaller::IsAllowEnterPrise()
+{
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, false) &&
+        !OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false)) {
+        LOG_E(BMS_TAG_INSTALLER, "not enterprise device or developer mode is off");
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
