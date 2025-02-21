@@ -9468,6 +9468,118 @@ HWTEST_F(ActsBmsKitSystemTest, InstallCloneAppTest002_UserNotFound, Function | M
 }
 
 /**
+ * @tc.number: MigrateData_0001
+ * @tc.name: test MigrateData
+ * @tc.desc: 1.MigrateData failed, param empty
+ */
+HWTEST_F(ActsBmsKitSystemTest, MigrateData_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START MigrateData_0001" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        std::vector<std::string> sourcePaths;
+        std::string destPath;
+        ErrCode ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+        sourcePaths.push_back("/data/update");
+        ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
+    }
+    std::cout << "END MigrateData_0001" << std::endl;
+}
+
+/**
+ * @tc.number: MigrateData_0002
+ * @tc.name: test MigrateData
+ * @tc.desc: 1.MigrateData failed, path not exist
+ */
+HWTEST_F(ActsBmsKitSystemTest, MigrateData_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START MigrateData_0002" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        std::vector<std::string> sourcePaths;
+        sourcePaths.push_back(THIRD_BUNDLE_PATH);
+        std::string destPath = "../temp";
+        ErrCode ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
+    }
+    std::cout << "END MigrateData_0002" << std::endl;
+}
+
+/**
+ * @tc.number: MigrateData_0003
+ * @tc.name: test MigrateData
+ * @tc.desc: 1.MigrateData failed, path can not access
+ */
+HWTEST_F(ActsBmsKitSystemTest, MigrateData_0003, Function | MediumTest | Level1)
+{
+    std::cout << "START MigrateData_0003" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        std::vector<std::string> sourcePaths;
+        sourcePaths.push_back(THIRD_BUNDLE_PATH);
+        std::string destPath = "/data/update";
+        // There are several scenarios here that we cannot predict, as follows:
+        // 1. The current device does not support user authentication or the user has not set a password (8521782)
+        // 2. The tester did not enter a password (8521783)
+        // 3. The tester entered the password incorrectly (8521782)
+        std::array<int, 3> probability = { ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED,
+            ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_TIME_OUT,
+            ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED };
+
+        auto ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
+        bool isExist = std::find(probability.begin(), probability.end(), ret) != probability.end();
+        EXPECT_TRUE(isExist);
+    }
+    std::cout << "END MigrateData_0003" << std::endl;
+}
+
+/**
+ * @tc.number: MigrateData_0004
+ * @tc.name: test MigrateData
+ * @tc.desc: 1.MigrateData succeed
+ */
+HWTEST_F(ActsBmsKitSystemTest, MigrateData_0004, Function | MediumTest | Level1)
+{
+    std::cout << "START MigrateData_0004" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        std::vector<std::string> sourcePaths;
+        sourcePaths.push_back(BUNDLE_DATA_ROOT_PATH + appName + "/files");
+        std::string destPath = BUNDLE_DATA_ROOT_PATH + appName + "/haps";
+
+        // There are several scenarios here that we cannot predict, as follows:
+        // 1. The current device does not support user authentication or the user has not set a password (8521782)
+        // 2. The tester did not enter a password (8521783)
+        // 3. The tester entered the password incorrectly (8521782)
+        std::array<int, 3> probability = { ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED,
+            ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_TIME_OUT, ERR_OK };
+        auto ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
+        bool isExist = std::find(probability.begin(), probability.end(), ret) != probability.end();
+        EXPECT_TRUE(isExist);
+    }
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END MigrateData_0004" << std::endl;
+}
+
+/**
  * @tc.number: GetCloneAppIndexes_0001
  * @tc.name: test query clone app's indexes
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -10045,101 +10157,6 @@ HWTEST_F(ActsBmsKitSystemTest, CleanAllBundleCache_0001, Function | MediumTest |
         }
     }
     std::cout << "END CleanAllBundleCache_0001" << std::endl;
-}
-
-/**
- * @tc.number: MigrateData_0001
- * @tc.name: test MigrateData
- * @tc.desc: 1.MigrateData failed, param empty
- */
-HWTEST_F(ActsBmsKitSystemTest, MigrateData_0001, Function | MediumTest | Level1)
-{
-    std::cout << "START MigrateData_0001" << std::endl;
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    if (bundleMgrProxy != nullptr) {
-        std::vector<std::string> sourcePaths;
-        std::string destPath;
-        ErrCode ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
-        sourcePaths.push_back("aaa");
-        ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
-    }
-    std::cout << "END MigrateData_0001" << std::endl;
-}
-
-/**
- * @tc.number: MigrateData_0002
- * @tc.name: test MigrateData
- * @tc.desc: 1.MigrateData failed, path not exist
- */
-HWTEST_F(ActsBmsKitSystemTest, MigrateData_0002, Function | MediumTest | Level1)
-{
-    std::cout << "START MigrateData_0002" << std::endl;
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    if (bundleMgrProxy != nullptr) {
-        std::vector<std::string> sourcePaths;
-        sourcePaths.push_back(THIRD_BUNDLE_PATH);
-        std::string destPath = "../bbb";
-        ErrCode ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
-    }
-    std::cout << "END MigrateData_0002" << std::endl;
-}
-
-/**
- * @tc.number: MigrateData_0003
- * @tc.name: test MigrateData
- * @tc.desc: 1.MigrateData failed, path can not access
- */
-HWTEST_F(ActsBmsKitSystemTest, MigrateData_0003, Function | MediumTest | Level1)
-{
-    std::cout << "START MigrateData_0003" << std::endl;
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    if (bundleMgrProxy != nullptr) {
-        std::vector<std::string> sourcePaths;
-        sourcePaths.push_back(THIRD_BUNDLE_PATH);
-        std::string destPath = "/data/update";
-        ErrCode ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED);
-    }
-    std::cout << "END MigrateData_0003" << std::endl;
-}
-
-/**
- * @tc.number: MigrateData_0004
- * @tc.name: test MigrateData
- * @tc.desc: 1.MigrateData succeed
- */
-HWTEST_F(ActsBmsKitSystemTest, MigrateData_0004, Function | MediumTest | Level1)
-{
-    std::cout << "START MigrateData_0002" << std::endl;
-    std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
-    CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
-
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    if (bundleMgrProxy != nullptr) {
-        std::vector<std::string> sourcePaths;
-        sourcePaths.push_back(BUNDLE_DATA_ROOT_PATH + appName + "/files");
-        std::string destPath = BUNDLE_DATA_ROOT_PATH + appName + "/haps";
-        ErrCode ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
-        EXPECT_EQ(ret, ERR_OK);
-    }
-
-    resvec.clear();
-    Uninstall(appName, resvec);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    std::cout << "END MigrateData_0002" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

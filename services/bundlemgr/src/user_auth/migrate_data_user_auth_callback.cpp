@@ -45,9 +45,8 @@ int32_t MigrateDataUserAuthCallback::GetUserAuthResult()
         return result_;
     }
     // timeout waiting for five minutes
-    auto future = resultPromise_.get_future();
-    if (future.wait_for(std::chrono::minutes(WAIT_TIME)) == std::future_status::ready) {
-        return future.get();
+    if (future_.wait_for(std::chrono::minutes(WAIT_TIME)) == std::future_status::ready) {
+        return future_.get();
     }
     return result_;
 }

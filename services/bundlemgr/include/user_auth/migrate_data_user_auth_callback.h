@@ -36,6 +36,7 @@ public:
 private:
     std::atomic<bool> isComplete_{ false };
     std::promise<int32_t> resultPromise_;
+    std::shared_future<int32_t> future_ = resultPromise_.get_future().share();
     int32_t result_{ 0 };
 };
 } // namespace AppExecFwk
