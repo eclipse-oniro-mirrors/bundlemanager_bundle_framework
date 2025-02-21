@@ -236,3 +236,5 @@ bundle_resource = [
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_register.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/resource_info.cpp",
 ]
+
+user_auth = [ "${services_path}/bundlemgr/src/user_auth/migrate_data_user_auth_callback.cpp" ]

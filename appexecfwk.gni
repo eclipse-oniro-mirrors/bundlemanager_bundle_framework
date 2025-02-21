@@ -74,6 +74,7 @@ declare_args() {
   device_usage_statistics_enabled = true
   dfx_sigdump_handler_enabled = true
   webview_enable = true
+  user_auth_framework_impl_enabled = true
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.resourceschedule_device_usage_statistics)) {
@@ -195,6 +196,11 @@ declare_args() {
   if (defined(global_parts_info) && !defined(global_parts_info.web_webview)) {
     webview_enable = false
   }
+
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.useriam_user_auth_framework)) {
+    user_auth_framework_impl_enabled = false
+  }
 }
 
 print("bundle_framework_power_mgr_enable = " +
@@ -219,3 +225,5 @@ print(
 print(
     "bundle_framework_bundle_resource = " + "$bundle_framework_bundle_resource")
 print("verify_abc_enabled = " + "$verify_abc_enabled")
+print(
+    "user_auth_framework_impl_enabled = " + "$user_auth_framework_impl_enabled")

@@ -186,6 +186,13 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     external_deps += [ "udmf:utd_client" ]
   }
 
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    include_dirs += [ "${services_path}/bundlemgr/include/user_auth" ]
+    sources += user_auth
+  }
+
   if (bms_device_info_manager_part_enabled) {
     external_deps += [
       "device_info_manager:distributed_device_profile_common",
@@ -361,6 +368,13 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    include_dirs += [ "${services_path}/bundlemgr/include/user_auth" ]
+    sources += user_auth
   }
 
   if (bms_device_info_manager_part_enabled) {
@@ -546,6 +560,13 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     external_deps += [ "udmf:utd_client" ]
   }
 
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    include_dirs += [ "${services_path}/bundlemgr/include/user_auth" ]
+    sources += user_auth
+  }
+
   if (bms_device_info_manager_part_enabled) {
     external_deps += [
       "device_info_manager:distributed_device_profile_common",
@@ -727,7 +748,12 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:utd_client" ]
   }
-
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    include_dirs += [ "${services_path}/bundlemgr/include/user_auth" ]
+    sources += user_auth
+  }
   if (bms_device_info_manager_part_enabled) {
     external_deps += [
       "device_info_manager:distributed_device_profile_common",
@@ -910,7 +936,12 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:utd_client" ]
   }
-
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    include_dirs += [ "${services_path}/bundlemgr/include/user_auth" ]
+    sources += user_auth
+  }
   if (bms_device_info_manager_part_enabled) {
     external_deps += [
       "device_info_manager:distributed_device_profile_common",
@@ -1088,7 +1119,12 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:utd_client" ]
   }
-
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    include_dirs += [ "${services_path}/bundlemgr/include/user_auth" ]
+    sources += user_auth
+  }
   if (bms_device_info_manager_part_enabled) {
     external_deps += [
       "device_info_manager:distributed_device_profile_common",
@@ -1261,7 +1297,12 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:utd_client" ]
   }
-
+  if (user_auth_framework_impl_enabled) {
+    external_deps += [ "user_auth_framework:userauth_client" ]
+    defines += [ "BMS_USER_AUTH_FRAMEWORK_ENABLED" ]
+    include_dirs += [ "${services_path}/bundlemgr/include/user_auth" ]
+    sources += user_auth
+  }
   if (bms_device_info_manager_part_enabled) {
     external_deps += [
       "device_info_manager:distributed_device_profile_common",

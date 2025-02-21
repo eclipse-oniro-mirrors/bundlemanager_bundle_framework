@@ -297,6 +297,7 @@ public:
 
     static int32_t CallIoctl(int32_t flag, int32_t associatedFlag, int32_t uid, int32_t &fd);
 #endif
+    static int32_t MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath);
 
     static bool GenerateKeyIdAndSetPolicy(const EncryptionParam &encryptionParam, std::string &keyId);
 
@@ -342,6 +343,12 @@ private:
 #endif
     static void FsyncFile(const std::string &path);
     static std::string GetSameLevelTmpPath(const std::string &path);
+
+    static int32_t InnerMigrateData(const std::string &sourcePaths, const std::string &destinationPath);
+    static int32_t MigrateDataCopyFile(const std::string &sourceFile, const std::string &destinationFile);
+    static int32_t MigrateDataCopyDir(const std::string &sourcePaths, const std::string &destinationPath);
+    static int32_t MigrateDataCheckPrmissions(
+        std::vector<std::string> &realSourcePaths, const std::string &destinationPath);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

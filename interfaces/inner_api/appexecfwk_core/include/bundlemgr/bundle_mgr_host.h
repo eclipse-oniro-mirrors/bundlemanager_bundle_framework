@@ -786,6 +786,7 @@ private:
 
     ErrCode HandleCreateBundleDataDirWithEl(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleMigrateData(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetAllPreinstalledApplicationInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.

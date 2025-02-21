@@ -761,6 +761,20 @@ HWTEST_F(BmsInstalldHostTest, HandleGetExtensionSandboxTypeList_0100, Function |
 }
 
 /**
+ * @tc.number: HandleMigrateData_0100
+ * @tc.name: test HandleMigrateData
+ * @tc.desc: 1.HandleMigrateData test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleMigrateData_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleMigrateData(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleAddUserDirDeleteDfx
  * @tc.name: test HandleAddUserDirDeleteDfx
  * @tc.desc: 1.HandleAddUserDirDeleteDfx test

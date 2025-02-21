@@ -311,6 +311,17 @@ ErrCode InstalldClient::CreateExtensionDataDir(const CreateDirParam &createDirPa
     return ERR_OK;
 }
 
+ErrCode InstalldClient::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
+{
+    if (sourcePaths.empty()) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    if (destinationPath.empty()) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
 {
     return ERR_OK;

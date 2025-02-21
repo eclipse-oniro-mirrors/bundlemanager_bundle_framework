@@ -69,6 +69,8 @@ static const char CODE_CRYPTO_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15
     "EnforceMetadataProcessForAppERKNSt3__h13unordered_mapINS3_12basic_stringIcNS3_11char_traitsIcEENS"
     "3_9allocatorIcEEEESA_NS3_4hashISA_EENS3_8equal_toISA_EENS8_INS3_4pairIKSA_SA_EEEEEERKNS2_17CodeCryptoHapInfoERb";
 #endif
+static constexpr int32_t PERMISSION_DENIED = 13;
+static constexpr int32_t RESULT_OK = 0;
 static constexpr int16_t INSTALLS_UID = 3060;
 static constexpr int16_t MODE_BASE = 07777;
 static constexpr int8_t KEY_ID_STEP = 2;
@@ -2352,6 +2354,171 @@ void InstalldOperator::RmvDeleteDfx(const std::string &path)
     return;
 }
 
+int32_t InstalldOperator::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
+{
+    LOG_D(BMS_TAG_INSTALLD, "migrate data start");
+    std::vector<std::string> realSourcePaths;
+    std::for_each(sourcePaths.begin(), sourcePaths.end(), [&realSourcePaths](const std::string &path) {
+        std::string realPath;
+        if (!PathToRealPath(path, realPath)) {
+            LOG_E(BMS_TAG_INSTALLD, "file(%{private}s) is not real path", path.c_str());
+            return;
+        }
+        realSourcePaths.push_back(realPath);
+    });
+    // all sourcePaths are invalid, need return error
+    if (realSourcePaths.empty()) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    std::string destPath;
+    if (!PathToRealPath(destinationPath, destPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "file(%{private}s) is not real path", destinationPath.c_str());
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+    auto result = MigrateDataCheckPrmissions(realSourcePaths, destPath);
+    if (result != RESULT_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "migrate data check permissions failed, result:%{public}d", result);
+        return result;
+    }
+    auto ret = RESULT_OK;
+    for (const auto &sourcePath : realSourcePaths) {
+        ret = InnerMigrateData(sourcePath, destPath);
+        if (ret != RESULT_OK) {
+            LOG_W(BMS_TAG_INSTALLD, "inner migrate data failed, errno:%{public}d", errno);
+            result = ret;
+        }
+    }
+    return result;
+}
+
+int32_t InstalldOperator::InnerMigrateData(const std::string &sourcePaths, const std::string &destinationPath)
+{
+    struct stat buf = {};
+    if (stat(sourcePaths.c_str(), &buf) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to stat errno:%{public}d", errno);
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED;
+    }
+    if (access(sourcePaths.c_str(), R_OK) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "source path[%{public}s] access failed", sourcePaths.c_str());
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED;
+    }
+    auto result = RESULT_OK;
+    if (!S_ISDIR(buf.st_mode)) {
+        std::string fileName = sourcePaths;
+        auto pos = sourcePaths.rfind(ServiceConstants::PATH_SEPARATOR);
+        if (pos != std::string::npos) {
+            fileName = sourcePaths.substr(pos + 1);
+        }
+        std::string destPath = OHOS::IncludeTrailingPathDelimiter(destinationPath) + fileName;
+        result = MigrateDataCopyFile(sourcePaths, destPath);
+        if (result != RESULT_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "migrate data source:%{private}s to destination %{public}s failed",
+                sourcePaths.c_str(), destPath.c_str());
+        }
+        return result;
+    }
+
+    result = MigrateDataCopyDir(sourcePaths, destinationPath);
+    if (result != RESULT_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "migrate data copy dir failed, source:%{private}s to destination %{public}s",
+            sourcePaths.c_str(), destinationPath.c_str());
+    }
+    return result;
+}
+
+int32_t InstalldOperator::MigrateDataCopyFile(const std::string &sourceFile, const std::string &destinationFile)
+{
+    std::ifstream in(sourceFile);
+    if (!in.is_open()) {
+        LOG_E(BMS_TAG_INSTALLD, "Copy file failed due to open sourceFile failed errno:%{public}d", errno);
+        return errno == PERMISSION_DENIED ? ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED
+                                          : ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
+    }
+    std::ofstream out(destinationFile);
+    if (!out.is_open()) {
+        LOG_E(BMS_TAG_INSTALLD, "Copy file failed due to open destinationFile[%{public}s] failed errno:%{public}d",
+            destinationFile.c_str(), errno);
+        in.close();
+        return errno == PERMISSION_DENIED ? ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED
+                                          : ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
+    }
+    out << in.rdbuf();
+    in.close();
+    out.close();
+    return ERR_OK;
+}
+
+int32_t InstalldOperator::MigrateDataCopyDir(const std::string &sourcePath, const std::string &destinationPath)
+{
+    // create dir if not exist
+    if (!IsExistDir(destinationPath) && !MkRecursiveDir(destinationPath, true)) {
+        LOG_E(BMS_TAG_INSTALLD, "create targetPath %{public}s failed", destinationPath.c_str());
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
+    }
+    DIR *dir = opendir(sourcePath.c_str());
+    if (dir == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to opendir:%{private}s, errno:%{public}d", sourcePath.c_str(), errno);
+        return errno == PERMISSION_DENIED ? ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED
+                                          : ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
+    }
+
+    auto result = RESULT_OK;
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+            continue;
+        }
+        std::string subPath = OHOS::IncludeTrailingPathDelimiter(sourcePath) + std::string(ptr->d_name);
+        std::string destPath = OHOS::IncludeTrailingPathDelimiter(destinationPath) + std::string(ptr->d_name);
+        if (ptr->d_type == DT_DIR) {
+            result = InnerMigrateData(subPath, destPath);
+            if (result != RESULT_OK) {
+                LOG_E(BMS_TAG_INSTALLD, "migrate data failed, result:%{public}d", result);
+            }
+            continue;
+        }
+        result = MigrateDataCopyFile(subPath, destPath);
+        if (result != RESULT_OK) {
+            LOG_E(BMS_TAG_INSTALLD,
+                "migrate data source:%{private}s to destination %{public}s failed, result:%{public}d", subPath.c_str(),
+                destPath.c_str(), result);
+        }
+    }
+    closedir(dir);
+    return result;
+}
+
+int32_t InstalldOperator::MigrateDataCheckPrmissions(
+    std::vector<std::string> &realSourcePaths, const std::string &destPath)
+{
+    auto result = RESULT_OK;
+    std::vector<std::string> unablePath;
+    // check read permissions
+    auto noReadPermission = [&unablePath, &result](const std::string &path) {
+        if (access(path.c_str(), R_OK) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "source path[%{public}s] access failed", path.c_str());
+            unablePath.push_back(path);
+            result = ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED;
+        }
+    };
+    std::for_each(realSourcePaths.begin(), realSourcePaths.end(), noReadPermission);
+    if (result != RESULT_OK) {
+        auto isUnablePath = [&unablePath](const std::string &path) -> bool {
+            return std::find(unablePath.begin(), unablePath.end(), path) != unablePath.end();
+        };
+        realSourcePaths.erase(
+            std::remove_if(realSourcePaths.begin(), realSourcePaths.end(), isUnablePath), realSourcePaths.end());
+        if (realSourcePaths.empty()) {
+            return result;
+        }
+    }
+    // check write permissions
+    if (access(destPath.c_str(), W_OK) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "dest path[%{public}s] access failed", destPath.c_str());
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED;
+    }
+    return result;
+}
 
 #if defined(CODE_ENCRYPTION_ENABLE)
 std::mutex InstalldOperator::encryptionMutex_;

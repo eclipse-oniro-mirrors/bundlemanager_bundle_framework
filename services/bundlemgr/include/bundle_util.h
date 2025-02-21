@@ -217,6 +217,8 @@ public:
     static std::string GetNoDisablingConfigPath();
     static std::string GenerateUuidByKey(const std::string &key);
     static uint32_t ExtractNumberFromString(nlohmann::json &jsonObject, const std::string &key);
+    static std::vector<uint8_t> GenerateRandomNumbers(uint8_t size, uint8_t lRange, uint8_t rRange);
+    static bool IsSandBoxPath(const std::string &path);
     static bool StrToUint32(const std::string &str, uint32_t &value);
     static std::string ExtractStringFromJson(nlohmann::json &jsonObject, const std::string &key);
 private:

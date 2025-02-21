@@ -64,6 +64,8 @@ const int32_t USERID = 100;
 const int32_t UID = 1000;
 const int32_t GID = 1000;
 const std::string APL = "normal";
+const std::string BUNDLE_DATA_DIR_2 = "/data/app/el2/100/base/com.example.14jsdemo";
+const std::string BUNDLE_DATA_DIR_CACHE_2 = "/data/app/el2/100/base/com.example.l4jsdemo/cache/temp";
 }  // namespace
 
 class BmsInstallDaemonTest : public testing::Test {
@@ -98,6 +100,7 @@ public:
     void DeleteBundleTempDataDirs(const std::string &bundleName) const;
     void CreateShareFilesTempDataDirs(const std::string &bundleName) const;
     void DeleteShareFilesTempDataDirs(const std::string &bundleName) const;
+    int32_t MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath) const;
 
 private:
     std::shared_ptr<InstalldService> service_ = std::make_shared<InstalldService>();
@@ -188,6 +191,15 @@ int BmsInstallDaemonTest::ExtractModuleFiles(const std::string &srcModulePath, c
         service_->Start();
     }
     return InstalldClient::GetInstance()->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
+}
+
+int32_t BmsInstallDaemonTest::MigrateData(
+    const std::vector<std::string> &sourcePaths, const std::string &destinationPath) const
+{
+    if (!service_->IsServiceReady()) {
+        service_->Start();
+    }
+    return InstalldClient::GetInstance()->MigrateData(sourcePaths, destinationPath);
 }
 
 int BmsInstallDaemonTest::ExtractFiles(const ExtractParam &extractParam) const
@@ -1506,6 +1518,77 @@ HWTEST_F(BmsInstallDaemonTest, OnStop_0001, Function | SmallTest | Level0)
     service->OnStop();
     bool isRead = service->IsServiceReady();
     EXPECT_FALSE(isRead);
+}
+
+/**
+ * @tc.number: MigrateData_0001
+ * @tc.name: test the MigrateData
+ * @tc.desc: 1. param empty or invalid
+ */
+HWTEST_F(BmsInstallDaemonTest, MigrateData_0001, Function | SmallTest | Level0)
+{
+    std::vector<std::string> sourcePaths;
+    std::string destinationPath;
+    auto ret = MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+    sourcePaths.push_back("aaaa");
+    ret = MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
+
+    destinationPath = "../aaa";
+    ret = MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
+
+    sourcePaths.push_back("../bbb");
+    ret = MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: MigrateData_0002
+ * @tc.name: test the MigrateData
+ * @tc.desc: 1. source path or dest path not exist and can not access
+ */
+HWTEST_F(BmsInstallDaemonTest, MigrateData_0002, Function | SmallTest | Level0)
+{
+    std::vector<std::string> sourcePaths;
+    sourcePaths.push_back("aaaa");
+    std::string destinationPath = "bbb";
+    auto ret = MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+    sourcePaths.clear();
+    sourcePaths.push_back("/data/app/el2/0/base/");
+    ret = MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
+
+    auto result = CreateBundleDir(BUNDLE_DATA_DIR);
+    EXPECT_EQ(result, 0);
+    destinationPath = BUNDLE_DATA_DIR;
+    std::vector<std::string> sourcePaths_2;
+    sourcePaths_2.push_back("/data/log");
+    ret = MigrateData(sourcePaths_2, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED);
+}
+
+/**
+ * @tc.number: MigrateData_0003
+ * @tc.name: test the MigrateData
+ * @tc.desc: 1. MigrateData succeed
+ */
+HWTEST_F(BmsInstallDaemonTest, MigrateData_0003, Function | SmallTest | Level0)
+{
+    OHOS::ForceCreateDirectory(BUNDLE_DATA_DIR_CACHE);
+    std::vector<std::string> sourcePaths;
+    sourcePaths.push_back(BUNDLE_DATA_DIR);
+
+    OHOS::ForceCreateDirectory(BUNDLE_DATA_DIR_2);
+    std::string destinationPath = BUNDLE_DATA_DIR_2;
+
+    auto ret = MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_OK);
+
+    OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR);
+    OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_2);
 }
 
 /**

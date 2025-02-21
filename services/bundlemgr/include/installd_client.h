@@ -131,6 +131,8 @@ public:
     ErrCode GetAllBundleStats(const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids);
 
+    ErrCode MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath);
+
     /**
      * @brief Reset the installd proxy object when installd service died.
      * @return
