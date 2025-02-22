@@ -445,8 +445,13 @@ void AppControlManagerHostImpl::UpdateAppControlledInfo(int32_t userId,
             continue;
         }
         auto iterator = std::find(appIds.begin(), appIds.end(), info.second.GetAppId());
-        userInfo.isRemovable = (iterator != appIds.end()) ? false : true;
-        dataMgr_->AddInnerBundleUserInfo(info.first, userInfo);
+        bool isRemovable = (iterator != appIds.end()) ? false : true;
+        if (userInfo.isRemovable != isRemovable) {
+            LOG_I(BMS_TAG_DEFAULT, "current bundle (%{public}s) change removable at userId (%{public}d)",
+                info.first.c_str(), userId);
+            userInfo.isRemovable = isRemovable;
+            dataMgr_->AddInnerBundleUserInfo(info.first, userInfo);
+        }
         auto modifyAppIdsIterator = std::find(modifyAppIds.begin(), modifyAppIds.end(), info.second.GetAppId());
         if (modifyAppIdsIterator != modifyAppIds.end()) {
             AbilityInfo mainAbilityInfo;

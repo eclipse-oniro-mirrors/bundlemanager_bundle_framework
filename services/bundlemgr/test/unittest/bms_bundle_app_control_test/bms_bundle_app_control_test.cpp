@@ -1496,7 +1496,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4900, Function | Sma
     ASSERT_NE(impl, nullptr);
     std::vector<std::string> modifyAppIds;
     impl->UpdateAppControlledInfo(NOT_EXIST_USERID, modifyAppIds);
-    EXPECT_FALSE(dataMgr->bundleInfos_[BUNDLE_NAME].innerBundleUserInfos_.empty());
+    EXPECT_TRUE(dataMgr->bundleInfos_[BUNDLE_NAME].innerBundleUserInfos_.empty());
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(BUNDLE_NAME);
 }
 
