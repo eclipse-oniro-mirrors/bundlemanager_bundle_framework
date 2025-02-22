@@ -838,7 +838,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0020, Function | SmallTest | Leve
 {
     BundleMgrExtTest bundleMgrExtTest;
     std::string bundleName{ "extension" };
-    auto res = bundleMgrExtTest.CheckWhetherCanBeUninstalled(bundleName);
+    auto res = bundleMgrExtTest.CheckWhetherCanBeUninstalled(bundleName, "0");
     EXPECT_TRUE(res);
 }
 
@@ -954,7 +954,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0023, Function | SmallTest
     BmsExtensionDataMgr bmsExtensionDataMgr;
 
     std::string bundleName{ "extension" };
-    auto res = bmsExtensionDataMgr.CheckWhetherCanBeUninstalled(bundleName);
+    auto res = bmsExtensionDataMgr.CheckWhetherCanBeUninstalled(bundleName, "0");
     EXPECT_TRUE(res);
 }
 

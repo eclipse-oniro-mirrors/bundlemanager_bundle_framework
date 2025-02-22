@@ -65,7 +65,7 @@ public:
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
     bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId);
     ErrCode KeyOperation(const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type);
-    bool CheckWhetherCanBeUninstalled(const std::string &bundleName);
+    bool CheckWhetherCanBeUninstalled(const std::string &bundleName, const std::string &appIdentifier);
     ErrCode GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
         BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
     ErrCode GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
