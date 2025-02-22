@@ -538,7 +538,7 @@ private:
     void InnerProcessBootSystemHspInstall();
     void ProcessSystemHspInstall(const PreScanInfo &preScanInfo);
 
-    void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
+    static void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
         bool isPreInstall, bool debug);
     static bool IsQuickfixFlagExsit(const BundleInfo &bundleInfo);
@@ -556,9 +556,7 @@ private:
     void ListeningUserUnlocked() const;
     void RemoveUnreservedSandbox() const;
     void HandleSceneBoard() const;
-    void InnerProcessStockBundleProvisionInfo();
-    void ProcessBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);
-    void ProcessSharedBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);
+    static void InnerProcessStockBundleProvisionInfo();
     bool UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const;
     bool IsNeedToUpdateSharedAppByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void CheckALLResourceInfo();
@@ -576,6 +574,7 @@ private:
     void ProcessCheckAppEl1Dir();
     void static ProcessCheckAppEl1DirTask();
     void CleanAllBundleShaderCache() const;
+    void CheckBundleProvisionInfo();
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.

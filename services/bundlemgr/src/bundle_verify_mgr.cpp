@@ -94,9 +94,11 @@ void BundleVerifyMgr::DisableDebug()
     isDebug_ = false;
 }
 
-ErrCode BundleVerifyMgr::ParseHapProfile(const std::string &filePath, HapVerifyResult &hapVerifyResult)
+ErrCode BundleVerifyMgr::ParseHapProfile(const std::string &filePath, HapVerifyResult &hapVerifyResult,
+    bool readFile)
 {
-    auto ret = Security::Verify::ParseHapProfile(filePath, hapVerifyResult);
+    auto ret = Security::Verify::ParseHapProfile(filePath, hapVerifyResult,
+        readFile);
     APP_LOGI("ParseHapProfile result %{public}d", ret);
     if (HAP_VERIFY_ERR_MAP.find(ret) == HAP_VERIFY_ERR_MAP.end()) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
