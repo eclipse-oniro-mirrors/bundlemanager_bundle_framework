@@ -646,7 +646,7 @@ private:
     void ListeningUserUnlocked() const;
     void RemoveUnreservedSandbox() const;
     void HandleSceneBoard() const;
-    void static InnerProcessStockBundleProvisionInfo();
+    static void InnerProcessStockBundleProvisionInfo();
     bool UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const;
     bool IsNeedToUpdateSharedAppByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void CheckALLResourceInfo();
