@@ -3180,7 +3180,7 @@ ErrCode InnerBundleInfo::SetCloneAbilityEnabled(const std::string &moduleName, c
             auto infoItem = innerBundleUserInfos_.find(key);
             if (infoItem == innerBundleUserInfos_.end()) {
                 APP_LOGE("SetAbilityEnabled find innerBundleUserInfo failed");
-                return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+                return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
             }
 
             auto cloneIter = infoItem->second.cloneInfos.find(std::to_string(appIndex));
@@ -3348,7 +3348,7 @@ ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appInd
     if (infoItem == innerBundleUserInfos_.end()) {
         APP_LOGE_NOFUNC("SetCloneApplicationEnabled not find:%{public}s bundleUserInfo in userId:%{public}d",
             GetBundleName().c_str(), userId);
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     auto iter = infoItem->second.cloneInfos.find(std::to_string(appIndex));
