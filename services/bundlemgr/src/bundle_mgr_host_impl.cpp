@@ -718,6 +718,25 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
 bool BundleMgrHostImpl::SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
 {
     APP_LOGD("SilentInstall in");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return false;
+    }
+    std::string callingBundleName;
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    ErrCode ret = dataMgr->GetNameForUid(callingUid, callingBundleName);
+    if (ret != ERR_OK) {
+        APP_LOGE("get bundleName failed %{public}d %{public}d", ret, callingUid);
+        return false;
+    }
+    ElementName element = want.GetElement();
+    std::string packageName = element.GetBundleName();
+    if (packageName != callingBundleName) {
+        APP_LOGE("callingBundleName vaild fail %{public}s %{public}s",
+            packageName.c_str(), callingBundleName.c_str());
+        return false;
+    }
     auto connectMgr = GetConnectAbilityMgrFromService();
     if (connectMgr == nullptr) {
         APP_LOGE("connectMgr is nullptr");
