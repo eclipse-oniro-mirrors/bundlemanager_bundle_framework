@@ -30,7 +30,8 @@ public:
      * @param bundleUserStatus Indicates the bundleUserStatus.
      * @param disallowList Pass in the provisioned disallowList.
      */
-    ErrCode CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList = {}) override;
+    ErrCode CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList = {},
+        const std::optional<std::vector<std::string>> &allowList = std::nullopt) override;
     /**
      * @brief Remove user.
      * @param userId Indicates the userId.
@@ -50,7 +51,8 @@ private:
     ErrCode CheckInitialUser();
     void BeforeCreateNewUser(int32_t userId);
     void OnCreateNewUser(int32_t userId, bool needToSkipPreBundleInstall,
-        const std::vector<std::string> &disallowList = {});
+        const std::vector<std::string> &disallowList = {},
+        const std::optional<std::vector<std::string>> &allowList = std::nullopt);
     void AfterCreateNewUser(int32_t userId);
     void RemoveArkProfile(int32_t userId);
     void RemoveAsanLogDirectory(int32_t userId);
@@ -60,9 +62,9 @@ private:
     void ClearBundleEvents();
     bool GetAllPreInstallBundleInfos(
         const std::vector<std::string> &disallowList,
-        int32_t userId,
-        bool needToSkipPreBundleInstall,
-        std::set<PreInstallBundleInfo> &preInstallBundleInfos);
+        int32_t userId, bool needToSkipPreBundleInstall,
+        std::set<PreInstallBundleInfo> &preInstallBundleInfos,
+        const std::optional<std::vector<std::string>> &allowList = std::nullopt);
     void UninstallBackupUninstallList(int32_t userId, bool needToSkipPreBundleInstall);
     void GetAdditionalBundleInfos(std::set<PreInstallBundleInfo> &preInstallBundleInfos);
 

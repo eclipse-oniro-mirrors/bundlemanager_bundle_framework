@@ -54,7 +54,8 @@ public:
     virtual ~BundleUserMgrHostMock() = default;
 
     MOCK_METHOD1(RemoveUser, int(int32_t userId));
-    MOCK_METHOD2(CreateNewUser, int(int32_t userId, const std::vector<std::string> &disallowList));
+    MOCK_METHOD3(CreateNewUser, int(int32_t userId, const std::vector<std::string> &disallowList,
+        const std::optional<std::vector<std::string>> &allowList));
 };
 
 class BmsStreamInstallerHostTest : public testing::Test {
@@ -260,7 +261,7 @@ HWTEST_F(BmsStreamInstallerHostTest, UserMgrHost_003, TestSize.Level1)
     MessageParcel reply;
     MessageOption option;
 
-    EXPECT_CALL(*userMgrHost_, CreateNewUser(_, _)).Times(1);
+    EXPECT_CALL(*userMgrHost_, CreateNewUser(_, _, _)).Times(1);
     auto result = userMgrHost_->OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, NO_ERROR);
 }
