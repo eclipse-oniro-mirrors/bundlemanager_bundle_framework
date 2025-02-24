@@ -264,13 +264,13 @@ public:
     static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
 
 #if defined(CODE_ENCRYPTION_ENABLE)
-    static bool EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap,
+    static ErrCode EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap,
         const CodeCryptoHapInfo &hapInfo, bool &isEncryption);
 #endif
 
-    static bool CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
+    static ErrCode CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 
-    static bool CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
+    static ErrCode CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 
     static bool MoveFiles(const std::string &srcDir, const std::string &desDir, bool isDesDirNeedCreated = false);
 

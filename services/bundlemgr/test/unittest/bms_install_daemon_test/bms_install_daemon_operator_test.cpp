@@ -1143,8 +1143,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7100, Function | Sma
     checkEncryptionParam.targetSoPath = TEST_STRING;
     checkEncryptionParam.bundleId = -1;
     bool isEncrypted = false;
-    bool res = InstalldOperator::CheckEncryption(checkEncryptionParam, isEncrypted);
-    EXPECT_EQ(res, false);
+    auto res = InstalldOperator::CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_ENCRYPTION_EXTRACTOR_INIT_FAILED);
 }
 
 /**
@@ -1577,7 +1577,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9800, Function | Sma
     checkEncryptionParam.bundleId = -1;
     bool isEncrypted = false;
     auto ret = InstalldOperator::CheckEncryption(checkEncryptionParam, isEncrypted);
-    EXPECT_FALSE(ret);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ENCRYPTION_EXTRACTOR_INIT_FAILED);
 }
 
 /**
@@ -1611,7 +1611,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10000, Function | Sm
     checkEncryptionParam.bundleId = -1;
     bool isEncrypted = false;
     auto ret = InstalldOperator::CheckEncryption(checkEncryptionParam, isEncrypted);
-    EXPECT_FALSE(ret);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ENCRYPTION_EXTRACTOR_INIT_FAILED);
 }
 
 /**

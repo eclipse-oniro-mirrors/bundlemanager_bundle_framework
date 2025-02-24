@@ -1658,9 +1658,10 @@ ErrCode InstalldHostImpl::CheckEncryption(const CheckEncryptionParam &checkEncry
         LOG_E(BMS_TAG_INSTALLD, "Calling the function CheckEncryption with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldOperator::CheckEncryption(checkEncryptionParam, isEncryption)) {
-        LOG_E(BMS_TAG_INSTALLD, "check encryption failed");
-        return ERR_APPEXECFWK_INSTALL_CHECK_ENCRYPTION_FAILED;
+    auto ret = InstalldOperator::CheckEncryption(checkEncryptionParam, isEncryption);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "check encryption failed due to %{public}d", ret);
+        return ret;
     }
     return ERR_OK;
 }
