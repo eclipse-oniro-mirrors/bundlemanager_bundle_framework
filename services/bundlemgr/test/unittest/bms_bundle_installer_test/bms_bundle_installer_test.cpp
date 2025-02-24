@@ -8301,6 +8301,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0300, Function | Sma
     installParam.isCallByShell = true;
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
     Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.isOpenHarmony = false;
     hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::CROWDTESTING;
     hapVerifyRes.emplace_back(hapVerifyResult);
     auto ret = installer.CheckPreAppAllowHdcInstall(installParam, hapVerifyRes);
@@ -8321,6 +8322,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0400, Function | Sma
     installParam.isCallByShell = true;
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
     Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.isOpenHarmony = false;
     hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::OS_INTEGRATION;
     hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
     hapVerifyRes.emplace_back(hapVerifyResult);
@@ -8342,6 +8344,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0500, Function | Sma
     installParam.isCallByShell = true;
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
     Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.isOpenHarmony = false;
     hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::OS_INTEGRATION;
     hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
     hapVerifyResult.provisionInfo.appPrivilegeCapabilities.emplace_back("AllowHdcInstall");
@@ -8364,6 +8367,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0600, Function | Sma
     installParam.isCallByShell = true;
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
     Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.isOpenHarmony = false;
     hapVerifyResult.provisionInfo.distributionType = Security::Verify::AppDistType::OS_INTEGRATION;
     hapVerifyResult.provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
     hapVerifyRes.emplace_back(hapVerifyResult);
@@ -8373,6 +8377,26 @@ HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0600, Function | Sma
     } else {
         EXPECT_EQ(ERR_APPEXECFWK_INSTALL_OS_INTEGRATION_BUNDLE_NOT_ALLOWED_FOR_SHELL, ret);
     }
+}
+
+/**
+ * @tc.number: CheckPreAppAllowHdcInstall_0700
+ * @tc.name: test CheckPreAppAllowHdcInstall
+ * @tc.desc: CheckPreAppAllowHdcInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckPreAppAllowHdcInstall_0700, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    installer.sysEventInfo_.callingUid = 0;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.provisionInfo.isOpenHarmony = true;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    auto ret = installer.CheckPreAppAllowHdcInstall(installParam, hapVerifyRes);
+    EXPECT_EQ(ERR_OK, ret);
 }
 
 /**
