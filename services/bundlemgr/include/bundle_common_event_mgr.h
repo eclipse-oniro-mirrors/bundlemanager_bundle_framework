@@ -41,6 +41,7 @@ enum class NotifyType : uint8_t {
     DISPOSED_RULE_ADDED,
     DISPOSED_RULE_DELETED,
     START_INSTALL,
+    UNINSTALL_STATE,
 };
 
 enum class SandboxInstallType : uint8_t {

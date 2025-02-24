@@ -4449,7 +4449,7 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
     innerBundleInfo.GetMainAbilityInfo(mainAbilityInfo);
     NotifyBundleEvents installRes = {
         .isModuleUpdate = false,
-        .type = NotifyType::UPDATE,
+        .type = NotifyType::UNINSTALL_STATE,
         .resultCode = ERR_OK,
         .accessTokenId = innerBundleInfo.GetAccessTokenId(currentActiveUserId),
         .uid = innerBundleInfo.GetUid(currentActiveUserId),

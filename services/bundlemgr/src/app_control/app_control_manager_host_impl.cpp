@@ -458,7 +458,7 @@ void AppControlManagerHostImpl::UpdateAppControlledInfo(int32_t userId,
             info.second.GetMainAbilityInfo(mainAbilityInfo);
             NotifyBundleEvents installRes = {
                 .isModuleUpdate = false,
-                .type = NotifyType::UPDATE,
+                .type = NotifyType::UNINSTALL_STATE,
                 .resultCode = ERR_OK,
                 .accessTokenId = info.second.GetAccessTokenId(userId),
                 .uid = info.second.GetUid(userId),
