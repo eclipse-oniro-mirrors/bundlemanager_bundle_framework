@@ -285,4 +285,38 @@
       <option name="push" value="matchShare/matchShareBundle3.hap -> /data/test/bms_bundle/" src="res" />
     </preparer>
   </target>
+  <target name="BmsInstallGroupTest">
+    <preparer>
+      <option name="push" value="stSystemBundle/bmsSystemBundle1.hap -> /system/app/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle1.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle2.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle3.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle4.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle5.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle6.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle7.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle8.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle9.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle10.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle12.rpk -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle13.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle17.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle24.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle25.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle26.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle28.rpk -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle41.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle42.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle43.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle44.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundle45.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/bmsThirdBundles1.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/e3.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/e4.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/e5.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/e6.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/e21.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="stThirdBundle/e23.hap -> /data/test/bms_bundle/" src="res" />
+    </preparer>
+  </target>
 </configuration>
