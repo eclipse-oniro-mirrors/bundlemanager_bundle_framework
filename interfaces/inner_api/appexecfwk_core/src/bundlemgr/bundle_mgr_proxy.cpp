@@ -2922,6 +2922,7 @@ bool BundleMgrProxy::ImplicitQueryInfoByPriority(const Want &want, int32_t flags
 
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::IMPLICIT_QUERY_INFO_BY_PRIORITY, data, reply)) {
+        APP_LOGE("fail to ImplicitQueryInfoByPriority from server");
         return false;
     }
 
@@ -3364,7 +3365,7 @@ ErrCode BundleMgrProxy::GetSandboxAbilityInfo(const Want &want, int32_t appIndex
     APP_LOGD("begin to GetSandboxAbilityInfo");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
-        APP_LOGE("GetSandboxAbilityInfo params are invalid");
+        APP_LOGE("appIndex is invalid,: %{public}d,", appIndex);
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
     MessageParcel data;
