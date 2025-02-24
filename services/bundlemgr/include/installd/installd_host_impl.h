@@ -267,6 +267,9 @@ private:
         const std::vector<std::string> &extensionDirs, bool setAccess, bool setDefault);
     int64_t GetAppCacheSize(const std::string &bundleName, const int32_t userId,
         const int32_t appIndex, const std::vector<std::string> &moduleNames = {});
+    ErrCode CreateBundleDataDirWithEl(const CreateDirParam &createDirParam);
+    ErrCode CreateCommonDataDir(const CreateDirParam &createDirParam, const std::string &el);
+    ErrCode CreateEl2DataDir(const CreateDirParam &createDirParam);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

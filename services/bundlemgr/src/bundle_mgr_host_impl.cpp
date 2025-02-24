@@ -3896,6 +3896,21 @@ ErrCode BundleMgrHostImpl::CreateBundleDataDir(int32_t userId)
     return dataMgr->CreateBundleDataDir(userId);
 }
 
+ErrCode BundleMgrHostImpl::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl)
+{
+    if (!BundlePermissionMgr::IsCallingUidValid(Constants::ROOT_UID)) {
+        APP_LOGE("IsCallingUidValid failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->CreateBundleDataDirWithEl(userId, dirEl);
+}
+
 sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE

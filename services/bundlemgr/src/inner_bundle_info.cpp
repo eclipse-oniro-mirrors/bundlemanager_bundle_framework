@@ -4387,6 +4387,15 @@ bool InnerBundleInfo::IsHwasanEnabled() const
     return false;
 }
 
+bool InnerBundleInfo::NeedCreateEl5Dir() const
+{
+    std::vector<RequestPermission> reqPermissions = GetAllRequestPermissions();
+    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
+        return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    });
+    return it != reqPermissions.end();
+}
+
 bool InnerBundleInfo::GetUninstallState() const
 {
     return uninstallState_;

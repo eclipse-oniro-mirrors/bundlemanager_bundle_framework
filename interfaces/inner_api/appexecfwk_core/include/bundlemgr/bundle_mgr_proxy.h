@@ -1018,6 +1018,8 @@ public:
 
     virtual ErrCode CreateBundleDataDir(int32_t userId) override;
 
+    virtual ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl) override;
+
     /**
      * @brief Check whether the link can be opened.
      * @param link Indicates the link to be opened.
