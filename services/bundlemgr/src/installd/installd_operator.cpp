@@ -1574,7 +1574,7 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
     return true;
 }
 
-bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
+ErrCode InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
 {
     if (checkEncryptionParam.cpuAbi.empty() && checkEncryptionParam.targetSoPath.empty()) {
         return CheckHapEncryption(checkEncryptionParam, isEncryption);
@@ -1587,16 +1587,16 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
         static_cast<int32_t>(installBundleType), checkEncryptionParam.modulePath.c_str());
     BundleExtractor extractor(checkEncryptionParam.modulePath);
     if (!extractor.Init()) {
-        return false;
+        return ERR_APPEXECFWK_INSTALL_ENCRYPTION_EXTRACTOR_INIT_FAILED;
     }
     std::vector<std::string> soEntryFiles;
     if (!ObtainNativeSoFile(extractor, cpuAbi, soEntryFiles)) {
         LOG_E(BMS_TAG_INSTALLD, "ObtainNativeSoFile failed");
-        return false;
+        return ERR_APPEXECFWK_INSTALL_ENCRYPTION_OBTAIN_SO_FAILED;
     }
     if (soEntryFiles.empty()) {
         LOG_D(BMS_TAG_INSTALLD, "no so file in installation file %{public}s", checkEncryptionParam.modulePath.c_str());
-        return true;
+        return ERR_OK;
     }
 #if defined(CODE_ENCRYPTION_ENABLE)
     const std::string targetSoPath = checkEncryptionParam.targetSoPath;
@@ -1619,14 +1619,14 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     hapInfo.versionCode = checkEncryptionParam.versionCode;
     hapInfo.type = installBundleType;
     hapInfo.libCompressed = isCompressNativeLibrary;
-    if (!EnforceEncryption(entryMap, hapInfo, isEncryption)) {
-        return false;
+    if (auto ret = EnforceEncryption(entryMap, hapInfo, isEncryption) != ERR_OK) {
+        return ret;
     }
 #endif
-    return true;
+    return ERR_OK;
 }
 
-bool InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
+ErrCode InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
 {
     const std::string hapPath = checkEncryptionParam.modulePath;
     const int32_t bundleId = checkEncryptionParam.bundleId;
@@ -1643,11 +1643,12 @@ bool InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEncry
     hapInfo.versionCode = checkEncryptionParam.versionCode;
     hapInfo.type = installBundleType;
     hapInfo.libCompressed = isCompressNativeLibrary;
-    if (!EnforceEncryption(entryMap, hapInfo, isEncryption)) {
-        return false;
+    auto ret = EnforceEncryption(entryMap, hapInfo, isEncryption);
+    if (ret != ERR_OK) {
+        return ret;
     }
 #endif
-    return true;
+    return ERR_OK;
 }
 
 bool InstalldOperator::ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
@@ -2553,18 +2554,18 @@ bool InstalldOperator::OpenEncryptionHandle()
     return true;
 }
 
-bool InstalldOperator::EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap,
+ErrCode InstalldOperator::EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap,
     const CodeCryptoHapInfo &hapInfo, bool &isEncryption)
 {
     if (!OpenEncryptionHandle()) {
-        return false;
+        return ERR_APPEXECFWK_INSTALL_ENCRYPTION_DLL_ERROR;
     }
     ErrCode ret = enforceMetadataProcessForApp_(entryMap, hapInfo, isEncryption);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CheckEncryption failed due to %{public}d", ret);
-        return false;
+        return ERR_APPEXECFWK_INSTALL_CHECK_ENCRYPTION_FAILED;
     }
-    return true;
+    return ERR_OK;
 }
 #endif
 
