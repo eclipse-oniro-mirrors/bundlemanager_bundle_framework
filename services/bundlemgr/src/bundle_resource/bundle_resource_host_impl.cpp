@@ -130,6 +130,7 @@ ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
         }
     }
     BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
+    APP_LOGI_NOFUNC("GetAllBundleResourceInfo count:%{public}zu", bundleResourceInfos.size());
     return ERR_OK;
 }
 
@@ -176,6 +177,7 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
         }
     }
     BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
+    APP_LOGI_NOFUNC("GetAllLauncherAbilityResourceInfo count:%{public}zu", launcherAbilityResourceInfos.size());
     return ERR_OK;
 }
 
