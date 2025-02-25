@@ -618,24 +618,6 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0500, Function | S
 }
 
 /**
- * @tc.number: RemoveBundleCodeDir_0010
- * @tc.name: test RemoveBundleCodeDir
- * @tc.desc: 1.Test the RemoveBundleCodeDir
-*/
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RemoveBundleCodeDir_0010, Function | SmallTest | Level0)
-{
-    AppServiceFwkInstaller appServiceFwkInstaller;
-
-    InnerBundleInfo info;
-    auto res = appServiceFwkInstaller.RemoveBundleCodeDir(info);
-    if (appServiceFwkInstaller.dataMgr_ == nullptr) {
-        appServiceFwkInstaller.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    }
-    appServiceFwkInstaller.RemoveInfo(EMPTY_STRING);
-    EXPECT_NE(res, ERR_OK);
-}
-
-/**
  * @tc.number: GetInnerBundleInfo_0010
  * @tc.name: test GetInnerBundleInfo
  * @tc.desc: 1.Test the GetInnerBundleInfo

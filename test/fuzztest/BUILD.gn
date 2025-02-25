@@ -97,7 +97,6 @@ group("fuzztest") {
     "fuzztest_others/appservicefwkinstallermovesotorealpath_fuzzer:AppServiceFwkInstallerMoveSoToRealPathFuzzTest",
     "fuzztest_others/appservicefwkinstallerprocessinstall_fuzzer:AppServiceFwkInstallerProcessInstallFuzzTest",
     "fuzztest_others/appservicefwkinstallerprocessnativelibrary_fuzzer:AppServiceFwkInstallerProcessNativeLibraryFuzzTest",
-    "fuzztest_others/appservicefwkinstallerremovebundlecodedir_fuzzer:AppServiceFwkInstallerRemoveBundleCodeDirFuzzTest",
     "fuzztest_others/appservicefwkinstallerremoveinfo_fuzzer:AppServiceFwkInstallerRemoveInfoFuzzTest",
     "fuzztest_others/appservicefwkinstallerrollback_fuzzer:AppServiceFwkInstallerRollBackFuzzTest",
     "fuzztest_others/appservicefwkinstallersavebundleinfotostorage_fuzzer:AppServiceFwkInstallerSaveBundleInfoToStorageFuzzTest",
