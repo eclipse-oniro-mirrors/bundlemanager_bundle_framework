@@ -154,7 +154,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     newUserInfo.accessTokenIdEx = newTokenIdEx.tokenIDEx;
     uid_ = uid;
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
-    int64_t now = BundleUtil::GetCurrentTime();
+    int64_t now = BundleUtil::GetCurrentTimeMs();
     newUserInfo.installTime = now;
     newUserInfo.updateTime = now;
     FirstInstallBundleInfo firstInstallBundleInfo;
