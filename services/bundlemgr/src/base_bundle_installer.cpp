@@ -7022,6 +7022,10 @@ ErrCode BaseBundleInstaller::CheckPreAppAllowHdcInstall(const InstallParam &inst
     }
 
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
+    if (provisionInfo.isOpenHarmony) {
+        return ERR_OK;
+    }
+
     if (provisionInfo.distributionType != Security::Verify::AppDistType::OS_INTEGRATION) {
         return ERR_OK;
     }
