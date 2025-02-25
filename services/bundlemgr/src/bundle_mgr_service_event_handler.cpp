@@ -4429,7 +4429,7 @@ void BMSEventHandler::CleanTempDir() const
             continue;
         }
         LOG_I(BMS_TAG_DEFAULT, "clean %{public}s", dir.c_str());
-        if (!OHOS::ForceRemoveDirectory(dir)) {
+        if (!OHOS::ForceRemoveDirectoryBMS(dir)) {
             LOG_E(BMS_TAG_DEFAULT, "remove failed: %{public}s", dir.c_str());
             continue;
         }

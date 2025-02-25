@@ -247,7 +247,7 @@ bool InstalldOperator::DeleteDir(const std::string &path)
     }
     if (IsExistDir(path)) {
         LOG_NOFUNC_I(BMS_TAG_COMMON, "del %{public}s", path.c_str());
-        res = OHOS::ForceRemoveDirectory(path);
+        res = OHOS::ForceRemoveDirectoryBMS(path);
         if (!res && errno == ENOENT) {
             return true;
         }
@@ -917,7 +917,7 @@ bool InstalldOperator::DeleteFiles(const std::string &dataPath)
         }
         subPath = OHOS::IncludeTrailingPathDelimiter(dataPath) + std::string(ptr->d_name);
         if (ptr->d_type == DT_DIR) {
-            if (!OHOS::ForceRemoveDirectory(subPath)) {
+            if (!OHOS::ForceRemoveDirectoryBMS(subPath)) {
                 ret = false;
                 LOG_W(BMS_TAG_INSTALLD, "ForceRemoveDirectory %{public}s failed, error: %{public}d",
                     dataPath.c_str(), errno);
@@ -964,7 +964,7 @@ bool InstalldOperator::DeleteFilesExceptDirs(const std::string &dataPath, const 
         }
         filePath = OHOS::IncludeTrailingPathDelimiter(dataPath) + std::string(ptr->d_name);
         if (ptr->d_type == DT_DIR) {
-            ret = OHOS::ForceRemoveDirectory(filePath);
+            ret = OHOS::ForceRemoveDirectoryBMS(filePath);
             continue;
         }
         if (access(filePath.c_str(), F_OK) == 0) {
