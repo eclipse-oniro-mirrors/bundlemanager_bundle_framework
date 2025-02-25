@@ -3826,56 +3826,6 @@ void BMSEventHandler::InnerProcessStockBundleProvisionInfo()
     LOG_D(BMS_TAG_DEFAULT, "InnerProcessStockBundleProvisionInfo end");
 }
 
-void BMSEventHandler::ProcessBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return;
-    }
-    std::vector<BundleInfo> bundleInfos;
-    auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
-    if (dataMgr->GetBundleInfosV9(baseFlag, bundleInfos, Constants::ALL_USERID) != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "GetBundleInfos failed");
-        return;
-    }
-    for (const auto &bundleInfo : bundleInfos) {
-        // not exist in appProvisionInfo table, then parse profile info and save it
-        if ((allBundleNames.find(bundleInfo.name) == allBundleNames.end()) &&
-            !bundleInfo.hapModuleInfos.empty()) {
-            AddStockAppProvisionInfoByOTA(bundleInfo.name, bundleInfo.hapModuleInfos[0].hapPath);
-        }
-    }
-}
-
-void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return;
-    }
-    std::vector<SharedBundleInfo> shareBundleInfos;
-    if (dataMgr->GetAllSharedBundleInfo(shareBundleInfos) != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAllSharedBundleInfo failed");
-        return;
-    }
-    for (const auto &sharedBundleInfo : shareBundleInfos) {
-        // not exist in appProvisionInfo table, then parse profile info and save it
-        if ((allBundleNames.find(sharedBundleInfo.name) == allBundleNames.end()) &&
-            !sharedBundleInfo.sharedModuleInfos.empty()) {
-            std::string hspPath = std::string(Constants::BUNDLE_CODE_DIR)
-                + ServiceConstants::PATH_SEPARATOR + sharedBundleInfo.name
-                + ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX
-                + std::to_string(sharedBundleInfo.sharedModuleInfos[0].versionCode) + ServiceConstants::PATH_SEPARATOR
-                + sharedBundleInfo.sharedModuleInfos[0].name + ServiceConstants::PATH_SEPARATOR
-                + sharedBundleInfo.sharedModuleInfos[0].name + ServiceConstants::HSP_FILE_SUFFIX;
-            AddStockAppProvisionInfoByOTA(sharedBundleInfo.name, hspPath);
-        }
-    }
-}
-
 void BMSEventHandler::InnerProcessStockBundleRouterInfo()
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
