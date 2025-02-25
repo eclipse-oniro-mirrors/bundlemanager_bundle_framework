@@ -117,7 +117,7 @@ ErrCode InstalldHostImpl::CreateBundleDir(const std::string &bundleDir)
     }
     if (InstalldOperator::IsExistDir(bundleDir)) {
         LOG_W(BMS_TAG_INSTALLD, "bundleDir %{public}s is exist", bundleDir.c_str());
-        OHOS::ForceRemoveDirectory(bundleDir);
+        OHOS::ForceRemoveDirectoryBMS(bundleDir);
     }
     if (!InstalldOperator::MkRecursiveDir(bundleDir, true)) {
         LOG_E(BMS_TAG_INSTALLD, "create bundle dir %{public}s failed, errno:%{public}d", bundleDir.c_str(), errno);

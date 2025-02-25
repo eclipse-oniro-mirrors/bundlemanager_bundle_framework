@@ -607,7 +607,7 @@ bool BundleUtil::DeleteDir(const std::string &path)
     }
 
     if (IsExistDir(path)) {
-        return OHOS::ForceRemoveDirectory(path);
+        return OHOS::ForceRemoveDirectoryBMS(path);
     }
 
     return true;
