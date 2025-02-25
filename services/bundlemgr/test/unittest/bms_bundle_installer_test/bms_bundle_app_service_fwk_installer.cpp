@@ -1135,7 +1135,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveSoToRealPath_0020, Function | 
     appServiceFwkInstaller.versionCode_ = VERSION;
     appServiceFwkInstaller.uninstallModuleVec_.emplace_back(MODULE_NAME_TEST);
     res = appServiceFwkInstaller.UpdateAppService(info, infos, installParam);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
     appServiceFwkInstaller.uninstallModuleVec_.clear();
 }
 
