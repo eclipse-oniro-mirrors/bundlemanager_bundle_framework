@@ -442,6 +442,8 @@ constexpr const char* ABILITY_ISOLATION_PROCESS = "isolationProcess";
 constexpr const char* ABILITY_CONTINUE_TYPE = "continueType";
 constexpr const char* ABILITY_ORIENTATION_ID = "orientationId";
 constexpr const char* ABILITY_CONTINUE_BUNDLE_NAME = "continueBundleName";
+constexpr const char* ABILITY_LANGUAGE = "language";
+constexpr const char* LANGUAGE_DEFAULT = "ArkTS1.0";
 // extension ability
 constexpr const char* EXTENSION_ABILITY_NAME = "name";
 constexpr const char* EXTENSION_ABILITY_TYPE = "type";
@@ -521,6 +523,13 @@ constexpr const char* MODULE_ROUTER_MAP = "routerMap";
 constexpr const char* MODULE_APP_ENVIRONMENTS = "appEnvironments";
 //module packageName
 constexpr const char* MODULE_PACKAGE_NAME = "packageName";
+
+//get application code language
+constexpr const char* ABC_RELATIVE_PATH_ARKTS_1_0 = "ets/modules.abc";
+constexpr const char* ABC_RELATIVE_PATH_ARKTS_1_2 = "ets/modules_static.abc";
+constexpr const char* LANGUAGE_ARKTS_1_0 = "ArkTS1.0";
+constexpr const char* LANGUAGE_ARKTS_1_2 = "ArkTS1.2";
+constexpr const char* LANGUAGE_ARKTS_HYBRID = "ArkTSHybrid";
 }  // namespace Profile
 }  // namespace AppExecFwk
 }  // namespace OHOS
