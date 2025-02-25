@@ -741,6 +741,11 @@ private:
         const InnerBundleInfo &oldBundleInfo, bool isPreInstallApp);
 
     bool DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundleInfo &oldBundleInfo);
+
+    bool SetDisposedRuleWhenBundleUninstallStart(const std::string &bundleName,
+        const std::string &appId, bool isMultiUser);
+    bool DeleteDisposedRuleWhenBundleUninstallEnd(const std::string &bundleName,
+        const std::string &appId, bool isMultiUser);
     bool AddAppGalleryHapToTempPath(const bool isPreInstallApp,
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
     bool DeleteAppGalleryHapFromTempPath();
