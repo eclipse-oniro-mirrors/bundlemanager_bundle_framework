@@ -3250,4 +3250,48 @@ HWTEST_F(BmsBundleParserTest, BundleParser_2300, Function | MediumTest | Level1)
     ErrCode ret = bundleParser.ParsePreAppListConfig(configFile, scanInfos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
 }
+
+/**
+ * @tc.number: BundleParser_2400
+ * @tc.name: Test ParseAclExtendedMap
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_2400, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string jsonString;
+    std::map<std::string, std::string> aclExtendedMap = bundleParser.ParseAclExtendedMap(jsonString);
+    EXPECT_EQ(aclExtendedMap.empty(), true);
+}
+
+/**
+ * @tc.number: BundleParser_2500
+ * @tc.name: Test ParseAclExtendedMap
+ * @tc.desc: test the interface of BundleParser
+ */
+ HWTEST_F(BmsBundleParserTest, BundleParser_2500, Function | MediumTest | Level1)
+ {
+    BundleParser bundleParser;
+
+    std::string jsonString = R"(["one", "two"])";
+    std::map<std::string, std::string> aclExtendedMap = bundleParser.ParseAclExtendedMap(jsonString);
+    EXPECT_EQ(aclExtendedMap.empty(), true);
+ }
+
+/**
+ * @tc.number: BundleParser_2600
+ * @tc.name: Test ParseAclExtendedMap
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_2600, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string jsonString = R"({"name": "zhangsan"})";
+    std::map<std::string, std::string> aclExtendedMap = bundleParser.ParseAclExtendedMap(jsonString);
+    EXPECT_EQ(aclExtendedMap.size(), 1);
+    const auto &item = aclExtendedMap.find("name");
+    EXPECT_FALSE(item == aclExtendedMap.end());
+}
 } // OHOS

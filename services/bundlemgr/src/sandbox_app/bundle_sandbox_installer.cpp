@@ -101,7 +101,12 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
 
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    if (BundlePermissionMgr::InitHapToken(info, userId_, dlpType, newTokenIdEx, checkResult) != ERR_OK) {
+    AppProvisionInfo appProvisionInfo;
+    if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
+        APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
+    }
+    if (BundlePermissionMgr::InitHapToken(info, userId_, dlpType, newTokenIdEx, checkResult,
+        appProvisionInfo.appServiceCapabilities) != ERR_OK) {
         auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
         APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName_.c_str(), result.c_str());
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;

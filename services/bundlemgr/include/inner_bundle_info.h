@@ -56,6 +56,8 @@ struct Distro {
 struct DefinePermission {
     bool provisionEnable = true;
     bool distributedSceneEnable = false;
+    bool isKernelEffect = false;
+    bool hasValue = false;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
     std::string name;

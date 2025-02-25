@@ -92,6 +92,8 @@ public:
     ErrCode ParseDefaultPermission(
         const std::string &permissionFile, std::set<DefaultPermission> &defaultPermissions) const;
 
+    static std::map<std::string, std::string> ParseAclExtendedMap(const std::string &appServiceCapabilities);
+
     /**
      * @brief Parse default extension type name file, then save in ParseExtensionTypeConfig info.
      * @param configFile Indicates the path of configFile.

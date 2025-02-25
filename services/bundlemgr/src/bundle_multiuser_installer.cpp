@@ -24,6 +24,7 @@
 #include "bundle_resource_helper.h"
 #include "bundle_util.h"
 #include "datetime_ex.h"
+#include "errors.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "perf_profile.h"
@@ -141,7 +142,12 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
     if (!RecoverHapToken(bundleName, userId, newTokenIdEx, info)) {
-        if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult) != ERR_OK) {
+        AppProvisionInfo appProvisionInfo;
+        if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
+            APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
+        }
+        if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult,
+            appProvisionInfo.appServiceCapabilities) != ERR_OK) {
             auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
             APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -294,7 +300,12 @@ bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, co
             uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenId;
         accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
         Security::AccessToken::HapInfoCheckResult checkResult;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId, checkResult) == ERR_OK) {
+        AppProvisionInfo appProvisionInfo;
+        if (dataMgr_->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
+            APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
+        }
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId, checkResult,
+            appProvisionInfo.appServiceCapabilities) == ERR_OK) {
             return true;
         } else {
             auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);

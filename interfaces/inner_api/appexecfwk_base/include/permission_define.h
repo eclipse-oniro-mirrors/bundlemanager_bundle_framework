@@ -26,6 +26,8 @@ namespace AppExecFwk {
 struct PermissionDef : public Parcelable {
     bool provisionEnable = true;
     bool distributedSceneEnable = false;
+    bool isKernelEffect = false;
+    bool hasValue = false;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
     int32_t grantMode = 0;

@@ -26,6 +26,7 @@
 #include "bundle_service_constants.h"
 #include "code_protect_bundle_info.h"
 #include "datetime_ex.h"
+#include "errors.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "inner_bundle_clone_common.h"
@@ -207,7 +208,12 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     info.SetAppIndex(appIndex);
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult) != ERR_OK) {
+    AppProvisionInfo appProvisionInfo;
+    if (dataMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
+        APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
+    }
+    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult,
+        appProvisionInfo.appServiceCapabilities) != ERR_OK) {
         auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
         APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
