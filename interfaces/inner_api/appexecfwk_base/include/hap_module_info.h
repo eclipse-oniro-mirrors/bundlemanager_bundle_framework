@@ -182,6 +182,7 @@ struct HapModuleInfo : public Parcelable {
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);
     std::string appStartup;
+    std::string language = "ArkTS1.0";
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

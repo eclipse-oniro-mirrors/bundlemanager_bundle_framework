@@ -313,6 +313,7 @@ struct ApplicationInfo : public Parcelable {
     // app detail ability
     bool needAppDetail = false;
     std::string appDetailAbilityLibraryPath;
+    std::string applicationCodeLanguage;
 
     MultiAppModeData multiAppMode;
     int32_t maxChildProcess = 0;

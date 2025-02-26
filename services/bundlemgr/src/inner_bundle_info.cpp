@@ -143,6 +143,7 @@ constexpr const char* MODULE_GWP_ASAN_ENABLED = "gwpAsanEnabled";
 constexpr const char* MODULE_TSAN_ENABLED = "tsanEnabled";
 constexpr const char* MODULE_PACKAGE_NAME = "packageName";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
+constexpr const char* MODULE_LANGUAGE = "language";
 constexpr const char* MODULE_HWASAN_ENABLED = "hwasanEnabled";
 constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
@@ -442,6 +443,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_TSAN_ENABLED, info.tsanEnabled},
         {MODULE_PACKAGE_NAME, info.packageName},
         {MODULE_APP_STARTUP, info.appStartup},
+        {MODULE_LANGUAGE, info.language},
         {MODULE_HWASAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
             InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED))},
         {MODULE_UBSAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
@@ -975,6 +977,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.appStartup,
         false,
         parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_LANGUAGE,
+        info.language,
+        false,
+        parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_HWASAN_ENABLED,
@@ -1482,6 +1490,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.isStageBasedModel = it->second.isStageBasedModel;
     hapInfo.deviceTypes = it->second.deviceTypes;
     hapInfo.appStartup = it->second.appStartup;
+    hapInfo.language = it->second.language;
     std::string moduleType = it->second.distro.moduleType;
     if (moduleType == Profile::MODULE_TYPE_ENTRY) {
         hapInfo.moduleType = ModuleType::ENTRY;

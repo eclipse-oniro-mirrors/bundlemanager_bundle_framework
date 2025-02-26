@@ -118,6 +118,7 @@ struct InnerModuleInfo {
     std::string routerMap;
     std::string packageName;
     std::string appStartup;
+    std::string language = "ArkTS1.0";
     // all user's value of isRemovable
     // key:userId
     // value:isRemovable true or flase
