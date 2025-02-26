@@ -5261,6 +5261,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        LOG_E(BMS_TAG_QUERY, "invalid userId, userId:%{public}d", userId);
         return false;
     }
 
@@ -5345,20 +5346,21 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfos(uint32_t flags, int32_t userId
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        LOG_E(BMS_TAG_QUERY, "invalid userId, userId:%{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     ErrCode ret = ImplicitQueryAllExtensionInfos(flags, requestUserId, extensionInfos, appIndex);
     if (ret != ERR_OK) {
-        LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfos error");
+        LOG_D(BMS_TAG_QUERY, "ImplicitQueryAllExtensionInfos error: %{public}d", ret);
         return ret;
     }
     if (extensionInfos.empty()) {
         LOG_W(BMS_TAG_QUERY, "no matching abilityInfo");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
-    LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfos success");
+    LOG_D(BMS_TAG_QUERY, "success");
     return ERR_OK;
 }
 
@@ -5376,13 +5378,14 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosByExtensionTypeName(const std::
         flags, requestUserId, extensionInfos, appIndex, typeName);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_QUERY, "QueryExtensionAbilityInfos error");
+        LOG_W(BMS_TAG_QUERY, "ImplicitQueryAllExtensionInfos error: %{public}d", ret);
         return ret;
     }
     if (extensionInfos.empty()) {
         LOG_W(BMS_TAG_QUERY, "no matching abilityInfo");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
-    LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfos success");
+    LOG_D(BMS_TAG_QUERY, "success");
     return ERR_OK;
 }
 
@@ -6074,6 +6077,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const ExtensionAbilityType &exten
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        LOG_E(BMS_TAG_QUERY, "invalid userId, userId:%{public}d", requestUserId);
         return false;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -6264,7 +6268,7 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        APP_LOGW("invalid userId");
+        APP_LOGW("invalid userId: %{public}d", userId);
         return false;
     }
     std::vector<AbilityInfo> abilityInfos;

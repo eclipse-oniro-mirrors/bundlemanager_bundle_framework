@@ -2713,7 +2713,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const ExtensionAbilityType &e
     }
     bool ret = dataMgr->QueryExtensionAbilityInfos(extensionType, userId, extensionInfos);
     if (!ret) {
-        LOG_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfos is failed");
+        LOG_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfos is failed, errno: %{public}d", ret);
         return false;
     }
 
@@ -3801,7 +3801,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosOnlyWithTypeName(const std:
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = dataMgr->QueryExtensionAbilityInfosByExtensionTypeName(typeName, flags, userId, infos);
     if (ret != ERR_OK) {
-        APP_LOGE("QueryExtensionAbilityInfos is failed");
+        APP_LOGE("QueryExtensionAbilityInfosByExtensionTypeName is failed");
         return ret;
     }
     if ((flags &
