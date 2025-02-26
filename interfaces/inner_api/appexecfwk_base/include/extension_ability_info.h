@@ -76,6 +76,7 @@ enum class ExtensionAbilityType {
     CALLER_INFO_QUERY = 25,
     ASSET_ACCELERATION = 26,
     FORM_EDIT = 27,
+    DISTRIBUTED = 28,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,

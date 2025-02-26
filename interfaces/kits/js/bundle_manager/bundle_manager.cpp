@@ -3293,6 +3293,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::BACKUP), &nBackup));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BACKUP", nBackup));
 
+    napi_value nDistributed;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::DISTRIBUTED), &nDistributed));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DISTRIBUTED", nDistributed));
+
     napi_value nWindow;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::WINDOW), &nWindow));
