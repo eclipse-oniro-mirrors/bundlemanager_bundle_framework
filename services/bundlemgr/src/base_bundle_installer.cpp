@@ -1244,9 +1244,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     // when bundle update start, bms need set disposed rule to forbidden app running.
-    SetDisposedRuleWhenBundleUpdateStart(newInfos, oldInfo, installParam.isPreInstallApp);
+    (void)SetDisposedRuleWhenBundleUpdateStart(newInfos, oldInfo, installParam.isPreInstallApp);
     // when bundle update end, bms need delete disposed rule.
-    ScopeGuard deleteDisposedRuleGuard([&] { DeleteDisposedRuleWhenBundleUpdateEnd(oldInfo); });
+    ScopeGuard deleteDisposedRuleGuard([&] { (void)DeleteDisposedRuleWhenBundleUpdateEnd(oldInfo); });
     result = InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
@@ -1539,6 +1539,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!CheckWhetherCanBeUninstalled(bundleName)) {
         return ERR_APPEXECFWK_UNINSTALL_CONTROLLED;
     }
+    bool isMultiUser = oldInfo.GetInnerBundleUserInfos().size() > 1;
+    // when bundle uninstall start, bms need set disposed rule to forbidden app running.
+    (void)SetDisposedRuleWhenBundleUninstallStart(bundleName, uninstallBundleAppId_, isMultiUser);
+    // when bundle uninstall end, bms need delete disposed rule.
+    ScopeGuard deleteDisposedRuleGuard([bundleName, isMultiUser, this] {
+        (void)DeleteDisposedRuleWhenBundleUninstallEnd(bundleName, uninstallBundleAppId_, isMultiUser);
+    });
 
     // reboot scan case will not kill the bundle
     if (installParam.GetKillProcess()) {
@@ -1567,7 +1574,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     DeleteEncryptionKeyId(oldInfo);
 
-    if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
+    if (isMultiUser) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
         auto res = RemoveBundleUserData(oldInfo, installParam.isKeepData, !installParam.isRemoveUser);
         if (res != ERR_OK) {
@@ -6153,6 +6160,9 @@ bool BaseBundleInstaller::SetDisposedRuleWhenBundleUpdateStart(
         appControlMgr->SetDisposedRuleOnlyForBms(oldBundleInfo.GetAppId());
     }
     return needSetDisposeRule_;
+#else
+    LOG_W(BMS_TAG_INSTALLER, "app control is disable");
+    return false;
 #endif
 }
 
@@ -6171,6 +6181,53 @@ bool BaseBundleInstaller::DeleteDisposedRuleWhenBundleUpdateEnd(const InnerBundl
 
     appControlMgr->DeleteDisposedRuleOnlyForBms(oldBundleInfo.GetAppId());
     return true;
+#else
+    LOG_W(BMS_TAG_INSTALLER, "app control is disable");
+    return false;
+#endif
+}
+
+bool BaseBundleInstaller::SetDisposedRuleWhenBundleUninstallStart(
+    const std::string &bundleName, const std::string &appId, bool isMultiUser)
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    if (isMultiUser) {
+        return false;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "set bms disposed rule when -n :%{public}s uninstall start",
+        bundleName.c_str());
+    std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
+    if (appControlMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "appControlMgr is nullptr, when -n :%{public}s uninstall start",
+            bundleName.c_str());
+        return false;
+    }
+    appControlMgr->SetDisposedRuleOnlyForBms(appId);
+    return true;
+#else
+    LOG_W(BMS_TAG_INSTALLER, "app control is disable");
+    return false;
+#endif
+}
+
+bool BaseBundleInstaller::DeleteDisposedRuleWhenBundleUninstallEnd(
+    const std::string &bundleName, const std::string &appId, bool isMultiUser)
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    if (isMultiUser) {
+        return false;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "delete bms disposed rule when -n :%{public}s uninstall end", bundleName.c_str());
+    std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
+    if (appControlMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "appControlMgr is nullptr, when -n :%{public}s uninstall end", bundleName.c_str());
+        return false;
+    }
+    appControlMgr->DeleteDisposedRuleOnlyForBms(appId);
+    return true;
+#else
+    LOG_W(BMS_TAG_INSTALLER, "app control is disable");
+    return false;
 #endif
 }
 
