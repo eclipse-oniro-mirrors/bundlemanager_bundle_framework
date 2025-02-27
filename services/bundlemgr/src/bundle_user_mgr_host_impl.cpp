@@ -218,6 +218,11 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
     }
 
     bool isStartUser = userId == Constants::START_USERID;
+    bool multiUserInstallThirdPreloadApp = true;
+    if (!isStartUser) {
+        multiUserInstallThirdPreloadApp = OHOS::system::GetBoolParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, true);
+        APP_LOGI("multiUserInstallThirdPreloadApp: %{public}d", multiUserInstallThirdPreloadApp);
+    }
     std::vector<PreInstallBundleInfo> allPreInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
     // Scan preset applications and parse package information.
     std::vector<std::string> allowLst = allowList.value_or(std::vector<std::string>());
@@ -251,8 +256,7 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
             continue;
         }
         if (!isStartUser && !preInfo.GetBundlePaths().empty() &&
-            (preInfo.GetBundlePaths().front().rfind(PRELOAD_APP, 0) == 0) &&
-            !OHOS::system::GetBoolParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, true)) {
+            (preInfo.GetBundlePaths().front().rfind(PRELOAD_APP, 0) == 0) && !multiUserInstallThirdPreloadApp) {
             APP_LOGI("-n %{public}s -u %{public}d not install preload app", preInfo.GetBundleName().c_str(), userId);
             continue;
         }
