@@ -387,13 +387,11 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
         LOG_E(BMS_TAG_DEFAULT, "GetString controlWant failed, ret: %{public}d", ret);
     }
     if (!wantString.empty()) {
-        auto wantPtr = Want::FromString(wantString);
+        std::unique_ptr<Want> wantPtr(Want::FromString(wantString));
         if (wantPtr) {
             controlRuleResult.controlWant = std::make_shared<Want>(*wantPtr);
-            delete wantPtr;
         } else {
             LOG_E(BMS_TAG_DEFAULT, "wantPtr is null");
-            return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
         }
     }
     if (callingName == AppControlConstants::EDM_CALLING) {
@@ -498,12 +496,12 @@ ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
         LOG_E(BMS_TAG_DEFAULT, "GetString DisposedStatus failed, ret: %{public}d", ret);
         return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
-    std::unique_ptr<Want> temp(Want::FromString(wantString));
-    if (!temp) {
-        LOG_E(BMS_TAG_DEFAULT, "temp is null");
+    std::unique_ptr<Want> wantPtr(Want::FromString(wantString));
+    if (!wantPtr) {
+        LOG_E(BMS_TAG_DEFAULT, "wantPtr is null");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
-    want = *temp;
+    want = *wantPtr;
     return ERR_OK;
 }
 
