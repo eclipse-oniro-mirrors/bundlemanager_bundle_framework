@@ -191,6 +191,7 @@ ohos_shared_library("bundlemgr_mini") {
   sources = [ "src/bundlemgr/bundle_mgr_mini_proxy.cpp" ]
 
   public_configs = [
+    "../appexecfwk_base:appexecfwk_base_sdk_config",
     ":appexecfwk_core_config",
     ":bundlemgr_sdk_config",
   ]
