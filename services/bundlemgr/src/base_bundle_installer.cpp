@@ -114,6 +114,7 @@ const std::string INSTALL_SOURCE_UNKNOWN = "unknown";
 const std::string ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
 const char* OLD_ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
 const char* NEW_ARK_WEB_BUNDLE_NAME = "com.ohos.arkwebcore";
+const char* APP_GALLERY_NAME_PARAM = "const.appgallery.shaderowner.bundlename";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -6243,10 +6244,9 @@ bool BaseBundleInstaller::AddAppGalleryHapToTempPath(const bool isPreInstall,
         LOG_D(BMS_TAG_INSTALLER, "not system app");
         return false;
     }
-    std::string bundleName;
-    std::string abilityName;
-    if (!dataMgr_->QueryAppGalleryAbilityName(bundleName, abilityName)) {
-        LOG_W(BMS_TAG_INSTALLER, "appGallery not exist");
+    std::string bundleName = OHOS::system::GetParameter(APP_GALLERY_NAME_PARAM, "");
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "ag param get failed");
         return false;
     }
     if (bundleInfo.GetBundleName() != bundleName) {
