@@ -3795,8 +3795,7 @@ void BMSEventHandler::InnerProcessStockBundleProvisionInfo()
     }
     std::unordered_set<std::string> allBundleNames;
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames)) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAllAppProvisionInfoBundleName failed");
-        return;
+        LOG_W(BMS_TAG_DEFAULT, "GetAllAppProvisionInfoBundleName failed");
     }
     // get all installed bundleName
     std::vector<std::string> installedBundleNames = dataMgr->GetAllBundleName();
