@@ -387,7 +387,14 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
         LOG_E(BMS_TAG_DEFAULT, "GetString controlWant failed, ret: %{public}d", ret);
     }
     if (!wantString.empty()) {
-        controlRuleResult.controlWant = std::make_shared<Want>(*Want::FromString(wantString));
+        auto wantPtr = Want::FromString(wantString);
+        if(wantPtr) {
+            controlRuleResult.controlWant = std::make_shared<Want>(*wantPtr);
+            delete wantPtr;
+        } else {
+            LOG_E(BMS_TAG_DEFAULT, "wantPtr is null");
+            return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        }  
     }
     if (callingName == AppControlConstants::EDM_CALLING) {
         controlRuleResult.isEdm = true;
