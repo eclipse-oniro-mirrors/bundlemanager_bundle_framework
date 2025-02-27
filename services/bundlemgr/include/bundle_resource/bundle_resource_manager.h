@@ -27,7 +27,9 @@
 #include "bundle_system_state.h"
 #include "inner_bundle_info.h"
 #include "resource_info.h"
+#include "resource_manager.h"
 #include "singleton.h"
+#include "single_delayed_task_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -135,9 +137,14 @@ private:
 
     void ProcessResourceInfoNoNeedToParseOtherIcon(std::vector<ResourceInfo> &resourceInfos);
 
+    void PrepareSysRes();
+
     std::atomic_uint currentTaskNum_ = 0;
     std::mutex mutex_;
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
+    std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_ = nullptr;
+    static std::mutex g_sysResMutex;
+    static std::shared_ptr<Global::Resource::ResourceManager> g_resMgr;
 };
 } // AppExecFwk
 } // OHOS
