@@ -126,7 +126,9 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "uiService", ExtensionAbilityType::UI_SERVICE },
     { "recentPhoto", ExtensionAbilityType::RECENT_PHOTO },
     { "assetAcceleration", ExtensionAbilityType::ASSET_ACCELERATION },
-    { "formEdit", ExtensionAbilityType::FORM_EDIT }
+    { "formEdit", ExtensionAbilityType::FORM_EDIT },
+    { "awc/webpage", ExtensionAbilityType::AWC_WEBPAGE },
+    { "awc/newsfeed", ExtensionAbilityType::AWC_NEWSFEED }
 };
 
 // the new extension type does not need to be added here
