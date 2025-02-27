@@ -140,6 +140,7 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     element.SetModuleName(installResult.modulePackage);
     element.SetAbilityName(installResult.abilityName);
     want.SetElement(element);
+    want.SetParam(Constants::BUNDLE_NAME, installResult.bundleName);
     want.SetParam(Constants::UID, installResult.uid);
     want.SetParam(Constants::USER_ID, BundleUtil::GetUserIdByUid(installResult.uid));
     want.SetParam(Constants::ABILITY_NAME, installResult.abilityName);
