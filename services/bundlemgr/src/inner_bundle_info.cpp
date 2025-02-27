@@ -4616,7 +4616,7 @@ ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
     cloneInfo.accessTokenIdEx = attr.accessTokenIdEx;
     cloneInfo.uid = attr.uid;
     cloneInfo.gids = attr.gids;
-    int64_t now = BundleUtil::GetCurrentTime();
+    int64_t now = BundleUtil::GetCurrentTimeMs();
     cloneInfo.installTime = now;
     cloneInfos[appIndexKey] = cloneInfo;
     APP_LOGD("Add clone app userId: %{public}d appIndex: %{public}d in bundle: %{public}s",
