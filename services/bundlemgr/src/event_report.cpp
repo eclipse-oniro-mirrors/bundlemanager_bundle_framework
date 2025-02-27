@@ -200,6 +200,16 @@ void EventReport::SendAppControlRuleEvent(const EventInfo& eventInfo)
     EventReport::SendSystemEvent(BMSEventType::APP_CONTROL_RULE, eventInfo);
 }
 
+void EventReport::SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode)
+{
+    APP_LOGI("SendDbErrorEvent dbname:%{public}s operation:%{public}d", dbName.c_str(), operationType);
+    EventInfo eventInfo;
+    eventInfo.dbName = dbName;
+    eventInfo.operationType = operationType;
+    eventInfo.errorCode = errorCode;
+    EventReport::SendSystemEvent(BMSEventType::DB_ERROR, eventInfo);
+}
+
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
 {
 #ifdef HISYSEVENT_ENABLE

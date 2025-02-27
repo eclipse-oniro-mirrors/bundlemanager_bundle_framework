@@ -58,6 +58,8 @@ public:
     void CheckSystemSizeAndHisysEvent(const std::string &path, const std::string &fileName);
 
     bool CheckIsSatisfyTime();
+
+    void SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode);
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
     int32_t InsertWithRetry(std::shared_ptr<NativeRdb::RdbStore> rdbStore, int64_t &rowId,

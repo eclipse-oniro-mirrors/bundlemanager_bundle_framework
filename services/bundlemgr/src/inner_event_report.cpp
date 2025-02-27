@@ -47,6 +47,7 @@ constexpr const char* AOT_COMPILE_RECORD = "AOT_COMPILE_RECORD";
 constexpr const char* QUERY_OF_CONTINUE_TYPE = "QUERY_OF_CONTINUE_TYPE";
 constexpr const char* BMS_DISK_SPACE = "BMS_DISK_SPACE";
 constexpr const char* APP_CONTROL_RULE = "APP_CONTROL_RULE";
+constexpr const char* DB_ERROR = "DB_ERROR";
 
 // event params
 const char* EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -118,6 +119,9 @@ const char* FAILURE_REASON = "failureReason";
 const char* FILE_NAME = "fileName";
 const char* FREE_SIZE = "freeSize";
 const char* OPERATION_TYPE = "operationType";
+const char* DB_NAME = "dbName";
+const char* ERROR_CODE = "errorCode";
+const char* REBUILD_TYPE = "rebuildType";
 
 const InstallScene INSTALL_SCENE_STR_MAP_KEY[] = {
     InstallScene::NORMAL,
@@ -285,7 +289,11 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::APP_CONTROL_RULE,
             [](const EventInfo& eventInfo) {
                 InnerSendAppControlRule(eventInfo);
-            } }
+            } },
+        { BMSEventType::DB_ERROR,
+            [](const EventInfo& eventInfo) {
+                InnerSendDbErrorEvent(eventInfo);
+            } },
     };
 
 void InnerEventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
@@ -640,6 +648,16 @@ void InnerEventReport::InnerSendAppControlRule(const EventInfo& eventInfo)
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
+void InnerEventReport::InnerSendDbErrorEvent(const EventInfo& eventInfo)
+{
+    InnerSystemEventWrite(
+        DB_ERROR,
+        HiSysEventType::BEHAVIOR,
+        DB_NAME, eventInfo.dbName,
+        OPERATION_TYPE, eventInfo.operationType,
+        ERROR_CODE, eventInfo.errorCode);
+}
+
 template<typename... Types>
 void InnerEventReport::InnerEventWrite(
     const std::string &eventName,
@@ -648,6 +666,19 @@ void InnerEventReport::InnerEventWrite(
 {
     HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::BUNDLEMANAGER_UE,
+        eventName,
+        static_cast<OHOS::HiviewDFX::HiSysEvent::EventType>(type),
+        keyValues...);
+}
+
+template<typename... Types>
+void InnerEventReport::InnerSystemEventWrite(
+    const std::string &eventName,
+    HiSysEventType type,
+    Types... keyValues)
+{
+    HiSysEventWrite(
+        OHOS::HiviewDFX::HiSysEvent::Domain::BUNDLE_MANAGER,
         eventName,
         static_cast<OHOS::HiviewDFX::HiSysEvent::EventType>(type),
         keyValues...);
