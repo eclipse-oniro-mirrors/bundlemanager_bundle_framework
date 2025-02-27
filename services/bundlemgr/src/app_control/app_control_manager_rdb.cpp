@@ -388,13 +388,13 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     }
     if (!wantString.empty()) {
         auto wantPtr = Want::FromString(wantString);
-        if(wantPtr) {
+        if (wantPtr) {
             controlRuleResult.controlWant = std::make_shared<Want>(*wantPtr);
             delete wantPtr;
         } else {
             LOG_E(BMS_TAG_DEFAULT, "wantPtr is null");
             return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
-        }  
+        }
     }
     if (callingName == AppControlConstants::EDM_CALLING) {
         controlRuleResult.isEdm = true;
