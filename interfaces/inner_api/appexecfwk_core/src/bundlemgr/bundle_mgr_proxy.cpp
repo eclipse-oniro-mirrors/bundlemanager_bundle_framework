@@ -1547,7 +1547,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoExt(
     }
     if (!data.WriteFileDescriptor(fd)) {
         APP_LOGE("fail to GetBundleArchiveInfo due to write FileDescriptor fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
         APP_LOGE("fail to GetBundleArchiveInfoV9 due to write flags fail");
