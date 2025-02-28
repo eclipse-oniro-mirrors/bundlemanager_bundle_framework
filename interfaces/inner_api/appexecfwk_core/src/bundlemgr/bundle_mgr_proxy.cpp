@@ -1526,6 +1526,37 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, i
         BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
 }
 
+ErrCode BundleMgrProxy::GetBundleArchiveInfoExt(
+    const std::string &hapFilePath, int32_t fd, int32_t flags, BundleInfo &bundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetBundleArchiveInfoV9 with int flags of %{private}s", hapFilePath.c_str());
+    if (hapFilePath.empty()) {
+        APP_LOGE("fail to GetBundleArchiveInfoV9 due to params empty");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetBundleArchiveInfoV9 due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(hapFilePath)) {
+        APP_LOGE("fail to GetBundleArchiveInfoV9 due to write hapFilePath fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteFileDescriptor(fd)) {
+        APP_LOGE("fail to GetBundleArchiveInfo due to write FileDescriptor fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetBundleArchiveInfoV9 due to write flags fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<BundleInfo>(
+        BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_EXT, data, bundleInfo);
+}
+
 bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleInfo &hapModuleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

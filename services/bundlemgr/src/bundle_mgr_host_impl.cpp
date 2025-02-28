@@ -1223,6 +1223,23 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::GetBundleArchiveInfoExt(
+    const std::string &hapFilePath, int32_t fd, int32_t flags, BundleInfo &bundleInfo)
+{
+    APP_LOGD("start GetBundleArchiveInfoV9, hapFilePath : %{private}s, flags : %{public}d",
+        hapFilePath.c_str(), flags);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    return bmsExtensionDataMgr.GetBundleArchiveInfoExt(hapFilePath, fd, bundleInfo);
+}
+
 ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &hapFilePath,
     int32_t flags, BundleInfo &bundleInfo, bool fromV9)
 {

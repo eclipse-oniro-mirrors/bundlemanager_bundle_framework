@@ -184,6 +184,17 @@ static ErrCode InnerGetBundleArchiveInfo(std::string &hapFilePath, int32_t flags
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     ErrCode ret = iBundleMgr->GetBundleArchiveInfoV9(hapFilePath, flags, bundleInfo);
+    if (!(ret == SUCCESS || ret == ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED ||
+        ret == ERR_BUNDLE_MANAGER_PERMISSION_DENIED)) {
+        int32_t fd = open(hapFilePath.c_str(), O_RDONLY);
+        if (fd >= 0) {
+            ErrCode retExt = iBundleMgr->GetBundleArchiveInfoExt(hapFilePath, fd, flags, bundleInfo);
+            close(fd);
+            if (retExt == SUCCESS) {
+                ret = retExt;
+            }
+        }
+    }
     APP_LOGD("GetBundleArchiveInfoV9 ErrCode : %{public}d", ret);
     return CommonFunc::ConvertErrCode(ret);
 }

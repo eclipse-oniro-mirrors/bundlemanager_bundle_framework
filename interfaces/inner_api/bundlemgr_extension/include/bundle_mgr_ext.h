@@ -170,6 +170,11 @@ public:
     {
         return false;
     }
+    virtual ErrCode GetBundleArchiveInfoExt(const std::string &hapFilePath, int32_t fd,
+        BundleInfo &bundleInfo)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
 };
 
 } // AppExecFwk

@@ -486,6 +486,16 @@ public:
     virtual ErrCode GetBundleArchiveInfoV9(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo) override;
     /**
+     * @brief Obtains information about an application bundle contained in an ohos Ability Package (HAP).
+     * @param hapFilePath Indicates the absolute file path of the HAP.
+     * @param fd Indicates the FileDescriptor.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
+     */
+    virtual ErrCode GetBundleArchiveInfoExt(
+        const std::string &hapFilePath, int32_t fd, int32_t flags, BundleInfo &bundleInfo) override;
+    /**
      * @brief Obtain the HAP module info of a specific ability through the proxy object.
      * @param abilityInfo Indicates the ability.
      * @param hapModuleInfo Indicates the obtained HapModuleInfo object.

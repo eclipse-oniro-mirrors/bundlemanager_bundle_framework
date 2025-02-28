@@ -1063,6 +1063,8 @@ public:
         std::string &dataDir) override;
     virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) override;
     virtual ErrCode SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums) override;
+    virtual ErrCode GetBundleArchiveInfoExt(const std::string &hapFilePath, int32_t fd,
+        int32_t flags, BundleInfo &bundleInfo) override;
 
 private:
     ErrCode MigrateDataUserAuthentication();
