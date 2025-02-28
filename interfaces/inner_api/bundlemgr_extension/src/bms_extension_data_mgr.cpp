@@ -615,5 +615,21 @@ bool BmsExtensionDataMgr::IsNeedToSkipPreBundleInstall()
     }
     return bundleMgrExtPtr->IsNeedToSkipPreBundleInstall();
 }
+
+bool BmsExtensionDataMgr::GetBundleArchiveInfoExt(
+    const std::string &hapFilePath, int32_t fd, int32_t flags, BundleInfo &bundleInfo)
+{
+    if ((Init() != ERR_OK) || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return false;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return false;
+    }
+    return bundleMgrExtPtr->GetBundleArchiveInfoExt(hapFilePath, fd, bundleInfo);
+}
 } // AppExecFwk
 } // OHOS

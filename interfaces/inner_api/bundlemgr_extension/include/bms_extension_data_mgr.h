@@ -79,6 +79,8 @@ public:
     std::string GetCompatibleDeviceType(const std::string &bundleName);
     ErrCode VerifyActivationLockToken(bool &res);
     bool IsNeedToSkipPreBundleInstall();
+    ErrCode GetBundleArchiveInfoExt(const std::string &hapFilePath, int32_t fd, int32_t flags,
+        BundleInfo &bundleInfo);
 private:
     bool OpenHandler();
     static void *handler_;
