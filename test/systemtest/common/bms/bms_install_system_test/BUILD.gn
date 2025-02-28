@@ -301,12 +301,76 @@ ohos_systemtest("BmsInstallExtensionSystemTest") {
   ]
 }
 
+ohos_systemtest("BmsInstallGroupTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  module_out_path = module_output_path
+
+  sources = [ "bms_install_group_test.cpp" ]
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stSystemBundle/bmsSystemBundle1:bmsSystemBundle1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle1:stbmsThirdBundle1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle10:stbmsThirdBundle10",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle12:stbmsThirdBundle12",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle13:stbmsThirdBundle13",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle17:stbmsThirdBundle17",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle2:stbmsThirdBundle2",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle24:stbmsThirdBundle24",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle25:stbmsThirdBundle25",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle26:stbmsThirdBundle26",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle28:stbmsThirdBundle28",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle3:stbmsThirdBundle3",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle4:stbmsThirdBundle4",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle41:stbmsThirdBundle41",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle42:stbmsThirdBundle42",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle43:stbmsThirdBundle43",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle44:stbmsThirdBundle44",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle45:stbmsThirdBundle45",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle5:stbmsThirdBundle5",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle6:stbmsThirdBundle6",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle7:stbmsThirdBundle7",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle8:stbmsThirdBundle8",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle9:stbmsThirdBundle9",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundles1:stbmsThirdBundles1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/e21Test:e21Test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/e23Test:e23Test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/e3Test:e3Test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/e4Test:e4Test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/e5Test:e5Test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/e6Test:e6Test",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "${services_path}/test/moduletest/utils:tool_common",
+  ]
+
+  defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
+
+  external_deps = [
+    "ability_base:want",
+    "common_event_service:cesfwk_innerkits",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+}
+
 group("systemtest") {
   testonly = true
 
   deps = [
     ":BmsInstallExtensionSystemTest",
     ":BmsInstallExternalHspSoTest",
+    ":BmsInstallGroupTest",
     ":BmsInstallHapSoTest",
     ":BmsInstallMultiUserTest",
     ":BmsInstallSystemTest",
