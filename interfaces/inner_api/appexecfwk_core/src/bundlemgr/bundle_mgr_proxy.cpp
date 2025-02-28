@@ -1554,7 +1554,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoExt(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfoWithErrCode<BundleInfo>(
-        BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
+        BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_EXT, data, bundleInfo);
 }
 
 bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleInfo &hapModuleInfo)
