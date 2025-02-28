@@ -617,7 +617,7 @@ bool BmsExtensionDataMgr::IsNeedToSkipPreBundleInstall()
 }
 
 ErrCode BmsExtensionDataMgr::GetBundleArchiveInfoExt(
-    const std::string &hapFilePath, int32_t fd, int32_t flags, BundleInfo &bundleInfo)
+    const std::string &hapFilePath, int32_t fd, BundleInfo &bundleInfo)
 {
     if ((Init() != ERR_OK) || handler_ == nullptr) {
         APP_LOGW("link failed");
