@@ -616,18 +616,18 @@ bool BmsExtensionDataMgr::IsNeedToSkipPreBundleInstall()
     return bundleMgrExtPtr->IsNeedToSkipPreBundleInstall();
 }
 
-bool BmsExtensionDataMgr::GetBundleArchiveInfoExt(
+ErrCode BmsExtensionDataMgr::GetBundleArchiveInfoExt(
     const std::string &hapFilePath, int32_t fd, int32_t flags, BundleInfo &bundleInfo)
 {
     if ((Init() != ERR_OK) || handler_ == nullptr) {
         APP_LOGW("link failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
     auto bundleMgrExtPtr =
         BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
     if (bundleMgrExtPtr == nullptr) {
         APP_LOGW("GetBundleMgrExt failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
     return bundleMgrExtPtr->GetBundleArchiveInfoExt(hapFilePath, fd, bundleInfo);
 }
