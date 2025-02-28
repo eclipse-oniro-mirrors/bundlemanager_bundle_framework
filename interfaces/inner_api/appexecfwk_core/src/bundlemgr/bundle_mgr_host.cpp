@@ -117,7 +117,7 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9):
             errCode = this->HandleGetApplicationInfoWithIntFlagsV9(data, reply);
             break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_EXT ):
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_EXT):
             errCode = this->HandleGetBundleArchiveInfoExt(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS_WITH_INT_FLAGS):
