@@ -1230,12 +1230,10 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoExt(
         hapFilePath.c_str(), flags);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
-        close(fd);
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
-        close(fd);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
