@@ -1527,7 +1527,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, i
 }
 
 ErrCode BundleMgrProxy::GetBundleArchiveInfoExt(
-    const std::string &hapFilePath, int32_t fd, const BundleFlag flag, BundleInfo &bundleInfo)
+    const std::string &hapFilePath, int32_t fd, int32_t flags, BundleInfo &bundleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetBundleArchiveInfoV9 with int flags of %{private}s", hapFilePath.c_str());
