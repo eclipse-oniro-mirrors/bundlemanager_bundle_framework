@@ -30,6 +30,8 @@
 #include "free_install/install_result.h"
 #include "free_install/target_ability_info.h"
 #include "nlohmann/json.hpp"
+#include "plugin_bundle_info.h"
+#include "plugin_module_info.h"
 #include "quick_fix/app_quick_fix.h"
 #include "shared/shared_bundle_info.h"
 #include "shared/shared_module_info.h"
@@ -160,6 +162,10 @@ void to_json(nlohmann::json &jsonObject, const Skill &skill);
 void from_json(const nlohmann::json &jsonObject, Skill &skill);
 void to_json(nlohmann::json &jsonObject, const CodeProtectBundleInfo &codeProtectBundleInfo);
 void from_json(const nlohmann::json &jsonObject, CodeProtectBundleInfo &codeProtectBundleInfo);
+void to_json(nlohmann::json &jsonObject, const PluginBundleInfo &pluginBundleInfo);
+void from_json(const nlohmann::json &jsonObject, PluginBundleInfo &pluginBundleInfo);
+void to_json(nlohmann::json &jsonObject, const PluginModuleInfo &pluginModuleInfo);
+void from_json(const nlohmann::json &jsonObject, PluginModuleInfo &pluginModuleInfo);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H

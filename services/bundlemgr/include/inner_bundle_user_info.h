@@ -19,6 +19,7 @@
 #include "bundle_user_info.h"
 #include "inner_bundle_clone_info.h"
 #include "json_util.h"
+#include "plugin_bundle_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -48,6 +49,7 @@ struct InnerBundleUserInfo {
 
     // appIndex -> cloneInfo
     std::map<std::string, InnerBundleCloneInfo> cloneInfos;
+    std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos;
     BundleUserInfo bundleUserInfo;
 
     bool operator() (const InnerBundleUserInfo& info) const
@@ -62,6 +64,17 @@ struct InnerBundleUserInfo {
     static std::string AppIndexToKey(const int32_t appIndex)
     {
         return std::to_string(appIndex);
+    }
+
+    bool GetPluginBundleInfo(const std::string &pluginBundleName, PluginBundleInfo &pluginBundleInfo) const
+    {
+        for (auto &item : pluginBundleInfos) {
+            if (item.first == pluginBundleName) {
+                pluginBundleInfo = item.second;
+                return true;
+            }
+        }
+        return false;
     }
 };
 
