@@ -188,6 +188,7 @@ static ErrCode InnerGetBundleArchiveInfo(std::string &hapFilePath, int32_t flags
         ret == ERR_BUNDLE_MANAGER_PERMISSION_DENIED)) {
         int32_t fd = open(hapFilePath.c_str(), O_RDONLY);
         ErrCode retExt = iBundleMgr->GetBundleArchiveInfoExt(hapFilePath, fd, flags, bundleInfo);
+        close(fd);
         if (retExt == SUCCESS) {
             ret = retExt;
         }
