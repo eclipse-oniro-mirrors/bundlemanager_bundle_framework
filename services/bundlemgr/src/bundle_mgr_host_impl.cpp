@@ -1239,7 +1239,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoExt(
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    return bmsExtensionDataMgr.GetBundleArchiveInfoExt(hapFilePath, fd, flags, bundleInfo);
+    return bmsExtensionDataMgr.GetBundleArchiveInfoExt(hapFilePath, fd, bundleInfo);
 }
 
 ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &hapFilePath,
