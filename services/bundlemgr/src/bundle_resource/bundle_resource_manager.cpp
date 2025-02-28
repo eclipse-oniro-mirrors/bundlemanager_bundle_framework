@@ -39,11 +39,16 @@ constexpr const char* THEME_ICONS_B = "/b/app/icons/";
 constexpr const char* INNER_UNDER_LINE = "_";
 constexpr const char* THEME_ICONS_A_FLAG = "/a/app/flag";
 constexpr const char* THEME_ICONS_B_FLAG = "/b/app/flag";
+constexpr const char* TASK_NAME = "ReleaseResourceTask";
+constexpr uint64_t DELAY_TIME_MILLI_SECONDS = 3 * 60 * 1000; // 3mins
 }
+std::mutex BundleResourceManager::g_sysResMutex;
+std::shared_ptr<Global::Resource::ResourceManager> BundleResourceManager::g_resMgr = nullptr;
 
 BundleResourceManager::BundleResourceManager()
 {
     bundleResourceRdb_ = std::make_shared<BundleResourceRdb>();
+    delayedTaskMgr_ = std::make_shared<SingleDelayedTaskMgr>(TASK_NAME, DELAY_TIME_MILLI_SECONDS);
 }
 
 BundleResourceManager::~BundleResourceManager()
@@ -59,6 +64,7 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
         return false;
     }
     DeleteNotExistResourceInfo(bundleName, 0, resourceInfos);
+    PrepareSysRes();
 
     if (!AddResourceInfos(userId, resourceInfos)) {
         APP_LOGE("error, bundleName:%{public}s", bundleName.c_str());
@@ -106,6 +112,7 @@ bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleNa
             bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return false;
     }
+    PrepareSysRes();
     if (!AddResourceInfo(userId, resourceInfo)) {
         APP_LOGE("error, bundleName %{public}s, moduleName %{public}s, abilityName %{public}s failed",
             bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
@@ -132,6 +139,7 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
         APP_LOGI("need stop current task, new first");
         return false;
     }
+    PrepareSysRes();
     if (!AddResourceInfosByMap(resourceInfosMap, tempTaskNum, type, userId, oldUserId)) {
         APP_LOGE("add all resource info failed, userId:%{public}d", userId);
         return false;
@@ -688,6 +696,24 @@ void BundleResourceManager::ProcessResourceInfoNoNeedToParseOtherIcon(std::vecto
             resourceInfos[index].iconNeedParse_ = false;
         }
     }
+}
+
+void BundleResourceManager::PrepareSysRes()
+{
+    {
+        std::lock_guard<std::mutex> guard(g_sysResMutex);
+        if (!g_resMgr) {
+            g_resMgr = std::shared_ptr<Global::Resource::ResourceManager>(
+                Global::Resource::CreateResourceManager());
+            APP_LOGI("get system resource");
+        }
+    }
+    auto task = [] {
+        std::lock_guard<std::mutex> guard(g_sysResMutex);
+        g_resMgr = nullptr;
+        APP_LOGI("release system resource");
+    };
+    delayedTaskMgr_->ScheduleDelayedTask(task);
 }
 } // AppExecFwk
 } // OHOS

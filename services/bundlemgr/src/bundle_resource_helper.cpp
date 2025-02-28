@@ -36,10 +36,6 @@ void BundleResourceHelper::BundleSystemStateInit()
     BundleSystemState::GetInstance().SetSystemLanguage(BundleResourceParam::GetSystemLanguage());
     BundleSystemState::GetInstance().SetSystemColorMode(BundleResourceParam::GetSystemColorMode());
     APP_LOGI("current system state: %{public}s", BundleSystemState::GetInstance().ToString().c_str());
-    // init resource manager
-    if (Global::Resource::GetSystemResourceManagerNoSandBox() == nullptr) {
-        APP_LOGE("init no sand box resource manager failed");
-    }
 #endif
 }
 
