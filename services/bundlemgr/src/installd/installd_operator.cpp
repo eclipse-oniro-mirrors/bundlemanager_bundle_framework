@@ -2378,7 +2378,9 @@ int32_t InstalldOperator::MigrateData(const std::vector<std::string> &sourcePath
     auto result = MigrateDataCheckPrmissions(realSourcePaths, destPath);
     if (result != RESULT_OK) {
         LOG_E(BMS_TAG_INSTALLD, "migrate data check permissions failed, result:%{public}d", result);
-        return result;
+        if (realSourcePaths.empty() || result != ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED) {
+            return result;
+        }
     }
     auto ret = RESULT_OK;
     for (const auto &sourcePath : realSourcePaths) {
@@ -2516,6 +2518,10 @@ int32_t InstalldOperator::MigrateDataCheckPrmissions(
     if (access(destPath.c_str(), W_OK) != 0) {
         LOG_E(BMS_TAG_INSTALLD, "dest path[%{public}s] access failed", destPath.c_str());
         return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED;
+    }
+    if (!IsExistDir(destPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "dest path[%{public}s] not a directory", destPath.c_str());
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
     }
     return result;
 }
