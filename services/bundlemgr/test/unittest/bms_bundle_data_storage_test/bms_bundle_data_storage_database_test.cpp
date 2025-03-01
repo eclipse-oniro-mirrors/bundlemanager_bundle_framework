@@ -3640,6 +3640,176 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerProcessRequestPermissions_0001, 
 }
 
 /**
+ * @tc.number: ShouldReplace_0001
+ * @tc.name: test function ShouldReplace
+ * @tc.desc: test function ShouldReplace
+ */
+ HWTEST_F(BmsBundleDataStorageDatabaseTest, ShouldReplace_0001, Function | SmallTest | Level1)
+ {
+    std::unordered_map<std::string, std::string> moduleNameMap;
+    moduleNameMap["entry"] = "entry";
+    moduleNameMap["feature"] = "feature";
+    moduleNameMap["shared"] = "shared";
+
+    InnerBundleInfo innerBundleInfo;
+    RequestPermission permission;
+    RequestPermission permission2;
+
+    permission.name = "aaa";
+    permission.moduleName = "entry";
+    permission.reasonId = 0;
+    permission2.name = "aaa";
+    permission2.moduleName = "entry";
+    permission2.reasonId = 0;
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "entry";
+    permission.reasonId = 0;
+    permission2.name = "aaa";
+    permission2.moduleName = "feature";
+    permission2.reasonId = 0;
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "feature";
+    permission.reasonId = 0;
+    permission2.name = "aaa";
+    permission2.moduleName = "feature";
+    permission2.reasonId = 0;
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "entry";
+    permission.reasonId = 0;
+    permission2.name = "aaa";
+    permission2.moduleName = "entry";
+    permission2.reasonId = 100;
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "entry";
+    permission.reasonId = 0;
+    permission2.name = "aaa";
+    permission2.moduleName = "feature";
+    permission2.reasonId = 100;
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "entry";
+    permission.reasonId = 100;
+    permission2.name = "aaa";
+    permission2.moduleName = "entry";
+    permission2.reasonId = 0;
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "entry";
+    permission.reasonId = 100;
+    permission2.name = "aaa";
+    permission2.moduleName = "feature";
+    permission2.reasonId = 0;
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "feature";
+    permission.reasonId = 100;
+    permission2.name = "aaa";
+    permission2.moduleName = "entry";
+    permission2.reasonId = 0;
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "feature";
+    permission.reasonId = 100;
+    permission2.name = "aaa";
+    permission2.moduleName = "feature";
+    permission2.reasonId = 0;
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "feature";
+    permission.reasonId = 100;
+    permission2.name = "aaa";
+    permission2.moduleName = "entry";
+    permission2.reasonId = 100;
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "feature";
+    permission.reasonId = 200;
+    permission2.name = "aaa";
+    permission2.moduleName = "entry";
+    permission2.reasonId = 100;
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "feature";
+    permission.reasonId = 100;
+    permission2.name = "aaa";
+    permission2.moduleName = "feature";
+    permission2.reasonId = 100;
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "feature";
+    permission.reasonId = 100;
+    permission2.name = "aaa";
+    permission2.moduleName = "feature";
+    permission2.reasonId = 200;
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "entry";
+    permission.reasonId = 100;
+    permission2.name = "aaa";
+    permission2.moduleName = "entry";
+    permission2.reasonId = 100;
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "entry";
+    permission.reasonId = 100;
+    permission2.name = "aaa";
+    permission2.moduleName = "entry";
+    permission2.reasonId = 200;
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "entry";
+    permission.reasonId = 100;
+    permission2.name = "aaa";
+    permission2.moduleName = "feature";
+    permission2.reasonId = 100;
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+
+    permission.name = "aaa";
+    permission.moduleName = "entry";
+    permission.reasonId = 100;
+    permission2.name = "aaa";
+    permission2.moduleName = "feature";
+    permission2.reasonId = 200;
+    EXPECT_FALSE(innerBundleInfo.ShouldReplacePermission(permission, permission2, moduleNameMap));
+    EXPECT_TRUE(innerBundleInfo.ShouldReplacePermission(permission2, permission, moduleNameMap));
+}
+
+/**
  * @tc.number: InnerBundleInfo_6500
  * @tc.name: Test to_json and from_json
  * @tc.desc: 1.Test convert extendResourceInfo to json
