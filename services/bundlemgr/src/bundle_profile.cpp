@@ -23,6 +23,23 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
+const int32_t THRESHOLD_VAL_LEN = 40;
+bool IsSupportCompressNativeLibs()
+{
+    char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
+    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
+    if (ret <= 0) {
+        APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS.c_str());
+        return false;
+    }
+    if (std::strcmp(compressNativeLibs, "true") == 0) {
+        return true;
+    }
+    return false;
+}
+}
 namespace ProfileReader {
 int32_t g_parseResult = ERR_OK;
 std::mutex g_mutex;
@@ -677,12 +694,14 @@ void from_json(const nlohmann::json &jsonObject, Device &device)
         device.debug,
         false,
         g_parseResult);
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_DEVICE_CONFIG_PROFILE_KEY_COMPRESS_NATIVE_LIBS,
-        device.compressNativeLibs,
-        false,
-        g_parseResult);
+    if (IsSupportCompressNativeLibs()) {
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+            jsonObjectEnd,
+            BUNDLE_DEVICE_CONFIG_PROFILE_KEY_COMPRESS_NATIVE_LIBS,
+            device.compressNativeLibs,
+            false,
+            g_parseResult);
+    }
     GetValueIfFindKey<Network>(jsonObject,
         jsonObjectEnd,
         BUNDLE_DEVICE_CONFIG_PROFILE_KEY_NETWORK,
@@ -2293,12 +2312,6 @@ bool ToInnerBundleInfo(
     InnerModuleInfo innerModuleInfo;
     ToInnerModuleInfo(configJson, innerModuleInfo);
 
-    if (applicationInfo.apiTargetVersion % ServiceConstants::API_VERSION_MOD <=
-        ServiceConstants::API_VERSION_FIFTEEN) {
-        APP_LOGD("targetAPIVersion is less than 16, set isCompressNativeLibs flag to true");
-        applicationInfo.isCompressNativeLibs = true;
-        innerModuleInfo.compressNativeLibs = true;
-    }
     BundleInfo bundleInfo;
     ToBundleInfo(configJson, applicationInfo, innerModuleInfo, transformParam, bundleInfo);
 
