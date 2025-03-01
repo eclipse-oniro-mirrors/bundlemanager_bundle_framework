@@ -169,7 +169,7 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0200, Function | SmallTest | Leve
  *           2.DeleteStorageBundleInfo
  * @tc.require: issueI56W8B
  */
-HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0100, Function | SmallTest | Level2)
 {
     std::unique_ptr<IBundleDataStorage> dataStorage = std::make_unique<BundleDataStorageRdb>();
     ApplicationInfo applicationInfo;
@@ -485,7 +485,7 @@ HWTEST_F(BmsRdbDataManagerTest, FirstInstallDataStorageRdb_0400, Function | Smal
  * @tc.name: AddFirstInstallBundleInfo
  * @tc.desc: 1.AddFirstInstallBundleInfo
  */
-HWTEST_F(BmsRdbDataManagerTest, FirstInstallDataStorageRdb_0500, Function | SmallTest | Level1)
+HWTEST_F(BmsRdbDataManagerTest, FirstInstallDataStorageRdb_0500, Function | SmallTest | Level2)
 {
     std::shared_ptr<FirstInstallDataMgrStorageRdb> firstInstallDataMgr =
         std::make_shared<FirstInstallDataMgrStorageRdb>();

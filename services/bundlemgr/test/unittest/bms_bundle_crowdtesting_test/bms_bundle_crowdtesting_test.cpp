@@ -392,7 +392,7 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_005, Function | Sm
  * @tc.desc: 1. system running normally
  *           2. get crowdtestDeadline
  */
-HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_006, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_006, Function | SmallTest | Level2)
 {
     ErrCode installResult = InstallBundle(HAP_FILE_PATH + HAP_NAME_ENTRY_C, CROWDTEST_DEADLINE);
     EXPECT_EQ(installResult, ERR_OK);

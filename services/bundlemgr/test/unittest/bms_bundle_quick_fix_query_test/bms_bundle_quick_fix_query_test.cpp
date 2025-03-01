@@ -319,7 +319,7 @@ HWTEST_F(BmsBundleQuickFixQueryTest, GetApplicationInfo_0200, Function | SmallTe
  * @tc.desc: 1.system run normally
  *           2.enable AppQuickFix, deployed is not empty
  */
-HWTEST_F(BmsBundleQuickFixQueryTest, GetApplicationInfo_0300, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleQuickFixQueryTest, GetApplicationInfo_0300, Function | SmallTest | Level2)
 {
     MockInstallBundleInfo();
     MockDeployQuickFix();

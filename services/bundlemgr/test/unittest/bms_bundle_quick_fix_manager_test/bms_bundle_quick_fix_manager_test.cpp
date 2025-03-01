@@ -313,7 +313,7 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0700, Function |
  * @tc.name: test QueryAllInnerAppQuickFix
  * @tc.desc: QueryAllInnerAppQuickFix
  */
-HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0800, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0800, Function | SmallTest | Level2)
 {
     APP_LOGI("begin of BmsBundleQuickFixManager_0800.");
     auto dataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();

@@ -888,7 +888,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4900, Function | Sma
  * @tc.desc: 1.system run normally
  *           2.RegisterBundleStatusCallback failed
  */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5000, Function | SmallTest | Level1)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5000, Function | SmallTest | Level2)
 {
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);

@@ -516,7 +516,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0700, Function | Mediu
  *           2.query application info by bundleName
  *           3.get the compatible application info of the hap by ConvertToCompatibleApplicationInfo
  */
-HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0800, Function | MediumTest | Level1)
+HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0800, Function | MediumTest | Level2)
 {
     GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_0800";
     std::string message;
@@ -697,7 +697,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_QueryAbilityInfoByUri_0200, Function | Med
  * @tc.name: test the interface of QueryAbilityInfoByUri
  * @tc.desc: get the ability info by the ability uri with wrong form
  */
-HWTEST_F(BmsCompatibleSystemTest, BMS_QueryAbilityInfoByUri_0300, Function | MediumTest | Level1)
+HWTEST_F(BmsCompatibleSystemTest, BMS_QueryAbilityInfoByUri_0300, Function | MediumTest | Level2)
 {
     GTEST_LOG_(INFO) << "START BMS_QueryAbilityInfoByUri_0300";
     std::string abilityUri = "err://com.test.demo.weatherfa.UserADataAbility";

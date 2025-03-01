@@ -344,7 +344,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_009, TestSize.
  * @tc.name: ProcessCloneBundleUninstall
  * @tc.desc: Test ProcessCloneBundleUninstall()
  */
-HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_010, TestSize.Level1)
+HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_010, TestSize.Level2)
 {
     ASSERT_NE(bundleCloneInstall_, nullptr);
     ASSERT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_, nullptr);

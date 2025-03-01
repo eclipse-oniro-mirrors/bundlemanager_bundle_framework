@@ -578,7 +578,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0030, Function |
  * @tc.name: test DeleteAppJumpControlRule by AppControlManagerHostImpl
  * @tc.desc: 1.DeleteAppJumpControlRule test
  */
-HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0040, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0040, Function | SmallTest | Level2)
 {
     AppControlManagerHostImpl impl;
     std::vector<AppJumpControlRule> controlRules;

@@ -1236,7 +1236,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7800
  * @tc.name: test GetDefaultApplication
  * @tc.desc: 1. GetDefaultApplication failed
  */
-HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7900, Function | SmallTest | Level2)
 {
     BundleInfo bundleInfo;
     auto dataMgr = bundleMgrService_->GetDataMgr();

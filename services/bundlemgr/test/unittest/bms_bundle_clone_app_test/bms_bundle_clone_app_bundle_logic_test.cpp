@@ -481,7 +481,7 @@ HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0003, Funct
  * @tc.name: innerBundleInfo verifyAndAckCloneAppIndex clone bundle
  * @tc.desc: 1.system running normally
  */
-HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0004, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0004, Function | SmallTest | Level2)
 {
     int32_t userId = 1001;
     InnerBundleInfo innerBundleInfo;

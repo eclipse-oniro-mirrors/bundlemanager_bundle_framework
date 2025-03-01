@@ -205,7 +205,7 @@ HWTEST_F(BmsInstalldHostTest, HandleRenameModuleDir_0100, Function | SmallTest |
  * @tc.name: test HandleCreateBundleDataDir
  * @tc.desc: 1.HandleCreateBundleDataDir test
  */
-HWTEST_F(BmsInstalldHostTest, HandleCreateBundleDataDir_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsInstalldHostTest, HandleCreateBundleDataDir_0100, Function | SmallTest | Level2)
 {
     InstalldHost installdHost;
     MessageParcel data;

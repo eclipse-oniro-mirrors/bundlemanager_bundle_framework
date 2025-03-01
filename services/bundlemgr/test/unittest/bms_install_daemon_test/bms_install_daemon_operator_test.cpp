@@ -1535,7 +1535,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9500, Function | Sma
  * @tc.name: test function of InstalldOperator
  * @tc.desc: 1. calling ScanSoFiles of InstalldOperator
 */
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9600, Function | SmallTest | Level1)
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9600, Function | SmallTest | Level2)
 {
     std::string newSoPath = "";
     std::string originPath = "";

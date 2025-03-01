@@ -60,7 +60,7 @@ HWTEST_F(BmsBundleMgrServiceDeathRecipientTest, BundleMgrServiceDeathRecipient_0
  * @tc.name: OnRemoteDied
  * @tc.desc: When deathCallback_ is empty, Successful case of verifying OnRemoteDied.
  */
-HWTEST_F(BmsBundleMgrServiceDeathRecipientTest, BundleMgrServiceDeathRecipient_002, TestSize.Level1)
+HWTEST_F(BmsBundleMgrServiceDeathRecipientTest, BundleMgrServiceDeathRecipient_002, TestSize.Level2)
 {
     const wptr<IRemoteObject> object;
     const std::function<void(const wptr<IRemoteObject>& object)> deathCallback;

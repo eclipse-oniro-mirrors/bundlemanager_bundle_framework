@@ -85,7 +85,7 @@ HWTEST_F(BmsBundleResourceHostTest, OnRemoteRequest_0100, Function | MediumTest 
  * @tc.desc: 1. system running normally
  *           2. test HandleGetBundleResourceInfo
  */
-HWTEST_F(BmsBundleResourceHostTest, HandleGetBundleResourceInfo_0100, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleResourceHostTest, HandleGetBundleResourceInfo_0100, Function | MediumTest | Level2)
 {
     BundleResourceHost bundleResourceHost;
     MessageParcel data;

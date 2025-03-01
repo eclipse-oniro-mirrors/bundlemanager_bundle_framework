@@ -386,7 +386,7 @@ HWTEST_F(BmsBundleUpdateDebugTest, UpdateDebug_0100, Function | SmallTest | Leve
 * @tc.name: test UpdateDebug
 * @tc.desc: test oldInfo has no entry
 */
-HWTEST_F(BmsBundleUpdateDebugTest, UpdateDebug_0200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleUpdateDebugTest, UpdateDebug_0200, Function | SmallTest | Level2)
 {
     InnerBundleInfo oldInfo;
     oldInfo.baseApplicationInfo_->debug = true;

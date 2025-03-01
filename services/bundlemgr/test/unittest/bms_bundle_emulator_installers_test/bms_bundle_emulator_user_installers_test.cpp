@@ -62,7 +62,7 @@ void BmsBundleEmulatorUserInstallersTest::TearDown()
  * @tc.name: test check emulator shell install
  * @tc.desc: test check emulator shell install
  */
-HWTEST_F(BmsBundleEmulatorUserInstallersTest, BmsBundleEmulatorUserInstallersTest_0100, TestSize.Level1)
+HWTEST_F(BmsBundleEmulatorUserInstallersTest, BmsBundleEmulatorUserInstallersTest_0100, TestSize.Level2)
 {
     Security::Verify::ProvisionInfo provisionInfo;
     provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
