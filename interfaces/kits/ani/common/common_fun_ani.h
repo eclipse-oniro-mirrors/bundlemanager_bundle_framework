@@ -57,7 +57,6 @@ public:
     static ani_object ConvertAbilityInfo(ani_env* env, const AbilityInfo& abilityInfo);
     static ani_object ConvertWindowSize(ani_env* env, const AbilityInfo& abilityInfo);
     static ani_object ConvertExtensionInfo(ani_env* env, const ExtensionAbilityInfo& extensionInfo);
-    static ani_object ConvertExtensionInfos(ani_env* env, const std::vector<ExtensionAbilityInfo>& extensionInfos);
     static ani_object ConvertDependency(ani_env* env, const Dependency& dependency);
     static ani_object ConvertPreloadItem(ani_env* env, const PreloadItem& preloadItem);
     static ani_object ConvertHapModuleInfo(ani_env* env, const HapModuleInfo& hapModuleInfo);

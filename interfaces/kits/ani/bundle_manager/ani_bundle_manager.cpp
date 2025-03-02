@@ -13,13 +13,16 @@
  * limitations under the License.
  */
 
-#include <ani.h>
 #include <cstring>
 #include <iostream>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <unistd.h>
+#include <unordered_map>
 #include <vector>
 
+#include "ani_bundle_manager.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
@@ -29,6 +32,13 @@
 
 using namespace OHOS;
 using namespace AppExecFwk;
+
+const std::string GET_BUNDLE_INFO = "GetBundleInfo";
+static ani_vm* g_vm;
+static std::mutex g_clearCacheListenerMutex;
+static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
+static std::shared_mutex g_cacheMutex;
+static std::unordered_map<Query, ani_ref, QueryHash> g_cache;
 
 std::string AniStrToString(ani_env* env, ani_ref aniStr)
 {
@@ -54,6 +64,21 @@ std::string AniStrToString(ani_env* env, ani_ref aniStr)
     }
 
     return std::string(buffer.data(), nameSize);
+}
+
+static void CheckToCache(
+    ani_env* env, const int32_t uid, const int32_t callingUid, const Query& query, ani_object aniObject)
+{
+    if (uid != callingUid) {
+        return;
+    }
+
+    ani_ref refBundleInfo = nullptr;
+    ani_status status = ANI_ERROR;
+    if ((status = env->GlobalReference_Create(aniObject, &refBundleInfo)) == ANI_OK) {
+        std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+        g_cache[query] = refBundleInfo;
+    }
 }
 
 static ani_boolean IsApplicationEnabledSync(
@@ -85,18 +110,31 @@ static ani_object GetBundleInfoForSelfSync(
         std::cerr << "GetBundleMgr failed" << std::endl;
         return nullptr;
     }
-    if (CommonFunc::CheckBundleFlagWithPermission(bundleFlags)) {
-        std::cerr << "CheckBundleFlagWithPermission failed" << std::endl;
-        return nullptr;
+    const auto uid = IPCSkeleton::GetCallingUid();
+    std::string bundleName = std::to_string(uid);
+    int32_t userId = uid / Constants::BASE_USER_RANGE;
+    const Query query(bundleName, GET_BUNDLE_INFO, bundleFlags, userId);
+    if (!CommonFunc::CheckBundleFlagWithPermission(bundleFlags)) {
+        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+        auto item = g_cache.find(query);
+        if (item != g_cache.end()) {
+            return reinterpret_cast<ani_object>(item->second);
+        }
     }
+
     BundleInfo bundleInfo;
     int32_t ret = iBundleMgr->GetBundleInfoForSelf(bundleFlags, bundleInfo);
     if (ret != ERR_OK) {
         std::cerr << "GetBundleInfoForSelf failed ret: " << ret << " userId: " << getuid() << std::endl;
+        return nullptr;
     }
-    ani_object objectTemp = CommonFunAni::ConvertBundleInfo(env, bundleInfo);
 
-    return objectTemp;
+    ani_object objectBundleInfo = CommonFunAni::ConvertBundleInfo(env, bundleInfo);
+    if (!CommonFunc::CheckBundleFlagWithPermission(bundleFlags)) {
+        CheckToCache(env, bundleInfo.uid, uid, query, objectBundleInfo);
+    }
+
+    return objectBundleInfo;
 }
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
@@ -107,7 +145,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         return (ani_status)9;
     }
 
-    static const char* className = "LBundleManager/BundleManager;";
+    static const char* className = "L@ohos/bundle/bundleManager/BundleManager;";
     ani_class cls;
     if (ANI_OK != env->FindClass(className, &cls)) {
         std::cerr << "Not found '" << className << "'" << std::endl;
@@ -127,5 +165,52 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     };
 
     *result = ANI_VERSION_1;
+
+    RegisterClearCacheListenerAndEnv(vm);
+
     return ANI_OK;
+}
+
+void ClearCacheListener::DoClearCache()
+{
+    std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+    ani_env *env = nullptr;
+    ani_option interopEnabled {"--interop=enable", nullptr};
+    ani_options aniArgs {1, &interopEnabled};
+    g_vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+    for (auto& item : g_cache) {
+        env->GlobalReference_Delete(item.second);
+    }
+    g_vm->DetachCurrentThread();
+    g_cache.clear();
+}
+
+void ClearCacheListener::HandleCleanEnv(void* data)
+{
+    DoClearCache();
+}
+
+ClearCacheListener::ClearCacheListener(const EventFwk::CommonEventSubscribeInfo& subscribeInfo)
+    : EventFwk::CommonEventSubscriber(subscribeInfo)
+{}
+
+void ClearCacheListener::OnReceiveEvent(const EventFwk::CommonEventData& data)
+{
+    DoClearCache();
+}
+
+void RegisterClearCacheListenerAndEnv(ani_vm* vm)
+{
+    std::lock_guard<std::mutex> lock(g_clearCacheListenerMutex);
+    if (g_clearCacheListener != nullptr) {
+        return;
+    }
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    g_clearCacheListener = std::make_shared<ClearCacheListener>(subscribeInfo);
+    (void)EventFwk::CommonEventManager::SubscribeCommonEvent(g_clearCacheListener);
+    g_vm = vm;
 }
