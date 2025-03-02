@@ -213,7 +213,7 @@ HWTEST_F(BmsBundleAppSpawnClientTest, RemoveSandboxDir_001, TestSize.Level0)
  * @tc.desc: test RemoveSandboxDir
  * @tc.type: FUNC
  */
-HWTEST_F(BmsBundleAppSpawnClientTest, RemoveSandboxDir_002, TestSize.Level0)
+HWTEST_F(BmsBundleAppSpawnClientTest, RemoveSandboxDir_002, TestSize.Level2)
 {
     TAG_LOGI(AAFwkTag::TEST, "RemoveSandboxDir_002 start");
     int32_t flagIndex = 0;

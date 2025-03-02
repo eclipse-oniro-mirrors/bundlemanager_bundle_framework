@@ -1500,7 +1500,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_2400, Function | SmallTest | Level1)
  * @tc.desc: 1. system running normally
  *           2. test parsing failed when forms prop has empty in the config.json
  */
-HWTEST_F(BmsBundleParserTest, TestParse_2500, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleParserTest, TestParse_2500, Function | SmallTest | Level2)
 {
     nlohmann::json errorFormsJson = CONFIG_JSON;
     errorFormsJson[BUNDLE_PROFILE_KEY_MODULE][BUNDLE_MODULE_PROFILE_KEY_ABILITIES] = R"(
@@ -2407,7 +2407,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_4700, Function | SmallTest | Level1)
  *           2. test parsing info in the config.json
  * @tc.type: FUNC
  */
-HWTEST_F(BmsBundleParserTest, TestParse_4800, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleParserTest, TestParse_4800, Function | SmallTest | Level2)
 {
     BundleProfile bundleProfile;
     InnerBundleInfo innerBundleInfo;

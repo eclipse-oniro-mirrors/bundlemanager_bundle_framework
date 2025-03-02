@@ -130,7 +130,7 @@ HWTEST_F(ExtendResourceManagerHostTest, HandleAddExtResource_0100, Function | Me
  * @tc.desc: 1. system running normally
  *           2. test HandleRemoveExtResource
  */
-HWTEST_F(ExtendResourceManagerHostTest, HandleRemoveExtResource_0100, Function | MediumTest | Level1)
+HWTEST_F(ExtendResourceManagerHostTest, HandleRemoveExtResource_0100, Function | MediumTest | Level2)
 {
     ExtendResourceManagerHost extendResource;
     MessageParcel data;

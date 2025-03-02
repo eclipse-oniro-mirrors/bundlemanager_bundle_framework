@@ -1479,7 +1479,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0700, Fu
  * @tc.name: test function of DeliveryProfileToCodeSign
  * @tc.desc: calling DeliveryProfileToCodeSign of AppServiceFwkInstaller
  */
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0800, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0800, Function | SmallTest | Level2)
 {
     AppServiceFwkInstaller installer;
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
@@ -1707,7 +1707,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessModuleUpdate_0010, Function
  * @tc.name: test UnInstall
  * @tc.desc: 1.test UnInstall
  */
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0010, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UnInstall_0010, Function | SmallTest | Level2)
 {
     AppServiceFwkInstaller installer;
     std::string bundleName = "";

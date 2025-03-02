@@ -88,7 +88,7 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_ApplicationInfoJsonSerializer_0001
  * @tc.desc: 1.system running normally
  *           2.successfully deserialize ApplicationInfo
  */
-HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_ApplicationInfoJsonSerializer_0002, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_ApplicationInfoJsonSerializer_0002, Function | SmallTest | Level2)
 {
     ApplicationInfo applicationInfo;
     from_json(APPLICATION_JSON, applicationInfo);

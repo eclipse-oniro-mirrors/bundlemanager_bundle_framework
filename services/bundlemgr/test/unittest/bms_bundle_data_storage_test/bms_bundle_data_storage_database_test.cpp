@@ -4071,7 +4071,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9000, Function | Smal
  * @tc.name: Test GetBundleWithReqPermissionsV9
  * @tc.desc: Test the GetBundleWithReqPermissionsV9 of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9100, Function | SmallTest | Level2)
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;

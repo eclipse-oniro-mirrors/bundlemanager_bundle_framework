@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("../../../../../appexecfwk.gni")
 
-module_output_path = "bundle_framework/bundlemgrsst"
+module_output_path = "bundle_framework/bundle_framework"
 
 ohos_systemtest("BmsMatchShareTest") {
   sanitize = {

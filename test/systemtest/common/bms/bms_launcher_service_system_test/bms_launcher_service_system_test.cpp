@@ -530,7 +530,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0500, Function | MediumTest 
  * @tc.name: test launcher service RegisterCallback
  * @tc.desc: repeatly register callback and listen for events by two launcher objects
  */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0600, Function | MediumTest | Level1)
+HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0600, Function | MediumTest | Level2)
 {
     GTEST_LOG_(INFO) << "START BMS_Register_0600";
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";

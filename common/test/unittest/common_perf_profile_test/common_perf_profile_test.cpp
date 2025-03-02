@@ -584,7 +584,7 @@ HWTEST_F(CommonPerfProfileTest, SetAmsLoadTime_001, TestSize.Level0)
  * EnvConditions: NA
  * CaseDescription: verify ams load time can set correct when set invalid start or end time
  */
-HWTEST_F(CommonPerfProfileTest, SetAmsLoadTime_002, TestSize.Level0)
+HWTEST_F(CommonPerfProfileTest, SetAmsLoadTime_002, TestSize.Level2)
 {
     int64_t amsLoadStartTime = 0;
     int64_t amsLoadEndTime = 0;

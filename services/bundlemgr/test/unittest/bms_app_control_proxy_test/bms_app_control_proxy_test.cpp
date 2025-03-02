@@ -309,7 +309,7 @@ HWTEST_F(BmsAppControlProxyTest, AddAppJumpControlRule_0100, Function | MediumTe
  * @tc.desc: 1. system running normally
  *           2. test AddAppJumpControlRule
  */
-HWTEST_F(BmsAppControlProxyTest, AddAppJumpControlRule_0200, Function | MediumTest | Level1)
+HWTEST_F(BmsAppControlProxyTest, AddAppJumpControlRule_0200, Function | MediumTest | Level2)
 {
     AppControlProxy appControlProxy(nullptr);
     int32_t userId = 100;
@@ -373,7 +373,7 @@ HWTEST_F(BmsAppControlProxyTest, DeleteRuleByTargetBundleName_0100, Function | M
  * @tc.desc: 1. system running normally
  *           2. test GetAppJumpControlRule
  */
-HWTEST_F(BmsAppControlProxyTest, GetAppJumpControlRule_0100, Function | MediumTest | Level1)
+HWTEST_F(BmsAppControlProxyTest, GetAppJumpControlRule_0100, Function | MediumTest | Level2)
 {
     AppControlProxy appControlProxy(nullptr);
     int32_t userId = 100;

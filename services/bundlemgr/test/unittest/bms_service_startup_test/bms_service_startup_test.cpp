@@ -1375,7 +1375,7 @@ HWTEST_F(BmsServiceStartupTest, Marshalling_0400, Function | SmallTest | Level1)
  * @tc.name: CheckConnectService
  * @tc.desc: test CheckConnectService of BmsEcologicalRuleMgrServiceClient
  */
-HWTEST_F(BmsServiceStartupTest, CheckConnectService_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsServiceStartupTest, CheckConnectService_0100, Function | SmallTest | Level2)
 {
     auto client = BmsEcologicalRuleMgrServiceClient::GetInstance();
     bool ret = client->CheckConnectService();
@@ -1516,7 +1516,7 @@ HWTEST_F(BmsServiceStartupTest, BmsParam_0600, Function | MediumTest | Level1)
  * @tc.name: SaveBmsParam
  * @tc.desc: test SaveBmsParam of BmsParam
  */
-HWTEST_F(BmsServiceStartupTest, BmsParam_0700, Function | MediumTest | Level1)
+HWTEST_F(BmsServiceStartupTest, BmsParam_0700, Function | MediumTest | Level2)
 {
     BmsParam param;
 

@@ -54,7 +54,7 @@ void BmsCleanCacheCallbackHostTest::TearDown() {}
  * @tc.name: OnRemoteRequest
  * @tc.desc: data is not write interface token, failed to verify OnRemoteRequest.
  */
-HWTEST_F(BmsCleanCacheCallbackHostTest, CleanCacheCallbackHost_001, TestSize.Level1)
+HWTEST_F(BmsCleanCacheCallbackHostTest, CleanCacheCallbackHost_001, TestSize.Level2)
 {
     uint32_t code = static_cast<uint32_t>(CleanCacheCallbackInterfaceCode::ON_CLEAN_CACHE_CALLBACK);
     MessageParcel data;
