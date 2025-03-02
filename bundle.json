@@ -94,7 +94,8 @@
         "build": {
             "sub_component": [
                 "//foundation/bundlemanager/bundle_framework:bms_target",
-                "//foundation/bundlemanager/bundle_framework/etc:bms_para"
+                "//foundation/bundlemanager/bundle_framework/etc:bms_para",
+                "//foundation/bundlemanager/bundle_framework/interfaces/kits/ani:ani_package"
             ],
             "inner_kits": [
                 {
