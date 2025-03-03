@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -191,6 +191,7 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED, ERROR_SOURCE_PATH_ACCESS_FAILED_FAILED },
     { ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED,
         ERROR_DESTINATION_PATH_ACCESS_FAILED_FAILED },
+    { ERR_APPEXECFWK_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED, ERROR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED },
 };
 }
 using Want = OHOS::AAFwk::Want;

@@ -158,6 +158,8 @@ constexpr const char* ERR_MSG_INVALID_UNINSTALL_RULE =
     "The specified bundleName of want is not the same with caller.";
 constexpr const char* ERR_MSG_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL =
     "Failed to install the HAP or HSP because the app distribution type is not allowed.";
+constexpr const char* ERR_MSG_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED =
+    "Failed to install the HAP and restore to preinstalled bundle.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -242,6 +244,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INSTALL_FAILED_INCONSISTENT_SIGNATURE, ERR_MSG_INSTALL_FAILED_INCONSISTENT_SIGNATURE },
     { ERROR_INVALID_UNINSTALL_RULE, ERR_MSG_INVALID_UNINSTALL_RULE },
     { ERROR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL, ERR_MSG_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL },
+    { ERROR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED, ERR_MSG_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED }
 };
 } // namespace
 
