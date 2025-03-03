@@ -4117,7 +4117,7 @@ ErrCode BundleMgrHostImpl::CheckSandboxPath(std::vector<std::string> &sourcePath
         return ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
     }
     std::string realPath{ "" };
-    for (int index = 0; index < sourcePaths.size(); ++index) {
+    for (size_t index = 0; index < sourcePaths.size(); ++index) {
         if (!BundleUtil::IsSandBoxPath(sourcePaths[index])) {
             continue;
         }
@@ -4173,7 +4173,7 @@ ErrCode BundleMgrHostImpl::MigrateDataUserAuthentication()
     auto contextId =
         UserIam::UserAuth::UserAuthClientImpl::GetInstance().BeginWidgetAuth(authParam, widgetInfo, userAuthaCallback);
     if (contextId == BAD_CONTEXT_ID) {
-        APP_LOGE("begin user auth err: %{public}llu", contextId);
+        APP_LOGE("begin user auth err!");
         return ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED;
     }
     auto result = userAuthaCallback->GetUserAuthResult();

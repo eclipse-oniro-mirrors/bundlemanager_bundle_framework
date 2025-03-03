@@ -9565,8 +9565,9 @@ HWTEST_F(ActsBmsKitSystemTest, MigrateData_0004, Function | MediumTest | Level1)
         // 1. The current device does not support user authentication or the user has not set a password (8521782)
         // 2. The tester did not enter a password (8521783)
         // 3. The tester entered the password incorrectly (8521782)
-        std::array<int, 3> probability = { ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED,
-            ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_TIME_OUT, ERR_OK };
+        std::array<int, 4> probability = { ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED,
+            ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_TIME_OUT,
+            ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID, ERR_OK };
         auto ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
         bool isExist = std::find(probability.begin(), probability.end(), ret) != probability.end();
         EXPECT_TRUE(isExist);

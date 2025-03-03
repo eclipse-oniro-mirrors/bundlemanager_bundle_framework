@@ -1565,7 +1565,7 @@ HWTEST_F(BmsInstallDaemonTest, MigrateData_0002, Function | SmallTest | Level0)
     EXPECT_EQ(result, 0);
     destinationPath = BUNDLE_DATA_DIR;
     std::vector<std::string> sourcePaths_2;
-    sourcePaths_2.push_back("/data/log");
+    sourcePaths_2.push_back("/system/bin");
     ret = MigrateData(sourcePaths_2, destinationPath);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED);
 }
