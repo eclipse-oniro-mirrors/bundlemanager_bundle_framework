@@ -22,7 +22,7 @@ config("private_config") {
   ]
 }
 
-module_output_path = "bundle_framework/bundle_framework"
+module_output_path = "bundle_framework/bundlemgrservice"
 
 ohos_unittest("BmsBundleUpdateDebugTest") {
   sanitize = {

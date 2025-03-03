@@ -77,7 +77,7 @@ HWTEST_F(BmsServiceStartupEmulatorTest, EmulatorBundlePermissionMgrInitHapToken_
  * @tc.name: test UpdateHapToken
  * @tc.desc: 1.test UpdateHapToken of BundlePermissionMgr in Emulator
  */
-HWTEST_F(BmsServiceStartupEmulatorTest, EmulatorBundlePermissionMgrUpdateHapToken_002, Function | SmallTest | Level2)
+HWTEST_F(BmsServiceStartupEmulatorTest, EmulatorBundlePermissionMgrUpdateHapToken_002, Function | SmallTest | Level1)
 {
     bool ret = BundlePermissionMgr::Init();
     InnerBundleInfo innerBundleInfo;

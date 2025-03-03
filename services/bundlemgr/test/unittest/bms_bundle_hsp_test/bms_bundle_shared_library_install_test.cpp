@@ -786,7 +786,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, GetBundleInfosV9_0100, Function | Sm
  * @tc.name: test GetAllBundleInfosV9
  * @tc.desc: 1.system run normally
  */
-HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAllBundleInfosV9_0100, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAllBundleInfosV9_0100, Function | SmallTest | Level1)
 {
     std::vector<std::string> bundleFilePaths{};
     std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};

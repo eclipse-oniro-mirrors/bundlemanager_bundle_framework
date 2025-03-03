@@ -160,7 +160,7 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_0500, Function | SmallTest 
  * @tc.name: Test UpdateOrInsertData
  * @tc.desc: 1.UpdateOrInsertData
  */
-HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_0600, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_0600, Function | SmallTest | Level1)
 {
     auto rdbDataManager = OpenDbAndTable();
     ASSERT_NE(rdbDataManager, nullptr);
@@ -240,7 +240,7 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1000, Function | SmallTest 
  * @tc.name: Test QueryByStep
  * @tc.desc: 1.QueryByStep
  */
-HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1100, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1100, Function | SmallTest | Level1)
 {
     auto rdbDataManager = OpenDbAndTable();
     ASSERT_NE(rdbDataManager, nullptr);

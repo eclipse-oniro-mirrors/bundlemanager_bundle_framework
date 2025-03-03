@@ -704,7 +704,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1500, Function | SmallTest
  * @tc.name: test SetDefaultApplication, invalid type
  * @tc.desc: 1. call SetDefaultApplication, return false
  */
-HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1600, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1600, Function | SmallTest | Level1)
 {
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
@@ -1381,7 +1381,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5800, Function | SmallTest
  * @tc.name: test ParseDefaultApplicationConfig
  * @tc.desc: 1. call ParseDefaultApplicationConfig
  */
-HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5900, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5900, Function | SmallTest | Level1)
 {
     DefaultAppData defaultAppData;
     nlohmann::json errorTypeJson = DEFAULT_CONFIG;
@@ -1823,7 +1823,7 @@ HWTEST_F(BmsBundleDefaultAppTest, IsElementValid_0100, Function | MediumTest | L
  * @tc.name: test MatchUtd
  * @tc.desc: 1.MatchUtd is false
  */
-HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0100, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0100, Function | SmallTest | Level1)
 {
     std::vector<Skill> skills;
     Skill skill;

@@ -79,7 +79,7 @@ HWTEST_F(ExtendResourceManagerProxyTest, AddExtResource_0100, Function | MediumT
  * @tc.desc: 1. system running normally
  *           2. test RemoveExtResource
  */
-HWTEST_F(ExtendResourceManagerProxyTest, RemoveExtResource_0100, Function | MediumTest | Level2)
+HWTEST_F(ExtendResourceManagerProxyTest, RemoveExtResource_0100, Function | MediumTest | Level1)
 {
     sptr<IRemoteObject> object;
     ExtendResourceManagerProxy extendResource(object);

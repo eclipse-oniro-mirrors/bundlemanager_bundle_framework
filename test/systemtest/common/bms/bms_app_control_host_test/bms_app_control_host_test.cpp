@@ -111,7 +111,7 @@ HWTEST_F(BmsAppControlHostTest, HandleGetAppInstallControlRule_0100, Function | 
  * @tc.desc: 1. system running normally
  *           2. test HandleAddAppRunningControlRule
  */
-HWTEST_F(BmsAppControlHostTest, HandleAddAppRunningControlRule_0100, Function | MediumTest | Level2)
+HWTEST_F(BmsAppControlHostTest, HandleAddAppRunningControlRule_0100, Function | MediumTest | Level1)
 {
     AppControlHost appControlHost;
     MessageParcel data;
@@ -261,7 +261,7 @@ HWTEST_F(BmsAppControlHostTest, HandleDeleteRuleByTargetBundleName_0100, Functio
  * @tc.desc: 1. system running normally
  *           2. test HandleGetAppJumpControlRule
  */
-HWTEST_F(BmsAppControlHostTest, HandleGetAppJumpControlRule_0100, Function | MediumTest | Level2)
+HWTEST_F(BmsAppControlHostTest, HandleGetAppJumpControlRule_0100, Function | MediumTest | Level1)
 {
     AppControlHost appControlHost;
     MessageParcel data;

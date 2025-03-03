@@ -656,7 +656,7 @@ HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0200, Function | SmallTest | Le
  * @tc.require: issueI5MZ8C
  * @tc.desc: 1.GetDisposedStatus test
  */
-HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0300, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleAppControlTest, DisposedStatus_0300, Function | SmallTest | Level1)
 {
     Want want;
     want.SetAction("action.system.home");
@@ -1984,7 +1984,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6800, Function | Sma
  * @tc.name: Test DeleteDisposedRule by AppControlManager
  * @tc.desc: 1.DeleteDisposedRule test
  */
-HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6900, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6900, Function | SmallTest | Level1)
 {
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     ASSERT_NE(impl, nullptr);

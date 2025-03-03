@@ -281,7 +281,7 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0300, Function | 
  *           2.get ability info successfully
  *           3.orientation equals to 2 (PORTRAIT)
  */
-HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0400, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_0400, Function | SmallTest | Level1)
 {
     auto res = CheckWindowProperty1(ABILITY_NAME_TEST_3, PORTRAIT, ORIENTATION);
     EXPECT_TRUE(res);
@@ -463,7 +463,7 @@ HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1700, Function | 
  *           2.get ability info successfully
  *           3.supportWindowMode equals to {2}
  */
-HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1800, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleGetWindowPropertiesTest, GetWindowProperties_1800, Function | SmallTest | Level1)
 {
     std::vector<int32_t> vec {2};
     CheckWindowProperty2(ABILITY_NAME_TEST_3, vec);

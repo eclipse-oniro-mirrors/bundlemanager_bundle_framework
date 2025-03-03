@@ -410,7 +410,7 @@ HWTEST_F(BmsPermissionGrantSystemTest, BmsPermissionGrant_0006, Function | Mediu
  *           2. install succeed
  *           3. update system app, high version code
  */
-HWTEST_F(BmsPermissionGrantSystemTest, BmsPermissionGrant_0007, Function | MediumTest | Level2)
+HWTEST_F(BmsPermissionGrantSystemTest, BmsPermissionGrant_0007, Function | MediumTest | Level1)
 {
     std::cout << "START BmsPermissionGrant_0007" << std::endl;
     std::string installMsg;

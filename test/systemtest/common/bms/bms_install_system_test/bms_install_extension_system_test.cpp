@@ -548,7 +548,7 @@ HWTEST_F(BmsInstallExtensionSystemTest, BmsExtensionInstall_0008, Function | Med
  * @tc.name:  test update a bundle with no extension
  * @tc.desc: there is no extensin dir for testing bundle
  */
-HWTEST_F(BmsInstallExtensionSystemTest, BmsExtensionInstall_0009, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallExtensionSystemTest, BmsExtensionInstall_0009, Function | MediumTest | Level1)
 {
     std::string bundleFilePath = BASE_HAP_PATH + VERSION1_TWO_EXTENSION_ENTRY_HAP;
     std::string installMsg;
@@ -718,7 +718,7 @@ HWTEST_F(BmsInstallExtensionSystemTest, BmsExtensionInstall_0013, Function | Med
  * @tc.name:  test update a bundle with one extension
  * @tc.desc: there is no extensin dir for testing bundle
  */
-HWTEST_F(BmsInstallExtensionSystemTest, BmsExtensionInstall_0014, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallExtensionSystemTest, BmsExtensionInstall_0014, Function | MediumTest | Level1)
 {
     std::string bundleFilePath = BASE_HAP_PATH + VERSION1_ONE_EXTENSION_ENTRY_HAP;
     std::string installMsg;
