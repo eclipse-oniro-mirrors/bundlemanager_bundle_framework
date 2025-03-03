@@ -42,7 +42,6 @@ namespace {
                 return i;                                                                        \
             }                                                                                    \
         }                                                                                        \
-        std::cerr << "NativeValueToIndex" #namespace #enumname " failed " << value << std::endl; \
         return 0;                                                                                \
     }
 #define DEFINE_INDEX_TO_NATIVE_VALUE_LOOKUP(namespace, enumname)                                     \
@@ -50,7 +49,6 @@ namespace {
     {                                                                                                \
         auto i = static_cast<std::size_t>(index);                                                    \
         if (i < 0 || i >= Array##_##namespace##_##enumname.size()) {                                 \
-            std::cerr << "IndexToNativeValue" #namespace #enumname " failed " << index << std::endl; \
             return 0;                                                                                \
         }                                                                                            \
         return Array##_##namespace##_##enumname[i];                                                  \
@@ -247,9 +245,29 @@ private:
     //     UNSPECIFIED = 255
     // }
     static constexpr std::array<int, 23> Array_BundleManager_ExtensionAbilityType = {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-        10, 11, 13, 14, 15, 16, 17, 18, 19, 20,
-        21, 22, 255,
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        255,
     };
 };
 } // namespace AppExecFwk

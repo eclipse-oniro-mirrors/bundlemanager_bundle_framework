@@ -1,17 +1,17 @@
 /*
-* Copyright (c) 2025 Huawei Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "common_fun_ani.h"
 #include "enum_util.h"
@@ -21,6 +21,7 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* CLASSNAME_STDSTRING = "Lstd/core/String;";
 constexpr const char* CLASSNAME_ABILITYINFO = "LAbilityInfo/AbilityInfoInner;";
+constexpr const char* CLASSNAME_EXTENSIONABILITYINFO = "LExtensionAbilityInfo/ExtensionAbilityInfoInner;";
 constexpr const char* CLASSNAME_WINDOWSIZE = "LAbilityInfo/WindowSizeInner;";
 constexpr const char* CLASSNAME_APPLICATIONINFO = "LApplicationInfo/ApplicationInfoInner;";
 constexpr const char* CLASSNAME_MODULEMETADATA = "LApplicationInfo/ModuleMetadataInner;";
@@ -171,11 +172,19 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
 
     // hapModulesInfo: Array<HapModuleInfo>
     std::vector<ani_object> aHapModuleInfos;
-    for (uint16_t i = 0; i < bundleInfo.hapModuleInfos.size(); ++i) {
+    for (size_t i = 0; i < bundleInfo.hapModuleInfos.size(); ++i) {
         aHapModuleInfos.emplace_back(ConvertHapModuleInfo(env, bundleInfo.hapModuleInfos[i]));
     }
     ani_ref aHapModuleInfosRef = ConvertAniArrayByClass(env, CLASSNAME_HAPMODULEINFO, aHapModuleInfos);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(hapModulesInfo), aHapModuleInfosRef);
+
+    // reqPermissionDetails: Array<ReqPermissionDetail>
+    std::vector<ani_object> aArray;
+    for (size_t i = 0; i < bundleInfo.reqPermissionDetails.size(); ++i) {
+        aArray.emplace_back(ConvertRequestPermission(env, bundleInfo.reqPermissionDetails[i]));
+    }
+    ani_ref aPermissionArrayRef = ConvertAniArrayByClass(env, CLASSNAME_PERMISSION, aArray);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(reqPermissionDetails), aPermissionArrayRef);
 
     // permissionGrantStates: Array<bundleManager.PermissionGrantState>
     ani_array_int aPermissionGrantStates = ConvertAniArrayEnum(
@@ -194,7 +203,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
 
     // routerMap: Array<RouterItem>
     std::vector<ani_object> aRouterMap;
-    for (uint16_t i = 0; i < bundleInfo.routerArray.size(); ++i) {
+    for (size_t i = 0; i < bundleInfo.routerArray.size(); ++i) {
         aRouterMap.emplace_back(ConvertRouterItem(env, bundleInfo.routerArray[i]));
     }
     ani_ref aRouterMapRef = ConvertAniArrayByClass(env, CLASSNAME_ROUTERITEM, aRouterMap);
@@ -203,14 +212,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     // appIndex: number
     CallSetter(env, cls, object, SETTER_METHOD_NAME(appIndex), bundleInfo.appIndex);
 
-    // reqPermissionDetails: Array<ReqPermissionDetail>
-    std::vector<ani_object> aArray;
-    for (uint16_t i = 0; i < bundleInfo.reqPermissionDetails.size(); ++i) {
-        aArray.emplace_back(ConvertRequestPermission(env, bundleInfo.reqPermissionDetails[i]));
-    }
-    ani_ref aPermissionArrayRef = ConvertAniArrayByClass(env, CLASSNAME_PERMISSION, aArray);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(reqPermissionDetails), aPermissionArrayRef);
-
+    std::cout << "CommonFunAni::ConvertBundleInfo exit" << std::endl;
     return object;
 }
 
@@ -278,7 +280,7 @@ ani_ref CommonFunAni::ConvertModuleMetaInfos(ani_env* env, const std::map<std::s
 
         // metadata: Array<Metadata>
         std::vector<ani_object> aMetadata;
-        for (uint16_t i = 0; i < item.second.size(); ++i) {
+        for (size_t i = 0; i < item.second.size(); ++i) {
             aMetadata.emplace_back(ConvertMetadata(env, item.second[i]));
         }
         ani_ref aMetadataRef = ConvertAniArrayByClass(env, CLASSNAME_MODULEMETADATA, aMetadata);
@@ -506,7 +508,7 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
 
     // metadata: Array<Metadata>
     std::vector<ani_object> aMetadata;
-    for (uint16_t i = 0; i < abilityInfo.metadata.size(); ++i) {
+    for (size_t i = 0; i < abilityInfo.metadata.size(); ++i) {
         aMetadata.emplace_back(ConvertMetadata(env, abilityInfo.metadata[i]));
     }
     ani_ref aMetadataRef = ConvertAniArrayByClass(env, CLASSNAME_METADATA, aMetadata);
@@ -529,7 +531,7 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
 
     // skills: Array<Skill>
     std::vector<ani_object> aSkills;
-    for (uint16_t i = 0; i < abilityInfo.skills.size(); ++i) {
+    for (size_t i = 0; i < abilityInfo.skills.size(); ++i) {
         aSkills.emplace_back(ConvertAbilitySkill(env, abilityInfo.skills[i], false));
     }
     ani_ref aSkillsRef = ConvertAniArrayByClass(env, CLASSNAME_SKILL, aSkills);
@@ -570,6 +572,90 @@ ani_object CommonFunAni::ConvertWindowSize(ani_env* env, const AbilityInfo& abil
 
     // minWindowHeight: number
     CallSetter(env, cls, object, SETTER_METHOD_NAME(minWindowHeight), abilityInfo.minWindowHeight);
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbilityInfo& extensionInfo)
+{
+    ani_class cls = CreateClassByName(env, CLASSNAME_EXTENSIONABILITYINFO);
+    ani_object object = CreateNewObjectByClass(env, cls);
+    if (cls == nullptr || object == nullptr) {
+        std::cerr << "ConvertExtensionInfo failed." << std::endl;
+        return nullptr;
+    }
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    env->String_NewUTF8(extensionInfo.bundleName.c_str(), extensionInfo.bundleName.size(), &string);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(bundleName), string);
+
+    // moduleName: string
+    env->String_NewUTF8(extensionInfo.moduleName.c_str(), extensionInfo.moduleName.size(), &string);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(moduleName), string);
+
+    // name: string
+    env->String_NewUTF8(extensionInfo.name.c_str(), extensionInfo.name.size(), &string);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(name), string);
+
+    // labelId: int
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(labelId), extensionInfo.labelId);
+
+    // descriptionId: int
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(descriptionId), extensionInfo.descriptionId);
+
+    // iconId: int
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(iconId), extensionInfo.iconId);
+
+    // exported: boolean
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(exported), extensionInfo.visible);
+
+    // extensionAbilityType: bundleManager.ExtensionAbilityType
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(extensionAbilityType),
+        EnumUtils::NativeValueToIndex_BundleManager_ExtensionAbilityType(static_cast<int32_t>(extensionInfo.type)));
+
+    // extensionAbilityTypeName: string
+    env->String_NewUTF8(extensionInfo.extensionTypeName.c_str(), extensionInfo.extensionTypeName.size(), &string);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(extensionAbilityTypeName), string);
+
+    // permissions: Array<string>
+    ani_ref aPermissions = ConvertAniArrayString(env, extensionInfo.permissions);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(permissions), aPermissions);
+
+    // applicationInfo: ApplicationInfo
+    ani_object aObject = ConvertApplicationInfo(env, extensionInfo.applicationInfo);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(applicationInfo), aObject);
+
+    // metadata: Array<Metadata>
+    std::vector<ani_object> aMetadata;
+    for (size_t i = 0; i < extensionInfo.metadata.size(); ++i) {
+        aMetadata.emplace_back(ConvertMetadata(env, extensionInfo.metadata[i]));
+    }
+    ani_ref aMetadataRef = ConvertAniArrayByClass(env, CLASSNAME_METADATA, aMetadata);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(metadata), aMetadataRef);
+
+    // enabled: boolean
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(enabled), extensionInfo.enabled);
+
+    // readPermission: string
+    env->String_NewUTF8(extensionInfo.readPermission.c_str(), extensionInfo.readPermission.size(), &string);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(readPermission), string);
+
+    // writePermission: string
+    env->String_NewUTF8(extensionInfo.writePermission.c_str(), extensionInfo.writePermission.size(), &string);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(writePermission), string);
+
+    // skills: Array<Skill>
+    std::vector<ani_object> aSkills;
+    for (size_t i = 0; i < extensionInfo.skills.size(); ++i) {
+        aSkills.emplace_back(ConvertAbilitySkill(env, extensionInfo.skills[i], false));
+    }
+    ani_ref aSkillsRef = ConvertAniArrayByClass(env, CLASSNAME_SKILL, aSkills);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(skills), aSkillsRef);
+
+    // appIndex: int
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(appIndex), extensionInfo.appIndex);
 
     return object;
 }
@@ -851,15 +937,24 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
 
     // abilitiesInfo: Array<AbilityInfo>
     std::vector<ani_object> aAbilityInfo;
-    for (uint16_t i = 0; i < hapModuleInfo.abilityInfos.size(); ++i) {
+    for (size_t i = 0; i < hapModuleInfo.abilityInfos.size(); ++i) {
         aAbilityInfo.emplace_back(ConvertAbilityInfo(env, hapModuleInfo.abilityInfos[i]));
     }
     ani_ref aAbilityInfoRef = ConvertAniArrayByClass(env, CLASSNAME_ABILITYINFO, aAbilityInfo);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(abilitiesInfo), aAbilityInfoRef);
 
+    // extensionAbilitiesInfo: Array<ExtensionAbilityInfo>
+    std::vector<ani_object> aExtensionAbilityInfo;
+    for (size_t i = 0; i < hapModuleInfo.extensionInfos.size(); ++i) {
+        aExtensionAbilityInfo.emplace_back(ConvertExtensionInfo(env, hapModuleInfo.extensionInfos[i]));
+    }
+    ani_ref aExtensionAbilityInfoRef =
+        ConvertAniArrayByClass(env, CLASSNAME_EXTENSIONABILITYINFO, aExtensionAbilityInfo);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(extensionAbilitiesInfo), aExtensionAbilityInfoRef);
+
     // metadata: Array<Metadata>
     std::vector<ani_object> aMetadata;
-    for (uint16_t i = 0; i < hapModuleInfo.metadata.size(); ++i) {
+    for (size_t i = 0; i < hapModuleInfo.metadata.size(); ++i) {
         aMetadata.emplace_back(ConvertMetadata(env, hapModuleInfo.metadata[i]));
     }
     ani_ref aMetadataRef = ConvertAniArrayByClass(env, CLASSNAME_METADATA, aMetadata);
@@ -883,7 +978,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
 
     // dependencies: Array<Dependency>
     std::vector<ani_object> aDependencies;
-    for (uint16_t i = 0; i < hapModuleInfo.dependencies.size(); ++i) {
+    for (size_t i = 0; i < hapModuleInfo.dependencies.size(); ++i) {
         aDependencies.emplace_back(ConvertDependency(env, hapModuleInfo.dependencies[i]));
     }
     ani_ref aDependenciesRef = ConvertAniArrayByClass(env, CLASSNAME_DEPENDENCY, aDependencies);
@@ -891,7 +986,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
 
     // preloads: Array<PreloadItem>
     std::vector<ani_object> aPreloads;
-    for (uint16_t i = 0; i < hapModuleInfo.preloads.size(); ++i) {
+    for (size_t i = 0; i < hapModuleInfo.preloads.size(); ++i) {
         aPreloads.emplace_back(ConvertPreloadItem(env, hapModuleInfo.preloads[i]));
     }
     ani_ref aPreloadsRef = ConvertAniArrayByClass(env, CLASSNAME_PRELOADITEM, aPreloads);
@@ -903,7 +998,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
 
     // routerMap: Array<RouterItem>
     std::vector<ani_object> aRrouterMap;
-    for (uint16_t i = 0; i < hapModuleInfo.routerArray.size(); ++i) {
+    for (size_t i = 0; i < hapModuleInfo.routerArray.size(); ++i) {
         aRrouterMap.emplace_back(ConvertRouterItem(env, hapModuleInfo.routerArray[i]));
     }
     ani_ref aRouterMapRef = ConvertAniArrayByClass(env, CLASSNAME_ROUTERITEM, aRrouterMap);
@@ -913,7 +1008,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
     env->String_NewUTF8(hapModuleInfo.nativeLibraryPath.c_str(), hapModuleInfo.nativeLibraryPath.size(), &string);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(nativeLibraryPath), string);
 
-    // codePath: string;
+    // codePath: string
     std::string codePath = hapModuleInfo.hapPath;
     size_t result = hapModuleInfo.hapPath.find(PATH_PREFIX);
     if (result != std::string::npos) {
@@ -1012,7 +1107,10 @@ ani_object CommonFunAni::ConvertAbilitySkillUri(ani_env* env, const SkillUri& sk
     env->String_NewUTF8(skillUri.host.c_str(), skillUri.host.size(), &string);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(host), string);
 
-    // port: string
+    // port: int
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(port), std::stoi(skillUri.port));
+
+    // path: string
     env->String_NewUTF8(skillUri.port.c_str(), skillUri.port.size(), &string);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(port), string);
 
@@ -1060,20 +1158,21 @@ ani_object CommonFunAni::ConvertAbilitySkill(ani_env* env, const Skill& skill, b
     aActions = ConvertAniArrayString(env, skill.actions);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(actions), aActions);
 
-    // entities: Array<string>;
+    // entities: Array<string>
     ani_ref aEntities = nullptr;
     aEntities = ConvertAniArrayString(env, skill.entities);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(entities), aEntities);
 
-    // uris: Array<SkillUri>;
+    // uris: Array<SkillUri>
     std::vector<ani_object> aArray;
-    for (uint16_t i = 0; i < skill.uris.size(); ++i) {
+    for (size_t i = 0; i < skill.uris.size(); ++i) {
         aArray.emplace_back(ConvertAbilitySkillUri(env, skill.uris[i], isExtension));
     }
     ani_ref aSkillUri = ConvertAniArrayByClass(env, CLASSNAME_SKILLURI, aArray);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(uris), aSkillUri);
 
     if (!isExtension) {
+        // domainVerify: boolean
         CallSetter(env, cls, object, SETTER_METHOD_NAME(domainVerify), BoolToAniBoolean(skill.domainVerify));
     }
 

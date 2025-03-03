@@ -13,6 +13,52 @@
  * limitations under the License.
  */
 
+import { BundleInfo } from './BundleInfo';
+
+export type MyFun = (e: int) => void;
+export class BusinessError<T = void> {
+  code: number;
+  data: T;
+}
+type AsyncCallback<T, E = void> = (err: BusinessError<E>, data: T) => void;
+
+export class BundleManager {
+  static {
+      loadLibrary("anibundlemanager.z")
+  }
+
+  native IsApplicationEnabledSync(bundleName: string): boolean;
+
+  native GetBundleInfoForSelfSync(bundleFlags: int): BundleInfo;
+
+  static GetBundleInfoForSelfSyncProc(bundleFlags: int, instance: BundleManager): BundleInfo
+  {
+      return instance.GetBundleInfoForSelfSync(bundleFlags);
+  }
+
+  GetBundleInfoForSelf(bundleFlags: int, callback: AsyncCallback<BundleInfo, void>):void {
+    let p1 = taskpool.execute(BundleManager.GetBundleInfoForSelfSyncProc, bundleFlags, this);
+    p1.then((e: NullishType) => {
+        let resultBundleInfo = e as BundleInfo;
+        let r: BusinessError = { code: 0, data: undefined };
+        callback(r, resultBundleInfo);
+    }, (err: Object): void => {
+    });
+  }
+
+  GetBundleInfoForSelf(bundleFlags: int):Promise<BundleInfo> {
+    let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Object) => void) => {
+        let p1 = taskpool.execute(BundleManager.GetBundleInfoForSelfSyncProc, bundleFlags, this);
+        p1.then((e: NullishType) => {
+            let resultBundleInfo = e as BundleInfo;
+            resolve(resultBundleInfo);
+        }, (err: Object): void => {
+        });
+    });
+    return p;
+  }
+}
+
 declare namespace bundleManager {
   enum BundleFlag {
     GET_BUNDLE_INFO_DEFAULT = 0x00000000,

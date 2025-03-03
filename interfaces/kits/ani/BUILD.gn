@@ -23,11 +23,12 @@ ohos_shared_library("anibundlemanager") {
   }
   include_dirs = [
     "${inner_api_path}/appexecfwk_core/include",
-    "${kits_path}/js/common",
+    "${kits_path}/ani/bundle_manager",
     "${kits_path}/ani/common",
+    "${kits_path}/js/common",
   ]
   sources = [
-    "ani_bundle_manager.cpp",
+    "bundle_manager/ani_bundle_manager.cpp",
     "common/common_fun_ani.cpp",
   ]
 
