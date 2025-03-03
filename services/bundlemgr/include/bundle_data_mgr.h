@@ -1194,6 +1194,7 @@ private:
         const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId, int32_t appIndex = 0) const;
     ErrCode CheckInnerBundleInfoWithFlagsV9(
         const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId, int32_t appIndex = 0) const;
+    ErrCode CheckBundleAndAbilityDisabled(const InnerBundleInfo &info, int32_t flags, int32_t userId) const;
     void AddAppDetailAbilityInfo(InnerBundleInfo &info) const;
     void GetAllLauncherAbility(const Want &want, std::vector<AbilityInfo> &abilityInfos,
         const int32_t userId, const int32_t requestUserId) const;
