@@ -30,6 +30,7 @@ constexpr const char* INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO = "bundleUserInfo"
 constexpr const char* INNER_BUNDLE_USER_INFO_IS_REMOVABLE = "isRemovable";
 constexpr const char* INNER_BUNDLE_USER_INFO_CLONE_INFOS = "cloneInfos";
 constexpr const char* INNER_BUNDLE_USER_INFO_KEYID = "keyId";
+constexpr const char* INNER_BUNDLE_USER_INFO_PLUGIN_BUNDLE_INFOS = "pluginBundleInfos";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleUserInfo)
@@ -47,6 +48,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleU
         {INNER_BUNDLE_USER_INFO_IS_REMOVABLE, innerBundleUserInfo.isRemovable},
         {INNER_BUNDLE_USER_INFO_CLONE_INFOS, innerBundleUserInfo.cloneInfos},
         {INNER_BUNDLE_USER_INFO_KEYID, innerBundleUserInfo.keyId},
+        {INNER_BUNDLE_USER_INFO_PLUGIN_BUNDLE_INFOS, innerBundleUserInfo.pluginBundleInfos},
     };
 }
 
@@ -79,6 +81,9 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
         innerBundleUserInfo.cloneInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_KEYID,
         innerBundleUserInfo.keyId, false, parseResult);
+    GetValueIfFindKey<std::unordered_map<std::string, PluginBundleInfo>>(jsonObject, jsonObjectEnd,
+        INNER_BUNDLE_USER_INFO_PLUGIN_BUNDLE_INFOS,
+        innerBundleUserInfo.pluginBundleInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
 }
 } // namespace AppExecFwk
 } // namespace OHOS
