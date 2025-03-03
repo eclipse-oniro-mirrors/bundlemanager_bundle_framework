@@ -1046,7 +1046,7 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
         return 0;
     }
     uint64_t size = GetFolderSize(filePath);
-    if (size > std::numeric_limits<int64_t>::max()) {
+    if (size > static_cast<uint64_t>((std::numeric_limits<int64_t>::max())) {
         LOG_E(BMS_TAG_INSTALLD, "GetFolderSize overflow:%{public}s", filePath.c_str());
         return 0;
     } else {
