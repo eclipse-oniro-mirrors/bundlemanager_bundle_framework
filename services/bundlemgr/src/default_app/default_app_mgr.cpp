@@ -104,7 +104,7 @@ void DefaultAppMgr::Init()
 
 ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type, bool& isDefaultApp) const
 {
-    LOG_I(BMS_TAG_DEFAULT, "IsDefault,userId:%{public}d,type:%{public}s", userId, type.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "IsDefault,userId:%{public}d,type:%{private}s", userId, type.c_str());
     if (type.size() > TYPE_MAX_SIZE) {
         LOG_W(BMS_TAG_DEFAULT, "type size too large");
         isDefaultApp = false;
@@ -173,7 +173,7 @@ ErrCode DefaultAppMgr::IsDefaultApplicationInternal(
 ErrCode DefaultAppMgr::GetDefaultApplication(
     int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup) const
 {
-    LOG_I(BMS_TAG_DEFAULT, "GetDefault,userId:%{public}d,type:%{public}s,backup(bool):%{public}d",
+    LOG_I(BMS_TAG_DEFAULT, "GetDefault,userId:%{public}d,type:%{private}s,backup(bool):%{public}d",
         userId, type.c_str(), backup);
 
     ErrCode ret = VerifyPermission(Constants::PERMISSION_GET_DEFAULT_APPLICATION);
@@ -215,7 +215,7 @@ ErrCode DefaultAppMgr::GetDefaultApplicationInternal(
 ErrCode DefaultAppMgr::SetDefaultApplication(
     int32_t userId, const std::string& type, const Element& element) const
 {
-    LOG_I(BMS_TAG_DEFAULT, "SetDefault,userId:%{public}d,type:%{public}s", userId, type.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "SetDefault,userId:%{public}d,type:%{private}s", userId, type.c_str());
 
     ErrCode ret = VerifyPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION);
     if (ret != ERR_OK) {
@@ -290,7 +290,7 @@ ErrCode DefaultAppMgr::SetDefaultApplicationInternal(
 
 ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& type) const
 {
-    LOG_I(BMS_TAG_DEFAULT, "ResetDefault,userId:%{public}d,type:%{public}s", userId, type.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "ResetDefault,userId:%{public}d,type:%{private}s", userId, type.c_str());
 
     ErrCode ret = VerifyPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION);
     if (ret != ERR_OK) {
@@ -454,7 +454,7 @@ bool DefaultAppMgr::GetDefaultApplication(const Want& want, const int32_t userId
     std::vector<AbilityInfo>& abilityInfos, std::vector<ExtensionAbilityInfo>& extensionInfos, bool backup) const
 {
     std::string type = GetTypeFromWant(want);
-    LOG_I(BMS_TAG_DEFAULT, "backup(bool):%{public}d, type(want):%{public}s", backup, type.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "backup(bool):%{public}d, type(want):%{private}s", backup, type.c_str());
     if (type.empty()) {
         LOG_W(BMS_TAG_DEFAULT, "type empty");
         return false;
