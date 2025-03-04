@@ -116,7 +116,7 @@ HWTEST_F(BmsDefaultAppHostTest, HandleGetDefaultApplication_0100, Function | Med
  * @tc.desc: 1. system running normally
  *           2. test HandleSetDefaultApplication
  */
-HWTEST_F(BmsDefaultAppHostTest, HandleSetDefaultApplication_0100, Function | MediumTest | Level2)
+HWTEST_F(BmsDefaultAppHostTest, HandleSetDefaultApplication_0100, Function | MediumTest | Level1)
 {
     DefaultAppHost defaultAppHost;
     MessageParcel data;

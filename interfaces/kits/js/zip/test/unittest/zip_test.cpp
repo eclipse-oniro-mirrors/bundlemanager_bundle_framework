@@ -416,7 +416,7 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0800_parallel, Function | MediumTes
  * @tc.name: GetOriginalSize_0100
  * @tc.desc:
  */
-HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0100, Function | MediumTest | Level2)
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0100, Function | MediumTest | Level1)
 {
     std::string src = "";
     int64_t originalSize = 0;

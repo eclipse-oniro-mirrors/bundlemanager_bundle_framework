@@ -14,7 +14,7 @@ import("//build/test.gni")
 import("../../../../../appexecfwk.gni")
 import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
-module_output_path = "bundle_framework/bundle_framework"
+module_output_path = "bundle_framework/bundlemgrservice"
 
 ohos_unittest("BmsInstalldHostTest") {
   sanitize = {

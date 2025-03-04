@@ -111,7 +111,7 @@ HWTEST_F(BmsBundleCommonTest, CancelDelayTask_0200, Function | SmallTest | Level
  * @tc.name: test CheckAppInstallControl by InnerBundleInfo
  * @tc.desc: 1.CheckAppInstallControl test
  */
-HWTEST_F(BmsBundleCommonTest, CancelDelayTask_0300, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleCommonTest, CancelDelayTask_0300, Function | SmallTest | Level1)
 {
     std::string queueName;
     SerialQueue serialQueue(queueName);

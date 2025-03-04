@@ -937,7 +937,7 @@ HWTEST_F(BundleResourceHostTest, BundleUserInfo_Marshalling_0001, Function | Sma
  * @tc.name: BundleUserInfo_Dump_0001
  * @tc.desc: test Dump
  */
-HWTEST_F(BundleResourceHostTest, BundleUserInfo_Dump_0001, Function | SmallTest | Level2)
+HWTEST_F(BundleResourceHostTest, BundleUserInfo_Dump_0001, Function | SmallTest | Level1)
 {
     BundleUserInfo localBundleUserInfo;
     std::string prefix = "loclaPrefix";

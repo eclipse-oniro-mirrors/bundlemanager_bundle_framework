@@ -109,7 +109,7 @@ HWTEST_F(BmsBundleResourceInfoTest, ReadFromParcel_0300, Function | MediumTest |
  * @tc.desc: 1. system running normally
  *           2. test ReadFromParcel
  */
-HWTEST_F(BmsBundleResourceInfoTest, ReadFromParcel_0400, Function | MediumTest | Level2)
+HWTEST_F(BmsBundleResourceInfoTest, ReadFromParcel_0400, Function | MediumTest | Level1)
 {
     BundleResourceInfo bundleResourceInfo;
     Parcel parcel;
@@ -229,7 +229,7 @@ HWTEST_F(BmsBundleResourceInfoTest, UnMarshalling_0300, Function | MediumTest | 
  * @tc.desc: 1. system running normally
  *           2. test UnMarshalling
  */
-HWTEST_F(BmsBundleResourceInfoTest, UnMarshalling_0400, Function | MediumTest | Level2)
+HWTEST_F(BmsBundleResourceInfoTest, UnMarshalling_0400, Function | MediumTest | Level1)
 {
     Parcel parcel;
     std::string bundleName = "bundleName";

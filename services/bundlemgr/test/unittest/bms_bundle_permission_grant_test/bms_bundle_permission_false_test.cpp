@@ -1501,7 +1501,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_10000, Funct
  * @tc.desc: 1.system run normally
  *           2.GetAppPrivilegeLevel is empty
 */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_11000, Function | SmallTest | Level2)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_11000, Function | SmallTest | Level1)
 {
     std::string testRet = bundleMgrHostImpl_->GetAppPrivilegeLevel("", USERID);
     EXPECT_EQ(testRet, Constants::EMPTY_STRING);

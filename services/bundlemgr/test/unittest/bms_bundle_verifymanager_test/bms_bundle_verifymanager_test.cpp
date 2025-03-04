@@ -247,7 +247,7 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0600, Function | SmallTes
  * @tc.name: test InnerVerify
  * @tc.desc: 1.InnerVerify test
  */
-HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0700, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0700, Function | SmallTest | Level1)
 {
     VerifyManagerHostImpl impl;
     std::vector<std::string> abcPaths;
@@ -301,7 +301,7 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0900, Function | SmallTes
  * @tc.name: test GetRealPath
  * @tc.desc: 1.GetRealPath test
  */
-HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1000, Function | SmallTest | Level2)
+HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1000, Function | SmallTest | Level1)
 {
     VerifyManagerHostImpl impl;
     auto ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL1_BUNDLE_ONE);

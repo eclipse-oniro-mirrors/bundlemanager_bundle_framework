@@ -852,7 +852,7 @@ HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_1200, Function | MediumTest | Lev
  *           3.uninstall the entry hap
  *           4.check results
  */
-HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_1300, Function | MediumTest | Level2)
+HWTEST_F(BmsUninstallSystemTest, BMS_Uninstall_1300, Function | MediumTest | Level1)
 {
     std::cout << "BMS_Uninstall_1000 start" << std::endl;
 

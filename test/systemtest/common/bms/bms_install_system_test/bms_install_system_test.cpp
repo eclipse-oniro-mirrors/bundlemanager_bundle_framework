@@ -893,7 +893,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_1700, Function | MediumTest | Level1)
  *           2.install the bundle
  *           3.check the bundle info
  */
-HWTEST_F(BmsInstallSystemTest, BMS_Install_1800, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallSystemTest, BMS_Install_1800, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Install_1800" << std::endl;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
@@ -1761,7 +1761,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Upgrade_0400, Function | MediumTest | Level1)
  *             are higher than installed bundles
  *           3.upgrade bundles and check results
  */
-HWTEST_F(BmsInstallSystemTest, BMS_MultiHapUpgrade_0100, Function | MediumTest | Level2)
+HWTEST_F(BmsInstallSystemTest, BMS_MultiHapUpgrade_0100, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_MultiHapUpgrade_0100" << std::endl;
     int32_t max = 8;

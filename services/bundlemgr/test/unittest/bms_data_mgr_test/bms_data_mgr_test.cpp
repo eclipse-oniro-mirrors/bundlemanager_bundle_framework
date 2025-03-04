@@ -2206,7 +2206,7 @@ HWTEST_F(BmsDataMgrTest, ModifyBundleInfoByCloneInfo_0100, Function | SmallTest 
  * @tc.name: test ModifyApplicationInfoByCloneInfo
  * @tc.desc: 1.modify application information based on clone information
  */
-HWTEST_F(BmsDataMgrTest, ModifyApplicationInfoByCloneInfo_0100, Function | SmallTest | Level2)
+HWTEST_F(BmsDataMgrTest, ModifyApplicationInfoByCloneInfo_0100, Function | SmallTest | Level1)
 {
     auto dataMgr = GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
@@ -2687,7 +2687,7 @@ HWTEST_F(BmsDataMgrTest, GetCloneBundleInfo_0100, Function | SmallTest | Level1)
  * @tc.name: test GetInnerBundleInfoWithFlags
  * @tc.desc: 1.test using flags to obtain internal bundling information
  */
-HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithFlags_0100, Function | SmallTest | Level2)
+HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithFlags_0100, Function | SmallTest | Level1)
 {
     auto dataMgr = GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
