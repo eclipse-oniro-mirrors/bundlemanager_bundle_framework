@@ -82,6 +82,7 @@ group("unittest") {
       "unittest/bms_bundle_navigation_test:unittest",
       "unittest/bms_bundle_parser_test:unittest",
       "unittest/bms_bundle_permission_grant_test:unittest",
+      "unittest/bms_bundle_permission_test:unittest",
       "unittest/bms_bundle_quick_fix_mgr_rdb_test:unittest",
       "unittest/bms_bundle_rdb_data_manager_test:unittest",
       "unittest/bms_bundle_resource_info_test:unittest",

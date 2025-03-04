@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,20 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("unittest_hap") {
+group("bundle_permission_test") {
   testonly = true
-  deps = []
-
-  deps += [
-    # deps file
-    "bundle_app_service:bundle_app_service",
-    "bundle_dependencies:bundle_dependencies",
-    "bundle_kit:bundle_kit",
-    "bundle_permission_test:bundle_permission_test",
-    "bundle_update_debug:bundle_update_debug",
-    "install_daemon:install_daemon",
-    "parse_bundle:parse_bundle",
-    "permission_bundle:permission_bundle",
-    "test_bundle:test_bundle",
+  deps = [
+    "entry2_hap:entry2_hap",
+    "entry_hap:entry_hap",
+    "feature2_hap:feature2_hap",
+    "feature_hap:feature_hap",
   ]
 }

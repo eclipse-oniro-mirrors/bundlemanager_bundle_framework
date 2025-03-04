@@ -181,6 +181,14 @@
       <option name="push" value="bundle_update_debug/library_v2release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
+  <target name="BmsBundlePermissionTest">
+    <preparer>
+      <option name="push" value="bundle_permission_test/entry_hap.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_permission_test/entry2_hap.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_permission_test/feature_hap.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="bundle_permission_test/feature2_hap.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+    </preparer>
+  </target>
   <target name="BmsBundleUpdaterTest">
     <preparer>
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
