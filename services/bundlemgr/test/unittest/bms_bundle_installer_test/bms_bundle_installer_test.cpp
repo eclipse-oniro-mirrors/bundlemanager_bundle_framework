@@ -8420,4 +8420,36 @@ HWTEST_F(BmsBundleInstallerTest, SetBundleFirstInstallTime_0100, Function | Medi
     installer.SetFirstInstallTime(BUNDLE_NAME, time, innerBundleInfo);
     EXPECT_EQ(time, innerBundleInfo.innerBundleUserInfos_[key].firstInstallTime);
 }
+
+/**
+ * @tc.number: IsEnterpriseForAllUser_0100
+ * @tc.name: test IsEnterpriseForAllUser
+ * @tc.desc: 1.Test IsEnterpriseForAllUser
+*/
+HWTEST_F(BmsBundleInstallerTest, IsEnterpriseForAllUser_0100, Function | MediumTest | Level1)
+{
+    InstallParam installParam;
+    BaseBundleInstaller installer;
+    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, ""));
+
+    installParam.parameters.emplace("ohos.bms.param.enterpriseForAllUser", "true");
+    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, ""));
+
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, ""));
+
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo info;
+    installer.dataMgr_->bundleInfos_.emplace("bundleName", info);
+    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, "bundleName"));
+
+    info.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM);
+    installer.dataMgr_->bundleInfos_["bundleName"] = info;
+    EXPECT_FALSE(installer.IsEnterpriseForAllUser(installParam, "bundleName"));
+
+    info.SetInstalledForAllUser(true);
+    installer.dataMgr_->bundleInfos_["bundleName"] = info;
+    EXPECT_TRUE(installer.IsEnterpriseForAllUser(installParam, "bundleName"));
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
+}
 } // OHOS

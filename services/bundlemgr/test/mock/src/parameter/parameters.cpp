@@ -31,7 +31,11 @@ std::string GetDeviceType()
 bool GetBoolParameter(const std::string& key, bool def)
 {
 #ifndef GET_BOOL_PARAMETER_TRUE
-    return false;
+    auto item = paramMap.find(key);
+    if (item == paramMap.end()) {
+        return def;
+    }
+    return "true" == item->second;
 #else
     auto item = paramMap.find(key);
     if (item == paramMap.end()) {

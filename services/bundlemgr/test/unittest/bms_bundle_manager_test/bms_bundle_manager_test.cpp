@@ -39,6 +39,7 @@
 #include "inner_bundle_info.h"
 #include "mime_type_mgr.h"
 #include "mock_status_receiver.h"
+#include "parameters.h"
 #include "preinstall_data_storage_rdb.h"
 #include "scope_guard.h"
 #include "system_bundle_installer.h"
@@ -6492,6 +6493,16 @@ HWTEST_F(BmsBundleManagerTest, GetBundleNamesForNewUser_0100, Function | SmallTe
     dataMgr->bundleInfos_.clear();
     std::vector<std::string> ret = dataMgr->GetBundleNamesForNewUser();
     EXPECT_EQ(ret.size(), 0);
+
+    InnerBundleInfo sharedInfo;
+    sharedInfo.SetApplicationBundleType(BundleType::SHARED);
+    dataMgr->bundleInfos_.try_emplace("sharedBundle", sharedInfo);
+    InnerBundleInfo preInstallInfo;
+    preInstallInfo.SetIsPreInstallApp(true);
+    dataMgr->bundleInfos_.try_emplace("preInstallBundle", preInstallInfo);
+    ret = dataMgr->GetBundleNamesForNewUser();
+    EXPECT_EQ(ret.size(), 0);
+    dataMgr->bundleInfos_.clear();
 }
 
 /**
@@ -6510,6 +6521,24 @@ HWTEST_F(BmsBundleManagerTest, GetBundleNamesForNewUser_0200, Function | SmallTe
     std::vector<std::string> ret = dataMgr->GetBundleNamesForNewUser();
     EXPECT_EQ(ret.size(), 1);
     dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetBundleNamesForNewUser_0300
+ * @tc.name: test GetBundleNamesForNewUser
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleNamesForNewUser_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.SetInstalledForAllUser(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
+    std::vector<std::string> ret = dataMgr->GetBundleNamesForNewUser();
+    EXPECT_EQ(ret.size(), 1);
+    dataMgr->bundleInfos_.clear();
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
 }
 
 /**
