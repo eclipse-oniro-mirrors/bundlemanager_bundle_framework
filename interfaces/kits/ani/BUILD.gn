@@ -15,6 +15,10 @@ import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
+config("bundle_ani_common_config") {
+  include_dirs = [ "./common" ]
+}
+
 ohos_shared_library("anibundlemanager") {
   sanitize = {
     cfi = true
@@ -31,6 +35,8 @@ ohos_shared_library("anibundlemanager") {
     "bundle_manager/ani_bundle_manager.cpp",
     "common/common_fun_ani.cpp",
   ]
+
+  public_configs = [ ":bundle_ani_common_config" ]
 
   deps = [
     "${base_path}:appexecfwk_base",
@@ -58,6 +64,8 @@ generate_static_abc("bundleManager2abc") {
   arktsconfig = "ani_config.json"
   dst_file = "$target_out_dir/BundleManager.abc"
   out_puts = [ "$target_out_dir/BundleManager.abc" ]
+  is_boot_abc = "True"
+  device_dst_file = "system/framework/BundleManager.abc"
 }
 
 group("ani_package") {
