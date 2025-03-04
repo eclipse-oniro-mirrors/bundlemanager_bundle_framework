@@ -3282,45 +3282,61 @@ void InnerBundleInfo::InnerProcessRequestPermissions(
     const std::unordered_map<std::string, std::string> &moduleNameMap,
     std::vector<RequestPermission> &requestPermissions) const
 {
-    std::sort(requestPermissions.begin(), requestPermissions.end(),
-        [&moduleNameMap](RequestPermission reqPermA, RequestPermission reqPermB) {
-            if (reqPermA.name == reqPermB.name) {
-                if ((reqPermA.reasonId == 0) || (reqPermB.reasonId == 0)) {
-                    return reqPermA.reasonId > reqPermB.reasonId;
-                }
-                auto moduleTypeA = moduleNameMap.find(reqPermA.moduleName);
-                if (moduleTypeA == moduleNameMap.end()) {
-                    return reqPermA.reasonId > reqPermB.reasonId;
-                }
-                auto moduleTypeB = moduleNameMap.find(reqPermB.moduleName);
-                if (moduleTypeB == moduleNameMap.end()) {
-                    return reqPermA.reasonId > reqPermB.reasonId;
-                }
-                if ((moduleTypeA->second == Profile::MODULE_TYPE_ENTRY) &&
-                    ((moduleTypeB->second == Profile::MODULE_TYPE_ENTRY))) {
-                    return reqPermA.reasonId > reqPermB.reasonId;
-                } else if (moduleTypeA->second == Profile::MODULE_TYPE_ENTRY) {
-                    return true;
-                } else if (moduleTypeB->second == Profile::MODULE_TYPE_ENTRY) {
-                    return false;
-                }
-                if ((moduleTypeA->second == Profile::MODULE_TYPE_FEATURE) &&
-                    ((moduleTypeB->second == Profile::MODULE_TYPE_FEATURE))) {
-                    return reqPermA.reasonId > reqPermB.reasonId;
-                } else if (moduleTypeA->second == Profile::MODULE_TYPE_FEATURE) {
-                    return true;
-                } else if (moduleTypeB->second == Profile::MODULE_TYPE_FEATURE) {
-                    return false;
-                }
-                return reqPermA.reasonId > reqPermB.reasonId;
+    std::map<std::string, RequestPermission> permissionMap;
+    for (const auto &item : requestPermissions) {
+        auto iter = permissionMap.find(item.name);
+        if (iter == permissionMap.end()) {
+            permissionMap[item.name] = item;
+        } else {
+            if (ShouldReplacePermission(iter->second, item, moduleNameMap)) {
+                permissionMap[item.name] = item;
             }
-            return reqPermA.name < reqPermB.name;
-        });
-    auto iter = std::unique(requestPermissions.begin(), requestPermissions.end(),
-        [](RequestPermission reqPermA, RequestPermission reqPermB) {
-            return reqPermA.name == reqPermB.name;
-        });
-    requestPermissions.erase(iter, requestPermissions.end());
+        }
+    }
+    requestPermissions.clear();
+    for (const auto &item : permissionMap) {
+        requestPermissions.emplace_back(item.second);
+    }
+}
+
+bool InnerBundleInfo::ShouldReplacePermission(
+    const RequestPermission &oldPermission, const RequestPermission &newPermission,
+    const std::unordered_map<std::string, std::string> &moduleNameTypeMap) const
+{
+    if (oldPermission.name != newPermission.name) {
+        return false;
+    }
+    std::string oldType;
+    std::string newType;
+    auto iter = moduleNameTypeMap.find(oldPermission.moduleName);
+    if (iter != moduleNameTypeMap.end()) {
+        oldType = iter->second;
+    }
+    iter = moduleNameTypeMap.find(newPermission.moduleName);
+    if (iter != moduleNameTypeMap.end()) {
+        newType = iter->second;
+    }
+    if (oldPermission.reasonId == 0) {
+        if (newPermission.reasonId != 0) {
+            return true;
+        }
+        if (newType == Profile::MODULE_TYPE_ENTRY) {
+            return true;
+        }
+        return false;
+    }
+    if (newPermission.reasonId != 0) {
+        if (oldType != Profile::MODULE_TYPE_ENTRY) {
+            if (newType == Profile::MODULE_TYPE_ENTRY || newPermission.reasonId > oldPermission.reasonId) {
+                return true;
+            }
+        } else {
+            if (newType == Profile::MODULE_TYPE_ENTRY && newPermission.reasonId > oldPermission.reasonId) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, const std::string &caller, int32_t userId)
