@@ -2291,7 +2291,7 @@ HWTEST_F(BmsDataMgrTest, GetAllBundleStats_0100, Function | SmallTest | Level1)
 {
     auto dataMgr = GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
-    int32_t userId = 0;
+    int32_t userId = -1;
     std::vector<int64_t> bundleStats;
     bool ret = dataMgr->GetAllBundleStats(userId, bundleStats);
     EXPECT_EQ(ret, false);
