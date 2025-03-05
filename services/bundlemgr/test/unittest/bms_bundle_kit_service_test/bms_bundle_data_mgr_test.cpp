@@ -4887,12 +4887,31 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0002, Function | SmallTest 
 }
 
 /**
- * @tc.number: BundleUserMgrHostImpl_0001
+ * @tc.number: BundleUserMgrHostImpl_0003
  * Function: BundleUserMgrHostImpl
  * @tc.name: test BundleUserMgrHostImpl
  * @tc.desc: test OnCreateNewUser and RemoveUser
  */
-HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0003, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0003, Function | SmallTest | Level1)
+{
+    auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
+    int32_t userId = 101;
+    const std::vector<std::string> allowList = {"com.example.actsregisterjserrorrely"};
+    bundleUserMgrHostImpl_->OnCreateNewUser(userId, false, DISALLOWLIST,
+    std::make_optional<std::vector<std::string>>(allowList));
+    bundleUserMgrHostImpl_->RemoveUser(userId);
+    ASSERT_NE(bundleInstaller, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0004
+ * Function: BundleUserMgrHostImpl
+ * @tc.name: test BundleUserMgrHostImpl
+ * @tc.desc: test OnCreateNewUser and RemoveUser
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0004, Function | SmallTest | Level0)
 {
     int32_t userId = 101;
     bundleUserMgrHostImpl_->OnCreateNewUser(userId, false);
@@ -4910,12 +4929,12 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0003, Function | SmallTest 
 }
 
 /**
- * @tc.number: BundleUserMgrHostImpl_0001
+ * @tc.number: BundleUserMgrHostImpl_0005
  * Function: BundleUserMgrHostImpl
  * @tc.name: test BundleUserMgrHostImpl
  * @tc.desc: test OnCreateNewUser and RemoveUser
  */
-HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0004, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0005, Function | SmallTest | Level0)
 {
     const std::vector<std::string> disallowList;
     std::set<PreInstallBundleInfo> preInstallBundleInfos;
