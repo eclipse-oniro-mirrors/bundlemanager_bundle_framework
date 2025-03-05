@@ -260,11 +260,11 @@ private:
 
     mutable std::atomic<int> transactId_ = 0;
     std::condition_variable cv_;
-    std::mutex mapMutex_;
+    // maintain the order of using locks. mutex_ >> mapMutex_
     std::mutex mutex_;
+    std::mutex mapMutex_;
     sptr<ServiceCenterConnection> serviceCenterConnection_;
     std::map<std::string, FreeInstallParams> freeInstallParamsMap_;
-    sptr<IRemoteObject> serviceCenterRemoteObject_;
     int32_t connectState_ = ServiceCenterConnectState::DISCONNECTED;
     std::shared_ptr<SerialQueue> serialQueue_;
 };
