@@ -121,7 +121,7 @@ public:
     {
         return false;
     }
-    virtual bool CheckWhetherCanBeUninstalled(const std::string &bundleName)
+    virtual bool CheckWhetherCanBeUninstalled(const std::string &bundleName, const std::string &appIdentifier)
     {
         return true;
     }
