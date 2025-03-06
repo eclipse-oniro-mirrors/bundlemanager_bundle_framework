@@ -478,8 +478,9 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
     }
     auto res = dataMgr->GetBundleInfosV9(flags, bundleInfos, userId);
     // menu profile is currently not supported in BrokerService
-    bool getMenu = ((static_cast<uint32_t>(flags) & BundleFlag::GET_BUNDLE_WITH_MENU)
-        == BundleFlag::GET_BUNDLE_WITH_MENU);
+    bool getMenu = ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU))
+        == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU));
     if (isBrokerServiceExisted_ && !getMenu) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         if (bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId, true) == ERR_OK) {
