@@ -15,6 +15,7 @@
 
 import { BundleInfo } from './BundleInfo';
 import { AsyncCallback, BusinessError } from './@ohos.base';
+import { ApplicationInfo } from './ApplicationInfo';
 
 namespace bundleManager {
 
@@ -174,6 +175,10 @@ namespace bundleManager {
 
   export native function getBundleInfoForSelfSync(bundleFlags: int): BundleInfo;
 
+  export native function getBundleInfoSync(bundleName: string, bundleFlags: int, userId: int) : BundleInfo;
+
+  export native function getApplicationInfoSync(bundleName: string, applicationFlags: int, userId: int): ApplicationInfo;
+
   export function getBundleInfoForSelf(bundleFlags: int, callback: AsyncCallback<BundleInfo, void>):void {
     let p1 = taskpool.execute(bundleManager.getBundleInfoForSelfSync, bundleFlags);
     p1.then((e: NullishType) => {
@@ -197,6 +202,47 @@ namespace bundleManager {
     return p;
   }
 
+  export function getBundleInfoSync(bundleName: string, bundleFlags: int): BundleInfo {
+    return bundleManager.getBundleInfoSync(bundleName, bundleFlags, -500);
+  }
+
+  export function getBundleInfo(bundleName: string, bundleFlags: int, userId?: int): Promise<BundleInfo> {
+    let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Object) => void) => {
+        let userIdInfo: int = userId ?? -500;
+        let p1 = launch getBundleInfoSync(bundleName, bundleFlags, userIdInfo);
+        p1.then((e: NullishType) => {
+            let resultBundleInfo = e as BundleInfo;
+            resolve(resultBundleInfo);
+        }, (err: Object): void => {
+        });
+    }
+    );
+    return p;
+  }
+
+  export function getBundleInfo(bundleName: string, bundleFlags: int, callback: AsyncCallback<BundleInfo, void>): void {
+    let p1 = launch getBundleInfoSync(bundleName, bundleFlags);
+    p1.then((e: NullishType) => {
+        let resultBundleInfo = e as BundleInfo;
+        let r: BusinessError = { code: 0, name: "error", message: "error", data: undefined };
+        callback(r, resultBundleInfo);
+    }, (err: Object): void => {
+    });
+  }
+
+  export function getBundleInfo(bundleName: string, bundleFlags: int, userId: int, callback: AsyncCallback<BundleInfo, void>): void {
+    let p1 = launch getBundleInfoSync(bundleName, bundleFlags, userId);
+    p1.then((e: NullishType) => {
+        let resultBundleInfo = e as BundleInfo;
+        let r: BusinessError = { code: 0, name: "error", message: "error", data: undefined };
+        callback(r, resultBundleInfo);
+    }, (err: Object): void => {
+    });
+  }
+
+  export function getApplicationInfoSync(bundleName: string, applicationFlags: int): ApplicationInfo {
+    return bundleManager.getApplicationInfoSync(bundleName, applicationFlags, -500);
+  }
 }
 
 export default bundleManager;
