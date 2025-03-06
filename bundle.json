@@ -183,7 +183,7 @@
                         "enum_util.h"
                       ]
                     },
-                    "name": "//foundation/bundlemanager/bundle_framework/interfaces/kits/ani:anibundlemanager"
+                    "name": "//foundation/bundlemanager/bundle_framework/interfaces/kits/ani/common:bms_ani_common"
                   }
             ],
             "test": [

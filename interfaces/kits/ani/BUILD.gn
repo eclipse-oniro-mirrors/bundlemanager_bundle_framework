@@ -15,10 +15,6 @@ import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
-config("bundle_ani_common_config") {
-  include_dirs = [ "./common" ]
-}
-
 ohos_shared_library("anibundlemanager") {
   sanitize = {
     cfi = true
@@ -31,18 +27,19 @@ ohos_shared_library("anibundlemanager") {
     "${kits_path}/ani/common",
     "${kits_path}/js/common",
   ]
-  sources = [
-    "bundle_manager/ani_bundle_manager.cpp",
-    "common/common_fun_ani.cpp",
-  ]
+  sources = [ "bundle_manager/ani_bundle_manager.cpp" ]
 
-  public_configs = [ ":bundle_ani_common_config" ]
+  defines = [
+    "APP_LOG_TAG = \"BMS\"",
+    "LOG_DOMAIN = 0xD001120",
+  ]
 
   deps = [
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${kits_path}/js/common:bundle_napi_common",
+    "common:bms_ani_common",
   ]
 
   external_deps = [
@@ -50,6 +47,7 @@ ohos_shared_library("anibundlemanager") {
     "c_utils:utils",
     "common_event_service:cesfwk_core",
     "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
     "runtime_core:ani",
@@ -65,12 +63,20 @@ generate_static_abc("bundleManager2abc") {
   dst_file = "$target_out_dir/BundleManager.abc"
   out_puts = [ "$target_out_dir/BundleManager.abc" ]
   is_boot_abc = "True"
-  device_dst_file = "system/framework/BundleManager.abc"
+  device_dst_file = "/system/framework/BundleManager.abc"
+}
+
+ohos_prebuilt_etc("bundleManager2abc_etc") {
+  source = "$target_out_dir/BundleManager.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":bundleManager2abc" ]
 }
 
 group("ani_package") {
   deps = [
     ":anibundlemanager",
-    ":bundleManager2abc",
+    ":bundleManager2abc_etc",
   ]
 }
