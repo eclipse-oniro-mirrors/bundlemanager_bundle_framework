@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "app_log_wrapper.h"
 #include "common_fun_ani.h"
 #include "enum_util.h"
 
@@ -49,10 +50,10 @@ constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
 } // namespace
 ani_class CommonFunAni::CreateClassByName(ani_env* env, const std::string& className)
 {
-    ani_status status = ANI_ERROR;
     ani_class cls = nullptr;
-    if ((status = env->FindClass(className.c_str(), &cls)) != ANI_OK) {
-        std::cerr << "FindClass failed status: " << status << std::endl;
+    ani_status status = env->FindClass(className.c_str(), &cls);
+    if (status != ANI_OK) {
+        APP_LOGE("FindClass failed %{public}d", status);
         return nullptr;
     }
     return cls;
@@ -60,16 +61,17 @@ ani_class CommonFunAni::CreateClassByName(ani_env* env, const std::string& class
 
 ani_object CommonFunAni::CreateNewObjectByClass(ani_env* env, ani_class cls)
 {
-    ani_status status = ANI_ERROR;
     ani_method method = nullptr;
-    if ((status = env->Class_FindMethod(cls, "<ctor>", ":V", &method)) != ANI_OK) {
-        std::cerr << "Class_FindMethod failed status: " << status << std::endl;
+    ani_status status = env->Class_FindMethod(cls, "<ctor>", ":V", &method);
+    if (status != ANI_OK) {
+        APP_LOGE("Class_FindMethod failed %{public}d", status);
         return nullptr;
     }
 
     ani_object object = nullptr;
-    if ((status = env->Object_New(cls, method, &object)) != ANI_OK) {
-        std::cerr << "Object_New failed status: " << status << std::endl;
+    status = env->Object_New(cls, method, &object);
+    if (status != ANI_OK) {
+        APP_LOGE("Object_New failed %{public}d", status);
         return nullptr;
     }
     return object;
@@ -81,12 +83,14 @@ ani_ref CommonFunAni::ConvertAniArrayByClass(
     ani_size length = aArray.size();
     ani_array_ref aArrayRef = nullptr;
     ani_class aCls = nullptr;
-    if (env->FindClass(className.c_str(), &aCls) != ANI_OK) {
-        std::cerr << "ConvertAniArrayByClass FindClass failed " << std::endl;
+    ani_status status = env->FindClass(className.c_str(), &aCls);
+    if (status != ANI_OK) {
+        APP_LOGE("FindClass failed %{public}d", status);
         return nullptr;
     }
-    if (env->Array_New_Ref(aCls, length, nullptr, &aArrayRef) != ANI_OK) {
-        std::cerr << "ConvertAniArrayByClass Array_New_Ref failed " << std::endl;
+    status = env->Array_New_Ref(aCls, length, nullptr, &aArrayRef);
+    if (status != ANI_OK) {
+        APP_LOGE("Array_New_Ref failed %{public}d", status);
         return nullptr;
     }
     for (ani_size i = 0; i < length; ++i) {
@@ -100,12 +104,14 @@ ani_ref CommonFunAni::ConvertAniArrayString(ani_env* env, const std::vector<std:
     ani_size length = cArray.size();
     ani_array_ref aArrayRef = nullptr;
     ani_class aStringcls = nullptr;
-    if (env->FindClass(CLASSNAME_STDSTRING, &aStringcls) != ANI_OK) {
-        std::cerr << "ConvertAniArrayString FindClass String failed " << std::endl;
+    ani_status status = env->FindClass(CLASSNAME_STDSTRING, &aStringcls);
+    if (status != ANI_OK) {
+        APP_LOGE("FindClass failed %{public}d", status);
         return nullptr;
     }
-    if (env->Array_New_Ref(aStringcls, length, nullptr, &aArrayRef) != ANI_OK) {
-        std::cerr << "ConvertAniArrayString Array_New_Ref failed " << std::endl;
+    status = env->Array_New_Ref(aStringcls, length, nullptr, &aArrayRef);
+    if (status != ANI_OK) {
+        APP_LOGE("Array_New_Ref failed %{public}d", status);
         return nullptr;
     }
     ani_string aString = nullptr;
@@ -122,8 +128,9 @@ ani_array_int CommonFunAni::ConvertAniArrayEnum(
 {
     ani_size length = cArray.size();
     ani_array_int aArrayEnum = nullptr;
-    if (env->Array_New_Int(length, &aArrayEnum) != ANI_OK) {
-        std::cerr << "ConvertAniArrayEnum Array_New_Int failed " << std::endl;
+    ani_status status = env->Array_New_Int(length, &aArrayEnum);
+    if (status != ANI_OK) {
+        APP_LOGE("Array_New_Int failed %{public}d", status);
         return nullptr;
     }
     std::vector<ani_int> buffer(length);
@@ -139,7 +146,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLEINFO);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertBundleInfo failed." << std::endl;
+        APP_LOGE("ConvertBundleInfo failed.");
         return nullptr;
     }
 
@@ -221,7 +228,7 @@ ani_object CommonFunAni::ConvertMetadata(ani_env* env, const Metadata& metadata)
     ani_class cls = CreateClassByName(env, CLASSNAME_METADATA);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertMetadata failed." << std::endl;
+        APP_LOGE("ConvertMetadata failed.");
         return nullptr;
     }
 
@@ -247,7 +254,7 @@ ani_object CommonFunAni::ConvertMultiAppMode(ani_env* env, const MultiAppModeDat
     ani_class cls = CreateClassByName(env, CLASSNAME_MULTIAPPMODE);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertMultiAppMode failed." << std::endl;
+        APP_LOGE("ConvertMultiAppMode failed.");
         return nullptr;
     }
 
@@ -271,7 +278,7 @@ ani_ref CommonFunAni::ConvertModuleMetaInfos(ani_env* env, const std::map<std::s
         ani_class cls = CreateClassByName(env, CLASSNAME_MODULEMETADATA);
         ani_object object = CreateNewObjectByClass(env, cls);
         if (cls == nullptr || object == nullptr) {
-            std::cerr << "ConvertModuleMetaInfos failed." << std::endl;
+            APP_LOGE("ConvertModuleMetaInfos failed.");
             return nullptr;
         }
         // moduleName: string
@@ -298,7 +305,7 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
     ani_class cls = CreateClassByName(env, CLASSNAME_APPLICATIONINFO);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertApplicationInfo failed." << std::endl;
+        APP_LOGE("ConvertApplicationInfo failed.");
         return nullptr;
     }
 
@@ -424,7 +431,7 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
     ani_class cls = CreateClassByName(env, CLASSNAME_ABILITYINFO);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertAbilityInfo failed." << std::endl;
+        APP_LOGE("ConvertAbilityInfo failed.");
         return nullptr;
     }
 
@@ -551,7 +558,7 @@ ani_object CommonFunAni::ConvertWindowSize(ani_env* env, const AbilityInfo& abil
     ani_class cls = CreateClassByName(env, CLASSNAME_WINDOWSIZE);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertWindowSize failed." << std::endl;
+        APP_LOGE("ConvertWindowSize failed.");
         return nullptr;
     }
 
@@ -581,7 +588,7 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
     ani_class cls = CreateClassByName(env, CLASSNAME_EXTENSIONABILITYINFO);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertExtensionInfo failed." << std::endl;
+        APP_LOGE("ConvertExtensionInfo failed.");
         return nullptr;
     }
 
@@ -665,7 +672,7 @@ ani_object CommonFunAni::ConvertResource(ani_env* env, const Resource& resource)
     ani_class cls = CreateClassByName(env, CLASSNAME_RESOURCE);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertResource failed." << std::endl;
+        APP_LOGE("ConvertResource failed.");
         return nullptr;
     }
 
@@ -690,7 +697,7 @@ ani_object CommonFunAni::ConvertSignatureInfo(ani_env* env, const SignatureInfo&
     ani_class cls = CreateClassByName(env, CLASSNAME_SIGNATUREINFO);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertSignatureInfo failed." << std::endl;
+        APP_LOGE("ConvertSignatureInfo failed.");
         return nullptr;
     }
 
@@ -720,7 +727,7 @@ ani_object CommonFunAni::ConvertDataItem(ani_env* env, const std::string& key, c
     ani_class cls = CreateClassByName(env, CLASSNAME_DATAITEM);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertDataItem failed." << std::endl;
+        APP_LOGE("ConvertDataItem failed.");
         return nullptr;
     }
 
@@ -742,7 +749,7 @@ ani_object CommonFunAni::ConvertRouterItem(ani_env* env, const RouterItem& route
     ani_class cls = CreateClassByName(env, CLASSNAME_ROUTERITEM);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertRouterItem failed." << std::endl;
+        APP_LOGE("ConvertRouterItem failed.");
         return nullptr;
     }
 
@@ -780,7 +787,7 @@ ani_ref CommonFunAni::ConvertRouterDataInfos(ani_env* env, const std::map<std::s
         ani_class cls = CreateClassByName(env, CLASSNAME_DATAITEM);
         ani_object object = CreateNewObjectByClass(env, cls);
         if (cls == nullptr || object == nullptr) {
-            std::cerr << "ConvertRouterDataInfos failed." << std::endl;
+            APP_LOGE("ConvertRouterDataInfos failed.");
             return nullptr;
         }
         // name: key
@@ -803,7 +810,7 @@ ani_object CommonFunAni::ConvertRequestPermission(ani_env* env, const RequestPer
     ani_class cls = CreateClassByName(env, CLASSNAME_PERMISSION);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertRequestPermission failed." << std::endl;
+        APP_LOGE("ConvertRequestPermission failed.");
         return nullptr;
     }
 
@@ -837,7 +844,7 @@ ani_object CommonFunAni::ConvertRequestPermissionUsedScene(
     ani_class cls = CreateClassByName(env, CLASSNAME_USEDSCENE);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertRequestPermissionUsedScene failed." << std::endl;
+        APP_LOGE("ConvertRequestPermissionUsedScene failed.");
         return nullptr;
     }
 
@@ -858,7 +865,7 @@ ani_object CommonFunAni::ConvertPreloadItem(ani_env* env, const PreloadItem& pre
     ani_class cls = CreateClassByName(env, CLASSNAME_PRELOADITEM);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertPreloadItem failed." << std::endl;
+        APP_LOGE("ConvertPreloadItem failed.");
         return nullptr;
     }
 
@@ -876,7 +883,7 @@ ani_object CommonFunAni::ConvertDependency(ani_env* env, const Dependency& depen
     ani_class cls = CreateClassByName(env, CLASSNAME_DEPENDENCY);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertDependency failed." << std::endl;
+        APP_LOGE("ConvertDependency failed.");
         return nullptr;
     }
 
@@ -900,7 +907,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
     ani_class cls = CreateClassByName(env, CLASSNAME_HAPMODULEINFO);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertHapModuleInfo failed." << std::endl;
+        APP_LOGE("ConvertHapModuleInfo failed.");
         return nullptr;
     }
 
@@ -1029,7 +1036,7 @@ ani_object CommonFunAni::ConvertElementName(ani_env* env, const ElementName& ele
     ani_class cls = CreateClassByName(env, CLASSNAME_ELEMENTNAME);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertElementName failed." << std::endl;
+        APP_LOGE("ConvertElementName failed.");
         return nullptr;
     }
 
@@ -1067,7 +1074,7 @@ ani_object CommonFunAni::ConvertCustomizeData(ani_env* env, const CustomizeData&
     ani_class cls = CreateClassByName(env, CLASSNAME_CUSTOMIZEDATA);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertCustomizeData failed." << std::endl;
+        APP_LOGE("ConvertCustomizeData failed.");
         return nullptr;
     }
 
@@ -1093,7 +1100,7 @@ ani_object CommonFunAni::ConvertAbilitySkillUri(ani_env* env, const SkillUri& sk
     ani_class cls = CreateClassByName(env, CLASSNAME_SKILLURI);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertAbilitySkillUri failed." << std::endl;
+        APP_LOGE("ConvertAbilitySkillUri failed.");
         return nullptr;
     }
 
@@ -1149,7 +1156,7 @@ ani_object CommonFunAni::ConvertAbilitySkill(ani_env* env, const Skill& skill, b
     ani_class cls = CreateClassByName(env, CLASSNAME_SKILL);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
-        std::cerr << "ConvertAbilitySkill failed." << std::endl;
+        APP_LOGE("ConvertAbilitySkill failed.");
         return nullptr;
     }
 

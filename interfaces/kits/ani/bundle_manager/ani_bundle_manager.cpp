@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "ani_bundle_manager.h"
+#include "app_log_wrapper.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
@@ -44,14 +45,14 @@ std::string AniStrToString(ani_env* env, ani_ref aniStr)
 {
     ani_string str = reinterpret_cast<ani_string>(aniStr);
     if (str == nullptr) {
-        std::cerr << "ani ParseString failed" << std::endl;
+        APP_LOGE("ani ParseString failed");
         return "";
     }
 
     ani_status status = ANI_ERROR;
     ani_size substrSize = -1;
     if ((status = env->String_GetUTF8Size(str, &substrSize)) != ANI_OK) {
-        std::cerr << "String_GetUTF8Size failed" << std::endl;
+        APP_LOGE("String_GetUTF8Size failed");
         return "";
     }
 
@@ -59,7 +60,7 @@ std::string AniStrToString(ani_env* env, ani_ref aniStr)
     ani_size nameSize;
     if ((status = env->String_GetUTF8SubString(str, 0U, substrSize, buffer.data(), buffer.size(), &nameSize)) !=
         ANI_OK) {
-        std::cerr << "String_GetUTF8SubString failed" << std::endl;
+        APP_LOGE("String_GetUTF8SubString failed");
         return "";
     }
 
@@ -81,33 +82,31 @@ static void CheckToCache(
     }
 }
 
-static ani_boolean IsApplicationEnabledSync(
-    [[maybe_unused]] ani_env* env, [[maybe_unused]] ani_object object, ani_string aniBundleName)
+static ani_boolean isApplicationEnabledSync([[maybe_unused]] ani_env* env, ani_string aniBundleName)
 {
     bool isEnable = false;
     std::string bundleName = AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
-        std::cerr << "BundleName is empty" << std::endl;
+        APP_LOGE("BundleName is empty");
         return isEnable;
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
-        std::cerr << "GetBundleMgr failed" << std::endl;
+        APP_LOGE("GetBundleMgr failed");
         return isEnable;
     }
     int32_t ret = iBundleMgr->IsApplicationEnabled(bundleName, isEnable);
     if (ret != ERR_OK) {
-        std::cerr << "IsApplicationEnabled failed ret: " << ret << std::endl;
+        APP_LOGE("IsApplicationEnabled failed ret: %{public}d", ret);
     }
     return isEnable;
 }
 
-static ani_object GetBundleInfoForSelfSync(
-    [[maybe_unused]] ani_env* env, [[maybe_unused]] ani_object object, ani_int bundleFlags)
+static ani_object getBundleInfoForSelfSync([[maybe_unused]] ani_env* env, ani_int bundleFlags)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
-        std::cerr << "GetBundleMgr failed" << std::endl;
+        APP_LOGE("GetBundleMgr failed");
         return nullptr;
     }
     const auto uid = IPCSkeleton::GetCallingUid();
@@ -125,7 +124,7 @@ static ani_object GetBundleInfoForSelfSync(
     BundleInfo bundleInfo;
     int32_t ret = iBundleMgr->GetBundleInfoForSelf(bundleFlags, bundleInfo);
     if (ret != ERR_OK) {
-        std::cerr << "GetBundleInfoForSelf failed ret: " << ret << " userId: " << getuid() << std::endl;
+        APP_LOGE("GetBundleInfoForSelf failed ret: %{public}d", ret);
         return nullptr;
     }
 
@@ -139,28 +138,30 @@ static ani_object GetBundleInfoForSelfSync(
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
+    APP_LOGI("ANI_Constructor called");
     ani_env* env;
-    if (ANI_OK != vm->GetEnv(ANI_VERSION_1, &env)) {
-        std::cerr << "Unsupported ANI_VERSION_1" << std::endl;
+    if (vm->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
+        APP_LOGE("Unsupported ANI_VERSION_1");
         return (ani_status)9;
     }
 
-    static const char* className = "L@ohos/bundle/bundleManager/BundleManager;";
-    ani_class cls;
-    if (ANI_OK != env->FindClass(className, &cls)) {
-        std::cerr << "Not found '" << className << "'" << std::endl;
+    static const char* nsName = "L@ohos/bundle/bundleManager/bundleManager;";
+    ani_namespace kitNs;
+    if (env->FindNamespace(nsName, &kitNs) != ANI_OK) {
+        APP_LOGE("Not found nameSpace name: %{public}s", nsName);
         return (ani_status)2;
     }
 
     std::array methods = {
         ani_native_function {
-            "IsApplicationEnabledSync", "Lstd/core/String;:Z", reinterpret_cast<void*>(IsApplicationEnabledSync) },
-        ani_native_function { "GetBundleInfoForSelfSync", "I:LBundleInfo/BundleInfo;",
-            reinterpret_cast<void*>(GetBundleInfoForSelfSync) },
+            "isApplicationEnabledSync", "Lstd/core/String;:Z", reinterpret_cast<void*>(isApplicationEnabledSync) },
+        ani_native_function {
+            "getBundleInfoForSelfSync", "I:LBundleInfo/BundleInfo;",
+            reinterpret_cast<void*>(getBundleInfoForSelfSync) },
     };
 
-    if (ANI_OK != env->Class_BindNativeMethods(cls, methods.data(), methods.size())) {
-        std::cerr << "Cannot bind native methods to '" << className << "'" << std::endl;
+    if (env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size()) != ANI_OK) {
+        APP_LOGE("Cannot bind native methods to %{public}s", nsName);
         return (ani_status)3;
     };
 
@@ -168,15 +169,17 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 
     RegisterClearCacheListenerAndEnv(vm);
 
+    APP_LOGI("ANI_Constructor finished");
+
     return ANI_OK;
 }
 
 void ClearCacheListener::DoClearCache()
 {
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
-    ani_env *env = nullptr;
-    ani_option interopEnabled {"--interop=enable", nullptr};
-    ani_options aniArgs {1, &interopEnabled};
+    ani_env* env = nullptr;
+    ani_option interopEnabled { "--interop=enable", nullptr };
+    ani_options aniArgs { 1, &interopEnabled };
     g_vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
     for (auto& item : g_cache) {
         env->GlobalReference_Delete(item.second);

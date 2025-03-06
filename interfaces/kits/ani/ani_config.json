@@ -36,6 +36,9 @@
       ],
       "@ohos.bundle.bundleManager": [
         "./ets/@ohos.bundle.bundleManager.ets"
+      ],
+      "@ohos.base": [
+        "./ets/@ohos.base.ets"
       ]
     }
   },
