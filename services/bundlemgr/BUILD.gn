@@ -602,6 +602,7 @@ ohos_shared_library("installs") {
     external_deps += [
       "faultloggerd:backtrace_local",
       "faultloggerd:dfx_sigdump_handler",
+      "faultloggerd:libbacktrace_local",
       "faultloggerd:libdfx_procinfo",
       "faultloggerd:libfaultloggerd",
       "faultloggerd:libunwinder",
