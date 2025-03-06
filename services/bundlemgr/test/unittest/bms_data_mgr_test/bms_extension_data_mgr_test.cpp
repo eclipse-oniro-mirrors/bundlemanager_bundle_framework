@@ -1248,4 +1248,19 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0035, Function | SmallTest | Leve
     bool res = bundleMgrExtTest.IsNeedToSkipPreBundleInstall();
     EXPECT_FALSE(res);
 }
+
+/**
+ * @tc.number: BundleMgrExt_0036
+ * @tc.name: GetBundleArchiveInfoExt
+ * @tc.desc: GetBundleArchiveInfoExt
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0036, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string hapFilePath;
+    int32_t fd = 123;
+    BundleInfo bundleInfo;
+    auto res = bundleMgrExtTest.GetBundleArchiveInfoExt(hapFilePath, fd, bundleInfo);
+    EXPECT_NE(res, ERR_OK);
+}
 } // OHOS
