@@ -247,7 +247,6 @@ void InstalldClient::ResetInstalldProxy()
     if ((installdProxy_ != nullptr) && (installdProxy_->AsObject() != nullptr)) {
         installdProxy_->AsObject()->RemoveDeathRecipient(recipient_);
     }
-    SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID);
     installdProxy_ = nullptr;
 }
 
