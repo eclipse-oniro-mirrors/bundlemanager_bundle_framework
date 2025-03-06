@@ -31,15 +31,18 @@
 #include "common_func.h"
 #include "ipc_skeleton.h"
 
-using namespace OHOS;
-using namespace AppExecFwk;
-
+namespace OHOS {
+namespace AppExecFwk {
+namespace {
 const std::string GET_BUNDLE_INFO = "GetBundleInfo";
+constexpr const char* GET_APPLICATION_INFO = "GetApplicationInfo";
 static ani_vm* g_vm;
 static std::mutex g_clearCacheListenerMutex;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
 static std::shared_mutex g_cacheMutex;
 static std::unordered_map<Query, ani_ref, QueryHash> g_cache;
+constexpr int32_t INVALID_USER_ID = -500;
+}
 
 std::string AniStrToString(ani_env* env, ani_ref aniStr)
 {
@@ -136,6 +139,90 @@ static ani_object getBundleInfoForSelfSync([[maybe_unused]] ani_env* env, ani_in
     return objectBundleInfo;
 }
 
+static ani_object getBundleInfoSync([[maybe_unused]] ani_env *env, ani_string aniBundleName, ani_int bundleFlags,
+    ani_int userId)
+{
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    if (userId == INVALID_USER_ID) {
+        userId = uid / Constants::BASE_USER_RANGE;
+    }
+    std::string bundleName = AniStrToString(env, aniBundleName);
+    if (bundleName.empty()) {
+        APP_LOGE("Bundle name is empty.");
+        return nullptr;
+    }
+
+    Query query(bundleName, GET_BUNDLE_INFO, bundleFlags, userId);
+    if (!CommonFunc::CheckBundleFlagWithPermission(bundleFlags)) {
+        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+        auto item = g_cache.find(query);
+        if (item != g_cache.end()) {
+            APP_LOGD("Get bundle info from global cache.");
+            return reinterpret_cast<ani_object>(item->second);
+        }
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Get bundle mgr failed");
+        return nullptr;
+    }
+    BundleInfo bundleInfo;
+    ErrCode ret = iBundleMgr->GetBundleInfoV9(bundleName, bundleFlags, bundleInfo, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetBundleInfoV9 failed ret: %{public}d", ret);
+        return nullptr;
+    }
+
+    ani_object objectBundleInfo = CommonFunAni::ConvertBundleInfo(env, bundleInfo);
+    if (!CommonFunc::CheckBundleFlagWithPermission(bundleFlags)) {
+        CheckToCache(env, bundleInfo.uid, uid, query, objectBundleInfo);
+    }
+
+    return objectBundleInfo;
+}
+
+static ani_object getApplicationInfoSync([[maybe_unused]] ani_env *env, ani_string aniBundleName,
+    ani_int applicationFlags, ani_int userId)
+{
+    std::string bundleName = AniStrToString(env, aniBundleName);
+    if (bundleName.empty()) {
+        APP_LOGE("BundleName is empty");
+        return nullptr;
+    }
+
+    if (userId == INVALID_USER_ID) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+
+    const Query query(bundleName, GET_APPLICATION_INFO, applicationFlags, userId);
+    {
+        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+        auto item = g_cache.find(query);
+        if (item != g_cache.end()) {
+            return reinterpret_cast<ani_object>(item->second);
+        }
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("nullptr iBundleMgr");
+        return nullptr;
+    }
+    ApplicationInfo appInfo;
+    
+    ErrCode ret = iBundleMgr->GetApplicationInfoV9(bundleName, applicationFlags, userId, appInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetApplicationInfoV9 failed ret: %{public}d,userId: %{public}d", ret, getuid());
+        return nullptr;
+    }
+
+    ani_object objectApplicationInfo = CommonFunAni::ConvertApplicationInfo(env, appInfo);
+    CheckToCache(env, appInfo.uid, IPCSkeleton::GetCallingUid(), query, objectApplicationInfo);
+
+    return objectApplicationInfo;
+}
+
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
     APP_LOGI("ANI_Constructor called");
@@ -158,6 +245,16 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function {
             "getBundleInfoForSelfSync", "I:LBundleInfo/BundleInfo;",
             reinterpret_cast<void*>(getBundleInfoForSelfSync) },
+        ani_native_function {
+            "getBundleInfoSync",
+            "Lstd/core/String;II:LBundleInfo/BundleInfo;",
+            reinterpret_cast<void*>(getBundleInfoSync)
+        },
+        ani_native_function {
+            "getApplicationInfoSync",
+            "Lstd/core/String;II:LApplicationInfo/ApplicationInfo;",
+            reinterpret_cast<void*>(getApplicationInfoSync)
+        },
     };
 
     if (env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size()) != ANI_OK) {
@@ -217,3 +314,5 @@ void RegisterClearCacheListenerAndEnv(ani_vm* vm)
     (void)EventFwk::CommonEventManager::SubscribeCommonEvent(g_clearCacheListener);
     g_vm = vm;
 }
+} // AppExecFwk
+} // OHOS

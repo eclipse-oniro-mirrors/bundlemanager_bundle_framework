@@ -24,6 +24,8 @@
 #include "common_event_subscriber.h"
 #include "common_event_support.h"
 
+namespace OHOS {
+namespace AppExecFwk {
 class ClearCacheListener final : public OHOS::EventFwk::CommonEventSubscriber {
 public:
     explicit ClearCacheListener(const OHOS::EventFwk::CommonEventSubscribeInfo& subscribeInfo);
@@ -61,4 +63,6 @@ struct QueryHash {
 
 void RegisterClearCacheListenerAndEnv(ani_vm* vm);
 
+} // AppExecFwk
+} // OHOS
 #endif
