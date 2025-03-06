@@ -67,6 +67,7 @@ const std::string FUNCTION_GET_BUNDLE_INFO = "BundleMgrHostImpl::GetBundleInfo";
 const std::string FUNCTION_GET_BUNDLE_INFO_V9 = "BundleMgrHostImpl::GetBundleInfoV9";
 const std::string FUNCTION_GET_BUNDLE_INFO_FOR_SELF = "BundleMgrHostImpl::GetBundleInfoForSelf";
 const std::string CLONE_APP_DIR_PREFIX = "+clone-";
+const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.IAtomicServiceStatusCallback";
 const std::string PLUS = "+";
 const std::string AUTH_TITLE = "      ";
 const uint64_t BAD_CONTEXT_ID = 0;
@@ -710,7 +711,6 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, AbilityInfo &abilityI
     return QueryAbilityInfo(want, GET_ABILITY_INFO_WITH_APPLICATION, Constants::UNSPECIFIED_USERID, abilityInfo);
 }
 
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack)
 {
@@ -723,14 +723,29 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
         LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
     if (connectAbilityMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "connectAbilityMgr is nullptr");
         return false;
     }
     return connectAbilityMgr->QueryAbilityInfo(want, flags, userId, abilityInfo, callBack);
+#else
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        return false;
+    }
+    if (dataMgr->IsObtainAbilityInfo(want, userId, abilityInfo)) {
+        CallAbilityManager(ERR_OK, want, userId, callBack);
+        return true;
+    }
+    CallAbilityManager(ERR_APPEXECFWK_FREE_INSTALL_NOT_SUPPORT, want, userId, callBack);
+    return false;
+#endif
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 bool BundleMgrHostImpl::SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
 {
     APP_LOGD("SilentInstall in");
@@ -5028,6 +5043,38 @@ ErrCode BundleMgrHostImpl::SetAppDistributionTypes(std::set<AppDistributionTypeE
     }
     APP_LOGI("save bms param success %{public}s", value.c_str());
     return ERR_OK;
+}
+
+void BundleMgrHostImpl::CallAbilityManager(
+    int32_t resultCode, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
+{
+    if (callBack == nullptr) {
+        APP_LOGI("callBack is nullptr");
+        return;
+    }
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN)) {
+        APP_LOGE("Write interface token failed");
+        return;
+    }
+    if (!data.WriteInt32(resultCode)) {
+        APP_LOGE("Write result code failed");
+        return;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("Write want failed");
+        return;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write userId failed");
+        return;
+    }
+
+    if (callBack->SendRequest(ERR_OK, data, reply, option) != ERR_OK) {
+        APP_LOGE("SendRequest failed");
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

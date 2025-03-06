@@ -276,7 +276,6 @@ public:
      */
     virtual bool QueryAbilityInfo(const Want &want, AbilityInfo &abilityInfo) override;
 
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     /**
      * @brief Query the AbilityInfo by the given Want.
      * @param want Indicates the information of the ability.
@@ -286,6 +285,7 @@ public:
     virtual bool QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack) override;
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     /**
      * @brief Silent install by the given Want.
      * @param want Indicates the information of the want.
@@ -1112,6 +1112,7 @@ private:
     bool CheckCanSetEnable(const std::string &bundleName);
     bool IsAppLinking(int32_t flags) const;
     std::string GetCallerName();
+    void CallAbilityManager(int32_t resultCode, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack);
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

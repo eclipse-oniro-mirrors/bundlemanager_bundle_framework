@@ -124,6 +124,9 @@ constexpr int32_t MAX_APP_UID = 65535;
 constexpr int8_t ONLY_ONE_USER = 1;
 constexpr unsigned int OTA_CODE_ENCRYPTION_TIMEOUT = 4 * 60;
 const std::string FUNCATION_HANDLE_OTA_CODE_ENCRYPTION = "BundleDataMgr::HandleOTACodeEncryption()";
+#ifndef BUNDLE_FRAMEWORK_FREE_INSTALL
+constexpr int APP_MGR_SERVICE_ID = 501;
+#endif
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -10030,6 +10033,31 @@ ErrCode BundleDataMgr::GetDeveloperId(const std::string &bundleName, std::string
     }
     developerId = item->second.GetDeveloperId();
     return ERR_OK;
+}
+
+bool BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, AbilityInfo &abilityInfo)
+{
+    APP_LOGI("IsObtainAbilityInfo");
+    std::string bundleName = want.GetElement().GetBundleName();
+    std::string abilityName = want.GetElement().GetAbilityName();
+    std::string moduleName = want.GetElement().GetModuleName();
+    if (bundleName.empty()) {
+        APP_LOGE("bundle name empty");
+        return false;
+    }
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        const auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            APP_LOGE("%{public}s not found", bundleName.c_str());
+            return false;
+        }
+        if (abilityName.empty()) {
+            return true;
+        }
+    }
+    int32_t flags = static_cast<int32_t>(GET_ABILITY_INFO_DEFAULT);
+    return ExplicitQueryAbilityInfo(want, flags, userId, abilityInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
