@@ -670,6 +670,12 @@ private:
     void CleanTempDir() const;
     bool CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo);
     void CheckBundleProvisionInfo();
+    void CheckBundleCloneEl1ShaderCacheLocal(const std::string &bundleName, int32_t appIndex,
+        int32_t userId, int32_t uid);
+    void CleanBundleCloneEl1ShaderCacheLocal(const std::string &bundleName, int32_t appIndex,
+        int32_t userId);
+    void CheckAllBundleEl1ShaderCacheLocal();
+    void CleanAllBundleEl1ShaderCacheLocal();
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
     // Used to notify bundle scan status

@@ -874,7 +874,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
             userGuard.Dismiss();
         }
-        ErrCode res = CleanShaderCache(bundleName_);
+        ErrCode res = CleanShaderCache(oldInfo, bundleName_);
         if (res != ERR_OK) {
             LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean shader fail %{public}d", bundleName_.c_str(), res);
         }
@@ -1745,6 +1745,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName)) {
         LOG_E(BMS_TAG_INSTALLER, "DeleteInnerPatchInfo failed, bundleName: %{public}s", bundleName.c_str());
     }
+    DeleteCloudShader(bundleName);
     return ERR_OK;
 }
 
@@ -3009,6 +3010,7 @@ void BaseBundleInstaller::PrepareBundleDirQuota(const std::string &bundleName, c
 
 ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
 {
+    LOG_I(BMS_TAG_INSTALLER, "start");
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
@@ -6332,7 +6334,8 @@ bool BaseBundleInstaller::IsRdDevice() const
     return false;
 }
 
-ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const
+ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName,
+    int32_t uid, int32_t gid) const
 {
     std::string shaderCachePath;
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
@@ -6348,12 +6351,35 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
     return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
 }
 
-ErrCode BaseBundleInstaller::CleanShaderCache(const std::string &bundleName) const
+ErrCode BaseBundleInstaller::CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName) const
 {
     std::string shaderCachePath;
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
     LOG_D(BMS_TAG_INSTALLER, "CleanShaderCache %{public}s", shaderCachePath.c_str());
-    return InstalldClient::GetInstance()->CleanBundleDataDir(shaderCachePath);
+    ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(shaderCachePath);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "CleanShaderCache %{public}s failed", shaderCachePath.c_str());
+        return ret;
+    }
+    std::vector<int32_t> allAppIndexes = {0};
+    std::vector<int32_t> cloneAppIndexes = dataMgr_->GetCloneAppIndexesByInnerBundleInfo(oldInfo, userId_);
+    allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
+    for (int32_t appIndex: allAppIndexes) {
+        std::string cloneBundleName = bundleName;
+        if (appIndex != 0) {
+            cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+        }
+        std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+        el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId_));
+        el1ShaderCachePath = el1ShaderCachePath + cloneBundleName + ServiceConstants::PATH_SEPARATOR +
+            ServiceConstants::SHADER_CACHE;
+        ret = InstalldClient::GetInstance()->CleanBundleDataDir(el1ShaderCachePath);
+        if (ret != ERR_OK) {
+            LOG_W(BMS_TAG_DEFAULT, "%{public}s clean shader cache fail %{public}d", bundleName.c_str(), ret);
+            return ret;
+        }
+    }
+    return ERR_OK;
 }
 
 void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const
@@ -6379,6 +6405,14 @@ void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32
         return;
     }
     LOG_I(BMS_TAG_INSTALLER, "Create cloud shader cache result: %{public}d", result);
+}
+
+ErrCode BaseBundleInstaller::DeleteCloudShader(const std::string &bundleName) const
+{
+    std::string newShaderCloudPath;
+    newShaderCloudPath.append(ServiceConstants::NEW_CLOUD_SHADER_PATH).append(bundleName);
+    LOG_I(BMS_TAG_INSTALLER, "DeleteCloudShader %{public}s", newShaderCloudPath.c_str());
+    return InstalldClient::GetInstance()->RemoveDir(newShaderCloudPath);
 }
 
 std::string BaseBundleInstaller::GetCheckResultMsg() const

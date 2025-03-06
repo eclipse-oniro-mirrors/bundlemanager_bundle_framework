@@ -43,6 +43,8 @@ namespace {
     const std::string BUNDLE_NAME = "bundleName";
     const std::string BUNDLE_NAME_ONE = "bundleName01";
     const std::string TEST_BUNDLE_NAME = "bundleName02";
+    const std::string TEST_SHADER_CACHE_NAME_ONE = "bundleName03";
+    const std::string TEST_SHADER_CACHE_NAME_TWO = "bundleName04";
     const std::string MODULE_NAME = "module1";
     const std::string MODULE_NAME_TWO = "module2";
     const std::string BUILD_HASH = "8670157ae28ac2dc08075c4a9364e320898b4aaf4c1ab691df6afdb854a6811b";
@@ -62,6 +64,7 @@ public:
     void SetUp();
     void TearDown();
     bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId);
+    bool CheckShaderCachePathExist(const std::string &bundleName, const int32_t &userId) const;
 
 private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
@@ -94,6 +97,20 @@ bool BmsEventHandlerTest::CreateBundleDataDir(const BundleInfo &bundleInfo, int3
     UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(userId);
     return UpdateAppDataMgr::CreateBundleDataDir(bundleInfo, userId, ServiceConstants::DIR_EL2);
 }
+
+bool BmsEventHandlerTest::CheckShaderCachePathExist(const std::string &bundleName, const int32_t &userId) const
+{
+    bool isExist = false;
+    std::string newShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+    newShaderCachePath = newShaderCachePath.replace(newShaderCachePath.find("%"), 1, std::to_string(userId));
+    newShaderCachePath = newShaderCachePath + bundleName +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::SHADER_CACHE;
+    if (access(newShaderCachePath.c_str(), F_OK) == 0) {
+        isExist = true;
+    }
+    return isExist;
+}
+
 
 /**
  * @tc.number: BeforeBmsStart_0100

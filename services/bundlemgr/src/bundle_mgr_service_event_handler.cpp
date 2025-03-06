@@ -1229,6 +1229,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckInstallSource();
     // Driver update may cause shader cache invalidity and need to be cleared
     CleanAllBundleShaderCache();
+    CleanAllBundleEl1ShaderCacheLocal();
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
@@ -1437,6 +1438,7 @@ void BMSEventHandler::ProcessCheckShaderCacheDir()
     }
     LOG_I(BMS_TAG_DEFAULT, "Need to check shader cache dir");
     InnerProcessCheckShaderCacheDir();
+    CheckAllBundleEl1ShaderCacheLocal();
     UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
 }
 
@@ -1462,7 +1464,108 @@ void BMSEventHandler::InnerProcessCheckShaderCacheDir()
         shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleInfo.name);
         ErrCode res = InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, bundleInfo.uid, bundleInfo.gid);
         if (res != ERR_OK) {
-            LOG_I(BMS_TAG_DEFAULT, "create shader cache failed: %{public}s ", shaderCachePath.c_str());
+            LOG_W(BMS_TAG_DEFAULT, "create shader cache failed: %{public}s ", shaderCachePath.c_str());
+        }
+    }
+}
+
+void BMSEventHandler::CheckBundleCloneEl1ShaderCacheLocal(const std::string &bundleName,
+    int32_t appIndex, int32_t userId, int32_t uid)
+{
+    std::string cloneBundleName = bundleName;
+    if (appIndex != 0) {
+        cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName,
+            appIndex);
+    }
+    if (uid == Constants::INVALID_UID) {
+        LOG_W(BMS_TAG_DEFAULT, "invalid uid for: %{public}s", cloneBundleName.c_str());
+        return;
+    }
+    std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"),
+        1, std::to_string(userId));
+    el1ShaderCachePath = el1ShaderCachePath + cloneBundleName + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::SHADER_CACHE;
+    bool isExist = true;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(el1ShaderCachePath, isExist);
+    if (result == ERR_OK && isExist) {
+        return;
+    }
+    result = InstalldClient::GetInstance()->Mkdir(el1ShaderCachePath,
+        ServiceConstants::NEW_SHADRE_CACHE_MODE,
+        uid, ServiceConstants::NEW_SHADRE_CACHE_GID);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "create new shadercache failed: %{public}s ", el1ShaderCachePath.c_str());
+    }
+}
+
+void BMSEventHandler::CheckAllBundleEl1ShaderCacheLocal()
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::map<std::string, InnerBundleInfo> infos = dataMgr->GetAllInnerBundleInfos();
+        for (auto &infoPair : infos) {
+            auto &info = infoPair.second;
+            std::string bundleName = info.GetBundleName();
+            BundleType type = info.GetApplicationBundleType();
+            std::vector<int32_t> allAppIndexes = {0};
+            std::vector<int32_t> cloneAppIndexes = dataMgr->GetCloneAppIndexesByInnerBundleInfo(info, userId);
+            allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
+            for (int32_t appIndex: allAppIndexes) {
+                int32_t uid = info.GetUid(userId, appIndex);
+                CheckBundleCloneEl1ShaderCacheLocal(bundleName, appIndex, userId, uid);
+            }
+        }
+    }
+}
+
+void BMSEventHandler::CleanBundleCloneEl1ShaderCacheLocal(const std::string &bundleName,
+    int32_t appIndex, int32_t userId)
+{
+    std::string cloneBundleName = bundleName;
+    if (appIndex != 0) {
+        cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName,
+            appIndex);
+    }
+    std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"),
+        1, std::to_string(userId));
+    el1ShaderCachePath = el1ShaderCachePath + cloneBundleName + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::SHADER_CACHE;
+    ErrCode res = InstalldClient::GetInstance()->CleanBundleDataDir(el1ShaderCachePath);
+    if (res != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "%{public}s clean shader cache fail %{public}d",
+            bundleName.c_str(), res);
+    }
+}
+
+void BMSEventHandler::CleanAllBundleEl1ShaderCacheLocal()
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::map<std::string, InnerBundleInfo> infos = dataMgr->GetAllInnerBundleInfos();
+        for (auto &infoPair : infos) {
+            auto &info = infoPair.second;
+            std::string bundleName = info.GetBundleName();
+            BundleType type = info.GetApplicationBundleType();
+            std::vector<int32_t> allAppIndexes = {0};
+            std::vector<int32_t> cloneAppIndexes = dataMgr->GetCloneAppIndexesByInnerBundleInfo(info, userId);
+            allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
+            for (int32_t appIndex: allAppIndexes) {
+                CleanBundleCloneEl1ShaderCacheLocal(bundleName, appIndex, userId);
+            }
         }
     }
 }
