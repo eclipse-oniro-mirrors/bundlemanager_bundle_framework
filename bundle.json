@@ -28,7 +28,8 @@
             "bundle_framework_sandbox_app",
             "bundle_framework_quick_fix",
             "bundle_framework_form_dimension_2_3",
-            "bundle_framework_form_dimension_3_3"
+            "bundle_framework_form_dimension_3_3",
+            "bundle_framework_form_dimension_3_4"
         ],
         "hisysevent_config": [
             "//foundation/bundlemanager/bundle_framework/hisysevent.yaml"

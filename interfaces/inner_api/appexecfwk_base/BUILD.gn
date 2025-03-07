@@ -147,6 +147,9 @@ ohos_shared_library("appexecfwk_base") {
   if (bundle_framework_form_dimension_3_3) {
     defines += [ "FORM_DIMENSION_3_3" ]
   }
+  if (bundle_framework_form_dimension_3_4) {
+    defines += [ "FORM_DIMENSION_3_4" ]
+  }
 
   public_external_deps = [
     "ability_base:base",

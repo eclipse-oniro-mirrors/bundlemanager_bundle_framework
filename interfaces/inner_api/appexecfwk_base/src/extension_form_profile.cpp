@@ -36,6 +36,9 @@ const int8_t DIMENSION_2_3 = 8;
 #ifndef FORM_DIMENSION_3_3
 const int8_t DIMENSION_3_3 = 9;
 #endif
+#ifndef FORM_DIMENSION_3_4
+const int8_t DIMENSION_3_4 = 10;
+#endif
 constexpr const char* FORM_COLOR_MODE_MAP_KEY[] = {
     "auto",
     "dark",
@@ -65,7 +68,8 @@ constexpr const char* DIMENSION_MAP_KEY[] = {
     "1*1",
     "6*4",
     "2*3",
-    "3*3"
+    "3*3",
+    "3*4"
 };
 const int32_t DIMENSION_MAP_VALUE[] = {
     1,
@@ -76,7 +80,8 @@ const int32_t DIMENSION_MAP_VALUE[] = {
     6,
     7,
     8,
-    9
+    9,
+    10
 };
 constexpr const char* SHAPE_MAP_KEY[] = {
     "rect",
@@ -436,6 +441,13 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
                 continue;
             }
         #endif
+        
+        #ifndef FORM_DIMENSION_3_4
+            if (dimensionItem == DIMENSION_3_4) {
+                APP_LOGW("dimension invalid in tv Device form %{public}d", dimensionItem);
+                continue;
+            }
+        #endif        
 
         supportDimensionSet.emplace(dimensionItem);
     }
