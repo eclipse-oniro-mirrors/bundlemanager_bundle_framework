@@ -3752,6 +3752,11 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
         if (!preInstallBundleInfo.IsRemovable()) {
             continue;
         }
+        if (preInstallBundleInfo.HasForceUninstalledUser(userId)) {
+            APP_LOGW("-n %{public}s is force unisntalled in -u %{public}d",
+                preInstallBundleInfo.GetBundleName().c_str(), userId);
+            continue;
+        }
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         auto infoItem = bundleInfos_.find(preInstallBundleInfo.GetBundleName());
         if (infoItem == bundleInfos_.end()) {

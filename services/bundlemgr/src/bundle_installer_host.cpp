@@ -463,6 +463,12 @@ bool BundleInstallerHost::Uninstall(
         statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED, "");
         return false;
     }
+    if (installParam.IsForcedUninstall() && IPCSkeleton::GetCallingUid() != Constants::EDC_UID) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PREINSTALL_BUNDLE_ONLY_ALLOW_FORCE_UNINSTALLED_BY_EDC,
+            "Only edc can force uninstall");
+        return false;
+    }
     if (installParam.IsVerifyUninstallRule() &&
         CheckUninstallDisposedRule(bundleName, installParam.userId, Constants::MAIN_APP_INDEX,
                                    installParam.isKeepData)) {
@@ -783,6 +789,12 @@ bool BundleInstallerHost::UninstallAndRecover(const std::string &bundleName, con
         ServiceConstants::PERMISSION_UNINSTALL_BUNDLE})) {
         LOG_E(BMS_TAG_INSTALLER, "install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
+    if (installParam.IsForcedUninstall() && IPCSkeleton::GetCallingUid() != Constants::EDC_UID) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PREINSTALL_BUNDLE_ONLY_ALLOW_FORCE_UNINSTALLED_BY_EDC,
+            "Only edc can force uninstall");
         return false;
     }
     manager_->CreateUninstallAndRecoverTask(bundleName, CheckInstallParam(installParam), statusReceiver);
