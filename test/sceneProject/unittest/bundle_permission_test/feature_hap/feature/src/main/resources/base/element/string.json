@@ -1,0 +1,40 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "FeatureAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "FeatureAbility_label",
+      "value": "label"
+    },
+    {
+      "name": "reason1",
+      "value": "reason1"
+    },
+    {
+      "name": "reason2",
+      "value": "reason2"
+    },
+    {
+      "name": "reason3",
+      "value": "reason3"
+    },
+    {
+      "name": "reason4",
+      "value": "reason4"
+    },
+    {
+      "name": "reason5",
+      "value": "reason5"
+    },
+    {
+      "name": "reason6",
+      "value": "reason6"
+    }
+  ]
+}
