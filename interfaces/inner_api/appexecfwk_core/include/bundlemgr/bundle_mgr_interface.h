@@ -551,6 +551,19 @@ public:
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     /**
+     * @brief Public interface query the AbilityInfo of list by the given Wants.
+     * @param bundleName Indicates the bundle name.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
+     */
+    virtual ErrCode QueryLauncherAbilityInfosPublic(
+        const std::string &bundleName, int32_t userId, std::vector<AbilityInfo> &abilityInfo)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    /**
      * @brief Query the AllAbilityInfos of list by the given userId.
      * @param userId Indicates the information of the user.
      * @param abilityInfos Indicates the obtained AbilityInfos object.

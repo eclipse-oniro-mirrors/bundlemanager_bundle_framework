@@ -202,6 +202,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     SET_APP_DISTRIBUTION_TYPES = 176,
     MIGRATE_DATA = 177,
     GET_BUNDLE_ARCHIVE_INFO_EXT = 178,
+    QUERY_LAUNCHER_ABILITY_INFOS_PUBLIC = 179,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

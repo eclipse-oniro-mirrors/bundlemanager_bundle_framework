@@ -384,6 +384,15 @@ public:
     virtual ErrCode QueryLauncherAbilityInfos(const Want &want,
         int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
     /**
+     * @brief Public interface query the launcher AbilityInfo of list by the given Want.
+     * @param bundleName Indicates the bundle name.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
+     */
+    virtual ErrCode QueryLauncherAbilityInfosPublic(const std::string &bundleName,
+        int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
+    /**
      * @brief Query the AbilityInfo of list of all service on launcher.
      * @param userId Indicates the information of the user.
      * @param abilityInfos Indicates the obtained AbilityInfos object.

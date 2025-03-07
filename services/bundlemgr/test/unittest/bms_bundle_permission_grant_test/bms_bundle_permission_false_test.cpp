@@ -1723,6 +1723,19 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_27000, Funct
 }
 
 /**
+ * @tc.number: BmsBundlePermissionFalseTest_28000
+ * @tc.name: test QueryLauncherAbilityInfosPublic
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_28000, Function | SmallTest | Level1)
+{
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode testRet = bundleMgrHostImpl_->QueryLauncherAbilityInfosPublic("", USERID, abilityInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: IsBundleInstalled_0001
  * @tc.name: test IsBundleInstalled
  * @tc.desc: 1.system run normal

@@ -1263,6 +1263,27 @@ ErrCode BundleMgrProxy::QueryLauncherAbilityInfos(
         BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFO, data, abilityInfo);
 }
 
+ErrCode BundleMgrProxy::QueryLauncherAbilityInfosPublic(
+    const std::string &bundleName, int32_t userId, std::vector<AbilityInfo> &abilityInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        LOG_E(BMS_TAG_QUERY, "write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_QUERY, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
+        BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFOS_PUBLIC, data, abilityInfo);
+}
+
 bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

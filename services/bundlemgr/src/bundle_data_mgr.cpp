@@ -2296,6 +2296,12 @@ ErrCode BundleDataMgr::GetLauncherAbilityByBundleName(const Want &want, std::vec
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &info = item->second;
+    if(!BundlePermissionMgr::IsSystemApp()){
+        int32_t responseUserId = info.GetResponseUserId(userId);
+        if (responseUserId == Constants::INVALID_USERID) {
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
     if (info.IsDisabled()) {
         LOG_W(BMS_TAG_QUERY, "app %{public}s is disabled", info.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
