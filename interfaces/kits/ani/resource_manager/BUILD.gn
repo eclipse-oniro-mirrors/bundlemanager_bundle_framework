@@ -15,7 +15,7 @@ import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
-ohos_shared_library("anibundlemanager") {
+ohos_shared_library("ani_bundle_res_manager") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
@@ -23,11 +23,12 @@ ohos_shared_library("anibundlemanager") {
   }
   include_dirs = [
     "${inner_api_path}/appexecfwk_core/include",
-    "${kits_path}/ani/bundle_manager",
+    "${kits_path}/ani/resource_manager",
     "${kits_path}/ani/common",
     "${kits_path}/js/common",
+    "${kits_path}/js/bundle_resource",
   ]
-  sources = [ "bundle_manager/ani_bundle_manager.cpp" ]
+  sources = [ "ani_resource_manager.cpp" ]
 
   defines = [
     "APP_LOG_TAG = \"BMS\"",
@@ -38,8 +39,9 @@ ohos_shared_library("anibundlemanager") {
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
+    "${kits_path}/ani/common:bms_ani_common",
+    "${kits_path}/js/bundle_resource:bundle_res_common",
     "${kits_path}/js/common:bundle_napi_common",
-    "common:bms_ani_common",
   ]
 
   external_deps = [
@@ -58,27 +60,18 @@ ohos_shared_library("anibundlemanager") {
   part_name = "bundle_framework"
 }
 
-generate_static_abc("bundleManager2abc") {
-  arktsconfig = "ani_config.json"
-  dst_file = "$target_out_dir/BundleManager.abc"
-  out_puts = [ "$target_out_dir/BundleManager.abc" ]
+generate_static_abc("resourceManager2abc") {
+  arktsconfig = "../ani_resource_config.json"
+  dst_file = "$target_out_dir/BundleResourceManager.abc"
+  out_puts = [ "$target_out_dir/BundleResourceManager.abc" ]
   is_boot_abc = "True"
-  device_dst_file = "/system/framework/BundleManager.abc"
+  device_dst_file = "/system/framework/BundleResourceManager.abc"
 }
 
-ohos_prebuilt_etc("bundleManager2abc_etc") {
-  source = "$target_out_dir/BundleManager.abc"
+ohos_prebuilt_etc("resourceManager2abc_etc") {
+  source = "$target_out_dir/BundleResourceManager.abc"
   module_install_dir = "framework"
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
-  deps = [ ":bundleManager2abc" ]
-}
-
-group("ani_package") {
-  deps = [
-    ":anibundlemanager",
-    ":bundleManager2abc_etc",
-    "resource_manager:ani_bundle_res_manager",
-    "resource_manager:resourceManager2abc_etc",
-  ]
+  deps = [ ":resourceManager2abc" ]
 }
