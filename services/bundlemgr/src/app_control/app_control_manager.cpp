@@ -36,15 +36,6 @@ namespace {
 AppControlManager::AppControlManager()
 {
     appControlManagerDb_ = std::make_shared<AppControlManagerRdb>();
-    bool isAppJumpEnabled = OHOS::system::GetBoolParameter(
-        OHOS::AppExecFwk::PARAMETER_APP_JUMP_INTERCEPTOR_ENABLE, false);
-    if (isAppJumpEnabled) {
-        LOG_I(BMS_TAG_DEFAULT, "App jump intercetor enabled, start init to AppJumpInterceptorManagerRdb");
-        appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
-        appJumpInterceptorManagerDb_->SubscribeCommonEvent();
-    } else {
-        LOG_I(BMS_TAG_DEFAULT, "App jump intercetor disabled");
-    }
     commonEventMgr_ = std::make_shared<BundleCommonEventMgr>();
     std::string configPath = BundleUtil::GetNoDisablingConfigPath();
     ErrCode ret = BundleParser::ParseNoDisablingList(configPath, noControllingList_);
