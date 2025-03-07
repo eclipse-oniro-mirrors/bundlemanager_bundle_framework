@@ -157,12 +157,13 @@ void BundleConnectAbilityMgr::PreloadRequest(int32_t flag, const TargetAbilityIn
         APP_LOGE("%{public}s failed to WriteParcelable targetAbilityInfo", __func__);
         return;
     }
-    serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
-    if (serviceCenterRemoteObject_ == nullptr) {
+    std::unique_lock<std::mutex> mutexLock(mutex_);
+    sptr<IRemoteObject> serviceCenterRemoteObject = serviceCenterConnection_->GetRemoteObject();
+    if (serviceCenterRemoteObject == nullptr) {
         APP_LOGE("%{public}s failed to get remote object", __func__);
         return;
     }
-    int32_t result = serviceCenterRemoteObject_->SendRequest(flag, data, reply, option);
+    int32_t result = serviceCenterRemoteObject->SendRequest(flag, data, reply, option);
     if (result != ERR_OK) {
         APP_LOGE("Failed to sendRequest, result = %{public}d", result);
     }
@@ -466,7 +467,6 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
             if (connectState_ != ServiceCenterConnectState::CONNECTED) {
                 WaitFromConnected(lock);
             }
-            serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
         } else {
             APP_LOGE("ConnectAbility fail result = %{public}d", result);
         }
@@ -580,6 +580,9 @@ void BundleConnectAbilityMgr::SendCallBack(const std::string &transactId, const 
 void BundleConnectAbilityMgr::DeathRecipientSendCallback()
 {
     APP_LOGI("DeathRecipientSendCallback start");
+    std::unique_lock<std::mutex> mutexLock(mutex_);
+    connectState_ = ServiceCenterConnectState::DISCONNECTED;
+
     std::unique_lock<std::mutex> lock(mapMutex_);
     APP_LOGI("freeInstallParamsMap size = %{public}zu", freeInstallParamsMap_.size());
     for (auto &it : freeInstallParamsMap_) {
@@ -587,9 +590,6 @@ void BundleConnectAbilityMgr::DeathRecipientSendCallback()
     }
     freeInstallParamsMap_.clear();
     lock.unlock();
-
-    connectState_ = ServiceCenterConnectState::DISCONNECTED;
-    serviceCenterRemoteObject_ = nullptr;
     cv_.notify_all();
 
     APP_LOGI("DeathRecipientSendCallback end");
@@ -683,8 +683,9 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
         SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
         return;
     }
-    serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
-    if (serviceCenterRemoteObject_ == nullptr) {
+    std::unique_lock<std::mutex> mutexLock(mutex_);
+    sptr<IRemoteObject> serviceCenterRemoteObject = serviceCenterConnection_->GetRemoteObject();
+    if (serviceCenterRemoteObject == nullptr) {
         APP_LOGE("%{public}s failed to get remote object", __func__);
         CallAbilityManager(FreeInstallErrorCode::CONNECT_ERROR, want, userId, freeInstallParams.callback);
         SendSysEvent(FreeInstallErrorCode::CONNECT_ERROR, want, userId);
@@ -700,7 +701,7 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
         return;
     }
     lock.unlock();
-    int32_t result = serviceCenterRemoteObject_->SendRequest(flag, data, reply, option);
+    int32_t result = serviceCenterRemoteObject->SendRequest(flag, data, reply, option);
     if (result != ERR_OK) {
         APP_LOGE("Failed to sendRequest, result = %{public}d", result);
         SendCallBack(FreeInstallErrorCode::CONNECT_ERROR, want, userId, targetAbilityInfo.targetInfo.transactId);
@@ -713,13 +714,14 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
 bool BundleConnectAbilityMgr::SendRequest(int32_t code, MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGI("BundleConnectAbilityMgr::SendRequest to service center");
-    serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
-    if (serviceCenterRemoteObject_ == nullptr) {
+    std::unique_lock<std::mutex> mutexLock(mutex_);
+    sptr<IRemoteObject> serviceCenterRemoteObject = serviceCenterConnection_->GetRemoteObject();
+    if (serviceCenterRemoteObject == nullptr) {
         APP_LOGE("failed to get remote object");
         return false;
     }
     MessageOption option(MessageOption::TF_ASYNC);
-    int32_t result = serviceCenterRemoteObject_->SendRequest(code, data, reply, option);
+    int32_t result = serviceCenterRemoteObject->SendRequest(code, data, reply, option);
     if (result != ERR_OK) {
         APP_LOGE("failed to send request code:%{public}d", code);
         return false;

@@ -1033,8 +1033,12 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0001, Function | Smal
         name.SetBundleName(BUNDLE_NAME);
         want.SetElement(name);
         bundleMgr->UpgradeAtomicService(want, USERID);
+        int32_t connectState = 0;
+        std::condition_variable cv;
+        const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
+        ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
         bool ret = bundleMgr->QueryAbilityInfo(want,
-            0, USERID, abilityInfo, bundleMgr->serviceCenterRemoteObject_);
+            0, USERID, abilityInfo, connection.serviceCenterRemoteObject_);
         EXPECT_EQ(ret, false);
         bundleMgr->DeathRecipientSendCallback();
     }
@@ -1062,7 +1066,11 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0003, Function | Smal
         want.SetElement(name);
         bundleMgr->UpgradeAtomicService(want, USERID);
         bundleMgr->DisconnectDelay();
-        bool ret = bundleMgr->ConnectAbility(want, bundleMgr->serviceCenterRemoteObject_);
+        int32_t connectState = 0;
+        std::condition_variable cv;
+        const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
+        ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
+        bool ret = bundleMgr->ConnectAbility(want, connection.serviceCenterRemoteObject_);
         EXPECT_FALSE(ret);
         bundleMgr->DisconnectAbility();
     }
@@ -1089,14 +1097,18 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0004, Function | Smal
         name.SetBundleName(BUNDLE_NAME);
         want.SetElement(name);
         InnerBundleInfo innerBundleInfo;
+        std::condition_variable cv;
+        int32_t connectState = 0;
+        const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
+        ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
         bool ret = bundleMgr->CheckIsModuleNeedUpdate(
-            innerBundleInfo, want, 100, bundleMgr->serviceCenterRemoteObject_);
+            innerBundleInfo, want, 100, connection.serviceCenterRemoteObject_);
         EXPECT_FALSE(ret);
         ApplicationInfo appInfo;
         appInfo.bundleName = BUNDLE_NAME;
         innerBundleInfo.SetBaseApplicationInfo(appInfo);
         ret = bundleMgr->CheckIsModuleNeedUpdate(
-            innerBundleInfo, want, 100, bundleMgr->serviceCenterRemoteObject_);
+            innerBundleInfo, want, 100, connection.serviceCenterRemoteObject_);
         EXPECT_FALSE(ret);
     }
 
