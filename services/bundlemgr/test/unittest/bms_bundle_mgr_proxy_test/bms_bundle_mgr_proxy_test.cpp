@@ -798,6 +798,23 @@ HWTEST_F(BmsBundleMgrProxyTest, QueryLauncherAbilityInfos_0100, Function | Mediu
 }
 
 /**
+ * @tc.number: QueryLauncherAbilityInfosPublic_0100
+ * @tc.name: test the QueryLauncherAbilityInfosPublic
+ * @tc.desc: 1. system running normally
+ *           2. test QueryLauncherAbilityInfosPublic
+ */
+HWTEST_F(BmsBundleMgrProxyTest, QueryLauncherAbilityInfosPublic_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName;
+    int32_t userId = 100;
+    std::vector<AbilityInfo> abilityInfos;
+    auto res = bundleMgrProxy.QueryLauncherAbilityInfosPublic(bundleName, userId, abilityInfos);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
  * @tc.number: QueryAllAbilityInfos_0100
  * @tc.name: test the QueryAllAbilityInfos
  * @tc.desc: 1. system running normally

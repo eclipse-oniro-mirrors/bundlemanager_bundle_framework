@@ -978,6 +978,42 @@ ErrCode BundleMgrHostImpl::QueryLauncherAbilityInfos(
     return ret;
 }
 
+ErrCode BundleMgrHostImpl::QueryLauncherAbilityInfosPublic(
+    const std::string &bundleName, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    LOG_D(BMS_TAG_QUERY, "start QueryLauncherAbilityInfosPublic, userId : %{public}d", userId);
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGD("verify permission success, begin to QueryLauncherAbilityInfosPublic");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_QUERY, "no bundleName %{public}s found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    Want want;
+    want.SetAction(Want::ACTION_HOME);
+    want.AddEntity(Want::ENTITY_HOME);
+    ElementName elementName;
+    elementName.SetBundleName(bundleName);
+    want.SetElement(elementName);
+
+    auto ret = dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos);
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    if (bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos) == ERR_OK) {
+        LOG_D(BMS_TAG_QUERY, "query launcher ability infos from bms extension successfully");
+        return ERR_OK;
+    }
+    return ret;
+}
+
 bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
     LOG_D(BMS_TAG_QUERY, "start QueryAllAbilityInfos, userId : %{public}d", userId);

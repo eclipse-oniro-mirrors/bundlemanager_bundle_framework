@@ -1343,6 +1343,19 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8500
 }
 
 /**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8600
+ * @tc.name: test QueryLauncherAbilityInfosPublic
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8600, Function | SmallTest | Level1)
+{
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode testRet = bundleMgrHostImpl_->QueryLauncherAbilityInfosPublic("", USERID, abilityInfos);
+    EXPECT_NE(testRet, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
  * @tc.number: InstallByBundleNameTest
  * @tc.name: test InstallByBundleName of IBundleInstaller
  * @tc.desc: system running normally
@@ -1397,6 +1410,20 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, QueryLauncherAbilityInfosTest, F
     want.SetElementName(BUNDLE_NAME, ABILITY_NAME);
     std::vector<AbilityInfo> abilityInfos;
     auto result = bundleMgrProxy->QueryLauncherAbilityInfos(want, USERID, abilityInfos);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryLauncherAbilityInfosPublicTest
+ * @tc.name: test QueryLauncherAbilityInfosPublic of BundleMgrProxy
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, QueryLauncherAbilityInfosPublicTest, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<AbilityInfo> abilityInfos;
+    auto result = bundleMgrProxy->QueryLauncherAbilityInfosPublic(BUNDLE_NAME, USERID, abilityInfos);
     EXPECT_NE(result, ERR_OK);
 }
 

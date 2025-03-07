@@ -198,6 +198,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFO):
             errCode = this->HandleQueryLauncherAbilityInfos(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFOS_PUBLIC):
+            errCode = this->HandleQueryLauncherAbilityInfosPublic(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ALL_ABILITY_INFOS):
             errCode = this->HandleQueryAllAbilityInfos(data, reply);
             break;
@@ -1384,6 +1387,25 @@ ErrCode BundleMgrHost::HandleQueryLauncherAbilityInfos(MessageParcel &data, Mess
     int32_t userId = data.ReadInt32();
     std::vector<AbilityInfo> abilityInfos;
     ErrCode ret = QueryLauncherAbilityInfos(*want, userId, abilityInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(abilityInfos, reply)) {
+            APP_LOGE("WriteVectorToParcelIntelligent failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryLauncherAbilityInfosPublic(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = QueryLauncherAbilityInfosPublic(bundleName, userId, abilityInfos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
