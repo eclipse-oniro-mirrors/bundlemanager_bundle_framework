@@ -169,8 +169,16 @@ void AOTExecutor::MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string
     }
     argsMap.emplace("target-compiler-mode", aotArgs.compileMode);
     argsMap.emplace("aot-file", aotArgs.outputPath + ServiceConstants::PATH_SEPARATOR + aotArgs.moduleName);
-    argsMap.emplace("compiler-pkg-info", subject.dump());
-    argsMap.emplace("compiler-external-pkg-info", objectArray.dump());
+    std::string subjectValue;
+    std::string objectArrayValue;
+    try {
+        subjectValue = subject.dump();
+        objectArrayValue = objectArray.dump();
+    } catch (const nlohmann::json::type_error &e) {
+        APP_LOGE("json dump failed: %{public}s", e.what());
+    }
+    argsMap.emplace("compiler-pkg-info", subjectValue);
+    argsMap.emplace("compiler-external-pkg-info", objectArrayValue);
     argsMap.emplace("compiler-opt-bc-range", aotArgs.optBCRangeList);
     argsMap.emplace("compiler-device-state", std::to_string(aotArgs.isScreenOff));
     argsMap.emplace("compiler-baseline-pgo", std::to_string(aotArgs.isEnableBaselinePgo));

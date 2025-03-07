@@ -568,7 +568,13 @@ bool BundlePackInfo::Marshalling(Parcel &parcel) const
         return false;
     }
     nlohmann::json jsonObject = *this;
-    std::string str = jsonObject.dump();
+    std::string str;
+    try {
+        str = jsonObject.dump();
+    } catch (const nlohmann::json::type_error &e) {
+        APP_LOGE("json dump failed: %{public}s", e.what());
+        return false;
+    }
     if (!messageParcel->WriteUint32(str.size() + 1)) {
         APP_LOGE("Failed to write;data size");
         return false;

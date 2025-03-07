@@ -91,7 +91,12 @@ std::string PreInstallBundleInfo::ToString() const
     jsonObject[ICON_ID] = iconId_;
     jsonObject[SYSTEM_APP] = systemApp_;
     jsonObject[BUNDLE_TYPE] = bundleType_;
-    return jsonObject.dump();
+    try {
+        return jsonObject.dump();
+    } catch (const nlohmann::json::type_error &e) {
+        APP_LOGE("json dump failed: %{public}s", e.what());
+        return "";
+    }
 }
 
 void PreInstallBundleInfo::CalculateHapTotalSize()
