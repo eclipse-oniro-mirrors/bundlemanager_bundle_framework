@@ -32,6 +32,8 @@ bool PermissionDef::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, availableLevel);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, provisionEnable);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, distributedSceneEnable);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isKernelEffect);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasValue);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, grantMode);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, labelId);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);
@@ -59,6 +61,8 @@ bool PermissionDef::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, availableLevel);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, provisionEnable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, distributedSceneEnable);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isKernelEffect);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasValue);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, grantMode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);

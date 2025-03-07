@@ -62,11 +62,11 @@ public:
 
     static int32_t InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
-        Security::AccessToken::HapInfoCheckResult &checkResult);
+        Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities);
 
     static int32_t UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
         const InnerBundleInfo &innerBundleInfo, int32_t userId,
-        Security::AccessToken::HapInfoCheckResult &checkResult);
+        Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities);
 
     static std::string GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult);
 
@@ -122,7 +122,8 @@ private:
 
     static Security::AccessToken::ATokenAplEnum GetTokenApl(const std::string &apl);
 
-    static Security::AccessToken::HapPolicyParams CreateHapPolicyParam(const InnerBundleInfo &innerBundleInfo);
+    static Security::AccessToken::HapPolicyParams CreateHapPolicyParam(const InnerBundleInfo &innerBundleInfo,
+        const std::string &appServiceCapabilities);
 
     static Security::AccessToken::HapInfoParams CreateHapInfoParams(const InnerBundleInfo &innerBundleInfo,
         const int32_t userId, const int32_t dlpType);

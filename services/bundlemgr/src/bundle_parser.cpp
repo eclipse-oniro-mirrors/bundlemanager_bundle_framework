@@ -290,6 +290,29 @@ ErrCode BundleParser::ParseDefaultPermission(
     return profile.TransformTo(jsonBuf, defaultPermissions);
 }
 
+std::map<std::string, std::string> BundleParser::ParseAclExtendedMap(const std::string &appServiceCapabilities)
+{
+    std::map<std::string, std::string> aclExtendedMap;
+    if (appServiceCapabilities.empty()) {
+        APP_LOGD("appServiceCapabilities is empty");
+        return aclExtendedMap;
+    }
+    APP_LOGI("ParseAclExtendedMap from %{private}s", appServiceCapabilities.c_str());
+    nlohmann::json jsonBuf = nlohmann::json::parse(appServiceCapabilities, nullptr, false);
+    if (jsonBuf.is_discarded()) {
+        APP_LOGE("json file discarded");
+        return aclExtendedMap;
+    }
+    if (!jsonBuf.is_object()) {
+        APP_LOGE("jsonBuf is not object");
+        return aclExtendedMap;
+    }
+    for (const auto& [key, value] : jsonBuf.items()) {
+        aclExtendedMap[key] = value.dump();
+    }
+    return aclExtendedMap;
+}
+
 ErrCode BundleParser::ParseExtTypeConfig(
     const std::string &configFile, std::set<std::string> &extensionTypeList) const
 {

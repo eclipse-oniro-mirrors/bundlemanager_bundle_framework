@@ -856,7 +856,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)
-                && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult) != ERR_OK) {
+                && BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult,
+                verifyRes_.GetProvisionInfo().appServiceCapabilities) != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
                 SetVerifyPermissionResult(checkResult);
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -2076,7 +2077,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)) {
-                if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult) != ERR_OK) {
+                if (BundlePermissionMgr::InitHapToken(oldInfo, userId_, 0, accessTokenIdEx, checkResult,
+                    verifyRes_.GetProvisionInfo().appServiceCapabilities) != ERR_OK) {
                     LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
                     SetVerifyPermissionResult(checkResult);
                     return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -2228,7 +2230,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
     if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, info)) {
-        if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx, checkResult) != ERR_OK) {
+        if (BundlePermissionMgr::InitHapToken(info, userId_, 0, accessTokenIdEx, checkResult,
+            verifyRes_.GetProvisionInfo().appServiceCapabilities) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
             SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -6207,7 +6210,8 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
         Security::AccessToken::HapInfoCheckResult checkResult;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, userId, checkResult) != ERR_OK) {
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo, userId, checkResult,
+            verifyRes_.GetProvisionInfo().appServiceCapabilities) != ERR_OK) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             SetVerifyPermissionResult(checkResult);
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -6221,7 +6225,8 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
             Security::AccessToken::AccessTokenIDEx cloneAccessTokenIdEx;
             cloneAccessTokenIdEx.tokenIDEx = cloneInfoPair.second.accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
-            if (BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo, userId, checkResult) != ERR_OK) {
+            if (BundlePermissionMgr::UpdateHapToken(cloneAccessTokenIdEx, newInfo, userId, checkResult,
+                verifyRes_.GetProvisionInfo().appServiceCapabilities) != ERR_OK) {
                 LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
                 SetVerifyPermissionResult(checkResult);
                 return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -6926,7 +6931,8 @@ bool BaseBundleInstaller::RecoverHapToken(const std::string &bundleName, const i
             uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenId;
         accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(std::to_string(userId)).accessTokenIdEx;
         Security::AccessToken::HapInfoCheckResult checkResult;
-        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId, checkResult) == ERR_OK) {
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId, checkResult,
+            verifyRes_.GetProvisionInfo().appServiceCapabilities) == ERR_OK) {
             return true;
         } else {
             LOG_W(BMS_TAG_INSTALLER, "bundleName:%{public}s UpdateHapToken failed", bundleName.c_str());

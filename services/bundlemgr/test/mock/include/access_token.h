@@ -18,6 +18,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 namespace OHOS {
 namespace Security {
@@ -103,6 +104,8 @@ public:
     TypeATokenAplEnum availableLevel;
     bool provisionEnable;
     bool distributedSceneEnable;
+    bool isKernelEffect = false;
+    bool hasValue = false;
     std::string label;
     int labelId;
     std::string description;
@@ -185,6 +188,7 @@ public:
     std::vector<std::string> aclRequestedList;
     std::vector<PreAuthorizationInfo> preAuthorizationInfo;
     HapPolicyCheckIgnore checkIgnore = HapPolicyCheckIgnore::None;
+    std::map<std::string, std::string> aclExtendedMap;
 };
 
 /**

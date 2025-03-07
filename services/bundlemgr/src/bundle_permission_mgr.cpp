@@ -86,6 +86,8 @@ void BundlePermissionMgr::ConvertPermissionDef(
     permissionDef.availableLevel = permDef.availableLevel;
     permissionDef.provisionEnable = permDef.provisionEnable;
     permissionDef.distributedSceneEnable = permDef.distributedSceneEnable;
+    permissionDef.isKernelEffect = permDef.isKernelEffect;
+    permissionDef.hasValue = permDef.hasValue;
     permissionDef.label = permDef.label;
     permissionDef.labelId = permDef.labelId;
     permissionDef.description = permDef.description;
@@ -110,6 +112,8 @@ void BundlePermissionMgr::ConvertPermissionDef(
     permDef.availableLevel = GetTokenApl(definePermission.availableLevel);
     permDef.provisionEnable = definePermission.provisionEnable;
     permDef.distributedSceneEnable = definePermission.distributedSceneEnable;
+    permDef.isKernelEffect = definePermission.isKernelEffect;
+    permDef.hasValue = definePermission.hasValue;
     permDef.label = definePermission.label;
     permDef.labelId = definePermission.labelId;
     permDef.description = definePermission.description;
@@ -137,7 +141,8 @@ AccessToken::ATokenAplEnum BundlePermissionMgr::GetTokenApl(const std::string &a
     return AccessToken::ATokenAplEnum::APL_NORMAL;
 }
 
-AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const InnerBundleInfo &innerBundleInfo)
+AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const InnerBundleInfo &innerBundleInfo,
+    const std::string &appServiceCapabilities)
 {
     AccessToken::HapPolicyParams hapPolicy;
     std::string apl = innerBundleInfo.GetAppPrivilegeLevel();
@@ -150,6 +155,8 @@ AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const Inn
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "-n %{public}s apl:%{public}s req permission size:%{public}zu, acls size:%{public}zu",
         innerBundleInfo.GetBundleName().c_str(), apl.c_str(), hapPolicy.permStateList.size(),
         hapPolicy.aclRequestedList.size());
+    BundleParser bundleParser;
+    hapPolicy.aclExtendedMap = bundleParser.ParseAclExtendedMap(appServiceCapabilities);
     // default permission list
     DefaultPermission permission;
     if (!GetDefaultPermission(innerBundleInfo.GetBundleName(), permission)) {
@@ -696,11 +703,11 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
 
 int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
-    Security::AccessToken::HapInfoCheckResult &checkResult)
+    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities)
 {
     LOG_I(BMS_TAG_DEFAULT, "start, init hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, dlpType);
-    AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo);
+    AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo, appServiceCapabilities);
 #ifdef X86_EMULATOR_MODE
     std::string appId = innerBundleInfo.GetAppId();
     if (appId == (innerBundleInfo.GetBundleName() + "_")) {
@@ -726,7 +733,8 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
 }
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
-    const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult)
+    const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
+    const std::string &appServiceCapabilities)
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "start UpdateHapToken -n %{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::UpdateHapInfoParams updateHapInfoParams;
@@ -735,7 +743,7 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
     updateHapInfoParams.isSystemApp = innerBundleInfo.IsSystemApp();
     updateHapInfoParams.appDistributionType = innerBundleInfo.GetAppDistributionType();
 
-    AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo);
+    AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo, appServiceCapabilities);
 #ifdef X86_EMULATOR_MODE
     std::string appId = innerBundleInfo.GetAppId();
     if (appId == (innerBundleInfo.GetBundleName() + "_")) {

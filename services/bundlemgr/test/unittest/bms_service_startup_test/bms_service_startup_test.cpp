@@ -735,7 +735,7 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1700, Function | SmallTest |
     Security::AccessToken::AccessTokenIDEx tokenIdeEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
 
-    ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType, tokenIdeEx, checkResult);
+    ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType, tokenIdeEx, checkResult, "{}");
     EXPECT_EQ(checkResult.permCheckResult.permissionName, "test");
     EXPECT_EQ(ret, false);
 }
@@ -752,7 +752,7 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1800, Function | SmallTest |
     InnerBundleInfo innerBundleInfo;
     Security::AccessToken::AccessTokenIDEx tokenIdeEx;
     Security::AccessToken::HapInfoCheckResult checkResult;
-    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo, userId, checkResult);
+    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo, userId, checkResult, "{}");
     EXPECT_EQ(checkResult.permCheckResult.permissionName, "test");
     EXPECT_EQ(ret, false);
 }
@@ -778,7 +778,7 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1900, Function | SmallTest |
 HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2000, Function | SmallTest | Level0)
 {
     InnerBundleInfo innerBundleInfo;
-    auto hapPolicy = BundlePermissionMgr::CreateHapPolicyParam(innerBundleInfo);
+    auto hapPolicy = BundlePermissionMgr::CreateHapPolicyParam(innerBundleInfo, "{}");
     EXPECT_EQ(hapPolicy.domain, "domain");
 }
 

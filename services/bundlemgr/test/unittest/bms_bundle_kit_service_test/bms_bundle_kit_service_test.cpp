@@ -10676,6 +10676,8 @@ HWTEST_F(BmsBundleKitServiceTest, PermissionDefBranchCover_0001, Function | Smal
     EXPECT_EQ(param1.availableLevel, ret2->availableLevel);
     EXPECT_EQ(param1.provisionEnable, ret2->provisionEnable);
     EXPECT_EQ(param1.distributedSceneEnable, ret2->distributedSceneEnable);
+    EXPECT_EQ(param1.isKernelEffect, ret2->isKernelEffect);
+    EXPECT_EQ(param1.hasValue, ret2->hasValue);
     EXPECT_EQ(param1.label, ret2->label);
     EXPECT_EQ(param1.labelId, ret2->labelId);
     EXPECT_EQ(param1.description, ret2->description);

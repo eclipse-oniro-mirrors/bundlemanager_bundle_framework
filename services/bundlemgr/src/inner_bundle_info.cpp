@@ -348,6 +348,8 @@ void to_json(nlohmann::json &jsonObject, const DefinePermission &definePermissio
         {Profile::DEFINEPERMISSION_AVAILABLE_LEVEL, definePermission.availableLevel},
         {Profile::DEFINEPERMISSION_PROVISION_ENABLE, definePermission.provisionEnable},
         {Profile::DEFINEPERMISSION_DISTRIBUTED_SCENE_ENABLE, definePermission.distributedSceneEnable},
+        {Profile::DEFINEPERMISSION_IS_KERNEL_EFFECT, definePermission.isKernelEffect},
+        {Profile::DEFINEPERMISSION_HAS_VALUE, definePermission.hasValue},
         {Profile::LABEL, definePermission.label},
         {Profile::LABEL_ID, definePermission.labelId},
         {Profile::DESCRIPTION, definePermission.description},
@@ -1096,6 +1098,18 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         jsonObjectEnd,
         Profile::DEFINEPERMISSION_DISTRIBUTED_SCENE_ENABLE,
         definePermission.distributedSceneEnable,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Profile::DEFINEPERMISSION_IS_KERNEL_EFFECT,
+        definePermission.isKernelEffect,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Profile::DEFINEPERMISSION_HAS_VALUE,
+        definePermission.hasValue,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
