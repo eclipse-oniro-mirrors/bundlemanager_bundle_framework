@@ -447,7 +447,7 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
                 APP_LOGW("dimension invalid in tv Device form %{public}d", dimensionItem);
                 continue;
             }
-        #endif        
+        #endif
 
         supportDimensionSet.emplace(dimensionItem);
     }
