@@ -146,6 +146,10 @@ public:
     DEFINE_NATIVE_VALUE_TO_INDEX(BundleManager, PermissionGrantState, 1)
     DEFINE_INDEX_TO_NATIVE_VALUE(BundleManager, PermissionGrantState, -1)
 
+    // bundleManager.ApplicationFlag
+    DEFINE_NATIVE_VALUE_TO_INDEX_LOOKUP(BundleManager, ApplicationFlag)
+    DEFINE_INDEX_TO_NATIVE_VALUE_LOOKUP(BundleManager, ApplicationFlag)
+
     // bundle.DisplayOrientation
     // enum DisplayOrientation {
     //     UNSPECIFIED,
@@ -181,6 +185,25 @@ public:
     // }
     DEFINE_NATIVE_VALUE_TO_INDEX(Bundle, LaunchMode, 0)
     DEFINE_INDEX_TO_NATIVE_VALUE(Bundle, LaunchMode, 0)
+
+    // zlib.CompressLevel
+    DEFINE_NATIVE_VALUE_TO_INDEX_LOOKUP(Zlib, CompressLevel)
+    DEFINE_INDEX_TO_NATIVE_VALUE_LOOKUP(Zlib, CompressLevel)
+
+    // zlib.MemLevel
+    DEFINE_NATIVE_VALUE_TO_INDEX_LOOKUP(Zlib, MemLevel)
+    DEFINE_INDEX_TO_NATIVE_VALUE_LOOKUP(Zlib, MemLevel)
+
+    // zlib.CompressStrategy
+    // enum CompressStrategy {
+    //     COMPRESS_STRATEGY_DEFAULT_STRATEGY = 0,
+    //     COMPRESS_STRATEGY_FILTERED = 1,
+    //     COMPRESS_STRATEGY_HUFFMAN_ONLY = 2,
+    //     COMPRESS_STRATEGY_RLE = 3,
+    //     COMPRESS_STRATEGY_FIXED = 4
+    // }
+    DEFINE_NATIVE_VALUE_TO_INDEX(Zlib, CompressStrategy, 0)
+    DEFINE_INDEX_TO_NATIVE_VALUE(Zlib, CompressStrategy, 0)
 
 private:
     // bundleManager.BundleFlag
@@ -268,6 +291,43 @@ private:
         21,
         22,
         255,
+    };
+    // bundleManager.ApplicationFlag
+    // enum ApplicationFlag {
+    //     GET_APPLICATION_INFO_DEFAULT = 0x00000000,
+    //     GET_APPLICATION_INFO_WITH_PERMISSION = 0x00000001,
+    //     GET_APPLICATION_INFO_WITH_METADATA = 0x00000002,
+    //     GET_APPLICATION_INFO_WITH_DISABLE = 0x00000004
+    // }
+    static constexpr std::array<int, 4> Array_BundleManager_ApplicationFlag = {
+        0x00000000,
+        0x00000001,
+        0x00000002,
+        0x00000004,
+    };
+    // zlib.CompressLevel
+    // enum CompressLevel {
+    //     COMPRESS_LEVEL_NO_COMPRESSION = 0,
+    //     COMPRESS_LEVEL_BEST_SPEED = 1,
+    //     COMPRESS_LEVEL_BEST_COMPRESSION = 9,
+    //     COMPRESS_LEVEL_DEFAULT_COMPRESSION = -1
+    // }
+    static constexpr std::array<int, 4> Array_Zlib_CompressLevel = {
+        0,
+        1,
+        9,
+        -1,
+    };
+    // zlib.MemLevel
+    // enum MemLevel {
+    //     MEM_LEVEL_MIN = 1,
+    //     MEM_LEVEL_MAX = 9,
+    //     MEM_LEVEL_DEFAULT = 8
+    // }
+    static constexpr std::array<int, 3> Array_Zlib_MemLevel = {
+        1,
+        9,
+        8,
     };
 };
 } // namespace AppExecFwk
