@@ -41,7 +41,7 @@ static std::mutex g_clearCacheListenerMutex;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
 static std::shared_mutex g_cacheMutex;
 static std::unordered_map<Query, ani_ref, QueryHash> g_cache;
-constexpr int32_t INVALID_USER_ID = -500;
+constexpr int32_t EMPTY_USER_ID = -500;
 }
 
 std::string AniStrToString(ani_env* env, ani_ref aniStr)
@@ -142,9 +142,9 @@ static ani_object getBundleInfoForSelfSync([[maybe_unused]] ani_env* env, ani_in
 static ani_object getBundleInfoSync([[maybe_unused]] ani_env *env, ani_string aniBundleName, ani_int bundleFlags,
     ani_int userId)
 {
-    int32_t uid = IPCSkeleton::GetCallingUid();
-    if (userId == INVALID_USER_ID) {
-        userId = uid / Constants::BASE_USER_RANGE;
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (userId == EMPTY_USER_ID) {
+        userId = callingUid / Constants::BASE_USER_RANGE;
     }
     std::string bundleName = AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
@@ -176,7 +176,7 @@ static ani_object getBundleInfoSync([[maybe_unused]] ani_env *env, ani_string an
 
     ani_object objectBundleInfo = CommonFunAni::ConvertBundleInfo(env, bundleInfo);
     if (!CommonFunc::CheckBundleFlagWithPermission(bundleFlags)) {
-        CheckToCache(env, bundleInfo.uid, uid, query, objectBundleInfo);
+        CheckToCache(env, bundleInfo.uid, callingUid, query, objectBundleInfo);
     }
 
     return objectBundleInfo;
@@ -190,9 +190,9 @@ static ani_object getApplicationInfoSync([[maybe_unused]] ani_env *env, ani_stri
         APP_LOGE("BundleName is empty");
         return nullptr;
     }
-
-    if (userId == INVALID_USER_ID) {
-        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (userId == EMPTY_USER_ID) {
+        userId = callingUid / Constants::BASE_USER_RANGE;
     }
 
     const Query query(bundleName, GET_APPLICATION_INFO, applicationFlags, userId);
@@ -210,7 +210,6 @@ static ani_object getApplicationInfoSync([[maybe_unused]] ani_env *env, ani_stri
         return nullptr;
     }
     ApplicationInfo appInfo;
-    
     ErrCode ret = iBundleMgr->GetApplicationInfoV9(bundleName, applicationFlags, userId, appInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GetApplicationInfoV9 failed ret: %{public}d,userId: %{public}d", ret, getuid());
@@ -218,7 +217,7 @@ static ani_object getApplicationInfoSync([[maybe_unused]] ani_env *env, ani_stri
     }
 
     ani_object objectApplicationInfo = CommonFunAni::ConvertApplicationInfo(env, appInfo);
-    CheckToCache(env, appInfo.uid, IPCSkeleton::GetCallingUid(), query, objectApplicationInfo);
+    CheckToCache(env, appInfo.uid, callingUid, query, objectApplicationInfo);
 
     return objectApplicationInfo;
 }
