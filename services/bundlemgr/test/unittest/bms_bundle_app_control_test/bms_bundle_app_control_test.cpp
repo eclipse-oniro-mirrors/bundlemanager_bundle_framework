@@ -2396,4 +2396,656 @@ HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_1300, Function | SmallTe
     auto res = rdb->DeleteUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, APP_INDEX, USERID);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: OnRemoteRequest_0100
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_0100, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::ADD_APP_INSTALL_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, OBJECT_NULL);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0200
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_0200, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::ADD_APP_INSTALL_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0300
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_0300, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_APP_JUMP_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0400
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_0400, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_APP_INSTALL_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0500
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_0500, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::CLEAN_APP_INSTALL_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0600
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_0600, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_APP_INSTALL_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0700
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_0700, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::ADD_APP_RUNNING_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0800
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_0800, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_APP_RUNNING_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0900
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_0900, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::CLEAN_APP_RUNNING_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1000
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_1000, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_APP_RUNNING_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1100
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_1100, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_APP_RUNNING_CONTROL_RULE_RESULT),
+        data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1200
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_1200, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::CONFIRM_APP_JUMP_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1300
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_1300, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::ADD_APP_JUMP_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1400
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_1400, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_APP_JUMP_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1500
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_1500, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_APP_JUMP_CONTROL_RULE_BY_CALLER),
+        data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1600
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_1600, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_APP_JUMP_CONTROL_RULE_BY_TARGET),
+        data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1700
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_1700, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_DISPOSED_STATUS), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1800
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_1800, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_STATUS), data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1800
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_2800, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_DISPOSED_STATUS), data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1900
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_1900, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_DISPOSED_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_2000
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_2000, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_2100
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_2100, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_ABILITY_RUNNING_CONTROL_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_2200
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_2200, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE_FOR_CLONE_APP), data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_2300
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_2300, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_DISPOSED_RULE_FOR_CLONE_APP), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_2400
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_2400, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_DISPOSED_RULE_FOR_CLONE_APP), data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_2500
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_2500, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_UNINSTALL_DISPOSED_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_2600
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_2600, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_UNINSTALL_DISPOSED_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_2700
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_2700, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_UNINSTALL_DISPOSED_RULE), data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppJumpInterceptorEventSubscriber_0100
+ * @tc.name: test AppJumpInterceptorEventSubscriber OnReceiveEvent
+ * @tc.desc: AppJumpInterceptorEventSubscriber OnReceiveEvent
+ */
+HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorEventSubscriber_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb
+        = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(appJumpInterceptorManagerDb, nullptr);
+    auto res = appJumpInterceptorManagerDb->SubscribeCommonEvent();
+    EXPECT_TRUE(res);
+
+    AppJumpInterceptorEventSubscriber subscriber = AppJumpInterceptorEventSubscriber(appJumpInterceptorManagerDb);
+    AAFwk::Want want;
+    want.SetAction("ohos.action.test");
+    EventFwk::CommonEventData eventData {want};
+    EXPECT_NO_THROW(subscriber.OnReceiveEvent(eventData));
+}
+
+/**
+ * @tc.number: AppJumpInterceptorEventSubscriber_0200
+ * @tc.name: test AppJumpInterceptorEventSubscriber OnReceiveEvent
+ * @tc.desc: AppJumpInterceptorEventSubscriber OnReceiveEvent
+ */
+HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorEventSubscriber_0200, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb
+        = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(appJumpInterceptorManagerDb, nullptr);
+    auto res = appJumpInterceptorManagerDb->SubscribeCommonEvent();
+    EXPECT_TRUE(res);
+
+    AppJumpInterceptorEventSubscriber subscriber = AppJumpInterceptorEventSubscriber(appJumpInterceptorManagerDb);
+    AAFwk::Want want;
+    want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+    ElementName element;
+    element.SetBundleName("com.ohos.test");
+    EventFwk::CommonEventData eventData {want};
+    EXPECT_NO_THROW(subscriber.OnReceiveEvent(eventData));
+}
+
+/**
+ * @tc.number: AppJumpInterceptorEventSubscriber_0300
+ * @tc.name: test AppJumpInterceptorEventSubscriber OnReceiveEvent
+ * @tc.desc: AppJumpInterceptorEventSubscriber OnReceiveEvent
+ */
+HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorEventSubscriber_0300, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb
+        = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(appJumpInterceptorManagerDb, nullptr);
+    auto res = appJumpInterceptorManagerDb->SubscribeCommonEvent();
+    EXPECT_TRUE(res);
+
+    AppJumpInterceptorEventSubscriber subscriber = AppJumpInterceptorEventSubscriber(appJumpInterceptorManagerDb);
+    AAFwk::Want want;
+    want.SetAction("ohos.action.test");
+    ElementName element;
+    element.SetBundleName("com.ohos.test");
+    EventFwk::CommonEventData eventData {want};
+    EXPECT_NO_THROW(subscriber.OnReceiveEvent(eventData));
+}
+
+/**
+ * @tc.number: GetUninstallDisposedRuleImpl_0100
+ * @tc.name: test GetUninstallDisposedRule by AppControlManagerHostImpl
+ * @tc.desc: 1.GetUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetUninstallDisposedRuleImpl_0100, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    std::string appIdentifier = "";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    UninstallDisposedRule uninstallDisposedRule;
+
+    ErrCode res = impl->GetUninstallDisposedRule(appIdentifier, appIndex, userId, uninstallDisposedRule);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = impl->GetUninstallDisposedRule(appIdentifier, -1, userId, uninstallDisposedRule);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+
+    res = impl->GetUninstallDisposedRule(appIdentifier, appIndex, -2, uninstallDisposedRule);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: SetUninstallDisposedRuleImpl_0100
+ * @tc.name: test SetUninstallDisposedRule by AppControlManagerHostImpl
+ * @tc.desc: 1.SetUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, SetUninstallDisposedRuleImpl_0100, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    std::string appIdentifier = "";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    UninstallDisposedRule uninstallDisposedRule;
+
+    ErrCode res = impl->SetUninstallDisposedRule(appIdentifier, uninstallDisposedRule, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_UNINSTALL_RULE);
+
+    res = impl->SetUninstallDisposedRule(appIdentifier, uninstallDisposedRule, -1, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+
+    res = impl->SetUninstallDisposedRule(appIdentifier, uninstallDisposedRule, appIndex, -2);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_UNINSTALL_RULE);
+}
+
+/**
+ * @tc.number: DeleteUninstallDisposedRuleImpl_0100
+ * @tc.name: test DeleteUninstallDisposedRule by AppControlManagerHostImpl
+ * @tc.desc: 1.DeleteUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, DeleteUninstallDisposedRuleImpl_0100, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    std::string appIdentifier = "";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+
+    ErrCode res = impl->DeleteUninstallDisposedRule(appIdentifier, appIndex, userId);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = impl->DeleteUninstallDisposedRule(appIdentifier, -1, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+
+    res = impl->DeleteUninstallDisposedRule(appIdentifier, appIndex, -2);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDisposedRuleFromResultSet_0100
+ * @tc.name: Test GetDisposedRuleFromResultSet by AppControlManagerRdb
+ * @tc.desc: 1.GetDisposedRuleFromResultSet test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetDisposedRuleFromResultSet_0100, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    std::vector<DisposedRule> disposedRules;
+    auto res = rdb->GetDisposedRuleFromResultSet(nullptr, disposedRules);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
+}
 } // OHOS
