@@ -223,6 +223,7 @@ static ani_object getApplicationInfoSync([[maybe_unused]] ani_env *env, ani_stri
     return objectApplicationInfo;
 }
 
+extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
     APP_LOGI("ANI_Constructor called");
@@ -269,6 +270,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     APP_LOGI("ANI_Constructor finished");
 
     return ANI_OK;
+}
 }
 
 void ClearCacheListener::DoClearCache()
