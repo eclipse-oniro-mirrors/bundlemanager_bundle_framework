@@ -451,9 +451,13 @@ HWTEST_F(BmsRdbDataManagerTest, FirstInstallDataStorageRdb_0300, Function | Smal
     firstInstallBundleInfo.firstInstallTime = 1106274594;
     bool ret = firstInstallDataMgr->AddFirstInstallBundleInfo(TEST_BUNDLE_NAME, 200, firstInstallBundleInfo);
     EXPECT_TRUE(ret);
+    ret = firstInstallDataMgr->AddFirstInstallBundleInfo("", 200, firstInstallBundleInfo);
+    EXPECT_FALSE(ret);
     FirstInstallBundleInfo firstInstallBundleInfoRes;
     ret = firstInstallDataMgr->GetFirstInstallBundleInfo(TEST_BUNDLE_NAME, 200, firstInstallBundleInfoRes);
     EXPECT_TRUE(ret);
+    ret = firstInstallDataMgr->GetFirstInstallBundleInfo("", 200, firstInstallBundleInfoRes);
+    EXPECT_FALSE(ret);
     EXPECT_EQ(firstInstallBundleInfoRes.firstInstallTime, 1106274594);
     ret = firstInstallDataMgr->DeleteFirstInstallBundleInfo(200);
     EXPECT_TRUE(ret);
@@ -494,6 +498,29 @@ HWTEST_F(BmsRdbDataManagerTest, FirstInstallDataStorageRdb_0500, Function | Smal
     FirstInstallBundleInfo firstInstallBundleInfo;
     firstInstallBundleInfo.firstInstallTime = 1106274594;
     bool ret = firstInstallDataMgr->AddFirstInstallBundleInfo(TEST_BUNDLE_NAME, 200, firstInstallBundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: FirstInstallDataStorageRdb_0600
+ * @tc.name: AddFirstInstallBundleInfo
+ * @tc.desc: 1.AddFirstInstallBundleInfo
+ */
+HWTEST_F(BmsRdbDataManagerTest, FirstInstallDataStorageRdb_0600, Function | SmallTest | Level1)
+{
+    std::shared_ptr<FirstInstallDataMgrStorageRdb> firstInstallDataMgr =
+        std::make_shared<FirstInstallDataMgrStorageRdb>();
+    ASSERT_NE(firstInstallDataMgr, nullptr);
+    firstInstallDataMgr->rdbDataManager_ = nullptr;
+    FirstInstallBundleInfo firstInstallBundleInfo;
+    firstInstallBundleInfo.firstInstallTime = 1106274594;
+    bool ret = firstInstallDataMgr->AddFirstInstallBundleInfo(TEST_BUNDLE_NAME, 200, firstInstallBundleInfo);
+    EXPECT_FALSE(ret);
+    ret = firstInstallDataMgr->IsExistFirstInstallBundleInfo(TEST_BUNDLE_NAME, 200);
+    EXPECT_FALSE(ret);
+    ret = firstInstallDataMgr->GetFirstInstallBundleInfo(TEST_BUNDLE_NAME, 200, firstInstallBundleInfo);
+    EXPECT_FALSE(ret);
+    ret = firstInstallDataMgr->DeleteFirstInstallBundleInfo(200);
     EXPECT_FALSE(ret);
 }
 
