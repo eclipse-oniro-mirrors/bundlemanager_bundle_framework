@@ -478,6 +478,8 @@ HWTEST_F(BmsRdbDataManagerTest, FirstInstallDataStorageRdb_0400, Function | Smal
     EXPECT_TRUE(ret);
     ret = firstInstallDataMgr->IsExistFirstInstallBundleInfo(TEST_BUNDLE_NAME, 200);
     EXPECT_FALSE(ret);
+    ret = firstInstallDataMgr->IsExistFirstInstallBundleInfo("", 200);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -494,6 +496,8 @@ HWTEST_F(BmsRdbDataManagerTest, FirstInstallDataStorageRdb_0500, Function | Smal
     FirstInstallBundleInfo firstInstallBundleInfo;
     firstInstallBundleInfo.firstInstallTime = 1106274594;
     bool ret = firstInstallDataMgr->AddFirstInstallBundleInfo(TEST_BUNDLE_NAME, 200, firstInstallBundleInfo);
+    EXPECT_FALSE(ret);
+    ret = firstInstallDataMgr->AddFirstInstallBundleInfo("", 200, firstInstallBundleInfo);
     EXPECT_FALSE(ret);
 }
 
