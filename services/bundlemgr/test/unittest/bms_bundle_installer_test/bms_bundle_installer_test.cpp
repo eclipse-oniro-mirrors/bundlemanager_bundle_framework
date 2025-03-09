@@ -8452,4 +8452,28 @@ HWTEST_F(BmsBundleInstallerTest, IsEnterpriseForAllUser_0100, Function | MediumT
     EXPECT_TRUE(installer.IsEnterpriseForAllUser(installParam, "bundleName"));
     OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
 }
+
+/**
+ * @tc.number: UtdHandler_0300
+ * @tc.name: test UtdHandler
+ * @tc.desc: 1.call GetUtdProfileFromHap, if exist utd.json5 then return content, otherwise return empty string
+ */
+HWTEST_F(BmsBundleInstallerTest, UtdHandler_0300, Function | SmallTest | Level0)
+{
+    std::string invalidHapPath = RESOURCE_ROOT_PATH + "invalid.hap";
+    std::string utdProfile = UtdHandler::GetUtdProfileFromHap(invalidHapPath);
+    EXPECT_EQ(utdProfile, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: UtdHandler_0400
+ * @tc.name: test UtdHandler
+ * @tc.desc: 1.call GetUtdProfileFromHap, if exist utd.json5 then return content, otherwise return empty string
+ */
+HWTEST_F(BmsBundleInstallerTest, UtdHandler_0400, Function | SmallTest | Level0)
+{
+    std::string corruptUtdHapPath = RESOURCE_ROOT_PATH + "corrupt_utd.hap";
+    std::string utdProfile = UtdHandler::GetUtdProfileFromHap(corruptUtdHapPath);
+    EXPECT_EQ(utdProfile, Constants::EMPTY_STRING);
+}
 } // OHOS
