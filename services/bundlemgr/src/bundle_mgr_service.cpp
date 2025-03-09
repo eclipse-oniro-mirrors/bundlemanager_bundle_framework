@@ -315,15 +315,15 @@ void BundleMgrService::CreateBmsServiceDir()
     auto ret = InstalldClient::GetInstance()->Mkdir(
         ServiceConstants::HAP_COPY_PATH, S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH,
         Constants::FOUNDATION_UID, ServiceConstants::BMS_GID);
-    if (!ret) {
-        APP_LOGE("create dir failed");
+    if (ret != ERR_OK) {
+        APP_LOGE("create dir failed, ret %{public}d", ret);
     }
     ret = InstalldClient::GetInstance()->Mkdir(
         std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH,
         S_IRWXU | S_IRWXG | S_IXOTH,
         Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID);
-    if (!ret) {
-        APP_LOGE("create app_install failed");
+    if (ret != ERR_OK) {
+        APP_LOGE("create app_install failed, ret %{public}d", ret);
     }
 }
 

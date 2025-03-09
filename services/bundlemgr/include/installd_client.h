@@ -269,7 +269,8 @@ private:
         for (int32_t retryTimes = 0; retryTimes < maxRetryTimes; retryTimes++) {
             auto proxy = GetInstalldProxy();
             if (proxy == nullptr) {
-                return ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR;
+                errCode = ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR;
+                continue;
             }
             errCode = (proxy->*func)(std::forward<Args>(args)...);
             if (errCode == ERR_APPEXECFWK_INSTALLD_SERVICE_DIED) {
