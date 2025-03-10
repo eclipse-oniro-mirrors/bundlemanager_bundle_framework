@@ -42,12 +42,154 @@ constexpr const char* CLASSNAME_ELEMENTNAME = "LElementName/ElementNameInner;";
 constexpr const char* CLASSNAME_CUSTOMIZEDATA = "LcustomizeData/CustomizeDataInner;";
 constexpr const char* CLASSNAME_SKILL = "LSkill/SkillInner;";
 constexpr const char* CLASSNAME_SKILLURI = "LSkill/SkillUriInner;";
+constexpr const char* CLASSNAME_SHORTCUTINFO = "LShortcutInfo/ShortcutInfoInner;";
+constexpr const char* CLASSNAME_SHORTCUTWANT = "LShortcutInfo/ShortcutWantInner;";
+constexpr const char* CLASSNAME_SHORTCUT_PARAMETERITEM = "LShortcutInfo/ParameterItemInner;";
+
+constexpr const char* PROPERTYNAME_NAME = "name";
+constexpr const char* PROPERTYNAME_VENDOR = "vendor";
+constexpr const char* PROPERTYNAME_VERSIONCODE = "versionCode";
+constexpr const char* PROPERTYNAME_VERSIONNAME = "versionName";
+constexpr const char* PROPERTYNAME_MINCOMPATIBLEVERSIONCODE = "minCompatibleVersionCode";
+constexpr const char* PROPERTYNAME_TARGETVERSION = "targetVersion";
+constexpr const char* PROPERTYNAME_APPINFO = "appInfo";
+constexpr const char* PROPERTYNAME_HAPMODULESINFO = "hapModulesInfo";
+constexpr const char* PROPERTYNAME_REQPERMISSIONDETAILS = "reqPermissionDetails";
+constexpr const char* PROPERTYNAME_PERMISSIONGRANTSTATES = "permissionGrantStates";
+constexpr const char* PROPERTYNAME_SIGNATUREINFO = "signatureInfo";
+constexpr const char* PROPERTYNAME_INSTALLTIME = "installTime";
+constexpr const char* PROPERTYNAME_UPDATETIME = "updateTime";
+constexpr const char* PROPERTYNAME_ROUTERMAP = "routerMap";
+constexpr const char* PROPERTYNAME_APPINDEX = "appIndex";
+constexpr const char* PROPERTYNAME_KEY = "key";
+constexpr const char* PROPERTYNAME_VALUE = "value";
+constexpr const char* PROPERTYNAME_RESOURCE = "resource";
+constexpr const char* PROPERTYNAME_MAXCOUNT = "maxCount";
+constexpr const char* PROPERTYNAME_MULTIAPPMODETYPE = "multiAppModeType";
+constexpr const char* PROPERTYNAME_MODULENAME = "moduleName";
+constexpr const char* PROPERTYNAME_METADATA = "metadata";
+constexpr const char* PROPERTYNAME_DESCRIPTION = "description";
+constexpr const char* PROPERTYNAME_DESCRIPTIONID = "descriptionId";
+constexpr const char* PROPERTYNAME_ENABLED = "enabled";
+constexpr const char* PROPERTYNAME_LABEL = "label";
+constexpr const char* PROPERTYNAME_LABELID = "labelId";
+constexpr const char* PROPERTYNAME_ICON = "icon";
+constexpr const char* PROPERTYNAME_ICONID = "iconId";
+constexpr const char* PROPERTYNAME_PROCESS = "process";
+constexpr const char* PROPERTYNAME_PERMISSIONS = "permissions";
+constexpr const char* PROPERTYNAME_CODEPATH = "codePath";
+constexpr const char* PROPERTYNAME_REMOVABLE = "removable";
+constexpr const char* PROPERTYNAME_ACCESSTOKENID = "accessTokenId";
+constexpr const char* PROPERTYNAME_UID = "uid";
+constexpr const char* PROPERTYNAME_ICONRESOURCE = "iconResource";
+constexpr const char* PROPERTYNAME_LABELRESOURCE = "labelResource";
+constexpr const char* PROPERTYNAME_DESCRIPTIONRESOURCE = "descriptionResource";
+constexpr const char* PROPERTYNAME_APPDISTRIBUTIONTYPE = "appDistributionType";
+constexpr const char* PROPERTYNAME_APPPROVISIONTYPE = "appProvisionType";
+constexpr const char* PROPERTYNAME_SYSTEMAPP = "systemApp";
+constexpr const char* PROPERTYNAME_BUNDLETYPE = "bundleType";
+constexpr const char* PROPERTYNAME_DEBUG = "debug";
+constexpr const char* PROPERTYNAME_DATAUNCLEARABLE = "dataUnclearable";
+constexpr const char* PROPERTYNAME_NATIVELIBRARYPATH = "nativeLibraryPath";
+constexpr const char* PROPERTYNAME_MULTIAPPMODE = "multiAppMode";
+constexpr const char* PROPERTYNAME_INSTALLSOURCE = "installSource";
+constexpr const char* PROPERTYNAME_RELEASETYPE = "releaseType";
+constexpr const char* PROPERTYNAME_CLOUDFILESYNCENABLED = "cloudFileSyncEnabled";
+constexpr const char* PROPERTYNAME_FLAGS = "flags";
+constexpr const char* PROPERTYNAME_BUNDLENAME = "bundleName";
+constexpr const char* PROPERTYNAME_EXPORTED = "exported";
+constexpr const char* PROPERTYNAME_TYPE = "type";
+constexpr const char* PROPERTYNAME_ORIENTATION = "orientation";
+constexpr const char* PROPERTYNAME_LAUNCHTYPE = "launchType";
+constexpr const char* PROPERTYNAME_READPERMISSION = "readPermission";
+constexpr const char* PROPERTYNAME_WRITEPERMISSION = "writePermission";
+constexpr const char* PROPERTYNAME_URI = "uri";
+constexpr const char* PROPERTYNAME_DEVICETYPES = "deviceTypes";
+constexpr const char* PROPERTYNAME_APPLICATIONINFO = "applicationInfo";
+constexpr const char* PROPERTYNAME_SUPPORTWINDOWMODES = "supportWindowModes";
+constexpr const char* PROPERTYNAME_WINDOWSIZE = "windowSize";
+constexpr const char* PROPERTYNAME_EXCLUDEFROMDOCK = "excludeFromDock";
+constexpr const char* PROPERTYNAME_SKILLS = "skills";
+constexpr const char* PROPERTYNAME_ORIENTATIONID = "orientationId";
+constexpr const char* PROPERTYNAME_MAXWINDOWRATIO = "maxWindowRatio";
+constexpr const char* PROPERTYNAME_MINWINDOWRATIO = "minWindowRatio";
+constexpr const char* PROPERTYNAME_MAXWINDOWWIDTH = "maxWindowWidth";
+constexpr const char* PROPERTYNAME_MINWINDOWWIDTH = "minWindowWidth";
+constexpr const char* PROPERTYNAME_MAXWINDOWHEIGHT = "maxWindowHeight";
+constexpr const char* PROPERTYNAME_MINWINDOWHEIGHT = "minWindowHeight";
+constexpr const char* PROPERTYNAME_EXTENSIONABILITYTYPE = "extensionAbilityType";
+constexpr const char* PROPERTYNAME_EXTENSIONABILITYTYPENAME = "extensionAbilityTypeName";
+constexpr const char* PROPERTYNAME_ID = "id";
+constexpr const char* PROPERTYNAME_APPID = "appId";
+constexpr const char* PROPERTYNAME_FINGERPRINT = "fingerprint";
+constexpr const char* PROPERTYNAME_APPIDENTIFIER = "appIdentifier";
+constexpr const char* PROPERTYNAME_CERTIFICATE = "certificate";
+constexpr const char* PROPERTYNAME_PAGESOURCEFILE = "pageSourceFile";
+constexpr const char* PROPERTYNAME_BUILDFUNCTION = "buildFunction";
+constexpr const char* PROPERTYNAME_CUSTOMDATA = "customData";
+constexpr const char* PROPERTYNAME_DATA = "data";
+constexpr const char* PROPERTYNAME_REASON = "reason";
+constexpr const char* PROPERTYNAME_REASONID = "reasonId";
+constexpr const char* PROPERTYNAME_USEDSCENE = "usedScene";
+constexpr const char* PROPERTYNAME_WHEN = "when";
+constexpr const char* PROPERTYNAME_ABILITIES = "abilities";
+constexpr const char* PROPERTYNAME_MAINELEMENTNAME = "mainElementName";
+constexpr const char* PROPERTYNAME_ABILITIESINFO = "abilitiesInfo";
+constexpr const char* PROPERTYNAME_EXTENSIONABILITIESINFO = "extensionAbilitiesInfo";
+constexpr const char* PROPERTYNAME_INSTALLATIONFREE = "installationFree";
+constexpr const char* PROPERTYNAME_HASHVALUE = "hashValue";
+constexpr const char* PROPERTYNAME_DEPENDENCIES = "dependencies";
+constexpr const char* PROPERTYNAME_PRELOADS = "preloads";
+constexpr const char* PROPERTYNAME_FILECONTEXTMENUCONFIG = "fileContextMenuConfig";
+constexpr const char* PROPERTYNAME_DEVICEID = "deviceId";
+constexpr const char* PROPERTYNAME_ABILITYNAME = "abilityName";
+constexpr const char* PROPERTYNAME_SHORTNAME = "shortName";
+constexpr const char* PROPERTYNAME_EXTRA = "extra";
+constexpr const char* PROPERTYNAME_SCHEME = "scheme";
+constexpr const char* PROPERTYNAME_HOST = "host";
+constexpr const char* PROPERTYNAME_PORT = "port";
+constexpr const char* PROPERTYNAME_PATH = "path";
+constexpr const char* PROPERTYNAME_PATHSTARTWITH = "pathStartWith";
+constexpr const char* PROPERTYNAME_PATHREGEX = "pathRegex";
+constexpr const char* PROPERTYNAME_UTD = "utd";
+constexpr const char* PROPERTYNAME_MAXFILESUPPORTED = "maxFileSupported";
+constexpr const char* PROPERTYNAME_LINKFEATURE = "linkFeature";
+constexpr const char* PROPERTYNAME_ACTIONS = "actions";
+constexpr const char* PROPERTYNAME_ENTITIES = "entities";
+constexpr const char* PROPERTYNAME_URIS = "uris";
+constexpr const char* PROPERTYNAME_DOMAINVERIFY = "domainVerify";
+constexpr const char* PROPERTYNAME_HOSTABILITY = "hostAbility";
+constexpr const char* PROPERTYNAME_WANTS = "wants";
+constexpr const char* PROPERTYNAME_SOURCETYPE = "sourceType";
+constexpr const char* PROPERTYNAME_TARGETBUNDLE = "targetBundle";
+constexpr const char* PROPERTYNAME_TARGETMODULE = "targetModule";
+constexpr const char* PROPERTYNAME_TARGETABILITY = "targetAbility";
+constexpr const char* PROPERTYNAME_PARAMETERS = "parameters";
 
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
 constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
-
-#define SETTER_METHOD_NAME(property) "<set>" #property
 } // namespace
+
+std::string CommonFunAni::AniStrToString(ani_env* env, ani_string aniStr)
+{
+    ani_size substrSize = 0;
+    ani_status status = env->String_GetUTF8Size(aniStr, &substrSize);
+    if (status != ANI_OK) {
+        APP_LOGE("String_GetUTF8Size failed");
+        return "";
+    }
+
+    std::vector<char> buffer(substrSize + 1);
+    ani_size nameSize;
+    status = env->String_GetUTF8(aniStr, buffer.data(), buffer.size(), &nameSize);
+    if (status != ANI_OK) {
+        APP_LOGE("String_GetUTF8SubString failed");
+        return "";
+    }
+
+    return std::string(buffer.data(), nameSize);
+}
+
 ani_class CommonFunAni::CreateClassByName(ani_env* env, const std::string& className)
 {
     ani_class cls = nullptr;
@@ -116,29 +258,11 @@ ani_ref CommonFunAni::ConvertAniArrayString(ani_env* env, const std::vector<std:
     }
     ani_string aString = nullptr;
     for (ani_size i = 0; i < length; ++i) {
-        env->String_NewUTF8(cArray[i].c_str(), cArray[i].size(), &aString);
-        env->Array_Set_Ref(aArrayRef, i, aString);
+        if (StringToAniStr(env, cArray[i], aString)) {
+            env->Array_Set_Ref(aArrayRef, i, aString);
+        }
     }
     return aArrayRef;
-}
-
-template<typename enumType>
-ani_array_int CommonFunAni::ConvertAniArrayEnum(
-    ani_env* env, const std::vector<enumType>& cArray, std::function<ani_int(const int32_t)> converter)
-{
-    ani_size length = cArray.size();
-    ani_array_int aArrayEnum = nullptr;
-    ani_status status = env->Array_New_Int(length, &aArrayEnum);
-    if (status != ANI_OK) {
-        APP_LOGE("Array_New_Int failed %{public}d", status);
-        return nullptr;
-    }
-    std::vector<ani_int> buffer(length);
-    for (ani_size i = 0; i < length; ++i) {
-        buffer[i] = converter(static_cast<int32_t>(cArray[i]));
-    }
-    env->Array_SetRegion_Int(aArrayEnum, 0, length, &buffer[0]);
-    return aArrayEnum;
 }
 
 ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo)
@@ -153,29 +277,32 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     ani_string string = nullptr;
 
     // name: string
-    env->String_NewUTF8(bundleInfo.name.c_str(), bundleInfo.name.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(name), string);
+    if (StringToAniStr(env, bundleInfo.name, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_NAME, string);
+    }
 
     // vendor: string
-    env->String_NewUTF8(bundleInfo.vendor.c_str(), bundleInfo.vendor.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(vendor), string);
+    if (StringToAniStr(env, bundleInfo.vendor, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_VENDOR, string);
+    }
 
     // versionCode: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(versionCode), bundleInfo.versionCode);
+    CallSetter(env, cls, object, PROPERTYNAME_VERSIONCODE, bundleInfo.versionCode);
 
     // versionName: string
-    env->String_NewUTF8(bundleInfo.versionName.c_str(), bundleInfo.versionName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(versionName), string);
+    if (StringToAniStr(env, bundleInfo.versionName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_VERSIONNAME, string);
+    }
 
     // minCompatibleVersionCode: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(minCompatibleVersionCode), bundleInfo.minCompatibleVersionCode);
+    CallSetter(env, cls, object, PROPERTYNAME_MINCOMPATIBLEVERSIONCODE, bundleInfo.minCompatibleVersionCode);
 
     // targetVersion: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(targetVersion), bundleInfo.targetVersion);
+    CallSetter(env, cls, object, PROPERTYNAME_TARGETVERSION, bundleInfo.targetVersion);
 
     // appInfo: ApplicationInfo
     ani_object aObject = ConvertApplicationInfo(env, bundleInfo.applicationInfo);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(appInfo), aObject);
+    CallSetter(env, cls, object, PROPERTYNAME_APPINFO, aObject);
 
     // hapModulesInfo: Array<HapModuleInfo>
     std::vector<ani_object> aHapModuleInfos;
@@ -183,7 +310,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         aHapModuleInfos.emplace_back(ConvertHapModuleInfo(env, bundleInfo.hapModuleInfos[i]));
     }
     ani_ref aHapModuleInfosRef = ConvertAniArrayByClass(env, CLASSNAME_HAPMODULEINFO, aHapModuleInfos);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(hapModulesInfo), aHapModuleInfosRef);
+    CallSetter(env, cls, object, PROPERTYNAME_HAPMODULESINFO, aHapModuleInfosRef);
 
     // reqPermissionDetails: Array<ReqPermissionDetail>
     std::vector<ani_object> aArray;
@@ -191,22 +318,22 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         aArray.emplace_back(ConvertRequestPermission(env, bundleInfo.reqPermissionDetails[i]));
     }
     ani_ref aPermissionArrayRef = ConvertAniArrayByClass(env, CLASSNAME_PERMISSION, aArray);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(reqPermissionDetails), aPermissionArrayRef);
+    CallSetter(env, cls, object, PROPERTYNAME_REQPERMISSIONDETAILS, aPermissionArrayRef);
 
     // permissionGrantStates: Array<bundleManager.PermissionGrantState>
     ani_array_int aPermissionGrantStates = ConvertAniArrayEnum(
         env, bundleInfo.reqPermissionStates, EnumUtils::NativeValueToIndex_BundleManager_PermissionGrantState);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(permissionGrantStates), aPermissionGrantStates);
+    CallSetter(env, cls, object, PROPERTYNAME_PERMISSIONGRANTSTATES, aPermissionGrantStates);
 
     // signatureInfo: SignatureInfo
     ani_object aniSignatureInfoObj = ConvertSignatureInfo(env, bundleInfo.signatureInfo);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(signatureInfo), aniSignatureInfoObj);
+    CallSetter(env, cls, object, PROPERTYNAME_SIGNATUREINFO, aniSignatureInfoObj);
 
     // installTime: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(installTime), bundleInfo.installTime);
+    CallSetter(env, cls, object, PROPERTYNAME_INSTALLTIME, bundleInfo.installTime);
 
     // updateTime: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(updateTime), bundleInfo.updateTime);
+    CallSetter(env, cls, object, PROPERTYNAME_UPDATETIME, bundleInfo.updateTime);
 
     // routerMap: Array<RouterItem>
     std::vector<ani_object> aRouterMap;
@@ -214,12 +341,11 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         aRouterMap.emplace_back(ConvertRouterItem(env, bundleInfo.routerArray[i]));
     }
     ani_ref aRouterMapRef = ConvertAniArrayByClass(env, CLASSNAME_ROUTERITEM, aRouterMap);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(routerMap), aRouterMapRef);
+    CallSetter(env, cls, object, PROPERTYNAME_ROUTERMAP, aRouterMapRef);
 
     // appIndex: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(appIndex), bundleInfo.appIndex);
+    CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, bundleInfo.appIndex);
 
-    std::cout << "CommonFunAni::ConvertBundleInfo exit" << std::endl;
     return object;
 }
 
@@ -235,16 +361,19 @@ ani_object CommonFunAni::ConvertMetadata(ani_env* env, const Metadata& metadata)
     ani_string string = nullptr;
 
     // name: string
-    env->String_NewUTF8(metadata.name.c_str(), metadata.name.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(name), string);
+    if (StringToAniStr(env, metadata.name, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_NAME, string);
+    }
 
     // value: string
-    env->String_NewUTF8(metadata.value.c_str(), metadata.value.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(value), string);
+    if (StringToAniStr(env, metadata.value, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_VALUE, string);
+    }
 
     // resource: string
-    env->String_NewUTF8(metadata.resource.c_str(), metadata.resource.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(resource), string);
+    if (StringToAniStr(env, metadata.resource, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_RESOURCE, string);
+    }
 
     return object;
 }
@@ -259,10 +388,10 @@ ani_object CommonFunAni::ConvertMultiAppMode(ani_env* env, const MultiAppModeDat
     }
 
     // maxCount: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(maxCount), multiAppMode.maxCount);
+    CallSetter(env, cls, object, PROPERTYNAME_MAXCOUNT, multiAppMode.maxCount);
 
     // multiAppModeType: bundleManager.MultiAppModeType
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(multiAppModeType),
+    CallSetter(env, cls, object, PROPERTYNAME_MULTIAPPMODETYPE,
         EnumUtils::NativeValueToIndex_BundleManager_MultiAppModeType(
             static_cast<int32_t>(multiAppMode.multiAppModeType)));
 
@@ -282,8 +411,9 @@ ani_ref CommonFunAni::ConvertModuleMetaInfos(ani_env* env, const std::map<std::s
             return nullptr;
         }
         // moduleName: string
-        env->String_NewUTF8(item.first.c_str(), item.first.size(), &string);
-        CallSetter(env, cls, object, SETTER_METHOD_NAME(moduleName), string);
+        if (StringToAniStr(env, item.first, string)) {
+            CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string);
+        }
 
         // metadata: Array<Metadata>
         std::vector<ani_object> aMetadata;
@@ -291,7 +421,7 @@ ani_ref CommonFunAni::ConvertModuleMetaInfos(ani_env* env, const std::map<std::s
             aMetadata.emplace_back(ConvertMetadata(env, item.second[i]));
         }
         ani_ref aMetadataRef = ConvertAniArrayByClass(env, CLASSNAME_MODULEMETADATA, aMetadata);
-        CallSetter(env, cls, object, SETTER_METHOD_NAME(metadata), aMetadataRef);
+        CallSetter(env, cls, object, PROPERTYNAME_METADATA, aMetadataRef);
         aDataItem.emplace_back(object);
         index++;
     }
@@ -312,116 +442,126 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
     ani_string string = nullptr;
 
     // name: string
-    env->String_NewUTF8(appInfo.name.c_str(), appInfo.name.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(name), string);
+    if (StringToAniStr(env, appInfo.name, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_NAME, string);
+    }
 
     // description: string
-    env->String_NewUTF8(appInfo.description.c_str(), appInfo.description.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(description), string);
+    if (StringToAniStr(env, appInfo.description, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string);
+    }
 
     // descriptionId: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(descriptionId), appInfo.descriptionId);
+    CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, appInfo.descriptionId);
 
     // enabled: boolean
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(enabled), BoolToAniBoolean(appInfo.enabled));
+    CallSetter(env, cls, object, PROPERTYNAME_ENABLED, BoolToAniBoolean(appInfo.enabled));
 
     // label: string
-    env->String_NewUTF8(appInfo.label.c_str(), appInfo.label.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(label), string);
+    if (StringToAniStr(env, appInfo.label, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_LABEL, string);
+    }
 
     // labelId: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(labelId), appInfo.labelId);
+    CallSetter(env, cls, object, PROPERTYNAME_LABELID, appInfo.labelId);
 
     // icon: string
-    env->String_NewUTF8(appInfo.iconPath.c_str(), appInfo.iconPath.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(icon), string);
+    if (StringToAniStr(env, appInfo.iconPath, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_ICON, string);
+    }
 
     // iconId: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(iconId), appInfo.iconId);
+    CallSetter(env, cls, object, PROPERTYNAME_ICONID, appInfo.iconId);
 
     // process: string
-    env->String_NewUTF8(appInfo.process.c_str(), appInfo.process.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(process), string);
+    if (StringToAniStr(env, appInfo.process, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_PROCESS, string);
+    }
 
     // permissions: Array<string>
     ani_ref aPermissions = ConvertAniArrayString(env, appInfo.permissions);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(permissions), aPermissions);
+    CallSetter(env, cls, object, PROPERTYNAME_PERMISSIONS, aPermissions);
 
     // codePath: string
-    env->String_NewUTF8(appInfo.codePath.c_str(), appInfo.codePath.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(codePath), string);
+    if (StringToAniStr(env, appInfo.codePath, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_CODEPATH, string);
+    }
 
     // metadataArray: Array<ModuleMetadata>
     ani_ref aMetadataArrayRef = ConvertModuleMetaInfos(env, appInfo.metadata);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(metadataArray), aMetadataArrayRef);
+    CallSetter(env, cls, object, PROPERTYNAME_METADATAARRAY, aMetadataArrayRef);
 
     // removable: boolean
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(removable), BoolToAniBoolean(appInfo.removable));
+    CallSetter(env, cls, object, PROPERTYNAME_REMOVABLE, BoolToAniBoolean(appInfo.removable));
 
     // accessTokenId: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(accessTokenId), appInfo.accessTokenId);
+    CallSetter(env, cls, object, PROPERTYNAME_ACCESSTOKENID, appInfo.accessTokenId);
 
     // uid: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(uid), appInfo.uid);
+    CallSetter(env, cls, object, PROPERTYNAME_UID, appInfo.uid);
 
     // iconResource: Resource
     ani_object aIconResource = ConvertResource(env, appInfo.iconResource);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(iconResource), aIconResource);
+    CallSetter(env, cls, object, PROPERTYNAME_ICONRESOURCE, aIconResource);
 
     // labelResource: Resource
     ani_object aLabelResource = ConvertResource(env, appInfo.labelResource);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(labelResource), aLabelResource);
+    CallSetter(env, cls, object, PROPERTYNAME_LABELRESOURCE, aLabelResource);
 
     // descriptionResource: Resource
     ani_object aDescriptionResource = ConvertResource(env, appInfo.descriptionResource);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(descriptionResource), aDescriptionResource);
+    CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONRESOURCE, aDescriptionResource);
 
     // appDistributionType: string
-    env->String_NewUTF8(appInfo.appDistributionType.c_str(), appInfo.appDistributionType.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(appDistributionType), string);
+    if (StringToAniStr(env, appInfo.appDistributionType, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_APPDISTRIBUTIONTYPE, string);
+    }
 
     // appProvisionType: string
-    env->String_NewUTF8(appInfo.appProvisionType.c_str(), appInfo.appProvisionType.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(appProvisionType), string);
+    if (StringToAniStr(env, appInfo.appProvisionType, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_APPPROVISIONTYPE, string);
+    }
 
     // systemApp: boolean
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(systemApp), BoolToAniBoolean(appInfo.isSystemApp));
+    CallSetter(env, cls, object, PROPERTYNAME_SYSTEMAPP, BoolToAniBoolean(appInfo.isSystemApp));
 
     // bundleType: bundleManager.BundleType
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(bundleType),
+    CallSetter(env, cls, object, PROPERTYNAME_BUNDLETYPE,
         EnumUtils::NativeValueToIndex_BundleManager_BundleType(static_cast<int32_t>(appInfo.bundleType)));
 
     // debug: boolean
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(debug), BoolToAniBoolean(appInfo.debug));
+    CallSetter(env, cls, object, PROPERTYNAME_DEBUG, BoolToAniBoolean(appInfo.debug));
 
     // dataUnclearable: boolean
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(dataUnclearable), BoolToAniBoolean(!appInfo.userDataClearable));
+    CallSetter(env, cls, object, PROPERTYNAME_DATAUNCLEARABLE, BoolToAniBoolean(!appInfo.userDataClearable));
 
     // nativeLibraryPath: string
-    env->String_NewUTF8(appInfo.nativeLibraryPath.c_str(), appInfo.nativeLibraryPath.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(nativeLibraryPath), string);
+    if (StringToAniStr(env, appInfo.nativeLibraryPath, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_NATIVELIBRARYPATH, string);
+    }
 
     // multiAppMode: MultiAppMode
     ani_object aniMultiAppModeObj = ConvertMultiAppMode(env, appInfo.multiAppMode);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(multiAppMode), aniMultiAppModeObj);
+    CallSetter(env, cls, object, PROPERTYNAME_MULTIAPPMODE, aniMultiAppModeObj);
 
     // appIndex: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(appIndex), appInfo.appIndex);
+    CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, appInfo.appIndex);
 
     // installSource: string
-    env->String_NewUTF8(appInfo.installSource.c_str(), appInfo.installSource.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(installSource), string);
+    if (StringToAniStr(env, appInfo.installSource, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_INSTALLSOURCE, string);
+    }
 
     // releaseType: string
-    env->String_NewUTF8(appInfo.apiReleaseType.c_str(), appInfo.apiReleaseType.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(releaseType), string);
+    if (StringToAniStr(env, appInfo.apiReleaseType, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_RELEASETYPE, string);
+    }
 
     // cloudFileSyncEnabled: boolean
-    CallSetter(
-        env, cls, object, SETTER_METHOD_NAME(cloudFileSyncEnabled), BoolToAniBoolean(appInfo.cloudFileSyncEnabled));
+    CallSetter(env, cls, object, PROPERTYNAME_CLOUDFILESYNCENABLED, BoolToAniBoolean(appInfo.cloudFileSyncEnabled));
 
     // flags?: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(flags), appInfo.flags);
+    CallSetterOptional(env, cls, object, PROPERTYNAME_FLAGS, appInfo.flags);
 
     return object;
 }
@@ -438,80 +578,90 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
     ani_string string = nullptr;
 
     // bundleName: string
-    env->String_NewUTF8(abilityInfo.bundleName.c_str(), abilityInfo.bundleName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(bundleName), string);
+    if (StringToAniStr(env, abilityInfo.bundleName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string);
+    }
 
     // moduleName: string
-    env->String_NewUTF8(abilityInfo.moduleName.c_str(), abilityInfo.moduleName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(moduleName), string);
+    if (StringToAniStr(env, abilityInfo.moduleName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string);
+    }
 
     // name: string
-    env->String_NewUTF8(abilityInfo.name.c_str(), abilityInfo.name.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(name), string);
+    if (StringToAniStr(env, abilityInfo.name, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_NAME, string);
+    }
 
     // label: string
-    env->String_NewUTF8(abilityInfo.label.c_str(), abilityInfo.label.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(label), string);
+    if (StringToAniStr(env, abilityInfo.label, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_LABEL, string);
+    }
 
     // labelId: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(labelId), abilityInfo.labelId);
+    CallSetter(env, cls, object, PROPERTYNAME_LABELID, abilityInfo.labelId);
 
     // description: string
-    env->String_NewUTF8(abilityInfo.description.c_str(), abilityInfo.description.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(description), string);
+    if (StringToAniStr(env, abilityInfo.description, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string);
+    }
 
     // descriptionId: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(descriptionId), abilityInfo.descriptionId);
+    CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, abilityInfo.descriptionId);
 
     // icon: string
-    env->String_NewUTF8(abilityInfo.iconPath.c_str(), abilityInfo.iconPath.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(icon), string);
+    if (StringToAniStr(env, abilityInfo.iconPath, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_ICON, string);
+    }
 
     // iconId: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(iconId), abilityInfo.iconId);
+    CallSetter(env, cls, object, PROPERTYNAME_ICONID, abilityInfo.iconId);
 
     // process: string
-    env->String_NewUTF8(abilityInfo.process.c_str(), abilityInfo.process.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(process), string);
+    if (StringToAniStr(env, abilityInfo.process, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_PROCESS, string);
+    }
 
     // exported: boolean
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(exported), BoolToAniBoolean(abilityInfo.visible));
+    CallSetter(env, cls, object, PROPERTYNAME_EXPORTED, BoolToAniBoolean(abilityInfo.visible));
 
     // type: bundleManager.AbilityType
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(type),
+    CallSetter(env, cls, object, PROPERTYNAME_TYPE,
         EnumUtils::NativeValueToIndex_BundleManager_AbilityType(static_cast<int32_t>(abilityInfo.type)));
 
     // orientation: bundleManager.DisplayOrientation
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(orientation),
+    CallSetter(env, cls, object, PROPERTYNAME_ORIENTATION,
         EnumUtils::NativeValueToIndex_BundleManager_DisplayOrientation(static_cast<int32_t>(abilityInfo.orientation)));
 
     // launchType: bundleManager.LaunchType
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(launchType),
+    CallSetter(env, cls, object, PROPERTYNAME_LAUNCHTYPE,
         EnumUtils::NativeValueToIndex_BundleManager_LaunchType(static_cast<int32_t>(abilityInfo.launchMode)));
 
     // permissions: Array<string>
     ani_ref aPermissions = ConvertAniArrayString(env, abilityInfo.permissions);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(permissions), aPermissions);
+    CallSetter(env, cls, object, PROPERTYNAME_PERMISSIONS, aPermissions);
 
     // readPermission: string
-    env->String_NewUTF8(abilityInfo.readPermission.c_str(), abilityInfo.readPermission.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(readPermission), string);
+    if (StringToAniStr(env, abilityInfo.readPermission, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_READPERMISSION, string);
+    }
 
     // writePermission: string
-    env->String_NewUTF8(abilityInfo.writePermission.c_str(), abilityInfo.writePermission.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(writePermission), string);
+    if (StringToAniStr(env, abilityInfo.writePermission, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_WRITEPERMISSION, string);
+    }
 
     // uri: string
-    env->String_NewUTF8(abilityInfo.uri.c_str(), abilityInfo.uri.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(uri), string);
+    if (StringToAniStr(env, abilityInfo.uri, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_URI, string);
+    }
 
     // deviceTypes: Array<string>
     ani_ref aDeviceTypes = ConvertAniArrayString(env, abilityInfo.deviceTypes);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(deviceTypes), aDeviceTypes);
+    CallSetter(env, cls, object, PROPERTYNAME_DEVICETYPES, aDeviceTypes);
 
     // applicationInfo: ApplicationInfo
     ani_object aObject = ConvertApplicationInfo(env, abilityInfo.applicationInfo);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(applicationInfo), aObject);
+    CallSetter(env, cls, object, PROPERTYNAME_APPLICATIONINFO, aObject);
 
     // metadata: Array<Metadata>
     std::vector<ani_object> aMetadata;
@@ -519,22 +669,22 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
         aMetadata.emplace_back(ConvertMetadata(env, abilityInfo.metadata[i]));
     }
     ani_ref aMetadataRef = ConvertAniArrayByClass(env, CLASSNAME_METADATA, aMetadata);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(metadata), aMetadataRef);
+    CallSetter(env, cls, object, PROPERTYNAME_METADATA, aMetadataRef);
 
     // enabled: boolean
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(enabled), BoolToAniBoolean(abilityInfo.enabled));
+    CallSetter(env, cls, object, PROPERTYNAME_ENABLED, BoolToAniBoolean(abilityInfo.enabled));
 
     // supportWindowModes: Array<bundleManager.SupportWindowMode>
     ani_array_int aSupportWindowModes = ConvertAniArrayEnum(
         env, abilityInfo.windowModes, EnumUtils::NativeValueToIndex_BundleManager_SupportWindowMode);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(supportWindowModes), aSupportWindowModes);
+    CallSetter(env, cls, object, PROPERTYNAME_SUPPORTWINDOWMODES, aSupportWindowModes);
 
     // windowSize: WindowSize
     ani_object aniWindowSizeObj = ConvertWindowSize(env, abilityInfo);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(windowSize), aniWindowSizeObj);
+    CallSetter(env, cls, object, PROPERTYNAME_WINDOWSIZE, aniWindowSizeObj);
 
     // excludeFromDock: boolean
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(excludeFromDock), BoolToAniBoolean(abilityInfo.excludeFromDock));
+    CallSetter(env, cls, object, PROPERTYNAME_EXCLUDEFROMDOCK, BoolToAniBoolean(abilityInfo.excludeFromDock));
 
     // skills: Array<Skill>
     std::vector<ani_object> aSkills;
@@ -542,13 +692,13 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
         aSkills.emplace_back(ConvertAbilitySkill(env, abilityInfo.skills[i], false));
     }
     ani_ref aSkillsRef = ConvertAniArrayByClass(env, CLASSNAME_SKILL, aSkills);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(skills), aSkillsRef);
+    CallSetter(env, cls, object, PROPERTYNAME_SKILLS, aSkillsRef);
 
     // appIndex: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(appIndex), abilityInfo.appIndex);
+    CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, abilityInfo.appIndex);
 
     // orientationId: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(orientationId), abilityInfo.orientationId);
+    CallSetter(env, cls, object, PROPERTYNAME_ORIENTATIONID, abilityInfo.orientationId);
 
     return object;
 }
@@ -563,22 +713,22 @@ ani_object CommonFunAni::ConvertWindowSize(ani_env* env, const AbilityInfo& abil
     }
 
     // maxWindowRatio: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(maxWindowRatio), abilityInfo.maxWindowRatio);
+    CallSetter(env, cls, object, PROPERTYNAME_MAXWINDOWRATIO, abilityInfo.maxWindowRatio);
 
     // minWindowRatio: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(minWindowRatio), abilityInfo.minWindowRatio);
+    CallSetter(env, cls, object, PROPERTYNAME_MINWINDOWRATIO, abilityInfo.minWindowRatio);
 
     // maxWindowWidth: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(maxWindowWidth), abilityInfo.maxWindowWidth);
+    CallSetter(env, cls, object, PROPERTYNAME_MAXWINDOWWIDTH, abilityInfo.maxWindowWidth);
 
     // minWindowWidth: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(minWindowWidth), abilityInfo.minWindowWidth);
+    CallSetter(env, cls, object, PROPERTYNAME_MINWINDOWWIDTH, abilityInfo.minWindowWidth);
 
     // maxWindowHeight: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(maxWindowHeight), abilityInfo.maxWindowHeight);
+    CallSetter(env, cls, object, PROPERTYNAME_MAXWINDOWHEIGHT, abilityInfo.maxWindowHeight);
 
     // minWindowHeight: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(minWindowHeight), abilityInfo.minWindowHeight);
+    CallSetter(env, cls, object, PROPERTYNAME_MINWINDOWHEIGHT, abilityInfo.minWindowHeight);
 
     return object;
 }
@@ -595,44 +745,48 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
     ani_string string = nullptr;
 
     // bundleName: string
-    env->String_NewUTF8(extensionInfo.bundleName.c_str(), extensionInfo.bundleName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(bundleName), string);
+    if (StringToAniStr(env, extensionInfo.bundleName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string);
+    }
 
     // moduleName: string
-    env->String_NewUTF8(extensionInfo.moduleName.c_str(), extensionInfo.moduleName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(moduleName), string);
+    if (StringToAniStr(env, extensionInfo.moduleName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string);
+    }
 
     // name: string
-    env->String_NewUTF8(extensionInfo.name.c_str(), extensionInfo.name.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(name), string);
+    if (StringToAniStr(env, extensionInfo.name, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_NAME, string);
+    }
 
     // labelId: int
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(labelId), extensionInfo.labelId);
+    CallSetter(env, cls, object, PROPERTYNAME_LABELID, extensionInfo.labelId);
 
     // descriptionId: int
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(descriptionId), extensionInfo.descriptionId);
+    CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, extensionInfo.descriptionId);
 
     // iconId: int
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(iconId), extensionInfo.iconId);
+    CallSetter(env, cls, object, PROPERTYNAME_ICONID, extensionInfo.iconId);
 
     // exported: boolean
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(exported), extensionInfo.visible);
+    CallSetter(env, cls, object, PROPERTYNAME_EXPORTED, extensionInfo.visible);
 
     // extensionAbilityType: bundleManager.ExtensionAbilityType
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(extensionAbilityType),
+    CallSetter(env, cls, object, PROPERTYNAME_EXTENSIONABILITYTYPE,
         EnumUtils::NativeValueToIndex_BundleManager_ExtensionAbilityType(static_cast<int32_t>(extensionInfo.type)));
 
     // extensionAbilityTypeName: string
-    env->String_NewUTF8(extensionInfo.extensionTypeName.c_str(), extensionInfo.extensionTypeName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(extensionAbilityTypeName), string);
+    if (StringToAniStr(env, extensionInfo.extensionTypeName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_EXTENSIONABILITYTYPENAME, string);
+    }
 
     // permissions: Array<string>
     ani_ref aPermissions = ConvertAniArrayString(env, extensionInfo.permissions);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(permissions), aPermissions);
+    CallSetter(env, cls, object, PROPERTYNAME_PERMISSIONS, aPermissions);
 
     // applicationInfo: ApplicationInfo
     ani_object aObject = ConvertApplicationInfo(env, extensionInfo.applicationInfo);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(applicationInfo), aObject);
+    CallSetter(env, cls, object, PROPERTYNAME_APPLICATIONINFO, aObject);
 
     // metadata: Array<Metadata>
     std::vector<ani_object> aMetadata;
@@ -640,29 +794,31 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
         aMetadata.emplace_back(ConvertMetadata(env, extensionInfo.metadata[i]));
     }
     ani_ref aMetadataRef = ConvertAniArrayByClass(env, CLASSNAME_METADATA, aMetadata);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(metadata), aMetadataRef);
+    CallSetter(env, cls, object, PROPERTYNAME_METADATA, aMetadataRef);
 
     // enabled: boolean
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(enabled), extensionInfo.enabled);
+    CallSetter(env, cls, object, PROPERTYNAME_ENABLED, extensionInfo.enabled);
 
     // readPermission: string
-    env->String_NewUTF8(extensionInfo.readPermission.c_str(), extensionInfo.readPermission.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(readPermission), string);
+    if (StringToAniStr(env, extensionInfo.readPermission, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_READPERMISSION, string);
+    }
 
     // writePermission: string
-    env->String_NewUTF8(extensionInfo.writePermission.c_str(), extensionInfo.writePermission.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(writePermission), string);
+    if (StringToAniStr(env, extensionInfo.writePermission, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_WRITEPERMISSION, string);
+    }
 
     // skills: Array<Skill>
     std::vector<ani_object> aSkills;
     for (size_t i = 0; i < extensionInfo.skills.size(); ++i) {
-        aSkills.emplace_back(ConvertAbilitySkill(env, extensionInfo.skills[i], false));
+        aSkills.emplace_back(ConvertAbilitySkill(env, extensionInfo.skills[i], true));
     }
     ani_ref aSkillsRef = ConvertAniArrayByClass(env, CLASSNAME_SKILL, aSkills);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(skills), aSkillsRef);
+    CallSetter(env, cls, object, PROPERTYNAME_SKILLS, aSkillsRef);
 
     // appIndex: int
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(appIndex), extensionInfo.appIndex);
+    CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, extensionInfo.appIndex);
 
     return object;
 }
@@ -679,15 +835,17 @@ ani_object CommonFunAni::ConvertResource(ani_env* env, const Resource& resource)
     ani_string string = nullptr;
 
     // bundleName: string
-    env->String_NewUTF8(resource.bundleName.c_str(), resource.bundleName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(bundleName), string);
+    if (StringToAniStr(env, resource.bundleName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string);
+    }
 
     // moduleName: string
-    env->String_NewUTF8(resource.moduleName.c_str(), resource.moduleName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(moduleName), string);
+    if (StringToAniStr(env, resource.moduleName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string);
+    }
 
     // id: int
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(id), resource.id);
+    CallSetter(env, cls, object, PROPERTYNAME_ID, resource.id);
 
     return object;
 }
@@ -704,20 +862,24 @@ ani_object CommonFunAni::ConvertSignatureInfo(ani_env* env, const SignatureInfo&
     ani_string string = nullptr;
 
     // appId: string
-    env->String_NewUTF8(signatureInfo.appId.c_str(), signatureInfo.appId.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(appId), string);
+    if (StringToAniStr(env, signatureInfo.appId, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_APPID, string);
+    }
 
     // fingerprint: string
-    env->String_NewUTF8(signatureInfo.fingerprint.c_str(), signatureInfo.fingerprint.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(fingerprint), string);
+    if (StringToAniStr(env, signatureInfo.fingerprint, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_FINGERPRINT, string);
+    }
 
     // appIdentifier: string
-    env->String_NewUTF8(signatureInfo.appIdentifier.c_str(), signatureInfo.appIdentifier.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(appIdentifier), string);
+    if (StringToAniStr(env, signatureInfo.appIdentifier, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_APPIDENTIFIER, string);
+    }
 
     // certificate: string
-    env->String_NewUTF8(signatureInfo.certificate.c_str(), signatureInfo.certificate.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(certificate), string);
+    if (StringToAniStr(env, signatureInfo.certificate, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_CERTIFICATE, string);
+    }
 
     return object;
 }
@@ -734,12 +896,14 @@ ani_object CommonFunAni::ConvertDataItem(ani_env* env, const std::string& key, c
     ani_string string = nullptr;
 
     // key: string
-    env->String_NewUTF8(key.c_str(), key.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(key), string);
+    if (StringToAniStr(env, key, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_KEY, string);
+    }
 
     // value: string
-    env->String_NewUTF8(value.c_str(), value.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(value), string);
+    if (StringToAniStr(env, value, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_VALUE, string);
+    }
 
     return object;
 }
@@ -756,24 +920,28 @@ ani_object CommonFunAni::ConvertRouterItem(ani_env* env, const RouterItem& route
     ani_string string = nullptr;
 
     // name: string
-    env->String_NewUTF8(routerItem.name.c_str(), routerItem.name.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(name), string);
+    if (StringToAniStr(env, routerItem.name, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_NAME, string);
+    }
 
     // pageSourceFile: string
-    env->String_NewUTF8(routerItem.pageSourceFile.c_str(), routerItem.pageSourceFile.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(pageSourceFile), string);
+    if (StringToAniStr(env, routerItem.pageSourceFile, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_PAGESOURCEFILE, string);
+    }
 
     // buildFunction: string
-    env->String_NewUTF8(routerItem.buildFunction.c_str(), routerItem.buildFunction.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(buildFunction), string);
+    if (StringToAniStr(env, routerItem.buildFunction, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_BUILDFUNCTION, string);
+    }
 
     // customData: string
-    env->String_NewUTF8(routerItem.customData.c_str(), routerItem.customData.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(customData), string);
+    if (StringToAniStr(env, routerItem.customData, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_CUSTOMDATA, string);
+    }
 
     // data: Array<DataItem>
     ani_ref aDataArrayRef = ConvertRouterDataInfos(env, routerItem.data);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(data), aDataArrayRef);
+    CallSetter(env, cls, object, PROPERTYNAME_DATA, aDataArrayRef);
 
     return object;
 }
@@ -791,12 +959,14 @@ ani_ref CommonFunAni::ConvertRouterDataInfos(ani_env* env, const std::map<std::s
             return nullptr;
         }
         // name: key
-        env->String_NewUTF8(item.first.c_str(), item.first.size(), &string);
-        CallSetter(env, cls, object, SETTER_METHOD_NAME(key), string);
+        if (StringToAniStr(env, item.first, string)) {
+            CallSetter(env, cls, object, PROPERTYNAME_KEY, string);
+        }
 
         // name: value
-        env->String_NewUTF8(item.second.c_str(), item.second.size(), &string);
-        CallSetter(env, cls, object, SETTER_METHOD_NAME(value), string);
+        if (StringToAniStr(env, item.second, string)) {
+            CallSetter(env, cls, object, PROPERTYNAME_VALUE, string);
+        }
         aDataItem[index] = object;
         index++;
     }
@@ -817,23 +987,26 @@ ani_object CommonFunAni::ConvertRequestPermission(ani_env* env, const RequestPer
     ani_string string = nullptr;
 
     // name: string
-    env->String_NewUTF8(requestPermission.name.c_str(), requestPermission.name.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(name), string);
+    if (StringToAniStr(env, requestPermission.name, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_NAME, string);
+    }
 
     // moduleName: string
-    env->String_NewUTF8(requestPermission.moduleName.c_str(), requestPermission.moduleName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(moduleName), string);
+    if (StringToAniStr(env, requestPermission.moduleName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string);
+    }
 
     // reason: string
-    env->String_NewUTF8(requestPermission.reason.c_str(), requestPermission.reason.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(reason), string);
+    if (StringToAniStr(env, requestPermission.reason, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_REASON, string);
+    }
 
     // reasonId: int
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(reasonId), requestPermission.reasonId);
+    CallSetter(env, cls, object, PROPERTYNAME_REASONID, requestPermission.reasonId);
 
     // usedScene: UsedScene
     ani_object aObject = ConvertRequestPermissionUsedScene(env, requestPermission.usedScene);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(usedScene), aObject);
+    CallSetter(env, cls, object, PROPERTYNAME_USEDSCENE, aObject);
 
     return object;
 }
@@ -850,12 +1023,13 @@ ani_object CommonFunAni::ConvertRequestPermissionUsedScene(
 
     ani_string string = nullptr;
     // when: string
-    env->String_NewUTF8(requestPermissionUsedScene.when.c_str(), requestPermissionUsedScene.when.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(when), string);
+    if (StringToAniStr(env, requestPermissionUsedScene.when, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_WHEN, string);
+    }
 
     // abilities: Array<string>
     ani_ref aAbilities = ConvertAniArrayString(env, requestPermissionUsedScene.abilities);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(abilities), aAbilities);
+    CallSetter(env, cls, object, PROPERTYNAME_ABILITIES, aAbilities);
 
     return object;
 }
@@ -872,8 +1046,9 @@ ani_object CommonFunAni::ConvertPreloadItem(ani_env* env, const PreloadItem& pre
     ani_string string = nullptr;
 
     // moduleName: string
-    env->String_NewUTF8(preloadItem.moduleName.c_str(), preloadItem.moduleName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(moduleName), string);
+    if (StringToAniStr(env, preloadItem.moduleName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string);
+    }
 
     return object;
 }
@@ -889,15 +1064,17 @@ ani_object CommonFunAni::ConvertDependency(ani_env* env, const Dependency& depen
 
     ani_string string = nullptr;
     // moduleName: string
-    env->String_NewUTF8(dependency.moduleName.c_str(), dependency.moduleName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(moduleName), string);
+    if (StringToAniStr(env, dependency.moduleName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string);
+    }
 
     // bundleName: string
-    env->String_NewUTF8(dependency.bundleName.c_str(), dependency.bundleName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(bundleName), string);
+    if (StringToAniStr(env, dependency.bundleName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string);
+    }
 
     // versionCode: int
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(versionCode), dependency.versionCode);
+    CallSetter(env, cls, object, PROPERTYNAME_VERSIONCODE, dependency.versionCode);
 
     return object;
 }
@@ -914,33 +1091,38 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
     ani_string string = nullptr;
 
     // name: string
-    env->String_NewUTF8(hapModuleInfo.name.c_str(), hapModuleInfo.name.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(name), string);
+    if (StringToAniStr(env, hapModuleInfo.name, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_NAME, string);
+    }
 
     // icon: string
-    env->String_NewUTF8(hapModuleInfo.iconPath.c_str(), hapModuleInfo.iconPath.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(icon), string);
+    if (StringToAniStr(env, hapModuleInfo.iconPath, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_ICON, string);
+    }
 
     // iconId: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(iconId), hapModuleInfo.iconId);
+    CallSetter(env, cls, object, PROPERTYNAME_ICONID, hapModuleInfo.iconId);
 
     // label: string
-    env->String_NewUTF8(hapModuleInfo.label.c_str(), hapModuleInfo.label.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(label), string);
+    if (StringToAniStr(env, hapModuleInfo.label, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_LABEL, string);
+    }
 
     // labelId: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(labelId), hapModuleInfo.labelId);
+    CallSetter(env, cls, object, PROPERTYNAME_LABELID, hapModuleInfo.labelId);
 
     // description: string
-    env->String_NewUTF8(hapModuleInfo.description.c_str(), hapModuleInfo.description.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(description), string);
+    if (StringToAniStr(env, hapModuleInfo.description, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string);
+    }
 
     // descriptionId: number
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(descriptionId), hapModuleInfo.descriptionId);
+    CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, hapModuleInfo.descriptionId);
 
     // mainElementName: string
-    env->String_NewUTF8(hapModuleInfo.mainElementName.c_str(), hapModuleInfo.mainElementName.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(mainElementName), string);
+    if (StringToAniStr(env, hapModuleInfo.mainElementName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_MAINELEMENTNAME, string);
+    }
 
     // abilitiesInfo: Array<AbilityInfo>
     std::vector<ani_object> aAbilityInfo;
@@ -948,7 +1130,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
         aAbilityInfo.emplace_back(ConvertAbilityInfo(env, hapModuleInfo.abilityInfos[i]));
     }
     ani_ref aAbilityInfoRef = ConvertAniArrayByClass(env, CLASSNAME_ABILITYINFO, aAbilityInfo);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(abilitiesInfo), aAbilityInfoRef);
+    CallSetter(env, cls, object, PROPERTYNAME_ABILITIESINFO, aAbilityInfoRef);
 
     // extensionAbilitiesInfo: Array<ExtensionAbilityInfo>
     std::vector<ani_object> aExtensionAbilityInfo;
@@ -957,7 +1139,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
     }
     ani_ref aExtensionAbilityInfoRef =
         ConvertAniArrayByClass(env, CLASSNAME_EXTENSIONABILITYINFO, aExtensionAbilityInfo);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(extensionAbilitiesInfo), aExtensionAbilityInfoRef);
+    CallSetter(env, cls, object, PROPERTYNAME_EXTENSIONABILITIESINFO, aExtensionAbilityInfoRef);
 
     // metadata: Array<Metadata>
     std::vector<ani_object> aMetadata;
@@ -965,22 +1147,22 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
         aMetadata.emplace_back(ConvertMetadata(env, hapModuleInfo.metadata[i]));
     }
     ani_ref aMetadataRef = ConvertAniArrayByClass(env, CLASSNAME_METADATA, aMetadata);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(metadata), aMetadataRef);
+    CallSetter(env, cls, object, PROPERTYNAME_METADATA, aMetadataRef);
 
     // deviceTypes: Array<string>
     ani_ref aDeviceTypes = ConvertAniArrayString(env, hapModuleInfo.deviceTypes);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(deviceTypes), aDeviceTypes);
+    CallSetter(env, cls, object, PROPERTYNAME_DEVICETYPES, aDeviceTypes);
 
     // installationFree: boolean
-    CallSetter(
-        env, cls, object, SETTER_METHOD_NAME(installationFree), BoolToAniBoolean(hapModuleInfo.installationFree));
+    CallSetter(env, cls, object, PROPERTYNAME_INSTALLATIONFREE, BoolToAniBoolean(hapModuleInfo.installationFree));
 
     // hashValue: string
-    env->String_NewUTF8(hapModuleInfo.hashValue.c_str(), hapModuleInfo.hashValue.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(hashValue), string);
+    if (StringToAniStr(env, hapModuleInfo.hashValue, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_HASHVALUE, string);
+    }
 
     // type: bundleManager.ModuleType
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(type),
+    CallSetter(env, cls, object, PROPERTYNAME_TYPE,
         EnumUtils::NativeValueToIndex_BundleManager_ModuleType(static_cast<int32_t>(hapModuleInfo.moduleType)));
 
     // dependencies: Array<Dependency>
@@ -989,7 +1171,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
         aDependencies.emplace_back(ConvertDependency(env, hapModuleInfo.dependencies[i]));
     }
     ani_ref aDependenciesRef = ConvertAniArrayByClass(env, CLASSNAME_DEPENDENCY, aDependencies);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(dependencies), aDependenciesRef);
+    CallSetter(env, cls, object, PROPERTYNAME_DEPENDENCIES, aDependenciesRef);
 
     // preloads: Array<PreloadItem>
     std::vector<ani_object> aPreloads;
@@ -997,11 +1179,12 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
         aPreloads.emplace_back(ConvertPreloadItem(env, hapModuleInfo.preloads[i]));
     }
     ani_ref aPreloadsRef = ConvertAniArrayByClass(env, CLASSNAME_PRELOADITEM, aPreloads);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(preloads), aPreloadsRef);
+    CallSetter(env, cls, object, PROPERTYNAME_PRELOADS, aPreloadsRef);
 
     // fileContextMenuConfig: string
-    env->String_NewUTF8(hapModuleInfo.fileContextMenu.c_str(), hapModuleInfo.fileContextMenu.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(fileContextMenuConfig), string);
+    if (StringToAniStr(env, hapModuleInfo.fileContextMenu, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_FILECONTEXTMENUCONFIG, string);
+    }
 
     // routerMap: Array<RouterItem>
     std::vector<ani_object> aRrouterMap;
@@ -1009,11 +1192,12 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
         aRrouterMap.emplace_back(ConvertRouterItem(env, hapModuleInfo.routerArray[i]));
     }
     ani_ref aRouterMapRef = ConvertAniArrayByClass(env, CLASSNAME_ROUTERITEM, aRrouterMap);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(routerMap), aRouterMapRef);
+    CallSetter(env, cls, object, PROPERTYNAME_ROUTERMAP, aRouterMapRef);
 
     // nativeLibraryPath: string
-    env->String_NewUTF8(hapModuleInfo.nativeLibraryPath.c_str(), hapModuleInfo.nativeLibraryPath.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(nativeLibraryPath), string);
+    if (StringToAniStr(env, hapModuleInfo.nativeLibraryPath, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_NATIVELIBRARYPATH, string);
+    }
 
     // codePath: string
     std::string codePath = hapModuleInfo.hapPath;
@@ -1025,8 +1209,9 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
             codePath.append(hapModuleInfo.hapPath.substr(pos + 1));
         }
     }
-    env->String_NewUTF8(codePath.c_str(), codePath.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(codePath), string);
+    if (StringToAniStr(env, codePath, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_CODEPATH, string);
+    }
 
     return object;
 }
@@ -1043,28 +1228,34 @@ ani_object CommonFunAni::ConvertElementName(ani_env* env, const ElementName& ele
     ani_string string = nullptr;
 
     // deviceId?: string
-    env->String_NewUTF8(elementName.GetDeviceID().c_str(), elementName.GetDeviceID().size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(deviceId), string);
+    if (StringToAniStr(env, elementName.GetDeviceID(), string)) {
+        CallSetterOptional(env, cls, object, PROPERTYNAME_DEVICEID, string);
+    }
 
     // bundleName: string
-    env->String_NewUTF8(elementName.GetBundleName().c_str(), elementName.GetBundleName().size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(bundleName), string);
+    if (StringToAniStr(env, elementName.GetBundleName(), string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string);
+    }
 
     // moduleName?: string
-    env->String_NewUTF8(elementName.GetModuleName().c_str(), elementName.GetModuleName().size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(moduleName), string);
+    if (StringToAniStr(env, elementName.GetModuleName(), string)) {
+        CallSetterOptional(env, cls, object, PROPERTYNAME_MODULENAME, string);
+    }
 
     // abilityName: string
-    env->String_NewUTF8(elementName.GetAbilityName().c_str(), elementName.GetAbilityName().size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(abilityName), string);
+    if (StringToAniStr(env, elementName.GetAbilityName(), string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_ABILITYNAME, string);
+    }
 
     // uri?: string
-    env->String_NewUTF8(elementName.GetURI().c_str(), elementName.GetURI().size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(uri), string);
+    if (StringToAniStr(env, elementName.GetURI(), string)) {
+        CallSetterOptional(env, cls, object, PROPERTYNAME_URI, string);
+    }
 
     // shortName?: string
-    env->String_NewUTF8("", 0, &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(shortName), string);
+    if (StringToAniStr(env, "", string)) {
+        CallSetterOptional(env, cls, object, PROPERTYNAME_SHORTNAME, string);
+    }
 
     return object;
 }
@@ -1081,16 +1272,19 @@ ani_object CommonFunAni::ConvertCustomizeData(ani_env* env, const CustomizeData&
     ani_string string = nullptr;
 
     // name: string
-    env->String_NewUTF8(customizeData.name.c_str(), customizeData.name.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(name), string);
+    if (StringToAniStr(env, customizeData.name, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_NAME, string);
+    }
 
     // value: string
-    env->String_NewUTF8(customizeData.value.c_str(), customizeData.value.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(value), string);
+    if (StringToAniStr(env, customizeData.value, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_VALUE, string);
+    }
 
     // extra: string
-    env->String_NewUTF8(customizeData.extra.c_str(), customizeData.extra.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(extra), string);
+    if (StringToAniStr(env, customizeData.extra, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_EXTRA, string);
+    }
 
     return object;
 }
@@ -1107,43 +1301,51 @@ ani_object CommonFunAni::ConvertAbilitySkillUri(ani_env* env, const SkillUri& sk
     ani_string string = nullptr;
 
     // scheme: string
-    env->String_NewUTF8(skillUri.scheme.c_str(), skillUri.scheme.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(scheme), string);
+    if (StringToAniStr(env, skillUri.scheme, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_SCHEME, string);
+    }
 
     // host: string
-    env->String_NewUTF8(skillUri.host.c_str(), skillUri.host.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(host), string);
+    if (StringToAniStr(env, skillUri.host, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_HOST, string);
+    }
 
     // port: int
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(port), std::stoi(skillUri.port));
+    CallSetter(env, cls, object, PROPERTYNAME_PORT, std::stoi(skillUri.port));
 
     // path: string
-    env->String_NewUTF8(skillUri.port.c_str(), skillUri.port.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(port), string);
+    if (StringToAniStr(env, skillUri.path, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_PATH, string);
+    }
 
     // pathStartWith: string
-    env->String_NewUTF8(skillUri.pathStartWith.c_str(), skillUri.pathStartWith.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(pathStartWith), string);
+    if (StringToAniStr(env, skillUri.pathStartWith, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_PATHSTARTWITH, string);
+    }
 
     // pathRegex: string
-    env->String_NewUTF8(skillUri.pathRegex.c_str(), skillUri.pathRegex.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(pathRegex), string);
+    if (StringToAniStr(env, skillUri.pathRegex, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_PATHREGEX, string);
+    }
 
     // type: string
-    env->String_NewUTF8(skillUri.type.c_str(), skillUri.type.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(type), string);
+    if (StringToAniStr(env, skillUri.type, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_TYPE, string);
+    }
 
     // utd: string
-    env->String_NewUTF8(skillUri.utd.c_str(), skillUri.utd.size(), &string);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(utd), string);
+    if (StringToAniStr(env, skillUri.utd, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_UTD, string);
+    }
 
     // maxFileSupported: int
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(maxFileSupported), skillUri.maxFileSupported);
+    CallSetter(env, cls, object, PROPERTYNAME_MAXFILESUPPORTED, skillUri.maxFileSupported);
 
     if (!isExtension) {
         // linkFeature: string
-        env->String_NewUTF8(skillUri.linkFeature.c_str(), skillUri.linkFeature.size(), &string);
-        CallSetter(env, cls, object, SETTER_METHOD_NAME(linkFeature), string);
+        if (StringToAniStr(env, skillUri.linkFeature, string)) {
+            CallSetter(env, cls, object, PROPERTYNAME_LINKFEATURE, string);
+        }
     }
 
     return object;
@@ -1151,8 +1353,6 @@ ani_object CommonFunAni::ConvertAbilitySkillUri(ani_env* env, const SkillUri& sk
 
 ani_object CommonFunAni::ConvertAbilitySkill(ani_env* env, const Skill& skill, bool isExtension)
 {
-    std::cout << "CommonFunAni::CLASSNAME_SKILL entry" << std::endl;
-
     ani_class cls = CreateClassByName(env, CLASSNAME_SKILL);
     ani_object object = CreateNewObjectByClass(env, cls);
     if (cls == nullptr || object == nullptr) {
@@ -1163,12 +1363,12 @@ ani_object CommonFunAni::ConvertAbilitySkill(ani_env* env, const Skill& skill, b
     // actions: Array<string>
     ani_ref aActions = nullptr;
     aActions = ConvertAniArrayString(env, skill.actions);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(actions), aActions);
+    CallSetter(env, cls, object, PROPERTYNAME_ACTIONS, aActions);
 
     // entities: Array<string>
     ani_ref aEntities = nullptr;
     aEntities = ConvertAniArrayString(env, skill.entities);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(entities), aEntities);
+    CallSetter(env, cls, object, PROPERTYNAME_ENTITIES, aEntities);
 
     // uris: Array<SkillUri>
     std::vector<ani_object> aArray;
@@ -1176,15 +1376,258 @@ ani_object CommonFunAni::ConvertAbilitySkill(ani_env* env, const Skill& skill, b
         aArray.emplace_back(ConvertAbilitySkillUri(env, skill.uris[i], isExtension));
     }
     ani_ref aSkillUri = ConvertAniArrayByClass(env, CLASSNAME_SKILLURI, aArray);
-    CallSetter(env, cls, object, SETTER_METHOD_NAME(uris), aSkillUri);
+    CallSetter(env, cls, object, PROPERTYNAME_URIS, aSkillUri);
 
     if (!isExtension) {
         // domainVerify: boolean
-        CallSetter(env, cls, object, SETTER_METHOD_NAME(domainVerify), BoolToAniBoolean(skill.domainVerify));
+        CallSetter(env, cls, object, PROPERTYNAME_DOMAINVERIFY, BoolToAniBoolean(skill.domainVerify));
     }
 
-    std::cout << "CommonFunAni::CLASSNAME_SKILL exit" << std::endl;
     return object;
+}
+
+ani_object CommonFunAni::ConvertShortcutInfo(ani_env* env, const ShortcutInfo& shortcutInfo)
+{
+    ani_class cls = CreateClassByName(env, CLASSNAME_SHORTCUTINFO);
+    ani_object object = CreateNewObjectByClass(env, cls);
+    if (cls == nullptr || object == nullptr) {
+        APP_LOGE("ConvertShortcutInfo failed.");
+        return nullptr;
+    }
+
+    ani_string string = nullptr;
+
+    // id: string;
+    if (StringToAniStr(env, shortcutInfo.id, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_ID, string);
+    }
+
+    // bundleName: string;
+    if (StringToAniStr(env, shortcutInfo.bundleName, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string);
+    }
+
+    // moduleName?: string;
+    if (StringToAniStr(env, shortcutInfo.moduleName, string)) {
+        CallSetterOptional(env, cls, object, PROPERTYNAME_MODULENAME, string);
+    }
+
+    // hostAbility?: string;
+    if (StringToAniStr(env, shortcutInfo.hostAbility, string)) {
+        CallSetterOptional(env, cls, object, PROPERTYNAME_HOSTABILITY, string);
+    }
+
+    // icon?: string;
+    if (StringToAniStr(env, shortcutInfo.icon, string)) {
+        CallSetterOptional(env, cls, object, PROPERTYNAME_ICON, string);
+    }
+
+    // iconId?: int;
+    CallSetterOptional(env, cls, object, PROPERTYNAME_ICONID, shortcutInfo.iconId);
+
+    // label?: string;
+    if (StringToAniStr(env, shortcutInfo.label, string)) {
+        CallSetterOptional(env, cls, object, PROPERTYNAME_LABEL, string);
+    }
+
+    // labelId?: int;
+    CallSetterOptional(env, cls, object, PROPERTYNAME_LABELID, shortcutInfo.labelId);
+
+    // wants?: Array<ShortcutWant>;
+    std::vector<ani_object> aArray;
+    for (size_t i = 0; i < shortcutInfo.intents.size(); ++i) {
+        aArray.emplace_back(ConvertShortcutIntent(env, shortcutInfo.intents[i]));
+    }
+    ani_ref aShortcutWant = ConvertAniArrayByClass(env, CLASSNAME_SHORTCUTWANT, aArray);
+    CallSetterOptional(env, cls, object, PROPERTYNAME_WANTS, aShortcutWant);
+
+    // appIndex: int;
+    CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, shortcutInfo.appIndex);
+
+    // sourceType: int;
+    CallSetter(env, cls, object, PROPERTYNAME_SOURCETYPE, shortcutInfo.sourceType);
+
+    return object;
+}
+
+ani_ref CommonFunAni::ConvertShortcutInfos(ani_env* env, const std::vector<ShortcutInfo>& shortcutInfos)
+{
+    std::vector<ani_object> aArray;
+    for (const auto& shortcutInfo : shortcutInfos) {
+        aArray.emplace_back(ConvertShortcutInfo(env, shortcutInfo));
+    }
+    ani_ref aShortcutInfoRef = ConvertAniArrayByClass(env, CLASSNAME_SHORTCUTINFO, aArray);
+
+    return aShortcutInfoRef;
+}
+
+ani_object CommonFunAni::ConvertShortcutIntent(ani_env* env, const ShortcutIntent& shortcutIntent)
+{
+    ani_class cls = CreateClassByName(env, CLASSNAME_SHORTCUTWANT);
+    ani_object object = CreateNewObjectByClass(env, cls);
+    if (cls == nullptr || object == nullptr) {
+        APP_LOGE("ConvertShortcutIntent failed.");
+        return nullptr;
+    }
+
+    ani_string string = nullptr;
+
+    // targetBundle: string;
+    if (StringToAniStr(env, shortcutIntent.targetBundle, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_TARGETBUNDLE, string);
+    }
+
+    // targetModule?: string;
+    if (StringToAniStr(env, shortcutIntent.targetModule, string)) {
+        CallSetterOptional(env, cls, object, PROPERTYNAME_TARGETMODULE, string);
+    }
+
+    // targetAbility: string;
+    if (StringToAniStr(env, shortcutIntent.targetClass, string)) {
+        CallSetter(env, cls, object, PROPERTYNAME_TARGETABILITY, string);
+    }
+
+    // parameters?: Array<ParameterItem>;
+    ani_ref aParameters =
+        ConvertShortcutIntentParameters(env, shortcutIntent.parameters, CLASSNAME_SHORTCUT_PARAMETERITEM);
+    CallSetterOptional(env, cls, object, PROPERTYNAME_PARAMETERS, aParameters);
+
+    return object;
+}
+
+ani_ref CommonFunAni::ConvertShortcutIntentParameters(
+    ani_env* env, const std::map<std::string, std::string>& data, const std::string& className)
+{
+    std::vector<ani_object> aArray;
+    ani_class cls = CreateClassByName(env, className);
+    ani_string string = nullptr;
+
+    for (const auto& item : data) {
+        ani_object object = CreateNewObjectByClass(env, cls);
+        if (cls == nullptr || object == nullptr) {
+            APP_LOGE("ConvertShortcutIntentParameters failed.");
+            return nullptr;
+        }
+
+        // key: string;
+        if (StringToAniStr(env, item.first, string)) {
+            CallSetter(env, cls, object, PROPERTYNAME_KEY, string);
+        }
+
+        // value: string;
+        if (StringToAniStr(env, item.second, string)) {
+            CallSetter(env, cls, object, PROPERTYNAME_VALUE, string);
+        }
+        aArray.emplace_back(object);
+    }
+    ani_ref parametersRef = ConvertAniArrayByClass(env, className, aArray);
+
+    return parametersRef;
+}
+
+bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutInfo& shortcutInfo)
+{
+    ani_string string = nullptr;
+    ani_int intValue = 0;
+
+    // id: string
+    CallGetter(env, object, PROPERTYNAME_ID, &string);
+    shortcutInfo.id = AniStrToString(env, string);
+
+    // bundleName: string
+    CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string);
+    shortcutInfo.bundleName = AniStrToString(env, string);
+
+    // moduleName?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_MODULENAME, &string)) {
+        shortcutInfo.moduleName = AniStrToString(env, string);
+    }
+
+    // hostAbility?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_HOSTABILITY, &string)) {
+        shortcutInfo.hostAbility = AniStrToString(env, string);
+    }
+
+    // icon?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_ICON, &string)) {
+        shortcutInfo.icon = AniStrToString(env, string);
+    }
+
+    // iconId?: int
+    if (CallGetterOptional(env, object, PROPERTYNAME_ICONID, &intValue)) {
+        shortcutInfo.iconId = intValue;
+    }
+
+    // label?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_LABEL, &string)) {
+        shortcutInfo.label = AniStrToString(env, string);
+    }
+
+    // labelId?: int
+    if (CallGetterOptional(env, object, PROPERTYNAME_LABELID, &intValue)) {
+        shortcutInfo.labelId = intValue;
+    }
+
+    // wants?: Array<ShortcutWant>
+    ani_array array = nullptr;
+    if (CallGetterOptional(env, object, PROPERTYNAME_WANTS, &array)) {
+        ParseAniArray(env, array, shortcutInfo.intents, ParseShortcutIntent);
+    }
+
+    // appIndex: int
+    CallGetter(env, object, PROPERTYNAME_APPINDEX, &intValue);
+    shortcutInfo.appIndex = intValue;
+
+    // sourceType: int
+    CallGetter(env, object, PROPERTYNAME_SOURCETYPE, &intValue);
+    shortcutInfo.sourceType = intValue;
+
+    return true;
+}
+
+bool CommonFunAni::ParseShortcutIntent(ani_env* env, ani_object object, ShortcutIntent& shortcutIntent)
+{
+    ani_string string = nullptr;
+
+    // targetBundle: string
+    CallGetter(env, object, PROPERTYNAME_TARGETBUNDLE, &string);
+    shortcutIntent.targetBundle = AniStrToString(env, string);
+
+    // targetModule?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_TARGETMODULE, &string)) {
+        shortcutIntent.targetModule = AniStrToString(env, string);
+    }
+
+    // targetAbility: string
+    CallGetter(env, object, PROPERTYNAME_TARGETABILITY, &string);
+    shortcutIntent.targetClass = AniStrToString(env, string);
+
+    // parameters?: Array<ParameterItem>
+    ani_array array = nullptr;
+    if (CallGetterOptional(env, object, PROPERTYNAME_PARAMETERS, &array)) {
+        std::vector<std::pair<std::string, std::string>> parameters;
+        ParseAniArray(env, array, parameters, ParseKeyValuePair);
+        for (const auto& parameter : parameters) {
+            shortcutIntent.parameters[parameter.first] = parameter.second;
+        }
+    }
+
+    return true;
+}
+
+bool CommonFunAni::ParseKeyValuePair(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
+{
+    ani_string string = nullptr;
+
+    // key: string
+    CallGetter(env, object, PROPERTYNAME_KEY, &string);
+    pair.first = AniStrToString(env, string);
+
+    // value: string
+    CallGetter(env, object, PROPERTYNAME_VALUE, &string);
+    pair.second = AniStrToString(env, string);
+
+    return true;
 }
 } // namespace AppExecFwk
 } // namespace OHOS
