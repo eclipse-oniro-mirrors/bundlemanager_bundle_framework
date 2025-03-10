@@ -14,6 +14,7 @@
  */
 #include <atomic>
 #include <cstdlib>
+#include "bundle_service_constants.h"
 #include "rdb_data_manager.h"
 
 #include "app_log_wrapper.h"
@@ -68,6 +69,7 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
     rdbStoreConfig.SetAllowRebuild(true);
+    rdbStoreConfig.SetBundleName(ServiceConstants::CALLER_NAME_BMS);
     // for check db exist or not
     bool isNeedRebuildDb = false;
     std::string rdbFilePath = bmsRdbConfig_.dbPath + std::string("/") + std::string(BMS_BACK_UP_RDB_NAME);
@@ -83,10 +85,10 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     rdbStore_ = NativeRdb::RdbHelper::GetRdbStore(
         rdbStoreConfig,
         bmsRdbConfig_.version,
-        bmsRdbOpenCallback,
-        errCode);
+        bmsRdbOpenCallback, errCode);
     if (rdbStore_ == nullptr) {
         APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
+        SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::OPEN), errCode);
         return nullptr;
     }
     CheckSystemSizeAndHisysEvent(bmsRdbConfig_.dbPath, bmsRdbConfig_.dbName);
@@ -103,6 +105,7 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         if (restoreRet != NativeRdb::E_OK) {
             APP_LOGE("rdb restore failed ret:%{public}d", restoreRet);
         }
+        SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), rebuildCode);
     }
 
     if (rdbStore_ != nullptr) {
@@ -133,6 +136,11 @@ bool RdbDataManager::CheckIsSatisfyTime()
     }
     g_lastReportTime = now;
     return true;
+}
+
+void RdbDataManager::SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode)
+{
+    EventReport::SendDbErrorEvent(dbName, operationType, errorCode);
 }
 
 void RdbDataManager::BackupRdb()

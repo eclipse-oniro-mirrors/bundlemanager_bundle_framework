@@ -60,9 +60,13 @@ private:
     static void InnerSendFreeInstallEvent(const EventInfo& eventInfo);
     static void InnerSendBmsDiskSpaceEvent(const EventInfo& eventInfo);
     static void InnerSendAppControlRule(const EventInfo& eventInfo);
+    static void InnerSendDbErrorEvent(const EventInfo& eventInfo);
 
     template<typename... Types>
     static void InnerEventWrite(const std::string &eventName,
+        HiSysEventType type, Types... keyValues);
+    template<typename... Types>
+    static void InnerSystemEventWrite(const std::string &eventName,
         HiSysEventType type, Types... keyValues);
 
     static std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)> bmsSysEventMap_;

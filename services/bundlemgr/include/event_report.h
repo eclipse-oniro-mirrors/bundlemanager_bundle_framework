@@ -50,7 +50,8 @@ enum class BMSEventType : uint8_t {
     QUERY_OF_CONTINUE_TYPE,
     FREE_INSTALL_EVENT,
     BMS_DISK_SPACE,
-    APP_CONTROL_RULE
+    APP_CONTROL_RULE,
+    DB_ERROR
 };
 
 enum class BundleEventType : uint8_t {
@@ -100,6 +101,16 @@ enum class OPERATION_TYPE_ENUM : uint8_t {
     OPERATION_TYPE_REMOVE_RULE = 2,
 };
 
+enum class DB_OPERATION_TYPE : uint8_t {
+    CREATE = 1,
+    OPEN = 2,
+    INSERT = 3,
+    UPDATE = 4,
+    QUERY = 5,
+    DELETE = 6,
+    REBUILD = 7,
+};
+
 struct EventInfo {
     bool hideDesktopIcon = false;
 
@@ -143,6 +154,8 @@ struct EventInfo {
     int64_t costTimeSeconds = 0;
     int64_t timeStamp = 0;
     int64_t freeSize = 0;
+    int32_t errorCode = 0;
+    int32_t rebuildType = 0;
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;
@@ -150,6 +163,7 @@ struct EventInfo {
     std::string applicationVersion;
     std::string callingAppId;
     std::string callingBundleName;
+    std::string dbName;
     // only for install
     std::string fingerprint;
     std::string appDistributionType;
@@ -211,6 +225,9 @@ struct EventInfo {
         callingName.clear();
         actionType = 0;
         rule.clear();
+        dbName.clear();
+        errorCode = 0;
+        rebuildType = 0;
     }
 };
 
@@ -315,6 +332,15 @@ public:
      * @param eventInfo report info.
      */
     static void SendAppControlRuleEvent(const EventInfo& eventInfo);
+
+    /**
+     * @brief Send system event when DB occur error.
+     * @param dbName DB name.
+     * @param operationType DB operation type.
+     * @param errorCode DB error code.
+     * @param rebuildType DB rebuild type.
+     */
+    static void SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

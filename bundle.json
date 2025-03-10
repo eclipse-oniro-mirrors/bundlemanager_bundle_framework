@@ -31,7 +31,8 @@
             "bundle_framework_form_dimension_3_3"
         ],
         "hisysevent_config": [
-            "//foundation/bundlemanager/bundle_framework/hisysevent.yaml"
+            "//foundation/bundlemanager/bundle_framework/hisysevent.yaml",
+            "//foundation/bundlemanager/bundle_framework/bundle_hisysevent.yaml"
         ],
         "adapted_system_type": [
             "standard"
