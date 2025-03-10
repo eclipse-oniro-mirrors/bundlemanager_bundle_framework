@@ -350,6 +350,13 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         result = ERR_OK;
     }
 
+    if (!installParam.isKeepData && (result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE ||
+        result == ERR_APPEXECFWK_USER_NOT_INSTALL_HAP) &&
+        DeleteUninstallBundleInfoFromDb(bundleName)) {
+        LOG_I(BMS_TAG_INSTALLER, "del uninstalled bundle %{public}s dir and info", bundleName.c_str());
+        return ERR_OK;
+    }
+
     if (result == ERR_OK) {
         UtdHandler::UninstallUtdAsync(bundleName, userId_);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
@@ -3209,6 +3216,31 @@ void BaseBundleInstaller::DeleteUninstallBundleInfo(const std::string &bundleNam
     if (!dataMgr_->DeleteUninstallBundleInfo(bundleName, userId_)) {
         LOG_E(BMS_TAG_INSTALLER, "delete failed");
     }
+}
+
+bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bundleName)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "init failed");
+        return false;
+    }
+    UninstallBundleInfo uninstallBundleInfo;
+    if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        return false;
+    }
+    if (uninstallBundleInfo.userInfos.find(std::to_string(userId_)) == uninstallBundleInfo.userInfos.end()) {
+        LOG_I(BMS_TAG_INSTALLER, "%{public}s has been uninstalled on user %{public}d without keepData",
+            bundleName.c_str(), userId_);
+        return false;
+    }
+    ErrCode result = InstalldClient::GetInstance()->RemoveBundleDataDir(bundleName, userId_,
+        uninstallBundleInfo.bundleType == BundleType::ATOMIC_SERVICE, true);
+    LOG_I(BMS_TAG_INSTALLER, "remove dirs res %{public}d", result);
+    if (!uninstallBundleInfo.extensionDirs.empty()) {
+        result = InstalldClient::GetInstance()->RemoveExtensionDir(userId_, uninstallBundleInfo.extensionDirs);
+        LOG_I(BMS_TAG_INSTALLER, "remove extension dirs res %{public}d", result);
+    }
+    return dataMgr_->DeleteUninstallBundleInfo(bundleName, userId_);
 }
 
 void BaseBundleInstaller::SetFirstInstallTime(const std::string &bundleName, const int64_t &time,

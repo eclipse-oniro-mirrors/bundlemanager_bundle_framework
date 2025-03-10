@@ -801,6 +801,7 @@ private:
     void CheckPreBundle(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const InstallParam &installParam, bool isRecover);
     ErrCode CheckShellCanInstallPreApp(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    bool DeleteUninstallBundleInfoFromDb(const std::string &bundleName);
 
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
         Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
