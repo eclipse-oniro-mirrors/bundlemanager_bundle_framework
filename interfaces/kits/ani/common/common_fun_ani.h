@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "bundle_mgr_interface.h"
+#include "bundle_resource_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -79,8 +80,9 @@ public:
     static ani_object ConvertAbilitySkill(ani_env* env, const Skill& skill, bool isExtension);
 
     static ani_object ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo);
-
-private:
+    static std::string AniStrToString(ani_env* env, ani_ref aniStr);
+    static ani_object ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo);
+    
     template<typename valueType>
     static inline void CallSetter(
         ani_env* env, ani_class cls, ani_object object, const char* setterName, valueType value)

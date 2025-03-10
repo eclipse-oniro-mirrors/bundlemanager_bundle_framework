@@ -42,12 +42,41 @@ constexpr const char* CLASSNAME_ELEMENTNAME = "LElementName/ElementNameInner;";
 constexpr const char* CLASSNAME_CUSTOMIZEDATA = "LcustomizeData/CustomizeDataInner;";
 constexpr const char* CLASSNAME_SKILL = "LSkill/SkillInner;";
 constexpr const char* CLASSNAME_SKILLURI = "LSkill/SkillUriInner;";
+constexpr const char* CLASSNAME_BUNDLERESINFO = "LBundleResourceInfo/BundleResourceInfoInner;";
 
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
 constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
 
 #define SETTER_METHOD_NAME(property) "<set>" #property
 } // namespace
+
+
+std::string CommonFunAni::AniStrToString(ani_env* env, ani_ref aniStr)
+{
+    ani_string str = reinterpret_cast<ani_string>(aniStr);
+    if (str == nullptr) {
+        APP_LOGE("ani ParseString failed");
+        return "";
+    }
+
+    ani_status status = ANI_ERROR;
+    ani_size substrSize = -1;
+    if ((status = env->String_GetUTF8Size(str, &substrSize)) != ANI_OK) {
+        APP_LOGE("String_GetUTF8Size failed");
+        return "";
+    }
+
+    std::vector<char> buffer(substrSize + 1);
+    ani_size nameSize;
+    if ((status = env->String_GetUTF8SubString(str, 0U, substrSize, buffer.data(), buffer.size(), &nameSize)) !=
+        ANI_OK) {
+        APP_LOGE("String_GetUTF8SubString failed");
+        return "";
+    }
+
+    return std::string(buffer.data(), nameSize);
+}
+
 ani_class CommonFunAni::CreateClassByName(ani_env* env, const std::string& className)
 {
     ani_class cls = nullptr;
@@ -1184,6 +1213,38 @@ ani_object CommonFunAni::ConvertAbilitySkill(ani_env* env, const Skill& skill, b
     }
 
     std::cout << "CommonFunAni::CLASSNAME_SKILL exit" << std::endl;
+    return object;
+}
+
+ani_object CommonFunAni::ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo)
+{
+    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLERESINFO);
+    ani_object object = CreateNewObjectByClass(env, cls);
+    if (cls == nullptr || object == nullptr) {
+        APP_LOGE("ConvertBundleReSourceInfo failed.");
+        return nullptr;
+    }
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    env->String_NewUTF8(bundleResInfo.bundleName.c_str(), bundleResInfo.bundleName.size(), &string);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(bundleName), string);
+
+    // icon: string
+    env->String_NewUTF8(bundleResInfo.icon.c_str(), bundleResInfo.icon.size(), &string);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(icon), string);
+
+    // label: string
+    env->String_NewUTF8(bundleResInfo.label.c_str(), bundleResInfo.label.size(), &string);
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(label), string);
+
+    // drawableDecriptor: drawableDecriptor
+
+    // appIndex: number
+    CallSetter(env, cls, object, SETTER_METHOD_NAME(appIndex), bundleResInfo.appIndex);
+
+    APP_LOGD("CommonFunAni::ConvertBundleReSourceInfo exit");
     return object;
 }
 } // namespace AppExecFwk

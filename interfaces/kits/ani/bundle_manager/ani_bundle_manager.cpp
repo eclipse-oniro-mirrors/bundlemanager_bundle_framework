@@ -44,32 +44,6 @@ static std::unordered_map<Query, ani_ref, QueryHash> g_cache;
 constexpr int32_t INVALID_USER_ID = -500;
 }
 
-std::string AniStrToString(ani_env* env, ani_ref aniStr)
-{
-    ani_string str = reinterpret_cast<ani_string>(aniStr);
-    if (str == nullptr) {
-        APP_LOGE("ani ParseString failed");
-        return "";
-    }
-
-    ani_status status = ANI_ERROR;
-    ani_size substrSize = -1;
-    if ((status = env->String_GetUTF8Size(str, &substrSize)) != ANI_OK) {
-        APP_LOGE("String_GetUTF8Size failed");
-        return "";
-    }
-
-    std::vector<char> buffer(substrSize + 1);
-    ani_size nameSize;
-    if ((status = env->String_GetUTF8SubString(str, 0U, substrSize, buffer.data(), buffer.size(), &nameSize)) !=
-        ANI_OK) {
-        APP_LOGE("String_GetUTF8SubString failed");
-        return "";
-    }
-
-    return std::string(buffer.data(), nameSize);
-}
-
 static void CheckToCache(
     ani_env* env, const int32_t uid, const int32_t callingUid, const Query& query, ani_object aniObject)
 {
@@ -88,7 +62,7 @@ static void CheckToCache(
 static ani_boolean isApplicationEnabledSync([[maybe_unused]] ani_env* env, ani_string aniBundleName)
 {
     bool isEnable = false;
-    std::string bundleName = AniStrToString(env, aniBundleName);
+    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
         return isEnable;
@@ -146,7 +120,7 @@ static ani_object getBundleInfoSync([[maybe_unused]] ani_env *env, ani_string an
     if (userId == INVALID_USER_ID) {
         userId = uid / Constants::BASE_USER_RANGE;
     }
-    std::string bundleName = AniStrToString(env, aniBundleName);
+    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("Bundle name is empty.");
         return nullptr;
@@ -185,7 +159,7 @@ static ani_object getBundleInfoSync([[maybe_unused]] ani_env *env, ani_string an
 static ani_object getApplicationInfoSync([[maybe_unused]] ani_env *env, ani_string aniBundleName,
     ani_int applicationFlags, ani_int userId)
 {
-    std::string bundleName = AniStrToString(env, aniBundleName);
+    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
         return nullptr;
