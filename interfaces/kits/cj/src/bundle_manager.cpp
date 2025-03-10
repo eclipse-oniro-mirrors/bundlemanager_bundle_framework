@@ -55,72 +55,60 @@ int32_t BundleManagerImpl::VerifyAbc(std::vector<std::string> abcPaths, bool fla
     return AppExecFwk::CommonFunc::ConvertErrCode(ret);
 }
 
-int32_t checkExtensionAbilityInfoExist(const std::string& abilityName,
-    const AppExecFwk::ExtensionAbilityInfo abilityInfo,
-    AppExecFwk::ExtensionAbilityInfo& targetAbilityInfo)
+std::tuple<bool, int32_t> checkExtensionAbilityName(const AppExecFwk::ExtensionAbilityInfo& extensionInfo,
+    const std::string& abilityName, AppExecFwk::ExtensionAbilityInfo& targetExtensionInfo)
 {
-    if (abilityInfo.name == abilityName) {
-        if (!abilityInfo.enabled) {
-            APP_LOGE("checkExtensionAbilityInfoExist failed by ability disabled");
-            return ERROR_ABILITY_IS_DISABLED;
+    bool ifExists = false;
+    if (extensionInfo.name == abilityName) {
+        ifExists = true;
+        if (!extensionInfo.enabled) {
+            APP_LOGI("extension disabled");
+            return {ifExists, ERROR_ABILITY_IS_DISABLED};
         }
-        targetAbilityInfo = abilityInfo;
-        return ERR_OK;
+        targetExtensionInfo = extensionInfo;
     }
-    return ERROR_ABILITY_NOT_EXIST;
-}
-
-std::tuple<bool, int32_t> checkExtensionName(const AppExecFwk::ExtensionAbilityInfo& extensionInfo,
-    const std::string& moduleName, const std::string& abilityName,
-    AppExecFwk::ExtensionAbilityInfo& targetExtensionInfo)
-{
-    bool flag = false;
-    if (extensionInfo.moduleName == moduleName) {
-        flag = true;
-        int32_t res = checkExtensionAbilityInfoExist(abilityName, extensionInfo, targetExtensionInfo);
-        if (res != ERROR_ABILITY_NOT_EXIST) {
-            return {flag, res};
-        }
-    }
-    return {flag, ERROR_ABILITY_NOT_EXIST};
+    return {ifExists, SUCCESS_CODE};
 }
 
 ErrCode CheckExtensionFromBundleInfo(const AppExecFwk::BundleInfo& bundleInfo, const std::string& abilityName,
     const std::string& moduleName, AppExecFwk::ExtensionAbilityInfo& targetExtensionInfo)
 {
-    bool flag = false;
+    bool hasFoundModule = false;
+    bool ifExists = false;
     int32_t res = SUCCESS_CODE;
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
+        if (hapModuleInfo.moduleName != moduleName) {
+            continue;
+        }
+        hasFoundModule = true;
         for (const auto& extensionInfo : hapModuleInfo.extensionInfos) {
-            std::tie(flag, res) = checkExtensionName(extensionInfo, moduleName, abilityName, targetExtensionInfo);
-            if (flag == true && res != ERROR_ABILITY_NOT_EXIST) {
+            std::tie(ifExists, res) = checkExtensionAbilityName(extensionInfo, abilityName, targetExtensionInfo);
+            if (res == ERROR_ABILITY_IS_DISABLED || (res == SUCCESS_CODE && ifExists == true)) {
                 return res;
             }
         }
     }
-    if (flag) {
-        return ERROR_ABILITY_NOT_EXIST;
-    } else {
-        return ERROR_MODULE_NOT_EXIST;
-    }
+    return hasFoundModule ? ERROR_ABILITY_NOT_EXIST : ERROR_MODULE_NOT_EXIST;
 }
 
 std::tuple<int32_t, std::vector<std::string>> BundleManagerImpl::GetProfileByExtensionAbility(
     std::string moduleName, std::string extensionAbilityName, char* metadataName)
 {
-    if (moduleName.empty()) {
-        APP_LOGE("GetProfileByExtensionAbility failed due to empty moduleName");
-        return {ERROR_MODULE_NOT_EXIST, {}};
+    auto naBundleMgr = AppExecFwk::CommonFunc::GetBundleMgr();
+    if (naBundleMgr == nullptr) {
+        return {ERROR_BUNDLE_SERVICE_EXCEPTION, {}};
     }
 
     if (extensionAbilityName.empty()) {
         APP_LOGE("GetProfileByExtensionAbility failed due to empty extensionAbilityName");
         return {ERROR_ABILITY_NOT_EXIST, {}};
     }
-    auto naBundleMgr = AppExecFwk::CommonFunc::GetBundleMgr();
-    if (naBundleMgr == nullptr) {
-        return {ERROR_BUNDLE_SERVICE_EXCEPTION, {}};
+
+    if (moduleName.empty()) {
+        APP_LOGE("GetProfileByExtensionAbility failed due to empty moduleName");
+        return {ERROR_MODULE_NOT_EXIST, {}};
     }
+
     auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
@@ -148,70 +136,61 @@ std::tuple<int32_t, std::vector<std::string>> BundleManagerImpl::GetProfileByExt
     return {SUCCESS_CODE, profileVec};
 }
 
-int32_t checkAbilityInfoExist(const std::string& abilityName, const AppExecFwk::AbilityInfo abilityInfo,
-    AppExecFwk::AbilityInfo& targetAbilityInfo)
-{
-    if (abilityInfo.name == abilityName) {
-        if (!abilityInfo.enabled) {
-            APP_LOGE("checkAbilityInfoExist failed by ability disabled");
-            return ERROR_ABILITY_IS_DISABLED;
-        }
-        targetAbilityInfo = abilityInfo;
-        return ERR_OK;
-    }
-    return ERROR_ABILITY_NOT_EXIST;
-}
-
-std::tuple<bool, int32_t> checkAbilityName(const AppExecFwk::AbilityInfo& abilityInfo, const std::string& moduleName,
+std::tuple<bool, int32_t> checkAbilityName(const AppExecFwk::AbilityInfo& abilityInfo,
     const std::string& abilityName, AppExecFwk::AbilityInfo& targetAbilityInfo)
 {
-    bool flag = false;
-    if (abilityInfo.moduleName == moduleName) {
-        flag = true;
-        int32_t res = checkAbilityInfoExist(abilityName, abilityInfo, targetAbilityInfo);
-        if (res != ERROR_ABILITY_NOT_EXIST) {
-            return {flag, res};
+    bool ifExists = false;
+    if (abilityInfo.name == abilityName) {
+        ifExists = true;
+        if (!abilityInfo.enabled) {
+            APP_LOGI("ability disabled");
+            return {ifExists, ERROR_ABILITY_IS_DISABLED};
         }
+        targetAbilityInfo = abilityInfo;
     }
-    return {flag, ERROR_ABILITY_NOT_EXIST};
+    return {ifExists, SUCCESS_CODE};
 }
 
 ErrCode CheckAbilityFromBundleInfo(const AppExecFwk::BundleInfo& bundleInfo, const std::string& abilityName,
     const std::string& moduleName, AppExecFwk::AbilityInfo& targetAbilityInfo)
 {
-    bool flag = false;
+    bool hasFoundModule = false;
+    bool ifExists = false;
     int32_t res = SUCCESS_CODE;
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
+        if (hapModuleInfo.moduleName != moduleName) {
+            continue;
+        }
+        hasFoundModule = true;
         for (const auto& abilityInfo : hapModuleInfo.abilityInfos) {
-            std::tie(flag, res) = checkAbilityName(abilityInfo, moduleName, abilityName, targetAbilityInfo);
-            if (flag == true && res != ERROR_ABILITY_NOT_EXIST) {
+            std::tie(ifExists, res) = checkAbilityName(abilityInfo, abilityName, targetAbilityInfo);
+            if (res == ERROR_ABILITY_IS_DISABLED || (res == SUCCESS_CODE && ifExists == true)) {
                 return res;
             }
         }
     }
-    if (flag) {
-        return ERROR_ABILITY_NOT_EXIST;
-    } else {
-        return ERROR_MODULE_NOT_EXIST;
-    }
+    return hasFoundModule ? ERROR_ABILITY_NOT_EXIST : ERROR_MODULE_NOT_EXIST;
 }
 
 std::tuple<int32_t, std::vector<std::string>> BundleManagerImpl::GetProfileByAbility(
     std::string moduleName, std::string abilityName, char* metadataName)
 {
     APP_LOGI("GetProfileByAbility called");
-    if (moduleName.empty()) {
-        APP_LOGE("GetProfileByAbility failed due to empty moduleName");
-        return {ERROR_MODULE_NOT_EXIST, {}};
-    }
-    if (abilityName.empty()) {
-        APP_LOGE("GetProfileByAbility failed due to empty abilityName");
-        return {ERROR_ABILITY_NOT_EXIST, {}};
-    }
     auto iBundleMgr = AppExecFwk::CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         return {ERROR_BUNDLE_SERVICE_EXCEPTION, {}};
     }
+
+    if (abilityName.empty()) {
+        APP_LOGE("GetProfileByAbility failed due to empty abilityName");
+        return {ERROR_ABILITY_NOT_EXIST, {}};
+    }
+
+    if (moduleName.empty()) {
+        APP_LOGE("GetProfileByAbility failed due to empty moduleName");
+        return {ERROR_MODULE_NOT_EXIST, {}};
+    }
+
     auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
