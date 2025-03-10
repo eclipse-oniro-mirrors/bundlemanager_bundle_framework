@@ -454,6 +454,7 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId);
     }
+    APP_LOGI_NOFUNC("GetBundleInfos size:%{public}zu", bundleInfos.size());
     return !bundleInfos.empty();
 }
 
@@ -486,6 +487,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         if (bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId, true) == ERR_OK) {
             LOG_D(BMS_TAG_QUERY, "query bundle infos from bms extension successfully");
             BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
+            APP_LOGI_NOFUNC("GetBundleInfosV9 size:%{public}zu", bundleInfos.size());
             return ERR_OK;
         }
     }
@@ -494,6 +496,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
     } else {
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
     }
+    APP_LOGI_NOFUNC("GetBundleInfosV9 size:%{public}zu", bundleInfos.size());
     return res;
 }
 
