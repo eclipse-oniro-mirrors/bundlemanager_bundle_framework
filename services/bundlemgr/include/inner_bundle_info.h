@@ -2200,6 +2200,7 @@ public:
     bool IsAsanEnabled() const;
     bool IsGwpAsanEnabled() const;
     bool IsTsanEnabled() const;
+    bool NeedCreateEl5Dir() const;
     bool GetUninstallState() const;
     void SetUninstallState(const bool &uninstallState);
     bool IsNeedSendNotify() const;

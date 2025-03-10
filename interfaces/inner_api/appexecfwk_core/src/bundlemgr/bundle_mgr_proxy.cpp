@@ -4311,6 +4311,32 @@ ErrCode BundleMgrProxy::CreateBundleDataDir(int32_t userId)
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("Called. userId: %{public}d el: %{public}d", userId, static_cast<uint8_t>(dirEl));
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to CreateBundleDataDirWithEl due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint8(static_cast<uint8_t>(dirEl))) {
+        APP_LOGE("fail to CreateBundleDataDirWithEl due to write dirEl fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_EL, data, reply)) {
+        APP_LOGE("Call failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::GetOdid(std::string &odid)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

@@ -245,6 +245,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR):
             errCode = this->HandleCreateBundleDataDir(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_EL):
+            errCode = HandleCreateBundleDataDirWithEl(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_DATA_FILES):
             errCode = this->HandleCleanBundleDataFiles(data, reply);
             break;
@@ -3594,6 +3597,24 @@ ErrCode BundleMgrHost::HandleCreateBundleDataDir(MessageParcel &data, MessagePar
     APP_LOGI("CreateBundleDataDir called");
     int32_t userId = data.ReadInt32();
     ErrCode ret = CreateBundleDataDir(userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCreateBundleDataDirWithEl(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGI("CreateBundleDataDirWithEl called");
+    int32_t userId = data.ReadInt32();
+    DataDirEl dirEl = static_cast<DataDirEl>(data.ReadUint8());
+    if (dirEl == DataDirEl::NONE || dirEl == DataDirEl::EL1) {
+        APP_LOGE("Invalid dirEl");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    ErrCode ret = CreateBundleDataDirWithEl(userId, dirEl);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write reply failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

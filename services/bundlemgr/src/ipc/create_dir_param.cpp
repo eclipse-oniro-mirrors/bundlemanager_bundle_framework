@@ -38,6 +38,7 @@ bool CreateDirParam::ReadFromParcel(Parcel &parcel)
     debug = parcel.ReadBool();
     isDlpSandbox = parcel.ReadBool();
     createDirFlag = static_cast<CreateDirFlag>(parcel.ReadInt32());
+    dataDirEl = static_cast<DataDirEl>(parcel.ReadUint8());
     return true;
 }
 
@@ -56,6 +57,7 @@ bool CreateDirParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, debug);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDlpSandbox);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(createDirFlag));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(dataDirEl));
     return true;
 }
 

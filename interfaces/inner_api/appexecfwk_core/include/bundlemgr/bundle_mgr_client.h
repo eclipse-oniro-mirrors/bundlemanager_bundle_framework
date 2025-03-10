@@ -41,6 +41,7 @@ public:
     ErrCode GetBundlePackInfo(const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID);
     ErrCode CreateBundleDataDir(int32_t userId);
+    ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl);
 
     /**
      * @brief Obtain the profile which are deploied in the Metadata in the bundle.

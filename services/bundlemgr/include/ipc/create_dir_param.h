@@ -18,6 +18,8 @@
 
 #include <map>
 #include <string>
+
+#include "bundle_dir.h"
 #include "message_parcel.h"
 
 namespace OHOS {
@@ -41,6 +43,7 @@ struct CreateDirParam : public Parcelable {
     bool debug = false;
     bool isDlpSandbox = false;
     CreateDirFlag createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
+    DataDirEl dataDirEl = DataDirEl::NONE;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

@@ -1479,6 +1479,11 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     /**
      * @brief Get preinstalled application infos.
      * @param preinstalledApplicationInfos Indicates all of the obtained PreinstalledApplicationInfo objects.
