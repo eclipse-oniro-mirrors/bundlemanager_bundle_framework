@@ -79,6 +79,7 @@ group("ani_package") {
     ":anibundlemanager",
     ":bundleManager2abc_etc",
     "resource_manager:ani_bundle_res_manager",
-    "resource_manager:resourceManager2abc_etc",
+    "resource_manager:bundle_resource_info_etc",
+    "resource_manager:bundle_resource_manager_etc",
   ]
 }

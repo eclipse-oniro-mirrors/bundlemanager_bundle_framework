@@ -60,18 +60,32 @@ ohos_shared_library("ani_bundle_res_manager") {
   part_name = "bundle_framework"
 }
 
-generate_static_abc("resourceManager2abc") {
-  arktsconfig = "../ani_resource_config.json"
-  dst_file = "$target_out_dir/BundleResourceManager.abc"
-  out_puts = [ "$target_out_dir/BundleResourceManager.abc" ]
+generate_static_abc("bundle_resource_info") {
+  base_url = "./ets"
+  files = [ "./ets/bundleManager/BundleResourceInfo.ets" ]
   is_boot_abc = "True"
-  device_dst_file = "/system/framework/BundleResourceManager.abc"
+  device_dst_file = "/system/framework/bundle_resource_info.abc"
 }
 
-ohos_prebuilt_etc("resourceManager2abc_etc") {
-  source = "$target_out_dir/BundleResourceManager.abc"
+ohos_prebuilt_etc("bundle_resource_info_etc") {
+  source = "$target_out_dir/bundle_resource_info.abc"
   module_install_dir = "framework"
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
-  deps = [ ":resourceManager2abc" ]
+  deps = [ ":bundle_resource_info" ]
+}
+
+generate_static_abc("bundle_resource_manager") {
+  base_url = "./ets"
+  files = [ "./ets/@ohos.bundle.bundleResourceManager.ets" ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/bundle_resource_manager.abc"
+}
+
+ohos_prebuilt_etc("bundle_resource_manager_etc") {
+  source = "$target_out_dir/bundle_resource_manager.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":bundle_resource_manager" ]
 }

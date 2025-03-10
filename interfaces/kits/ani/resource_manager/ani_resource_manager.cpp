@@ -75,7 +75,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     std::array methods = {
         ani_native_function {
             "getBundleResourceInfo",
-            "Lstd/core/String;II:LBundleResourceInfo/BundleResourceInfo;",
+            "Lstd/core/String;II:LbundleManager/BundleResourceInfo/BundleResourceInfo;",
             reinterpret_cast<void*>(GetBundleResourceInfo) }
     };
 
