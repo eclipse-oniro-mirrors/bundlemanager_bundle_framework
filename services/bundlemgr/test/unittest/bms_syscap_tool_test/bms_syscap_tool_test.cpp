@@ -148,4 +148,25 @@ HWTEST_F(BmsSyscapToolTest, RPCIDStreamDecodeToBuffer_0400, Function | SmallTest
     int32_t ret = RPCIDStreamDecodeToBuffer(contextBuffer, bufferLen, &syscapSetBuf, &syscapSetLength);
     EXPECT_EQ(ret, -1);
 }
+
+/**
+ * @tc.number: RPCIDStreamDecodeToBuffer_0500
+ * @tc.name: test the stream decode to buffer
+ * @tc.desc: RPCIDStreamDecodeToBuffer
+ */
+HWTEST_F(BmsSyscapToolTest, RPCIDStreamDecodeToBuffer_0500, Function | SmallTest | Level0)
+{
+    RPCIDHead headPtr;
+    headPtr.apiVersionType = 1;
+    char *contextBuffer = reinterpret_cast<char *>(&headPtr);
+    char *syscapSetBuf;
+    uint32_t *syscapSetLength = nullptr;
+    uint32_t bufferLen =  32;
+    int32_t ret = RPCIDStreamDecodeToBuffer(contextBuffer, bufferLen, &syscapSetBuf, syscapSetLength);
+    EXPECT_EQ(ret, -1);
+
+    syscapSetBuf = nullptr;
+    ret = RPCIDStreamDecodeToBuffer(contextBuffer, bufferLen, &syscapSetBuf, syscapSetLength);
+    EXPECT_EQ(ret, -1);
+}
 } // OHOS
