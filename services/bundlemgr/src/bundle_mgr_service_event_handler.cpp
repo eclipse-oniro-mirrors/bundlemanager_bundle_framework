@@ -3960,7 +3960,8 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
         installParam.isPatch = true;
         SystemBundleInstaller installer;
         std::vector<std::string> filePaths { scanPathIter };
-        if (installer.OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP) != ERR_OK) {
+        if (installer.OTAInstallSystemBundleNeedCheckUser(
+            filePaths, installParam, bundleName, Constants::AppType::SYSTEM_APP) != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: install failed", bundleName.c_str());
         }
     }

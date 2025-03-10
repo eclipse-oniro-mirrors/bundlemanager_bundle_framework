@@ -5591,11 +5591,6 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
         LOG_D(BMS_TAG_INSTALLER, "no need to copy preInstallApp to secure dir");
         return ERR_OK;
     }
-    if (!bundlePaths_.empty()) {
-        bundlePaths = bundlePaths_;
-        LOG_D(BMS_TAG_INSTALLER, "using the existed hap files in security dir");
-        return ERR_OK;
-    }
     for (size_t index = 0; index < bundlePaths.size(); ++index) {
         if (!BundleUtil::CheckSystemSize(bundlePaths[index], APP_INSTALL_PATH)) {
             LOG_E(BMS_TAG_INSTALLER, "install %{private}s failed insufficient disk memory", bundlePaths[index].c_str());
