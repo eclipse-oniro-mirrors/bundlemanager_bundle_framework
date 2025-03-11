@@ -209,7 +209,10 @@ namespace bundleManager {
   export function getBundleInfo(bundleName: string, bundleFlags: int, userId?: int): Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Object) => void) => {
         let userIdInfo: int = userId ?? -500;
-        let p1 = launch getBundleInfoSync(bundleName, bundleFlags, userIdInfo);
+        let execFun = (bundleName: string, bundleFlags: int, userId: int): BundleInfo => {
+          return bundleManager.getBundleInfoSync(bundleName, bundleFlags, userId);
+        };
+        let p1 = taskpool.execute(execFun, bundleName, bundleFlags, userIdInfo);
         p1.then((e: NullishType) => {
             let resultBundleInfo = e as BundleInfo;
             resolve(resultBundleInfo);
@@ -221,7 +224,10 @@ namespace bundleManager {
   }
 
   export function getBundleInfo(bundleName: string, bundleFlags: int, callback: AsyncCallback<BundleInfo, void>): void {
-    let p1 = launch getBundleInfoSync(bundleName, bundleFlags);
+    let execFun = (bundleName: string, bundleFlags: int): BundleInfo => {
+      return bundleManager.getBundleInfoSync(bundleName, bundleFlags);
+    };
+    let p1 = taskpool.execute(execFun, bundleName, bundleFlags);
     p1.then((e: NullishType) => {
         let resultBundleInfo = e as BundleInfo;
         let r: BusinessError = { code: 0, name: "error", message: "error", data: undefined };
@@ -231,7 +237,10 @@ namespace bundleManager {
   }
 
   export function getBundleInfo(bundleName: string, bundleFlags: int, userId: int, callback: AsyncCallback<BundleInfo, void>): void {
-    let p1 = launch getBundleInfoSync(bundleName, bundleFlags, userId);
+    let execFun = (bundleName: string, bundleFlags: int, userId: int): BundleInfo => {
+      return bundleManager.getBundleInfoSync(bundleName, bundleFlags, userId);
+    };
+    let p1 = taskpool.execute(execFun, bundleName, bundleFlags, userId);
     p1.then((e: NullishType) => {
         let resultBundleInfo = e as BundleInfo;
         let r: BusinessError = { code: 0, name: "error", message: "error", data: undefined };

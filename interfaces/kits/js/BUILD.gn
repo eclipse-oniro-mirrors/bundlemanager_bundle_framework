@@ -25,6 +25,7 @@ group("napi_packages") {
       "app_control:appcontrol",
       "bundle_manager:bundlemanager",
       "bundle_monitor:bundlemonitor",
+      "bundle_resource:bundle_res_common",
       "bundle_resource:bundleresourcemanager",
       "bundlemgr:bundle",
       "default_app:defaultappmanager",

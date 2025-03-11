@@ -41,7 +41,7 @@ static std::mutex g_aniClearCacheListenerMutex;
 static std::shared_ptr<ANIClearCacheListener> g_aniClearCacheListener;
 static std::shared_mutex g_aniCacheMutex;
 static std::unordered_map<ANIQuery, ani_ref, ANIQueryHash> g_aniCache;
-constexpr int32_t INVALID_USER_ID = -500;
+constexpr int32_t EMPTY_USER_ID = -500;
 } // namespace
 
 static void CheckToCache(
@@ -51,11 +51,11 @@ static void CheckToCache(
         return;
     }
 
-    ani_ref refBundleInfo = nullptr;
-    ani_status status = env->GlobalReference_Create(aniObject, &refBundleInfo);
+    ani_ref info = nullptr;
+    ani_status status = env->GlobalReference_Create(aniObject, &info);
     if (status == ANI_OK) {
         std::unique_lock<std::shared_mutex> lock(g_aniCacheMutex);
-        g_aniCache[query] = refBundleInfo;
+        g_aniCache[query] = info;
     }
 }
 
@@ -116,9 +116,9 @@ static ani_object getBundleInfoForSelfSync([[maybe_unused]] ani_env* env, ani_in
 static ani_object getBundleInfoSync(
     [[maybe_unused]] ani_env* env, ani_string aniBundleName, ani_int bundleFlags, ani_int userId)
 {
-    int32_t uid = IPCSkeleton::GetCallingUid();
-    if (userId == INVALID_USER_ID) {
-        userId = uid / Constants::BASE_USER_RANGE;
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (userId == EMPTY_USER_ID) {
+        userId = callingUid / Constants::BASE_USER_RANGE;
     }
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
@@ -150,7 +150,7 @@ static ani_object getBundleInfoSync(
 
     ani_object objectBundleInfo = CommonFunAni::ConvertBundleInfo(env, bundleInfo);
     if (!CommonFunc::CheckBundleFlagWithPermission(bundleFlags)) {
-        CheckToCache(env, bundleInfo.uid, uid, query, objectBundleInfo);
+        CheckToCache(env, bundleInfo.uid, callingUid, query, objectBundleInfo);
     }
 
     return objectBundleInfo;
@@ -164,9 +164,9 @@ static ani_object getApplicationInfoSync(
         APP_LOGE("BundleName is empty");
         return nullptr;
     }
-
-    if (userId == INVALID_USER_ID) {
-        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (userId == EMPTY_USER_ID) {
+        userId = callingUid / Constants::BASE_USER_RANGE;
     }
 
     const ANIQuery query(bundleName, GET_APPLICATION_INFO, applicationFlags, userId);
@@ -184,7 +184,6 @@ static ani_object getApplicationInfoSync(
         return nullptr;
     }
     ApplicationInfo appInfo;
-
     ErrCode ret = iBundleMgr->GetApplicationInfoV9(bundleName, applicationFlags, userId, appInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GetApplicationInfoV9 failed ret: %{public}d,userId: %{public}d", ret, getuid());
@@ -192,7 +191,7 @@ static ani_object getApplicationInfoSync(
     }
 
     ani_object objectApplicationInfo = CommonFunAni::ConvertApplicationInfo(env, appInfo);
-    CheckToCache(env, appInfo.uid, IPCSkeleton::GetCallingUid(), query, objectApplicationInfo);
+    CheckToCache(env, appInfo.uid, callingUid, query, objectApplicationInfo);
 
     return objectApplicationInfo;
 }
@@ -216,22 +215,13 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 
     std::array methods = {
         ani_native_function {
-            "isApplicationEnabledSync",
-            "Lstd/core/String;:Z",
-            reinterpret_cast<void*>(isApplicationEnabledSync) },
-        ani_native_function {
-            "getBundleInfoForSelfSync", "I:LBundleInfo/BundleInfo;",
+            "isApplicationEnabledSync", "Lstd/core/String;:Z", reinterpret_cast<void*>(isApplicationEnabledSync) },
+        ani_native_function { "getBundleInfoForSelfSync", "I:LBundleInfo/BundleInfo;",
             reinterpret_cast<void*>(getBundleInfoForSelfSync) },
-        ani_native_function {
-            "getBundleInfoSync",
-            "Lstd/core/String;II:LBundleInfo/BundleInfo;",
-            reinterpret_cast<void*>(getBundleInfoSync)
-        },
-        ani_native_function {
-            "getApplicationInfoSync",
-            "Lstd/core/String;II:LApplicationInfo/ApplicationInfo;",
-            reinterpret_cast<void*>(getApplicationInfoSync)
-        },
+        ani_native_function { "getBundleInfoSync", "Lstd/core/String;II:LBundleInfo/BundleInfo;",
+            reinterpret_cast<void*>(getBundleInfoSync) },
+        ani_native_function { "getApplicationInfoSync", "Lstd/core/String;II:LApplicationInfo/ApplicationInfo;",
+            reinterpret_cast<void*>(getApplicationInfoSync) },
     };
 
     if (env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size()) != ANI_OK) {

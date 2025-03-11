@@ -25,12 +25,21 @@ ohos_shared_library("bms_ani_common") {
     cfi_cross_dso = true
     debug = false
   }
+
   sources = [ "common_fun_ani.cpp" ]
+
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
 
   deps = [
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
+  ]
+
+  defines = [
+    "APP_LOG_TAG = \"BMS\"",
+    "LOG_DOMAIN = 0xD001120",
   ]
 
   public_configs = [ ":bms_ani_common_config" ]
@@ -39,7 +48,9 @@ ohos_shared_library("bms_ani_common") {
     "ability_base:want",
     "c_utils:utils",
     "hilog:libhilog",
+    "ipc:ipc_core",
     "runtime_core:ani",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
 
