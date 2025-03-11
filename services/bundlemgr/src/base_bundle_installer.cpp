@@ -1537,7 +1537,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
-    if (!CheckWhetherCanBeUninstalled(bundleName)) {
+    if (!CheckWhetherCanBeUninstalled(bundleName, appIdentifier_)) {
         return ERR_APPEXECFWK_UNINSTALL_CONTROLLED;
     }
     bool isMultiUser = oldInfo.GetInnerBundleUserInfos().size() > 1;
@@ -6086,11 +6086,12 @@ bool BaseBundleInstaller::IsAppInBlocklist(const std::string &bundleName, const 
     return false;
 }
 
-bool BaseBundleInstaller::CheckWhetherCanBeUninstalled(const std::string &bundleName) const
+bool BaseBundleInstaller::CheckWhetherCanBeUninstalled(const std::string &bundleName,
+    const std::string &appIdentifier) const
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
     LOG_I(BMS_TAG_INSTALLER, "CheckUninstall %{public}s", bundleName.c_str());
-    bool res = bmsExtensionDataMgr.CheckWhetherCanBeUninstalled(bundleName);
+    bool res = bmsExtensionDataMgr.CheckWhetherCanBeUninstalled(bundleName, appIdentifier);
     if (!res) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall %{public}s rejected", bundleName.c_str());
         return false;

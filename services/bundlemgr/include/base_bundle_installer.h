@@ -734,7 +734,7 @@ private:
     void SetApplicationFlagsAndInstallSource(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InstallParam &installParam) const;
     bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId) const;
-    bool CheckWhetherCanBeUninstalled(const std::string &bundleName) const;
+    bool CheckWhetherCanBeUninstalled(const std::string &bundleName, const std::string &appIdentifier) const;
     void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier) const;
 
     bool SetDisposedRuleWhenBundleUpdateStart(const std::unordered_map<std::string, InnerBundleInfo> &infos,

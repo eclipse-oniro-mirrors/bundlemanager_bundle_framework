@@ -63,7 +63,7 @@ public:
     ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
     bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId);
-    bool CheckWhetherCanBeUninstalled(const std::string &bundleName);
+    bool CheckWhetherCanBeUninstalled(const std::string &bundleName, const std::string &appIdentifier);
 
     ErrCode GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
         BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
