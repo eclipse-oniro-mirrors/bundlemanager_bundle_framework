@@ -24,7 +24,6 @@
 #include "bundle_resource_helper.h"
 #include "bundle_util.h"
 #include "datetime_ex.h"
-#include "errors.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "perf_profile.h"
