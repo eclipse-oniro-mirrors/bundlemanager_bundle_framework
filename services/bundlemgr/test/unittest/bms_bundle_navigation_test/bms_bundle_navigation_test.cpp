@@ -19,9 +19,11 @@
 #include <string>
 
 #include "bundle_info.h"
+#include "router_data_storage_rdb.h"
 #include "router_item_compare.h"
 #include "router_map_helper.h"
 #include "sem_ver.h"
+#include "uninstall_data_mgr_storage_rdb.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -1273,5 +1275,285 @@ HWTEST_F(BmsBundleNavigationTest, RouterMapMerge_0013, Function | SmallTest | Le
     b = "2";
     ret = RouterMapHelper::CompareIdentifiers(a, b);
     EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0001
+ * @tc.name: test merge function for router map
+ * @tc.desc: 1.UpdateRouterInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0001, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    routerDataStorageRdb->rdbDataManager_ = nullptr;
+    std::string bundleName;
+    std::map<std::string, std::string> routerInfoMap;
+    auto ret = routerDataStorageRdb->UpdateRouterInfo(bundleName, routerInfoMap);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0002
+ * @tc.name: test merge function for router map
+ * @tc.desc: 1.UpdateRouterInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0002, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    std::string bundleName = "";
+    std::map<std::string, std::string> routerInfoMap;
+    auto ret = routerDataStorageRdb->UpdateRouterInfo(bundleName, routerInfoMap);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0003
+ * @tc.name: test merge function for router map
+ * @tc.desc: 1.UpdateRouterInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0003, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    std::string bundleName = "xxxx";
+    std::map<std::string, std::string> routerInfoMap;
+    routerInfoMap["testKey"] = "testValue";
+    auto ret = routerDataStorageRdb->UpdateRouterInfo(bundleName, routerInfoMap);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0004
+ * @tc.name: test merge function for router map
+ * @tc.desc: 1.RouterMapMerge
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0004, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    routerDataStorageRdb->rdbDataManager_ = nullptr;
+    std::string bundleName;
+    std::string moduleName;
+    std::vector<RouterItem> routerInfos;
+    auto ret = routerDataStorageRdb->GetRouterInfo(bundleName, moduleName, routerInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0005
+ * @tc.name: test merge function for router map
+ * @tc.desc: 1.RouterMapMerge
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0005, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    std::string bundleName;
+    std::string moduleName;
+    std::vector<RouterItem> routerInfos;
+    auto ret = routerDataStorageRdb->GetRouterInfo(bundleName, moduleName, routerInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0006
+ * @tc.name: test merge function for router map
+ * @tc.desc: 1.GetAllBundleNames
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0006, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    routerDataStorageRdb->rdbDataManager_ = nullptr;
+    std::set<std::string> bundleNames;
+    routerDataStorageRdb->GetAllBundleNames(bundleNames);
+    EXPECT_TRUE(bundleNames.empty());
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0007
+ * @tc.name: test merge function for router map
+ * @tc.desc: 1.GetAllBundleNames
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0007, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    std::set<std::string> bundleNames;
+    routerDataStorageRdb->GetAllBundleNames(bundleNames);
+    EXPECT_TRUE(bundleNames.empty());
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0008
+ * @tc.name: test merge function for router map
+ * @tc.desc: 1.DeleteRouterInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0008, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    routerDataStorageRdb->rdbDataManager_ = nullptr;
+    std::string bundleName;
+    auto ret = routerDataStorageRdb->DeleteRouterInfo(bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0009
+ * @tc.name: test merge function for router map
+ * @tc.desc: 1.DeleteRouterInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0009, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    routerDataStorageRdb->rdbDataManager_ = nullptr;
+    std::string bundleName;
+    std::string moduleName;
+    auto ret = routerDataStorageRdb->DeleteRouterInfo(bundleName, moduleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UninstallDataMgrStorageRdb_0001
+ * @tc.name: test function for UninstallDataMgrStorageRdb
+ * @tc.desc: 1.UpdateUninstallBundleInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, UninstallDataMgrStorageRdb_0001, Function | SmallTest | Level0)
+{
+    auto uninstallDataMgrStorageRdb = std::make_shared<UninstallDataMgrStorageRdb>();
+    ASSERT_NE(uninstallDataMgrStorageRdb, nullptr);
+
+    uninstallDataMgrStorageRdb->rdbDataManager_ = nullptr;
+    std::string bundleName;
+    UninstallBundleInfo uninstallbundleInfo;
+    auto ret = uninstallDataMgrStorageRdb->UpdateUninstallBundleInfo(bundleName, uninstallbundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UninstallDataMgrStorageRdb_0002
+ * @tc.name: test function for UninstallDataMgrStorageRdb
+ * @tc.desc: 1.UpdateUninstallBundleInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, UninstallDataMgrStorageRdb_0002, Function | SmallTest | Level0)
+{
+    auto uninstallDataMgrStorageRdb = std::make_shared<UninstallDataMgrStorageRdb>();
+    ASSERT_NE(uninstallDataMgrStorageRdb, nullptr);
+
+    std::string bundleName;
+    UninstallBundleInfo uninstallbundleInfo;
+    auto ret = uninstallDataMgrStorageRdb->UpdateUninstallBundleInfo(bundleName, uninstallbundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UninstallDataMgrStorageRdb_0003
+ * @tc.name: test function for UninstallDataMgrStorageRdb
+ * @tc.desc: 1.GetUninstallBundleInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, UninstallDataMgrStorageRdb_0003, Function | SmallTest | Level0)
+{
+    auto uninstallDataMgrStorageRdb = std::make_shared<UninstallDataMgrStorageRdb>();
+    ASSERT_NE(uninstallDataMgrStorageRdb, nullptr);
+    uninstallDataMgrStorageRdb->rdbDataManager_ = nullptr;
+
+    std::string bundleName;
+    UninstallBundleInfo uninstallbundleInfo;
+    auto ret = uninstallDataMgrStorageRdb->GetUninstallBundleInfo(bundleName, uninstallbundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UninstallDataMgrStorageRdb_0004
+ * @tc.name: test function for UninstallDataMgrStorageRdb
+ * @tc.desc: 1.GetUninstallBundleInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, UninstallDataMgrStorageRdb_0004, Function | SmallTest | Level0)
+{
+    auto uninstallDataMgrStorageRdb = std::make_shared<UninstallDataMgrStorageRdb>();
+    ASSERT_NE(uninstallDataMgrStorageRdb, nullptr);
+
+    std::string bundleName;
+    UninstallBundleInfo uninstallbundleInfo;
+    auto ret = uninstallDataMgrStorageRdb->GetUninstallBundleInfo(bundleName, uninstallbundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UninstallDataMgrStorageRdb_0005
+ * @tc.name: test function for UninstallDataMgrStorageRdb
+ * @tc.desc: 1.GetAllUninstallBundleInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, UninstallDataMgrStorageRdb_0005, Function | SmallTest | Level0)
+{
+    auto uninstallDataMgrStorageRdb = std::make_shared<UninstallDataMgrStorageRdb>();
+    ASSERT_NE(uninstallDataMgrStorageRdb, nullptr);
+    uninstallDataMgrStorageRdb->rdbDataManager_ = nullptr;
+
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    auto ret = uninstallDataMgrStorageRdb->GetAllUninstallBundleInfo(uninstallBundleInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UninstallDataMgrStorageRdb_0006
+ * @tc.name: test function for UninstallDataMgrStorageRdb
+ * @tc.desc: 1.GetAllUninstallBundleInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, UninstallDataMgrStorageRdb_0006, Function | SmallTest | Level0)
+{
+    auto uninstallDataMgrStorageRdb = std::make_shared<UninstallDataMgrStorageRdb>();
+    ASSERT_NE(uninstallDataMgrStorageRdb, nullptr);
+    uninstallDataMgrStorageRdb->rdbDataManager_ = nullptr;
+
+    std::map<std::string, std::string> datas;
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    uninstallDataMgrStorageRdb->TransformStrToInfo(datas, uninstallBundleInfos);
+    EXPECT_TRUE(datas.empty());
+    EXPECT_TRUE(uninstallBundleInfos.empty());
+}
+
+/**
+ * @tc.number: UninstallDataMgrStorageRdb_0007
+ * @tc.name: test function for UninstallDataMgrStorageRdb
+ * @tc.desc: 1.DeleteUninstallBundleInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, UninstallDataMgrStorageRdb_0007, Function | SmallTest | Level0)
+{
+    auto uninstallDataMgrStorageRdb = std::make_shared<UninstallDataMgrStorageRdb>();
+    ASSERT_NE(uninstallDataMgrStorageRdb, nullptr);
+    uninstallDataMgrStorageRdb->rdbDataManager_ = nullptr;
+
+    std::string bundleName;
+    auto ret = uninstallDataMgrStorageRdb->DeleteUninstallBundleInfo(bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UninstallDataMgrStorageRdb_0008
+ * @tc.name: test function for UninstallDataMgrStorageRdb
+ * @tc.desc: 1.DeleteUninstallBundleInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, UninstallDataMgrStorageRdb_0008, Function | SmallTest | Level0)
+{
+    auto uninstallDataMgrStorageRdb = std::make_shared<UninstallDataMgrStorageRdb>();
+    ASSERT_NE(uninstallDataMgrStorageRdb, nullptr);
+
+    std::string bundleName;
+    auto ret = uninstallDataMgrStorageRdb->DeleteUninstallBundleInfo(bundleName);
+    EXPECT_FALSE(ret);
 }
 } // OHOS
