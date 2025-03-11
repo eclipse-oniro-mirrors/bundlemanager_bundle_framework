@@ -344,11 +344,21 @@ private:
     static void FsyncFile(const std::string &path);
     static std::string GetSameLevelTmpPath(const std::string &path);
 
-    static int32_t InnerMigrateData(const std::string &sourcePaths, const std::string &destinationPath);
-    static int32_t MigrateDataCopyFile(const std::string &sourceFile, const std::string &destinationFile);
-    static int32_t MigrateDataCopyDir(const std::string &sourcePaths, const std::string &destinationPath);
+    struct OwnershipInfo {
+        int32_t uid { 0 };
+        int32_t gid { 0 };
+        int32_t mode { 0 };
+    };
+    static int32_t InnerMigrateData(
+        const std::string &sourcePaths, const std::string &destinationPath, const OwnershipInfo &info);
+    static int32_t MigrateDataCopyFile(
+        const std::string &sourceFile, const std::string &destinationFile, const OwnershipInfo &info);
+    static int32_t MigrateDataCopyDir(
+        const std::string &sourcePaths, const std::string &destinationPath, const OwnershipInfo &info);
     static int32_t MigrateDataCheckPrmissions(
-        std::vector<std::string> &realSourcePaths, const std::string &destinationPath);
+        std::vector<std::string> &realSourcePaths, const std::string &destinationPath, OwnershipInfo &info);
+    static int32_t UpdateFileProperties(const std::string &newFile, const OwnershipInfo &info);
+    static int32_t ForceCreateDirectory(const std::string &path, const OwnershipInfo &info);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

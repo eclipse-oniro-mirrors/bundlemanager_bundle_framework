@@ -2376,7 +2376,8 @@ int32_t InstalldOperator::MigrateData(const std::vector<std::string> &sourcePath
         LOG_E(BMS_TAG_INSTALLD, "file(%{private}s) is not real path", destinationPath.c_str());
         return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
     }
-    auto result = MigrateDataCheckPrmissions(realSourcePaths, destPath);
+    OwnershipInfo info;
+    auto result = MigrateDataCheckPrmissions(realSourcePaths, destPath, info);
     if (result != RESULT_OK) {
         LOG_E(BMS_TAG_INSTALLD, "migrate data check permissions failed, result:%{public}d", result);
         if (realSourcePaths.empty() || result != ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED) {
@@ -2385,7 +2386,7 @@ int32_t InstalldOperator::MigrateData(const std::vector<std::string> &sourcePath
     }
     auto ret = RESULT_OK;
     for (const auto &sourcePath : realSourcePaths) {
-        ret = InnerMigrateData(sourcePath, destPath);
+        ret = InnerMigrateData(sourcePath, destPath, info);
         if (ret != RESULT_OK) {
             LOG_W(BMS_TAG_INSTALLD, "inner migrate data failed, errno:%{public}d", errno);
             result = ret;
@@ -2394,7 +2395,8 @@ int32_t InstalldOperator::MigrateData(const std::vector<std::string> &sourcePath
     return result;
 }
 
-int32_t InstalldOperator::InnerMigrateData(const std::string &sourcePaths, const std::string &destinationPath)
+int32_t InstalldOperator::InnerMigrateData(
+    const std::string &sourcePaths, const std::string &destinationPath, const OwnershipInfo &info)
 {
     struct stat buf = {};
     if (stat(sourcePaths.c_str(), &buf) != 0) {
@@ -2413,7 +2415,7 @@ int32_t InstalldOperator::InnerMigrateData(const std::string &sourcePaths, const
             fileName = sourcePaths.substr(pos + 1);
         }
         std::string destPath = OHOS::IncludeTrailingPathDelimiter(destinationPath) + fileName;
-        result = MigrateDataCopyFile(sourcePaths, destPath);
+        result = MigrateDataCopyFile(sourcePaths, destPath, info);
         if (result != RESULT_OK) {
             LOG_E(BMS_TAG_INSTALLD, "migrate data source:%{private}s to destination %{public}s failed",
                 sourcePaths.c_str(), destPath.c_str());
@@ -2421,7 +2423,7 @@ int32_t InstalldOperator::InnerMigrateData(const std::string &sourcePaths, const
         return result;
     }
 
-    result = MigrateDataCopyDir(sourcePaths, destinationPath);
+    result = MigrateDataCopyDir(sourcePaths, destinationPath, info);
     if (result != RESULT_OK) {
         LOG_E(BMS_TAG_INSTALLD, "migrate data copy dir failed, source:%{private}s to destination %{public}s",
             sourcePaths.c_str(), destinationPath.c_str());
@@ -2429,7 +2431,8 @@ int32_t InstalldOperator::InnerMigrateData(const std::string &sourcePaths, const
     return result;
 }
 
-int32_t InstalldOperator::MigrateDataCopyFile(const std::string &sourceFile, const std::string &destinationFile)
+int32_t InstalldOperator::MigrateDataCopyFile(
+    const std::string &sourceFile, const std::string &destinationFile, const OwnershipInfo &info)
 {
     std::ifstream in(sourceFile);
     if (!in.is_open()) {
@@ -2448,13 +2451,21 @@ int32_t InstalldOperator::MigrateDataCopyFile(const std::string &sourceFile, con
     out << in.rdbuf();
     in.close();
     out.close();
+    auto result = UpdateFileProperties(destinationFile, info);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to update file properties");
+        return result;
+    }
     return ERR_OK;
 }
 
-int32_t InstalldOperator::MigrateDataCopyDir(const std::string &sourcePath, const std::string &destinationPath)
+int32_t InstalldOperator::MigrateDataCopyDir(
+    const std::string &sourcePath, const std::string &destinationPath, const OwnershipInfo &info)
 {
     // create dir if not exist
-    if (!IsExistDir(destinationPath) && !MkRecursiveDir(destinationPath, true)) {
+    auto result = RESULT_OK;
+    result = ForceCreateDirectory(destinationPath, info);
+    if (result != RESULT_OK) {
         LOG_E(BMS_TAG_INSTALLD, "create targetPath %{public}s failed", destinationPath.c_str());
         return ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
     }
@@ -2465,7 +2476,6 @@ int32_t InstalldOperator::MigrateDataCopyDir(const std::string &sourcePath, cons
                                           : ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
     }
 
-    auto result = RESULT_OK;
     struct dirent *ptr = nullptr;
     while ((ptr = readdir(dir)) != nullptr) {
         if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
@@ -2474,13 +2484,13 @@ int32_t InstalldOperator::MigrateDataCopyDir(const std::string &sourcePath, cons
         std::string subPath = OHOS::IncludeTrailingPathDelimiter(sourcePath) + std::string(ptr->d_name);
         std::string destPath = OHOS::IncludeTrailingPathDelimiter(destinationPath) + std::string(ptr->d_name);
         if (ptr->d_type == DT_DIR) {
-            result = InnerMigrateData(subPath, destPath);
+            result = InnerMigrateData(subPath, destPath, info);
             if (result != RESULT_OK) {
                 LOG_E(BMS_TAG_INSTALLD, "migrate data failed, result:%{public}d", result);
             }
             continue;
         }
-        result = MigrateDataCopyFile(subPath, destPath);
+        result = MigrateDataCopyFile(subPath, destPath, info);
         if (result != RESULT_OK) {
             LOG_E(BMS_TAG_INSTALLD,
                 "migrate data source:%{private}s to destination %{public}s failed, result:%{public}d", subPath.c_str(),
@@ -2492,7 +2502,7 @@ int32_t InstalldOperator::MigrateDataCopyDir(const std::string &sourcePath, cons
 }
 
 int32_t InstalldOperator::MigrateDataCheckPrmissions(
-    std::vector<std::string> &realSourcePaths, const std::string &destPath)
+    std::vector<std::string> &realSourcePaths, const std::string &destPath, OwnershipInfo &info)
 {
     auto result = RESULT_OK;
     std::vector<std::string> unablePath;
@@ -2524,7 +2534,58 @@ int32_t InstalldOperator::MigrateDataCheckPrmissions(
         LOG_E(BMS_TAG_INSTALLD, "dest path[%{public}s] not a directory", destPath.c_str());
         return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
     }
+    struct stat destPathStat = {};
+    if (stat(destPath.c_str(), &destPathStat) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to get dest path stat stat errno:%{public}d", errno);
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED;
+    }
+    info.uid = static_cast<int32_t>(destPathStat.st_uid);
+    info.gid = static_cast<int32_t>(destPathStat.st_gid);
+    info.mode = static_cast<int32_t>(destPathStat.st_mode);
     return result;
+}
+
+
+int32_t InstalldOperator::UpdateFileProperties(const std::string &newFile, const OwnershipInfo &info)
+{
+    int32_t result = ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
+    if (access(newFile.c_str(), F_OK) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "new file not existence.");
+        return result;
+    }
+    if (chmod(newFile.c_str(), info.mode) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to set mode for new file: %{public}s", newFile.c_str());
+        return result;
+    }
+    if (chown(newFile.c_str(), info.uid, info.gid) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to set uid and gid for new file: %{public}s", newFile.c_str());
+        return result;
+    }
+    return ERR_OK;
+}
+
+int32_t InstalldOperator::ForceCreateDirectory(const std::string &path, const OwnershipInfo &info)
+{
+    auto result = ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
+    if (IsExistDir(path)) {
+        LOG_D(BMS_TAG_INSTALLD, "path already exists");
+        return RESULT_OK;
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "need crate dir: %{public}s", path.c_str());
+    if (!OHOS::ForceCreateDirectory(path)) {
+        LOG_E(BMS_TAG_INSTALLD, "mkdir failed");
+        return result;
+    }
+    if (!OHOS::ChangeModeDirectory(path, info.mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to set mod for path: %{public}s", path.c_str());
+        return result;
+    }
+    if (chown(path.c_str(), info.uid, info.gid) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to set uid and gid for new file: %{public}s", path.c_str());
+        return result;
+    }
+    return RESULT_OK;
 }
 
 #if defined(CODE_ENCRYPTION_ENABLE)
