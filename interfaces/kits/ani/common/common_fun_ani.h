@@ -43,8 +43,8 @@ public:
         ani_env* env, const std::string& className, const std::vector<ani_object>& aArray);
     static ani_ref ConvertAniArrayString(ani_env* env, const std::vector<std::string>& cArray);
     template<typename enumType>
-    static ani_array_int ConvertAniArrayEnum(
-        ani_env* env, const std::vector<enumType>& cArray, std::function<int32_t(const int32_t)> converter);
+    static ani_object ConvertAniArrayEnum(ani_env* env, const std::vector<enumType>& cArray,
+        std::function<ani_enum_item(ani_env*, const int32_t)> converter);
     static ani_class CreateClassByName(ani_env* env, const std::string& className);
     static ani_object CreateNewObjectByClass(ani_env* env, ani_class cls);
 
@@ -82,7 +82,7 @@ public:
     static ani_object ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo);
     static std::string AniStrToString(ani_env* env, ani_ref aniStr);
     static ani_object ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo);
-    
+
     template<typename valueType>
     static inline void CallSetter(
         ani_env* env, ani_class cls, ani_object object, const char* setterName, valueType value)
