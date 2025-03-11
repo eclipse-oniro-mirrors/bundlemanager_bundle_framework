@@ -1189,6 +1189,106 @@ HWTEST_F(BmsBundleDataMgrTest, GetLauncherAbilityByBundleName_0300, Function | S
 }
 
 /**
+ * @tc.number: GetLauncherAbilityInfoSync_0100
+ * @tc.name: test GetLauncherAbilityInfoSync
+ * @tc.desc: 1.system run normally
+ *           2.check GetLauncherAbilityInfoSync true
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetLauncherAbilityInfoSync_0100, Function | SmallTest | Level1)
+{
+    Want want;
+    want.SetElementName(BUNDLE_TEST1, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.entryInstallationFree = true;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->GetLauncherAbilityInfoSync(want, USERID, abilityInfo);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityInfoSync_0200
+ * @tc.name: test GetLauncherAbilityInfoSync
+ * @tc.desc: 1.system run normally
+ *           2.check GetLauncherAbilityInfoSync failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetLauncherAbilityInfoSync_0200, Function | SmallTest | Level1)
+{
+    Want want;
+    want.SetElementName(BUNDLE_TEST1, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    GetBundleDataMgr()->bundleInfos_.emplace("", innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->GetLauncherAbilityInfoSync(want, USERID, abilityInfo);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityInfoSync_0300
+ * @tc.name: test GetLauncherAbilityInfoSync
+ * @tc.desc: 1.system run normally
+ *           2.check GetLauncherAbilityInfoSync failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetLauncherAbilityInfoSync_0300, Function | SmallTest | Level1)
+{
+    Want want;
+    want.SetElementName(BUNDLE_TEST1, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.entryInstallationFree = true;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->GetLauncherAbilityInfoSync(want, -1, abilityInfo);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityInfoSync_0400
+ * @tc.name: test GetLauncherAbilityInfoSync
+ * @tc.desc: 1.system run normally
+ *           2.check GetLauncherAbilityInfoSync true
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetLauncherAbilityInfoSync_0400, Function | SmallTest | Level1)
+{
+    Want want;
+    want.SetElementName(BUNDLE_TEST1, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.hideDesktopIcon = true;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->GetLauncherAbilityInfoSync(want, USERID, abilityInfo);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityInfoSync_0500
+ * @tc.name: test GetLauncherAbilityInfoSync
+ * @tc.desc: 1.system run normally
+ *           2.check GetLauncherAbilityInfoSync true
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetLauncherAbilityInfoSync_0500, Function | SmallTest | Level1)
+{
+    Want want;
+    want.SetElementName(BUNDLE_TEST1, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.hideDesktopIcon = false;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.entryInstallationFree = false;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->GetLauncherAbilityInfoSync(want, USERID, abilityInfo);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
  * @tc.number: QueryAbilityInfoByUri_0100
  * @tc.name: test QueryAbilityInfoByUri
  * @tc.desc: 1.system run normally

@@ -92,7 +92,7 @@ public:
      * @param launcherAbilityInfos Indicates the obtained vector of the input bundle.
      * @return Returns ERR code of the result.
      */
-    ErrCode GetLauncherAbilityByBundleNamePublic(const std::string &bundleName, const int32_t userId,
+    ErrCode GetLauncherAbilityInfoSync(const std::string &bundleName, const int32_t userId,
         std::vector<LauncherAbilityInfo> &launcherAbilityInfos);
     /**
      * @brief Obtains information about the launcher ability of input bundleName and userId.

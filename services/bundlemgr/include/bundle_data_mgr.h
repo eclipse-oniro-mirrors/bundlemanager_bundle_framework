@@ -207,6 +207,15 @@ public:
     ErrCode QueryLauncherAbilityInfos(
         const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     /**
+     * @brief Query Launcher AbilityInfo of list by the given Want.
+     * @param bundleName Indicates the information of the ability.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfo of list.
+     * @return Returns ERR_OK if the AbilityInfo is successfully obtained; returns errCode otherwise.
+     */
+    ErrCode GetLauncherAbilityInfoSync(
+        const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
+    /**
      * @brief Query all match launcher ability infos by given wants.
      * @param want Indicates the match infomation for abilities.
      * @param info Indicates the bundleInfo.

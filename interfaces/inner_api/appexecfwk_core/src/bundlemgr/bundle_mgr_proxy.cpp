@@ -1263,7 +1263,7 @@ ErrCode BundleMgrProxy::QueryLauncherAbilityInfos(
         BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFO, data, abilityInfo);
 }
 
-ErrCode BundleMgrProxy::QueryLauncherAbilityInfosPublic(
+ErrCode BundleMgrProxy::GetLauncherAbilityInfoSync(
     const std::string &bundleName, int32_t userId, std::vector<AbilityInfo> &abilityInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1281,7 +1281,7 @@ ErrCode BundleMgrProxy::QueryLauncherAbilityInfosPublic(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
-        BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFOS_PUBLIC, data, abilityInfo);
+        BundleMgrInterfaceCode::GET_LAUNCHER_ABILITY_INFO_SYNC, data, abilityInfo);
 }
 
 bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)

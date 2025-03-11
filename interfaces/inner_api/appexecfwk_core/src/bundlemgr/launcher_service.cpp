@@ -339,11 +339,11 @@ ErrCode LauncherService::GetLauncherAbilityByBundleName(const std::string &bundl
     return ERR_OK;
 }
 
-ErrCode LauncherService::GetLauncherAbilityByBundleNamePublic(const std::string &bundleName, const int32_t userId,
+ErrCode LauncherService::GetLauncherAbilityInfoSync(const std::string &bundleName, const int32_t userId,
     std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("GetLauncherAbilityByBundleNamePublic called");
+    APP_LOGD("GetLauncherAbilityInfoSync called");
     if (bundleName.empty()) {
         APP_LOGE("no bundleName %{public}s found", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -355,9 +355,9 @@ ErrCode LauncherService::GetLauncherAbilityByBundleNamePublic(const std::string 
     }
 
     std::vector<AbilityInfo> abilityInfos;
-    ErrCode err = iBundleMgr->QueryLauncherAbilityInfosPublic(bundleName, userId, abilityInfos);
+    ErrCode err = iBundleMgr->GetLauncherAbilityInfoSync(bundleName, userId, abilityInfos);
     if (err != ERR_OK) {
-        APP_LOGE_NOFUNC("QueryLauncherAbilityInfosPublic fail:%{public}d -n %{public}s", err, bundleName.c_str());
+        APP_LOGE_NOFUNC("GetLauncherAbilityInfoSync fail:%{public}d -n %{public}s", err, bundleName.c_str());
         return err;
     }
     for (const auto &ability : abilityInfos) {
