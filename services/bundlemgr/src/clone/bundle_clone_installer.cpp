@@ -26,7 +26,6 @@
 #include "bundle_service_constants.h"
 #include "code_protect_bundle_info.h"
 #include "datetime_ex.h"
-#include "errors.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "inner_bundle_clone_common.h"

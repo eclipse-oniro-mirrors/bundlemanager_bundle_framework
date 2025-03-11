@@ -3263,6 +3263,10 @@ HWTEST_F(BmsBundleParserTest, BundleParser_2400, Function | MediumTest | Level1)
     std::string jsonString;
     std::map<std::string, std::string> aclExtendedMap = bundleParser.ParseAclExtendedMap(jsonString);
     EXPECT_EQ(aclExtendedMap.empty(), true);
+
+    jsonString = R"({"name": "zhangsan")";
+    aclExtendedMap = bundleParser.ParseAclExtendedMap(jsonString);
+    EXPECT_EQ(aclExtendedMap.empty(), true);
 }
 
 /**
@@ -3276,6 +3280,10 @@ HWTEST_F(BmsBundleParserTest, BundleParser_2400, Function | MediumTest | Level1)
 
     std::string jsonString = R"(["one", "two"])";
     std::map<std::string, std::string> aclExtendedMap = bundleParser.ParseAclExtendedMap(jsonString);
+    EXPECT_EQ(aclExtendedMap.empty(), true);
+
+    jsonString = "a";
+    aclExtendedMap = bundleParser.ParseAclExtendedMap(jsonString);
     EXPECT_EQ(aclExtendedMap.empty(), true);
  }
 
