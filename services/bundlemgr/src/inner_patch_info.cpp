@@ -53,12 +53,7 @@ std::string InnerPatchInfo::ToString() const
 {
     nlohmann::json jsonObj;
     ToJson(jsonObj);
-    try {
-        return jsonObj.dump();
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return jsonObj.dump();
 }
 
 void InnerPatchInfo::ToJson(nlohmann::json &jsonObject) const

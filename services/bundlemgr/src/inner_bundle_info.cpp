@@ -2191,12 +2191,7 @@ std::string InnerBundleInfo::ToString() const
 {
     nlohmann::json j;
     ToJson(j);
-    try {
-        return j.dump();
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return j.dump();
 }
 
 void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, ApplicationInfo &appInfo,
