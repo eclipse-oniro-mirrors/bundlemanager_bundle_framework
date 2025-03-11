@@ -42,7 +42,7 @@ constexpr const char* CLASSNAME_ELEMENTNAME = "LElementName/ElementNameInner;";
 constexpr const char* CLASSNAME_CUSTOMIZEDATA = "LcustomizeData/CustomizeDataInner;";
 constexpr const char* CLASSNAME_SKILL = "LSkill/SkillInner;";
 constexpr const char* CLASSNAME_SKILLURI = "LSkill/SkillUriInner;";
-constexpr const char* CLASSNAME_BUNDLERESINFO = "LBundleResourceInfo/BundleResourceInfoInner;";
+constexpr const char* CLASSNAME_BUNDLERESINFO = "LbundleManager/BundleResourceInfo/BundleResourceInfoInner;";
 
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
 constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";

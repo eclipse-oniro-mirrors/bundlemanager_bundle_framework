@@ -18,7 +18,7 @@
  * @kit AbilityKit
  */
 
-import { BundleResourceInfo } from './BundleResourceInfo';
+import { BundleResourceInfo } from 'bundleManager.BundleResourceInfo';
 
 /**
  * This module is used to obtain bundle resource information of various applications installed on the current device.
@@ -28,7 +28,7 @@ import { BundleResourceInfo } from './BundleResourceInfo';
  * @systemapi
  * @since 11
  */
-namespace bundleResourceManager {
+export default namespace bundleResourceManager {
 
   loadLibrary("ani_bundle_res_manager.z");
 
@@ -128,5 +128,3 @@ namespace bundleResourceManager {
    */
   export native function getBundleResourceInfo(bundleName: string, resourceFlags: int, appIndex: int): BundleResourceInfo;
 }
-
-export default bundleResourceManager;
