@@ -94,7 +94,6 @@ constexpr const char* LOG_PATH = "/log/";
 const std::vector<std::string> DRIVER_EXECUTE_DIR {
     "/print_service/cups/serverbin/backend",
     "/print_service/cups/serverbin/filter",
-    "/print_service/cups/datadir/model",
     "/print_service/sane/backend"
 };
 #if defined(CODE_SIGNATURE_ENABLE)
