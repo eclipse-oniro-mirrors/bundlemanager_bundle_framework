@@ -90,13 +90,13 @@ void El5FilekeyCallback::ProcessAppEl5Dir(const Security::AccessToken::AppKeyInf
 
 void El5FilekeyCallback::ProcessGroupEl5Dir(const Security::AccessToken::AppKeyInfo &info)
 {
-    if (info.type != Security::AccessToken::AppKeyType::GROUPID || info.uid < 0) {
+    if (info.type != Security::AccessToken::AppKeyType::GROUPID || info.uid < 0 || info.groupID.empty()) {
         APP_LOGE("param error, type %{public}d uid %{public}d", static_cast<int32_t>(info.type), info.uid);
         return;
     }
     int32_t userId = info.uid / Constants::BASE_USER_RANGE;
     std::string parentDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(userId);;
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId);
     bool isDirExisted = false;
     auto result = InstalldClient::GetInstance()->IsExistDir(parentDir, isDirExisted);
     if (result != ERR_OK || !isDirExisted) {
