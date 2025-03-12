@@ -18,7 +18,7 @@ ohos_hap("bmsAccessTokentest2") {
   hap_profile = "./src/main/config.json"
   hap_name = "bmsAccessTokentest2"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundlemgrservice/resource/test_bundle/${hap_name}.hap"
+  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/test_bundle/${hap_name}.hap"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",
