@@ -17,6 +17,7 @@
 
 #include <fstream>
 #include <gtest/gtest.h>
+#include <nlohmann/json.hpp>
 
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
@@ -30,6 +31,7 @@
 #include "mime_type_mgr.h"
 #include "parcel.h"
 #include "shortcut_data_storage_rdb.h"
+#include "uninstall_data_mgr_storage_rdb.h"
 #include "want_params_wrapper.h"
 
 using namespace testing::ext;
@@ -3009,5 +3011,20 @@ HWTEST_F(BmsDataMgrTest, TryGetRawDataByExtractor_0001, Function | MediumTest | 
     AbilityInfo abilityInfo = GetDefaultAbilityInfo();
     std::string result = dataMgr_->TryGetRawDataByExtractor(hapPath, profileName, abilityInfo);
     EXPECT_TRUE(result.empty());
+}
+
+/**
+ * @tc.number: FromJson_001
+ * @tc.name: FromJson
+ * @tc.desc: test FromJson(const nlohmann::json& jsonObject,
+ *  UninstallBundleInfo& uninstallBundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, FromJson_001, Function | MediumTest | Level1)
+{
+    int32_t parseResult = 0;
+    nlohmann::json jsonObject = {};
+    UninstallDataUserInfo uninstallDataUserInfo;
+    from_json(jsonObject, uninstallDataUserInfo);
+    EXPECT_EQ(parseResult, ERR_OK);
 }
 } // OHOS

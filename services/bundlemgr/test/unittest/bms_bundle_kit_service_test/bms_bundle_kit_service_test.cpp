@@ -14011,4 +14011,50 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheTaskGetCleanSize_0100, Functio
     hostImpl->CleanBundleCacheTaskGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cacheSize);
     EXPECT_FALSE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.empty());
 }
+
+/**
+* @tc.number: AginTest_0018
+* @tc.name: test RecentlyUnuseBundleAgingHandler of ProcessBundle
+* @tc.desc: ProcessBundle is false
+*/
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0018, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+    AgingRequest request;
+    bool ret = bundleAgingMgr.ProcessBundle(request);
+    EXPECT_FALSE(ret);
+}
+
+/**
+* @tc.number: AginTest_0019
+* @tc.name: test RecentlyUnuseBundleAgingHandler of ProcessBundle
+* @tc.desc: ProcessBundle is false
+*/
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0019, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+
+    AgingRequest request;
+    std::vector<AgingBundleInfo> agingBundles = {
+        AgingBundleInfo("com.example.app1", 1000, 5),
+        AgingBundleInfo("com.example.app2", 2000, 3)
+    };
+    request.AddAgingBundle(agingBundles[0]);
+    request.AddAgingBundle(agingBundles[1]);
+    bool ret = bundleAgingMgr.ProcessBundle(request);
+    EXPECT_FALSE(ret);
+}
+
+/**
+* @tc.number: AginTest_0024
+* @tc.name: test RecentlyUnuseBundleAgingHandler of Process
+* @tc.desc: CleanCache is hasCleanCache
+*/
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0024, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+    AgingBundleInfo agingBundle("com.example.app2", 2000, 3);
+    bool ret = bundleAgingMgr.CleanCache(agingBundle);
+    EXPECT_FALSE(ret);
+}
 }
