@@ -5284,6 +5284,8 @@ bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
         shortcutInfo.moduleName = abilityInfo.moduleName;
         info.InnerProcessShortcut(item, shortcutInfo);
         shortcutInfo.sourceType = 1;
+        APP_LOGI("shortcutInfo: -n %{public}s, id %{public}s, iconId %{public}d, labelId %{public}d",
+            shortcutInfo.bundleName.c_str(), shortcutInfo.id.c_str(), shortcutInfo.iconId, shortcutInfo.labelId);
         shortcutInfos.emplace_back(shortcutInfo);
     }
     return true;
