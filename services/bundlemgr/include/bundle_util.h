@@ -18,6 +18,7 @@
 
 #include <mutex>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "appexecfwk_errors.h"
@@ -221,6 +222,7 @@ public:
     static bool IsSandBoxPath(const std::string &path);
     static bool StrToUint32(const std::string &str, uint32_t &value);
     static std::string ExtractStringFromJson(nlohmann::json &jsonObject, const std::string &key);
+    static std::unordered_map<std::string, std::string> ParseMapFromJson(const std::string &jsonStr);
 private:
     static std::mutex g_mutex;
 };

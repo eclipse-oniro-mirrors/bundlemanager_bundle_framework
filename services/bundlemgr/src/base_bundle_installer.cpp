@@ -1211,6 +1211,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         }
     }
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
+    // plugin judge
+    if (!newInfos.empty() &&
+        newInfos.begin()->second.GetApplicationBundleType() == BundleType::APP_PLUGIN) {
+        result = ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW;
+        CHECK_RESULT(result, "plugin install not allow %{public}d");
+    }
     result = CheckShellCanInstallPreApp(newInfos);
     CHECK_RESULT(result, "check shell can install pre app failed %{public}d");
     CheckPreBundle(newInfos, installParam, isRecover);

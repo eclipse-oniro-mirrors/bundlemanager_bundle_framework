@@ -87,6 +87,8 @@ constexpr const char* PERMISSION_MANAGER_SHORTCUT = "ohos.permission.MANAGE_SHOR
 constexpr const char* PERMISSION_ACCESS_APP_INSTALL_DIR = "ohos.permission.ACCESS_APP_INSTALL_DIR";
 constexpr const char* PERMISSION_GET_SIGNATURE_INFO = "ohos.permission.GET_SIGNATURE_INFO";
 constexpr const char* PERMISSION_MIGRATE_DATA = "ohos.permission.MIGRATE_DATA";
+constexpr const char* PERMISSION_INSTALL_PLUGIN = "ohos.permission.INSTALL_PLUGIN_BUNDLE";
+constexpr const char* PERMISSION_UNINSTALL_PLUGIN = "ohos.permission.UNINSTALL_PLUGIN_BUNDLE";
 
 enum class AppType {
     SYSTEM_APP = 0,

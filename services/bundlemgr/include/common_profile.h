@@ -511,6 +511,7 @@ constexpr const char* BUNDLE_TYPE_APP = "app";
 constexpr const char* BUNDLE_TYPE_ATOMIC_SERVICE = "atomicService";
 constexpr const char* BUNDLE_TYPE_SHARED = "shared";
 constexpr const char* BUNDLE_TYPE_APP_SERVICE_FWK = "appService";
+constexpr const char* BUNDLE_TYPE_PLUGIN = "appPlugin";
 
 // compileSdkType
 constexpr const char* COMPILE_SDK_VERSION = "compileSdkVersion";

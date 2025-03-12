@@ -8499,4 +8499,113 @@ HWTEST_F(BmsBundleInstallerTest, UtdHandler_0400, Function | SmallTest | Level0)
     std::string utdProfile = UtdHandler::GetUtdProfileFromHap(corruptUtdHapPath);
     EXPECT_EQ(utdProfile, Constants::EMPTY_STRING);
 }
+
+/*
+ * @tc.number: 20449gin_0100
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the HandleInstallPlugin of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallPlugin_0100, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string hostBundleName = "bundleName";
+    data.WriteString16(Str8ToStr16(hostBundleName));
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallPlugin(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_READ_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleInstallPlugin_0200
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the HandleInstallPlugin of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleInstallPlugin_0200, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string hostBundleName = "";
+    std::vector<std::string> pluginFilePaths;
+    pluginFilePaths.emplace_back("pluginPath1");
+    pluginFilePaths.emplace_back("pluginPath2");
+    InstallPluginParam installPluginParam;
+    data.WriteString16(Str8ToStr16(hostBundleName));
+    data.WriteStringVector(pluginFilePaths);
+    data.WriteParcelable(&installPluginParam);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleInstallPlugin(data, reply);
+    
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleUninstallPlugin_0100
+ * @tc.name: test uninstall
+ * @tc.desc: 1.Test the HandleUninstallPlugin of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, HandleUninstallPlugin_0100, Function | SmallTest | Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    std::string hostBundleName = "bundleName";
+    std::string pluginBundleName = "";
+    InstallPluginParam installPluginParam;
+    data.WriteString16(Str8ToStr16(hostBundleName));
+    data.WriteString16(Str8ToStr16(pluginBundleName));
+    data.WriteParcelable(&installPluginParam);
+
+    BundleInstallerHost bundleInstallerHost;
+    bundleInstallerHost.HandleUninstallPlugin(data, reply);
+
+    int32_t ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstallPlugin_0100
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the InstallPlugin of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallPlugin_0100, Function | SmallTest | Level0)
+{
+    std::string hostBundleName = BUNDLE_NAME_TEST;
+    std::vector<std::string> pluginFilePaths;
+    pluginFilePaths.emplace_back("pluginPath1");
+    pluginFilePaths.emplace_back("pluginPath2");
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = 100;
+    OHOS::system::SetParameter(ServiceConstants::IS_SUPPORT_PLUGIN, "true");
+
+    BundleInstallerHost bundleInstallerHost;
+    int32_t ret = bundleInstallerHost.InstallPlugin(hostBundleName, pluginFilePaths,
+        installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+    OHOS::system::SetParameter(ServiceConstants::IS_SUPPORT_PLUGIN, "false");
+}
+
+/**
+ * @tc.number: UninstallPlugin_0100
+ * @tc.name: test Uninstall
+ * @tc.desc: 1.Test the UninstallPlugin of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallPlugin_0100, Function | SmallTest | Level0)
+{
+    std::string hostBundleName = BUNDLE_NAME_TEST;
+    std::string pluginBundleName = "pluginName";
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = 100;
+
+    BundleInstallerHost bundleInstallerHost;
+    int32_t ret = bundleInstallerHost.UninstallPlugin(hostBundleName, pluginBundleName,
+        installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+}
 } // OHOS

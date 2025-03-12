@@ -21,6 +21,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* RENAME_INSTALL_KEY = "ohos.bms.param.renameInstall";
+constexpr const char* PARAMETERS_VALUE_TRUE = "true";
+}
+
 bool InstallPluginParam::ReadFromParcel(Parcel &parcel)
 {
     userId = parcel.ReadInt32();
@@ -57,6 +62,16 @@ bool InstallPluginParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, parameter.second);
     }
     return true;
+}
+
+bool InstallPluginParam::IsRenameInstall() const
+{
+    for (const auto &item : parameters) {
+        if ((item.first == RENAME_INSTALL_KEY) && (item.second == PARAMETERS_VALUE_TRUE)) {
+            return true;
+        } 
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

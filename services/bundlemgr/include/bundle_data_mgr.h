@@ -1087,6 +1087,12 @@ public:
     ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) const;
     ErrCode GetAssetAccessGroups(const std::string &bundleName, std::vector<std::string> &assetAccessGroups) const;
     ErrCode GetDeveloperId(const std::string &bundleName, std::string &developerId) const;
+    ErrCode AddPluginInfo(const InnerBundleInfo &innerBundleInfo, const PluginBundleInfo &pluginBundleInfo,
+        const int32_t userId);
+    ErrCode RemovePluginInfo(const InnerBundleInfo &innerBundleInfo, const std::string &pluginBundleName,
+        const int32_t userId);
+    bool GetPluginBundleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+        PluginBundleInfo &pluginBundleInfo, const int32_t userId = Constants::ALL_USERID);
 
 private:
     /**

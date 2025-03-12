@@ -29,6 +29,8 @@
 #include "bundle_multiuser_installer.h"
 #include "bundle_permission_mgr.h"
 #include "ipc_skeleton.h"
+#include "parameters.h"
+#include "plugin_installer.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -115,6 +117,12 @@ int BundleInstallerHost::OnRemoteRequest(
             break;
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_EXISTED):
             HandleInstallExisted(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_PLUGIN_APP):
+            HandleInstallPlugin(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_PLUGIN_APP):
+            HandleUninstallPlugin(data, reply);
             break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -279,6 +287,47 @@ void BundleInstallerHost::HandleUninstallSandboxApp(MessageParcel &data, Message
         LOG_E(BMS_TAG_INSTALLER, "write failed");
     }
     LOG_D(BMS_TAG_INSTALLER, "handle install sandbox app message finished");
+}
+
+void BundleInstallerHost::HandleInstallPlugin(MessageParcel &data, MessageParcel &reply)
+{
+    LOG_D(BMS_TAG_INSTALLER, "handle install plugin application");
+    std::string hostBundleName = Str16ToStr8(data.ReadString16());
+    std::vector<std::string> pluginFilePaths;
+    if (!data.ReadStringVector(&pluginFilePaths)) {
+        reply.WriteInt32(ERR_APPEXECFWK_PLUGIN_INSTALL_READ_PARCEL_ERROR);
+        LOG_E(BMS_TAG_INSTALLER, "read pluginFilePaths failed");
+        return;
+    }
+    std::unique_ptr<InstallPluginParam> installPluginParam(data.ReadParcelable<InstallPluginParam>());
+    if (installPluginParam == nullptr) {
+        reply.WriteInt32(ERR_APPEXECFWK_PLUGIN_INSTALL_READ_PARCEL_ERROR);
+        LOG_E(BMS_TAG_INSTALLER, "ReadParcelable<installPluginParam> failed");
+        return;
+    }
+    auto ret = InstallPlugin(hostBundleName, pluginFilePaths, *installPluginParam);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "write failed");
+    }
+    LOG_D(BMS_TAG_INSTALLER, "handle install plugin application finished");
+}
+
+void BundleInstallerHost::HandleUninstallPlugin(MessageParcel &data, MessageParcel &reply)
+{
+    LOG_D(BMS_TAG_INSTALLER, "handle uninstall plugin application");
+    std::string hostBundleName = Str16ToStr8(data.ReadString16());
+    std::string pluginBundleName = Str16ToStr8(data.ReadString16());
+    std::unique_ptr<InstallPluginParam> installPluginParam(data.ReadParcelable<InstallPluginParam>());
+    if (installPluginParam == nullptr) {
+        reply.WriteInt32(ERR_APPEXECFWK_PLUGIN_INSTALL_READ_PARCEL_ERROR);
+        LOG_E(BMS_TAG_INSTALLER, "ReadParcelable<installPluginParam> failed");
+        return;
+    }
+    auto ret = UninstallPlugin(hostBundleName, pluginBundleName, *installPluginParam);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "write failed");
+    }
+    LOG_D(BMS_TAG_INSTALLER, "handle uninstall plugin application finished");
 }
 
 void BundleInstallerHost::HandleCreateStreamInstaller(MessageParcel &data, MessageParcel &reply)
@@ -619,6 +668,56 @@ ErrCode BundleInstallerHost::UninstallSandboxApp(const std::string &bundleName, 
         LOG_E(BMS_TAG_INSTALLER, "uninstall sandbox failed due to error code : %{public}d", res);
     }
     return res;
+}
+
+ErrCode BundleInstallerHost::InstallPlugin(const std::string &hostBundleName,
+    const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam)
+{
+    if (hostBundleName.empty() || pluginFilePaths.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "install plugin failed due to empty hostBundleName");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::IS_SUPPORT_PLUGIN, false)) {
+        LOG_E(BMS_TAG_INSTALLER, "current device not support plugin");
+        return ERR_APPEXECFWK_DEVICE_NOT_SUPPORT_PLUGIN;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_PLUGIN)) {
+        LOG_E(BMS_TAG_INSTALLER, "InstallPlugin permission denied");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    std::shared_ptr<PluginInstaller> pluginInstaller = std::make_shared<PluginInstaller>();
+    auto ret = pluginInstaller->InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "install plugin failed due to error code : %{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode BundleInstallerHost::UninstallPlugin(const std::string &hostBundleName, const std::string &pluginBundleName,
+    const InstallPluginParam &installPluginParam)
+{
+    if (hostBundleName.empty() || pluginBundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall plugin failed due to empty BundleName");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_UNINSTALL_PLUGIN)) {
+        LOG_E(BMS_TAG_INSTALLER, "UninstallPlugin permission denied");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    std::shared_ptr<PluginInstaller> pluginInstaller = std::make_shared<PluginInstaller>();
+    auto ret = pluginInstaller->UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall plugin failed due to error code : %{public}d", ret);
+    }
+    return ret;
 }
 
 ErrCode BundleInstallerHost::StreamInstall(const std::vector<std::string> &bundleFilePaths,

@@ -22,6 +22,7 @@
 #include "clone_param.h"
 #include "status_receiver_interface.h"
 #include "install_param.h"
+#include "plugin/install_plugin_param.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -115,6 +116,32 @@ public:
      * @return Returns ERR_OK if the sandbox application is installed successfully; returns errcode otherwise.
      */
     virtual ErrCode UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId) = 0;
+
+    /**
+     * @brief Install or update plugin application.
+     * @param hostBundleName Indicates the bundle name of the host application.
+     * @param pluginFilePath Indicates the paths for storing the HSP of the plugin to install or update.
+     * @param installPluginParam Indicates the install parameters.
+     * @return Returns ERR_OK if the plugin application is installed successfully; returns errcode otherwise.
+     */
+    virtual ErrCode InstallPlugin(const std::string &hostBundleName, const std::vector<std::string> &pluginFilePaths,
+        const InstallPluginParam &installPluginParam)
+    {
+        return ERR_OK;
+    }
+
+    /**
+     * @brief uninstall plugin application.
+     * @param hostBundleName Indicates the bundle name of the host application.
+     * @param pluginBundleName Indicates the plugin bundle name to uninstall.
+     * @param installPluginParam Indicates the uninstall parameters.
+     * @return Returns ERR_OK if the plugin application is uninstalled successfully; returns errcode otherwise.
+     */
+    virtual ErrCode UninstallPlugin(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const InstallPluginParam &installPluginParam)
+    {
+        return ERR_OK;
+    }
 
     virtual sptr<IBundleStreamInstaller> CreateStreamInstaller(const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver, const std::vector<std::string> &originHapPaths) = 0;
