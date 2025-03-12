@@ -85,12 +85,7 @@ std::string DeployQuickFixResult::ToString() const
         { QUICK_FIX_TYPE, static_cast<int32_t>(type) },
         { QUICK_FIX_MODULE_NAME, moduleNames }
     };
-    try {
-        return deployResultJson.dump(Constants::DUMP_INDENT);
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return deployResultJson.dump(Constants::DUMP_INDENT);
 }
 
 void DeployQuickFixResult::SetResCode(int32_t resCode)
@@ -134,12 +129,7 @@ std::string SwitchQuickFixResult::ToString() const
         { QUICK_FIX_RESULT_CODE, resultCode },
         { QUICK_FIX_BUNDLE_NAME, bundleName }
     };
-    try {
-        return switchResultJson.dump(Constants::DUMP_INDENT);
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return switchResultJson.dump(Constants::DUMP_INDENT);
 }
 
 int32_t SwitchQuickFixResult::GetResCode()
@@ -183,12 +173,7 @@ std::string DeleteQuickFixResult::ToString() const
         { QUICK_FIX_RESULT_CODE, resultCode },
         { QUICK_FIX_BUNDLE_NAME, bundleName }
     };
-    try {
-        return deleteResultJson.dump(Constants::DUMP_INDENT);
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return deleteResultJson.dump(Constants::DUMP_INDENT);
 }
 
 int32_t DeleteQuickFixResult::GetResCode()

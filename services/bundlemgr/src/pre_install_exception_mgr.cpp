@@ -113,13 +113,7 @@ void PreInstallExceptionMgr::SavePreInstallExceptionInfosToDb()
     jsonObject[EXCEPTION_BUNDLENAMES] = exceptionBundleNames_;
     jsonObject[EXCEPTION_APP_SERVICE_PATHS] = exceptionAppServicePaths_;
     jsonObject[EXCEPTION_APP_SERVICE_BUNDLENAMES] = exceptionAppServiceBundleNames_;
-    std::string param;
-    try {
-        param = jsonObject.dump();
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-    }
-    bmsPara->SaveBmsParam(PREINSTALL_EXCEPTION, param);
+    bmsPara->SaveBmsParam(PREINSTALL_EXCEPTION, jsonObject.dump());
 }
 
 void PreInstallExceptionMgr::DeletePreInstallExceptionInfosFromDb()
@@ -152,13 +146,7 @@ void PreInstallExceptionMgr::DeletePreInstallExceptionInfosFromDb()
         bmsPara->DeleteBmsParam(PREINSTALL_EXCEPTION);
     } else {
         APP_LOGI_NOFUNC("Updating pre-install exception in database");
-        std::string param;
-        try {
-            param = jsonObject.dump();
-        } catch (const nlohmann::json::type_error &e) {
-            APP_LOGE("json dump failed: %{public}s", e.what());
-        }
-        bmsPara->SaveBmsParam(PREINSTALL_EXCEPTION, param);
+        bmsPara->SaveBmsParam(PREINSTALL_EXCEPTION, jsonObject.dump());
     }
 }
 

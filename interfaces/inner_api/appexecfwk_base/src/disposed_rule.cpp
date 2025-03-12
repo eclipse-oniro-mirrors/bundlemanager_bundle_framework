@@ -221,12 +221,7 @@ std::string DisposedRule::ToString() const
 {
     nlohmann::json jsonObject;
     to_json(jsonObject, *this);
-    try {
-        return jsonObject.dump();
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return jsonObject.dump();
 }
 
 bool DisposedRule::FromString(const std::string &ruleString, DisposedRule &rule)
@@ -319,12 +314,7 @@ std::string UninstallDisposedRule::ToString() const
 {
     nlohmann::json jsonObject;
     to_json(jsonObject, *this);
-    try {
-        return jsonObject.dump();
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return jsonObject.dump();
 }
 
 bool UninstallDisposedRule::FromString(const std::string &ruleString, UninstallDisposedRule &rule)

@@ -37,12 +37,7 @@ std::string DefaultAppData::ToString() const
     LOG_D(BMS_TAG_DEFAULT, "DefaultAppData ToString begin");
     nlohmann::json jsonObject;
     jsonObject[INFOS] = infos;
-    try {
-        return jsonObject.dump();
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return jsonObject.dump();
 }
 
 void DefaultAppData::ToJson(nlohmann::json& jsonObject) const

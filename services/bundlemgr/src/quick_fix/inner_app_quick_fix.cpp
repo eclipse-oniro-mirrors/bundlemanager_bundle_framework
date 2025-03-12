@@ -99,12 +99,7 @@ std::string InnerAppQuickFix::ToString() const
 {
     nlohmann::json object;
     ToJson(object);
-    try {
-        return object.dump();
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return object.dump();
 }
 
 void InnerAppQuickFix::ToJson(nlohmann::json &jsonObject) const

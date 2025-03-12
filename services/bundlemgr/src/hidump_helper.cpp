@@ -199,14 +199,7 @@ ErrCode HidumpHelper::GetAllAbilityInfo(std::string &result)
             result.append(abilityInfo.name);
             result.append(":\n");
             nlohmann::json jsonObject = abilityInfo;
-            std::string ability;
-            try {
-                ability = jsonObject.dump(Constants::DUMP_INDENT);
-            } catch (const nlohmann::json::type_error &e) {
-                APP_LOGE("json dump failed: %{public}s", e.what());
-                return ERR_APPEXECFWK_HIDUMP_ERROR;
-            }
-            result.append(ability);
+            result.append(jsonObject.dump(Constants::DUMP_INDENT));
             result.append("\n");
         }
     }
@@ -273,14 +266,8 @@ ErrCode HidumpHelper::GetAbilityInfoByName(const std::string &name, std::string 
         APP_LOGE("get ability by abilityName failed");
         return ERR_APPEXECFWK_HIDUMP_ERROR;
     }
-    std::string abilities;
-    try {
-        abilities = jsonObject.dump(Constants::DUMP_INDENT);
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return ERR_APPEXECFWK_HIDUMP_ERROR;
-    }
-    result.append(abilities);
+
+    result.append(jsonObject.dump(Constants::DUMP_INDENT));
     result.append("\n");
     return ERR_OK;
 }
@@ -307,14 +294,7 @@ ErrCode HidumpHelper::GetAllBundleInfo(std::string &result)
         result.append(":\n");
         nlohmann::json jsonObject = info;
         jsonObject["hapModuleInfos"] = info.hapModuleInfos;
-        std::string hapModules;
-        try {
-            hapModules = jsonObject.dump(Constants::DUMP_INDENT);
-        } catch (const nlohmann::json::type_error &e) {
-            APP_LOGE("json dump failed: %{public}s", e.what());
-            return ERR_APPEXECFWK_HIDUMP_ERROR;
-        }
-        result.append(hapModules);
+        result.append(jsonObject.dump(Constants::DUMP_INDENT));
         result.append("\n");
     }
     APP_LOGD("get all bundle info success");
@@ -365,14 +345,7 @@ ErrCode HidumpHelper::GetBundleInfoByName(const std::string &name, std::string &
     result.append(":\n");
     nlohmann::json jsonObject = bundleInfo;
     jsonObject["hapModuleInfos"] = bundleInfo.hapModuleInfos;
-    std::string hapModules;
-    try {
-        hapModules = jsonObject.dump(Constants::DUMP_INDENT);
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return ERR_APPEXECFWK_HIDUMP_ERROR;
-    }
-    result.append(hapModules);
+    result.append(jsonObject.dump(Constants::DUMP_INDENT));
     result.append("\n");
     APP_LOGD("get %{public}s bundle info success", name.c_str());
     return ERR_OK;
