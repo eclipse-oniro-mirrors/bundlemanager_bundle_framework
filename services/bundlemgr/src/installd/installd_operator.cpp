@@ -92,9 +92,9 @@ constexpr const char* HILOG_LOG = "/data/log/hilog/";
 const std::vector<std::string> HILOG_FILE_HEAD = {"hilog."};
 constexpr const char* LOG_PATH = "/log/";
 const std::vector<std::string> DRIVER_EXECUTE_DIR {
-    "/print_service/cups/serverbin/backend",
     "/print_service/cups/serverbin/filter",
-    "/print_service/sane/backend"
+    "/print_service/sane/backend",
+    "/print_service/cups/serverbin/backend"
 };
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
