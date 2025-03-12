@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 #include "app_log_wrapper.h"
+#include "bundle_errors.h"
 #include "bundle_resource_info.h"
 #include "bundle_resource_interface.h"
+#include "business_error_ani.h"
 #include "common_fun_ani.h"
 #include "common_func.h"
 #include "resource_helper.h"
@@ -25,6 +27,10 @@ namespace AppExecFwk {
 namespace  {
     constexpr int32_t INVALID_RES_FLAG = -500;
     constexpr int32_t DEFAULT_RES_FLAG = 1;
+    constexpr const char* BUNDLE_NAME = "bundleName";
+    constexpr const char* TYPE_STRING = "string";
+    constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
+    constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
 }
 
 static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_string aniBundleName,
@@ -33,6 +39,7 @@ static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_strin
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
     auto resourceMgr = ResourceHelper::GetBundleResourceMgr();
@@ -49,6 +56,8 @@ static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_strin
     int32_t ret = resourceMgr->GetBundleResourceInfo(bundleName, resFlag, bundleResInfo, appIdx);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleResourceInfo failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ret, GET_BUNDLE_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
         return nullptr;
     }
 

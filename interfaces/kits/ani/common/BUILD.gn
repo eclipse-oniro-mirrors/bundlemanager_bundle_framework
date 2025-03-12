@@ -15,7 +15,10 @@ import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
 config("bms_ani_common_config") {
-  include_dirs = [ "./" ]
+  include_dirs = [
+    "./",
+    "${kits_path}/js/common",
+  ]
 }
 
 ohos_shared_library("bms_ani_common") {
@@ -26,7 +29,10 @@ ohos_shared_library("bms_ani_common") {
     debug = false
   }
 
-  sources = [ "common_fun_ani.cpp" ]
+  sources = [
+    "business_error_ani.cpp",
+    "common_fun_ani.cpp",
+  ]
 
   cflags = [ "-Os" ]
   cflags_cc = [ "-Os" ]
@@ -35,6 +41,7 @@ ohos_shared_library("bms_ani_common") {
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
+    "${kits_path}/js/common:bundle_napi_common",
   ]
 
   defines = [
