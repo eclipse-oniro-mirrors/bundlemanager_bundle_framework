@@ -615,7 +615,7 @@ private:
     ErrCode CreateArkProfile(
         const std::string &bundleName, int32_t userId, int32_t uid, int32_t gid) const;
     ErrCode DeleteArkProfile(const std::string &bundleName, int32_t userId) const;
-    bool RemoveDataPreloadHapFiles(const std::string &bundleName, bool forceRemove = false) const;
+    bool RemoveDataPreloadHapFiles(const std::string &bundleName) const;
     bool IsDataPreloadHap(const std::string &path) const;
     ErrCode ExtractArkProfileFile(const std::string &modulePath, const std::string &bundleName,
         int32_t userId) const;
@@ -814,6 +814,8 @@ private:
     void CheckPreBundleRecoverResult(ErrCode &result);
 
     bool IsAllowEnterPrise();
+    void MarkIsForceUninstall(const std::string &bundleName, bool isForceUninstalled);
+    bool CheckCanInstallPreBundle(const std::string &bundleName, const int32_t userId);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

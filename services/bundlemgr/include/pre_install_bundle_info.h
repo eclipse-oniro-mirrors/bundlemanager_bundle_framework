@@ -274,6 +274,56 @@ public:
         isAdditionalApp_ = isAdditionalApp;
     }
 
+    /**
+     * @brief Get forceUninstalledUsers_.
+     * @return Return forceUninstalledUsers_
+     */
+    std::vector<int32_t> GetForceUnisntalledUsers() const
+    {
+        return forceUninstalledUsers_;
+    }
+    /**
+     * @brief Add bundle path.
+     * @param bundlePath bundle path.
+     */
+    void AddForceUnisntalledUser(const int32_t &forceUninstalledUser)
+    {
+        bool ret = std::find(
+            forceUninstalledUsers_.begin(), forceUninstalledUsers_.end(), forceUninstalledUser) !=
+                forceUninstalledUsers_.end();
+        if (!ret) {
+            forceUninstalledUsers_.emplace_back(forceUninstalledUser);
+        }
+    }
+    /**
+     * @brief Delete forceUninstalledUser.
+     * @param forceUninstalledUser
+     */
+    void DeleteForceUnisntalledUser(const int32_t &forceUninstalledUser)
+    {
+        auto iter = std::find(forceUninstalledUsers_.begin(), forceUninstalledUsers_.end(), forceUninstalledUser);
+        if (iter != forceUninstalledUsers_.end()) {
+            forceUninstalledUsers_.erase(iter);
+        }
+    }
+    /**
+     * @brief clear forceUninstalledUsers_.
+     * @param forceUninstalledUsers_ forceUninstalledUsers.
+     */
+    void ClearForceUninstalledUsers()
+    {
+        forceUninstalledUsers_.clear();
+    }
+    /**
+     * @brief Has forceUninstalledUser.
+     * @param forceUninstalledUser forceUninstalledUser.
+     */
+    bool HasForceUninstalledUser(const int32_t &forceUninstalledUser)
+    {
+        return std::find(forceUninstalledUsers_.begin(), forceUninstalledUsers_.end(), forceUninstalledUser)
+            != forceUninstalledUsers_.end();
+    }
+
 private:
     bool removable_ = true;
     bool isUninstalled_ = false;
@@ -289,6 +339,7 @@ private:
     int64_t hapTotalSize_ = 0;
     BundleType bundleType_ = BundleType::APP;
     std::vector<std::string> bundlePaths_;
+    std::vector<int32_t> forceUninstalledUsers_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

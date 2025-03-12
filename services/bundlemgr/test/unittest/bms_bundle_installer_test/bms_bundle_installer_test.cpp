@@ -149,13 +149,15 @@ public:
     void SetUp();
     void TearDown();
     bool InstallSystemBundle(const std::string &filePath) const;
-    bool InstallSystemBundle(const std::string &filePath, bool isRemovable) const;
+    bool InstallSystemBundle(const std::string &filePath, bool isRemovable, bool needSavePreInstall = true) const;
     bool OTAInstallSystemBundle(const std::string &filePath) const;
     ErrCode InstallThirdPartyBundle(const std::string &filePath) const;
     ErrCode UpdateThirdPartyBundle(const std::string &filePath) const;
     ErrCode UnInstallBundle(const std::string &bundleName) const;
     ErrCode UnInstallBundle(const std::string &bundleName, const InstallParam &installParam) const;
     ErrCode RecoverBundle(const std::string &bundleName, const InstallParam &installParam) const;
+    ErrCode MockForceUnInstallBundle(const std::string &bundleName,
+        const InstallParam &installParam) const;
     void CheckFileExist() const;
     void CheckFileNonExist() const;
     void CheckShareFilesDataDirsExist(const std::string &bundleName) const;
@@ -224,7 +226,8 @@ bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath)
         filePaths, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
 }
 
-bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath, bool isRemovable) const
+bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath,
+    bool isRemovable, bool needSavePreInstall) const
 {
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     auto installer = std::make_unique<SystemBundleInstaller>();
@@ -235,7 +238,7 @@ bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath, bo
     installParam.SetKillProcess(false);
     setuid(Constants::ROOT_UID);
     installParam.needSendEvent = false;
-    installParam.needSavePreInstallInfo = true;
+    installParam.needSavePreInstallInfo = needSavePreInstall;
     installParam.copyHapToInstallPath = false;
     installParam.removable = isRemovable;
     return installer->InstallSystemBundle(
@@ -340,6 +343,24 @@ ErrCode BmsBundleInstallerTest::RecoverBundle(const std::string &bundleName, con
     }
     bool result = installer->Recover(bundleName, installParam, receiver);
     EXPECT_TRUE(result);
+    return receiver->GetResultCode();
+}
+
+ErrCode BmsBundleInstallerTest::MockForceUnInstallBundle(const std::string &bundleName,
+    const InstallParam &installParam) const
+{
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
+    if (!installer) {
+        EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    if (!receiver) {
+        EXPECT_FALSE(true) << "the receiver is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    bool result = installer->Uninstall(bundleName, installParam, receiver);
     return receiver->GetResultCode();
 }
 
@@ -513,6 +534,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0100, Function | Smal
     OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
     InstallParam installParam;
     installParam.userId = USERID;
+    setuid(Constants::EDC_UID);
     ErrCode uninstallRes = UnInstallBundle(UNINSTALL_PREINSTALL_BUNDLE_NAME, installParam);
     EXPECT_EQ(uninstallRes, ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR);
     OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
@@ -529,6 +551,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0200, Function | Smal
     OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
     InstallParam installParam;
     installParam.userId = USERID;
+    setuid(Constants::EDC_UID);
     installParam.parameters.emplace(Constants::VERIFY_UNINSTALL_FORCED_KEY,
         Constants::VERIFY_UNINSTALL_FORCED_VALUE);
     ErrCode uninstallRes = UnInstallBundle(UNINSTALL_PREINSTALL_BUNDLE_NAME, installParam);

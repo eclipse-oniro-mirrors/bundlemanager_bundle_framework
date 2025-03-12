@@ -788,6 +788,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         preInstallBundleInfo.SetAppType(newInfos.begin()->second.GetAppType());
         preInstallBundleInfo.SetVersionCode(newInfos.begin()->second.GetVersionCode());
         preInstallBundleInfo.SetIsUninstalled(false);
+        preInstallBundleInfo.DeleteForceUnisntalledUser(userId_);
         for (const auto &item : newInfos) {
             preInstallBundleInfo.AddBundlePath(item.first);
         }
@@ -814,6 +815,16 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             }
         }
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
+    } else {
+        // remove userid record in preinstallbundleinfo
+        PreInstallBundleInfo preInstallBundleInfo;
+        preInstallBundleInfo.SetBundleName(bundleName_);
+        if (dataMgr_->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo)) {
+            preInstallBundleInfo.DeleteForceUnisntalledUser(userId_);
+            if (!dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo)) {
+                LOG_NOFUNC_E(BMS_TAG_DEFAULT, "update preinstall DB fail -n %{public}s", bundleName_.c_str());
+            }
+        }
     }
 
     result = CheckSingleton(newInfos.begin()->second, userId_);
@@ -1595,9 +1606,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     uid = curInnerBundleUserInfo.uid;
+    bool isForcedUninstall = installParam.IsForcedUninstall() && IsAllowEnterPrise();
     if (!installParam.GetForceExecuted() &&
         !oldInfo.IsRemovable() && installParam.GetKillProcess() && !installParam.GetIsUninstallAndRecover()) {
-        if (!installParam.isForcedUninstall() || !IsAllowEnterPrise()) {
+        if (!isForcedUninstall) {
             LOG_E(BMS_TAG_INSTALLER, "uninstall system app");
             return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
         }
@@ -1605,7 +1617,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (!installParam.GetForceExecuted() &&
         !oldInfo.GetUninstallState() && installParam.GetKillProcess() && !installParam.GetIsUninstallAndRecover()) {
-        if (!installParam.isForcedUninstall() || !IsAllowEnterPrise()) {
+        if (!isForcedUninstall) {
             LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
                 bundleName.c_str(), oldInfo.GetUninstallState());
             return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
@@ -1613,7 +1625,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
-        if (!installParam.isForcedUninstall() || !IsAllowEnterPrise()) {
+        if (!isForcedUninstall) {
             LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s is not allow uninstall", bundleName.c_str());
             return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
         }
@@ -1664,6 +1676,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (isMultiUser) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
+        if (oldInfo.IsPreInstallApp() && isForcedUninstall) {
+            LOG_I(BMS_TAG_INSTALLER, "Pre-installed app %{public}s detected, Marking as force uninstalled",
+                bundleName.c_str());
+            MarkIsForceUninstall(bundleName, isForcedUninstall);
+        }
         auto res = RemoveBundleUserData(oldInfo, installParam.isKeepData, !installParam.isRemoveUser);
         if (res != ERR_OK) {
             return res;
@@ -1733,15 +1750,21 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed", bundleName.c_str());
     }
     LOG_D(BMS_TAG_INSTALLER, "finish to process %{public}s bundle uninstall", bundleName.c_str());
-    RemoveDataPreloadHapFiles(bundleName, installParam.isForcedUninstall() && IsAllowEnterPrise());
+    RemoveDataPreloadHapFiles(bundleName);
 
     // remove drive so file
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     driverInstaller->RemoveDriverSoFile(oldInfo, "", false);
-    if (oldInfo.IsPreInstallApp() && oldInfo.IsRemovable()) {
+    if (oldInfo.IsPreInstallApp() && (oldInfo.IsRemovable() || isForcedUninstall)) {
         LOG_I(BMS_TAG_INSTALLER, "Pre-installed app %{public}s detected, Marking as uninstalled", bundleName.c_str());
         MarkPreInstallState(bundleName, true);
+        if (isForcedUninstall) {
+            LOG_I(BMS_TAG_INSTALLER, "Pre-installed app %{public}s detected, Marking as force uninstalled",
+                bundleName.c_str());
+            MarkIsForceUninstall(bundleName, isForcedUninstall);
+        }
     }
+    
     DeleteEncryptedStatus(bundleName, uid);
     BundleResourceHelper::DeleteResourceInfo(bundleName, userId_);
     DeleteRouterInfo(bundleName);
@@ -2024,6 +2047,12 @@ ErrCode BaseBundleInstaller::ProcessRecover(
     const std::string &bundleName, const InstallParam &installParam, int32_t &uid)
 {
     LOG_D(BMS_TAG_INSTALLER, "Process Recover Bundle(%{public}s) start", bundleName.c_str());
+    int32_t userId = GetUserId(installParam.userId);
+    if (!CheckCanInstallPreBundle(bundleName, userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "Bundle(%{public}s) was force uninstalled before, not allow recover",
+            bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_FORCE_UNINSTALLED_BUNDLE_NOT_ALLOW_RECOVER;
+    }
     ErrCode result = InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid);
     return result;
 }
@@ -2120,6 +2149,13 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             }
             UtdHandler::InstallUtdAsync(bundleName, userId_);
             GenerateNewUserDataGroupInfos(oldInfo);
+            // remove userid record in preInstallBundleInfo
+            PreInstallBundleInfo preInstallBundleInfo;
+            preInstallBundleInfo.SetBundleName(bundleName);
+            if (dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+                preInstallBundleInfo.DeleteForceUnisntalledUser(userId_);
+                dataMgr_->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+            }
             return ERR_OK;
         }
     }
@@ -3385,7 +3421,7 @@ ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int
     return InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
 }
 
-bool BaseBundleInstaller::RemoveDataPreloadHapFiles(const std::string &bundleName, bool forceRemove) const
+bool BaseBundleInstaller::RemoveDataPreloadHapFiles(const std::string &bundleName) const
 {
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "null dataMgr_");
@@ -3405,15 +3441,12 @@ bool BaseBundleInstaller::RemoveDataPreloadHapFiles(const std::string &bundleNam
 
     auto preinstalledAppPath = preInstallBundleInfo.GetBundlePaths().front();
     LOG_D(BMS_TAG_INSTALLER, "preinstalledAppPath %{public}s", preinstalledAppPath.c_str());
-    bool isPreLoad = IsDataPreloadHap(preinstalledAppPath);
-    if (isPreLoad) {
+    if (IsDataPreloadHap(preinstalledAppPath)) {
         std::filesystem::path apFilePath(preinstalledAppPath);
         std::string delDir = apFilePath.parent_path().string();
         if (InstalldClient::GetInstance()->RemoveDir(delDir) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "removeDir failed :%{public}s", delDir.c_str());
         }
-    }
-    if (isPreLoad || forceRemove) {
         if (!dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
             LOG_E(BMS_TAG_INSTALLER, "deletePreInfoInDb bundle %{public}s failed", bundleName.c_str());
         }
@@ -7089,6 +7122,43 @@ bool BaseBundleInstaller::IsAllowEnterPrise()
         return false;
     }
     return true;
+}
+
+void BaseBundleInstaller::MarkIsForceUninstall(const std::string &bundleName, bool isForceUninstalled)
+{
+    if (!dataMgr_) {
+        LOG_E(BMS_TAG_INSTALLER, "dataMgr is nullptr");
+        return;
+    }
+ 
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(bundleName);
+    if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        LOG_D(BMS_TAG_INSTALLER, "No PreInstallBundleInfo(%{public}s) in db", bundleName.c_str());
+        return;
+    }
+    if (isForceUninstalled) {
+        preInstallBundleInfo.AddForceUnisntalledUser(userId_);
+        dataMgr_->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    }
+    return;
+}
+
+bool BaseBundleInstaller::CheckCanInstallPreBundle(const std::string &bundleName, const int32_t userId)
+{
+    if (!InitDataMgr()) {
+        LOG_E(BMS_TAG_INSTALLER, "DataMgr null");
+        return false;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(bundleName);
+    dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    if (!preInstallBundleInfo.HasForceUninstalledUser(userId)) {
+        LOG_D(BMS_TAG_INSTALLER, "GetBundleNameForUid %{public}s is not forceuninstalled in  %{public}d",
+            bundleName.c_str(), userId);
+        return true;
+    }
+    return false;
 }
 
 void BaseBundleInstaller::CheckPreBundleRecoverResult(ErrCode &result)

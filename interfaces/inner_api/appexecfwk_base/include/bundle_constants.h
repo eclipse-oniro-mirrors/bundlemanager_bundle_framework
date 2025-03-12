@@ -53,6 +53,7 @@ constexpr int32_t BASE_APP_UID = 10000;
 constexpr int32_t BASE_USER_RANGE = 200000;
 constexpr int32_t MAX_APP_UID = 65535;
 constexpr int32_t STORAGE_MANAGER_UID = 1090;
+constexpr int32_t EDC_UID = 7200;
 
 // for render process
 constexpr int32_t START_UID_FOR_RENDER_PROCESS = 1000000;

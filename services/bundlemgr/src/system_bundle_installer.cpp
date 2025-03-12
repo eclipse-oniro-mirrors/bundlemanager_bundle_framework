@@ -111,7 +111,11 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
         userIdSet.insert(userId);
     }
     if (!installParam.removable) {
-        userIdSet.insert(Constants::START_USERID);
+        PreInstallBundleInfo preInstallBundleInfo;
+        if (!(dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) ||
+            !preInstallBundleInfo.HasForceUninstalledUser(Constants::START_USERID)) {
+            userIdSet.insert(Constants::START_USERID);
+        }
     }
     if (userIdSet.empty() || (userIdSet.find(Constants::DEFAULT_USERID) != userIdSet.end())) {
         // for singleton hap or no user
@@ -153,7 +157,11 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleTargetUser(const std::vecto
         userIdSet.insert(userId);
     }
     if (!installParam.removable) {
-        userIdSet.insert(Constants::START_USERID);
+        PreInstallBundleInfo preInstallBundleInfo;
+        if (!(dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) ||
+            !preInstallBundleInfo.HasForceUninstalledUser(Constants::START_USERID)) {
+            userIdSet.insert(Constants::START_USERID);
+        }
     }
     if (userIdSet.empty() || (userIdSet.find(Constants::DEFAULT_USERID) != userIdSet.end())) {
         // for singleton hap or no user
