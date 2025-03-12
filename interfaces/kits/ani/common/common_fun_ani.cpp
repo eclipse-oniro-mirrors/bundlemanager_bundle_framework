@@ -128,6 +128,38 @@ ani_ref CommonFunAni::ConvertAniArrayByClass(
     return aArrayRef;
 }
 
+ani_ref CommonFunAni::NewConvertAniArrayByClass(ani_env* env, const std::vector<ani_object>& aArray)
+{
+    ani_class arrayCls = nullptr;
+    ani_status status = env->FindClass("Lescompat/Array;", &arrayCls);
+    if (status != ANI_OK) {
+        APP_LOGE("FindClass Lescompat/Array; failed %{public}d", status);
+        return nullptr;
+    }
+    ani_method arrayCtor;
+    status = env->Class_FindMethod(arrayCls, "<ctor>", "I:V", &arrayCtor);
+    if (status != ANI_OK) {
+        APP_LOGE("Class_FindMethod <ctor> failed %{public}d", status);
+        return nullptr;
+    }
+    ani_object arrayObj;
+    status = env->Object_New(arrayCls, arrayCtor, &arrayObj, aArray.size());
+    if (status != ANI_OK) {
+        APP_LOGE("Object_New Array failed %{public}d", status);
+        return arrayObj;
+    }
+    ani_size index = 0;
+    for (auto obj:aArray) {
+        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", index, obj);
+        if (status != ANI_OK) {
+            APP_LOGE("Object_CallMethodByName_Void $_set failed %{public}d", status);
+            break;
+        }
+        index++;
+    }
+    return arrayObj;
+}
+
 ani_ref CommonFunAni::ConvertAniArrayString(ani_env* env, const std::vector<std::string>& cArray)
 {
     ani_size length = cArray.size();
@@ -211,7 +243,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     for (size_t i = 0; i < bundleInfo.hapModuleInfos.size(); ++i) {
         aHapModuleInfos.emplace_back(ConvertHapModuleInfo(env, bundleInfo.hapModuleInfos[i]));
     }
-    ani_ref aHapModuleInfosRef = ConvertAniArrayByClass(env, CLASSNAME_HAPMODULEINFO, aHapModuleInfos);
+    ani_ref aHapModuleInfosRef = NewConvertAniArrayByClass(env, aHapModuleInfos);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(hapModulesInfo), aHapModuleInfosRef);
 
     // reqPermissionDetails: Array<ReqPermissionDetail>
@@ -219,7 +251,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     for (size_t i = 0; i < bundleInfo.reqPermissionDetails.size(); ++i) {
         aArray.emplace_back(ConvertRequestPermission(env, bundleInfo.reqPermissionDetails[i]));
     }
-    ani_ref aPermissionArrayRef = ConvertAniArrayByClass(env, CLASSNAME_PERMISSION, aArray);
+    ani_ref aPermissionArrayRef = NewConvertAniArrayByClass(env, aArray);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(reqPermissionDetails), aPermissionArrayRef);
 
     // permissionGrantStates: Array<bundleManager.PermissionGrantState>
@@ -242,7 +274,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     for (size_t i = 0; i < bundleInfo.routerArray.size(); ++i) {
         aRouterMap.emplace_back(ConvertRouterItem(env, bundleInfo.routerArray[i]));
     }
-    ani_ref aRouterMapRef = ConvertAniArrayByClass(env, CLASSNAME_ROUTERITEM, aRouterMap);
+    ani_ref aRouterMapRef = NewConvertAniArrayByClass(env, aRouterMap);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(routerMap), aRouterMapRef);
 
     // appIndex: number
@@ -319,12 +351,12 @@ ani_ref CommonFunAni::ConvertModuleMetaInfos(ani_env* env, const std::map<std::s
         for (size_t i = 0; i < item.second.size(); ++i) {
             aMetadata.emplace_back(ConvertMetadata(env, item.second[i]));
         }
-        ani_ref aMetadataRef = ConvertAniArrayByClass(env, CLASSNAME_MODULEMETADATA, aMetadata);
+        ani_ref aMetadataRef = NewConvertAniArrayByClass(env, aMetadata);
         CallSetter(env, cls, object, SETTER_METHOD_NAME(metadata), aMetadataRef);
         aDataItem.emplace_back(object);
         index++;
     }
-    ani_ref aDataItemRef = ConvertAniArrayByClass(env, CLASSNAME_DATAITEM, aDataItem);
+    ani_ref aDataItemRef = NewConvertAniArrayByClass(env, aDataItem);
 
     return aDataItemRef;
 }
@@ -547,7 +579,7 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
     for (size_t i = 0; i < abilityInfo.metadata.size(); ++i) {
         aMetadata.emplace_back(ConvertMetadata(env, abilityInfo.metadata[i]));
     }
-    ani_ref aMetadataRef = ConvertAniArrayByClass(env, CLASSNAME_METADATA, aMetadata);
+    ani_ref aMetadataRef = NewConvertAniArrayByClass(env, aMetadata);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(metadata), aMetadataRef);
 
     // enabled: boolean
@@ -570,7 +602,7 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
     for (size_t i = 0; i < abilityInfo.skills.size(); ++i) {
         aSkills.emplace_back(ConvertAbilitySkill(env, abilityInfo.skills[i], false));
     }
-    ani_ref aSkillsRef = ConvertAniArrayByClass(env, CLASSNAME_SKILL, aSkills);
+    ani_ref aSkillsRef = NewConvertAniArrayByClass(env, aSkills);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(skills), aSkillsRef);
 
     // appIndex: number
@@ -668,7 +700,7 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
     for (size_t i = 0; i < extensionInfo.metadata.size(); ++i) {
         aMetadata.emplace_back(ConvertMetadata(env, extensionInfo.metadata[i]));
     }
-    ani_ref aMetadataRef = ConvertAniArrayByClass(env, CLASSNAME_METADATA, aMetadata);
+    ani_ref aMetadataRef = NewConvertAniArrayByClass(env, aMetadata);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(metadata), aMetadataRef);
 
     // enabled: boolean
@@ -687,7 +719,7 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
     for (size_t i = 0; i < extensionInfo.skills.size(); ++i) {
         aSkills.emplace_back(ConvertAbilitySkill(env, extensionInfo.skills[i], false));
     }
-    ani_ref aSkillsRef = ConvertAniArrayByClass(env, CLASSNAME_SKILL, aSkills);
+    ani_ref aSkillsRef = NewConvertAniArrayByClass(env, aSkills);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(skills), aSkillsRef);
 
     // appIndex: int
@@ -829,7 +861,7 @@ ani_ref CommonFunAni::ConvertRouterDataInfos(ani_env* env, const std::map<std::s
         aDataItem[index] = object;
         index++;
     }
-    ani_ref aDataItemRef = ConvertAniArrayByClass(env, CLASSNAME_DATAITEM, aDataItem);
+    ani_ref aDataItemRef = NewConvertAniArrayByClass(env, aDataItem);
 
     return aDataItemRef;
 }
@@ -976,7 +1008,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
     for (size_t i = 0; i < hapModuleInfo.abilityInfos.size(); ++i) {
         aAbilityInfo.emplace_back(ConvertAbilityInfo(env, hapModuleInfo.abilityInfos[i]));
     }
-    ani_ref aAbilityInfoRef = ConvertAniArrayByClass(env, CLASSNAME_ABILITYINFO, aAbilityInfo);
+    ani_ref aAbilityInfoRef = NewConvertAniArrayByClass(env, aAbilityInfo);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(abilitiesInfo), aAbilityInfoRef);
 
     // extensionAbilitiesInfo: Array<ExtensionAbilityInfo>
@@ -984,8 +1016,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
     for (size_t i = 0; i < hapModuleInfo.extensionInfos.size(); ++i) {
         aExtensionAbilityInfo.emplace_back(ConvertExtensionInfo(env, hapModuleInfo.extensionInfos[i]));
     }
-    ani_ref aExtensionAbilityInfoRef =
-        ConvertAniArrayByClass(env, CLASSNAME_EXTENSIONABILITYINFO, aExtensionAbilityInfo);
+    ani_ref aExtensionAbilityInfoRef = NewConvertAniArrayByClass(env, aExtensionAbilityInfo);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(extensionAbilitiesInfo), aExtensionAbilityInfoRef);
 
     // metadata: Array<Metadata>
@@ -993,7 +1024,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
     for (size_t i = 0; i < hapModuleInfo.metadata.size(); ++i) {
         aMetadata.emplace_back(ConvertMetadata(env, hapModuleInfo.metadata[i]));
     }
-    ani_ref aMetadataRef = ConvertAniArrayByClass(env, CLASSNAME_METADATA, aMetadata);
+    ani_ref aMetadataRef = NewConvertAniArrayByClass(env, aMetadata);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(metadata), aMetadataRef);
 
     // deviceTypes: Array<string>
@@ -1017,7 +1048,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
     for (size_t i = 0; i < hapModuleInfo.dependencies.size(); ++i) {
         aDependencies.emplace_back(ConvertDependency(env, hapModuleInfo.dependencies[i]));
     }
-    ani_ref aDependenciesRef = ConvertAniArrayByClass(env, CLASSNAME_DEPENDENCY, aDependencies);
+    ani_ref aDependenciesRef = NewConvertAniArrayByClass(env, aDependencies);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(dependencies), aDependenciesRef);
 
     // preloads: Array<PreloadItem>
@@ -1025,7 +1056,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
     for (size_t i = 0; i < hapModuleInfo.preloads.size(); ++i) {
         aPreloads.emplace_back(ConvertPreloadItem(env, hapModuleInfo.preloads[i]));
     }
-    ani_ref aPreloadsRef = ConvertAniArrayByClass(env, CLASSNAME_PRELOADITEM, aPreloads);
+    ani_ref aPreloadsRef = NewConvertAniArrayByClass(env, aPreloads);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(preloads), aPreloadsRef);
 
     // fileContextMenuConfig: string
@@ -1037,7 +1068,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
     for (size_t i = 0; i < hapModuleInfo.routerArray.size(); ++i) {
         aRrouterMap.emplace_back(ConvertRouterItem(env, hapModuleInfo.routerArray[i]));
     }
-    ani_ref aRouterMapRef = ConvertAniArrayByClass(env, CLASSNAME_ROUTERITEM, aRrouterMap);
+    ani_ref aRouterMapRef = NewConvertAniArrayByClass(env, aRrouterMap);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(routerMap), aRouterMapRef);
 
     // nativeLibraryPath: string
@@ -1204,7 +1235,7 @@ ani_object CommonFunAni::ConvertAbilitySkill(ani_env* env, const Skill& skill, b
     for (size_t i = 0; i < skill.uris.size(); ++i) {
         aArray.emplace_back(ConvertAbilitySkillUri(env, skill.uris[i], isExtension));
     }
-    ani_ref aSkillUri = ConvertAniArrayByClass(env, CLASSNAME_SKILLURI, aArray);
+    ani_ref aSkillUri = NewConvertAniArrayByClass(env, aArray);
     CallSetter(env, cls, object, SETTER_METHOD_NAME(uris), aSkillUri);
 
     if (!isExtension) {
