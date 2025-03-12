@@ -72,7 +72,7 @@ HWTEST_F(BundleManagerFfiTest, FfiGetProfileByExtensionAbility_0001, Function | 
     char metadataName;
     CJSystemapi::BundleManager::RetCArrString retCArrString =
         CJSystemapi::BundleManager::FfiGetProfileByExtensionAbility(&moduleName, &extensionAbilityName, &metadataName);
-    EXPECT_EQ(retCArrString.code, CJSystemapi::BundleManager::ERROR_MODULE_NOT_EXIST);
+    EXPECT_EQ(retCArrString.code, CJSystemapi::BundleManager::ERROR_ABILITY_NOT_EXIST);
 }
 
 /**
@@ -87,7 +87,7 @@ HWTEST_F(BundleManagerFfiTest, FfiGetProfileByAbility_0001, Function | SmallTest
     char metadataName;
     CJSystemapi::BundleManager::RetCArrString retCArrString =
         CJSystemapi::BundleManager::FfiGetProfileByAbility(&moduleName, &extensionAbilityName, &metadataName);
-    EXPECT_EQ(retCArrString.code, CJSystemapi::BundleManager::ERROR_MODULE_NOT_EXIST);
+    EXPECT_EQ(retCArrString.code, CJSystemapi::BundleManager::ERROR_ABILITY_NOT_EXIST);
 }
 
 /**
