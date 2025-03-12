@@ -41,6 +41,7 @@ public:
     }
     static ani_ref ConvertAniArrayByClass(
         ani_env* env, const std::string& className, const std::vector<ani_object>& aArray);
+    static ani_ref NewConvertAniArrayByClass(ani_env* env, const std::vector<ani_object>& aArray);
     static ani_ref ConvertAniArrayString(ani_env* env, const std::vector<std::string>& cArray);
     template<typename enumType>
     static ani_array_int ConvertAniArrayEnum(
