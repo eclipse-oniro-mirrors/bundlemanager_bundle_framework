@@ -18,7 +18,7 @@ ohos_hap("driver_feature15_hap") {
   hap_profile = "feature/src/main/module.json"
   hap_name = "driver_feature15_hap"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundlemgrservice/resource/driver_test/${hap_name}.hap"
+  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/driver_test/${hap_name}.hap"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",

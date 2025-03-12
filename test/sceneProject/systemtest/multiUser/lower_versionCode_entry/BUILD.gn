@@ -18,7 +18,7 @@ ohos_hap("lower_versionCode_entry_hap") {
   hap_profile = "entry/src/main/module.json"
   hap_name = "lower_versionCode_entry_hap"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundlemgrsst/resource/multiUser/${hap_name}.hap"
+  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/multiUser/${hap_name}.hap"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",

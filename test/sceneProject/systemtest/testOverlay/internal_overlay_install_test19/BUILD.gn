@@ -18,7 +18,7 @@ ohos_hap("priority_101") {
   hap_profile = "feature/src/main/module.json"
   hap_name = "priority_101"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundlemgrsst/resource/testOverlay/internal/test19/${hap_name}.hsp"
+  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/testOverlay/internal/test19/${hap_name}.hsp"
   testonly = true
   deps = [
     ":hjs_demo_feature_resources",

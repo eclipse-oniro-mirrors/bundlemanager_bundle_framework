@@ -18,7 +18,7 @@ ohos_hap("CodeSigntureWithLibs") {
   hap_profile = "entry/src/main/module.json"
   hap_name = "CodeSigntureWithLibs"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundlemgrsst/resource/CodeSignature/${hap_name}.hsp"
+  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/CodeSignature/${hap_name}.hsp"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",
