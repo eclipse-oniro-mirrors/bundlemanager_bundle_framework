@@ -23,6 +23,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_resource_info.h"
 
@@ -41,27 +42,37 @@ constexpr const char* BOX_DOUBLE = "Lstd/core/Double;";
 constexpr const char* SETTER_PREFIX = "<set>";
 constexpr const char* CLASSNAME_ARRAY = "Lescompat/Array;";
 
-#define COMMON_FUN_ANI_CHECK_AND_RETURN(exp, ret) \
-    do {                                          \
-        if ((exp)) {                              \
-            return ret;                           \
-        }                                         \
-    } while (0)
-#define RETURN_IF_NULL(ptr, ret) COMMON_FUN_ANI_CHECK_AND_RETURN(!CheckNullPointer(ptr, #ptr), ret)
-#define RETURN_FALSE_IF_NULL(ptr) RETURN_IF_NULL(ptr, false)
-#define RETURN_NULL_IF_NULL(ptr) RETURN_IF_NULL(ptr, nullptr)
+#define RETURN_NULL_IF_NULL(ptr)     \
+    do {                             \
+        if ((ptr) == nullptr) {      \
+            APP_LOGE("ptr is null"); \
+            return nullptr;          \
+        }                            \
+    } while (false)
+#define RETURN_FALSE_IF_NULL(ptr)    \
+    do {                             \
+        if ((ptr) == nullptr) {      \
+            APP_LOGE("ptr is null"); \
+            return false;            \
+        }                            \
+    } while (false)
+#define RETURN_NULL_IF_FALSE(condition)     \
+    do {                                    \
+        if (!(condition)) {                 \
+            APP_LOGE("condition is false"); \
+            return nullptr;                 \
+        }                                   \
+    } while (false)
+#define RETURN_FALSE_IF_FALSE(condition)    \
+    do {                                    \
+        if (!(condition)) {                 \
+            APP_LOGE("condition is false"); \
+            return false;                   \
+        }                                   \
+    } while (false)
 } // namespace
 class CommonFunAni {
 public:
-    template<typename T>
-    static inline bool CheckNullPointer(T* p, const char* name)
-    {
-        if (p == nullptr) {
-            APP_LOGE("null %{public}s", name);
-            return false;
-        }
-        return true;
-    }
     // Data conversion.
     static inline bool AniBooleanToBool(ani_boolean value)
     {
@@ -76,7 +87,7 @@ public:
     {
         ani_status status = env->String_NewUTF8(str.c_str(), str.size(), &aniStr);
         if (status != ANI_OK) {
-            APP_LOGE("String_NewUTF8 %{public}s failed %{public}d", str.c_str(), status);
+            APP_LOGE("String_NewUTF8 failed %{public}d", status);
             return false;
         }
         return true;
@@ -148,27 +159,50 @@ public:
     static ani_ref ConvertAniArrayString(ani_env* env, const std::vector<std::string>& cArray);
 
     template<typename enumType>
-    static ani_array_int ConvertAniArrayEnum(
-        ani_env* env, const std::vector<enumType>& cArray, int32_t (*converter)(const int32_t))
+    static ani_object ConvertAniArrayEnum(
+        ani_env* env, const std::vector<enumType>& cArray, ani_enum_item (*converter)(ani_env*, const int32_t))
     {
         RETURN_NULL_IF_NULL(env);
         RETURN_NULL_IF_NULL(converter);
 
-        ani_size length = cArray.size();
-        ani_array_int aArrayEnum = nullptr;
-        ani_status status = env->Array_New_Int(length, &aArrayEnum);
+        ani_class arrayCls = nullptr;
+        ani_status status = env->FindClass(CLASSNAME_ARRAY, &arrayCls);
         if (status != ANI_OK) {
-            APP_LOGE("Array_New_Int failed %{public}d", status);
+            APP_LOGE("FindClass failed %{public}d", status);
+            return nullptr;
+        }
+
+        ani_method arrayCtor;
+        status = env->Class_FindMethod(arrayCls, "<ctor>", "I:V", &arrayCtor);
+        if (status != ANI_OK) {
+            APP_LOGE("Class_FindMethod failed %{public}d", status);
+            return nullptr;
+        }
+
+        ani_object arrayObj;
+        ani_size length = cArray.size();
+        status = env->Object_New(arrayCls, arrayCtor, &arrayObj, length);
+        if (status != ANI_OK) {
+            APP_LOGE("Object_New failed %{public}d", status);
             return nullptr;
         }
         if (length > 0) {
-            std::vector<ani_int> buffer(length);
             for (ani_size i = 0; i < length; ++i) {
-                buffer[i] = converter(static_cast<int32_t>(cArray[i]));
+                ani_enum_item item = converter(env, static_cast<int32_t>(cArray[i]));
+                if (item == nullptr) {
+                    APP_LOGE("convert failed");
+                    return nullptr;
+                }
+                status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", i, item);
+                env->Reference_Delete(item);
+                if (status != ANI_OK) {
+                    APP_LOGE("Object_CallMethodByName_Void failed %{public}d", status);
+                    return nullptr;
+                }
             }
-            env->Array_SetRegion_Int(aArrayEnum, 0, length, &buffer[0]);
         }
-        return aArrayEnum;
+
+        return arrayObj;
     }
 
     template<typename nativeType, typename contanerType>
@@ -391,6 +425,7 @@ public:
         ani_status status = env->GetUndefined(&undefined);
         if (status != ANI_OK) {
             APP_LOGE("GetUndefined %{public}s failed %{public}d", propertyName, status);
+            return false;
         }
 
         return CallSetter(env, cls, object, propertyName, undefined);
