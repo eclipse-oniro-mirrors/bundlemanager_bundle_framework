@@ -7327,7 +7327,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfosForContinuation_0100, Function | Sm
     bundleInfo.abilityInfos.push_back(abilityInfo);
     bundleInfos.push_back(bundleInfo);
     ClearDataMgr();
- 
+
     ResetDataMgr();
     GetBundleDataMgr()->GetBundleInfosForContinuation(bundleInfos);
     EXPECT_TRUE(bundleInfos.empty());
@@ -8025,5 +8025,23 @@ HWTEST_F(BmsBundleDataMgrTest, GetSignatureInfo_0003, Function | MediumTest | Le
     SignatureInfo signatureInfo;
     ErrCode ret = bundleMgrHostImpl_->GetSignatureInfoByUid(100, signatureInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoExt_0010
+ * @tc.name: GetBundleArchiveInfoExt
+ * @tc.desc: test GetBundleArchiveInfoExt of BmsExtensionDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleArchiveInfoExt_0010, Function | MediumTest | Level1)
+{
+    auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
+    ASSERT_NE(extensionDataMgr, nullptr);
+    extensionDataMgr->handler_ = nullptr;
+
+    std::string hapFilePath;
+    int32_t fd = 0;
+    BundleInfo bundleInfo;
+    ErrCode res = extensionDataMgr->GetBundleArchiveInfoExt(hapFilePath, fd, bundleInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 }
 } // OHOS

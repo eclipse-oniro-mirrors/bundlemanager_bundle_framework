@@ -61,6 +61,7 @@ group("unittest") {
       "unittest/bms_bundle_common_test:unittest",
       "unittest/bms_bundle_crowdtesting_test:unittest",
       "unittest/bms_bundle_data_group_test:unittest",
+      "unittest/bms_bundle_data_mgr_nullptr_test:unittest",
       "unittest/bms_bundle_data_storage_test:unittest",
       "unittest/bms_bundle_dependencies_test:unittest",
       "unittest/bms_bundle_emulator_installers_test:unittest",
