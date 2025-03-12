@@ -31,7 +31,7 @@ ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleN
     BundleResourceInfo &bundleResourceInfo, const int32_t appIndex)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("start, bundleName: %{public}s, flags: %{public}u", bundleName.c_str(), flags);
+    APP_LOGI_NOFUNC("get resource -n %{public}s -f %{public}u -i %{public}d", bundleName.c_str(), flags, appIndex);
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_BUNDLE_RESOURCE_INFO);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (!BundlePermissionMgr::IsSystemApp()) {

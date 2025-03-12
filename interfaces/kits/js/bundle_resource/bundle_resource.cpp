@@ -240,7 +240,7 @@ static ErrCode InnerGetBundleResourceInfo(
 
 napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("NAPI start");
+    APP_LOGI("NAPI start");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid");
@@ -279,7 +279,7 @@ napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
     napi_value nBundleResourceInfo = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nBundleResourceInfo));
     ConvertBundleResourceInfo(env, resourceInfo, nBundleResourceInfo);
-    APP_LOGD("NAPI end");
+    APP_LOGI("NAPI end");
     return nBundleResourceInfo;
 }
 
