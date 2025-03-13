@@ -1131,5 +1131,28 @@ std::string BundleUtil::ExtractStringFromJson(nlohmann::json &jsonObject, const 
     }
     return str;
 }
+
+std::unordered_map<std::string, std::string> BundleUtil::ParseMapFromJson(const std::string &jsonStr)
+{
+    std::unordered_map<std::string, std::string> result;
+    if (jsonStr.empty()) {
+        APP_LOGD("jsonStr is empty");
+        return result;
+    }
+    APP_LOGD("ParseMapFromJson from %{public}s", jsonStr.c_str());
+    nlohmann::json jsonBuf = nlohmann::json::parse(jsonStr, nullptr, false);
+    if (jsonBuf.is_discarded()) {
+        APP_LOGE("json file discarded");
+        return result;
+    }
+    if (!jsonBuf.is_object()) {
+        APP_LOGE("jsonBuf is not object");
+        return result;
+    }
+    for (const auto& [key, value] : jsonBuf.items()) {
+        result[key] = value.dump();
+    }
+    return result;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

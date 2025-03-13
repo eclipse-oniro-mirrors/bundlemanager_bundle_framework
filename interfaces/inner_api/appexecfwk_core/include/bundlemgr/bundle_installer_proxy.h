@@ -103,6 +103,26 @@ public:
      */
     virtual ErrCode UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId) override;
 
+    /**
+     * @brief Install or update plugin application.
+     * @param hostBundleName Indicates the bundle name of the host application.
+     * @param pluginFilePath Indicates the paths for storing the HSP of the plugin to install or update.
+     * @param installPluginParam Indicates the install parameters.
+     * @return Returns ERR_OK if the plugin application is installed successfully; returns errcode otherwise.
+     */
+    virtual ErrCode InstallPlugin(const std::string &hostBundleName, const std::vector<std::string> &pluginFilePaths,
+        const InstallPluginParam &installPluginParam) override;
+
+    /**
+     * @brief uninstall plugin application.
+     * @param hostBundleName Indicates the bundle name of the host application.
+     * @param pluginBundleName Indicates the plugin bundle name to uninstall.
+     * @param installPluginParam Indicates the uninstall parameters.
+     * @return Returns ERR_OK if the plugin application is uninstalled successfully; returns errcode otherwise.
+     */
+    virtual ErrCode UninstallPlugin(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const InstallPluginParam &installPluginParam) override;
+
     virtual sptr<IBundleStreamInstaller> CreateStreamInstaller(const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver, const std::vector<std::string> &originHapPaths) override;
     virtual bool DestoryBundleStreamInstaller(uint32_t streamInstallerId) override;

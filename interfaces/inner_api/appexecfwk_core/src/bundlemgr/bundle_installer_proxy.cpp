@@ -262,6 +262,73 @@ ErrCode BundleInstallerProxy::UninstallSandboxApp(const std::string &bundleName,
     return reply.ReadInt32();
 }
 
+ErrCode BundleInstallerProxy::InstallPlugin(const std::string &hostBundleName,
+    const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallPlugin due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(hostBundleName))) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallPlugin due to write hostBundleName fail");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteStringVector(pluginFilePaths)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallPlugin due to write pluginFilePaths fail");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&installPluginParam)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallPlugin due to write installParam fail");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_WRITE_PARCEL_ERROR;
+    }
+
+    bool ret =
+        SendInstallRequest(BundleInstallerInterfaceCode::INSTALL_PLUGIN_APP, data, reply, option);
+    if (!ret) {
+        LOG_E(BMS_TAG_INSTALLER, "InstallPlugin failed due to send request fail");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_SEND_REQUEST_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode BundleInstallerProxy::UninstallPlugin(const std::string &hostBundleName, const std::string &pluginBundleName,
+    const InstallPluginParam &installPluginParam)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to UninstallPlugin due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(hostBundleName))) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to UninstallPlugin due to write hostBundleName fail");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(pluginBundleName))) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to UninstallPlugin due to write pluginBundleName fail");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&installPluginParam)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to UninstallPlugin due to write installParam fail");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_WRITE_PARCEL_ERROR;
+    }
+    bool ret =
+        SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL_PLUGIN_APP, data, reply, option);
+    if (!ret) {
+        LOG_E(BMS_TAG_INSTALLER, "UninstallPlugin failed due to send request fail");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_SEND_REQUEST_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
 sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const InstallParam &installParam,
     const sptr<IStatusReceiver> &statusReceiver, const std::vector<std::string> &originHapPaths)
 {

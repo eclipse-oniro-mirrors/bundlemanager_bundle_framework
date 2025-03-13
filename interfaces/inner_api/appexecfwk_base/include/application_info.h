@@ -59,6 +59,7 @@ enum class BundleType {
     ATOMIC_SERVICE = 1,
     SHARED = 2,
     APP_SERVICE_FWK = 3,
+    APP_PLUGIN = 4,
 };
 
 enum class CompatiblePolicy {

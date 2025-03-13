@@ -50,6 +50,11 @@ enum BundleInstallerInterfaceCode : uint32_t {
     CREATE_STREAM_INSTALLER,
     DESTORY_STREAM_INSTALLER,
     UNINSTALL_AND_RECOVER,
+    INSTALL_CLONE_APP,
+    UNINSTALL_CLONE_APP,
+    INSTALL_EXISTED,
+    INSTALL_PLUGIN_APP,
+    UNINSTALL_PLUGIN_APP
 };
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
 }; // namespace
@@ -1164,6 +1169,48 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_3200, Function | SmallTe
     InstalldHost installdHost;
     int res = installdHost.OnRemoteRequest(code, datas, reply, option);
     EXPECT_EQ(res, ERR_CODE);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_3300
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_3300, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL_PLUGIN_APP;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_3400
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_3400, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL_PLUGIN_APP;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
 }
 
 /**

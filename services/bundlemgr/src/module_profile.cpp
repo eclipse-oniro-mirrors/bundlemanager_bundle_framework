@@ -1816,6 +1816,8 @@ bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &inner
             bundleType = BundleType::SHARED;
         } else if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_APP_SERVICE_FWK) {
             bundleType = BundleType::APP_SERVICE_FWK;
+        } else if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_PLUGIN) {
+            bundleType = BundleType::APP_PLUGIN;
         }
     }
 
