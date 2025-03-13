@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef BUSINESS_ERROR_H
-#define BUSINESS_ERROR_H
+#ifndef BUNDLE_FRAMEWORK_INTERFACES_KITS_ANI_BUSINESS_ERROR_H
+#define BUNDLE_FRAMEWORK_INTERFACES_KITS_ANI_BUSINESS_ERROR_H
 
 #include <ani.h>
 

@@ -93,27 +93,6 @@ export default namespace bundleResourceManager {
    *
    * @permission ohos.permission.GET_BUNDLE_RESOURCES
    * @param { string } bundleName - Indicates the bundle name of the application.
-   * @param { number } resourceFlags - Indicates the flag used to specify information contained in the BundleResourceInfo object that will be returned.
-   * @returns { BundleResourceInfo } Returns the BundleResourceInfo object.
-   * @throws { BusinessError } 201 - Permission denied.
-   * @throws { BusinessError } 202 - Permission denied, non-system app called system api.
-   * @throws { BusinessError } 401 - Parameter error. Possible causes: 1. Mandatory parameters are left unspecified; 2. Incorrect parameter types.
-   * @throws { BusinessError } 17700001 - The specified bundleName is not found.
-   * @syscap SystemCapability.BundleManager.BundleFramework.Resource
-   * @systemapi
-   * @since 11
-   */
-  export function getBundleResourceInfo(bundleName: string, resourceFlags?: int): BundleResourceInfo
-  {
-      let resFlag: int = resourceFlags ?? -500;
-      return bundleResourceManager.getBundleResourceInfo(bundleName, resFlag, 0);
-  }
-
-  /**
-   * Obtains the BundleResourceInfo of a specified bundle. Default resourceFlag is GET_RESOURCE_INFO_ALL.
-   *
-   * @permission ohos.permission.GET_BUNDLE_RESOURCES
-   * @param { string } bundleName - Indicates the bundle name of the application.
    * @param { number } [resourceFlags] - Indicates the flag used to specify information contained in the BundleResourceInfo object that will be returned.
    * @param { number } [appIndex] - Indicates the index of the bundle.
    * @returns { BundleResourceInfo } Returns the BundleResourceInfo object.
@@ -126,5 +105,12 @@ export default namespace bundleResourceManager {
    * @systemapi
    * @since 12
    */
-  export native function getBundleResourceInfo(bundleName: string, resourceFlags: int, appIndex: int): BundleResourceInfo;
+  export function getBundleResourceInfo(bundleName: string, resourceFlags?: number, appIndex?: number): BundleResourceInfo
+  {
+      let resFlag = resourceFlags ?? -500;
+      let appIdx = appIndex ?? -500;
+      return bundleResourceManager.getBundleResourceInfo(bundleName, resFlag as int, appIdx as int);
+  }
+
+  native function getBundleResourceInfo(bundleName: string, resourceFlags: int, appIndex: int): BundleResourceInfo;
 }
