@@ -80,6 +80,7 @@ public:
     ErrCode VerifyActivationLockToken(bool &res);
     bool IsNeedToSkipPreBundleInstall();
     ErrCode GetBundleArchiveInfoExt(const std::string &hapFilePath, int32_t fd, BundleInfo &bundleInfo);
+    ErrCode GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames);
 private:
     bool OpenHandler();
     static void *handler_;

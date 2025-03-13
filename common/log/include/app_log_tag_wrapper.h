@@ -40,6 +40,10 @@
 #define BMS_TAG_COMMON std::make_pair(0xD001123, "BMSCommon")
 #endif
 
+#ifndef BMS_TAG_EXT
+#define BMS_TAG_EXT std::make_pair(0xD0011FC, "BMSExt")
+#endif
+
 #ifndef APPEXECFWK_FUNC_FMT
 #define APPEXECFWK_FUNC_FMT "%{public}s:%{public}s:%{public}d "
 #endif

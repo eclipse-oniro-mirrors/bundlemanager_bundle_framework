@@ -2097,5 +2097,20 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetContinueBundleNames_0001, Function | Med
     auto ret = bundleMgrHost.HandleGetContinueBundleNames(data, reply);
     EXPECT_EQ(ERR_OK, ret);
 }
+
+/**
+ * @tc.number: HandleGetBundleMgrExtProxy_0001
+ * @tc.name: test the HandleGetBundleMgrExtProxy
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetBundleMgrExtProxy
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleMgrExtProxy_0001, Function | MediumTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleMgrHost.HandleGetBundleMgrExtProxy(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
 } // AppExecFwk
 } // OHOS

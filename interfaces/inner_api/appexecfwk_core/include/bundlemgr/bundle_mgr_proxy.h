@@ -956,6 +956,9 @@ public:
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     virtual sptr<IAppControlMgr> GetAppControlProxy() override;
 #endif
+
+    virtual sptr<IBundleMgrExt> GetBundleMgrExtProxy() override;
+    
     virtual ErrCode SetDebugMode(bool isDebug) override;
 
     virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION) override;

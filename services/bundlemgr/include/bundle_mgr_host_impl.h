@@ -889,6 +889,8 @@ public:
     virtual sptr<IAppControlMgr> GetAppControlProxy() override;
 #endif
 
+    virtual sptr<IBundleMgrExt> GetBundleMgrExtProxy() override;
+
     virtual ErrCode GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
         AbilityInfo &info) override;
     virtual ErrCode GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,

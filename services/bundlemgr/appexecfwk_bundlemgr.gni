@@ -219,6 +219,7 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/patch_data_storage_rdb.cpp",
   "${services_path}/bundlemgr/src/inner_patch_info.cpp",
   "${services_path}/bundlemgr/src/patch_data_mgr.cpp",
+  "${services_path}/bundlemgr/src/bundlemgr_ext/bundle_mgr_ext_host_impl.cpp",
 ]
 
 bundle_resource = [
