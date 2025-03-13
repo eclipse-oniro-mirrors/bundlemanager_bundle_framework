@@ -5696,6 +5696,27 @@ ErrCode BundleMgrProxy::SetAppDistributionTypes(std::set<AppDistributionTypeEnum
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
+    std::vector<PluginBundleInfo> &pluginBundleInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(hostBundleName)) {
+        APP_LOGE("Write host bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write user id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<PluginBundleInfo>(
+        BundleMgrInterfaceCode::GET_ALL_PLUGIN_INFO, data, pluginBundleInfos);
+}
+
 ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

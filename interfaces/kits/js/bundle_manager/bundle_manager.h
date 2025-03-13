@@ -29,6 +29,7 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "plugin/plugin_bundle_info.h"
 #ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
 #include "pixel_map.h"
 #endif
@@ -266,6 +267,13 @@ struct BatchBundleInfoCallbackInfo : public BaseCallbackInfo {
     std::vector<BundleInfo> bundleInfos;
 };
 
+struct PluginCallbackInfo : public BaseCallbackInfo {
+    explicit PluginCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string hostBundleName;
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+};
+
 struct SharedBundleCallbackInfo : public BaseCallbackInfo {
     explicit SharedBundleCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
 
@@ -359,6 +367,7 @@ napi_value SwitchUninstallState(napi_env env, napi_callback_info info);
 napi_value GetAppCloneBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetAllAppCloneBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetAppCloneIdentity(napi_env env, napi_callback_info info);
+napi_value GetAllPluginInfo(napi_env env, napi_callback_info info);
 napi_value GetAllBundleCacheSize(napi_env env, napi_callback_info info);
 napi_value CleanAllBundleCache(napi_env env, napi_callback_info info);
 napi_value GetLaunchWant(napi_env env, napi_callback_info info);

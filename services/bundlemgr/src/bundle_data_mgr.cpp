@@ -10199,6 +10199,40 @@ bool BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, Abilit
     return ExplicitQueryAbilityInfo(want, flags, userId, abilityInfo);
 }
 
+ErrCode BundleDataMgr::GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
+    std::vector<PluginBundleInfo> &pluginBundleInfos) const
+{
+    APP_LOGD("start GetAllPluginInfo -n : %{public}s, -u : %{public}d", hostBundleName.c_str(), userId);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid userid :%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(hostBundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("hostBundleName: %{public}s does not exist", hostBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        APP_LOGE("-n : %{public}s is not installed in user %{public}d or 0", hostBundleName.c_str(), userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    std::unordered_map<std::string, PluginBundleInfo> pluginInfoMap = innerBundleInfo.GetAllPluginBundleInfo();
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        for (const auto &pluginName : innerBundleUserInfo.installedPluginSet) {
+            if (pluginInfoMap.find(pluginName) != pluginInfoMap.end()) {
+                APP_LOGD("pluginName: %{public}s", pluginName.c_str());
+                pluginBundleInfos.emplace_back(pluginInfoMap[pluginName]);
+            }
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::AddPluginInfo(const std::string &bundleName,
     const PluginBundleInfo &pluginBundleInfo, const int32_t userId)
 {

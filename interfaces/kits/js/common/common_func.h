@@ -142,6 +142,10 @@ static void ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInf
 
 static void ConvertDependency(napi_env env, const Dependency &dependency, napi_value value);
 
+static void ConvertPluginBundleInfo(napi_env env, const PluginBundleInfo &pluginBundleInfo, napi_value value);
+
+static void ConvertPluginModuleInfo(napi_env env, const PluginModuleInfo &pluginModuleInfo, napi_value value);
+
 static void ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_value objBundleInfo, int32_t flags);
 
 static void ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,

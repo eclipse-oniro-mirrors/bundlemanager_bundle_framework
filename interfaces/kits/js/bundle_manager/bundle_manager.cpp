@@ -28,6 +28,7 @@
 #include "bundle_constants.h"
 #include "common_func.h"
 #include "hap_module_info.h"
+#include "plugin/plugin_bundle_info.h"
 #ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
 #include "image_source.h"
 #include "pixel_map_napi.h"
@@ -67,6 +68,7 @@ constexpr const char* STATE = "state";
 constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* SOURCE_PATHS = "sourcePaths";
 constexpr const char* DESTINATION_PATHS = "destinationPath";
+constexpr const char* HOST_BUNDLE_NAME = "hostBundleName";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string GET_APP_CLONE_IDENTITY = "getAppCloneIdentity";
@@ -110,6 +112,7 @@ const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
 const std::string SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
 const std::string GET_APP_CLONE_BUNDLE_INFO = "GetAppCloneBundleInfo";
 const std::string GET_ALL_APP_CLONE_BUNDLE_INFO = "GetAllAppCloneBundleInfo";
+const std::string GET_ALL_PLUGIN_INFO = "GetAllPluginInfo";
 const std::string MIGRATE_DATA = "MigrateData";
 const std::string CLONE_BUNDLE_PREFIX = "clone_";
 constexpr int32_t ENUM_ONE = 1;
@@ -1203,6 +1206,109 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete);
     callbackPtr.release();
     APP_LOGI_NOFUNC("napi QueryAbilityInfos end");
+    return promise;
+}
+
+static ErrCode InnerGetAllPluginInfo(std::string &hostBundleName, int32_t userId,
+    std::vector<PluginBundleInfo> &pluginBundleInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void GetAllPluginInfoExec(napi_env env, void *data)
+{
+    PluginCallbackInfo *asyncCallbackInfo = reinterpret_cast<PluginCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetAllPluginInfo(asyncCallbackInfo->hostBundleName,
+        asyncCallbackInfo->userId, asyncCallbackInfo->pluginBundleInfos);
+}
+
+static void ProcessPluginInfos(
+    napi_env env, napi_value result, const std::vector<PluginBundleInfo> &pluginBundleInfos)
+{
+    if (pluginBundleInfos.empty()) {
+        APP_LOGD("pluginBundleInfos is null");
+        return;
+    }
+    size_t index = 0;
+    for (const auto &item : pluginBundleInfos) {
+        napi_value objPluginInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objPluginInfo));
+        CommonFunc::ConvertPluginBundleInfo(env, item, objPluginInfo);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, result, index, objPluginInfo));
+        index++;
+    }
+}
+
+void GetAllPluginInfoComplete(napi_env env, napi_status status, void *data)
+{
+    APP_LOGI("GetAllPluginInfoComplete begin");
+    PluginCallbackInfo *asyncCallbackInfo = reinterpret_cast<PluginCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<PluginCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        ProcessPluginInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->pluginBundleInfos);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_ALL_PLUGIN_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+    }
+    CommonFunc::NapiReturnDeferred<PluginCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetAllPluginInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("napi GetAllPluginInfo begin");
+    NapiArg args(env, info);
+    PluginCallbackInfo *asyncCallbackInfo = new (std::nothrow) PluginCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<PluginCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->hostBundleName)) {
+                APP_LOGE("parse hostBundleName failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, HOST_BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_SIZE_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
+            }
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<PluginCallbackInfo>(
+        env, asyncCallbackInfo, GET_ALL_PLUGIN_INFO, GetAllPluginInfoExec, GetAllPluginInfoComplete);
+    callbackPtr.release();
+    APP_LOGI_NOFUNC("napi GetAllPluginInfo end");
     return promise;
 }
 
