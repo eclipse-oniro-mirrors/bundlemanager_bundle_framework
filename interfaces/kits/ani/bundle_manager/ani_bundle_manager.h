@@ -26,10 +26,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class ClearCacheListener final : public OHOS::EventFwk::CommonEventSubscriber {
+class ANIClearCacheListener final : public OHOS::EventFwk::CommonEventSubscriber {
 public:
-    explicit ClearCacheListener(const OHOS::EventFwk::CommonEventSubscribeInfo& subscribeInfo);
-    virtual ~ClearCacheListener() = default;
+    explicit ANIClearCacheListener(const OHOS::EventFwk::CommonEventSubscribeInfo& subscribeInfo);
+    virtual ~ANIClearCacheListener() = default;
     void OnReceiveEvent(const OHOS::EventFwk::CommonEventData& data) override;
     static void HandleCleanEnv(void* data);
 
@@ -37,32 +37,32 @@ private:
     static void DoClearCache();
 };
 
-struct Query {
+struct ANIQuery {
     std::string bundleName_;
     std::string interfaceType_;
     int32_t flags_ = 0;
     int32_t userId_ = OHOS::AppExecFwk::Constants::UNSPECIFIED_USERID;
-    Query(const std::string& bundleName, const std::string& interfaceType, int32_t flags, int32_t userId)
+    ANIQuery(const std::string& bundleName, const std::string& interfaceType, int32_t flags, int32_t userId)
         : bundleName_(bundleName), interfaceType_(interfaceType), flags_(flags), userId_(userId)
     {}
 
-    bool operator==(const Query& query) const
+    bool operator==(const ANIQuery& query) const
     {
         return bundleName_ == query.bundleName_ && interfaceType_ == query.interfaceType_ && flags_ == query.flags_ &&
                userId_ == query.userId_;
     }
 };
 
-struct QueryHash {
-    size_t operator()(const Query& query) const
+struct ANIQueryHash {
+    size_t operator()(const ANIQuery& query) const
     {
         return std::hash<std::string>()(query.bundleName_) ^ std::hash<std::string>()(query.interfaceType_) ^
                std::hash<int32_t>()(query.flags_) ^ std::hash<int32_t>()(query.userId_);
     }
 };
 
-void RegisterClearCacheListenerAndEnv(ani_vm* vm);
+void RegisterANIClearCacheListenerAndEnv(ani_vm* vm);
 
-} // AppExecFwk
-} // OHOS
+} // namespace AppExecFwk
+} // namespace OHOS
 #endif

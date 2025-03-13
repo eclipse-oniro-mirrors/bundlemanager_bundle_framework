@@ -236,7 +236,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
 };
 constexpr const char* BUSINESS_ERROR_CLASS = "L@ohos/base/BusinessError;";
 
-#define SETTER_METHOD_NAME(property) "<set>" #property
+constexpr const char* PROPERTYNAME_MESSAGE = "message";
 } // namespace
     
 void BusinessErrorAni::ThrowError(ani_env *env, int32_t err, const std::string &msg)
@@ -274,7 +274,7 @@ ani_object BusinessErrorAni::CreateError(ani_env *env, ani_int code, const std::
     }
     ani_string string = nullptr;
     env->String_NewUTF8(msg.c_str(), msg.size(), &string);
-    CommonFunAni::CallSetter(env, cls, obj, SETTER_METHOD_NAME(message), string);
+    CommonFunAni::CallSetter(env, cls, obj, PROPERTYNAME_MESSAGE, string);
     return obj;
 }
 

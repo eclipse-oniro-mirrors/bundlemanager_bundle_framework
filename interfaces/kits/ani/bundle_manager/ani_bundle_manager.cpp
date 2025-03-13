@@ -37,25 +37,25 @@ namespace {
 const std::string GET_BUNDLE_INFO = "GetBundleInfo";
 constexpr const char* GET_APPLICATION_INFO = "GetApplicationInfo";
 static ani_vm* g_vm;
-static std::mutex g_clearCacheListenerMutex;
-static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
-static std::shared_mutex g_cacheMutex;
-static std::unordered_map<Query, ani_ref, QueryHash> g_cache;
+static std::mutex g_aniClearCacheListenerMutex;
+static std::shared_ptr<ANIClearCacheListener> g_aniClearCacheListener;
+static std::shared_mutex g_aniCacheMutex;
+static std::unordered_map<ANIQuery, ani_ref, ANIQueryHash> g_aniCache;
 constexpr int32_t EMPTY_USER_ID = -500;
-}
+} // namespace
 
 static void CheckToCache(
-    ani_env* env, const int32_t uid, const int32_t callingUid, const Query& query, ani_object aniObject)
+    ani_env* env, const int32_t uid, const int32_t callingUid, const ANIQuery& query, ani_object aniObject)
 {
     if (uid != callingUid) {
         return;
     }
 
-    ani_ref refBundleInfo = nullptr;
-    ani_status status = ANI_ERROR;
-    if ((status = env->GlobalReference_Create(aniObject, &refBundleInfo)) == ANI_OK) {
-        std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
-        g_cache[query] = refBundleInfo;
+    ani_ref info = nullptr;
+    ani_status status = env->GlobalReference_Create(aniObject, &info);
+    if (status == ANI_OK) {
+        std::unique_lock<std::shared_mutex> lock(g_aniCacheMutex);
+        g_aniCache[query] = info;
     }
 }
 
@@ -89,11 +89,11 @@ static ani_object getBundleInfoForSelfSync([[maybe_unused]] ani_env* env, ani_in
     const auto uid = IPCSkeleton::GetCallingUid();
     std::string bundleName = std::to_string(uid);
     int32_t userId = uid / Constants::BASE_USER_RANGE;
-    const Query query(bundleName, GET_BUNDLE_INFO, bundleFlags, userId);
+    const ANIQuery query(bundleName, GET_BUNDLE_INFO, bundleFlags, userId);
     if (!CommonFunc::CheckBundleFlagWithPermission(bundleFlags)) {
-        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
-        auto item = g_cache.find(query);
-        if (item != g_cache.end()) {
+        std::shared_lock<std::shared_mutex> lock(g_aniCacheMutex);
+        auto item = g_aniCache.find(query);
+        if (item != g_aniCache.end()) {
             return reinterpret_cast<ani_object>(item->second);
         }
     }
@@ -113,8 +113,8 @@ static ani_object getBundleInfoForSelfSync([[maybe_unused]] ani_env* env, ani_in
     return objectBundleInfo;
 }
 
-static ani_object getBundleInfoSync([[maybe_unused]] ani_env *env, ani_string aniBundleName, ani_int bundleFlags,
-    ani_int userId)
+static ani_object getBundleInfoSync(
+    [[maybe_unused]] ani_env* env, ani_string aniBundleName, ani_int bundleFlags, ani_int userId)
 {
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (userId == EMPTY_USER_ID) {
@@ -126,11 +126,11 @@ static ani_object getBundleInfoSync([[maybe_unused]] ani_env *env, ani_string an
         return nullptr;
     }
 
-    Query query(bundleName, GET_BUNDLE_INFO, bundleFlags, userId);
+    ANIQuery query(bundleName, GET_BUNDLE_INFO, bundleFlags, userId);
     if (!CommonFunc::CheckBundleFlagWithPermission(bundleFlags)) {
-        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
-        auto item = g_cache.find(query);
-        if (item != g_cache.end()) {
+        std::shared_lock<std::shared_mutex> lock(g_aniCacheMutex);
+        auto item = g_aniCache.find(query);
+        if (item != g_aniCache.end()) {
             APP_LOGD("Get bundle info from global cache.");
             return reinterpret_cast<ani_object>(item->second);
         }
@@ -156,8 +156,8 @@ static ani_object getBundleInfoSync([[maybe_unused]] ani_env *env, ani_string an
     return objectBundleInfo;
 }
 
-static ani_object getApplicationInfoSync([[maybe_unused]] ani_env *env, ani_string aniBundleName,
-    ani_int applicationFlags, ani_int userId)
+static ani_object getApplicationInfoSync(
+    [[maybe_unused]] ani_env* env, ani_string aniBundleName, ani_int applicationFlags, ani_int userId)
 {
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
@@ -169,11 +169,11 @@ static ani_object getApplicationInfoSync([[maybe_unused]] ani_env *env, ani_stri
         userId = callingUid / Constants::BASE_USER_RANGE;
     }
 
-    const Query query(bundleName, GET_APPLICATION_INFO, applicationFlags, userId);
+    const ANIQuery query(bundleName, GET_APPLICATION_INFO, applicationFlags, userId);
     {
-        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
-        auto item = g_cache.find(query);
-        if (item != g_cache.end()) {
+        std::shared_lock<std::shared_mutex> lock(g_aniCacheMutex);
+        auto item = g_aniCache.find(query);
+        if (item != g_aniCache.end()) {
             return reinterpret_cast<ani_object>(item->second);
         }
     }
@@ -216,19 +216,12 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     std::array methods = {
         ani_native_function {
             "isApplicationEnabledSync", "Lstd/core/String;:Z", reinterpret_cast<void*>(isApplicationEnabledSync) },
-        ani_native_function {
-            "getBundleInfoForSelfSync", "I:LBundleInfo/BundleInfo;",
+        ani_native_function { "getBundleInfoForSelfSync", "I:LBundleInfo/BundleInfo;",
             reinterpret_cast<void*>(getBundleInfoForSelfSync) },
-        ani_native_function {
-            "getBundleInfoSync",
-            "Lstd/core/String;II:LBundleInfo/BundleInfo;",
-            reinterpret_cast<void*>(getBundleInfoSync)
-        },
-        ani_native_function {
-            "getApplicationInfoSync",
-            "Lstd/core/String;II:LApplicationInfo/ApplicationInfo;",
-            reinterpret_cast<void*>(getApplicationInfoSync)
-        },
+        ani_native_function { "getBundleInfoSync", "Lstd/core/String;II:LBundleInfo/BundleInfo;",
+            reinterpret_cast<void*>(getBundleInfoSync) },
+        ani_native_function { "getApplicationInfoSync", "Lstd/core/String;II:LApplicationInfo/ApplicationInfo;",
+            reinterpret_cast<void*>(getApplicationInfoSync) },
     };
 
     if (env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size()) != ANI_OK) {
@@ -238,7 +231,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 
     *result = ANI_VERSION_1;
 
-    RegisterClearCacheListenerAndEnv(vm);
+    RegisterANIClearCacheListenerAndEnv(vm);
 
     APP_LOGI("ANI_Constructor finished");
 
@@ -246,38 +239,38 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 }
 }
 
-void ClearCacheListener::DoClearCache()
+void ANIClearCacheListener::DoClearCache()
 {
-    std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+    std::unique_lock<std::shared_mutex> lock(g_aniCacheMutex);
     ani_env* env = nullptr;
     ani_option interopEnabled { "--interop=enable", nullptr };
     ani_options aniArgs { 1, &interopEnabled };
     g_vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    for (auto& item : g_cache) {
+    for (auto& item : g_aniCache) {
         env->GlobalReference_Delete(item.second);
     }
     g_vm->DetachCurrentThread();
-    g_cache.clear();
+    g_aniCache.clear();
 }
 
-void ClearCacheListener::HandleCleanEnv(void* data)
+void ANIClearCacheListener::HandleCleanEnv(void* data)
 {
     DoClearCache();
 }
 
-ClearCacheListener::ClearCacheListener(const EventFwk::CommonEventSubscribeInfo& subscribeInfo)
+ANIClearCacheListener::ANIClearCacheListener(const EventFwk::CommonEventSubscribeInfo& subscribeInfo)
     : EventFwk::CommonEventSubscriber(subscribeInfo)
 {}
 
-void ClearCacheListener::OnReceiveEvent(const EventFwk::CommonEventData& data)
+void ANIClearCacheListener::OnReceiveEvent(const EventFwk::CommonEventData& data)
 {
     DoClearCache();
 }
 
-void RegisterClearCacheListenerAndEnv(ani_vm* vm)
+void RegisterANIClearCacheListenerAndEnv(ani_vm* vm)
 {
-    std::lock_guard<std::mutex> lock(g_clearCacheListenerMutex);
-    if (g_clearCacheListener != nullptr) {
+    std::lock_guard<std::mutex> lock(g_aniClearCacheListenerMutex);
+    if (g_aniClearCacheListener != nullptr) {
         return;
     }
     EventFwk::MatchingSkills matchingSkills;
@@ -285,9 +278,9 @@ void RegisterClearCacheListenerAndEnv(ani_vm* vm)
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-    g_clearCacheListener = std::make_shared<ClearCacheListener>(subscribeInfo);
-    (void)EventFwk::CommonEventManager::SubscribeCommonEvent(g_clearCacheListener);
+    g_aniClearCacheListener = std::make_shared<ANIClearCacheListener>(subscribeInfo);
+    (void)EventFwk::CommonEventManager::SubscribeCommonEvent(g_aniClearCacheListener);
     g_vm = vm;
 }
-} // AppExecFwk
-} // OHOS
+} // namespace AppExecFwk
+} // namespace OHOS

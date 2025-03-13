@@ -11,73 +11,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
-ohos_shared_library("anibundlemanager") {
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-  include_dirs = [
-    "${inner_api_path}/appexecfwk_core/include",
-    "${kits_path}/ani/bundle_manager",
-    "${kits_path}/ani/common",
-    "${kits_path}/js/common",
-  ]
-  sources = [ "bundle_manager/ani_bundle_manager.cpp" ]
+group("ani_common") {
+  deps = [ "common:bms_ani_common" ]
+}
 
-  defines = [
-    "APP_LOG_TAG = \"BMS\"",
-    "LOG_DOMAIN = 0xD001120",
-  ]
-
+group("ani_bms_packages") {
   deps = [
-    "${base_path}:appexecfwk_base",
-    "${common_path}:libappexecfwk_common",
-    "${core_path}:appexecfwk_core",
-    "${kits_path}/js/common:bundle_napi_common",
-    "common:bms_ani_common",
-  ]
-
-  external_deps = [
-    "ability_base:want",
-    "c_utils:utils",
-    "common_event_service:cesfwk_core",
-    "common_event_service:cesfwk_innerkits",
-    "hilog:libhilog",
-    "ipc:ipc_core",
-    "napi:ace_napi",
-    "runtime_core:ani",
-    "samgr:samgr_proxy",
-  ]
-
-  subsystem_name = "bundlemanager"
-  part_name = "bundle_framework"
-}
-
-generate_static_abc("bundleManager2abc") {
-  arktsconfig = "ani_config.json"
-  dst_file = "$target_out_dir/BundleManager.abc"
-  out_puts = [ "$target_out_dir/BundleManager.abc" ]
-  is_boot_abc = "True"
-  device_dst_file = "/system/framework/BundleManager.abc"
-}
-
-ohos_prebuilt_etc("bundleManager2abc_etc") {
-  source = "$target_out_dir/BundleManager.abc"
-  module_install_dir = "framework"
-  subsystem_name = "bundlemanager"
-  part_name = "bundle_framework"
-  deps = [ ":bundleManager2abc" ]
-}
-
-group("ani_package") {
-  deps = [
-    ":anibundlemanager",
-    ":bundleManager2abc_etc",
+    "bundle_manager:anibundlemanager",
+    "bundle_manager:bundleManager2abc_etc",
     "resource_manager:ani_bundle_res_manager",
     "resource_manager:bundle_resource_info_etc",
     "resource_manager:bundle_resource_manager_etc",
