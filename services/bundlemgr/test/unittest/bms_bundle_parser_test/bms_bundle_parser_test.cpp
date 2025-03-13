@@ -3296,10 +3296,16 @@ HWTEST_F(BmsBundleParserTest, BundleParser_2600, Function | MediumTest | Level1)
 {
     BundleParser bundleParser;
 
-    std::string jsonString = R"({"name": "zhangsan"})";
+    std::string jsonString = R"({"name": "zhangsan", "age": 18})";
     std::map<std::string, std::string> aclExtendedMap = bundleParser.ParseAclExtendedMap(jsonString);
-    EXPECT_EQ(aclExtendedMap.size(), 1);
-    const auto &item = aclExtendedMap.find("name");
-    EXPECT_FALSE(item == aclExtendedMap.end());
+    EXPECT_EQ(aclExtendedMap.size(), 2);
+
+    for (auto it = aclExtendedMap.begin(); it != aclExtendedMap.end(); ++it) {
+        if (it->first == "name") {
+            EXPECT_EQ(it->second, "zhangsan");
+        } else if (it->first == "age") {
+            EXPECT_EQ(it->second, "18");
+        }
+    }
 }
 } // OHOS
