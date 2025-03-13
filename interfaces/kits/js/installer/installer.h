@@ -19,6 +19,7 @@
 #include "base_cb_info.h"
 #include "clone_param.h"
 #include "install_param.h"
+#include "plugin/install_plugin_param.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -90,6 +91,14 @@ struct InstallPreexistingAppCallbackInfo : public BaseCallbackInfo {
     std::string bundleName;
 };
 
+struct PluginCallbackInfo : public BaseCallbackInfo {
+    explicit PluginCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string hostBundleName;
+    std::vector<std::string> pluginFilePaths;
+    std::string pluginBundleName;
+    OHOS::AppExecFwk::InstallPluginParam installPluginParam;
+};
+
 napi_value GetBundleInstaller(napi_env env, napi_callback_info info);
 napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info);
 napi_value Install(napi_env env, napi_callback_info info);
@@ -103,6 +112,8 @@ napi_value RemoveExtResource(napi_env env, napi_callback_info info);
 napi_value CreateAppClone(napi_env env, napi_callback_info info);
 napi_value DestroyAppClone(napi_env env, napi_callback_info info);
 napi_value InstallPreexistingApp(napi_env env, napi_callback_info info);
+napi_value InstallPlugin(napi_env env, napi_callback_info info);
+napi_value UninstallPlugin(napi_env env, napi_callback_info info);
 } // AppExecFwk
 } // OHOS
 #endif // FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H
