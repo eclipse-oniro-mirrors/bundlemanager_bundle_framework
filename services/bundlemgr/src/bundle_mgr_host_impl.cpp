@@ -4095,7 +4095,7 @@ ErrCode BundleMgrHostImpl::UpdateAppEncryptedStatus(const std::string &bundleNam
 
 ErrCode BundleMgrHostImpl::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
 {
-    APP_LOGD("MigrateData start");
+    APP_LOGI("MigrateData start");
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("Non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -4130,6 +4130,7 @@ ErrCode BundleMgrHostImpl::MigrateData(const std::vector<std::string> &sourcePat
     if (result != ERR_OK) {
         APP_LOGE("migrate data filesd, errcode:%{public}d", result);
     }
+    APP_LOGI("MigrateData end");
     return result;
 }
 
