@@ -413,8 +413,9 @@ bool CheckFormNameIsValid(const std::string &name)
     return true;
 }
 
-void supportFormDimension(set<int32_t> &supportDimensionSet,const ExtensionFormProfileInfo &form)
+void supportFormDimension(std::set<int32_t> &supportDimensionSet, const ExtensionFormProfileInfo &form, const size_t len)
 {
+    size_t i = 0;
     for (const auto &dimension: form.supportDimensions) {
         for (size_t i = 0; i < len; i++) {
             if (DIMENSION_MAP_KEY[i] == dimension) {
@@ -447,7 +448,7 @@ void supportFormDimension(set<int32_t> &supportDimensionSet,const ExtensionFormP
                 continue;
             }
         #endif
-
+        
         supportDimensionSet.emplace(dimensionItem);
     }
 }
@@ -457,7 +458,7 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
     std::set<int32_t> supportDimensionSet {};
     size_t len = sizeof(DIMENSION_MAP_KEY) / sizeof(DIMENSION_MAP_KEY[0]);
     size_t i = 0;
-    supportFormDimension(supportDimensionSet,form);
+    supportFormDimension(supportDimensionSet, form, len);
     for (i = 0; i < len; i++) {
         if (DIMENSION_MAP_KEY[i] == form.defaultDimension) {
             break;
