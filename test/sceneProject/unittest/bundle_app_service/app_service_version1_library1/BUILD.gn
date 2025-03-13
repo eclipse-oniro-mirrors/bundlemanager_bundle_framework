@@ -18,7 +18,7 @@ ohos_hap("appService_v1_library1") {
   hap_profile = "entry/src/main/module.json"
   hap_name = "appService_v1_library1"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundlemgrservice/resource/bundle_app_service/${hap_name}.hsp"
+  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/bundle_app_service/${hap_name}.hsp"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",

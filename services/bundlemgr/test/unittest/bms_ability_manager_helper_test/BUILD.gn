@@ -19,7 +19,7 @@ config("private_config") {
   include_dirs = [ "${services_path}/bundlemgr/test/mock/include" ]
 }
 
-module_output_path = "bundle_framework/bundlemgrservice"
+module_output_path = "bundle_framework/bundle_framework"
 
 ohos_unittest("BmsAbilityManagerHelperTest") {
   sanitize = {
