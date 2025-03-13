@@ -54,7 +54,11 @@ ohos_unittest("BmsDataMgrTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [ "${core_path}:appexecfwk_core" ]
+  deps = [
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest1:bmsAccessTokentest1",
+    "${core_path}:appexecfwk_core",
+  ]
   deps += bundle_install_deps
 
   external_deps = [

@@ -1174,6 +1174,7 @@ private:
 #ifdef GLOBAL_RESMGR_ENABLE
     std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(const std::string &bundleName,
         const std::string &moduleName, int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING) const;
+    std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(const std::string &hapPath) const;
 #endif
 
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;
@@ -1302,6 +1303,8 @@ private:
         const AbilityInfo &abilityInfo) const;
     void RestoreUidAndGidFromUninstallInfo();
     ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
+    bool InnerProcessShortcutId(const std::string &hapPath, std::vector<ShortcutInfo> &shortcutInfos) const;
+
 private:
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;

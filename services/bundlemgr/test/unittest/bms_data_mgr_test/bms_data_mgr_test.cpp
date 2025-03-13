@@ -68,6 +68,7 @@ constexpr const char* WANT_PARAM_PICKER_SUMMARY = "ability.picker.summary";
 constexpr const char* WANT_PARAM_SUMMARY = "summary";
 constexpr const char* SUMMARY_TOTAL_COUNT = "totalCount";
 const int32_t ICON_ID = 2222;
+const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
 }  // namespace
 
 class BmsDataMgrTest : public testing::Test {
@@ -3026,5 +3027,98 @@ HWTEST_F(BmsDataMgrTest, FromJson_001, Function | MediumTest | Level1)
     UninstallDataUserInfo uninstallDataUserInfo;
     from_json(jsonObject, uninstallDataUserInfo);
     EXPECT_EQ(parseResult, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerProcessShortcutId_0001
+ * @tc.name: InnerProcessShortcutId
+ * @tc.desc: test InnerProcessShortcutId
+ */
+HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0001, Function | MediumTest | Level1)
+{
+    std::string hapPath;
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool result = dataMgr_->InnerProcessShortcutId(hapPath, shortcutInfos);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: InnerProcessShortcutId_0002
+ * @tc.name: InnerProcessShortcutId
+ * @tc.desc: test InnerProcessShortcutId
+ */
+HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0002, Function | MediumTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.id = "id_1";
+    shortcutInfos.emplace_back(shortcutInfo);
+    std::string hapPath;
+    bool result = dataMgr_->InnerProcessShortcutId(hapPath, shortcutInfos);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: InnerProcessShortcutId_0003
+ * @tc.name: InnerProcessShortcutId
+ * @tc.desc: test InnerProcessShortcutId
+ */
+HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0003, Function | MediumTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.id = "$string:11111";
+    shortcutInfos.emplace_back(shortcutInfo);
+    std::string hapPath;
+    bool result = dataMgr_->InnerProcessShortcutId(hapPath, shortcutInfos);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: InnerProcessShortcutId_0004
+ * @tc.name: InnerProcessShortcutId
+ * @tc.desc: test InnerProcessShortcutId
+ */
+HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0004, Function | MediumTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo_1;
+    shortcutInfo_1.id = "$string:11111";
+    shortcutInfos.emplace_back(shortcutInfo_1);
+    ShortcutInfo shortcutInfo_2;
+    shortcutInfo_2.id = "id";
+    shortcutInfos.emplace_back(shortcutInfo_2);
+    ShortcutInfo shortcutInfo_3;
+    shortcutInfo_3.id = "$string:xxxx";
+    shortcutInfos.emplace_back(shortcutInfo_3);
+
+    std::string hapPath = HAP_FILE_PATH1;
+    bool result = dataMgr_->InnerProcessShortcutId(hapPath, shortcutInfos);
+    EXPECT_TRUE(result);
+    if (!shortcutInfos.empty()) {
+        EXPECT_EQ(shortcutInfos[0].id, shortcutInfo_1.id);
+        EXPECT_EQ(shortcutInfos[1].id, shortcutInfo_2.id);
+        EXPECT_EQ(shortcutInfos[2].id, shortcutInfo_3.id);
+    }
+}
+
+/**
+ * @tc.number: InnerProcessShortcutId_0005
+ * @tc.name: InnerProcessShortcutId
+ * @tc.desc: test InnerProcessShortcutId
+ */
+HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0005, Function | MediumTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.id = "$string:16777216";
+    shortcutInfos.emplace_back(shortcutInfo);
+
+    std::string hapPath = HAP_FILE_PATH1;
+    bool result = dataMgr_->InnerProcessShortcutId(hapPath, shortcutInfos);
+    EXPECT_TRUE(result);
+    if (!shortcutInfos.empty()) {
+        EXPECT_NE(shortcutInfos[0].id, shortcutInfo.id);
+    }
 }
 } // OHOS

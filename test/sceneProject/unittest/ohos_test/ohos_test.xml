@@ -464,4 +464,10 @@
         src="res" />
     </preparer>
   </target>
+  <target name="BmsDataMgrTest">
+    <preparer>
+      <option name="push" value="test_bundle/bmsAccessTokentest1.hap -> /data/test/resource/bms/accesstoken_bundle/"
+        src="res" />
+    </preparer>
+  </target>
 </configuration>
