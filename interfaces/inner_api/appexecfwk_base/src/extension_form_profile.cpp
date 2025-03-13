@@ -417,7 +417,7 @@ void supportFormDimension(std::set<int32_t> &supportDimensionSet, const Extensio
 {
     size_t i = 0;
     for (const auto &dimension: form.supportDimensions) {
-        for (size_t i = 0; i < len; i++) {
+        for (i = 0; i < len; i++) {
             if (DIMENSION_MAP_KEY[i] == dimension) {
                 break;
             }
