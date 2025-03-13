@@ -73,9 +73,9 @@ class AbilityInfoInner implements AbilityInfo {
   readonly iconId: int;
   readonly process: string = "";
   readonly exported: boolean;
-  readonly type: bundleManager.AbilityType;
-  readonly orientation: bundleManager.DisplayOrientation;
-  readonly launchType: bundleManager.LaunchType;
+  readonly type: bundleManager.AbilityType = bundleManager.AbilityType.PAGE;
+  readonly orientation: bundleManager.DisplayOrientation = bundleManager.DisplayOrientation.UNSPECIFIED;
+  readonly launchType: bundleManager.LaunchType = bundleManager.LaunchType.SINGLETON;
   readonly permissions: Array<string> = new Array<string>;
   readonly readPermission: string = "";
   readonly writePermission: string = "";
