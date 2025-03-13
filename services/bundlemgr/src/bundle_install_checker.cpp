@@ -600,7 +600,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
         }
         // There is only one innerModuleInfo when installing
         InnerModuleInfo moduleInfo = info.second.GetInnerModuleInfos().begin()->second;
-        LOG_D(BMS_TAG_INSTALLER, "current module:%{public}s, dependencies = %{public}s", moduleInfo.moduleName.c_str(),
+        LOG_D(BMS_TAG_INSTALLER, "current module:%s, dependencies = %s", moduleInfo.moduleName.c_str(),
             GetJsonStrFromInfo(moduleInfo.dependencies).c_str());
         for (const auto &dependency : moduleInfo.dependencies) {
             if (!NeedCheckDependency(dependency, info.second)) {
