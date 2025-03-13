@@ -308,4 +308,27 @@ HWTEST_F(BmsBundleMultiuserInstallIPCTest, ResetInstallProperties_0100, Function
     installer.ResetInstallProperties();
     EXPECT_EQ(installer.uid_, 0);
 }
+
+/**
+ * @tc.number: RecoverHapToken_0100
+ * @tc.name: RecoverHapToken by BundleMultiUserInstaller
+ * @tc.desc: test RecoverHapToken
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, RecoverHapToken_0100, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(installer.dataMgr_, nullptr);
+    UninstallBundleInfo unInstallBundleInfo;
+    unInstallBundleInfo.appId = 1;
+    std::map<std::string, UninstallDataUserInfo> userInfos;
+    UninstallDataUserInfo uninstallDataUserInfo;
+    unInstallBundleInfo.userInfos.try_emplace("100", uninstallDataUserInfo);
+    installer.dataMgr_->UpdateUninstallBundleInfo("test", unInstallBundleInfo);
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    InnerBundleInfo innerBundleInfo;
+    auto res = installer.RecoverHapToken("test", 100, accessTokenIdEx, innerBundleInfo);
+    EXPECT_EQ(res, true);
+    installer.dataMgr_->DeleteUninstallBundleInfo("test", 100);
+}
 } // OHOS

@@ -711,4 +711,88 @@ HWTEST_F(BmsBundleInstallerPermissionTest, SetEncryptionPolicy_0100, Function | 
     ErrCode ret = hostImpl.SetEncryptionPolicy(encryptionParam, keyId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: InnerProcessBundleInstall_0100
+ * @tc.name: InnerProcessBundleInstall
+ * @tc.desc: test InnerProcessBundleInstall
+ */
+HWTEST_F(BmsBundleInstallerPermissionTest, InnerProcessBundleInstall_0100, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetSingleton(false);
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>("com.example.testbundle", innerBundleInfo));
+    int32_t uid = 3057;
+    InnerBundleInfo oldInfo;
+    InstallParam installParam;
+    installParam.needSavePreInstallInfo = false;
+    installer.isAppExist_ = true;
+    installer.userId_ = 1;
+    auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+}
+
+/**
+ * @tc.number: InnerProcessInstallByPreInstallInfo_0100
+ * @tc.name: test InnerProcessInstallByPreInstallInfo
+ * @tc.desc: 1.Test the InnerProcessInstallByPreInstallInfo of BaseBundleInstaller without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, InnerProcessInstallByPreInstallInfo_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    int32_t uid = 0;
+    InstallParam installParam;
+    installParam.userId = 100;
+    installer.dataMgr_->AddUserId(100);
+    installer.dataMgr_->bundleInfos_.try_emplace("com.example.testbundle", innerBundleInfo);
+    installer.isAppExist_ = true;
+    ErrCode ret = installer.InnerProcessInstallByPreInstallInfo(
+        "com.example.testbundle", installParam, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+}
+
+/**
+ * @tc.number: ProcessBundleInstallStatus_0100
+ * @tc.name: test ProcessBundleInstallStatus
+ * @tc.desc: 1.Test the ProcessBundleInstallStatus of BaseBundleInstaller without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, ProcessBundleInstallStatus_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    int32_t uid = 0;
+    InstallParam installParam;
+    installer.isAppExist_ = true;
+    installer.userId_ = 1;
+    installer.bundleName_ = "com.example.testbundle";
+
+    ErrCode ret = installer.ProcessBundleInstallStatus(innerBundleInfo, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+}
+
+/**
+ * @tc.number: UpdateHapToken_0100
+ * @tc.name: test UpdateHapToken
+ * @tc.desc: test UpdateHapToken of BaseBundleInstaller without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, UpdateHapToken_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo newInfo;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    info.accessTokenId = -1;
+    info.bundleUserInfo.userId = 1;
+    innerBundleUserInfos.try_emplace(BUNDLE_NAME, info);
+    newInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+
+    ErrCode ret = installer.UpdateHapToken(false, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+}
 } // OHOS
