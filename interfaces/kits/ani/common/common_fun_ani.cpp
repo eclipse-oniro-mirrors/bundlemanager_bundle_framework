@@ -21,6 +21,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* CLASSNAME_STDSTRING = "Lstd/core/String;";
+constexpr const char* CLASSNAME_ARRAY = "Lescompat/Array;";
 constexpr const char* CLASSNAME_ABILITYINFO = "LAbilityInfo/AbilityInfoInner;";
 constexpr const char* CLASSNAME_EXTENSIONABILITYINFO = "LExtensionAbilityInfo/ExtensionAbilityInfoInner;";
 constexpr const char* CLASSNAME_WINDOWSIZE = "LAbilityInfo/WindowSizeInner;";
@@ -49,7 +50,6 @@ constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
 
 #define SETTER_METHOD_NAME(property) "<set>" #property
 } // namespace
-
 
 std::string CommonFunAni::AniStrToString(ani_env* env, ani_ref aniStr)
 {
@@ -184,22 +184,56 @@ ani_ref CommonFunAni::ConvertAniArrayString(ani_env* env, const std::vector<std:
 }
 
 template<typename enumType>
-ani_array_int CommonFunAni::ConvertAniArrayEnum(
-    ani_env* env, const std::vector<enumType>& cArray, std::function<ani_int(const int32_t)> converter)
+ani_object CommonFunAni::ConvertAniArrayEnum(
+    ani_env* env, const std::vector<enumType>& cArray, std::function<ani_enum_item(ani_env*, const int32_t)> converter)
 {
-    ani_size length = cArray.size();
-    ani_array_int aArrayEnum = nullptr;
-    ani_status status = env->Array_New_Int(length, &aArrayEnum);
-    if (status != ANI_OK) {
-        APP_LOGE("Array_New_Int failed %{public}d", status);
+    if (env == nullptr) {
+        APP_LOGE("null env");
         return nullptr;
     }
-    std::vector<ani_int> buffer(length);
-    for (ani_size i = 0; i < length; ++i) {
-        buffer[i] = converter(static_cast<int32_t>(cArray[i]));
+
+    if (cArray.empty()) {
+        APP_LOGE("cArray empty");
+        return nullptr;
     }
-    env->Array_SetRegion_Int(aArrayEnum, 0, length, &buffer[0]);
-    return aArrayEnum;
+
+    ani_class arrayCls = nullptr;
+    ani_status status = env->FindClass(CLASSNAME_ARRAY, &arrayCls);
+    if (status != ANI_OK) {
+        APP_LOGE("FindClass failed %{public}d", status);
+        return nullptr;
+    }
+
+    ani_method arrayCtor;
+    status = env->Class_FindMethod(arrayCls, "<ctor>", "I:V", &arrayCtor);
+    if (status != ANI_OK) {
+        APP_LOGE("Class_FindMethod failed %{public}d", status);
+        return nullptr;
+    }
+
+    ani_object arrayObj;
+    ani_size length = cArray.size();
+    status = env->Object_New(arrayCls, arrayCtor, &arrayObj, length);
+    if (status != ANI_OK) {
+        APP_LOGE("Object_New failed %{public}d", status);
+        return nullptr;
+    }
+
+    for (ani_size i = 0; i < length; ++i) {
+        ani_enum_item item = converter(env, static_cast<int32_t>(cArray[i]));
+        if (item == nullptr) {
+            APP_LOGE("convert failed");
+            return nullptr;
+        }
+        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", i, item);
+        env->Reference_Delete(item);
+        if (status != ANI_OK) {
+            APP_LOGE("Object_CallMethodByName_Void failed %{public}d", status);
+            return nullptr;
+        }
+    }
+
+    return arrayObj;
 }
 
 ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo)
@@ -255,8 +289,12 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     CallSetter(env, cls, object, SETTER_METHOD_NAME(reqPermissionDetails), aPermissionArrayRef);
 
     // permissionGrantStates: Array<bundleManager.PermissionGrantState>
-    ani_array_int aPermissionGrantStates = ConvertAniArrayEnum(
-        env, bundleInfo.reqPermissionStates, EnumUtils::NativeValueToIndex_BundleManager_PermissionGrantState);
+    ani_object aPermissionGrantStates = ConvertAniArrayEnum(
+        env, bundleInfo.reqPermissionStates, EnumUtils::EnumNativeToETS_BundleManager_PermissionGrantState);
+    if (aPermissionGrantStates == nullptr) {
+        APP_LOGE("null aPermissionGrantStates");
+        return nullptr;
+    }
     CallSetter(env, cls, object, SETTER_METHOD_NAME(permissionGrantStates), aPermissionGrantStates);
 
     // signatureInfo: SignatureInfo
@@ -324,8 +362,8 @@ ani_object CommonFunAni::ConvertMultiAppMode(ani_env* env, const MultiAppModeDat
 
     // multiAppModeType: bundleManager.MultiAppModeType
     CallSetter(env, cls, object, SETTER_METHOD_NAME(multiAppModeType),
-        EnumUtils::NativeValueToIndex_BundleManager_MultiAppModeType(
-            static_cast<int32_t>(multiAppMode.multiAppModeType)));
+        EnumUtils::EnumNativeToETS_BundleManager_MultiAppModeType(
+            env, static_cast<int32_t>(multiAppMode.multiAppModeType)));
 
     return object;
 }
@@ -450,7 +488,7 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
 
     // bundleType: bundleManager.BundleType
     CallSetter(env, cls, object, SETTER_METHOD_NAME(bundleType),
-        EnumUtils::NativeValueToIndex_BundleManager_BundleType(static_cast<int32_t>(appInfo.bundleType)));
+        EnumUtils::EnumNativeToETS_BundleManager_BundleType(env, static_cast<int32_t>(appInfo.bundleType)));
 
     // debug: boolean
     CallSetter(env, cls, object, SETTER_METHOD_NAME(debug), BoolToAniBoolean(appInfo.debug));
@@ -540,15 +578,16 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
 
     // type: bundleManager.AbilityType
     CallSetter(env, cls, object, SETTER_METHOD_NAME(type),
-        EnumUtils::NativeValueToIndex_BundleManager_AbilityType(static_cast<int32_t>(abilityInfo.type)));
+        EnumUtils::EnumNativeToETS_BundleManager_AbilityType(env, static_cast<int32_t>(abilityInfo.type)));
 
     // orientation: bundleManager.DisplayOrientation
     CallSetter(env, cls, object, SETTER_METHOD_NAME(orientation),
-        EnumUtils::NativeValueToIndex_BundleManager_DisplayOrientation(static_cast<int32_t>(abilityInfo.orientation)));
+        EnumUtils::EnumNativeToETS_BundleManager_DisplayOrientation(
+            env, static_cast<int32_t>(abilityInfo.orientation)));
 
     // launchType: bundleManager.LaunchType
     CallSetter(env, cls, object, SETTER_METHOD_NAME(launchType),
-        EnumUtils::NativeValueToIndex_BundleManager_LaunchType(static_cast<int32_t>(abilityInfo.launchMode)));
+        EnumUtils::EnumNativeToETS_BundleManager_LaunchType(env, static_cast<int32_t>(abilityInfo.launchMode)));
 
     // permissions: Array<string>
     ani_ref aPermissions = ConvertAniArrayString(env, abilityInfo.permissions);
@@ -586,8 +625,12 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
     CallSetter(env, cls, object, SETTER_METHOD_NAME(enabled), BoolToAniBoolean(abilityInfo.enabled));
 
     // supportWindowModes: Array<bundleManager.SupportWindowMode>
-    ani_array_int aSupportWindowModes = ConvertAniArrayEnum(
-        env, abilityInfo.windowModes, EnumUtils::NativeValueToIndex_BundleManager_SupportWindowMode);
+    ani_object aSupportWindowModes =
+        ConvertAniArrayEnum(env, abilityInfo.windowModes, EnumUtils::EnumNativeToETS_BundleManager_SupportWindowMode);
+    if (aSupportWindowModes == nullptr) {
+        APP_LOGE("null aSupportWindowModes");
+        return nullptr;
+    }
     CallSetter(env, cls, object, SETTER_METHOD_NAME(supportWindowModes), aSupportWindowModes);
 
     // windowSize: WindowSize
@@ -681,7 +724,7 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
 
     // extensionAbilityType: bundleManager.ExtensionAbilityType
     CallSetter(env, cls, object, SETTER_METHOD_NAME(extensionAbilityType),
-        EnumUtils::NativeValueToIndex_BundleManager_ExtensionAbilityType(static_cast<int32_t>(extensionInfo.type)));
+        EnumUtils::EnumNativeToETS_BundleManager_ExtensionAbilityType(env, static_cast<int32_t>(extensionInfo.type)));
 
     // extensionAbilityTypeName: string
     env->String_NewUTF8(extensionInfo.extensionTypeName.c_str(), extensionInfo.extensionTypeName.size(), &string);
@@ -1041,7 +1084,7 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
 
     // type: bundleManager.ModuleType
     CallSetter(env, cls, object, SETTER_METHOD_NAME(type),
-        EnumUtils::NativeValueToIndex_BundleManager_ModuleType(static_cast<int32_t>(hapModuleInfo.moduleType)));
+        EnumUtils::EnumNativeToETS_BundleManager_ModuleType(env, static_cast<int32_t>(hapModuleInfo.moduleType)));
 
     // dependencies: Array<Dependency>
     std::vector<ani_object> aDependencies;

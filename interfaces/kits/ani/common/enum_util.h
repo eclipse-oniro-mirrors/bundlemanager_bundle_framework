@@ -17,195 +17,89 @@
 #define BUNDLE_FRAMEWORK_INTERFACES_KITS_ANI_ENUM_UTIL_H
 
 #include <array>
-#include <iostream>
 #include <string>
 
+#include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-#define DEFINE_INLINE_CONVERT_FUNC(prefix, namespace, enumname, argname, offset) \
-    static inline int prefix##_##namespace##_##enumname(const int argname)       \
-    {                                                                            \
-        return argname + (offset);                                               \
-    }
-#define DEFINE_NATIVE_VALUE_TO_INDEX(namespace, enumname, offset) \
-    DEFINE_INLINE_CONVERT_FUNC(NativeValueToIndex, namespace, enumname, value, offset)
-#define DEFINE_INDEX_TO_NATIVE_VALUE(namespace, enumname, offset) \
-    DEFINE_INLINE_CONVERT_FUNC(IndexToNativeValue, namespace, enumname, index, offset)
-#define DEFINE_NATIVE_VALUE_TO_INDEX_LOOKUP(namespace, enumname)                                 \
-    static inline int32_t NativeValueToIndex##_##namespace##_##enumname(const int32_t value)     \
-    {                                                                                            \
-        for (std::size_t i = 0; i < Array##_##namespace##_##enumname.size(); ++i) {              \
-            if (value == Array##_##namespace##_##enumname[i]) {                                  \
-                return i;                                                                        \
-            }                                                                                    \
-        }                                                                                        \
-        return 0;                                                                                \
-    }
-#define DEFINE_INDEX_TO_NATIVE_VALUE_LOOKUP(namespace, enumname)                                     \
-    static inline int32_t IndexToNativeValue##_##namespace##_##enumname(const int32_t index)         \
-    {                                                                                                \
-        auto i = static_cast<std::size_t>(index);                                                    \
-        if (i < 0 || i >= Array##_##namespace##_##enumname.size()) {                                 \
-            return 0;                                                                                \
-        }                                                                                            \
-        return Array##_##namespace##_##enumname[i];                                                  \
-    }
+constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_FLAG = "L@ohos/bundle/bundleManager/bundleManager/BundleFlag";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE = "L@ohos/bundle/bundleManager/bundleManager/BundleType";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_MULTIAPPMODE_TYPE =
+    "L@ohos/bundle/bundleManager/bundleManager/MultiAppModeType";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_ABILITY_TYPE = "L@ohos/bundle/bundleManager/bundleManager/AbilityType";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_DISPLAYORIENTATION =
+    "L@ohos/bundle/bundleManager/bundleManager/DisplayOrientation";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_LAUNCH_TYPE = "L@ohos/bundle/bundleManager/bundleManager/LaunchType";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_SUPPORTWINDOWMODE =
+    "L@ohos/bundle/bundleManager/bundleManager/SupportWindowMode";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_EXTENSIONABILITY_TYPE =
+    "L@ohos/bundle/bundleManager/bundleManager/ExtensionAbilityType";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_MODULE_TYPE = "L@ohos/bundle/bundleManager/bundleManager/ModuleType";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_PERMISSIONGRANTSTATE =
+    "L@ohos/bundle/bundleManager/bundleManager/PermissionGrantState";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_APPLICATION_FLAG =
+    "L@ohos/bundle/bundleManager/bundleManager/ApplicationFlag";
+constexpr const char* CLASSNAME_BUNDLE_DISPLAYORIENTATION = "L@ohos/bundle/bundle/DisplayOrientation";
+constexpr const char* CLASSNAME_BUNDLE_ABILITY_TYPE = "L@ohos/bundle/bundle/AbilityType";
+constexpr const char* CLASSNAME_BUNDLE_ABILITYSUB_TYPE = "L@ohos/bundle/bundle/AbilitySubType";
+constexpr const char* CLASSNAME_BUNDLE_LAUNCHMODE = "L@ohos/bundle/bundle/LaunchMode";
+constexpr const char* CLASSNAME_ZLIB_COMPRESSLEVEL = "L@ohos/zlib/zlib/CompressLevel";
+constexpr const char* CLASSNAME_ZLIB_MEMLEVEL = "L@ohos/zlib/zlib/MemLevel";
+constexpr const char* CLASSNAME_ZLIB_COMPRESSSTRATEGY = "L@ohos/zlib/zlib/CompressStrategy";
 } // namespace
 class EnumUtils {
-public:
-    // bundleManager.BundleFlag
-    DEFINE_NATIVE_VALUE_TO_INDEX_LOOKUP(BundleManager, BundleFlag)
-    DEFINE_INDEX_TO_NATIVE_VALUE_LOOKUP(BundleManager, BundleFlag)
-
-    // bundleManager.BundleType
-    // enum BundleType {
-    //     APP = 0,
-    //     ATOMIC_SERVICE = 1
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(BundleManager, BundleType, 0)
-    DEFINE_INDEX_TO_NATIVE_VALUE(BundleManager, BundleType, 0)
-
-    // bundleManager.MultiAppModeType
-    // enum MultiAppModeType {
-    //     UNSPECIFIED = 0,
-    //     MULTI_INSTANCE = 1,
-    //     APP_CLONE = 2,
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(BundleManager, MultiAppModeType, 0)
-    DEFINE_INDEX_TO_NATIVE_VALUE(BundleManager, MultiAppModeType, 0)
-
-    // bundleManager.AbilityType
-    // enum AbilityType {
-    //     PAGE = 1,
-    //     SERVICE = 2,
-    //     DATA = 3
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(BundleManager, AbilityType, -1)
-    DEFINE_INDEX_TO_NATIVE_VALUE(BundleManager, AbilityType, 1)
-
-    // bundleManager.DisplayOrientation
-    // enum DisplayOrientation {
-    //     UNSPECIFIED,
-    //     LANDSCAPE,
-    //     PORTRAIT,
-    //     FOLLOW_RECENT,
-    //     LANDSCAPE_INVERTED,
-    //     PORTRAIT_INVERTED,
-    //     AUTO_ROTATION,
-    //     AUTO_ROTATION_LANDSCAPE,
-    //     AUTO_ROTATION_PORTRAIT,
-    //     AUTO_ROTATION_RESTRICTED,
-    //     AUTO_ROTATION_LANDSCAPE_RESTRICTED,
-    //     AUTO_ROTATION_PORTRAIT_RESTRICTED,
-    //     LOCKED,
-    //     AUTO_ROTATION_UNSPECIFIED,
-    //     FOLLOW_DESKTOP
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(BundleManager, DisplayOrientation, 0)
-    DEFINE_INDEX_TO_NATIVE_VALUE(BundleManager, DisplayOrientation, 0)
-
-    // bundleManager.LaunchType
-    // enum LaunchType {
-    //     SINGLETON = 0,
-    //     MULTITON = 1,
-    //     SPECIFIED = 2
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(BundleManager, LaunchType, 0)
-    DEFINE_INDEX_TO_NATIVE_VALUE(BundleManager, LaunchType, 0)
-
-    // bundleManager.SupportWindowMode
-    // SupportWindowMode {
-    //     FULL_SCREEN = 0,
-    //     SPLIT = 1,
-    //     FLOATING = 2
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(BundleManager, SupportWindowMode, 0)
-    DEFINE_INDEX_TO_NATIVE_VALUE(BundleManager, SupportWindowMode, 0)
-
-    // bundleManager.ExtensionAbilityType
-    DEFINE_NATIVE_VALUE_TO_INDEX_LOOKUP(BundleManager, ExtensionAbilityType)
-    DEFINE_INDEX_TO_NATIVE_VALUE_LOOKUP(BundleManager, ExtensionAbilityType)
-
-    // bundleManager.ModuleType
-    // enum ModuleType {
-    //     ENTRY = 1,
-    //     FEATURE = 2,
-    //     SHARED = 3
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(BundleManager, ModuleType, -1)
-    DEFINE_INDEX_TO_NATIVE_VALUE(BundleManager, ModuleType, 1)
-
-    // bundleManager.PermissionGrantState
-    // enum PermissionGrantState {
-    //     PERMISSION_DENIED = -1,
-    //     PERMISSION_GRANTED = 0
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(BundleManager, PermissionGrantState, 1)
-    DEFINE_INDEX_TO_NATIVE_VALUE(BundleManager, PermissionGrantState, -1)
-
-    // bundleManager.ApplicationFlag
-    DEFINE_NATIVE_VALUE_TO_INDEX_LOOKUP(BundleManager, ApplicationFlag)
-    DEFINE_INDEX_TO_NATIVE_VALUE_LOOKUP(BundleManager, ApplicationFlag)
-
-    // bundle.DisplayOrientation
-    // enum DisplayOrientation {
-    //     UNSPECIFIED,
-    //     LANDSCAPE,
-    //     PORTRAIT,
-    //     FOLLOW_RECENT
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(Bundle, DisplayOrientation, 0)
-    DEFINE_INDEX_TO_NATIVE_VALUE(Bundle, DisplayOrientation, 0)
-
-    // bundle.AbilityType
-    // enum AbilityType {
-    //     UNKNOWN,
-    //     PAGE,
-    //     SERVICE,
-    //     DATA
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(Bundle, AbilityType, 0)
-    DEFINE_INDEX_TO_NATIVE_VALUE(Bundle, AbilityType, 0)
-
-    // bundle.AbilitySubType
-    // enum AbilitySubType {
-    //     UNSPECIFIED = 0,
-    //     CA = 1
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(Bundle, AbilitySubType, 0)
-    DEFINE_INDEX_TO_NATIVE_VALUE(Bundle, AbilitySubType, 0)
-
-    // bundle.LaunchMode
-    // enum LaunchMode {
-    //     SINGLETON = 0,
-    //     STANDARD = 1
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(Bundle, LaunchMode, 0)
-    DEFINE_INDEX_TO_NATIVE_VALUE(Bundle, LaunchMode, 0)
-
-    // zlib.CompressLevel
-    DEFINE_NATIVE_VALUE_TO_INDEX_LOOKUP(Zlib, CompressLevel)
-    DEFINE_INDEX_TO_NATIVE_VALUE_LOOKUP(Zlib, CompressLevel)
-
-    // zlib.MemLevel
-    DEFINE_NATIVE_VALUE_TO_INDEX_LOOKUP(Zlib, MemLevel)
-    DEFINE_INDEX_TO_NATIVE_VALUE_LOOKUP(Zlib, MemLevel)
-
-    // zlib.CompressStrategy
-    // enum CompressStrategy {
-    //     COMPRESS_STRATEGY_DEFAULT_STRATEGY = 0,
-    //     COMPRESS_STRATEGY_FILTERED = 1,
-    //     COMPRESS_STRATEGY_HUFFMAN_ONLY = 2,
-    //     COMPRESS_STRATEGY_RLE = 3,
-    //     COMPRESS_STRATEGY_FIXED = 4
-    // }
-    DEFINE_NATIVE_VALUE_TO_INDEX(Zlib, CompressStrategy, 0)
-    DEFINE_INDEX_TO_NATIVE_VALUE(Zlib, CompressStrategy, 0)
-
 private:
+    static ani_enum_item EnumNativeToETSByIndex(ani_env* env, const char* enumClassName, const size_t index)
+    {
+        if (env == nullptr) {
+            APP_LOGE("null env");
+            return nullptr;
+        }
+
+        ani_enum aniEnum = nullptr;
+        ani_status status = env->FindEnum(enumClassName, &aniEnum);
+        if (status != ANI_OK) {
+            APP_LOGE("FindEnum failed %{public}d", status);
+            return nullptr;
+        }
+
+        ani_enum_item enumItem = nullptr;
+        status = env->Enum_GetEnumItemByIndex(aniEnum, index, &enumItem);
+        if (status != ANI_OK) {
+            APP_LOGE("Enum_GetEnumItemByIndex failed %{public}d", status);
+            return nullptr;
+        }
+        return enumItem;
+    }
+
+    // enum offset = enum value - enum index
+    static inline ani_enum_item EnumNativeToETSByOffset(
+        ani_env* env, const char* enumClassName, const int32_t enumValue, const int32_t offset)
+    {
+        if (enumValue < offset) {
+            APP_LOGE("invalid index");
+            return nullptr;
+        }
+        return EnumNativeToETSByIndex(env, enumClassName, enumValue - offset);
+    }
+
+    template<std::size_t tableSize>
+    static inline ani_enum_item EnumNativeToETSByTable(
+        ani_env* env, const char* enumClassName, const int32_t enumValue, const std::array<int32_t, tableSize>& table)
+    {
+        for (std::size_t index = 0; index < table.size(); ++index) {
+            if (enumValue == table[index]) {
+                return EnumNativeToETSByIndex(env, enumClassName, index);
+            }
+        }
+
+        APP_LOGE("Not found %{public}d", enumValue);
+        return nullptr;
+    }
+
     // bundleManager.BundleFlag
     // enum BundleFlag {
     //     GET_BUNDLE_INFO_DEFAULT = 0x00000000,
@@ -329,6 +223,218 @@ private:
         9,
         8,
     };
+
+public:
+    template<typename enumType>
+    static inline bool EnumETSToNative(ani_env* env, ani_enum_item enumItem, enumType& enumValue)
+    {
+        if (env == nullptr) {
+            APP_LOGE("null env");
+            return false;
+        }
+
+        if (enumItem == nullptr) {
+            APP_LOGE("null enumItem");
+            return false;
+        }
+
+        ani_int value {};
+        ani_status status = env->EnumItem_GetValue_Int(enumItem, &value);
+        if (status != ANI_OK) {
+            APP_LOGE("EnumItem_GetValue_Int failed %{public}d", status);
+            return false;
+        }
+
+        enumValue = static_cast<enumType>(value);
+        return true;
+    }
+
+    // bundleManager.BundleFlag
+    static inline ani_enum_item EnumNativeToETS_BundleManager_BundleFlag(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByTable(env, CLASSNAME_BUNDLEMANAGER_BUNDLE_FLAG, value, Array_BundleManager_BundleFlag);
+    }
+
+    // bundleManager.BundleType
+    // enum BundleType {
+    //     APP = 0,
+    //     ATOMIC_SERVICE = 1
+    // }
+    static inline ani_enum_item EnumNativeToETS_BundleManager_BundleType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE, value, 0);
+    }
+
+    // bundleManager.MultiAppModeType
+    // enum MultiAppModeType {
+    //     UNSPECIFIED = 0,
+    //     MULTI_INSTANCE = 1,
+    //     APP_CLONE = 2,
+    // }
+    static inline ani_enum_item EnumNativeToETS_BundleManager_MultiAppModeType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_BUNDLEMANAGER_MULTIAPPMODE_TYPE, value, 0);
+    }
+
+    // bundleManager.AbilityType
+    // enum AbilityType {
+    //     PAGE = 1,
+    //     SERVICE = 2,
+    //     DATA = 3
+    // }
+    static inline ani_enum_item EnumNativeToETS_BundleManager_AbilityType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_BUNDLEMANAGER_ABILITY_TYPE, value, 1);
+    }
+
+    // bundleManager.DisplayOrientation
+    // enum DisplayOrientation {
+    //     UNSPECIFIED,
+    //     LANDSCAPE,
+    //     PORTRAIT,
+    //     FOLLOW_RECENT,
+    //     LANDSCAPE_INVERTED,
+    //     PORTRAIT_INVERTED,
+    //     AUTO_ROTATION,
+    //     AUTO_ROTATION_LANDSCAPE,
+    //     AUTO_ROTATION_PORTRAIT,
+    //     AUTO_ROTATION_RESTRICTED,
+    //     AUTO_ROTATION_LANDSCAPE_RESTRICTED,
+    //     AUTO_ROTATION_PORTRAIT_RESTRICTED,
+    //     LOCKED,
+    //     AUTO_ROTATION_UNSPECIFIED,
+    //     FOLLOW_DESKTOP
+    // }
+    static inline ani_enum_item EnumNativeToETS_BundleManager_DisplayOrientation(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_BUNDLEMANAGER_DISPLAYORIENTATION, value, 0);
+    }
+
+    // bundleManager.LaunchType
+    // enum LaunchType {
+    //     SINGLETON = 0,
+    //     MULTITON = 1,
+    //     SPECIFIED = 2
+    // }
+    static inline ani_enum_item EnumNativeToETS_BundleManager_LaunchType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_BUNDLEMANAGER_LAUNCH_TYPE, value, 0);
+    }
+
+    // bundleManager.SupportWindowMode
+    // SupportWindowMode {
+    //     FULL_SCREEN = 0,
+    //     SPLIT = 1,
+    //     FLOATING = 2
+    // }
+    static inline ani_enum_item EnumNativeToETS_BundleManager_SupportWindowMode(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_BUNDLEMANAGER_SUPPORTWINDOWMODE, value, 0);
+    }
+
+    // bundleManager.ExtensionAbilityType
+    static inline ani_enum_item EnumNativeToETS_BundleManager_ExtensionAbilityType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByTable(
+            env, CLASSNAME_BUNDLEMANAGER_EXTENSIONABILITY_TYPE, value, Array_BundleManager_ExtensionAbilityType);
+    }
+
+    // bundleManager.ModuleType
+    // enum ModuleType {
+    //     ENTRY = 1,
+    //     FEATURE = 2,
+    //     SHARED = 3
+    // }
+    static inline ani_enum_item EnumNativeToETS_BundleManager_ModuleType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_BUNDLEMANAGER_MODULE_TYPE, value, 1);
+    }
+
+    // bundleManager.PermissionGrantState
+    // enum PermissionGrantState {
+    //     PERMISSION_DENIED = -1,
+    //     PERMISSION_GRANTED = 0
+    // }
+    static inline ani_enum_item EnumNativeToETS_BundleManager_PermissionGrantState(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_BUNDLEMANAGER_PERMISSIONGRANTSTATE, value, -1);
+    }
+
+    // bundleManager.ApplicationFlag
+    static inline ani_enum_item EnumNativeToETS_BundleManager_ApplicationFlag(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByTable(
+            env, CLASSNAME_BUNDLEMANAGER_APPLICATION_FLAG, value, Array_BundleManager_ApplicationFlag);
+    }
+
+    // bundle.DisplayOrientation
+    // enum DisplayOrientation {
+    //     UNSPECIFIED,
+    //     LANDSCAPE,
+    //     PORTRAIT,
+    //     FOLLOW_RECENT
+    // }
+    static inline ani_enum_item EnumNativeToETS_Bundle_DisplayOrientation(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_BUNDLE_DISPLAYORIENTATION, value, 0);
+    }
+
+    // bundle.AbilityType
+    // enum AbilityType {
+    //     UNKNOWN,
+    //     PAGE,
+    //     SERVICE,
+    //     DATA
+    // }
+    static inline ani_enum_item EnumNativeToETS_Bundle_AbilityType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_BUNDLE_ABILITY_TYPE, value, 0);
+    }
+
+    // bundle.AbilitySubType
+    // enum AbilitySubType {
+    //     UNSPECIFIED = 0,
+    //     CA = 1
+    // }
+    static inline ani_enum_item EnumNativeToETS_Bundle_AbilitySubType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_BUNDLE_ABILITYSUB_TYPE, value, 0);
+    }
+
+    // bundle.LaunchMode
+    // enum LaunchMode {
+    //     SINGLETON = 0,
+    //     STANDARD = 1
+    // }
+    static inline ani_enum_item EnumNativeToETS_Bundle_LaunchMode(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_BUNDLE_LAUNCHMODE, value, 0);
+    }
+
+    // zlib.CompressLevel
+    static inline ani_enum_item EnumNativeToETS_Zlib_CompressLevel(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByTable(env, CLASSNAME_ZLIB_COMPRESSLEVEL, value, Array_Zlib_CompressLevel);
+    }
+
+    // zlib.MemLevel
+    static inline ani_enum_item EnumNativeToETS_Zlib_MemLevel(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByTable(env, CLASSNAME_ZLIB_MEMLEVEL, value, Array_Zlib_MemLevel);
+    }
+
+    // zlib.CompressStrategy
+    // enum CompressStrategy {
+    //     COMPRESS_STRATEGY_DEFAULT_STRATEGY = 0,
+    //     COMPRESS_STRATEGY_FILTERED = 1,
+    //     COMPRESS_STRATEGY_HUFFMAN_ONLY = 2,
+    //     COMPRESS_STRATEGY_RLE = 3,
+    //     COMPRESS_STRATEGY_FIXED = 4
+    // }
+    static inline ani_enum_item EnumNativeToETS_Zlib_CompressStrategy(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CLASSNAME_ZLIB_COMPRESSSTRATEGY, value, 0);
+    }
 };
 } // namespace AppExecFwk
 } // namespace OHOS
