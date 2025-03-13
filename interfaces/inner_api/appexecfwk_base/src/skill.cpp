@@ -392,10 +392,9 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         return uriStr == skillScheme || StartsWith(uriStr, skillScheme + PORT_SEPARATOR);
     }
     std::string optParamUri = ConvertUriToLower(GetOptParamUri(uriString));
-    std::string skillUriString;
-    std::string skillScheme = ConvertToLower(skillUri.scheme);
-    std::string skillHost = ConvertToLower(skillUri.host);
-    skillUriString.append(skillScheme).append(SCHEME_SEPARATOR).append(skillHost);
+    std::string skillUriTmpString;
+    skillUriTmpString.append(skillUri.scheme).append(SCHEME_SEPARATOR).append(skillUri.host);
+    std::string skillUriString = ConvertUriToLower(skillUriTmpString);
 
     if (!skillUri.port.empty()) {
         skillUriString.append(PORT_SEPARATOR).append(skillUri.port);

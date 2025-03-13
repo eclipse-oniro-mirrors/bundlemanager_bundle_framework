@@ -2516,6 +2516,23 @@ HWTEST_F(BmsBundleManagerTest, MatchUri_0900, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: MatchUri_1000
+ * @tc.name: test MatchUri
+ * @tc.desc: 1.system run normally
+ *           2.test scheme and host case-sensitivity match.
+*/
+HWTEST_F(BmsBundleManagerTest, MatchUri_1000, Function | SmallTest | Level1)
+{
+    SkillUri skillUri;
+    skillUri.scheme = "myscheme";
+    skillUri.host = "www.test.com/testPath";
+    std::string uriString = "myscheme://www.test.com/testPath";
+    struct Skill skill;
+    bool ret = skill.MatchUri(uriString, skillUri);
+    EXPECT_EQ(true, ret);
+}
+
+/**
  * @tc.number: InnerBundleInfoFalse_0001
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
