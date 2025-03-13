@@ -25,5 +25,8 @@ group("ani_bms_packages") {
     "resource_manager:ani_bundle_res_manager",
     "resource_manager:bundle_resource_info_etc",
     "resource_manager:bundle_resource_manager_etc",
+    "shortcut_manager:anishortcutmanager",
+    "shortcut_manager:shortcut_info_etc",
+    "shortcut_manager:shortcut_manager_etc",
   ]
 }

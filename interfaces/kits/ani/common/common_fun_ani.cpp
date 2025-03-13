@@ -43,9 +43,9 @@ constexpr const char* CLASSNAME_CUSTOMIZEDATA = "LcustomizeData/CustomizeDataInn
 constexpr const char* CLASSNAME_SKILL = "LSkill/SkillInner;";
 constexpr const char* CLASSNAME_SKILLURI = "LSkill/SkillUriInner;";
 constexpr const char* CLASSNAME_BUNDLERESINFO = "LbundleManager/BundleResourceInfo/BundleResourceInfoInner;";
-constexpr const char* CLASSNAME_SHORTCUTINFO = "LShortcutInfo/ShortcutInfoInner;";
-constexpr const char* CLASSNAME_SHORTCUTWANT = "LShortcutInfo/ShortcutWantInner;";
-constexpr const char* CLASSNAME_SHORTCUT_PARAMETERITEM = "LShortcutInfo/ParameterItemInner;";
+constexpr const char* CLASSNAME_SHORTCUTINFO = "LbundleManager/ShortcutInfo/ShortcutInfoInner;";
+constexpr const char* CLASSNAME_SHORTCUTWANT = "LbundleManager/ShortcutInfo/ShortcutWantInner;";
+constexpr const char* CLASSNAME_SHORTCUT_PARAMETERITEM = "LbundleManager/ShortcutInfo/ParameterItemInner;";
 
 constexpr const char* PROPERTYNAME_NAME = "name";
 constexpr const char* PROPERTYNAME_VENDOR = "vendor";
