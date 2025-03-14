@@ -5681,7 +5681,7 @@ void MigrateDataComplete(napi_env env, napi_status status, void *data)
 
 napi_value MigrateData(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("begin to MigrateData");
+    APP_LOGI("begin to MigrateData");
     NapiArg args(env, info);
     MigrateDataCallbackInfo *asyncCallbackInfo = new (std::nothrow) MigrateDataCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -5711,7 +5711,7 @@ napi_value MigrateData(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<MigrateDataCallbackInfo>(
         env, asyncCallbackInfo, MIGRATE_DATA, MigrateDataExec, MigrateDataComplete);
     callbackPtr.release();
-    APP_LOGD("call MigrateData done");
+    APP_LOGI("call MigrateData done");
     return promise;
 }
 } // namespace AppExecFwk

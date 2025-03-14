@@ -2359,7 +2359,7 @@ void InstalldOperator::RmvDeleteDfx(const std::string &path)
 
 int32_t InstalldOperator::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
 {
-    LOG_D(BMS_TAG_INSTALLD, "migrate data start");
+    LOG_I(BMS_TAG_INSTALLD, "MigrateData start");
     std::vector<std::string> realSourcePaths;
     std::for_each(sourcePaths.begin(), sourcePaths.end(), [&realSourcePaths](const std::string &path) {
         std::string realPath;
@@ -2394,6 +2394,7 @@ int32_t InstalldOperator::MigrateData(const std::vector<std::string> &sourcePath
             result = ret;
         }
     }
+    LOG_I(BMS_TAG_INSTALLD, "MigrateData end");
     return result;
 }
 
