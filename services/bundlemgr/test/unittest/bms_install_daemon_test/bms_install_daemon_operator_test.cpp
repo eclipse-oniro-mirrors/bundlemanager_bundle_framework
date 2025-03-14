@@ -2016,4 +2016,140 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12400, Function | Sm
     auto ret = InstalldOperator::CheckAndDeleteLinkFile(path);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_12500
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling UpdateFileProperties of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12500, Function | SmallTest | Level0)
+{
+    std::string path;
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+    auto ret = InstalldOperator::UpdateFileProperties(path, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_12600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling UpdateFileProperties of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12600, Function | SmallTest | Level0)
+{
+    std::string path = "/data/xxxxxx";
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+    auto ret = InstalldOperator::UpdateFileProperties(path, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_12700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling UpdateFileProperties of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12700, Function | SmallTest | Level0)
+{
+    std::string path = "/data/test/InstalldOperatorTest_12700";
+    OHOS::ForceCreateDirectory(path);
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+    info.mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IXOTH;
+    info.uid = 1010;
+    info.gid = 1010;
+    auto ret = InstalldOperator::UpdateFileProperties(path, info);
+    EXPECT_EQ(ret, ERR_OK);
+    OHOS::ForceRemoveDirectory(path);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_12800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling UpdateFileProperties of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12800, Function | SmallTest | Level0)
+{
+    std::string path = "/data/test/InstalldOperatorTest_12800";
+    OHOS::ForceCreateDirectory(path);
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+    struct stat buf = {};
+    if (stat("/data/test/", &buf) != 0) {
+        info.uid = static_cast<int32_t>(buf.st_uid);
+        info.gid = static_cast<int32_t>(buf.st_gid);
+        info.mode = static_cast<int32_t>(buf.st_mode);
+    }
+    auto ret = InstalldOperator::UpdateFileProperties(path, info);
+    EXPECT_EQ(ret, ERR_OK);
+    OHOS::ForceRemoveDirectory(path);
+}
+
+/**
+ * @tc.number: vs
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ForceCreateDirectory of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12900, Function | SmallTest | Level0)
+{
+    std::string path = "/data";
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+    auto ret = InstalldOperator::ForceCreateDirectory(path, info);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_13000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ForceCreateDirectory of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13000, Function | SmallTest | Level0)
+{
+    std::string path = "/data/test/InstalldOperatorTest_13000";
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+    info.mode = S_ISUID | S_ISGID;
+    auto ret = InstalldOperator::ForceCreateDirectory(path, info);
+    EXPECT_EQ(ret, ERR_OK);
+    OHOS::ForceRemoveDirectory(path);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_13100
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling UpdateFileProperties of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13100, Function | SmallTest | Level0)
+{
+    std::string path = "/data/test/InstalldOperatorTest_13100";
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+    info.mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IXOTH;
+    info.uid = 1010;
+    info.gid = 1010;
+    auto ret = InstalldOperator::ForceCreateDirectory(path, info);
+
+    struct stat buf = {};
+    if (stat(path.c_str(), &buf) != 0) {
+        EXPECT_EQ(info.uid, static_cast<int32_t>(buf.st_uid));
+        EXPECT_EQ(info.gid, static_cast<int32_t>(buf.st_gid));
+        EXPECT_EQ(info.mode, static_cast<int32_t>(buf.st_mode));
+    }
+    OHOS::ForceRemoveDirectory(path);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_13200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling UpdateFileProperties of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13200, Function | SmallTest | Level0)
+{
+    std::string path = "/data/test/InstalldOperatorTest_13200";
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+    struct stat buf = {};
+    if (stat("/tmp", &buf) != 0) {
+        info.uid = static_cast<int32_t>(buf.st_uid);
+        info.gid = static_cast<int32_t>(buf.st_gid);
+        info.mode = static_cast<int32_t>(buf.st_mode);
+    }
+    auto ret = InstalldOperator::ForceCreateDirectory(path, info);
+    EXPECT_EQ(ret, ERR_OK);
+    OHOS::ForceRemoveDirectory(path);
+}
 } // OHOS
