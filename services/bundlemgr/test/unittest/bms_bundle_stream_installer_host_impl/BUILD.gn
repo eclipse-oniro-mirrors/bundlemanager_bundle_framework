@@ -54,7 +54,10 @@ ohos_unittest("BmsBundleInstallerHostTest") {
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
 
-  sources += [ "bms_bundle_stream_installer_host_impl_test.cpp" ]
+  sources += [
+    "bms_bundle_stream_installer_host_impl_test.cpp",
+    "mock/src/mock_ipc_skeleton.cpp",
+  ]
 
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
