@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 import("../../../../../appexecfwk.gni")
-module_output_path = "bundle_framework/bundle_framework"
+module_output_path = "bundle_framework/bundlemgrsst"
 
 ohos_systemtest("BundleMgrSandboxAppSystemTest") {
   sanitize = {

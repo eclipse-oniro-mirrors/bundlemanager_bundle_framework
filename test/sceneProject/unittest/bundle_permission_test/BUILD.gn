@@ -11,9 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
-import("../../../../appexecfwk.gni")
-
 group("bundle_permission_test") {
   testonly = true
   deps = [
@@ -22,9 +19,4 @@ group("bundle_permission_test") {
     "feature2_hap:feature2_hap",
     "feature_hap:feature_hap",
   ]
-}
-
-ohos_copy("copy_ohos_test") {
-  sources = [ "./ohos_test.xml" ]
-  outputs = [ "$root_out_dir/tests/unittest/bundle_framework/bundlemgrservice/resource/ohos_test.xml" ]
 }
