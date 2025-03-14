@@ -28,7 +28,12 @@ ohos_shared_library("ani_bundle_res_manager") {
     "${kits_path}/js/common",
     "${kits_path}/js/bundle_resource",
   ]
-  sources = [ "ani_resource_manager.cpp" ]
+
+  if (bundle_framework_bundle_resource) {
+    sources = [ "ani_resource_manager.cpp" ]
+  } else {
+    sources = [ "ani_resource_manager_unsupport.cpp" ]
+  }
 
   defines = [
     "APP_LOG_TAG = \"BMS\"",

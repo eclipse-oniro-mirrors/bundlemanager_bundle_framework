@@ -14,59 +14,20 @@
  */
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
-#include "bundle_resource_info.h"
-#include "bundle_resource_interface.h"
 #include "business_error_ani.h"
-#include "common_fun_ani.h"
-#include "common_func.h"
-#include "resource_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-
 namespace  {
-    constexpr int32_t INVALID_INT = -500;
-    constexpr int32_t DEFAULT_RES_FLAG = 1;
-    constexpr int32_t DEFAULT_IDX = 0;
-    constexpr const char* BUNDLE_NAME = "bundleName";
-    constexpr const char* TYPE_STRING = "string";
     constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
-    constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
 }
 
 static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_string aniBundleName,
     ani_int resFlag, ani_int appIdx)
 {
-    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
-    if (bundleName.empty()) {
-        APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
-        return nullptr;
-    }
-    auto resourceMgr = ResourceHelper::GetBundleResourceMgr();
-    if (resourceMgr == nullptr) {
-        APP_LOGE("GetBundleResourceMgr failed");
-        return nullptr;
-    }
-
-    if (resFlag == INVALID_INT) {
-        resFlag = DEFAULT_RES_FLAG;
-    }
-
-    if (resFlag == INVALID_INT) {
-        appIdx = DEFAULT_IDX;
-    }
-
-    BundleResourceInfo bundleResInfo;
-    int32_t ret = resourceMgr->GetBundleResourceInfo(bundleName, resFlag, bundleResInfo, appIdx);
-    if (ret != ERR_OK) {
-        APP_LOGE("GetBundleResourceInfo failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(
-            env, ret, GET_BUNDLE_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
-        return nullptr;
-    }
-
-    return CommonFunAni::ConvertBundleResourceInfo(env, bundleResInfo);
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    BusinessErrorAni::ThrowParameterTypeError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_BUNDLE_RESOURCE_INFO, "");
+    return nullptr;
 }
 
 extern "C" {
