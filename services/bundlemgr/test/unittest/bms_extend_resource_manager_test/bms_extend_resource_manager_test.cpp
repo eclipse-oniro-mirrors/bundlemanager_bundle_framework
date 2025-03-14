@@ -846,4 +846,42 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1001, Function | SmallTes
     ret = impl.UpateExtResourcesDb(BUNDLE_NAME, extendResourceInfos);
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.number: DisableDynamicIcon_0200
+ * @tc.name: Test DisableDynamicIcon
+ * @tc.desc: 1.DisableDynamicIcon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, DisableDynamicIcon_0200, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    const std::string bundleName = BUNDLE_NAME;
+    ErrCode res = impl.DisableDynamicIcon(bundleName);
+    EXPECT_FALSE(res);
+
+    ErrCode ret = impl.DisableDynamicIcon(bundleName);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED);
+}
+
+/**
+ * @tc.number: ExtResourceTest_1003
+ * @tc.name: test ExtResourceTest_1003
+ * @tc.desc: 1. BeforeAddExtResource test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1003, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    const std::string bundleName = BUNDLE_NAME;
+    std::vector<std::string> filePaths;
+    filePaths.emplace_back(INVALID_PATH);
+    auto ret = impl.BeforeAddExtResource(bundleName, filePaths);
+    EXPECT_TRUE(ret);
+
+    ret = impl.BeforeAddExtResource(EMPTY_STRING, filePaths);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    filePaths.emplace_back(INVALID_PATH);
+    ret = impl.BeforeAddExtResource(bundleName, filePaths);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_INVALID_PATH_FAILED);
+}
 } // OHOS
