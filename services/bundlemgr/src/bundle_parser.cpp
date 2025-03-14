@@ -308,7 +308,7 @@ std::map<std::string, std::string> BundleParser::ParseAclExtendedMap(const std::
         return aclExtendedMap;
     }
     for (const auto& [key, value] : jsonBuf.items()) {
-        aclExtendedMap[key] = value.dump();
+        aclExtendedMap[key] = value.is_string() ? value.get<std::string>() : value.dump();
     }
     return aclExtendedMap;
 }
