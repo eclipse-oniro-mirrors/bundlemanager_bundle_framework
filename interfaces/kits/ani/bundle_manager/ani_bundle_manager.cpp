@@ -24,9 +24,11 @@
 
 #include "ani_bundle_manager.h"
 #include "app_log_wrapper.h"
+#include "bundle_errors.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
+#include "business_error_ani.h"
 #include "common_fun_ani.h"
 #include "common_func.h"
 #include "ipc_skeleton.h"
@@ -34,6 +36,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr const char* BUNDLE_NAME = "bundleName";
+constexpr const char* TYPE_STRING = "string";
+constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
+const std::string IS_APPLICATION_ENABLED_SYNC = "IsApplicationEnabledSync";
+const std::string GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
+const std::string GET_BUNDLE_INFO_SYNC = "GetBundleInfoSync";
+const std::string GET_APPLICATION_INFO_SYNC = "GetApplicationInfoSync";
+const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const std::string GET_BUNDLE_INFO = "GetBundleInfo";
 constexpr const char* GET_APPLICATION_INFO = "GetApplicationInfo";
 static ani_vm* g_vm;
@@ -65,16 +75,19 @@ static ani_boolean isApplicationEnabledSync([[maybe_unused]] ani_env* env, ani_s
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return isEnable;
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("GetBundleMgr failed");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return isEnable;
     }
     int32_t ret = iBundleMgr->IsApplicationEnabled(bundleName, isEnable);
     if (ret != ERR_OK) {
         APP_LOGE("IsApplicationEnabled failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowParameterTypeError(env, ret, IS_APPLICATION_ENABLED_SYNC, "");
     }
     return isEnable;
 }
@@ -84,6 +97,7 @@ static ani_object getBundleInfoForSelfSync([[maybe_unused]] ani_env* env, ani_in
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("GetBundleMgr failed");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return nullptr;
     }
     const auto uid = IPCSkeleton::GetCallingUid();
@@ -102,6 +116,7 @@ static ani_object getBundleInfoForSelfSync([[maybe_unused]] ani_env* env, ani_in
     int32_t ret = iBundleMgr->GetBundleInfoForSelf(bundleFlags, bundleInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleInfoForSelf failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowParameterTypeError(env, ret, GET_BUNDLE_INFO_FOR_SELF_SYNC, BUNDLE_PERMISSIONS);
         return nullptr;
     }
 
@@ -123,6 +138,7 @@ static ani_object getBundleInfoSync(
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("Bundle name is empty.");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
 
@@ -139,12 +155,14 @@ static ani_object getBundleInfoSync(
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("Get bundle mgr failed");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return nullptr;
     }
     BundleInfo bundleInfo;
     ErrCode ret = iBundleMgr->GetBundleInfoV9(bundleName, bundleFlags, bundleInfo, userId);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleInfoV9 failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowParameterTypeError(env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
         return nullptr;
     }
 
@@ -162,6 +180,7 @@ static ani_object getApplicationInfoSync(
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
@@ -181,12 +200,14 @@ static ani_object getApplicationInfoSync(
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("nullptr iBundleMgr");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return nullptr;
     }
     ApplicationInfo appInfo;
     ErrCode ret = iBundleMgr->GetApplicationInfoV9(bundleName, applicationFlags, userId, appInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GetApplicationInfoV9 failed ret: %{public}d,userId: %{public}d", ret, getuid());
+        BusinessErrorAni::ThrowParameterTypeError(env, ret, GET_APPLICATION_INFO_SYNC, BUNDLE_PERMISSIONS);
         return nullptr;
     }
 
