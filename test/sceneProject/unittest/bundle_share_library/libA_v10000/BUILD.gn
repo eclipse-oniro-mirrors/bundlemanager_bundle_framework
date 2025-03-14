@@ -18,7 +18,7 @@ ohos_hap("libA_v10000") {
   hap_profile = "entry/src/main/module.json"
   hap_name = "libA_v10000"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/bundle_share_library/${hap_name}.hsp"
+  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundlemgrservice/resource/bundle_share_library/${hap_name}.hsp"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",

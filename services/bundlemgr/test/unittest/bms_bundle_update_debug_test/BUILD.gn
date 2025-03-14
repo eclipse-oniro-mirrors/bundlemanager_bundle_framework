@@ -70,7 +70,6 @@ ohos_unittest("BmsBundleUpdateDebugTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${bundle_framework_path}/test/sceneProject/unittest/bundle_permission_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_update_debug:bundle_update_debug",
     "${core_path}:appexecfwk_core",
   ]

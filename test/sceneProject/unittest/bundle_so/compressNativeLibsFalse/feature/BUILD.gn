@@ -18,7 +18,7 @@ ohos_hap("compressNativeLibsFalse02") {
   hap_profile = "src/main/module.json"
   hap_name = "compressNativeLibsFalse02"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/bundle_so/${hap_name}.hap"
+  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundlemgrservice/resource/bundle_so/${hap_name}.hap"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",

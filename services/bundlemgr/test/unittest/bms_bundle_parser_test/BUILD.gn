@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("../../../../../appexecfwk.gni")
 
-module_output_path = "bundle_framework/bundle_framework"
+module_output_path = "bundle_framework/bundlemgrservice"
 
 config("bundlemgr_parse_test_config") {
   include_dirs = [
