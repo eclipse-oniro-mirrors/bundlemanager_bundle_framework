@@ -568,6 +568,17 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         }
         AclSetDir(createDirParam.debug, bundleDataDir, true, true);
         InstalldOperator::RmvDeleteDfx(bundleDataDir);
+        if (el == ServiceConstants::BUNDLE_EL[0]) {
+            std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+            el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
+                std::to_string(createDirParam.userId));
+            el1ShaderCachePath = el1ShaderCachePath + createDirParam.bundleName +
+                ServiceConstants::PATH_SEPARATOR + ServiceConstants::SHADER_CACHE;
+            if (!InstalldOperator::MkOwnerDir(el1ShaderCachePath, ServiceConstants::NEW_SHADRE_CACHE_MODE,
+                createDirParam.uid, ServiceConstants::NEW_SHADRE_CACHE_GID)) {
+                    LOG_W(BMS_TAG_INSTALLER, "fail to Mkdir el1ShaderCachePath, errno: %{public}d", errno);
+            }
+        }
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             for (const auto &dir : BUNDLE_DATA_DIR) {
                 if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, mode,
