@@ -83,4 +83,27 @@ HWTEST_F(BmsBundleEmulatorRootInstallersTest, BmsBundleEmulatorRootInstallersTes
     setuid(Constants::ROOT_UID);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: BmsBundleEmulatorRootInstallersTest_0200
+ * @tc.name: test check emulator shell install
+ * @tc.desc: test check emulator shell install
+ */
+HWTEST_F(BmsBundleEmulatorRootInstallersTest, BmsBundleEmulatorRootInstallersTest_0200, TestSize.Level1)
+{
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+
+    Security::Verify::HapVerifyResult verifyRes;
+    verifyRes.SetProvisionInfo(provisionInfo);
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    hapVerifyRes.emplace_back(verifyRes);
+
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.sysEventInfo_.callingUid = ServiceConstants::SHELL_UID;
+    ErrCode res = baseBundleInstaller.CheckShellInstallForEmulator(hapVerifyRes);
+    EXPECT_EQ(res, ERR_OK);
+}
 }  // namespace OHOS
