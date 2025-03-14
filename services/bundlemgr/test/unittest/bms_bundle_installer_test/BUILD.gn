@@ -1702,6 +1702,9 @@ ohos_unittest("BmsBundleInstallerPermissionTest") {
   sources += bundle_install_sources
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
+  sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
+  sources +=
+      [ "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp" ]
 
   sources += [ "bms_bundle_installer_permission_test.cpp" ]
 
@@ -1755,6 +1758,7 @@ ohos_unittest("BmsBundleInstallerPermissionTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
+  defines += [ "BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE" ]
   if (code_signature_enable) {
     sources += [
       "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
