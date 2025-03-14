@@ -1112,6 +1112,7 @@ ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const i
         (!isSingleton && (userId == Constants::DEFAULT_USERID))) {
         LOG_NOFUNC_W(BMS_TAG_INSTALLER, "singleton(%{public}d) app(%{public}s) and user(%{public}d) are not matched",
             isSingleton, info.GetBundleName().c_str(), userId);
+        EventReport::SendBundleSystemEvent(BundleEventType::INSTALL, sysEventInfo_);
         return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
     }
 
