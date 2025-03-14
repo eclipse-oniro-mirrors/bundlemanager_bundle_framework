@@ -102,6 +102,7 @@ constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 constexpr const char* ENTRY = "entry";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
+constexpr const char* RESOURCE_STRING_PREFIX = "$string:";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -5293,7 +5294,78 @@ bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
             shortcutInfo.bundleName.c_str(), shortcutInfo.id.c_str(), shortcutInfo.iconId, shortcutInfo.labelId);
         shortcutInfos.emplace_back(shortcutInfo);
     }
+    (void)InnerProcessShortcutId(abilityInfo.hapPath, shortcutInfos);
     return true;
+}
+
+#ifdef GLOBAL_RESMGR_ENABLE
+std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceManager(const std::string &hapPath) const
+{
+    if (hapPath.empty()) {
+        APP_LOGE("hapPath is empty");
+        return nullptr;
+    }
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+    if (!resConfig) {
+        APP_LOGE("resConfig is nullptr");
+        return nullptr;
+    }
+#ifdef GLOBAL_I18_ENABLE
+    std::map<std::string, std::string> configs;
+    OHOS::Global::I18n::LocaleInfo locale(Global::I18n::LocaleConfig::GetEffectiveLanguage(), configs);
+    resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
+#endif
+    resourceManager->UpdateResConfig(*resConfig);
+    if (!resourceManager->AddResource(hapPath.c_str(), Global::Resource::SELECT_STRING)) {
+        APP_LOGW("AddResource failed");
+    }
+    return resourceManager;
+}
+#endif
+
+bool BundleDataMgr::InnerProcessShortcutId(const std::string &hapPath, std::vector<ShortcutInfo> &shortcutInfos) const
+{
+#ifdef GLOBAL_RESMGR_ENABLE
+    bool needToParseShortcutId = false;
+    for (const auto &info : shortcutInfos) {
+        if (info.id.find(RESOURCE_STRING_PREFIX) == 0) {
+            needToParseShortcutId = true;
+            break;
+        }
+    }
+    if (!needToParseShortcutId) {
+        return false;
+    }
+    APP_LOGI("shortcut id conatins $string:");
+    auto resourceManager = GetResourceManager(hapPath);
+    if (resourceManager == nullptr) {
+        APP_LOGI("create resource mgr failed");
+        return false;
+    }
+
+    for (auto &info : shortcutInfos) {
+        if (info.id.find(RESOURCE_STRING_PREFIX) != 0) {
+            continue;
+        }
+        int32_t id = static_cast<uint32_t>(atoi(info.id.substr(std::string(RESOURCE_STRING_PREFIX).size()).c_str()));
+        if (id <= 0) {
+            APP_LOGE("shortcut id is less than 0");
+            continue;
+        }
+        std::string shortcutId;
+        OHOS::Global::Resource::RState errValue = resourceManager->GetStringById(id, shortcutId);
+        if (errValue != OHOS::Global::Resource::RState::SUCCESS) {
+            APP_LOGE("GetStringById failed, id:%{public}d", id);
+            continue;
+        }
+        info.id = shortcutId;
+    }
+    return true;
+
+#else
+    return true;
+#endif
 }
 
 ErrCode BundleDataMgr::GetShortcutInfoV9(
