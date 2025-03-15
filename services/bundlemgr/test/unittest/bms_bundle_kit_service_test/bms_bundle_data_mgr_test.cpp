@@ -309,6 +309,7 @@ const int FORMINFO_DESCRIPTIONID = 123;
 const int ABILITYINFOS_SIZE_1 = 1;
 const int ABILITYINFOS_SIZE_2 = 2;
 const int32_t USERID = 100;
+const int32_t MULTI_USERID = 101;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
@@ -4950,6 +4951,21 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0005, Function | SmallTest 
     res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, false, preInstallBundleInfos);
     EXPECT_FALSE(res);
     bundleUserMgrHostImpl_->HandleNotifyBundleEvents();
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0006
+ * Function: BundleUserMgrHostImpl
+ * @tc.name: test BundleUserMgrHostImpl
+ * @tc.desc: test OnCreateNewUser and RemoveUser
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0006, Function | SmallTest | Level0)
+{
+    const std::vector<std::string> disallowList;
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    auto res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, MULTI_USERID, false,
+    preInstallBundleInfos);
+    EXPECT_TRUE(res);
 }
 
 /**
