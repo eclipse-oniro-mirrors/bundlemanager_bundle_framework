@@ -53,7 +53,7 @@ static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_strin
         resFlag = DEFAULT_RES_FLAG;
     }
 
-    if (resFlag == INVALID_INT) {
+    if (appIdx == INVALID_INT) {
         appIdx = DEFAULT_IDX;
     }
 
