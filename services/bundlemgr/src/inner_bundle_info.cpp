@@ -148,6 +148,8 @@ constexpr const char* MODULE_APP_STARTUP = "appStartup";
 constexpr const char* MODULE_HWASAN_ENABLED = "hwasanEnabled";
 constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
 constexpr const char* MODULE_DEBUG = "debug";
+constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
+constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
 constexpr int32_t CPM_KEY_NOT_EXIST = 0x7A000005;
 
@@ -439,6 +441,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_TSAN_ENABLED, info.tsanEnabled},
         {MODULE_PACKAGE_NAME, info.packageName},
         {MODULE_APP_STARTUP, info.appStartup},
+        {MODULE_ABILITY_SRC_ENTRY_DELEGATOR, info.abilitySrcEntryDelegator},
+        {MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR, info.abilityStageSrcEntryDelegator},
         {MODULE_HWASAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
             InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED))},
         {MODULE_UBSAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
@@ -971,6 +975,18 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_APP_STARTUP,
         info.appStartup,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_ABILITY_SRC_ENTRY_DELEGATOR,
+        info.abilitySrcEntryDelegator,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR,
+        info.abilityStageSrcEntryDelegator,
         false,
         parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
@@ -1553,6 +1569,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.routerMap = it->second.routerMap;
     hapInfo.appEnvironments = it->second.appEnvironments;
     hapInfo.packageName = it->second.packageName;
+    hapInfo.abilitySrcEntryDelegator = it->second.abilitySrcEntryDelegator;
+    hapInfo.abilityStageSrcEntryDelegator = it->second.abilityStageSrcEntryDelegator;
     return hapInfo;
 }
 

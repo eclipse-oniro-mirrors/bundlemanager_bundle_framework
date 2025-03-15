@@ -300,6 +300,8 @@ struct Module {
     std::string name;
     std::string type;
     std::string srcEntrance;
+    std::string abilitySrcEntryDelegator;
+    std::string abilityStageSrcEntryDelegator;
     std::string description;
     std::string process;
     std::string mainElement;
@@ -1356,6 +1358,18 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
             false,
             g_parseResult);
     }
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_ABILITY_SRC_ENTRY_DELEGATOR,
+        module.abilitySrcEntryDelegator,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR,
+        module.abilityStageSrcEntryDelegator,
+        false,
+        g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         DESCRIPTION,
@@ -2423,6 +2437,8 @@ bool ToInnerModuleInfo(
     innerModuleInfo.packageName = moduleJson.module.packageName;
     innerModuleInfo.appStartup = moduleJson.module.appStartup;
     innerModuleInfo.debug = moduleJson.app.debug;
+    innerModuleInfo.abilitySrcEntryDelegator = moduleJson.module.abilitySrcEntryDelegator;
+    innerModuleInfo.abilityStageSrcEntryDelegator = moduleJson.module.abilityStageSrcEntryDelegator;
     return true;
 }
 
