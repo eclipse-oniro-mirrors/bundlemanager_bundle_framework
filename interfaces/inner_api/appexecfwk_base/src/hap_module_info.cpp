@@ -95,6 +95,8 @@ const char* HAP_MODULE_INFO_APP_ENVIRONMENTS = "appEnvironments";
 const char* APP_ENVIRONMENTS_NAME = "name";
 const char* APP_ENVIRONMENTS_VALUE = "value";
 const char* HAP_MODULE_INFO_PACKAGE_NAME = "packageName";
+const char* HAP_MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
+const char* HAP_MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 const char* HAP_MODULE_INFO_APP_STARTUP = "appStartup";
 const uint32_t MODULE_CAPACITY = 204800; // 200K
 }
@@ -646,6 +648,8 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         appEnvironments.emplace_back(*appEnvironment);
     }
     packageName = Str16ToStr8(parcel.ReadString16());
+    abilitySrcEntryDelegator = Str16ToStr8(parcel.ReadString16());
+    abilityStageSrcEntryDelegator = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -771,6 +775,8 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(packageName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilitySrcEntryDelegator));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilityStageSrcEntryDelegator));
     return true;
 }
 
@@ -833,6 +839,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_ROUTER_ARRAY, hapModuleInfo.routerArray},
         {HAP_MODULE_INFO_APP_ENVIRONMENTS, hapModuleInfo.appEnvironments},
         {HAP_MODULE_INFO_PACKAGE_NAME, hapModuleInfo.packageName},
+        {HAP_MODULE_ABILITY_SRC_ENTRY_DELEGATOR, hapModuleInfo.abilitySrcEntryDelegator},
+        {HAP_MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR, hapModuleInfo.abilityStageSrcEntryDelegator},
         {HAP_MODULE_INFO_APP_STARTUP, hapModuleInfo.appStartup}
     };
 }
@@ -1223,6 +1231,18 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         HAP_MODULE_INFO_PACKAGE_NAME,
         hapModuleInfo.packageName,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_ABILITY_SRC_ENTRY_DELEGATOR,
+        hapModuleInfo.abilitySrcEntryDelegator,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR,
+        hapModuleInfo.abilityStageSrcEntryDelegator,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,

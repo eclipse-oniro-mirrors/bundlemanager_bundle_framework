@@ -122,6 +122,8 @@ struct InnerModuleInfo {
     std::string routerMap;
     std::string packageName;
     std::string appStartup;
+    std::string abilitySrcEntryDelegator;
+    std::string abilityStageSrcEntryDelegator;
     Distro distro;
     // all user's value of isRemovable
     // key:userId
