@@ -893,7 +893,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
             userGuard.Dismiss();
         }
-        ErrCode res = CleanShaderCache(oldInfo, bundleName_);
+        ErrCode res = CleanShaderCache(oldInfo, bundleName_, userId_);
         if (res != ERR_OK) {
             LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean shader fail %{public}d", bundleName_.c_str(), res);
         }
@@ -6422,26 +6422,17 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
     return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
 }
 
-ErrCode BaseBundleInstaller::CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName) const
+ErrCode BaseBundleInstaller::CleanBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
+    const std::string &bundleName, int32_t userId) const
 {
-    std::string shaderCachePath;
-    shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
-    LOG_D(BMS_TAG_INSTALLER, "CleanShaderCache %{public}s", shaderCachePath.c_str());
-    ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(shaderCachePath);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "CleanShaderCache %{public}s failed", shaderCachePath.c_str());
-        return ret;
-    }
-    std::vector<int32_t> allAppIndexes = {0};
-    std::vector<int32_t> cloneAppIndexes = dataMgr_->GetCloneAppIndexesByInnerBundleInfo(oldInfo, userId_);
-    allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
+    ErrCode ret = ERR_OK;
     for (int32_t appIndex: allAppIndexes) {
         std::string cloneBundleName = bundleName;
         if (appIndex != 0) {
             cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
         }
         std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-        el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId_));
+        el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
         el1ShaderCachePath = el1ShaderCachePath + cloneBundleName + ServiceConstants::PATH_SEPARATOR +
             ServiceConstants::SHADER_CACHE;
         ret = InstalldClient::GetInstance()->CleanBundleDataDir(el1ShaderCachePath);
@@ -6450,7 +6441,23 @@ ErrCode BaseBundleInstaller::CleanShaderCache(const InnerBundleInfo &oldInfo, co
             return ret;
         }
     }
-    return ERR_OK;
+    return ret;
+}
+
+ErrCode BaseBundleInstaller::CleanShaderCache(const InnerBundleInfo &oldInfo,
+    const std::string &bundleName, int32_t userId) const
+{
+    std::string shaderCachePath;
+    shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
+    LOG_D(BMS_TAG_INSTALLER, "CleanShaderCache %{public}s", shaderCachePath.c_str());
+    ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(shaderCachePath);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "CleanShaderCache %{public}s failed", shaderCachePath.c_str());
+    }
+    std::vector<int32_t> allAppIndexes = {0};
+    std::vector<int32_t> cloneAppIndexes = dataMgr_->GetCloneAppIndexesByInnerBundleInfo(oldInfo, userId);
+    allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
+    return CleanBundleClonesShaderCache(allAppIndexes, bundleName, userId);
 }
 
 void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const
@@ -6482,7 +6489,7 @@ ErrCode BaseBundleInstaller::DeleteCloudShader(const std::string &bundleName) co
 {
     std::string newShaderCloudPath;
     newShaderCloudPath.append(ServiceConstants::NEW_CLOUD_SHADER_PATH).append(bundleName);
-    LOG_I(BMS_TAG_INSTALLER, "DeleteCloudShader %{public}s", newShaderCloudPath.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "DeleteCloudShader %{public}s", newShaderCloudPath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(newShaderCloudPath);
 }
 
