@@ -138,6 +138,9 @@ const std::vector<std::string> BUNDLE_DATA_SUB_DIRS = {
     "/preferences",
     "/haps"
 };
+const int32_t ADD_NEW_USERID = 200;
+const int32_t TEST_APP_INDEX1 = 1;
+const int32_t TEST_APP_INDEX2 = 2;
 }  // namespace
 
 class BmsBundleInstallerTest : public testing::Test {
@@ -171,6 +174,8 @@ public:
     void ClearBundleInfo();
     void ClearDataMgr();
     void ResetDataMgr();
+    bool CheckShaderCachePathExist(const std::string &bundleName,
+        const int32_t appIndex, const int32_t &userId) const;
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
@@ -523,6 +528,60 @@ void BmsBundleInstallerTest::ClearBundleInfo()
     EXPECT_TRUE(result) << "the bundle info in db clear fail: " << BUNDLE_NAME;
 }
 
+bool BmsBundleInstallerTest::CheckShaderCachePathExist(const std::string &bundleName,
+    const int32_t appIndex, const int32_t &userId) const
+{
+    bool isExist = false;
+    std::string cloneBundleName = bundleName;
+    if (appIndex != 0) {
+        cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
+    std::string newShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+    newShaderCachePath = newShaderCachePath.replace(newShaderCachePath.find("%"), 1, std::to_string(userId));
+    newShaderCachePath = newShaderCachePath + bundleName +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::SHADER_CACHE;
+    if (access(newShaderCachePath.c_str(), F_OK) == 0) {
+        isExist = true;
+    } else {
+        LOG_E(BMS_TAG_INSTALLD, "senlin %{public}s can not access, errno: %{public}d",
+            newShaderCachePath.c_str(), errno);
+    }
+    return isExist;
+}
+
+/**
+ * @tc.number: ShaderCache_0010
+ * @tc.name: test the right system bundle file can be installed
+ * @tc.desc: 1.the system bundle shader cache path exist
+ */
+HWTEST_F(BmsBundleInstallerTest, ShaderCache_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    bool result = InstallSystemBundle(bundleFile);
+    result = CheckShaderCachePathExist(BUNDLE_NAME, 0, USERID);
+    EXPECT_TRUE(result) << "the shader cache path does not exist: " << bundleFile;
+
+    InnerBundleInfo info;
+    dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, info);
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    // test CleanShaderCache
+    ErrCode ret = installer.CleanShaderCache(info, BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // test CleanEl1UserShaderCache
+    std::vector<int32_t> allAppIndexes = {0, TEST_APP_INDEX1, TEST_APP_INDEX2};
+    ret = installer.CleanBundleClonesShaderCache(allAppIndexes, BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // test DeleteCloudShader
+    ret = installer.DeleteCloudShader(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
+    ClearBundleInfo();
+}
+
 /**
  * @tc.number: UninstallPreInstallBundle_0100
  * @tc.name: test unisntall  preinstall bundle
@@ -531,15 +590,31 @@ void BmsBundleInstallerTest::ClearBundleInfo()
  */
 HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0100, Function | SmallTest | Level0)
 {
+    // test GetForceUnisntalledUsers before ForceUnInstallBundle
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(UNINSTALL_PREINSTALL_BUNDLE_NAME);
+    dataMgr->GetPreInstallBundleInfo(UNINSTALL_PREINSTALL_BUNDLE_NAME, preInstallBundleInfo);
+    std::vector<int> forceUnisntallUsers = preInstallBundleInfo.GetForceUnisntalledUsers();
+    bool isForceUninstall = forceUnisntallUsers.empty();
+    EXPECT_TRUE(isForceUninstall);
+ 
     OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
     InstallParam installParam;
     installParam.userId = USERID;
     setuid(Constants::EDC_UID);
-    ErrCode uninstallRes = UnInstallBundle(UNINSTALL_PREINSTALL_BUNDLE_NAME, installParam);
+    // test foruninstall failed
+    ErrCode uninstallRes = MockForceUnInstallBundle(UNINSTALL_PREINSTALL_BUNDLE_NAME, installParam);
     EXPECT_EQ(uninstallRes, ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR);
+    setuid(Constants::STORAGE_MANAGER_UID);
+    installParam.parameters.emplace(Constants::VERIFY_UNINSTALL_FORCED_KEY,
+        Constants::VERIFY_UNINSTALL_FORCED_VALUE);
+    uninstallRes = MockForceUnInstallBundle(UNINSTALL_PREINSTALL_BUNDLE_NAME, installParam);
+    EXPECT_NE(uninstallRes, ERR_OK);
     OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
 }
-
+ 
 /**
  * @tc.number: UninstallPreInstallBundle_0200
  * @tc.name: test unisntall  preinstall bundle
@@ -548,17 +623,151 @@ HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0100, Function | Smal
  */
 HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0200, Function | SmallTest | Level0)
 {
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    bool result = InstallSystemBundle(bundleFile);
+    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
+ 
+    // test GetForceUnisntalledUsers
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(BUNDLE_NAME);
+    dataMgr->GetPreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    std::vector<int> forceUnisntallUsers = preInstallBundleInfo.GetForceUnisntalledUsers();
+    bool getForceUninstall = forceUnisntallUsers.empty();
+    EXPECT_TRUE(getForceUninstall);
+    
+    // test ForceUnInstallBundle succeed
     OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
     InstallParam installParam;
     installParam.userId = USERID;
     setuid(Constants::EDC_UID);
     installParam.parameters.emplace(Constants::VERIFY_UNINSTALL_FORCED_KEY,
         Constants::VERIFY_UNINSTALL_FORCED_VALUE);
-    ErrCode uninstallRes = UnInstallBundle(UNINSTALL_PREINSTALL_BUNDLE_NAME, installParam);
+    ErrCode uninstallRes = MockForceUnInstallBundle(BUNDLE_NAME, installParam);
     EXPECT_EQ(uninstallRes, ERR_OK);
-    uninstallRes = RecoverBundle(UNINSTALL_PREINSTALL_BUNDLE_NAME, installParam);
-    EXPECT_NE(uninstallRes, ERR_OK);
+ 
+    // test forceuninstalluser in preinstallbundleinfo
+    preInstallBundleInfo.SetBundleName(BUNDLE_NAME);
+    dataMgr->GetPreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    bool isForceUninstall = preInstallBundleInfo.HasForceUninstalledUser(USERID);
+    EXPECT_TRUE(isForceUninstall);
+ 
+    // test GetRecoverablePreInstallBundleInfos
+    dataMgr->GetRecoverablePreInstallBundleInfos();
+ 
+    // test recover failed and succeed
+    ErrCode recoverRes = RecoverBundle(BUNDLE_NAME, installParam);
+    EXPECT_NE(recoverRes, ERR_OK);
+    preInstallBundleInfo.ClearForceUninstalledUsers();
+    dataMgr->SavePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    recoverRes = RecoverBundle(BUNDLE_NAME, installParam);
+    EXPECT_EQ(recoverRes, ERR_OK);
+    uninstallRes = MockForceUnInstallBundle(BUNDLE_NAME, installParam);
+    EXPECT_EQ(uninstallRes, ERR_OK);
+ 
     OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
+    ClearBundleInfo();
+}
+ 
+/**
+ * @tc.number: UninstallPreInstallBundle_0300
+ * @tc.name: test unisntall  preinstall bundle
+ * @tc.desc: 1.uninstall the hap
+ *           2.query bundle is revoverable or not
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    // test for DeletePreInstallBundleInfo
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(BUNDLE_NAME);
+    dataMgr->DeletePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    bool installResult = InstallSystemBundle(bundleFile, true, false);
+    EXPECT_TRUE(installResult);
+ 
+    // test add ForceUnisntalledUser
+    preInstallBundleInfo.SetBundleName(BUNDLE_NAME);
+    dataMgr->GetPreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    preInstallBundleInfo.AddForceUnisntalledUser(ADD_NEW_USERID);
+    dataMgr->SavePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    bool isForceUninstall = preInstallBundleInfo.HasForceUninstalledUser(ADD_NEW_USERID);
+    EXPECT_TRUE(isForceUninstall);
+ 
+    // test delete ForceUnisntalledUser
+    preInstallBundleInfo.DeleteForceUnisntalledUser(ADD_NEW_USERID);
+    dataMgr->SavePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    dataMgr->GetPreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    isForceUninstall = preInstallBundleInfo.HasForceUninstalledUser(ADD_NEW_USERID);
+    EXPECT_FALSE(isForceUninstall);
+    ClearBundleInfo();
+}
+ 
+/**
+ * @tc.number: UninstallPreInstallBundle_0400
+ * @tc.name: test the wrong system bundle file can't be installed
+ * @tc.desc: 1.the system bundle file don't exists
+ *           2.the system bundle can't be installed and the result is fail
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0400, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    bool result = InstallSystemBundle(bundleFile);
+    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
+ 
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = ADD_NEW_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    dataMgr->AddInnerBundleUserInfo(BUNDLE_NAME, innerBundleUserInfo);
+ 
+    // test multiuser force uninstall
+    InstallParam installParam;
+    installParam.userId = USERID;
+    setuid(Constants::EDC_UID);
+    installParam.parameters.emplace(Constants::VERIFY_UNINSTALL_FORCED_KEY,
+        Constants::VERIFY_UNINSTALL_FORCED_VALUE);
+    ErrCode res = MockForceUnInstallBundle(BUNDLE_NAME, installParam);
+    EXPECT_EQ(res, ERR_OK);
+ 
+    // test ClearForceUninstalledUsers and recover
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(BUNDLE_NAME);
+    preInstallBundleInfo.ClearForceUninstalledUsers();
+    dataMgr->SavePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    res = RecoverBundle(BUNDLE_NAME, installParam);
+    EXPECT_EQ(res, ERR_OK);
+    dataMgr->RemoveInnerBundleUserInfo(BUNDLE_NAME, ADD_NEW_USERID);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
+    ClearBundleInfo();
+}
+ 
+/**
+ * @tc.number: UninstallPreInstallBundle_0500
+ * @tc.name: test MarkIsForceUninstall
+ * @tc.desc: 1.the system bundle file don't exists
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0500, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+ 
+    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    bool result = InstallSystemBundle(bundleFile);
+    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
+ 
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(BUNDLE_NAME);
+    dataMgr->DeletePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    dataMgr->SavePreInstallBundleInfo(BUNDLE_NAME, preInstallBundleInfo);
+    BaseBundleInstaller installer;
+    installer.MarkIsForceUninstall(BUNDLE_NAME, false);
+    CheckFileExist();
+    ClearBundleInfo();
 }
 
 /**

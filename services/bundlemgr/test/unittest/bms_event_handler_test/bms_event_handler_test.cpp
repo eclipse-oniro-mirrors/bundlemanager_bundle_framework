@@ -61,6 +61,8 @@ namespace {
     constexpr const char* VERSION_CODE = "versionCode";
     constexpr const char* APP_PATCH_TYPE = "appPatchType";
     constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
+    const int32_t TEST_UID = 20020098;
+    const std::string UNINSTALL_PREINSTALL_BUNDLE_NAME = "com.ohos.telephonydataability";
 }
 class BmsEventHandlerTest : public testing::Test {
 public:
@@ -69,7 +71,8 @@ public:
     void SetUp();
     void TearDown();
     bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId);
-    bool CheckShaderCachePathExist(const std::string &bundleName, const int32_t &userId) const;
+    bool CheckShaderCachePathExist(const std::string &bundleName,
+        const int32_t appIndex, const int32_t &userId) const;
 
 private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
@@ -103,15 +106,23 @@ bool BmsEventHandlerTest::CreateBundleDataDir(const BundleInfo &bundleInfo, int3
     return UpdateAppDataMgr::CreateBundleDataDir(bundleInfo, userId, ServiceConstants::DIR_EL2);
 }
 
-bool BmsEventHandlerTest::CheckShaderCachePathExist(const std::string &bundleName, const int32_t &userId) const
+bool BmsEventHandlerTest::CheckShaderCachePathExist(const std::string &bundleName,
+    const int32_t appIndex, const int32_t &userId) const
 {
     bool isExist = false;
+    std::string cloneBundleName = bundleName;
+    if (appIndex != 0) {
+        cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
     std::string newShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
     newShaderCachePath = newShaderCachePath.replace(newShaderCachePath.find("%"), 1, std::to_string(userId));
     newShaderCachePath = newShaderCachePath + bundleName +
         ServiceConstants::PATH_SEPARATOR + ServiceConstants::SHADER_CACHE;
     if (access(newShaderCachePath.c_str(), F_OK) == 0) {
         isExist = true;
+    } else {
+        LOG_E(BMS_TAG_INSTALLD, "senlin %{public}s can not access, errno: %{public}d",
+            newShaderCachePath.c_str(), errno);
     }
     return isExist;
 }
@@ -2186,5 +2197,113 @@ HWTEST_F(BmsEventHandlerTest, CheckEl5Dir_0001, Function | SmallTest | Level0)
     info.userId = 100;
     callback.CheckEl5Dir(info, bundleInfo, "com.test.test");
     EXPECT_EQ(info.userId, 100);
+}
+
+/**
+ * @tc.number: BundleCloneEl1ShaderCacheLocal_0100
+ * @tc.name: CheckBundleCloneEl1ShaderCacheLocal
+ * @tc.desc: test CheckBundleCloneEl1ShaderCacheLocal and CleanBundleCloneEl1ShaderCacheLocal
+ */
+HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    // test first time mkdir with invalid uid
+    setuid(Constants::FOUNDATION_UID);
+    handler->CheckBundleCloneEl1ShaderCacheLocal(TEST_SHADER_CACHE_NAME_ONE,
+        1, Constants::DEFAULT_USERID, Constants::INVALID_UID);
+    bool isExist = CheckShaderCachePathExist(TEST_SHADER_CACHE_NAME_ONE, 1, Constants::START_USERID);
+    EXPECT_FALSE(isExist) << "test1: mkdir shader cache succeed: " << TEST_SHADER_CACHE_NAME_ONE;
+}
+
+/**
+ * @tc.number: BundleCloneEl1ShaderCacheLocal_0200
+ * @tc.name: CheckBundleCloneEl1ShaderCacheLocal
+ * @tc.desc: test CheckBundleCloneEl1ShaderCacheLocal and CleanBundleCloneEl1ShaderCacheLocal
+ */
+HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // test first time mkdir with no permission uid
+    setuid(Constants::ROOT_UID);
+    handler->CheckBundleCloneEl1ShaderCacheLocal(TEST_SHADER_CACHE_NAME_ONE,
+        1, Constants::START_USERID, TEST_UID);
+    bool isExist = CheckShaderCachePathExist(TEST_SHADER_CACHE_NAME_ONE, 1, Constants::START_USERID);
+    EXPECT_FALSE(isExist) << "test2: mkdir shader cache succeed: " << TEST_SHADER_CACHE_NAME_ONE;
+}
+
+/**
+ * @tc.number: BundleCloneEl1ShaderCacheLocal_0300
+ * @tc.name: CheckBundleCloneEl1ShaderCacheLocal
+ * @tc.desc: test CheckBundleCloneEl1ShaderCacheLocal and CleanBundleCloneEl1ShaderCacheLocal
+ */
+HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // test shader cache already exist and mkdir second time
+    bool isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path does not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+    setuid(Constants::FOUNDATION_UID);
+    handler->CheckBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME,
+        0, Constants::START_USERID, TEST_UID);
+    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path second time mkdir failed: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+}
+
+/**
+ * @tc.number: BundleCloneEl1ShaderCacheLocal_0400
+ * @tc.name: CheckBundleCloneEl1ShaderCacheLocal
+ * @tc.desc: test CheckBundleCloneEl1ShaderCacheLocal and CleanBundleCloneEl1ShaderCacheLocal
+ */
+HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0400, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // test CleanBundleCloneEl1ShaderCacheLocal
+    setuid(Constants::ROOT_UID);
+    handler->CleanBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    bool isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path was deleted: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+
+    setuid(Constants::FOUNDATION_UID);
+    handler->CleanBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path was deleted: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+}
+
+/**
+ * @tc.number: BundleEl1ShaderCacheLocal_0100
+ * @tc.name: CheckAllBundleEl1ShaderCacheLocal and CleanAllBundleEl1ShaderCacheLocal
+ * @tc.desc: test CheckAllBundleEl1ShaderCacheLocal and CleanAllBundleEl1ShaderCacheLocal
+ */
+HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    bool isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path does not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+    
+    // test CleanAllBundleEl1ShaderCacheLocal
+    setuid(Constants::FOUNDATION_UID);
+    handler->CleanAllBundleEl1ShaderCacheLocal();
+    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+ 
+    // test CheckAllBundleEl1ShaderCacheLocal
+    setuid(Constants::FOUNDATION_UID);
+    handler->CheckAllBundleEl1ShaderCacheLocal();
+    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
 }
 } // OHOS
