@@ -359,6 +359,8 @@ private:
         std::vector<std::string> &realSourcePaths, const std::string &destinationPath, OwnershipInfo &info);
     static int32_t UpdateFileProperties(const std::string &newFile, const OwnershipInfo &info);
     static int32_t ForceCreateDirectory(const std::string &path, const OwnershipInfo &info);
+    static int32_t MigrateDataCreateAhead(
+        const std::string &sourcePaths, std::string &destinationPath, const OwnershipInfo &info);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

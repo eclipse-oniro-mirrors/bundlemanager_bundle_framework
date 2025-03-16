@@ -2152,4 +2152,83 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13200, Function | Sm
     EXPECT_EQ(ret, ERR_OK);
     OHOS::ForceRemoveDirectory(path);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_13300
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling MigrateDataCreateAhead of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13300, Function | SmallTest | Level0)
+{
+    std::string sourcePath;
+    std::string destPath{ "/tmp" };
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+
+    auto ret = InstalldOperator::MigrateDataCreateAhead(sourcePath, destPath, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_13400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling MigrateDataCreateAhead of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13400, Function | SmallTest | Level0)
+{
+    std::string sourcePath { "/data/test/InstalldOperatorTest_13400" };
+    std::string destPath;
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+
+    auto ret = InstalldOperator::MigrateDataCreateAhead(sourcePath, destPath, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_13500
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling MigrateDataCreateAhead of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13500, Function | SmallTest | Level0)
+{
+    std::string sourcePath { "/data/test/sourcePath/test.txt" };
+    std::string destPath { "/data/test/InstalldOperatorTest_13500"};
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+    struct stat buf = {};
+    if (stat(destPath.c_str(), &buf) != 0) {
+        info.uid = static_cast<int32_t>(buf.st_uid);
+        info.gid = static_cast<int32_t>(buf.st_gid);
+        info.mode = static_cast<int32_t>(buf.st_mode);
+    }
+
+    auto ret = InstalldOperator::MigrateDataCreateAhead(sourcePath, destPath, info);
+    std::string desiredValue { "/data/test/InstalldOperatorTest_13500/data/test/sourcePath" };
+    EXPECT_EQ(destPath, desiredValue);
+    EXPECT_EQ(ret, ERR_OK);
+    OHOS::ForceRemoveDirectory("/data/test/InstalldOperatorTest_13500");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_13600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling MigrateDataCreateAhead of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13600, Function | SmallTest | Level0)
+{
+    std::string sourcePath { "/data/test/sourcePath///test.txt" };
+    std::string destPath { "/data/test/InstalldOperatorTest_13600"};
+    std::ofstream out(sourcePath);
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+    struct stat buf = {};
+    if (stat(destPath.c_str(), &buf) != 0) {
+        info.uid = static_cast<int32_t>(buf.st_uid);
+        info.gid = static_cast<int32_t>(buf.st_gid);
+        info.mode = static_cast<int32_t>(buf.st_mode);
+    }
+
+    auto ret = InstalldOperator::MigrateDataCreateAhead(sourcePath, destPath, info);
+    std::string desiredValue { "/data/test/InstalldOperatorTest_13600/data/test/sourcePath//" };
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(destPath, desiredValue);
+    OHOS::ForceRemoveDirectory("/data/test/InstalldOperatorTest_13600");
+}
 } // OHOS

@@ -5674,7 +5674,8 @@ void MigrateDataComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
         APP_LOGE("MigrateData err! code :%{public}d", asyncCallbackInfo->err);
-        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
+        result[0] = BusinessError::CreateCommonError(
+            env, asyncCallbackInfo->err, MIGRATE_DATA, Constants::PERMISSION_MIGRATE_DATA);
     }
     CommonFunc::NapiReturnDeferred<MigrateDataCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }

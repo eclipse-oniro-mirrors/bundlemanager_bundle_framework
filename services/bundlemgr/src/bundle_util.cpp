@@ -814,8 +814,7 @@ bool BundleUtil::IsSandBoxPath(const std::string &path)
     if (path.empty()) {
         return false;
     }
-    return path.find(ServiceConstants::SANDBOX_DATA_PATH) == SANDBOX_PATH_INDEX ||
-           path.find(ServiceConstants::APP_INSTALL_SANDBOX_PATH) == SANDBOX_PATH_INDEX;
+    return path.find(ServiceConstants::SANDBOX_DATA_PATH) == SANDBOX_PATH_INDEX;
 }
 
 bool BundleUtil::StartWith(const std::string &source, const std::string &prefix)
