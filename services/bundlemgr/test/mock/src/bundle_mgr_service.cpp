@@ -146,6 +146,11 @@ bool BundleMgrService::InitAppControl()
     return false;
 }
 
+bool BundleMgrService::InitBundleMgrExt()
+{
+    return false;
+}
+
 bool BundleMgrService::InitQuickFixManager()
 {
     return false;
@@ -238,6 +243,11 @@ sptr<IAppControlMgr> BundleMgrService::GetAppControlProxy() const
     return nullptr;
 }
 #endif
+
+sptr<IBundleMgrExt> BundleMgrService::GetBundleMgrExtProxy() const
+{
+    return nullptr;
+}
 
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 sptr<QuickFixManagerHostImpl> BundleMgrService::GetQuickFixManagerProxy() const

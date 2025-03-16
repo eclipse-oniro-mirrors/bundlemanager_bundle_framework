@@ -75,6 +75,7 @@ group("unittest") {
       "unittest/bms_bundle_kit_service_test:unittest",
       "unittest/bms_bundle_manager_convert_test:unittest",
       "unittest/bms_bundle_manager_test:unittest",
+      "unittest/bms_bundle_mgr_ext_test:unittest",
       "unittest/bms_bundle_mgr_mini_proxy_test:unittest",
       "unittest/bms_bundle_mgr_proxy_test:unittest",
       "unittest/bms_bundle_mgr_service_death_recipient_test:unittest",

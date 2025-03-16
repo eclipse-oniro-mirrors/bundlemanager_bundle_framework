@@ -728,6 +728,8 @@ private:
     ErrCode HandleGetAppControlProxy(MessageParcel &data, MessageParcel &reply);
 #endif
 
+    ErrCode HandleGetBundleMgrExtProxy(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetQuickFixManagerProxy(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleSetDebugMode(MessageParcel &data, MessageParcel &reply);

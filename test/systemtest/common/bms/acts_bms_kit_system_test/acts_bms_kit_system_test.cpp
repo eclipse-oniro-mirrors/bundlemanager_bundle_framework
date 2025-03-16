@@ -7474,6 +7474,20 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppControlProxy_0100, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: GetBundleMgrExtProxy_0100
+ * @tc.name: test GetBundleMgrExtProxy_0100 proxy
+ * @tc.desc: 1.system run normally
+ *           2.proxy not null
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleMgrExtProxy_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IBundleMgrExt> bundleMgrExtProxy = bundleMgrProxy->GetBundleMgrExtProxy();
+    EXPECT_NE(bundleMgrExtProxy, nullptr);
+}
+
+/**
  * @tc.number: GetSandboxAbilityInfo_0100
  * @tc.name: test GetSandboxAbilityInfo proxy
  * @tc.desc: 1.system run normally

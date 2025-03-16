@@ -27,6 +27,7 @@ config("bundlemgr_common_config") {
     "include/clone",
     "include/common",
     "include/default_app",
+    "include/bundlemgr_ext",
     "include/free_install",
     "include/distributed_manager",
     "include/driver",

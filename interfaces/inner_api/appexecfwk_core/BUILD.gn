@@ -25,6 +25,7 @@ config("bundlemgr_sdk_config") {
     "include/overlay",
     "include/quick_fix",
     "include/verify",
+    "include/bundlemgr_ext",
   ]
 }
 
@@ -66,6 +67,8 @@ ohos_shared_library("appexecfwk_core") {
     "src/bundlemgr/process_cache_callback_host.cpp",
     "src/bundlemgr/process_cache_callback_proxy.cpp",
     "src/bundlemgr/status_receiver_host.cpp",
+    "src/bundlemgr_ext/bundle_mgr_ext_host.cpp",
+    "src/bundlemgr_ext/bundle_mgr_ext_proxy.cpp",
     "src/extend_resource/extend_resource_manager_host.cpp",
     "src/extend_resource/extend_resource_manager_proxy.cpp",
     "src/verify/verify_manager_host.cpp",

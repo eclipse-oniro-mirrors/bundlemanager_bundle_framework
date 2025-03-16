@@ -138,6 +138,7 @@ bool BundleMgrService::Init()
     InitFreeInstall();
     CHECK_INIT_RESULT(InitDefaultApp(), "Init defaultApp fail");
     CHECK_INIT_RESULT(InitAppControl(), "Init appControl fail");
+    CHECK_INIT_RESULT(InitBundleMgrExt(), "Init bundle mgr ext fail");
     CHECK_INIT_RESULT(InitQuickFixManager(), "Init quickFixManager fail");
     CHECK_INIT_RESULT(InitOverlayManager(), "Init overlayManager fail");
     CHECK_INIT_RESULT(InitBundleResourceMgr(), "Init BundleResourceMgr fail");
@@ -279,6 +280,18 @@ bool BundleMgrService::InitAppControl()
         }
     }
 #endif
+    return true;
+}
+
+bool BundleMgrService::InitBundleMgrExt()
+{
+    if (bundleMgrExtHostImpl_ == nullptr) {
+        bundleMgrExtHostImpl_ = new (std::nothrow) BundleMgrExtHostImpl();
+        if (bundleMgrExtHostImpl_ == nullptr) {
+            APP_LOGE("create bundleMgrExtHostImpl failed");
+            return false;
+        }
+    }
     return true;
 }
 
@@ -442,6 +455,11 @@ sptr<IAppControlMgr> BundleMgrService::GetAppControlProxy() const
     return appControlManagerHostImpl_;
 }
 #endif
+
+sptr<IBundleMgrExt> BundleMgrService::GetBundleMgrExtProxy() const
+{
+    return bundleMgrExtHostImpl_;
+}
 
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 sptr<QuickFixManagerHostImpl> BundleMgrService::GetQuickFixManagerProxy() const

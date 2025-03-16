@@ -34,6 +34,7 @@
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "bundle_installer_host.h"
+#include "bundle_mgr_ext_host_impl.h"
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_user_mgr_host_impl.h"
@@ -118,6 +119,8 @@ public:
     sptr<IAppControlMgr> GetAppControlProxy() const;
 #endif
 
+    sptr<IBundleMgrExt> GetBundleMgrExtProxy() const;
+
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     sptr<QuickFixManagerHostImpl> GetQuickFixManagerProxy() const;
 #endif
@@ -176,6 +179,7 @@ private:
     void InitFreeInstall();
     bool InitDefaultApp();
     bool InitAppControl();
+    bool InitBundleMgrExt();
     bool InitQuickFixManager();
     bool InitOverlayManager();
     void CreateBmsServiceDir();
@@ -211,6 +215,8 @@ private:
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     sptr<AppControlManagerHostImpl> appControlManagerHostImpl_;
 #endif
+
+    sptr<BundleMgrExtHostImpl> bundleMgrExtHostImpl_;
 
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     sptr<QuickFixManagerHostImpl> quickFixManagerHostImpl_;

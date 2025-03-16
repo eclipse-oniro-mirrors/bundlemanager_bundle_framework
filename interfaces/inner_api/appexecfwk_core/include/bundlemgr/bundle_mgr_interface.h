@@ -28,6 +28,7 @@
 #include "bundle_installer_interface.h"
 #include "bundle_status_callback_interface.h"
 #include "bundle_user_mgr_interface.h"
+#include "bundle_mgr_ext_interface.h"
 #include "clean_cache_callback_interface.h"
 #include "common_event_info.h"
 #include "data_group_info.h"
@@ -1263,6 +1264,11 @@ public:
     }
 
     virtual sptr<IAppControlMgr> GetAppControlProxy()
+    {
+        return nullptr;
+    }
+
+    virtual sptr<IBundleMgrExt> GetBundleMgrExtProxy()
     {
         return nullptr;
     }
