@@ -24,6 +24,7 @@
 #include "bundle_installer.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
+#include "parameters.h"
 #include "scope_guard.h"
 
 using namespace testing;
@@ -450,5 +451,57 @@ HWTEST_F(BmsBundleCloneInstallerTest, GetDeveloperId_0100, Function | SmallTest 
     ASSERT_NE(bundleCloneInstall_, nullptr);
     EXPECT_EQ(bundleCloneInstall_->GetDeveloperId(bundleName), "testDeveloperId");
     EXPECT_EQ(bundleCloneInstall_->GetDeveloperId(bundleName1), "");
+}
+
+/**
+ * @tc.number: RemoveEl5Dir_0100
+ * @tc.name: test RemoveEl5Dir
+ * @tc.desc: test RemoveEl5Dir of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, RemoveEl5Dir_0100, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    int32_t uid = 0;
+    int32_t appIndex = 0;
+    int32_t userId = 0;
+    bundleCloneInstall_->RemoveEl5Dir(userInfo, uid, userId, appIndex);
+    EXPECT_EQ(userInfo.cloneInfos.find(std::to_string(appIndex)), userInfo.cloneInfos.end());
+}
+
+/**
+ * @tc.number: CreateEl5Dir_0100
+ * @tc.name: test CreateEl5Dir
+ * @tc.desc: test CreateEl5Dir of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, CreateEl5Dir_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    int32_t uid = 0;
+    int32_t userId = 0;
+    int32_t appIndex = 0;
+    bundleCloneInstall_->CreateEl5Dir(innerBundleInfo, uid, userId, appIndex);
+    EXPECT_EQ(innerBundleInfo.GetBundleName(), "");
+}
+
+/**
+ * @tc.number: UninstallDebugAppSandbox_0100
+ * @tc.name: test UninstallDebugAppSandbox
+ * @tc.desc: test UninstallDebugAppSandbox of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, UninstallDebugAppSandbox_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "testBundleName";
+    int32_t uid = 0;
+    int32_t appIndex = 0;
+    InnerBundleInfo innerBundleInfo;
+    OHOS::AppExecFwk::ApplicationInfo ApplicationInfo_;
+    ApplicationInfo_.appProvisionType = OHOS::AppExecFwk::Constants::APP_PROVISION_TYPE_DEBUG;
+    innerBundleInfo.SetBaseApplicationInfo(ApplicationInfo_);
+    std::string key = "debug";
+    std::string value = "y";
+    OHOS::system::SetParameter(key, value);
+    bundleCloneInstall_->UninstallDebugAppSandbox(bundleName, uid, appIndex, innerBundleInfo);
+    EXPECT_EQ(innerBundleInfo.GetBaseApplicationInfo().appProvisionType,
+        OHOS::AppExecFwk::Constants::APP_PROVISION_TYPE_DEBUG);
 }
 }

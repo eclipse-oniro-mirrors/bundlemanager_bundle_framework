@@ -1551,7 +1551,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoExt(
     const std::string &hapFilePath, int32_t fd, int32_t flags, BundleInfo &bundleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to GetBundleArchiveInfoV9 with int flags of %{private}s", hapFilePath.c_str());
+    APP_LOGD("begin to GetBundleArchiveInfoV9 with int flags of %{private}s.", hapFilePath.c_str());
     if (hapFilePath.empty()) {
         APP_LOGE("fail to GetBundleArchiveInfoV9 due to params empty");
         return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
