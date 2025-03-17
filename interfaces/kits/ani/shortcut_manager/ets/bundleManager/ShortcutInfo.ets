@@ -19,12 +19,12 @@ export interface ShortcutInfo {
     moduleName?: string;
     hostAbility?: string;
     icon?: string;
-    iconId?: int;
+    iconId?: number;
     label?: string;
-    labelId?: int;
+    labelId?: number;
     wants?: Array<ShortcutWant>;
-    appIndex: int;
-    sourceType: int;
+    appIndex: number;
+    sourceType: number;
 }
 
 export interface ShortcutWant {
@@ -45,19 +45,19 @@ export class ShortcutInfoInner implements ShortcutInfo {
     moduleName?: string | undefined = "";
     hostAbility?: string | undefined = "";
     icon?: string | undefined = "";
-    iconId?: int | undefined;
+    iconId?: number | undefined;
     label?: string | undefined = "";
-    labelId?: int | undefined;
-    wants?: Array<ShortcutWant> | undefined = new Array<ShortcutWant>();
-    appIndex: int;
-    sourceType: int;
+    labelId?: number | undefined;
+    wants?: Array<ShortcutWant> | undefined = new Array<ShortcutWant>;
+    appIndex: number;
+    sourceType: number;
 }
 
 class ShortcutWantInner implements ShortcutWant {
     targetBundle: string = "";
     targetModule?: string | undefined = "";
     targetAbility: string = "";
-    parameters?: Array<ParameterItem> | undefined = new Array<ParameterItem>();
+    parameters?: Array<ParameterItem> | undefined = new Array<ParameterItem>;
 }
 
 class ParameterItemInner implements ParameterItem {
