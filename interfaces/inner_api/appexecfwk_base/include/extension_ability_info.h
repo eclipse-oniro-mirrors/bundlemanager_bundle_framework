@@ -172,7 +172,7 @@ struct ExtensionAbilityInfo : public Parcelable {
     // for NAPI, save self query cache
     int32_t uid = -1;
     int32_t appIndex = 0;
-    std::string language = "ArkTS1.0";
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
 
     // for Check flags, add to abilityInfo and extensionAbilityInfo
     std::vector<SkillUriForAbilityAndExtension> skillUri;

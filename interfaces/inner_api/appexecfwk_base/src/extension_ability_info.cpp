@@ -50,7 +50,6 @@ const char* META_DATA = "metadata";
 const char* RESOURCE_PATH = "resourcePath";
 const char* ENABLED = "enabled";
 const char* PROCESS = "process";
-const char* LANGUAGE = "language";
 const char* COMPILE_MODE = "compileMode";
 const char* UID = "uid";
 const char* APP_INDEX = "appIndex";
@@ -227,7 +226,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     hapPath = Str16ToStr8(parcel.ReadString16());
     enabled = parcel.ReadBool();
     process = Str16ToStr8(parcel.ReadString16());
-    language = parcel.ReadString();
+    codeLanguage = parcel.ReadString();
     compileMode = static_cast<CompileMode>(parcel.ReadInt32());
     uid = parcel.ReadInt32();
     appIndex = parcel.ReadInt32();
@@ -324,7 +323,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, language);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(compileMode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
@@ -376,7 +375,7 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {Constants::HAP_PATH, extensionInfo.hapPath},
         {ENABLED, extensionInfo.enabled},
         {PROCESS, extensionInfo.process},
-        {LANGUAGE, extensionInfo.language},
+        {Constants::CODE_LANGUAGE, extensionInfo.codeLanguage},
         {COMPILE_MODE, extensionInfo.compileMode},
         {UID, extensionInfo.uid},
         {APP_INDEX, extensionInfo.appIndex},
@@ -547,8 +546,8 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        LANGUAGE,
-        extensionInfo.language,
+        Constants::CODE_LANGUAGE,
+        extensionInfo.codeLanguage,
         false,
         parseResult);
     GetValueIfFindKey<CompileMode>(jsonObject,

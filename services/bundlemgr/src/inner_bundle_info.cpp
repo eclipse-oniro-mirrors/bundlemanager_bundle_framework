@@ -143,7 +143,6 @@ constexpr const char* MODULE_GWP_ASAN_ENABLED = "gwpAsanEnabled";
 constexpr const char* MODULE_TSAN_ENABLED = "tsanEnabled";
 constexpr const char* MODULE_PACKAGE_NAME = "packageName";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
-constexpr const char* MODULE_LANGUAGE = "language";
 constexpr const char* MODULE_HWASAN_ENABLED = "hwasanEnabled";
 constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
@@ -443,7 +442,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_TSAN_ENABLED, info.tsanEnabled},
         {MODULE_PACKAGE_NAME, info.packageName},
         {MODULE_APP_STARTUP, info.appStartup},
-        {MODULE_LANGUAGE, info.language},
+        {Constants::CODE_LANGUAGE, info.codeLanguage},
         {MODULE_HWASAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
             InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_HWASANENABLED))},
         {MODULE_UBSAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
@@ -979,8 +978,8 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        MODULE_LANGUAGE,
-        info.language,
+        Constants::CODE_LANGUAGE,
+        info.codeLanguage,
         false,
         parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
@@ -1490,7 +1489,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.isStageBasedModel = it->second.isStageBasedModel;
     hapInfo.deviceTypes = it->second.deviceTypes;
     hapInfo.appStartup = it->second.appStartup;
-    hapInfo.language = it->second.language;
+    hapInfo.codeLanguage = it->second.codeLanguage;
     std::string moduleType = it->second.distro.moduleType;
     if (moduleType == Profile::MODULE_TYPE_ENTRY) {
         hapInfo.moduleType = ModuleType::ENTRY;
@@ -2178,6 +2177,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
     appInfo = *baseApplicationInfo_;
+    appInfo.codeLanguage = GetAppCodeLanguage();
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
         return;
     }
@@ -2236,6 +2236,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
+    appInfo.codeLanguage = GetAppCodeLanguage();
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -2377,6 +2378,7 @@ bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo)
     bundleInfo = *baseBundleInfo_;
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, Constants::ALL_USERID);
     bundleInfo.applicationInfo = *baseApplicationInfo_;
+    bundleInfo.applicationInfo.codeLanguage = GetAppCodeLanguage();
     return true;
 }
 
@@ -4036,6 +4038,7 @@ ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
     }
     bundleInfo = *baseBundleInfo_;
     bundleInfo.applicationInfo = *baseApplicationInfo_;
+    bundleInfo.applicationInfo.codeLanguage = GetAppCodeLanguage();
     for (const auto &info : innerModuleInfos_) {
         if (info.second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
             auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, Constants::ALL_USERID);
@@ -4665,6 +4668,32 @@ void InnerBundleInfo::PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_
         APP_LOGW_NOFUNC("-n %{public}s -u %{public}d -i %{public}d disabled caller is %{public}s",
             bundleName.c_str(), userId, appIndex, caller.c_str());
     }
+}
+
+std::string InnerBundleInfo::GetAppCodeLanguage() const
+{
+    bool contains1_1 = false;
+    bool contains1_2 = false;
+    for (const auto& info : innerModuleInfos_) {
+        if (info.second.codeLanguage == Constants::CODE_LANGUAGE_1_1) {
+            contains1_1 = true;
+        }
+        if (info.second.codeLanguage == Constants::CODE_LANGUAGE_1_2) {
+            contains1_2 = true;
+        }
+    }
+
+    if (contains1_1 && contains1_2) {
+        return Constants::CODE_LANGUAGE_HYBRID;
+    }
+    if (contains1_1) {
+        return Constants::CODE_LANGUAGE_1_1;
+    }
+    if (contains1_2) {
+        return Constants::CODE_LANGUAGE_1_2;
+    }
+    APP_LOGW_NOFUNC("invlaid codeLanguage");
+    return Constants::CODE_LANGUAGE_1_1;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

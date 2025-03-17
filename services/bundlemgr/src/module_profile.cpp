@@ -199,7 +199,7 @@ struct Ability {
     std::string preferMultiWindowOrientation = "default";
     std::vector<std::string> continueType;
     std::vector<std::string> continueBundleNames;
-    std::string language = LANGUAGE_DEFAULT;
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
 };
 
 struct Extension {
@@ -222,7 +222,7 @@ struct Extension {
     std::vector<Metadata> metadata;
     std::string extensionProcessMode;
     std::vector<std::string> dataGroupIds;
-    std::string language = LANGUAGE_DEFAULT;
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
 };
 
 struct MultiAppMode {
@@ -306,7 +306,7 @@ struct Module {
     std::vector<AppEnvironment> appEnvironments;
     std::string packageName;
     std::string appStartup;
-    std::string language = LANGUAGE_DEFAULT;
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
 };
 
 struct ModuleJson {
@@ -647,8 +647,8 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ArrayType::STRING);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        ABILITY_LANGUAGE,
-        ability.language,
+        Constants::CODE_LANGUAGE,
+        ability.codeLanguage,
         false,
         g_parseResult);
 }
@@ -806,8 +806,8 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         ArrayType::STRING);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        ABILITY_LANGUAGE,
-        extension.language,
+        Constants::CODE_LANGUAGE,
+        extension.codeLanguage,
         false,
         g_parseResult);
 }
@@ -1504,8 +1504,8 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        ABILITY_LANGUAGE,
-        module.language,
+        Constants::CODE_LANGUAGE,
+        module.codeLanguage,
         false,
         g_parseResult);
 }
@@ -1842,19 +1842,6 @@ bool ParserArkNativeFilePath(
     return false;
 }
 
-std::string GetLanguage(const BundleExtractor &bundleExtractor)
-{
-    bool exists_abc_1_0 = bundleExtractor.HasEntry(Profile::ABC_RELATIVE_PATH_ARKTS_1_0);
-    bool exists_abc_1_2 = bundleExtractor.HasEntry(Profile::ABC_RELATIVE_PATH_ARKTS_1_2);
-    if (exists_abc_1_0 && exists_abc_1_2) {
-        return Profile::LANGUAGE_ARKTS_HYBRID;
-    }
-    if (exists_abc_1_2) {
-        return Profile::LANGUAGE_ARKTS_1_2;
-    }
-    return Profile::LANGUAGE_ARKTS_1_0;
-}
-
 MultiAppModeType ToMultiAppModeType(const std::string &type)
 {
     auto iter = Profile::MULTI_APP_MODE_MAP.find(type);
@@ -2015,7 +2002,6 @@ bool ToApplicationInfo(
         ToInnerProfileConfiguration(bundleExtractor, app.configuration, applicationInfo.configuration);
     }
     applicationInfo.cloudFileSyncEnabled = app.cloudFileSyncEnabled;
-    applicationInfo.applicationCodeLanguage = GetLanguage(bundleExtractor);
     return true;
 }
 
@@ -2171,7 +2157,7 @@ bool ToAbilityInfo(
         abilityInfo.continueType = ability.continueType;
     }
     abilityInfo.orientationId = ability.orientationId;
-    abilityInfo.language = ability.language;
+    abilityInfo.codeLanguage = ability.codeLanguage;
     return true;
 }
 
@@ -2230,7 +2216,7 @@ void ToExtensionInfo(
     for (const std::string &dataGroup : extension.dataGroupIds) {
         extensionInfo.dataGroupIds.emplace_back(dataGroup);
     }
-    extensionInfo.language = extension.language;
+    extensionInfo.codeLanguage = extension.codeLanguage;
 }
 
 bool GetPermissions(
@@ -2344,7 +2330,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.appEnvironments = moduleJson.module.appEnvironments;
     innerModuleInfo.packageName = moduleJson.module.packageName;
     innerModuleInfo.appStartup = moduleJson.module.appStartup;
-    innerModuleInfo.language = moduleJson.module.language;
+    innerModuleInfo.codeLanguage = moduleJson.module.codeLanguage;
     return true;
 }
 
