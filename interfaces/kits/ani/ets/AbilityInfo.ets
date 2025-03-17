@@ -26,11 +26,11 @@ export interface AbilityInfo {
   readonly moduleName: string;
   readonly name: string;
   readonly label: string;
-  readonly labelId: int;
+  readonly labelId: number;
   readonly description: string;
-  readonly descriptionId: int;
+  readonly descriptionId: number;
   readonly icon: string;
-  readonly iconId: int;
+  readonly iconId: number;
   readonly process: string;
   readonly exported: boolean;
   readonly type: bundleManager.AbilityType;
@@ -48,17 +48,17 @@ export interface AbilityInfo {
   readonly windowSize: WindowSize;
   readonly excludeFromDock: boolean;
   readonly skills: Array<Skill>;
-  readonly appIndex: int;
-  readonly orientationId: int;
+  readonly appIndex: number;
+  readonly orientationId: number;
 }
 
 export interface WindowSize {
-  readonly maxWindowRatio: int;
-  readonly minWindowRatio: int;
-  readonly maxWindowWidth: int;
-  readonly minWindowWidth: int;
-  readonly maxWindowHeight: int;
-  readonly minWindowHeight: int;
+  readonly maxWindowRatio: number;
+  readonly minWindowRatio: number;
+  readonly maxWindowWidth: number;
+  readonly minWindowWidth: number;
+  readonly maxWindowHeight: number;
+  readonly minWindowHeight: number;
 }
 
 class AbilityInfoInner implements AbilityInfo {
@@ -66,11 +66,11 @@ class AbilityInfoInner implements AbilityInfo {
   readonly moduleName: string = "";
   readonly name: string = "";
   readonly label: string = "";
-  readonly labelId: int;
+  readonly labelId: number;
   readonly description: string = "";
-  readonly descriptionId: int;
+  readonly descriptionId: number;
   readonly icon: string = "";
-  readonly iconId: int;
+  readonly iconId: number;
   readonly process: string = "";
   readonly exported: boolean;
   readonly type: bundleManager.AbilityType = bundleManager.AbilityType.PAGE;
@@ -88,15 +88,15 @@ class AbilityInfoInner implements AbilityInfo {
   readonly windowSize: WindowSize = new WindowSizeInner;
   readonly excludeFromDock: boolean;
   readonly skills: Array<Skill> = new Array<Skill>;
-  readonly appIndex: int;
-  readonly orientationId: int;
+  readonly appIndex: number;
+  readonly orientationId: number;
 }
 
 class WindowSizeInner implements WindowSize {
-  readonly maxWindowRatio: int;
-  readonly minWindowRatio: int;
-  readonly maxWindowWidth: int;
-  readonly minWindowWidth: int;
-  readonly maxWindowHeight: int;
-  readonly minWindowHeight: int;
+  readonly maxWindowRatio: number;
+  readonly minWindowRatio: number;
+  readonly maxWindowWidth: number;
+  readonly minWindowWidth: number;
+  readonly maxWindowHeight: number;
+  readonly minWindowHeight: number;
 }

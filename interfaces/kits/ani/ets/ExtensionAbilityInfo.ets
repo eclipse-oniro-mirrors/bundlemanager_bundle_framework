@@ -24,9 +24,9 @@ export interface ExtensionAbilityInfo {
   readonly bundleName: string;
   readonly moduleName: string;
   readonly name: string;
-  readonly labelId: int;
-  readonly descriptionId: int;
-  readonly iconId: int;
+  readonly labelId: number;
+  readonly descriptionId: number;
+  readonly iconId: number;
   readonly exported: boolean;
   readonly extensionAbilityType: bundleManager.ExtensionAbilityType;
   readonly extensionAbilityTypeName: string;
@@ -37,16 +37,16 @@ export interface ExtensionAbilityInfo {
   readonly readPermission: string;
   readonly writePermission: string;
   readonly skills: Array<Skill>;
-  readonly appIndex: int;
+  readonly appIndex: number;
 }
 
 class ExtensionAbilityInfoInner implements ExtensionAbilityInfo {
   readonly bundleName: string = "";
   readonly moduleName: string = "";
   readonly name: string = "";
-  readonly labelId: int;
-  readonly descriptionId: int;
-  readonly iconId: int;
+  readonly labelId: number;
+  readonly descriptionId: number;
+  readonly iconId: number;
   readonly exported: boolean;
   readonly extensionAbilityType: bundleManager.ExtensionAbilityType = bundleManager.ExtensionAbilityType.UNSPECIFIED;
   readonly extensionAbilityTypeName: string = "";
@@ -57,5 +57,5 @@ class ExtensionAbilityInfoInner implements ExtensionAbilityInfo {
   readonly readPermission: string = "";
   readonly writePermission: string = "";
   readonly skills: Array<Skill> = new Array<Skill>;
-  readonly appIndex: int;
+  readonly appIndex: number;
 }

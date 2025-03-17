@@ -21,11 +21,11 @@ import bundleManager from './@ohos.bundle.bundleManager';
 export interface HapModuleInfo {
   readonly name: string;
   readonly icon: string;
-  readonly iconId: int;
+  readonly iconId: number;
   readonly label: string;
-  readonly labelId: int;
+  readonly labelId: number;
   readonly description: string;
-  readonly descriptionId: int;
+  readonly descriptionId: number;
   readonly mainElementName: string;
   readonly abilitiesInfo: Array<AbilityInfo>;
   readonly extensionAbilitiesInfo: Array<ExtensionAbilityInfo>;
@@ -45,7 +45,7 @@ export interface HapModuleInfo {
 export interface Dependency {
   readonly moduleName: string;
   readonly bundleName: string;
-  readonly versionCode: int;
+  readonly versionCode: number;
 }
 
 export interface PreloadItem {
@@ -68,11 +68,11 @@ export interface DataItem {
 class HapModuleInfoInner implements HapModuleInfo {
   readonly name: string = "";
   readonly icon: string = "";
-  readonly iconId: int;
+  readonly iconId: number;
   readonly label: string = "";
-  readonly labelId: int;
+  readonly labelId: number;
   readonly description: string = "";
-  readonly descriptionId: int;
+  readonly descriptionId: number;
   readonly mainElementName: string = "";
   readonly abilitiesInfo: Array<AbilityInfo> = new Array<AbilityInfo>;
   readonly extensionAbilitiesInfo: Array<ExtensionAbilityInfo> = new Array<ExtensionAbilityInfo>;
@@ -92,7 +92,7 @@ class HapModuleInfoInner implements HapModuleInfo {
 class DependencyInner implements Dependency {
   readonly moduleName: string = "";
   readonly bundleName: string = "";
-  readonly versionCode: int;
+  readonly versionCode: number;
 }
 
 class PreloadItemInner implements PreloadItem {

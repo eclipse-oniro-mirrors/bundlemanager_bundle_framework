@@ -20,87 +20,87 @@ import bundleManager from './@ohos.bundle.bundleManager';
 import { ApplicationInfoInner } from './ApplicationInfo';
 
 export interface BundleInfo {
-    readonly name: string;
-    readonly vendor: string;
-    readonly versionCode: int;
-    readonly versionName: string;
-    readonly minCompatibleVersionCode: int;
-    readonly targetVersion: int;
-    readonly appInfo: ApplicationInfo;
-    readonly hapModulesInfo: Array<HapModuleInfo>;
-    readonly reqPermissionDetails: Array<ReqPermissionDetail>;
-    readonly permissionGrantStates: Array<bundleManager.PermissionGrantState>;
-    readonly signatureInfo: SignatureInfo;
-    readonly installTime: long;
-    readonly updateTime: long;
-    readonly routerMap: Array<RouterItem>;
-    readonly appIndex: int;
+  readonly name: string;
+  readonly vendor: string;
+  readonly versionCode: number;
+  readonly versionName: string;
+  readonly minCompatibleVersionCode: number;
+  readonly targetVersion: number;
+  readonly appInfo: ApplicationInfo;
+  readonly hapModulesInfo: Array<HapModuleInfo>;
+  readonly reqPermissionDetails: Array<ReqPermissionDetail>;
+  readonly permissionGrantStates: Array<bundleManager.PermissionGrantState>;
+  readonly signatureInfo: SignatureInfo;
+  readonly installTime: number;
+  readonly updateTime: number;
+  readonly routerMap: Array<RouterItem>;
+  readonly appIndex: number;
 }
 
 export interface ReqPermissionDetail {
-    name: string;
-    moduleName: string;
-    reason: string;
-    reasonId: int;
-    usedScene: UsedScene;
+  name: string;
+  moduleName: string;
+  reason: string;
+  reasonId: number;
+  usedScene: UsedScene;
 }
 
 export interface UsedScene {
-    abilities: Array<string>;
-    when: string;
+  abilities: Array<string>;
+  when: string;
 }
 
 export interface SignatureInfo {
-    readonly appId: string;
-    readonly fingerprint: string;
-    readonly appIdentifier: string;
-    readonly certificate?: string;
+  readonly appId: string;
+  readonly fingerprint: string;
+  readonly appIdentifier: string;
+  readonly certificate?: string;
 }
 
 export interface AppCloneIdentity {
-    readonly bundleName: string;
-    readonly appIndex: int;
+  readonly bundleName: string;
+  readonly appIndex: number;
 }
 
 class BundleInfoInner implements BundleInfo {
-    readonly name: string = "";
-    readonly vendor: string = "";
-    readonly versionCode: int;
-    readonly versionName: string = "";
-    readonly minCompatibleVersionCode: int;
-    readonly targetVersion: int;
-    readonly appInfo: ApplicationInfo = new ApplicationInfoInner;
-    readonly hapModulesInfo: Array<HapModuleInfo> = new Array<HapModuleInfo>;
-    readonly reqPermissionDetails: Array<ReqPermissionDetail> = new Array<ReqPermissionDetail>;
-    readonly permissionGrantStates: Array<bundleManager.PermissionGrantState> = new Array<bundleManager.PermissionGrantState>;
-    readonly signatureInfo: SignatureInfo = new SignatureInfoInner;
-    readonly routerMap: Array<RouterItem> = new Array<RouterItem>;
-    readonly installTime: long;
-    readonly updateTime: long;
-    readonly appIndex: int;
+  readonly name: string = "";
+  readonly vendor: string = "";
+  readonly versionCode: number;
+  readonly versionName: string = "";
+  readonly minCompatibleVersionCode: number;
+  readonly targetVersion: number;
+  readonly appInfo: ApplicationInfo = new ApplicationInfoInner;
+  readonly hapModulesInfo: Array<HapModuleInfo> = new Array<HapModuleInfo>;
+  readonly reqPermissionDetails: Array<ReqPermissionDetail> = new Array<ReqPermissionDetail>;
+  readonly permissionGrantStates: Array<bundleManager.PermissionGrantState> = new Array<bundleManager.PermissionGrantState>;
+  readonly signatureInfo: SignatureInfo = new SignatureInfoInner;
+  readonly routerMap: Array<RouterItem> = new Array<RouterItem>;
+  readonly installTime: number;
+  readonly updateTime: number;
+  readonly appIndex: number;
 }
 
 class ReqPermissionDetailInner implements ReqPermissionDetail {
-    name: string = "";
-    moduleName: string = "";
-    reason: string = "";
-    reasonId: int;
-    usedScene: UsedScene = new UsedSceneInner;
+  name: string = "";
+  moduleName: string = "";
+  reason: string = "";
+  reasonId: number;
+  usedScene: UsedScene = new UsedSceneInner;
 }
 
 export class UsedSceneInner implements UsedScene {
-    abilities: Array<string> = new Array<string>;
-    when: string = "";
+  abilities: Array<string> = new Array<string>;
+  when: string = "";
 }
 
 class SignatureInfoInner implements SignatureInfo {
-    readonly appId: string = "";
-    readonly fingerprint: string = "";
-    readonly appIdentifier: string = "";
-    readonly certificate?: string | undefined = "";
+  readonly appId: string = "";
+  readonly fingerprint: string = "";
+  readonly appIdentifier: string = "";
+  readonly certificate?: string | undefined = "";
 }
 
 export class AppCloneIdentityInner implements AppCloneIdentity {
-    readonly bundleName: string = "";
-    readonly appIndex: int;
+  readonly bundleName: string = "";
+  readonly appIndex: number;
 }

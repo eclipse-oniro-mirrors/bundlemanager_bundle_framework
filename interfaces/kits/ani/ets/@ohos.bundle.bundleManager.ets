@@ -173,13 +173,13 @@ namespace bundleManager {
 
   export native function isApplicationEnabledSync(bundleName: string): boolean;
 
-  export native function getBundleInfoForSelfSync(bundleFlags: int): BundleInfo;
+  export native function getBundleInfoForSelfSync(bundleFlags: number): BundleInfo;
 
-  export native function getBundleInfoSync(bundleName: string, bundleFlags: int, userId: int) : BundleInfo;
+  export native function getBundleInfoSync(bundleName: string, bundleFlags: number, userId: number) : BundleInfo;
 
-  export native function getApplicationInfoSync(bundleName: string, applicationFlags: int, userId: int): ApplicationInfo;
+  export native function getApplicationInfoSync(bundleName: string, applicationFlags: number, userId: number): ApplicationInfo;
 
-  export function getBundleInfoForSelf(bundleFlags: int, callback: AsyncCallback<BundleInfo, void>):void {
+  export function getBundleInfoForSelf(bundleFlags: number, callback: AsyncCallback<BundleInfo, void>):void {
     let p1 = taskpool.execute(bundleManager.getBundleInfoForSelfSync, bundleFlags);
     p1.then((e: NullishType) => {
         let resultBundleInfo = e as BundleInfo;
@@ -189,7 +189,7 @@ namespace bundleManager {
     });
   }
 
-  export function getBundleInfoForSelf(bundleFlags: int):Promise<BundleInfo> {
+  export function getBundleInfoForSelf(bundleFlags: number):Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Object) => void) => {
         let p1 = taskpool.execute(bundleManager.getBundleInfoForSelfSync, bundleFlags);
         p1.then((e: NullishType) => {
@@ -202,14 +202,14 @@ namespace bundleManager {
     return p;
   }
 
-  export function getBundleInfoSync(bundleName: string, bundleFlags: int): BundleInfo {
+  export function getBundleInfoSync(bundleName: string, bundleFlags: number): BundleInfo {
     return bundleManager.getBundleInfoSync(bundleName, bundleFlags, -500);
   }
 
-  export function getBundleInfo(bundleName: string, bundleFlags: int, userId?: int): Promise<BundleInfo> {
+  export function getBundleInfo(bundleName: string, bundleFlags: number, userId?: number): Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Object) => void) => {
-        let userIdInfo: int = userId ?? -500;
-        let execFun = (bundleName: string, bundleFlags: int, userId: int): BundleInfo => {
+        let userIdInfo: number = userId ?? -500;
+        let execFun = (bundleName: string, bundleFlags: number, userId: number): BundleInfo => {
           return bundleManager.getBundleInfoSync(bundleName, bundleFlags, userId);
         };
         let p1 = taskpool.execute(execFun, bundleName, bundleFlags, userIdInfo);
@@ -223,8 +223,8 @@ namespace bundleManager {
     return p;
   }
 
-  export function getBundleInfo(bundleName: string, bundleFlags: int, callback: AsyncCallback<BundleInfo, void>): void {
-    let execFun = (bundleName: string, bundleFlags: int): BundleInfo => {
+  export function getBundleInfo(bundleName: string, bundleFlags: number, callback: AsyncCallback<BundleInfo, void>): void {
+    let execFun = (bundleName: string, bundleFlags: number): BundleInfo => {
       return bundleManager.getBundleInfoSync(bundleName, bundleFlags);
     };
     let p1 = taskpool.execute(execFun, bundleName, bundleFlags);
@@ -236,8 +236,8 @@ namespace bundleManager {
     });
   }
 
-  export function getBundleInfo(bundleName: string, bundleFlags: int, userId: int, callback: AsyncCallback<BundleInfo, void>): void {
-    let execFun = (bundleName: string, bundleFlags: int, userId: int): BundleInfo => {
+  export function getBundleInfo(bundleName: string, bundleFlags: number, userId: number, callback: AsyncCallback<BundleInfo, void>): void {
+    let execFun = (bundleName: string, bundleFlags: number, userId: number): BundleInfo => {
       return bundleManager.getBundleInfoSync(bundleName, bundleFlags, userId);
     };
     let p1 = taskpool.execute(execFun, bundleName, bundleFlags, userId);
@@ -249,7 +249,7 @@ namespace bundleManager {
     });
   }
 
-  export function getApplicationInfoSync(bundleName: string, applicationFlags: int): ApplicationInfo {
+  export function getApplicationInfoSync(bundleName: string, applicationFlags: number): ApplicationInfo {
     return bundleManager.getApplicationInfoSync(bundleName, applicationFlags, -500);
   }
 }
