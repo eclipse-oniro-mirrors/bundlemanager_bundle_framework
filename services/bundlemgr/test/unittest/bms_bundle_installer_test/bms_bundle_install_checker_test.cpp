@@ -2531,4 +2531,25 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckEnterpriseForAllUser_0100, Function |
     ret = installChecker.CheckEnterpriseForAllUser(infos, checkParam, distributionType);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: BaseBundleInstaller_0100
+ * @tc.name: Test CheckMDMUpdateBundleForSelf
+ * @tc.desc: 1.Test CheckMDMUpdateBundleForSelf
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, BaseBundleInstaller_0100, Function | SmallTest | Level1)
+{
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, "false"));
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false"));
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false"));
+
+    BaseBundleInstaller baseBundleInstaller;
+    InstallParam installParam;
+    installParam.isSelfUpdate = true;
+    InnerBundleInfo oldInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+
+    auto ret = baseBundleInstaller.CheckMDMUpdateBundleForSelf(installParam, oldInfo, newInfos, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED);
+}
 } // OHOS

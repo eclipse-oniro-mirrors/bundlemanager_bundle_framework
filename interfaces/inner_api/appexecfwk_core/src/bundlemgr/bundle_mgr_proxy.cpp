@@ -1465,26 +1465,26 @@ bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, const 
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetBundleArchiveInfo of %{private}s", hapFilePath.c_str());
     if (hapFilePath.empty()) {
-        APP_LOGE("fail to GetBundleArchiveInfo due to params empty");
+        APP_LOGE("params empty");
         return false;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleArchiveInfo due to write InterfaceToken fail");
+        APP_LOGE("write InterfaceToken fail");
         return false;
     }
     if (!data.WriteString(hapFilePath)) {
-        APP_LOGE("fail to GetBundleArchiveInfo due to write hapFilePath fail");
+        APP_LOGE("write hapFilePath fail");
         return false;
     }
     if (!data.WriteInt32(static_cast<int>(flag))) {
-        APP_LOGE("fail to GetBundleArchiveInfo due to write flag fail");
+        APP_LOGE("write flag fail");
         return false;
     }
 
     if (!GetParcelableInfo<BundleInfo>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO, data, bundleInfo)) {
-        APP_LOGE("fail to GetBundleArchiveInfo from server");
+        APP_LOGE("fail from server");
         return false;
     }
     return true;
@@ -5645,7 +5645,7 @@ ErrCode BundleMgrProxy::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
         APP_LOGE("fail to GetAllBundleCacheStat, for write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    
+
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ALL_BUNDLE_CACHE, data, reply)) {
         APP_LOGE("fail to GetAllBundleCacheStat from server");
@@ -5676,7 +5676,7 @@ ErrCode BundleMgrProxy::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
         APP_LOGE("fail to CleanAllBundleCache, for write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    
+
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::CLEAN_ALL_BUNDLE_CACHE, data, reply)) {
         APP_LOGE("fail to CleanAllBundleCache from server");

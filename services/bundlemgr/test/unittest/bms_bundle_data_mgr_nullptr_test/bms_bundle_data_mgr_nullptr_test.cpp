@@ -237,4 +237,355 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCacheMgr_0003, Function | MediumTest
     auto ret = bundleCacheMgr.CleanAllBundleCache(processCacheCallback);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
+
+/**
+ * @tc.number: BaseBundleInstaller_0001
+ * @tc.name: test UninstallHspBundle
+ * @tc.desc: 1.Test UninstallHspBundle the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0001, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string uninstallDir;
+    std::string bundleName = "xxx";
+    auto ret = installer.UninstallHspBundle(uninstallDir, bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0002
+ * @tc.name: test RemoveInfo
+ * @tc.desc: 1.Test RemoveInfo the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0002, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName;
+    std::string packageName;
+    installer.RemoveInfo(bundleName, packageName);
+    EXPECT_TRUE(bundleName.empty());
+    EXPECT_TRUE(packageName.empty());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0003
+ * @tc.name: test RollBackModuleInfo
+ * @tc.desc: 1.Test RollBackModuleInfo the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0003, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName;
+    InnerBundleInfo oldInfo;
+    installer.RollBackModuleInfo(bundleName, oldInfo);
+    EXPECT_TRUE(bundleName.empty());
+    EXPECT_TRUE(oldInfo.GetBundleName().empty());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0004
+ * @tc.name: test DeleteRouterInfo
+ * @tc.desc: 1.Test DeleteRouterInfo the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0004, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName;
+    std::string moduleName;
+    installer.DeleteRouterInfo(bundleName, moduleName);
+    EXPECT_TRUE(bundleName.empty());
+    EXPECT_TRUE(moduleName.empty());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0005
+ * @tc.name: test RemoveBundle
+ * @tc.desc: 1.Test RemoveBundle the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0005, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    bool isKeepData = false;
+    bool async = false;
+    installer.RemoveBundle(info, isKeepData, async);
+    EXPECT_TRUE(info.GetBundleName().empty());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0006
+ * @tc.name: test ProcessBundleInstallStatus
+ * @tc.desc: 1.Test ProcessBundleInstallStatus the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0006, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    int32_t uid = -1;
+    auto ret = installer.ProcessBundleInstallStatus(info, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0007
+ * @tc.name: test ProcessBundleUpdateStatus
+ * @tc.desc: 1.Test ProcessBundleUpdateStatus the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0007, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    bool isReplace = false;
+    bool killProcess = false;
+    auto ret = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, killProcess);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0008
+ * @tc.name: test ProcessNewModuleInstall
+ * @tc.desc: 1.Test ProcessNewModuleInstall the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0008, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    auto ret = installer.ProcessNewModuleInstall(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0009
+ * @tc.name: test ProcessModuleUpdate
+ * @tc.desc: 1.Test ProcessModuleUpdate the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0009, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    bool isReplace = false;
+    bool killProcess = false;
+    auto ret = installer.ProcessModuleUpdate(oldInfo, newInfo, isReplace, killProcess);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0010
+ * @tc.name: test CreateEl5AndSetPolicy
+ * @tc.desc: 1.Test CreateEl5AndSetPolicy the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0010, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    installer.CreateEl5AndSetPolicy(newInfo);
+    EXPECT_EQ(newInfo.GetBundleName().empty(), true);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0011
+ * @tc.name: test CreateScreenLockProtectionDir
+ * @tc.desc: 1.Test CreateScreenLockProtectionDir the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0011, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.tempInfo_.bundleInit_ = false;
+
+    installer.CreateScreenLockProtectionDir();
+    EXPECT_FALSE(installer.tempInfo_.bundleInit_);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0012
+ * @tc.name: test CreateScreenLockProtectionDir
+ * @tc.desc: 1.Test CreateScreenLockProtectionDir the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0012, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    installer.CreateEl5AndSetPolicy(newInfo);
+    EXPECT_EQ(newInfo.GetBundleName().empty(), true);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0013
+ * @tc.name: test CreateScreenLockProtectionDir
+ * @tc.desc: 1.Test CreateScreenLockProtectionDir the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0013, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName;
+    installer.DeleteUninstallBundleInfo(bundleName);
+    EXPECT_EQ(bundleName.empty(), true);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0014
+ * @tc.name: test CreateScreenLockProtectionDir
+ * @tc.desc: 1.Test CreateScreenLockProtectionDir the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0014, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName;
+    bool ret = installer.DeleteUninstallBundleInfoFromDb(bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0015
+ * @tc.name: test SetFirstInstallTime
+ * @tc.desc: 1.Test SetFirstInstallTime the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0015, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = 100;
+    std::string bundleName;
+    int64_t time = 0;
+    InnerBundleInfo info;
+    installer.SetFirstInstallTime(bundleName, time, info);
+    EXPECT_TRUE(info.innerBundleUserInfos_.empty());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0016
+ * @tc.name: test SaveFirstInstallBundleInfo
+ * @tc.desc: 1.Test SaveFirstInstallBundleInfo the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0016, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = 100;
+    std::string bundleName;
+    int32_t userId = 100;
+    bool isPreInstallApp = true;
+    InnerBundleUserInfo innerBundleUserInfo;
+    bool ret = installer.SaveFirstInstallBundleInfo(bundleName, userId, isPreInstallApp, innerBundleUserInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0017
+ * @tc.name: test CheckInstallOnKeepData
+ * @tc.desc: 1.Test CheckInstallOnKeepData the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0017, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = 100;
+
+    std::string bundleName;
+    bool isOTA = false;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    bool ret = installer.CheckInstallOnKeepData(bundleName, isOTA, infos);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0018
+ * @tc.name: test DeleteGroupDirsForException
+ * @tc.desc: 1.Test DeleteGroupDirsForException the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0018, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = 100;
+
+    InnerBundleInfo info;
+    installer.DeleteGroupDirsForException(info);
+    EXPECT_TRUE(info.GetBundleName().empty());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0019
+ * @tc.name: test InitTempBundleFromCache
+ * @tc.desc: 1.Test InitTempBundleFromCache the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0019, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = 100;
+
+    InnerBundleInfo info;
+    bool isAppExist = false;
+    std::string bundleName;
+    bool ret = installer.InitTempBundleFromCache(info, isAppExist, bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0020
+ * @tc.name: test UninstallLowerVersionFeature
+ * @tc.desc: 1.Test UninstallLowerVersionFeature the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0020, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = 100;
+
+    std::vector<std::string> packageVec;
+    bool killProcess = false;
+    auto ret = installer.UninstallLowerVersionFeature(packageVec, killProcess);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0021
+ * @tc.name: test CheckUserId
+ * @tc.desc: 1.Test CheckUserId the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0021, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = 100;
+
+    auto ret = installer.CheckUserId(100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0022
+ * @tc.name: test CreateBundleUserData
+ * @tc.desc: 1.Test CreateBundleUserData the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0022, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = Constants::ALL_USERID;
+
+    InnerBundleInfo newInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = 20022222;
+
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    innerBundleCloneInfo.userId = Constants::ALL_USERID;
+    innerBundleCloneInfo.appIndex = 1;
+
+    innerBundleUserInfo.cloneInfos["1"] = innerBundleCloneInfo;
+    newInfo.innerBundleUserInfos_["com.example.test_100"] = innerBundleUserInfo;
+    auto ret = installer.CreateBundleUserData(newInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0023
+ * @tc.name: test UpdateEncryptedStatus
+ * @tc.desc: 1.Test UpdateEncryptedStatus the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0023, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = Constants::ALL_USERID;
+
+    InnerBundleInfo newInfo;
+    auto ret = installer.UpdateEncryptedStatus(newInfo);
+    EXPECT_NE(ret, true);
+}
 } // OHOS

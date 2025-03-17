@@ -37,6 +37,7 @@
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_multiuser_installer.h"
 #include "directory_ex.h"
 #include "file_ex.h"
 #include "hmp_bundle_installer.h"
@@ -105,6 +106,7 @@ const std::string ATOMIC_FEATURE_V1_HAP = "versionUpdateTest6.hap";
 const std::string ATOMIC_FEATURE_V2_HAP = "versionUpdateTest7.hap";
 const std::string VERSION_UPDATE_BUNDLE_NAME = "com.example.versiontest";
 const std::string UNINSTALL_PREINSTALL_BUNDLE_NAME = "com.ohos.telephonydataability";
+const std::string GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
 const int32_t ZERO_CODE = 0;
@@ -8749,7 +8751,7 @@ HWTEST_F(BmsBundleInstallerTest, HandleInstallPlugin_0200, Function | SmallTest 
 
     BundleInstallerHost bundleInstallerHost;
     bundleInstallerHost.HandleInstallPlugin(data, reply);
-    
+
     int32_t ret = reply.ReadInt32();
     EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_PARAM_ERROR);
 }
@@ -8816,5 +8818,607 @@ HWTEST_F(BmsBundleInstallerTest, UninstallPlugin_0100, Function | SmallTest | Le
     int32_t ret = bundleInstallerHost.UninstallPlugin(hostBundleName, pluginBundleName,
         installPluginParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_7200
+ * @tc.name: test InnerProcessInstallByPreInstallInfo
+ * @tc.desc: 1.test InnerProcessInstallByPreInstallInfo
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7200, Function | SmallTest | Level0)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    int32_t uid = 0;
+    InstallParam installParam;
+    installParam.userId = 100;
+    ErrCode ret = installer.InnerProcessInstallByPreInstallInfo(
+        GLOBAL_RESOURCE_BUNDLE_NAME, installParam, uid);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UnInstallBundle(SYSTEMFIEID_NAME);
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0001
+ * @tc.name: test InnerProcessInstallByPreInstallInfo
+ * @tc.desc: 1.test InnerProcessInstallByPreInstallInfo
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0001, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    std::string bundleName = "test";
+    auto ret = installer.InstallExistedApp(bundleName, 100);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0002
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0002, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    std::string bundleName;
+    int32_t userId = 100;
+    auto ret = installer.ProcessBundleInstall(bundleName, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0003
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0003, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    std::string bundleName = "test";
+    int32_t userId = -1;
+    auto ret = installer.ProcessBundleInstall(bundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0004
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0004, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    std::string bundleName = "test";
+    int32_t userId = 100;
+    auto ret = installer.ProcessBundleInstall(bundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0005
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0005, Function | SmallTest | Level0)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMultiUserInstaller installer;
+    std::string bundleName = SYSTEMFIEID_NAME;
+    int32_t userId = 101;
+    auto ret = installer.ProcessBundleInstall(bundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    UnInstallBundle(SYSTEMFIEID_NAME);
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0006
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0006, Function | SmallTest | Level0)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMultiUserInstaller installer;
+    std::string bundleName = SYSTEMFIEID_NAME;
+    int32_t userId = 100;
+    auto ret = installer.ProcessBundleInstall(bundleName, userId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UnInstallBundle(SYSTEMFIEID_NAME);
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0007
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0007, Function | SmallTest | Level0)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    int32_t userId = 110;
+    dataMgr->AddUserId(userId);
+
+    BundleMultiUserInstaller installer;
+    std::string bundleName = SYSTEMFIEID_NAME;
+    auto ret = installer.ProcessBundleInstall(bundleName, userId);
+    EXPECT_EQ(ret, ERR_OK);
+    dataMgr->RemoveUserId(userId);
+
+    UnInstallBundle(SYSTEMFIEID_NAME);
+    InstallState state = InstallState::UNINSTALL_SUCCESS;
+    dataMgr->DeleteBundleInfo(SYSTEMFIEID_NAME, state, false);
+    dataMgr->installStates_.erase(SYSTEMFIEID_NAME);
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0008
+ * @tc.name: test CreateDataGroupDir
+ * @tc.desc: 1.test CreateDataGroupDir
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0008, Function | SmallTest | Level0)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleMultiUserInstaller installer;
+    std::string bundleName = SYSTEMFIEID_NAME;
+    int32_t userId = 100;
+    installer.CreateDataGroupDir(bundleName, userId);
+
+    UnInstallBundle(SYSTEMFIEID_NAME);
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0009
+ * @tc.name: test CreateEl5Dir
+ * @tc.desc: 1.test CreateEl5Dir
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0009, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    BundleMultiUserInstaller installer;
+    std::string bundleName = "test";
+    int32_t userId = 100;
+    int32_t uid = -1;
+    installer.CreateEl5Dir(innerBundleInfo, userId, uid);
+    EXPECT_TRUE(innerBundleInfo.innerBundleUserInfos_.empty());
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0010
+ * @tc.name: test CreateEl5Dir
+ * @tc.desc: 1.test CreateEl5Dir
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0010, Function | SmallTest | Level0)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    ScopeGuard uninstallGuard([this] { UnInstallBundle("com.query.test"); });
+    ASSERT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo(SYSTEMFIEID_NAME, innerBundleInfo));
+    ASSERT_FALSE(innerBundleInfo.innerModuleInfos_.empty());
+
+    RequestPermission requestPermission;
+    requestPermission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    innerBundleInfo.innerModuleInfos_.begin()->second.requestPermissions.emplace_back(requestPermission);
+
+    EXPECT_TRUE(dataMgr->UpdateInnerBundleInfo(innerBundleInfo, false));
+
+    BundleMultiUserInstaller installer;
+    std::string bundleName = SYSTEMFIEID_NAME;
+    int32_t userId = 100;
+    int32_t uid = innerBundleInfo.GetUid(100);
+    installer.CreateEl5Dir(innerBundleInfo, userId, uid);
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0011
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0011, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    std::string bundleName;
+    int32_t userId = 0;
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    InnerBundleInfo innerBundleInfo;
+    installer.dataMgr_ = GetBundleDataMgr();
+    EXPECT_FALSE(installer.RecoverHapToken(bundleName, userId, accessTokenIdEx, innerBundleInfo));
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0012
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0012, Function | SmallTest | Level0)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    ScopeGuard uninstallGuard([this] { UnInstallBundle("com.query.test"); });
+    ASSERT_EQ(installResult, ERR_OK);
+
+    InstallParam installParam;
+    int32_t userId = 0;
+    installParam.userId = userId;
+    installParam.isKeepData = true;
+    UnInstallBundle(SYSTEMFIEID_NAME, installParam);
+
+    BundleMultiUserInstaller installer;
+    std::string bundleName;
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    InnerBundleInfo innerBundleInfo;
+    installer.dataMgr_ = GetBundleDataMgr();
+    EXPECT_FALSE(installer.RecoverHapToken(bundleName, userId, accessTokenIdEx, innerBundleInfo));
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0013
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0013, Function | SmallTest | Level0)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    ScopeGuard uninstallGuard([this] { UnInstallBundle("com.query.test"); });
+    ASSERT_EQ(installResult, ERR_OK);
+
+    InstallParam installParam;
+    int32_t userId = 100;
+    installParam.userId = userId;
+    installParam.isKeepData = true;
+    UnInstallBundle(SYSTEMFIEID_NAME, installParam);
+
+    BundleMultiUserInstaller installer;
+    std::string bundleName;
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    InnerBundleInfo innerBundleInfo;
+    installer.dataMgr_ = GetBundleDataMgr();
+    EXPECT_FALSE(installer.RecoverHapToken(bundleName, userId, accessTokenIdEx, innerBundleInfo));
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_7300
+ * @tc.name: test CheckShellInstall
+ * @tc.desc: 1.test CheckShellInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+
+    baseBundleInstaller.sysEventInfo_.callingUid = 1234;
+    auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_7400
+ * @tc.name: test CheckShellInstall
+ * @tc.desc: 1.test CheckShellInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7400, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+
+    baseBundleInstaller.sysEventInfo_.callingUid = ServiceConstants::SHELL_UID;
+    auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_7500
+ * @tc.name: test CheckShellInstall
+ * @tc.desc: 1.test CheckShellInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes{ hapVerifyResult };
+
+    baseBundleInstaller.sysEventInfo_.callingUid = ServiceConstants::SHELL_UID;
+    auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_7600
+ * @tc.name: test CheckShellInstall
+ * @tc.desc: 1.test CheckShellInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7600, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes{ hapVerifyResult };
+
+    baseBundleInstaller.sysEventInfo_.callingUid = ServiceConstants::SHELL_UID;
+    auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_7700
+ * @tc.name: test CheckShellInstall
+ * @tc.desc: 1.test CheckShellInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7700, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo oldInfo;
+
+    baseBundleInstaller.GetRemoveExtensionDirs(newInfos, oldInfo);
+    EXPECT_EQ(newInfos.empty(), true);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_7800
+ * @tc.name: test RemoveCreatedExtensionDirsForException
+ * @tc.desc: 1.test RemoveCreatedExtensionDirsForException
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7800, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+
+    baseBundleInstaller.createExtensionDirs_.emplace_back("test");
+    baseBundleInstaller.RemoveCreatedExtensionDirsForException();
+    EXPECT_EQ(baseBundleInstaller.createExtensionDirs_.empty(), false);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_7900
+ * @tc.name: test RemoveOldExtensionDirs
+ * @tc.desc: 1.test RemoveOldExtensionDirs
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7900, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+
+    baseBundleInstaller.createExtensionDirs_.emplace_back("test");
+    baseBundleInstaller.RemoveOldExtensionDirs();
+    EXPECT_EQ(baseBundleInstaller.createExtensionDirs_.empty(), false);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_8000
+ * @tc.name: test CheckInstallPermission
+ * @tc.desc: 1.test CheckInstallPermission
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_8000, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    installParam.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.emplace_back(hapVerifyResult);
+
+    auto ret = baseBundleInstaller.CheckInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_8100
+ * @tc.name: test UninstallHspBundle
+ * @tc.desc: 1.Test UninstallHspBundle the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_8100, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string uninstallDir;
+    std::string bundleName = "xxx";
+    auto ret = installer.UninstallHspBundle(uninstallDir, bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_8200
+ * @tc.name: test RollBackModuleInfo
+ * @tc.desc: 1.Test RollBackModuleInfo the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_8200, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName = "demo";
+    InnerBundleInfo oldInfo;
+    installer.RollBackModuleInfo(bundleName, oldInfo);
+    EXPECT_FALSE(bundleName.empty());
+    EXPECT_TRUE(oldInfo.GetBundleName().empty());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_8300
+ * @tc.name: test CreateEl5AndSetPolicy
+ * @tc.desc: 1.Test CreateEl5AndSetPolicy the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_8300, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = 1001;
+    InnerBundleInfo newInfo;
+    installer.CreateEl5AndSetPolicy(newInfo);
+    EXPECT_EQ(newInfo.innerBundleUserInfos_.empty(), true);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_8400
+ * @tc.name: test CreateEl5AndSetPolicy
+ * @tc.desc: 1.Test CreateEl5AndSetPolicy the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_8400, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = Constants::ALL_USERID;
+    InnerBundleInfo newInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = 20022222;
+
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    innerBundleCloneInfo.userId = Constants::ALL_USERID;
+    innerBundleCloneInfo.appIndex = 1;
+
+    innerBundleUserInfo.cloneInfos["1"] = innerBundleCloneInfo;
+    newInfo.innerBundleUserInfos_["com.example.test_100"] = innerBundleUserInfo;
+    installer.CreateEl5AndSetPolicy(newInfo);
+    EXPECT_FALSE(newInfo.innerBundleUserInfos_.empty());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_8500
+ * @tc.name: test SaveUninstallBundleInfo
+ * @tc.desc: 1.Test SaveUninstallBundleInfo the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_8500, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    std::string bundleName;
+    bool isKeepData = true;
+    UninstallBundleInfo uninstallBundleInfo;
+    installer.SaveUninstallBundleInfo(bundleName, isKeepData, uninstallBundleInfo);
+    EXPECT_EQ(uninstallBundleInfo.userInfos.empty(), true);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_8600
+ * @tc.name: test DeleteUninstallBundleInfo
+ * @tc.desc: 1.Test DeleteUninstallBundleInfo the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_8600, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    installer.existBeforeKeepDataApp_ = true;
+    std::string bundleName;
+    installer.DeleteUninstallBundleInfo(bundleName);
+    EXPECT_EQ(bundleName.empty(), true);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_8700
+ * @tc.name: test DeleteUninstallBundleInfo
+ * @tc.desc: 1.Test DeleteUninstallBundleInfo the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_8700, Function | MediumTest | Level1)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    ScopeGuard uninstallGuard([this] { UnInstallBundle("com.query.test"); });
+    ASSERT_EQ(installResult, ERR_OK);
+
+    InstallParam installParam;
+    int32_t userId = 100;
+    installParam.userId = userId;
+    installParam.isKeepData = true;
+    UnInstallBundle(SYSTEMFIEID_NAME, installParam);
+
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    std::string bundleName = SYSTEMFIEID_NAME;
+    auto ret = installer.DeleteUninstallBundleInfoFromDb(bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_8800
+ * @tc.name: test DeleteUninstallBundleInfo
+ * @tc.desc: 1.Test DeleteUninstallBundleInfo the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_8800, Function | MediumTest | Level1)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    ScopeGuard uninstallGuard([this] { UnInstallBundle("com.query.test"); });
+    ASSERT_EQ(installResult, ERR_OK);
+
+    InstallParam installParam;
+    int32_t userId = 100;
+    installParam.userId = userId;
+    installParam.isKeepData = true;
+    UnInstallBundle(SYSTEMFIEID_NAME, installParam);
+
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    installer.userId_ = 100;
+    std::string bundleName = SYSTEMFIEID_NAME;
+    auto ret = installer.DeleteUninstallBundleInfoFromDb(bundleName);
+    EXPECT_TRUE(ret);
+    if (ret) {
+        uninstallGuard.Dismiss();
+    }
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_8900
+ * @tc.name: test DeleteUninstallBundleInfo
+ * @tc.desc: 1.Test DeleteUninstallBundleInfo the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_8900, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+
+    std::string bundleName;
+    InnerBundleUserInfo innerBundleUserInfo;
+    bool ret = installer.SaveFirstInstallBundleInfo(bundleName, 100, false, innerBundleUserInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_9000
+ * @tc.name: test DeleteGroupDirsForException
+ * @tc.desc: 1.Test DeleteGroupDirsForException the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9000, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+
+    InnerBundleInfo oldInfo;
+    installer.DeleteGroupDirsForException(oldInfo);
+    EXPECT_TRUE(oldInfo.GetBundleName().empty());
 }
 } // OHOS
