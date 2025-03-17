@@ -332,46 +332,63 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
 };
 
 constexpr const char* BUSINESS_ERROR_CLASS = "L@ohos/base/BusinessError;";
-
-constexpr const char* PROPERTYNAME_MESSAGE = "message";
 } // namespace
     
 void BusinessErrorAni::ThrowError(ani_env *env, int32_t err, const std::string &msg)
 {
+    if (env == nullptr) {
+        return;
+    }
     ani_object error = CreateError(env, err, msg);
-    env->ThrowError(static_cast<ani_error>(error));
+    ThrowError(env, error);
 }
 
 ani_object BusinessErrorAni::CreateError(ani_env *env, ani_int code, const std::string& msg)
 {
+    if (env == nullptr) {
+        return nullptr;
+    }
     ani_class cls = nullptr;
     ani_field field = nullptr;
     ani_method method = nullptr;
     ani_object obj = nullptr;
-    ani_status status = ANI_ERROR;
-    if ((status = env->FindClass(BUSINESS_ERROR_CLASS, &cls)) != ANI_OK) {
-        APP_LOGE("status : %{public}d", status);
+    ani_status status = env->FindClass(BUSINESS_ERROR_CLASS, &cls);
+    if (status != ANI_OK) {
+        APP_LOGE("FindClass : %{public}d", status);
         return nullptr;
     }
-    if ((status = env->Class_FindMethod(cls, "<ctor>", nullptr, &method)) != ANI_OK) {
-        APP_LOGE("status : %{public}d", status);
+    status = env->Class_FindMethod(cls, "<ctor>", ":V", &method);
+    if (status != ANI_OK) {
+        APP_LOGE("Class_FindMethod : %{public}d", status);
         return nullptr;
     }
-    if ((status = env->Object_New(cls, method, &obj)) != ANI_OK) {
-        APP_LOGE("status : %{public}d", status);
+    status = env->Object_New(cls, method, &obj);
+    if (status != ANI_OK) {
+        APP_LOGE("Object_New : %{public}d", status);
         return nullptr;
     }
-    if ((status = env->Class_FindField(cls, "code", &field)) != ANI_OK) {
-        APP_LOGE("status : %{public}d", status);
+    status = env->Class_FindField(cls, "code", &field);
+    if (status != ANI_OK) {
+        APP_LOGE("Class_FindField : %{public}d", status);
         return nullptr;
     }
-    if ((status = env->Object_SetField_Int(obj, field, code)) != ANI_OK) {
-        APP_LOGE("status : %{public}d", status);
+    status = env->Object_SetField_Double(obj, field, code);
+    if (status != ANI_OK) {
+        APP_LOGE("Object_SetField_Double : %{public}d", status);
+        return nullptr;
+    }
+    status = env->Class_FindField(cls, "message", &field);
+    if (status != ANI_OK) {
+        APP_LOGE("Class_FindField : %{public}d", status);
         return nullptr;
     }
     ani_string string = nullptr;
     env->String_NewUTF8(msg.c_str(), msg.size(), &string);
-    CommonFunAni::CallSetter(env, cls, obj, PROPERTYNAME_MESSAGE, string);
+    status = env->Object_SetField_Ref(obj, field, string);
+    if (status != ANI_OK) {
+        APP_LOGE("Object_SetField_Ref : %{public}d", status);
+        return nullptr;
+    }
     return obj;
 }
 
@@ -379,18 +396,27 @@ ani_object BusinessErrorAni::CreateError(ani_env *env, ani_int code, const std::
 void BusinessErrorAni::ThrowParameterTypeError(ani_env *env, int32_t err,
     const std::string &parameter, const std::string &type)
 {
+    if (env == nullptr) {
+        return;
+    }
     ani_object error = CreateCommonError(env, err, parameter, type);
-    env->ThrowError(static_cast<ani_error>(error));
+    ThrowError(env, error);
 }
 
 void BusinessErrorAni::ThrowTooFewParametersError(ani_env *env, int32_t err)
 {
+    if (env == nullptr) {
+        return;
+    }
     ThrowError(env, err, ERR_MSG_PARAM_NUMBER_ERROR);
 }
 
 ani_object BusinessErrorAni::CreateCommonError(
     ani_env *env, int32_t err, const std::string &functionName, const std::string &permissionName)
 {
+    if (env == nullptr) {
+        return nullptr;
+    }
     std::string errMessage = ERR_MSG_BUSINESS_ERROR;
     auto iter = errMessage.find("$");
     if (iter != std::string::npos) {
@@ -413,13 +439,19 @@ ani_object BusinessErrorAni::CreateCommonError(
 void BusinessErrorAni::ThrowEnumError(ani_env *env,
     const std::string &parameter, const std::string &type)
 {
+    if (env == nullptr) {
+        return;
+    }
     ani_object error = CreateEnumError(env, parameter, type);
-    env->ThrowError(static_cast<ani_error>(error));
+    ThrowError(env, error);
 }
 
 ani_object BusinessErrorAni::CreateEnumError(ani_env *env,
     const std::string &parameter, const std::string &enumClass)
 {
+    if (env == nullptr) {
+        return nullptr;
+    }
     std::string errMessage = ERR_MSG_BUSINESS_ERROR;
     auto iter = errMessage.find("$");
     if (iter != std::string::npos) {
@@ -435,6 +467,15 @@ ani_object BusinessErrorAni::CreateEnumError(ani_env *env,
         }
     }
     return CreateError(env, ERROR_PARAM_CHECK_ERROR, errMessage);
+}
+
+void BusinessErrorAni::ThrowError(ani_env *env, ani_object err)
+{
+    if (err == nullptr) {
+        APP_LOGE("err is nullptr");
+        return;
+    }
+    env->ThrowError(static_cast<ani_error>(err));
 }
 
 int32_t BusinessErrorAni::ConvertErrCode(ErrCode nativeErrCode)
