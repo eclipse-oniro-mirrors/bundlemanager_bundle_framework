@@ -17,6 +17,8 @@
 #define BUNDLE_FRAMEWORK_INTERFACES_KITS_ANI_BUSINESS_ERROR_H
 
 #include <ani.h>
+#include "appexecfwk_errors.h"
+#include "bundle_errors.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -31,6 +33,7 @@ public:
         const std::string &parameter, const std::string &type);
     static void ThrowEnumError(ani_env *env, const std::string &parameter, const std::string &type);
     static void ThrowError(ani_env *env, int32_t err, const std::string &msg = "");
+    static int32_t ConvertErrCode(ErrCode nativeErrCode);
 };
 } // namespace AppExecFwk
 } // namespace OHOS

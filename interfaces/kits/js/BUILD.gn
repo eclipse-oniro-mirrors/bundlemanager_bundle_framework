@@ -32,6 +32,7 @@ group("napi_packages") {
       "free_install:freeinstall",
       "installer:installer",
       "launcher_bundle_manager:launcherbundlemanager",
+      "launcher_bundle_manager:launcherbundlemanager_common",
       "launchermgr:innerbundlemanager",
       "overlay:overlay",
       "package:package",
