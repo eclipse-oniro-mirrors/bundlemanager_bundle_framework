@@ -70,6 +70,7 @@ constexpr uint32_t SANDBOX_PATH_INDEX = 0;
 constexpr uint32_t ID_INVALID = 0;
 constexpr const char* COLON = ":";
 constexpr const char* DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE = "Cover";
+constexpr const char* APP_INSTALL_PREFIX = "+app_install+";
 }
 
 std::mutex BundleUtil::g_mutex;
@@ -872,7 +873,9 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         subStr = ServiceConstants::SIGNATURE_FILE_PATH;
         destination.append(ServiceConstants::SECURITY_SIGNATURE_FILE_PATH);
     }
-    destination.append(ServiceConstants::PATH_SEPARATOR).append(std::to_string(GetCurrentTimeNs()));
+    destination.append(ServiceConstants::PATH_SEPARATOR);
+    destination.append(GetAppInstallPrefix(filePath, rename));
+    destination.append(std::to_string(GetCurrentTimeNs()));
     destination = CreateTempDir(destination);
     auto pos = filePath.find(subStr);
     if (pos == std::string::npos) { // this circumstance could not be considered laterly
@@ -914,6 +917,123 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         }
     }
     return destination;
+}
+
+std::string BundleUtil::GetAppInstallPrefix(const std::string &filePath, bool rename)
+{
+    // get ${bundleName} and ${userId} from
+    // /data/service/el1/public/bms/bundle_manager_service/app_install/${userId}/${bundleName}/${fileName}.hap
+    if (!rename) {
+        return "";
+    }
+    std::string prefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::GALLERY_DOWNLOAD_PATH;
+    if (filePath.find(prefix) != 0) {
+        return "";
+    }
+    // ${userId}/${bundleName}/${fileName}.hap
+    std::string tempStr = filePath.substr(prefix.length());
+    auto pos = tempStr.rfind(ServiceConstants::PATH_SEPARATOR);
+    if (pos == std::string::npos) {
+        return "";
+    }
+    // ${userId}/${bundleName}
+    tempStr = tempStr.substr(0, pos);
+    pos = tempStr.rfind(ServiceConstants::PATH_SEPARATOR);
+    if (pos == std::string::npos) {
+        return "";
+    }
+    if (pos != tempStr.find(ServiceConstants::PATH_SEPARATOR)) {
+        return "";
+    }
+    std::string bundleName = tempStr.substr(pos + 1);
+    std::string userId = tempStr.substr(0, pos);
+    if (bundleName.empty() || userId.empty()) {
+        return "";
+    }
+    // +app_install+${bundleName}+${userId}+
+    std::string newPrefix = std::string(APP_INSTALL_PREFIX) + bundleName + ServiceConstants::PLUS_SIGN + userId +
+        ServiceConstants::PLUS_SIGN;
+    APP_LOGI("newPrefix is %{public}s", newPrefix.c_str());
+    return newPrefix;
+}
+
+void BundleUtil::RestoreAppInstallHaps()
+{
+    std::string securityPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::SECURITY_STREAM_INSTALL_PATH + ServiceConstants::PATH_SEPARATOR;
+    DIR* dir = opendir(securityPath.c_str());
+    if (dir == nullptr) {
+        APP_LOGE("open security dir failed errno:%{public}d", errno);
+        return;
+    }
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+        if (entry->d_type != DT_DIR) {
+            continue;
+        }
+        std::string dirName = std::string(entry->d_name);
+        if (dirName.find(APP_INSTALL_PREFIX) != 0) {
+            continue;
+        }
+        // parse bundleName and userId from +app_install+${bundleName}+${userId}+${fileName}
+        std::string temp = dirName.substr(strlen(APP_INSTALL_PREFIX));
+        auto pos = temp.find(ServiceConstants::PLUS_SIGN);
+        if (pos == std::string::npos) {
+            continue;
+        }
+        std::string bundleName = temp.substr(0, pos);
+        temp = temp.substr(pos + 1);
+        pos = temp.find(ServiceConstants::PLUS_SIGN);
+        if (pos == std::string::npos) {
+            continue;
+        }
+        std::string userId = temp.substr(0, pos);
+        RestoreHaps(securityPath + dirName + ServiceConstants::PATH_SEPARATOR, bundleName, userId);
+    }
+    closedir(dir);
+}
+
+void BundleUtil::RestoreHaps(const std::string &sourcePath, const std::string &bundleName, const std::string &userId)
+{
+    if (sourcePath.empty() || bundleName.empty() || userId.empty()) {
+        return;
+    }
+    if (OHOS::IsEmptyFolder(sourcePath)) {
+        return;
+    }
+    std::string destPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::GALLERY_DOWNLOAD_PATH +
+        userId + ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR;
+    struct stat buf = {};
+    if (stat(destPath.c_str(), &buf) != 0 || !S_ISDIR(buf.st_mode)) {
+        APP_LOGE("app install bundlename dir not exist");
+        return;
+    }
+    DIR* dir = opendir(sourcePath.c_str());
+    if (dir == nullptr) {
+        APP_LOGE("open security dir failed errno:%{public}d", errno);
+        return;
+    }
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+        std::string fileName = std::string(entry->d_name);
+        std::string sourceFile = sourcePath + fileName;
+        std::string destFile = destPath + fileName;
+        APP_LOGI("restore file from %{public}s to %{public}s", sourceFile.c_str(), destFile.c_str());
+        if (!RenameFile(sourceFile, destFile)) {
+            APP_LOGE("restore file from %{public}s to %{public}s failed", sourceFile.c_str(), destFile.c_str());
+        }
+    }
+    closedir(dir);
+    if (OHOS::IsEmptyFolder(sourcePath)) {
+        BundleUtil::DeleteDir(sourcePath);
+    }
 }
 
 void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
