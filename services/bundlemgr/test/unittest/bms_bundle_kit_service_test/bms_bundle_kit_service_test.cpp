@@ -57,11 +57,16 @@
 #include "shortcut_info.h"
 #include "system_ability_helper.h"
 #include "want.h"
+#include "display_power_mgr_client.h"
+#include "display_power_info.h"
+#include "battery_srv_client.h"
 
 using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 using OHOS::AAFwk::Want;
+using namespace OHOS::DisplayPowerMgr;
+using namespace OHOS::PowerMgr;
 
 namespace OHOS {
 namespace {
@@ -14148,5 +14153,60 @@ HWTEST_F(BmsBundleKitServiceTest, PluginModuleInfoTest_0200, Function | SmallTes
     EXPECT_NE(ret2, nullptr);
     EXPECT_EQ(info1.moduleName, ret2->moduleName);
     EXPECT_EQ(info1.hapPath, ret2->hapPath);
+}
+
+/**
+ * @tc.number: InitAgingRequest_0001
+ * @tc.name: test BundleAgingMgr of Process
+ * @tc.desc: InitAgingRequest is true(uncord)
+ */
+HWTEST_F(BmsBundleKitServiceTest, InitAgingRequest_0001, Function | SmallTest | Level0)
+{
+    const int64_t allBundleDataBytes = 1;
+    BundleAgingMgr bundleAgingMgr;
+    bundleAgingMgr.request_.SetTotalDataBytes(allBundleDataBytes);
+    bool ret = bundleAgingMgr.InitAgingRequest();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckPrerequisite_0001
+ * @tc.name: test BundleAgingMgr of Process
+ * @tc.desc: CheckPrerequisite is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckPrerequisite_0001, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    AppExecFwk::BundleAgingMgr::AgingTriggertype type = AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD;
+    bool ret = bundleAgingMgr.CheckPrerequisite(type);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: CheckPrerequisite_0002
+ * @tc.name: test BundleAgingMgr of Process
+ * @tc.desc: CheckPrerequisite is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckPrerequisite_0002, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    AppExecFwk::BundleAgingMgr::AgingTriggertype type = AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD;
+    DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().SetDisplayState(DisplayPowerMgr::DisplayState::DISPLAY_ON);
+    bool ret = bundleAgingMgr.CheckPrerequisite(type);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckPrerequisite_0003
+ * @tc.name: test BundleAgingMgr of Process
+ * @tc.desc: CheckPrerequisite is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckPrerequisite_0003, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    AppExecFwk::BundleAgingMgr::AgingTriggertype type = AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD;
+    DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().SetDisplayState(DisplayPowerMgr::DisplayState::DISPLAY_OFF);
+    bool ret = bundleAgingMgr.CheckPrerequisite(type);
+    EXPECT_TRUE(ret);
 }
 }
