@@ -2806,7 +2806,7 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0200, Function | SmallTest | L
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     ret = impl.ExtractModuleFiles("wrong", TEST_STRING, "wrong", "wrong");
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED);
 }
 
 /**
@@ -2951,7 +2951,7 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0900, Function | SmallTest | L
     extractParam.extractFileType = ExtractFileType::AN;
 
     ret = impl.ExtractFiles(extractParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED);
 }
 
 /**
