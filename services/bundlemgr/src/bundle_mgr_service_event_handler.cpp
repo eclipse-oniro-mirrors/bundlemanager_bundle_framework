@@ -4522,6 +4522,7 @@ void BMSEventHandler::ProcessAppTmpPath()
 
 void BMSEventHandler::CleanTempDir() const
 {
+    BundleUtil::RestoreAppInstallHaps();
     std::vector<std::string> dirs = {
         std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
             ServiceConstants::STREAM_INSTALL_PATH,
