@@ -53,8 +53,11 @@ const std::string ENTRY = "entry";
 const std::string PROXY_DATAS = "2";
 const std::string NONISOLATION_ONLY_VALUE = "nonisolationOnly";
 const std::string ISOLATION_ONLY_VALUE = "isolationOnly";
+const std::string MULTIUSER_INSTALL_THIRD_PRELOAD_APP = "const.bms.multiUserInstallThirdPreloadApp";
 const int32_t PRIORITY_ONE = 1;
 const int32_t PRIORITY_TWO = 2;
+const int32_t USERID = 100;
+const int32_t MULTI_USERID = 101;
 const int32_t TEST_UID = 20013999;
 const int32_t TEST_BUNDLE_ID = 13999;
 }  // namespace
@@ -67,6 +70,7 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+    std::shared_ptr<BundleUserMgrHostImpl> bundleUserMgrHostImpl_ = std::make_shared<BundleUserMgrHostImpl>();
 private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
@@ -2456,6 +2460,66 @@ HWTEST_F(BmsBundleInstallCheckerTest, ParseBundleInfo_0100, Function | SmallTest
     BundlePackInfo packInfo;
     bool ret = installChecker.ParseBundleInfo(bundlePath, info, packInfo);
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0001
+ * @tc.name: test BundleUserMgrHostImpl
+ * @tc.desc: test OnCreateNewUser
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, BundleUserMgrHostImpl_0001, Function | SmallTest | Level0)
+{
+    const std::vector<std::string> disallowList;
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "false");
+    auto res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, MULTI_USERID, false,
+        preInstallBundleInfos);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0002
+ * @tc.name: test BundleUserMgrHostImpl
+ * @tc.desc: test OnCreateNewUser
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, BundleUserMgrHostImpl_0002, Function | SmallTest | Level0)
+{
+    const std::vector<std::string> disallowList;
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "true");
+    auto res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, MULTI_USERID, false,
+        preInstallBundleInfos);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0003
+ * @tc.name: test BundleUserMgrHostImpl
+ * @tc.desc: test OnCreateNewUser
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, BundleUserMgrHostImpl_0003, Function | SmallTest | Level0)
+{
+    const std::vector<std::string> disallowList;
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "false");
+    auto res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, false,
+        preInstallBundleInfos);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0004
+ * @tc.name: test BundleUserMgrHostImpl
+ * @tc.desc: test OnCreateNewUser
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, BundleUserMgrHostImpl_0004, Function | SmallTest | Level0)
+{
+    const std::vector<std::string> disallowList;
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "true");
+    auto res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, false,
+        preInstallBundleInfos);
+    EXPECT_TRUE(res);
 }
 
 /**
