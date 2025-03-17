@@ -10035,7 +10035,7 @@ ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &
         std::string bundleName = info.GetBundleName();
         int32_t responseUserId = info.GetResponseUserId(requestUserId);
         if (responseUserId == Constants::INVALID_USERID) {
-            APP_LOGD("-n %{public}s is not installed in -u %{public}d or 0", bundleName.c_str(), userId);
+            APP_LOGD("bundle %{public}s is not installed in user %{public}d or 0", bundleName.c_str(), userId);
             continue;
         }
         BundleType type = info.GetApplicationBundleType();
