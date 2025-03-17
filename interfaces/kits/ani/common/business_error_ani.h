@@ -31,6 +31,8 @@ public:
         const std::string &parameter, const std::string &type);
     static void ThrowEnumError(ani_env *env, const std::string &parameter, const std::string &type);
     static void ThrowError(ani_env *env, int32_t err, const std::string &msg = "");
+private:
+    static void ThrowError(ani_env *env, ani_object err);
 };
 } // namespace AppExecFwk
 } // namespace OHOS
