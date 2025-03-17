@@ -27,6 +27,7 @@ config("bundlemgr_common_config") {
     "include/clone",
     "include/common",
     "include/default_app",
+    "include/bundlemgr_ext",
     "include/free_install",
     "include/distributed_manager",
     "include/driver",
@@ -41,6 +42,7 @@ config("bundlemgr_common_config") {
     "include/quick_fix/state/include",
     "include/utd",
     "include/verify",
+    "include/plugin",
     "../../interfaces/inner_api/appexecfwk_base/include",
     "../../interfaces/inner_api/bundlemgr_extension/include",
   ]

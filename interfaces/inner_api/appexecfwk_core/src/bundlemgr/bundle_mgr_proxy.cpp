@@ -3419,6 +3419,32 @@ sptr<IAppControlMgr> BundleMgrProxy::GetAppControlProxy()
 }
 #endif
 
+sptr<IBundleMgrExt> BundleMgrProxy::GetBundleMgrExtProxy()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to get app control proxy due to write InterfaceToken failed");
+        return nullptr;
+    }
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_MGR_EXT_PROXY, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("reply failed");
+        return nullptr;
+    }
+    sptr<IBundleMgrExt> bundleMgrExtProxy = iface_cast<IBundleMgrExt>(object);
+    if (bundleMgrExtProxy == nullptr) {
+        APP_LOGE("bundleMgrExtProxy is nullptr");
+    }
+
+    return bundleMgrExtProxy;
+}
+
 ErrCode BundleMgrProxy::GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
     AbilityInfo &info)
 {

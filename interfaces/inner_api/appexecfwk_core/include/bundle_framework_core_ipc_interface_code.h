@@ -203,6 +203,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     MIGRATE_DATA = 177,
     GET_BUNDLE_ARCHIVE_INFO_EXT = 178,
     GET_LAUNCHER_ABILITY_INFO_SYNC = 179,
+    GET_BUNDLE_MGR_EXT_PROXY = 180,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -257,6 +258,8 @@ enum class BundleInstallerInterfaceCode : uint8_t {
     INSTALL_CLONE_APP = 11,
     UNINSTALL_CLONE_APP = 12,
     INSTALL_EXISTED = 13,
+    INSTALL_PLUGIN_APP = 14,
+    UNINSTALL_PLUGIN_APP = 15,
 };
 
 /* SAID: 401-28 Interface No.28 subservice also provides the following interfaces */
@@ -359,6 +362,11 @@ enum class ExtendResourceManagerInterfaceCode : uint8_t {
     DISABLE_DYNAMIC_ICON = 4,
     GET_DYNAMIC_ICON = 5,
     CREATE_FD = 6,
+};
+
+/* SAID: 401-180 Interface No.180 subservice also provides the following interfaces */
+enum class BundleMgrExtInterfaceCode : uint8_t {
+    GET_BUNDLE_NAMES_FOR_UID_EXT = 0,
 };
 } // namespace AppExecFwk
 } // namespace OHOS

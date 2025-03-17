@@ -25,6 +25,8 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "common_event_subscriber.h"
+#include "el5_filekey_callback.h"
+#include "patch_data_mgr.h"
 #include "want.h"
 #include "user_unlocked_event_subscriber.h"
 #undef private
@@ -43,6 +45,8 @@ namespace {
     const std::string BUNDLE_NAME = "bundleName";
     const std::string BUNDLE_NAME_ONE = "bundleName01";
     const std::string TEST_BUNDLE_NAME = "bundleName02";
+    const std::string TEST_SHADER_CACHE_NAME_ONE = "bundleName03";
+    const std::string TEST_SHADER_CACHE_NAME_TWO = "bundleName04";
     const std::string MODULE_NAME = "module1";
     const std::string MODULE_NAME_TWO = "module2";
     const std::string BUILD_HASH = "8670157ae28ac2dc08075c4a9364e320898b4aaf4c1ab691df6afdb854a6811b";
@@ -54,6 +58,11 @@ namespace {
     const std::string MODULE_UPDATE_PATH = "/module_update/test/";
     constexpr const char* SYSTEM_RESOURCES_CAMERA_PATH = "/system/app/Camera";
     constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
+    constexpr const char* VERSION_CODE = "versionCode";
+    constexpr const char* APP_PATCH_TYPE = "appPatchType";
+    constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
+    const int32_t TEST_UID = 20020098;
+    const std::string UNINSTALL_PREINSTALL_BUNDLE_NAME = "com.ohos.telephonydataability";
 }
 class BmsEventHandlerTest : public testing::Test {
 public:
@@ -62,6 +71,8 @@ public:
     void SetUp();
     void TearDown();
     bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId);
+    bool CheckShaderCachePathExist(const std::string &bundleName,
+        const int32_t appIndex, const int32_t &userId) const;
 
 private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
@@ -94,6 +105,28 @@ bool BmsEventHandlerTest::CreateBundleDataDir(const BundleInfo &bundleInfo, int3
     UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(userId);
     return UpdateAppDataMgr::CreateBundleDataDir(bundleInfo, userId, ServiceConstants::DIR_EL2);
 }
+
+bool BmsEventHandlerTest::CheckShaderCachePathExist(const std::string &bundleName,
+    const int32_t appIndex, const int32_t &userId) const
+{
+    bool isExist = false;
+    std::string cloneBundleName = bundleName;
+    if (appIndex != 0) {
+        cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
+    std::string newShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+    newShaderCachePath = newShaderCachePath.replace(newShaderCachePath.find("%"), 1, std::to_string(userId));
+    newShaderCachePath = newShaderCachePath + bundleName +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::SHADER_CACHE;
+    if (access(newShaderCachePath.c_str(), F_OK) == 0) {
+        isExist = true;
+    } else {
+        LOG_E(BMS_TAG_INSTALLD, "senlin %{public}s can not access, errno: %{public}d",
+            newShaderCachePath.c_str(), errno);
+    }
+    return isExist;
+}
+
 
 /**
  * @tc.number: BeforeBmsStart_0100
@@ -1830,5 +1863,447 @@ HWTEST_F(BmsEventHandlerTest, ConvertApplicationFlagToInstallSource_0300, Functi
     std::string installSource = handler->ConvertApplicationFlagToInstallSource(
         static_cast<int32_t>(ApplicationInfoFlag::FLAG_RECOVER_INSTALLED));
     EXPECT_EQ(installSource, "recovery");
+}
+
+/**
+ * @tc.number: InnerPatchInfo_FromJson_0001
+ * @tc.name: test InnerPatchInfo_FromJson
+ * @tc.desc: test InnerPatchInfo_FromJson
+ */
+HWTEST_F(BmsEventHandlerTest, InnerPatchInfo_FromJson_0001, Function | SmallTest | Level0)
+{
+    InnerPatchInfo innerPatchInfo;
+
+    std::string emptyJson = "";
+    EXPECT_FALSE(innerPatchInfo.FromJson(emptyJson));
+
+    std::string notJson = R"({"versionCode": "123", "appPatchType":})";
+    EXPECT_FALSE(innerPatchInfo.FromJson(notJson));
+
+    std::string missingFieldsJson = R"({"versionCode": 123})";
+    EXPECT_FALSE(innerPatchInfo.FromJson(missingFieldsJson));
+
+    std::string wrongKeyJson = R"({"versionCode1": "abc", "appPatchType": "xyz"})";
+    EXPECT_FALSE(innerPatchInfo.FromJson(wrongKeyJson));
+
+    std::string invalidJson = R"({"versionCode": "abc", "appPatchType": "xyz"})";
+    EXPECT_FALSE(innerPatchInfo.FromJson(invalidJson));
+
+    std::string validJson = R"({"versionCode": 123, "appPatchType": 1})";
+    EXPECT_TRUE(innerPatchInfo.FromJson(validJson));
+}
+
+/**
+ * @tc.number: InnerPatchInfo_ToJson_0001
+ * @tc.name: test InnerPatchInfo_ToJson
+ * @tc.desc: test InnerPatchInfo_ToJson
+ */
+HWTEST_F(BmsEventHandlerTest, InnerPatchInfo_ToJson_0001, Function | SmallTest | Level0)
+{
+    PatchInfo patchInfo;
+    patchInfo.versionCode = 123;
+    patchInfo.appPatchType = AppPatchType::INTERNAL;
+    InnerPatchInfo innerPatchInfo;
+    innerPatchInfo.SetPatchInfo(patchInfo);
+    EXPECT_EQ(innerPatchInfo.GetVersionCode(), 123);
+    EXPECT_EQ(innerPatchInfo.GetAppPatchType(), AppPatchType::INTERNAL);
+
+    nlohmann::json jsonObj;
+    innerPatchInfo.ToJson(jsonObj);
+    EXPECT_TRUE(jsonObj.contains(VERSION_CODE));
+    EXPECT_TRUE(jsonObj.contains(APP_PATCH_TYPE));
+    EXPECT_EQ(jsonObj[VERSION_CODE], 123);
+    EXPECT_EQ(jsonObj[APP_PATCH_TYPE], static_cast<int>(AppPatchType::INTERNAL));
+}
+
+/**
+ * @tc.number: InnerPatchInfo_ToString_0001
+ * @tc.name: test InnerPatchInfo_ToString
+ * @tc.desc: test InnerPatchInfo_ToString
+ */
+HWTEST_F(BmsEventHandlerTest, InnerPatchInfo_ToString_0001, Function | SmallTest | Level0)
+{
+    PatchInfo patchInfo;
+    patchInfo.versionCode = 123;
+    patchInfo.appPatchType = AppPatchType::INTERNAL;
+    InnerPatchInfo innerPatchInfo;
+    innerPatchInfo.SetPatchInfo(patchInfo);
+
+    std::string jsonString = innerPatchInfo.ToString();
+    nlohmann::json jsonObj = nlohmann::json::parse(jsonString);
+
+    EXPECT_TRUE(jsonObj.contains(VERSION_CODE));
+    EXPECT_TRUE(jsonObj.contains(APP_PATCH_TYPE));
+    EXPECT_EQ(jsonObj[VERSION_CODE], 123);
+    EXPECT_EQ(jsonObj[APP_PATCH_TYPE], static_cast<int>(AppPatchType::INTERNAL));
+}
+
+/**
+ * @tc.number: AddInnerPatchInfo_0001
+ * @tc.name: test AddInnerPatchInfo
+ * @tc.desc: test AddInnerPatchInfo
+ */
+HWTEST_F(BmsEventHandlerTest, AddInnerPatchInfo_0001, Function | SmallTest | Level0)
+{
+    InnerPatchInfo innerPatchInfo;
+    EXPECT_FALSE(PatchDataMgr::GetInstance().AddInnerPatchInfo("", innerPatchInfo));
+    PatchDataMgr::GetInstance().patchDataStorage_->rdbDataManager_ = nullptr;
+    EXPECT_FALSE(PatchDataMgr::GetInstance().AddInnerPatchInfo("bundleName", innerPatchInfo));
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
+    bmsRdbConfig.tableName = BUNDLE_RDB_TABLE_NAME;
+    PatchDataMgr::GetInstance().patchDataStorage_->rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
+
+    PatchInfo patchInfo;
+    patchInfo.versionCode = 123;
+    patchInfo.appPatchType = AppPatchType::INTERNAL;
+    innerPatchInfo.SetPatchInfo(patchInfo);
+    EXPECT_TRUE(PatchDataMgr::GetInstance().AddInnerPatchInfo("bundleName", innerPatchInfo));
+
+    EXPECT_TRUE(PatchDataMgr::GetInstance().DeleteInnerPatchInfo("bundleName"));
+}
+
+/**
+ * @tc.number: GetInnerPatchInfo_0001
+ * @tc.name: test GetInnerPatchInfo
+ * @tc.desc: test GetInnerPatchInfo
+ */
+HWTEST_F(BmsEventHandlerTest, GetInnerPatchInfo_0001, Function | SmallTest | Level0)
+{
+    InnerPatchInfo innerPatchInfo;
+    EXPECT_FALSE(PatchDataMgr::GetInstance().GetInnerPatchInfo("", innerPatchInfo));
+    EXPECT_FALSE(PatchDataMgr::GetInstance().GetInnerPatchInfo("bundleName", innerPatchInfo));
+
+    PatchInfo patchInfo;
+    patchInfo.versionCode = 123;
+    patchInfo.appPatchType = AppPatchType::INTERNAL;
+    innerPatchInfo.SetPatchInfo(patchInfo);
+    EXPECT_TRUE(PatchDataMgr::GetInstance().AddInnerPatchInfo("bundleName", innerPatchInfo));
+    EXPECT_TRUE(PatchDataMgr::GetInstance().GetInnerPatchInfo("bundleName", innerPatchInfo));
+
+    EXPECT_TRUE(PatchDataMgr::GetInstance().DeleteInnerPatchInfo("bundleName"));
+}
+
+/**
+ * @tc.number: DeleteInnerPatchInfo_0001
+ * @tc.name: test DeleteInnerPatchInfo
+ * @tc.desc: test DeleteInnerPatchInfo
+ */
+HWTEST_F(BmsEventHandlerTest, DeleteInnerPatchInfo_0001, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(PatchDataMgr::GetInstance().DeleteInnerPatchInfo(""));
+    PatchDataMgr::GetInstance().patchDataStorage_->rdbDataManager_ = nullptr;
+    EXPECT_FALSE(PatchDataMgr::GetInstance().DeleteInnerPatchInfo("bundleName"));
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
+    bmsRdbConfig.tableName = BUNDLE_RDB_TABLE_NAME;
+    PatchDataMgr::GetInstance().patchDataStorage_->rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
+
+    InnerPatchInfo innerPatchInfo;
+    PatchInfo patchInfo;
+    patchInfo.versionCode = 123;
+    patchInfo.appPatchType = AppPatchType::INTERNAL;
+    innerPatchInfo.SetPatchInfo(patchInfo);
+    EXPECT_TRUE(PatchDataMgr::GetInstance().AddInnerPatchInfo("bundleName", innerPatchInfo));
+    EXPECT_TRUE(PatchDataMgr::GetInstance().DeleteInnerPatchInfo("bundleName"));
+}
+
+/**
+ * @tc.number: ProcessPatchInfo_0001
+ * @tc.name: test ProcessPatchInfo
+ * @tc.desc: test ProcessPatchInfo
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessPatchInfo_0001, Function | SmallTest | Level0)
+{
+    InnerPatchInfo innerPatchInfo;
+    std::vector<std::string> installSources;
+
+    PatchDataMgr::GetInstance().ProcessPatchInfo("", installSources, 0, AppPatchType::INTERNAL, false);
+    EXPECT_FALSE(PatchDataMgr::GetInstance().GetInnerPatchInfo("bundleName", innerPatchInfo));
+
+    installSources.emplace_back("test");
+    PatchDataMgr::GetInstance().ProcessPatchInfo("bundleName", installSources, 2, AppPatchType::INTERNAL, true);
+    EXPECT_TRUE(PatchDataMgr::GetInstance().GetInnerPatchInfo("bundleName", innerPatchInfo));
+
+    PatchDataMgr::GetInstance().ProcessPatchInfo("test", installSources, 1, AppPatchType::INTERNAL, false);
+    EXPECT_FALSE(PatchDataMgr::GetInstance().GetInnerPatchInfo("test", innerPatchInfo));
+
+    PatchDataMgr::GetInstance().ProcessPatchInfo("bundleName", installSources, 1, AppPatchType::INTERNAL, false);
+    EXPECT_TRUE(PatchDataMgr::GetInstance().GetInnerPatchInfo("bundleName", innerPatchInfo));
+
+    PatchDataMgr::GetInstance().ProcessPatchInfo("bundleName", installSources, 3, AppPatchType::INTERNAL, false);
+    EXPECT_FALSE(PatchDataMgr::GetInstance().GetInnerPatchInfo("bundleName", innerPatchInfo));
+
+    EXPECT_TRUE(PatchDataMgr::GetInstance().DeleteInnerPatchInfo("bundleName"));
+}
+
+/**
+ * @tc.number: GetStoragePatchInfo_0001
+ * @tc.name: test GetStoragePatchInfo
+ * @tc.desc: test GetStoragePatchInfo
+ */
+HWTEST_F(BmsEventHandlerTest, GetStoragePatchInfo_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<PatchDataStorageRdb> patchDataStorage_ = std::make_shared<PatchDataStorageRdb>();
+    InnerPatchInfo innerPatchInfo;
+    EXPECT_FALSE(patchDataStorage_->GetStoragePatchInfo("", innerPatchInfo));
+    EXPECT_FALSE(patchDataStorage_->GetStoragePatchInfo("bundleName", innerPatchInfo));
+
+    EXPECT_TRUE(patchDataStorage_->rdbDataManager_->InsertData("bundleName", "123"));
+    EXPECT_FALSE(patchDataStorage_->GetStoragePatchInfo("bundleName", innerPatchInfo));
+    EXPECT_TRUE(patchDataStorage_->DeleteStoragePatchInfo("bundleName"));
+
+    EXPECT_TRUE(patchDataStorage_->SaveStoragePatchInfo("bundleName", innerPatchInfo));
+    EXPECT_TRUE(patchDataStorage_->GetStoragePatchInfo("bundleName", innerPatchInfo));
+    EXPECT_TRUE(patchDataStorage_->DeleteStoragePatchInfo("bundleName"));
+}
+
+/**
+ * @tc.number: SaveStoragePatchInfo_0001
+ * @tc.name: test SaveStoragePatchInfo
+ * @tc.desc: test SaveStoragePatchInfo
+ */
+HWTEST_F(BmsEventHandlerTest, SaveStoragePatchInfo_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<PatchDataStorageRdb> patchDataStorage_ = std::make_shared<PatchDataStorageRdb>();
+    InnerPatchInfo innerPatchInfo;
+    EXPECT_FALSE(patchDataStorage_->SaveStoragePatchInfo("", innerPatchInfo));
+
+    EXPECT_TRUE(patchDataStorage_->SaveStoragePatchInfo("bundleName", innerPatchInfo));
+    EXPECT_TRUE(patchDataStorage_->DeleteStoragePatchInfo("bundleName"));
+}
+
+/**
+ * @tc.number: DeleteStoragePatchInfo_0001
+ * @tc.name: test DeleteStoragePatchInfo
+ * @tc.desc: test DeleteStoragePatchInfo
+ */
+HWTEST_F(BmsEventHandlerTest, DeleteStoragePatchInfo_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<PatchDataStorageRdb> patchDataStorage_ = std::make_shared<PatchDataStorageRdb>();
+    InnerPatchInfo innerPatchInfo;
+    EXPECT_FALSE(patchDataStorage_->DeleteStoragePatchInfo(""));
+
+    EXPECT_TRUE(patchDataStorage_->SaveStoragePatchInfo("bundleName", innerPatchInfo));
+    EXPECT_TRUE(patchDataStorage_->DeleteStoragePatchInfo("bundleName"));
+}
+
+/**
+ * @tc.number: PatchDataStorageRdb_Nullptr_0001
+ * @tc.name: test PatchDataStorageRdb_Nullptr
+ * @tc.desc: test PatchDataStorageRdb_Nullptr
+ */
+HWTEST_F(BmsEventHandlerTest, PatchDataStorageRdb_Nullptr_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<PatchDataStorageRdb> patchDataStorage_ = std::make_shared<PatchDataStorageRdb>();
+    patchDataStorage_->rdbDataManager_ = nullptr;
+    InnerPatchInfo innerPatchInfo;
+    EXPECT_FALSE(patchDataStorage_->GetStoragePatchInfo("bundleName", innerPatchInfo));
+    EXPECT_FALSE(patchDataStorage_->SaveStoragePatchInfo("bundleName", innerPatchInfo));
+    EXPECT_FALSE(patchDataStorage_->DeleteStoragePatchInfo("bundleName"));
+}
+
+/**
+ * @tc.number: OnRegenerateAppKey_0001
+ * @tc.name: test OnRegenerateAppKey
+ * @tc.desc: test OnRegenerateAppKey
+ */
+HWTEST_F(BmsEventHandlerTest, OnRegenerateAppKey_0001, Function | SmallTest | Level0)
+{
+    El5FilekeyCallback callback;
+    std::vector<Security::AccessToken::AppKeyInfo> infos;
+    callback.OnRegenerateAppKey(infos);
+    EXPECT_EQ(infos.size(), 0);
+
+    Security::AccessToken::AppKeyInfo infoApp;
+    infoApp.type = Security::AccessToken::AppKeyType::APP;
+    Security::AccessToken::AppKeyInfo infoGroup;
+    infoGroup.type = Security::AccessToken::AppKeyType::GROUPID;
+    infos.emplace_back(infoApp);
+    infos.emplace_back(infoGroup);
+    callback.OnRegenerateAppKey(infos);
+    EXPECT_EQ(infos.size(), 2);
+}
+
+/**
+ * @tc.number: ProcessAppEl5Dir_0001
+ * @tc.name: test ProcessAppEl5Dir
+ * @tc.desc: test ProcessAppEl5Dir
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAppEl5Dir_0001, Function | SmallTest | Level0)
+{
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 100;
+    userInfo.cloneInfos.insert(std::make_pair(std::to_string(1), cloneInfo));
+    InnerBundleInfo bundleInfo;
+    bundleInfo.AddInnerBundleUserInfo(userInfo);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace("com.test.test", bundleInfo);
+
+    El5FilekeyCallback callback;
+    Security::AccessToken::AppKeyInfo info;
+    info.bundleName = "+clone-test";
+    callback.ProcessAppEl5Dir(info);
+    info.bundleName = "com.test.test";
+    callback.ProcessAppEl5Dir(info);
+    info.bundleName = "+clone-1+com.test.test";
+    callback.ProcessAppEl5Dir(info);
+    info.bundleName = "+clone-2+com.test.test";
+    callback.ProcessAppEl5Dir(info);
+
+    InnerBundleInfo fetchedBundleInfo;
+    EXPECT_TRUE(dataMgr->FetchInnerBundleInfo("com.test.test", fetchedBundleInfo));
+    InnerBundleUserInfo fetchedUserInfo;
+    EXPECT_TRUE(fetchedBundleInfo.GetInnerBundleUserInfo(100, fetchedUserInfo));
+    EXPECT_EQ(fetchedUserInfo.cloneInfos["1"].keyId, "");
+}
+
+/**
+ * @tc.number: ProcessGroupEl5Dir_0001
+ * @tc.name: test ProcessGroupEl5Dir
+ * @tc.desc: test ProcessGroupEl5Dir
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessGroupEl5Dir_0001, Function | SmallTest | Level0)
+{
+    El5FilekeyCallback callback;
+    Security::AccessToken::AppKeyInfo info;
+    info.type = Security::AccessToken::AppKeyType::APP;
+    callback.ProcessGroupEl5Dir(info);
+    EXPECT_EQ(info.type, Security::AccessToken::AppKeyType::APP);
+
+    info.type = Security::AccessToken::AppKeyType::GROUPID;
+    info.uid = 1;
+    info.groupID = "123";
+    callback.ProcessGroupEl5Dir(info);
+    EXPECT_EQ(info.type, Security::AccessToken::AppKeyType::GROUPID);
+}
+
+/**
+ * @tc.number: CheckEl5Dir_0001
+ * @tc.name: test CheckEl5Dir
+ * @tc.desc: test CheckEl5Dir
+ */
+HWTEST_F(BmsEventHandlerTest, CheckEl5Dir_0001, Function | SmallTest | Level0)
+{
+    El5FilekeyCallback callback;
+    Security::AccessToken::AppKeyInfo info;
+    info.userId = -1;
+    InnerBundleInfo bundleInfo;
+    callback.CheckEl5Dir(info, bundleInfo, "com.test.test");
+    EXPECT_EQ(info.userId, -1);
+
+    info.userId = 100;
+    callback.CheckEl5Dir(info, bundleInfo, "com.test.test");
+    EXPECT_EQ(info.userId, 100);
+}
+
+/**
+ * @tc.number: BundleCloneEl1ShaderCacheLocal_0100
+ * @tc.name: CheckBundleCloneEl1ShaderCacheLocal
+ * @tc.desc: test CheckBundleCloneEl1ShaderCacheLocal and CleanBundleCloneEl1ShaderCacheLocal
+ */
+HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    // test first time mkdir with invalid uid
+    setuid(Constants::FOUNDATION_UID);
+    handler->CheckBundleCloneEl1ShaderCacheLocal(TEST_SHADER_CACHE_NAME_ONE,
+        1, Constants::DEFAULT_USERID, Constants::INVALID_UID);
+    bool isExist = CheckShaderCachePathExist(TEST_SHADER_CACHE_NAME_ONE, 1, Constants::START_USERID);
+    EXPECT_FALSE(isExist) << "test1: mkdir shader cache succeed: " << TEST_SHADER_CACHE_NAME_ONE;
+}
+
+/**
+ * @tc.number: BundleCloneEl1ShaderCacheLocal_0200
+ * @tc.name: CheckBundleCloneEl1ShaderCacheLocal
+ * @tc.desc: test CheckBundleCloneEl1ShaderCacheLocal and CleanBundleCloneEl1ShaderCacheLocal
+ */
+HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // test first time mkdir with no permission uid
+    setuid(Constants::ROOT_UID);
+    handler->CheckBundleCloneEl1ShaderCacheLocal(TEST_SHADER_CACHE_NAME_ONE,
+        1, Constants::START_USERID, TEST_UID);
+    bool isExist = CheckShaderCachePathExist(TEST_SHADER_CACHE_NAME_ONE, 1, Constants::START_USERID);
+    EXPECT_FALSE(isExist) << "test2: mkdir shader cache succeed: " << TEST_SHADER_CACHE_NAME_ONE;
+}
+
+/**
+ * @tc.number: BundleCloneEl1ShaderCacheLocal_0300
+ * @tc.name: CheckBundleCloneEl1ShaderCacheLocal
+ * @tc.desc: test CheckBundleCloneEl1ShaderCacheLocal and CleanBundleCloneEl1ShaderCacheLocal
+ */
+HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // test shader cache already exist and mkdir second time
+    bool isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path does not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+    setuid(Constants::FOUNDATION_UID);
+    handler->CheckBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME,
+        0, Constants::START_USERID, TEST_UID);
+    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path second time mkdir failed: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+}
+
+/**
+ * @tc.number: BundleCloneEl1ShaderCacheLocal_0400
+ * @tc.name: CheckBundleCloneEl1ShaderCacheLocal
+ * @tc.desc: test CheckBundleCloneEl1ShaderCacheLocal and CleanBundleCloneEl1ShaderCacheLocal
+ */
+HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0400, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // test CleanBundleCloneEl1ShaderCacheLocal
+    setuid(Constants::ROOT_UID);
+    handler->CleanBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    bool isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path was deleted: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+
+    setuid(Constants::FOUNDATION_UID);
+    handler->CleanBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path was deleted: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+}
+
+/**
+ * @tc.number: BundleEl1ShaderCacheLocal_0100
+ * @tc.name: CheckAllBundleEl1ShaderCacheLocal and CleanAllBundleEl1ShaderCacheLocal
+ * @tc.desc: test CheckAllBundleEl1ShaderCacheLocal and CleanAllBundleEl1ShaderCacheLocal
+ */
+HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    bool isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path does not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+    
+    // test CleanAllBundleEl1ShaderCacheLocal
+    setuid(Constants::FOUNDATION_UID);
+    handler->CleanAllBundleEl1ShaderCacheLocal();
+    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+ 
+    // test CheckAllBundleEl1ShaderCacheLocal
+    setuid(Constants::FOUNDATION_UID);
+    handler->CheckAllBundleEl1ShaderCacheLocal();
+    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
 }
 } // OHOS

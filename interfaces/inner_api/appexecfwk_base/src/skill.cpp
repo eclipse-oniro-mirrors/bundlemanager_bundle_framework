@@ -392,10 +392,9 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         return uriStr == skillScheme || StartsWith(uriStr, skillScheme + PORT_SEPARATOR);
     }
     std::string optParamUri = ConvertUriToLower(GetOptParamUri(uriString));
-    std::string skillUriString;
-    std::string skillScheme = ConvertToLower(skillUri.scheme);
-    std::string skillHost = ConvertToLower(skillUri.host);
-    skillUriString.append(skillScheme).append(SCHEME_SEPARATOR).append(skillHost);
+    std::string skillUriTmpString;
+    skillUriTmpString.append(skillUri.scheme).append(SCHEME_SEPARATOR).append(skillUri.host);
+    std::string skillUriString = ConvertUriToLower(skillUriTmpString);
 
     if (!skillUri.port.empty()) {
         skillUriString.append(PORT_SEPARATOR).append(skillUri.port);
@@ -713,11 +712,7 @@ void Skill::Dump(std::string prefix, int fd)
         nlohmann::json jsonObject = *this;
         std::string result;
         result.append(prefix);
-        try {
-            result.append(jsonObject.dump(Constants::DUMP_INDENT));
-        } catch (const nlohmann::json::type_error &e) {
-            APP_LOGE("json dump failed: %{public}s", e.what());
-        }
+        result.append(jsonObject.dump(Constants::DUMP_INDENT));
         int ret = TEMP_FAILURE_RETRY(write(fd, result.c_str(), result.size()));
         if (ret < 0) {
             APP_LOGE("dump Abilityinfo write error : %{public}d", errno);

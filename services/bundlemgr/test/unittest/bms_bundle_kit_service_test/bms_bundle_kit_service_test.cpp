@@ -14011,4 +14011,142 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheTaskGetCleanSize_0100, Functio
     hostImpl->CleanBundleCacheTaskGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cacheSize);
     EXPECT_FALSE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.empty());
 }
+
+/**
+* @tc.number: AginTest_0018
+* @tc.name: test RecentlyUnuseBundleAgingHandler of ProcessBundle
+* @tc.desc: ProcessBundle is false
+*/
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0018, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+    AgingRequest request;
+    bool ret = bundleAgingMgr.ProcessBundle(request);
+    EXPECT_FALSE(ret);
+}
+
+/**
+* @tc.number: AginTest_0019
+* @tc.name: test RecentlyUnuseBundleAgingHandler of ProcessBundle
+* @tc.desc: ProcessBundle is false
+*/
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0019, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+
+    AgingRequest request;
+    std::vector<AgingBundleInfo> agingBundles = {
+        AgingBundleInfo("com.example.app1", 1000, 5),
+        AgingBundleInfo("com.example.app2", 2000, 3)
+    };
+    request.AddAgingBundle(agingBundles[0]);
+    request.AddAgingBundle(agingBundles[1]);
+    bool ret = bundleAgingMgr.ProcessBundle(request);
+    EXPECT_FALSE(ret);
+}
+
+/**
+* @tc.number: AginTest_0024
+* @tc.name: test RecentlyUnuseBundleAgingHandler of Process
+* @tc.desc: CleanCache is hasCleanCache
+*/
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0024, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+    AgingBundleInfo agingBundle("com.example.app2", 2000, 3);
+    bool ret = bundleAgingMgr.CleanCache(agingBundle);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: PluginBundleInfoTest
+ * @tc.name: PluginBundleInfoTest to_json and from_json branch cover
+ * @tc.desc: 1.Test to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, PluginBundleInfoTest_0100, Function | SmallTest | Level1)
+{
+    PluginBundleInfo pluginBundleInfo;
+    pluginBundleInfo.pluginBundleName = BUNDLE_NAME_TEST;
+    pluginBundleInfo.versionCode = BUNDLE_VERSION_CODE;
+    pluginBundleInfo.versionName = BUNDLE_VERSION_NAME;
+    pluginBundleInfo.iconId = ICON_ID;
+    pluginBundleInfo.labelId = LABEL_ID;
+    nlohmann::json jsonObj;
+    to_json(jsonObj, pluginBundleInfo);
+    PluginBundleInfo result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.pluginBundleName, BUNDLE_NAME_TEST);
+    EXPECT_EQ(result.versionCode, BUNDLE_VERSION_CODE);
+    EXPECT_EQ(result.versionName, BUNDLE_VERSION_NAME);
+    EXPECT_EQ(result.iconId, ICON_ID);
+    EXPECT_EQ(result.labelId, LABEL_ID);
+}
+
+/**
+ * @tc.number: PluginBundleInfoTest
+ * @tc.name: PluginBundleInfo Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, PluginBundleInfoTest_0200, Function | SmallTest | Level1)
+{
+    PluginBundleInfo info1;
+    info1.pluginBundleName = BUNDLE_NAME_TEST;
+    info1.versionCode = BUNDLE_VERSION_CODE;
+    info1.iconId = ICON_ID;
+    info1.labelId = LABEL_ID;
+
+    Parcel parcel;
+    auto ret1 = info1.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+
+    PluginBundleInfo info2;
+    auto ret2 = info2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(info1.pluginBundleName, ret2->pluginBundleName);
+    EXPECT_EQ(info1.versionCode, ret2->versionCode);
+    EXPECT_EQ(info1.iconId, ret2->iconId);
+    EXPECT_EQ(info1.labelId, ret2->labelId);
+}
+
+/**
+ * @tc.number: PluginModuleInfoTest
+ * @tc.name: PluginModuleInfo to_json and from_json branch cover
+ * @tc.desc: 1.Test to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, PluginModuleInfoTest_0100, Function | SmallTest | Level1)
+{
+    PluginModuleInfo pluginModuleInfo;
+    pluginModuleInfo.moduleName = MODULE_NAME;
+    pluginModuleInfo.hapPath = HAP_FILE_PATH;
+    pluginModuleInfo.description = DESCRIPTION;
+    nlohmann::json jsonObj;
+    to_json(jsonObj, pluginModuleInfo);
+    PluginModuleInfo result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.moduleName, MODULE_NAME);
+    EXPECT_EQ(result.hapPath, HAP_FILE_PATH);
+    EXPECT_EQ(result.description, DESCRIPTION);
+}
+
+/**
+ * @tc.number: PluginModuleInfoTest
+ * @tc.name: PluginModuleInfo Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, PluginModuleInfoTest_0200, Function | SmallTest | Level1)
+{
+    PluginModuleInfo info1;
+    info1.moduleName = MODULE_NAME;
+    info1.hapPath = HAP_FILE_PATH;
+    info1.description = DESCRIPTION;
+    Parcel parcel;
+    auto ret1 = info1.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+
+    PluginModuleInfo info2;
+    auto ret2 = info2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(info1.moduleName, ret2->moduleName);
+    EXPECT_EQ(info1.hapPath, ret2->hapPath);
+}
 }

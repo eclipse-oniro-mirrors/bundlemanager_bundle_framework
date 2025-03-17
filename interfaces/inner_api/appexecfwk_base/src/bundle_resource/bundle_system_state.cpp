@@ -68,12 +68,7 @@ std::string BundleSystemState::ToString()
         {JSON_KEY_COLOR_MODE, colorMode_},
         {JSON_KEY_LANGUAGE, language_}
     };
-    try {
-        return jsonObject.dump();
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return jsonObject.dump();
 }
 
 bool BundleSystemState::FromString(const std::string &systemState)

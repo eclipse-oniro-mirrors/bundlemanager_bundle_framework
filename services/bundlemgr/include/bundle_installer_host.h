@@ -118,6 +118,26 @@ public:
      */
     virtual ErrCode UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId) override;
 
+    /**
+     * @brief Install or update plugin application.
+     * @param hostBundleName Indicates the bundle name of the host application.
+     * @param pluginFilePaths Indicates the paths for storing the HSP of the plugin to install or update.
+     * @param installPluginParam Indicates the install parameters.
+     * @return Returns ERR_OK if the plugin application is installed successfully; returns errcode otherwise.
+     */
+    virtual ErrCode InstallPlugin(const std::string &hostBundleName, const std::vector<std::string> &pluginFilePaths,
+        const InstallPluginParam &installPluginParam) override;
+
+    /**
+     * @brief uninstall plugin application.
+     * @param hostBundleName Indicates the bundle name of the host application.
+     * @param pluginBundleName Indicates the plugin bundle name to uninstall.
+     * @param installPluginParam Indicates the uninstall parameters.
+     * @return Returns ERR_OK if the plugin application is uninstalled successfully; returns errcode otherwise.
+     */
+    virtual ErrCode UninstallPlugin(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const InstallPluginParam &installPluginParam) override;
+
     virtual sptr<IBundleStreamInstaller> CreateStreamInstaller(const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver, const std::vector<std::string> &originHapPaths) override;
     virtual bool DestoryBundleStreamInstaller(uint32_t streamInstallerId) override;
@@ -198,6 +218,21 @@ private:
      * @return Returns true if the object is valid; returns false otherwise.
      */
     bool CheckBundleInstallerManager(const sptr<IStatusReceiver> &statusReceiver) const;
+    /**
+     * @brief Handles the InstallPlugin function called from a IBundleInstaller proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent.
+     * @return
+     */
+    void HandleInstallPlugin(MessageParcel &data, MessageParcel &reply);
+
+    /**
+     * @brief Handles the UninstallPlugin function called from a IBundleInstaller proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent.
+     * @return
+     */
+    void HandleUninstallPlugin(MessageParcel &data, MessageParcel &reply);
 
     void HandleCreateStreamInstaller(MessageParcel &data, MessageParcel &reply);
     void HandleDestoryBundleStreamInstaller(MessageParcel &data, MessageParcel &reply);

@@ -267,7 +267,7 @@ bool BundleResourceRdb::GetBundleResourceInfo(
     BundleResourceInfo &bundleResourceInfo,
     int32_t appIndex)
 {
-    APP_LOGI_NOFUNC("rdb GetBundleResourceInfo -n %{public}s -i %{public}d", bundleName.c_str(), appIndex);
+    APP_LOGI_NOFUNC("rdb -n %{public}s -i %{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
@@ -293,6 +293,7 @@ bool BundleResourceRdb::GetBundleResourceInfo(
             bundleName.c_str(), ret, systemState.c_str());
         return false;
     }
+    APP_LOGI_NOFUNC("rdb end");
     return ConvertToBundleResourceInfo(absSharedResultSet, flags, bundleResourceInfo);
 }
 

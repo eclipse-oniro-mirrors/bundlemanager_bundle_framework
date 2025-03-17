@@ -53,6 +53,7 @@ constexpr int32_t BASE_APP_UID = 10000;
 constexpr int32_t BASE_USER_RANGE = 200000;
 constexpr int32_t MAX_APP_UID = 65535;
 constexpr int32_t STORAGE_MANAGER_UID = 1090;
+constexpr int32_t EDC_UID = 7200;
 
 // for render process
 constexpr int32_t START_UID_FOR_RENDER_PROCESS = 1000000;
@@ -86,6 +87,8 @@ constexpr const char* PERMISSION_MANAGER_SHORTCUT = "ohos.permission.MANAGE_SHOR
 constexpr const char* PERMISSION_ACCESS_APP_INSTALL_DIR = "ohos.permission.ACCESS_APP_INSTALL_DIR";
 constexpr const char* PERMISSION_GET_SIGNATURE_INFO = "ohos.permission.GET_SIGNATURE_INFO";
 constexpr const char* PERMISSION_MIGRATE_DATA = "ohos.permission.MIGRATE_DATA";
+constexpr const char* PERMISSION_INSTALL_PLUGIN = "ohos.permission.INSTALL_PLUGIN_BUNDLE";
+constexpr const char* PERMISSION_UNINSTALL_PLUGIN = "ohos.permission.UNINSTALL_PLUGIN_BUNDLE";
 
 enum class AppType {
     SYSTEM_APP = 0,

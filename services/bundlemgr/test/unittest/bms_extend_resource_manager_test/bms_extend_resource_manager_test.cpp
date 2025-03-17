@@ -789,4 +789,61 @@ HWTEST_F(BmsExtendResourceManagerTest, GCreateFd_0200, Function | SmallTest | Le
     auto res = impl.CreateFd(fileName, fd, path);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: ExtResourceTest_0700
+ * @tc.name: test ExtResourceTest_0700
+ * @tc.desc: 1.BeforeAddExtResource test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1002, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::vector<std::string> filePaths;
+    filePaths.emplace_back(FILE_PATH);
+    std::vector<ExtendResourceInfo> extendResourceInfos;
+    auto ret = impl.ParseExtendResourceFile(BUNDLE_NAME, filePaths, extendResourceInfos);
+    EXPECT_TRUE(ret);
+}
+
+/**
+* @tc.number: ExtResourceTest_0700
+* @tc.name:  test ExtResourceTest_0700
+* @tc.desc: Verify the function behavior when all MoveFile operations succeed.
+*/
+HWTEST_F(BmsExtendResourceManagerTest, InnerSaveExtendResourceInfoTest_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::vector<std::string> filePaths;
+    std::vector<ExtendResourceInfo> extendResourceInfos;
+    std::vector<std::string> moduleNames;
+    moduleNames.push_back(TEST_MODULE);
+    auto ret = impl.RemoveExtResource(TEST_BUNDLE, moduleNames);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    impl.InnerSaveExtendResourceInfo(BUNDLE_NAME, filePaths, extendResourceInfos);
+    EXPECT_TRUE(ret);
+}
+
+/**
+* @tc.number: ExtResourceTest_0700
+* @tc.name: test ExtResourceTest_0700
+* @tc.desc: 1.BeforeAddExtResource test
+*/
+HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1001, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::vector<std::string> oldFilePaths;
+    oldFilePaths.push_back(FILE_PATH);
+    std::vector<std::string> newFilePaths;
+    std::string buildResourcePath;
+    auto originalMkdirIfNotExist = [](const std::string &path) {
+        return ERR_OK;
+    };
+    auto originalMoveFile = [](const std::string &src, const std::string &dest) {
+        return ERR_OK;
+    };
+    auto ret = impl.CopyToTempDir(BUNDLE_NAME, oldFilePaths, newFilePaths);
+    std::vector<ExtendResourceInfo> extendResourceInfos;
+    ret = impl.UpateExtResourcesDb(BUNDLE_NAME, extendResourceInfos);
+    EXPECT_TRUE(ret);
+}
 } // OHOS

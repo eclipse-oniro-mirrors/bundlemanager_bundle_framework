@@ -17,7 +17,6 @@
 
 #include <fstream>
 #include <sstream>
-#include <string>
 
 #include "bundle_profile.h"
 #include "bundle_service_constants.h"
@@ -309,7 +308,7 @@ std::map<std::string, std::string> BundleParser::ParseAclExtendedMap(const std::
         return aclExtendedMap;
     }
     for (const auto& [key, value] : jsonBuf.items()) {
-        aclExtendedMap[key] = value.dump();
+        aclExtendedMap[key] = value.is_string() ? value.get<std::string>() : value.dump();
     }
     return aclExtendedMap;
 }
@@ -380,14 +379,8 @@ ErrCode BundleParser::ParseRouterArray(
         }
         from_json(object, routerItem);
         if (object.find(ROUTER_ITEM_KEY_CUSTOM_DATA) != object.end()) {
-            std::string customData;
-            try {
-                customData = object[ROUTER_ITEM_KEY_CUSTOM_DATA].dump();
-            } catch (const nlohmann::json::type_error &e) {
-                APP_LOGE("json dump failed: %{public}s", e.what());
-            }
-            if (customData.size() <= DATA_MAX_LENGTH) {
-                routerItem.customData = customData;
+            if (object[ROUTER_ITEM_KEY_CUSTOM_DATA].dump().size() <= DATA_MAX_LENGTH) {
+                routerItem.customData = object[ROUTER_ITEM_KEY_CUSTOM_DATA].dump();
             } else {
                 APP_LOGE("customData in routerMap profile is too long");
             }

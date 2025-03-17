@@ -31,6 +31,7 @@ constexpr const char* LABEL_ID = "labelId";
 constexpr const char* ICON_ID = "iconId";
 constexpr const char* SYSTEM_APP = "systemApp";
 constexpr const char* BUNDLE_TYPE = "bundleType";
+constexpr const char* FORCE_UNINSTALL_USERS = "forceUninstallUsers";
 }  // namespace
 
 void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
@@ -38,6 +39,7 @@ void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_NAME] = bundleName_;
     jsonObject[VERSION_CODE] = versionCode_;
     jsonObject[BUNDLE_PATHS] = bundlePaths_;
+    jsonObject[FORCE_UNINSTALL_USERS] = forceUninstalledUsers_;
     jsonObject[APP_TYPE] = appType_;
     jsonObject[REMOVABLE] = removable_;
     jsonObject[IS_UNINSTALLED] = isUninstalled_;
@@ -58,6 +60,8 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         versionCode_, JsonType::NUMBER, true, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, BUNDLE_PATHS,
         bundlePaths_, JsonType::ARRAY, true, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::vector<int32_t>>(jsonObject, jsonObjectEnd, FORCE_UNINSTALL_USERS,
+        forceUninstalledUsers_, JsonType::ARRAY, false, parseResult, ArrayType::NUMBER);
     GetValueIfFindKey<Constants::AppType>(jsonObject, jsonObjectEnd, APP_TYPE,
         appType_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, REMOVABLE,
@@ -83,6 +87,7 @@ std::string PreInstallBundleInfo::ToString() const
     jsonObject[BUNDLE_NAME] = bundleName_;
     jsonObject[VERSION_CODE] = versionCode_;
     jsonObject[BUNDLE_PATHS] = bundlePaths_;
+    jsonObject[FORCE_UNINSTALL_USERS] = forceUninstalledUsers_;
     jsonObject[APP_TYPE] = appType_;
     jsonObject[REMOVABLE] = removable_;
     jsonObject[IS_UNINSTALLED] = isUninstalled_;
@@ -91,12 +96,7 @@ std::string PreInstallBundleInfo::ToString() const
     jsonObject[ICON_ID] = iconId_;
     jsonObject[SYSTEM_APP] = systemApp_;
     jsonObject[BUNDLE_TYPE] = bundleType_;
-    try {
-        return jsonObject.dump();
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return jsonObject.dump();
 }
 
 void PreInstallBundleInfo::CalculateHapTotalSize()

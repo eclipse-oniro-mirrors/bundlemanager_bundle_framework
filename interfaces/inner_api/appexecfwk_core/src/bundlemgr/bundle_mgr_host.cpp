@@ -430,6 +430,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             errCode = this->HandleGetAppControlProxy(data, reply);
             break;
 #endif
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_MGR_EXT_PROXY):
+            errCode = this->HandleGetBundleMgrExtProxy(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_DEBUG_MODE):
             errCode = this->HandleSetDebugMode(data, reply);
             break;
@@ -2856,6 +2859,22 @@ ErrCode BundleMgrHost::HandleGetAppControlProxy(MessageParcel &data, MessageParc
     return ERR_OK;
 }
 #endif
+
+ErrCode BundleMgrHost::HandleGetBundleMgrExtProxy(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IBundleMgrExt> bundleMgrExtProxy = GetBundleMgrExtProxy();
+    if (bundleMgrExtProxy == nullptr) {
+        APP_LOGE("bundleMgrExtProxy is nullptr");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteRemoteObject(bundleMgrExtProxy->AsObject())) {
+        APP_LOGE("WriteRemoteObject failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
 
 ErrCode BundleMgrHost::HandleGetSandboxAbilityInfo(MessageParcel &data, MessageParcel &reply)
 {

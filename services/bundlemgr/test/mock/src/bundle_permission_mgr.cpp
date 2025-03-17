@@ -300,6 +300,21 @@ Security::AccessToken::HapInfoParams CreateHapInfoParams(const InnerBundleInfo &
     return params;
 }
 
+#ifdef BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE
+int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+    const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
+    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities)
+{
+    return -1;
+}
+
+int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
+    const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
+    const std::string &appServiceCapabilities)
+{
+    return -1;
+}
+#else
 int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx &tokenIdeEx,
     Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities)
@@ -313,7 +328,7 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
 {
     return 0;
 }
-
+#endif
 std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult)
 {
     return "";

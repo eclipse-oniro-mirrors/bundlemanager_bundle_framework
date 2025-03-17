@@ -109,6 +109,7 @@ ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir, 
         return ret;
     }
     if (!InitDataMgr()) {
+        APP_LOGE("InitDataMgr fail");
         return ERR_APPEXECFWK_NULL_PTR;
     }
     if (dataMgr_->IsSystemHsp(bundleName)) {
@@ -137,6 +138,7 @@ ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir, 
 bool HmpBundleInstaller::GetRequiredUserIds(std::string bundleName, std::set<int32_t> &userIds)
 {
     if (!InitDataMgr()) {
+        APP_LOGE("InitDataMgr fail");
         return false;
     }
     // if bundle exists, return the set of user ids that have installed the bundle
@@ -279,6 +281,7 @@ void HmpBundleInstaller::UpdateInnerBundleInfo(const std::string &bundleName,
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     if (!InitDataMgr()) {
+        APP_LOGE("InitDataMgr fail");
         return;
     }
     InnerBundleInfo oldBundleInfo;
@@ -306,6 +309,7 @@ void HmpBundleInstaller::UpdateInnerBundleInfo(const std::string &bundleName,
 bool HmpBundleInstaller::UninstallSystemBundle(const std::string &bundleName, const std::string &modulePackage)
 {
     if (!InitDataMgr()) {
+        APP_LOGE("InitDataMgr fail");
         return false;
     }
 
@@ -335,6 +339,7 @@ bool HmpBundleInstaller::UninstallSystemBundle(const std::string &bundleName, co
 void HmpBundleInstaller::CheckUninstallSystemHsp(const std::string &bundleName)
 {
     if (!InitDataMgr()) {
+        APP_LOGE("InitDataMgr fail");
         return;
     }
     InnerBundleInfo info;
@@ -379,6 +384,7 @@ void HmpBundleInstaller::UpdatePreInfoInDb(const std::string &bundleName,
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     if (!InitDataMgr()) {
+        APP_LOGE("InitDataMgr fail");
         return;
     }
     PreInstallBundleInfo preInstallBundleInfo;
@@ -422,6 +428,7 @@ void HmpBundleInstaller::UpdateBundleInfoForHmp(const std::string &filePath, std
 bool HmpBundleInstaller::GetIsRemovable(const std::string &bundleName)
 {
     if (!InitDataMgr()) {
+        APP_LOGE("InitDataMgr fail");
         return true;
     }
     InnerBundleInfo info;

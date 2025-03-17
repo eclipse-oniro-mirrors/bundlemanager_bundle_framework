@@ -19,7 +19,7 @@
 #include "bundle_user_info.h"
 #include "inner_bundle_clone_info.h"
 #include "json_util.h"
-#include "plugin_bundle_info.h"
+#include "plugin/plugin_bundle_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {

@@ -86,6 +86,9 @@ const char* HAPS_FILE_NEEDED =
 const char* CREATE_APP_CLONE = "CreateAppClone";
 const char* DESTROY_APP_CLONE = "destroyAppClone";
 const char* INSTALL_PREEXISTING_APP = "installPreexistingApp";
+const char* INSTALL_PLUGIN = "InstallPlugin";
+const char* UNINSTALL_PLUGIN = "UninstallPlugin";
+const char* PLUGIN_BUNDLE_NAME = "pluginBundleName";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
@@ -412,6 +415,10 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_DELIVERY_FILE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
         { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_REMOVE_FILE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
         { IStatusReceiver::ERR_INSTALL_CODE_APP_CONTROLLED_FAILED, ERROR_INSTALL_FAILED_CONTROLLED},
+        { IStatusReceiver::ERR_APPEXECFWK_INSTALL_FORCE_UNINSTALLED_BUNDLE_NOT_ALLOW_RECOVER,
+            ERROR_INSTALL_FAILED_CONTROLLED},
+        { IStatusReceiver::ERR_APPEXECFWK_INSTALL_PREINSTALL_BUNDLE_ONLY_ALLOW_FORCE_UNINSTALLED_BY_EDC,
+            ERROR_INSTALL_FAILED_CONTROLLED},
         { IStatusReceiver::ERR_INSTALL_NATIVE_FAILED, ERROR_INSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_UNINSTALL_NATIVE_FAILED, ERROR_UNINSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_UNINSTALL_DISPOSED_RULE_DENIED, ERROR_APPLICATION_UNINSTALL},
@@ -1975,6 +1982,209 @@ napi_value InstallPreexistingApp(napi_env env, napi_callback_info info)
         InstallPreexistingAppExec, InstallPreexistingAppComplete);
     asyncCallbackInfo.release();
     APP_LOGI("call napi done");
+    return promise;
+}
+
+
+void ParseInstallPluginParam(napi_env env, napi_value args, InstallPluginParam &installPluginParam)
+{
+    if (!ParseUserId(env, args, installPluginParam.userId)) {
+        APP_LOGW("parse userId failed. assign default value");
+    }
+    if (!ParseParameters(env, args, installPluginParam.parameters)) {
+        APP_LOGW("parse parameters failed. using default value");
+    }
+}
+
+static ErrCode InnerInstallPlugin(const std::string &hostBundleName,
+    const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode result = iBundleInstaller->InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
+    APP_LOGD("InstallPlugin result is %{public}d", result);
+    return result;
+}
+
+void InstallPluginExec(napi_env env, void *data)
+{
+    PluginCallbackInfo *asyncCallbackInfo = reinterpret_cast<PluginCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InnerInstallPlugin(asyncCallbackInfo->hostBundleName,
+        asyncCallbackInfo->pluginFilePaths, asyncCallbackInfo->installPluginParam);
+}
+
+void InstallPluginComplete(napi_env env, napi_status status, void *data)
+{
+    PluginCallbackInfo *asyncCallbackInfo = reinterpret_cast<PluginCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<PluginCallbackInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
+    APP_LOGD("InstallPluginComplete err is %{public}d", asyncCallbackInfo->err);
+
+    napi_value result[ARGS_SIZE_ONE] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
+    } else {
+        result[FIRST_PARAM] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            INSTALL_PLUGIN, Constants::PERMISSION_INSTALL_PLUGIN);
+    }
+    CommonFunc::NapiReturnDeferred<PluginCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value InstallPlugin(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("begin to InstallPlugin");
+    NapiArg args(env, info);
+    std::unique_ptr<PluginCallbackInfo> asyncCallbackInfo = std::make_unique<PluginCallbackInfo>(env);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGW("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    size_t argc = args.GetMaxArgc();
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->hostBundleName)) {
+                APP_LOGW("parse hostBundleName failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseStringArray(env, asyncCallbackInfo->pluginFilePaths, args[i])) {
+                APP_LOGE("pluginFilePaths invalid");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, FILE_PATH, TYPE_ARRAY);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_TWO && valueType == napi_object) {
+            ParseInstallPluginParam(env, args[i], asyncCallbackInfo->installPluginParam);
+        } else {
+            APP_LOGW("The number of parameters is incorrect");
+            BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    if (asyncCallbackInfo->installPluginParam.userId == Constants::UNSPECIFIED_USERID) {
+        asyncCallbackInfo->installPluginParam.userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<PluginCallbackInfo>(
+        env, asyncCallbackInfo.get(), INSTALL_PLUGIN, InstallPluginExec, InstallPluginComplete);
+    asyncCallbackInfo.release();
+    APP_LOGI("call napi InstallPlugin done");
+    return promise;
+}
+
+static ErrCode InnerUninstallPlugin(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const InstallPluginParam &installPluginParam)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode result = iBundleInstaller->UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);
+    APP_LOGD("UninstallPlugin result is %{public}d", result);
+    return result;
+}
+
+void UninstallPluginExec(napi_env env, void *data)
+{
+    PluginCallbackInfo *asyncCallbackInfo = reinterpret_cast<PluginCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    APP_LOGD("param: hostBundleName = %{public}s, pluginBundleName = %{public}s, userId = %{public}d",
+        asyncCallbackInfo->hostBundleName.c_str(),
+        asyncCallbackInfo->pluginBundleName.c_str(),
+        asyncCallbackInfo->installPluginParam.userId);
+    asyncCallbackInfo->err = InnerUninstallPlugin(asyncCallbackInfo->hostBundleName,
+        asyncCallbackInfo->pluginBundleName, asyncCallbackInfo->installPluginParam);
+}
+
+void UninstallPluginComplete(napi_env env, napi_status status, void *data)
+{
+    PluginCallbackInfo *asyncCallbackInfo = reinterpret_cast<PluginCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<PluginCallbackInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
+    APP_LOGD("UninstallPluginComplete err is %{public}d", asyncCallbackInfo->err);
+
+    napi_value result[ARGS_SIZE_ONE] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
+    } else {
+        result[FIRST_PARAM] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            UNINSTALL_PLUGIN, Constants::PERMISSION_UNINSTALL_PLUGIN);
+    }
+    CommonFunc::NapiReturnDeferred<PluginCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value UninstallPlugin(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("begin to UninstallPlugin");
+    NapiArg args(env, info);
+    std::unique_ptr<PluginCallbackInfo> asyncCallbackInfo = std::make_unique<PluginCallbackInfo>(env);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGW("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    size_t argc = args.GetMaxArgc();
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->hostBundleName)) {
+                APP_LOGW("parse hostBundleName failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->pluginBundleName)) {
+                APP_LOGW("parse pluginBundleName failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PLUGIN_BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_TWO && valueType == napi_object) {
+            ParseInstallPluginParam(env, args[i], asyncCallbackInfo->installPluginParam);
+        } else {
+            APP_LOGW("The number of parameters is incorrect");
+            BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    if (asyncCallbackInfo->installPluginParam.userId == Constants::UNSPECIFIED_USERID) {
+        asyncCallbackInfo->installPluginParam.userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<PluginCallbackInfo>(
+        env, asyncCallbackInfo.get(), UNINSTALL_PLUGIN, UninstallPluginExec, UninstallPluginComplete);
+    asyncCallbackInfo.release();
+    APP_LOGI("call napi UninstallPlugin done");
     return promise;
 }
 } // AppExecFwk

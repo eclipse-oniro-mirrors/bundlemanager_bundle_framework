@@ -160,6 +160,16 @@ constexpr const char* ERR_MSG_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL =
     "Failed to install the HAP or HSP because the app distribution type is not allowed.";
 constexpr const char* ERR_MSG_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED =
     "Failed to install the HAP and restore to preinstalled bundle.";
+constexpr const char* ERR_MSG_PLUGIN_ID_CHECK_ERROR =
+    "Failed to install the plugin because the plugin id fails to be verified.";
+constexpr const char* ERR_MSG_CHECK_SUPPORT_PERMISSION =
+    "Failed to install the plugin because the host application lacks ohos.permission.kernel.SUPPORT_PLUGIN.";
+constexpr const char* ERROR_MSG_DEVICE_NOT_SUPPORT_PLUGIN =
+    "Failed to install the plugin because the current device does not support plugin.";
+constexpr const char* ERROR_MSG_PLUGIN_ID_PARSE_ERROR =
+    "Failed to install the plugin because the plugin id fails to be parsed.";
+constexpr const char* ERROR_MSG_PLUGIN_NOT_FOUND =
+    "Failed to uninstall the plugin because the specified plugin is not found.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -244,7 +254,12 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INSTALL_FAILED_INCONSISTENT_SIGNATURE, ERR_MSG_INSTALL_FAILED_INCONSISTENT_SIGNATURE },
     { ERROR_INVALID_UNINSTALL_RULE, ERR_MSG_INVALID_UNINSTALL_RULE },
     { ERROR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL, ERR_MSG_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL },
-    { ERROR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED, ERR_MSG_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED }
+    { ERROR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED, ERR_MSG_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED },
+    { ERROR_PLUGIN_ID_CHECK_ERROR, ERR_MSG_PLUGIN_ID_CHECK_ERROR},
+    { ERROR_CHECK_SUPPORT_PERMISSION, ERR_MSG_CHECK_SUPPORT_PERMISSION},
+    { ERROR_DEVICE_NOT_SUPPORT_PLUGIN, ERROR_MSG_DEVICE_NOT_SUPPORT_PLUGIN},
+    { ERROR_PLUGIN_ID_PARSE_ERROR, ERROR_MSG_PLUGIN_ID_PARSE_ERROR },
+    { ERROR_PLUGIN_NOT_FOUND, ERROR_MSG_PLUGIN_NOT_FOUND }
 };
 } // namespace
 

@@ -86,12 +86,7 @@ std::string CodeSignatureParam::ToString() const
         { CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY, isCompileSdkOpenHarmony },
         { CODE_SIGNATURE_IS_COMPRESS_NATIVE_LIBRARY, isCompressNativeLibrary },
     };
-    try {
-        return codeSignatureParamJson.dump(Constants::DUMP_INDENT);
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return codeSignatureParamJson.dump(Constants::DUMP_INDENT);
 }
 } // AppExecFwk
 } // OHOS

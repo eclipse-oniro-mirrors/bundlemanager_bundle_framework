@@ -29,6 +29,7 @@
 #include "json_constants.h"
 #include "json_serializer.h"
 #include "nlohmann/json.hpp"
+#include "plugin/plugin_bundle_info.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -4894,4 +4895,107 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12700, Function | Sma
     info.DeleteHspModuleByVersion(versionCode);
     EXPECT_EQ(info.innerSharedModuleInfos_.size(), 0);
 }
+
+/**
+ * @tc.number: InnerBundleInfo_12800
+ * @tc.name: Test GetPluginBundleInfo
+ * @tc.desc: Test the GetPluginBundleInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12800, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    EXPECT_EQ(info.FromJson(innerBundleInfoJson_), OHOS::ERR_OK);
+    PluginBundleInfo pluginBundleInfo;
+    info.GetPluginBundleInfo(BUNDLE_NAME, pluginBundleInfo);
+    EXPECT_EQ(pluginBundleInfo.pluginBundleName, info.GetBundleName());
+    EXPECT_EQ(pluginBundleInfo.pluginModuleInfos.size(), info.innerModuleInfos_.size());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_12900
+ * @tc.name: Test AddPluginBundleInfo
+ * @tc.desc: Test the AddPluginBundleInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12900, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    PluginBundleInfo pluginBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = 100;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    bool result = true;
+    result = info.AddPluginBundleInfo(pluginBundleInfo, 100);
+    EXPECT_EQ(result, true);
+
+    result = info.AddPluginBundleInfo(pluginBundleInfo, 101);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_13000
+ * @tc.name: Test RemovePluginBundleInfo
+ * @tc.desc: Test the RemovePluginBundleInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13000, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    PluginBundleInfo pluginBundleInfo;
+    pluginBundleInfo.pluginBundleName = TEST_BUNDLE_NAME;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = 100;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    bool result = true;
+    result = info.AddPluginBundleInfo(pluginBundleInfo, 100);
+    EXPECT_EQ(result, true);
+    result = info.RemovePluginBundleInfo(TEST_BUNDLE_NAME, 101);
+    EXPECT_EQ(result, false);
+    result = info.RemovePluginBundleInfo(BUNDLE_NAME, 100);
+    EXPECT_EQ(result, true);
+    result = info.RemovePluginBundleInfo(TEST_BUNDLE_NAME, 100);
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_13100
+ * @tc.name: Test HasMultiUserPlugin
+ * @tc.desc: Test the HasMultiUserPlugin of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerBundleUserInfo innerBundleUserInfo1;
+    innerBundleUserInfo1.bundleUserInfo.userId = 100;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo1);
+
+    bool result = true;
+    result = info.HasMultiUserPlugin(TEST_BUNDLE_NAME);
+    EXPECT_EQ(result, false);
+
+    InnerBundleUserInfo innerBundleUserInfo2;
+    innerBundleUserInfo2.bundleUserInfo.userId = 101;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo2);
+
+    result = info.HasMultiUserPlugin(TEST_BUNDLE_NAME);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_13200
+ * @tc.name: Test GetPluginInstalledUser
+ * @tc.desc: Test the GetPluginInstalledUser of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerBundleUserInfo innerBundleUserInfo1;
+    innerBundleUserInfo1.bundleUserInfo.userId = 100;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo1);
+
+    std::unordered_set<int32_t> userIds;
+    info.GetPluginInstalledUser(TEST_BUNDLE_NAME, userIds);
+    EXPECT_EQ(userIds.size(), 0);
+}
+
 } // OHOS

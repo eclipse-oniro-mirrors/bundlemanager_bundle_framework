@@ -1,0 +1,86 @@
+# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+import("../../../../../appexecfwk.gni")
+import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
+
+module_output_path = "bundle_framework/bundle_framework"
+
+ohos_unittest("BmsBundleMgrExtTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  use_exceptions = true
+  module_out_path = module_output_path
+  include_dirs = [
+    "${services_path}/bundlemgr/include/bundlemgr_ext",
+    "${services_path}/bundlemgr/include/rdb",
+  ]
+
+  sources = bundle_mgr_source
+  sources += bundle_install_sources
+  sources += [
+    "${inner_api_path}/bundlemgr_extension/src/bms_extension_data_mgr.cpp",
+    "${inner_api_path}/bundlemgr_extension/src/bms_extension_profile.cpp",
+    "${inner_api_path}/bundlemgr_extension/src/bundle_mgr_ext_register.cpp",
+    "${services_path}/bundlemgr/src/bundle_data_storage_rdb.cpp",
+    "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
+    "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "bms_bundle_mgr_ext_test.cpp",
+  ]
+
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${core_path}:appexecfwk_core",
+  ]
+  deps += bundle_install_deps
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:app_manager",
+    "access_token:el5_filekey_manager_sdk",
+    "access_token:libprivacy_sdk",
+    "access_token:libtokenid_sdk",
+    "appspawn:appspawn_client",
+    "appspawn:hnpapi",
+    "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
+    "common_event_service:cesfwk_innerkits",
+    "eventhandler:libeventhandler",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "json:nlohmann_json_static",
+    "jsoncpp:jsoncpp",
+    "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
+    "zlib:shared_libz",
+  ]
+  external_deps += bundle_install_external_deps
+}
+
+group("unittest") {
+  testonly = true
+  deps = [ ":BmsBundleMgrExtTest" ]
+}

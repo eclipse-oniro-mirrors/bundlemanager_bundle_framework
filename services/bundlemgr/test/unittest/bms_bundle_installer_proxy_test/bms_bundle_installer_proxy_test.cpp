@@ -867,5 +867,42 @@ HWTEST_F(BmsBundleInstallerProxyTest, InstallExisted_0100, Function | MediumTest
     auto res = bundleInstallerProxy.InstallExisted(bundleName, userId);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_EXISTED_WRITE_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: InstallPlugin_0100
+ * @tc.name: test the InstallPlugin
+ * @tc.desc: 1. send request fail
+ *           2. test InstallPlugin
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, InstallPlugin_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string hostBundleName = "bundleName";
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = 100;
+    std::vector<std::string> pluginFilePaths;
+    pluginFilePaths.emplace_back("bundlePath");
+    auto res = bundleInstallerProxy.InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PLUGIN_INSTALL_SEND_REQUEST_ERROR);
+}
+
+/**
+ * @tc.number: UninstallPlugin_0100
+ * @tc.name: test the UninstallPlugin
+ * @tc.desc: 1. send request fail
+ *           2. test UninstallPlugin
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, UninstallPlugin_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string hostBundleName = "bundleName";
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = 100;
+    std::string pluginBundleName = "pluginName";
+    auto res = bundleInstallerProxy.UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PLUGIN_INSTALL_SEND_REQUEST_ERROR);
+}
 }
 }

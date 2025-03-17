@@ -43,6 +43,4 @@ struct PluginBundleInfo : public Parcelable {
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
-
-
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_PLUGIN_BUNDLE_INFO_H

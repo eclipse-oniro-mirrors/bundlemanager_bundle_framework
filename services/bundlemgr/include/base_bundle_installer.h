@@ -615,7 +615,7 @@ private:
     ErrCode CreateArkProfile(
         const std::string &bundleName, int32_t userId, int32_t uid, int32_t gid) const;
     ErrCode DeleteArkProfile(const std::string &bundleName, int32_t userId) const;
-    bool RemoveDataPreloadHapFiles(const std::string &bundleName, bool forceRemove = false) const;
+    bool RemoveDataPreloadHapFiles(const std::string &bundleName) const;
     bool IsDataPreloadHap(const std::string &path) const;
     ErrCode ExtractArkProfileFile(const std::string &modulePath, const std::string &bundleName,
         int32_t userId) const;
@@ -724,8 +724,11 @@ private:
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
-    ErrCode CleanShaderCache(const std::string &bundleName) const;
+    ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
+    ErrCode CleanBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
+        const std::string &bundleName, int32_t userId) const;
     void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
+    ErrCode DeleteCloudShader(const std::string &bundleName) const;
     bool VerifyActivationLock() const;
     bool VerifyActivationLockToken() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
@@ -814,6 +817,8 @@ private:
     void CheckPreBundleRecoverResult(ErrCode &result);
 
     bool IsAllowEnterPrise();
+    void MarkIsForceUninstall(const std::string &bundleName, bool isForceUninstalled);
+    bool CheckCanInstallPreBundle(const std::string &bundleName, const int32_t userId);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

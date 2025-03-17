@@ -2191,12 +2191,7 @@ std::string InnerBundleInfo::ToString() const
 {
     nlohmann::json j;
     ToJson(j);
-    try {
-        return j.dump();
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("json dump failed: %{public}s", e.what());
-        return "";
-    }
+    return j.dump();
 }
 
 void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, ApplicationInfo &appInfo,
@@ -4885,5 +4880,91 @@ void InnerBundleInfo::SetDFXParamStatus()
     SetHwasanEnabled(IsHwasanEnabled());
     SetUbsanEnabled(IsUbsanEnabled());
 }
+
+bool InnerBundleInfo::GetPluginBundleInfo(const std::string &bundleName,
+    PluginBundleInfo &pluginBundleInfo) const
+{
+    pluginBundleInfo.pluginBundleName = GetBundleName();
+    pluginBundleInfo.versionCode = baseBundleInfo_->versionCode;
+    pluginBundleInfo.versionName = baseBundleInfo_->versionName;
+    pluginBundleInfo.label = baseApplicationInfo_->label;
+    pluginBundleInfo.appIdentifier = GetAppIdentifier();
+    pluginBundleInfo.appId = baseBundleInfo_->appId;
+    pluginBundleInfo.icon = baseApplicationInfo_->icon;
+    pluginBundleInfo.labelId = baseApplicationInfo_->labelId;
+    pluginBundleInfo.iconId = baseApplicationInfo_->iconId;
+    for (const auto &info : innerModuleInfos_) {
+        PluginModuleInfo pluginModuleInfo;
+        pluginModuleInfo.moduleName = info.second.name;
+        pluginModuleInfo.hapPath = info.second.hapPath;
+        pluginModuleInfo.cpuAbi = info.second.cpuAbi;
+        pluginModuleInfo.nativeLibraryPath = bundleName + ServiceConstants::PATH_SEPARATOR +
+            info.second.nativeLibraryPath;
+        pluginModuleInfo.nativeLibraryFileNames = info.second.nativeLibraryFileNames;
+        pluginModuleInfo.descriptionId = info.second.descriptionId;
+        pluginModuleInfo.description = info.second.description;
+        pluginBundleInfo.pluginModuleInfos.emplace_back(pluginModuleInfo);
+    }
+    return true;
+}
+
+bool InnerBundleInfo::AddPluginBundleInfo(const PluginBundleInfo &pluginBundleInfo, const int32_t userId)
+{
+    auto &key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE("add pluginBundleInfo:%{public}s failed, userId: %{public}d not found in bundleName:%{public}s",
+            pluginBundleInfo.pluginBundleName.c_str(), userId, GetBundleName().c_str());
+        return false;
+    }
+    auto &infos = infoItem->second.pluginBundleInfos;
+    infos[pluginBundleInfo.pluginBundleName] = pluginBundleInfo;
+    APP_LOGD("bundleName: %{public}s add plugin info, userId: %{public}d, plugin:%{public}s",
+        GetBundleName().c_str(), userId, pluginBundleInfo.pluginBundleName.c_str());
+    return true;
+}
+
+bool InnerBundleInfo::RemovePluginBundleInfo(const std::string &pluginBundleName, const int32_t userId)
+{
+    auto &key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE("remove pluginBundleInfo:%{public}s failed, userId: %{public}d not found in bundleName:%{public}s",
+            pluginBundleName.c_str(), userId, GetBundleName().c_str());
+        return false;
+    }
+    auto &infos = infoItem->second.pluginBundleInfos;
+    infos.erase(pluginBundleName);
+    APP_LOGD("bundleName: %{public}s remove plugin info, userId: %{public}d, plugin:%{public}s",
+        GetBundleName().c_str(), userId, pluginBundleName.c_str());
+    return true;
+}
+
+bool InnerBundleInfo::HasMultiUserPlugin(const std::string &pluginBundleName) const
+{
+    if (innerBundleUserInfos_.size() <= 1) {
+        return false;
+    }
+    PluginBundleInfo pluginBundleInfo;
+    int32_t cnt = 0;
+    for (auto &info : innerBundleUserInfos_) {
+        if (info.second.GetPluginBundleInfo(pluginBundleName, pluginBundleInfo)) {
+            cnt++;
+        }
+    }
+    return cnt > 1;
+}
+
+void InnerBundleInfo::GetPluginInstalledUser(const std::string &pluginBundleName,
+    std::unordered_set<int32_t> &userIds) const
+{
+    PluginBundleInfo pluginBundleInfo;
+    for (auto &info : innerBundleUserInfos_) {
+        if (info.second.GetPluginBundleInfo(pluginBundleName, pluginBundleInfo)) {
+            userIds.insert(info.second.bundleUserInfo.userId);
+        }
+    }
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

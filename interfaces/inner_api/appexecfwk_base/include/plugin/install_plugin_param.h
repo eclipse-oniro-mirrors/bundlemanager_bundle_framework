@@ -26,11 +26,13 @@ namespace OHOS {
 namespace AppExecFwk {
 struct InstallPluginParam : public Parcelable {
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    std::unordered_map<std::string, std::string> parameters;
+    std::map<std::string, std::string> parameters;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static InstallPluginParam *Unmarshalling(Parcel &parcel);
+
+    bool IsRenameInstall() const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

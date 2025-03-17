@@ -102,6 +102,7 @@ constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 constexpr const char* ENTRY = "entry";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
+constexpr const char* RESOURCE_STRING_PREFIX = "$string:";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -3803,6 +3804,11 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
         if (!preInstallBundleInfo.IsRemovable()) {
             continue;
         }
+        if (preInstallBundleInfo.HasForceUninstalledUser(userId)) {
+            APP_LOGW("-n %{public}s is force unisntalled in -u %{public}d",
+                preInstallBundleInfo.GetBundleName().c_str(), userId);
+            continue;
+        }
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         auto infoItem = bundleInfos_.find(preInstallBundleInfo.GetBundleName());
         if (infoItem == bundleInfos_.end()) {
@@ -5329,9 +5335,82 @@ bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
         shortcutInfo.moduleName = abilityInfo.moduleName;
         info.InnerProcessShortcut(item, shortcutInfo);
         shortcutInfo.sourceType = 1;
+        APP_LOGI("shortcutInfo: -n %{public}s, id %{public}s, iconId %{public}d, labelId %{public}d",
+            shortcutInfo.bundleName.c_str(), shortcutInfo.id.c_str(), shortcutInfo.iconId, shortcutInfo.labelId);
         shortcutInfos.emplace_back(shortcutInfo);
     }
+    (void)InnerProcessShortcutId(abilityInfo.hapPath, shortcutInfos);
     return true;
+}
+
+#ifdef GLOBAL_RESMGR_ENABLE
+std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceManager(const std::string &hapPath) const
+{
+    if (hapPath.empty()) {
+        APP_LOGE("hapPath is empty");
+        return nullptr;
+    }
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+    if (!resConfig) {
+        APP_LOGE("resConfig is nullptr");
+        return nullptr;
+    }
+#ifdef GLOBAL_I18_ENABLE
+    std::map<std::string, std::string> configs;
+    OHOS::Global::I18n::LocaleInfo locale(Global::I18n::LocaleConfig::GetEffectiveLanguage(), configs);
+    resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
+#endif
+    resourceManager->UpdateResConfig(*resConfig);
+    if (!resourceManager->AddResource(hapPath.c_str(), Global::Resource::SELECT_STRING)) {
+        APP_LOGW("AddResource failed");
+    }
+    return resourceManager;
+}
+#endif
+
+bool BundleDataMgr::InnerProcessShortcutId(const std::string &hapPath, std::vector<ShortcutInfo> &shortcutInfos) const
+{
+#ifdef GLOBAL_RESMGR_ENABLE
+    bool needToParseShortcutId = false;
+    for (const auto &info : shortcutInfos) {
+        if (info.id.find(RESOURCE_STRING_PREFIX) == 0) {
+            needToParseShortcutId = true;
+            break;
+        }
+    }
+    if (!needToParseShortcutId) {
+        return false;
+    }
+    APP_LOGI("shortcut id conatins $string:");
+    auto resourceManager = GetResourceManager(hapPath);
+    if (resourceManager == nullptr) {
+        APP_LOGI("create resource mgr failed");
+        return false;
+    }
+
+    for (auto &info : shortcutInfos) {
+        if (info.id.find(RESOURCE_STRING_PREFIX) != 0) {
+            continue;
+        }
+        int32_t id = static_cast<uint32_t>(atoi(info.id.substr(std::string(RESOURCE_STRING_PREFIX).size()).c_str()));
+        if (id <= 0) {
+            APP_LOGE("shortcut id is less than 0");
+            continue;
+        }
+        std::string shortcutId;
+        OHOS::Global::Resource::RState errValue = resourceManager->GetStringById(id, shortcutId);
+        if (errValue != OHOS::Global::Resource::RState::SUCCESS) {
+            APP_LOGE("GetStringById failed, id:%{public}d", id);
+            continue;
+        }
+        info.id = shortcutId;
+    }
+    return true;
+
+#else
+    return true;
+#endif
 }
 
 ErrCode BundleDataMgr::GetShortcutInfoV9(
@@ -10109,6 +10188,91 @@ bool BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, Abilit
     }
     int32_t flags = static_cast<int32_t>(GET_ABILITY_INFO_DEFAULT);
     return ExplicitQueryAbilityInfo(want, flags, userId, abilityInfo);
+}
+
+ErrCode BundleDataMgr::AddPluginInfo(const InnerBundleInfo &innerBundleInfo,
+    const PluginBundleInfo &pluginBundleInfo, const int32_t userId)
+{
+    APP_LOGD("start AddPluginInfo");
+    std::string bundleName = innerBundleInfo.GetBundleName();
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo newInfo = item->second;
+    if (!newInfo.AddPluginBundleInfo(pluginBundleInfo, userId)) {
+        APP_LOGE("%{public}s add plugin info failed", bundleName.c_str());
+        return ERR_APPEXECFWK_ADD_PLUGIN_INFO_ERROR;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(newInfo)) {
+        APP_LOGE("save InnerBundleInfo:%{public}s failed", bundleName.c_str());
+        return ERR_APPEXECFWK_ADD_PLUGIN_INFO_ERROR;
+    }
+    bundleInfos_.at(bundleName) = newInfo;
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::RemovePluginInfo(const InnerBundleInfo &innerBundleInfo,
+    const std::string &pluginBundleName, const int32_t userId)
+{
+    APP_LOGD("start RemovePluginInfo");
+    std::string bundleName = innerBundleInfo.GetBundleName();
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo newInfo = item->second;
+    if (!newInfo.RemovePluginBundleInfo(pluginBundleName, userId)) {
+        APP_LOGE("%{public}s remove plugin info failed", bundleName.c_str());
+        return ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(newInfo)) {
+        APP_LOGE("save InnerBundleInfo:%{public}s failed", bundleName.c_str());
+        return ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR;
+    }
+    bundleInfos_.at(bundleName) = newInfo;
+    return ERR_OK;
+}
+
+bool BundleDataMgr::GetPluginBundleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+    PluginBundleInfo &pluginBundleInfo, const int32_t userId)
+{
+    APP_LOGD("bundleName:%{public}s start GetPluginBundleInfo", hostBundleName.c_str());
+    if (hostBundleName.empty() || pluginBundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return false;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(hostBundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW_NOFUNC("%{public}s GetPluginBundleInfo not found %{public}s", hostBundleName.c_str(),
+            pluginBundleName.c_str());
+        return false;
+    }
+
+    if (userId == Constants::ALL_USERID) {
+        auto &infos = infoItem->second.GetInnerBundleUserInfos();
+        for (auto &info : infos) {
+            if (info.second.GetPluginBundleInfo(pluginBundleName, pluginBundleInfo)) {
+                APP_LOGD("%{public}s GetPluginBundleInfo success %{public}s", hostBundleName.c_str(),
+                    pluginBundleName.c_str());
+                return true;
+            }
+        }
+    } else {
+        InnerBundleUserInfo innerBundleUserInfo;
+        if (!infoItem->second.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+            APP_LOGE("GetInnerBundleUserInfo failed");
+            return false;
+        }
+        return innerBundleUserInfo.GetPluginBundleInfo(pluginBundleName, pluginBundleInfo);
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

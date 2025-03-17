@@ -134,6 +134,7 @@ constexpr const char* PERMISSION_INSTALL_QUICK_FIX_BUNDLE = "ohos.permission.INS
 constexpr const char* PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE = "ohos.permission.UNINSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
 constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
+constexpr const char* PERMISSION_SUPPORT_PLUGIN = "ohos.permission.kernel.SUPPORT_PLUGIN";
 
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 // max number of haps under one direction
@@ -166,6 +167,7 @@ constexpr const char* ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle
 constexpr const char* IS_ENTERPRISE_DEVICE = "const.edm.is_enterprise_device";
 constexpr const char* DEVELOPERMODE_STATE = "const.security.developermode.state";
 constexpr const char* BMS_DATA_PRELOAD = "persist.bms.data.preload";
+constexpr const char* IS_SUPPORT_PLUGIN = "const.bms.support_plugin";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 // hmdfs and sharefs config
@@ -183,6 +185,12 @@ constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
 constexpr const char* CLOUD_SHADER_COMMON_PATH = "/data/local/shader_cache/cloud/common";
 constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlename";
+// new shader
+constexpr int16_t NEW_SHADRE_CACHE_MODE = 02775;
+constexpr int16_t NEW_SHADRE_CACHE_GID = 3099;
+constexpr const char* SHADER_CACHE = "shader_cache";
+constexpr const char* NEW_SHADER_CACHE_PATH = "/data/app/el1/%/base/";
+constexpr const char* NEW_CLOUD_SHADER_PATH = "/data/app/el1/public/shader_cache/cloud/";
 // apiReleaseType
 constexpr const char* API_RELEASE_TYPE_RELEASE = "Release";
 constexpr const char* API_RELEASE_TYPE_BETA = "Beta";

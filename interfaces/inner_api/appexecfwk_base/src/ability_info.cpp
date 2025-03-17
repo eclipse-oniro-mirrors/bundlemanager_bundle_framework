@@ -542,11 +542,7 @@ void AbilityInfo::Dump(std::string prefix, int fd)
         nlohmann::json jsonObject = *this;
         std::string result;
         result.append(prefix);
-        try {
-            result.append(jsonObject.dump(Constants::DUMP_INDENT));
-        } catch (const nlohmann::json::type_error &e) {
-            APP_LOGE("json dump failed: %{public}s", e.what());
-        }
+        result.append(jsonObject.dump(Constants::DUMP_INDENT));
         int ret = TEMP_FAILURE_RETRY(write(fd, result.c_str(), result.size()));
         if (ret < 0) {
             APP_LOGE("dump Abilityinfo write error : %{public}d", errno);

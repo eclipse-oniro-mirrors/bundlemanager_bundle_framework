@@ -36,6 +36,7 @@
 #include "inner_bundle_user_info.h"
 #include "ipc/check_encryption_param.h"
 #include "json_util.h"
+#include "plugin/plugin_bundle_info.h"
 #include "preinstalled_application_info.h"
 #include "quick_fix/app_quick_fix.h"
 #include "quick_fix/hqf_info.h"
@@ -2287,6 +2288,11 @@ public:
     {
         return baseApplicationInfo_->applicationFlags;
     }
+    bool GetPluginBundleInfo(const std::string &bundleName, PluginBundleInfo &pluginBundleInfo) const;
+    bool AddPluginBundleInfo(const PluginBundleInfo &pluginBundleInfo, const int32_t userId);
+    bool RemovePluginBundleInfo(const std::string &pluginBundleName, const int32_t userId);
+    bool HasMultiUserPlugin(const std::string &pluginBundleName) const;
+    void GetPluginInstalledUser(const std::string &pluginBundleName, std::unordered_set<int32_t> &userIds) const;
 
 private:
     bool IsExistLauncherAbility() const;
