@@ -2177,7 +2177,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
     appInfo = *baseApplicationInfo_;
-    appInfo.codeLanguage = GetAppCodeLanguage();
+    appInfo.codeLanguage = GetApplicationCodeLanguage();
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
         return;
     }
@@ -2236,7 +2236,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
-    appInfo.codeLanguage = GetAppCodeLanguage();
+    appInfo.codeLanguage = GetApplicationCodeLanguage();
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -2378,7 +2378,7 @@ bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo)
     bundleInfo = *baseBundleInfo_;
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, Constants::ALL_USERID);
     bundleInfo.applicationInfo = *baseApplicationInfo_;
-    bundleInfo.applicationInfo.codeLanguage = GetAppCodeLanguage();
+    bundleInfo.applicationInfo.codeLanguage = GetApplicationCodeLanguage();
     return true;
 }
 
@@ -4038,7 +4038,7 @@ ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
     }
     bundleInfo = *baseBundleInfo_;
     bundleInfo.applicationInfo = *baseApplicationInfo_;
-    bundleInfo.applicationInfo.codeLanguage = GetAppCodeLanguage();
+    bundleInfo.applicationInfo.codeLanguage = GetApplicationCodeLanguage();
     for (const auto &info : innerModuleInfos_) {
         if (info.second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
             auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, Constants::ALL_USERID);
@@ -4670,29 +4670,29 @@ void InnerBundleInfo::PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_
     }
 }
 
-std::string InnerBundleInfo::GetAppCodeLanguage() const
+std::string InnerBundleInfo::GetApplicationCodeLanguage() const
 {
-    bool contains1_1 = false;
-    bool contains1_2 = false;
-    for (const auto& info : innerModuleInfos_) {
-        if (info.second.codeLanguage == Constants::CODE_LANGUAGE_1_1) {
-            contains1_1 = true;
+    bool foundLanguage1_1 = false;
+    bool foundLanguage1_2 = false;
+    for (const auto& [moduleName, innerModuleInfo] : innerModuleInfos_) {
+        if (innerModuleInfo.codeLanguage == Constants::CODE_LANGUAGE_1_1) {
+            foundLanguage1_1 = true;
         }
-        if (info.second.codeLanguage == Constants::CODE_LANGUAGE_1_2) {
-            contains1_2 = true;
+        if (innerModuleInfo.codeLanguage == Constants::CODE_LANGUAGE_1_2) {
+            foundLanguage1_2 = true;
         }
     }
 
-    if (contains1_1 && contains1_2) {
+    if (foundLanguage1_1 && foundLanguage1_2) {
         return Constants::CODE_LANGUAGE_HYBRID;
     }
-    if (contains1_1) {
+    if (foundLanguage1_1) {
         return Constants::CODE_LANGUAGE_1_1;
     }
-    if (contains1_2) {
+    if (foundLanguage1_2) {
         return Constants::CODE_LANGUAGE_1_2;
     }
-    APP_LOGW_NOFUNC("invlaid codeLanguage");
+    APP_LOGW_NOFUNC("invalid codeLanguage");
     return Constants::CODE_LANGUAGE_1_1;
 }
 }  // namespace AppExecFwk
