@@ -171,9 +171,9 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
     }
     std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
     ErrCode ret = CommonFunc::ConvertErrCode(launcherService->
-        GetLauncherAbilityByBundleNamePublic(bundleName, userId, launcherAbilityInfos));
+        GetLauncherAbilityInfoSync(bundleName, userId, launcherAbilityInfos));
     if (ret != SUCCESS) {
-        APP_LOGE("GetLauncherAbilityByBundleNamePublic failed, bundleName is %{public}s, userId is %{public}d",
+        APP_LOGE("GetLauncherAbilityInfoSync failed, bundleName is %{public}s, userId is %{public}d",
             bundleName.c_str(), userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_LAUNCHER_ABILITY_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);

@@ -390,7 +390,7 @@ public:
      * @param abilityInfos Indicates the obtained AbilityInfos object.
      * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
      */
-    virtual ErrCode QueryLauncherAbilityInfosPublic(const std::string &bundleName,
+    virtual ErrCode GetLauncherAbilityInfoSync(const std::string &bundleName,
         int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
     /**
      * @brief Query the AbilityInfo of list of all service on launcher.

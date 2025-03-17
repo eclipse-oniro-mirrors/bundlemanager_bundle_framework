@@ -3069,7 +3069,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1200, Function | MediumTest | L
     retCode = hostImpl->QueryLauncherAbilityInfos(want, USERID, abilityInfos);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
-    retCode = hostImpl->QueryLauncherAbilityInfosPublic("", USERID, abilityInfos);
+    retCode = hostImpl->GetLauncherAbilityInfoSync("", USERID, abilityInfos);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
     retBool = hostImpl->IsPreInstallApp("");
@@ -4299,7 +4299,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0018, Function | SmallTest 
 
 /**
  * @tc.number: GetMgrFalseByNoBundle_0020
- * @tc.name: test QueryLauncherAbilityInfosPublic
+ * @tc.name: test GetLauncherAbilityInfoSync
  * @tc.desc: 1.system run normally
  *           2.bundle is empty
 */
@@ -4308,7 +4308,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0020, Function | SmallTest 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string bundleName = "action.system.home";
     std::vector<AbilityInfo> abilityInfos;
-    ErrCode testRet = hostImpl->QueryLauncherAbilityInfosPublic(
+    ErrCode testRet = hostImpl->GetLauncherAbilityInfoSync(
         bundleName, USERID, abilityInfos);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }

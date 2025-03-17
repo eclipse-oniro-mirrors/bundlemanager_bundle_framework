@@ -198,8 +198,8 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFO):
             errCode = this->HandleQueryLauncherAbilityInfos(data, reply);
             break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFOS_PUBLIC):
-            errCode = this->HandleQueryLauncherAbilityInfosPublic(data, reply);
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LAUNCHER_ABILITY_INFO_SYNC):
+            errCode = this->HandleGetLauncherAbilityInfoSync(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ALL_ABILITY_INFOS):
             errCode = this->HandleQueryAllAbilityInfos(data, reply);
@@ -1403,12 +1403,12 @@ ErrCode BundleMgrHost::HandleQueryLauncherAbilityInfos(MessageParcel &data, Mess
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleQueryLauncherAbilityInfosPublic(MessageParcel &data, MessageParcel &reply)
+ErrCode BundleMgrHost::HandleGetLauncherAbilityInfoSync(MessageParcel &data, MessageParcel &reply)
 {
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     std::vector<AbilityInfo> abilityInfos;
-    ErrCode ret = QueryLauncherAbilityInfosPublic(bundleName, userId, abilityInfos);
+    ErrCode ret = GetLauncherAbilityInfoSync(bundleName, userId, abilityInfos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

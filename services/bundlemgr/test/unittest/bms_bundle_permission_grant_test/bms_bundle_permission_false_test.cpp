@@ -1724,14 +1724,14 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_27000, Funct
 
 /**
  * @tc.number: BmsBundlePermissionFalseTest_28000
- * @tc.name: test QueryLauncherAbilityInfosPublic
+ * @tc.name: test GetLauncherAbilityInfoSync
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
 */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_28000, Function | SmallTest | Level1)
 {
     std::vector<AbilityInfo> abilityInfos;
-    ErrCode testRet = bundleMgrHostImpl_->QueryLauncherAbilityInfosPublic("", USERID, abilityInfos);
+    ErrCode testRet = bundleMgrHostImpl_->GetLauncherAbilityInfoSync("", USERID, abilityInfos);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 

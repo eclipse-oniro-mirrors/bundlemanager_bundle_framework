@@ -2297,12 +2297,6 @@ ErrCode BundleDataMgr::GetLauncherAbilityByBundleName(const Want &want, std::vec
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &info = item->second;
-    if(!BundlePermissionMgr::IsSystemApp()){
-        int32_t responseUserId = info.GetResponseUserId(userId);
-        if (responseUserId == Constants::INVALID_USERID) {
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-        }
-    }
     if (info.IsDisabled()) {
         LOG_W(BMS_TAG_QUERY, "app %{public}s is disabled", info.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
@@ -2358,6 +2352,57 @@ ErrCode BundleDataMgr::QueryLauncherAbilityInfos(
         LOG_D(BMS_TAG_QUERY, "ability infos have been found");
     }
     return ret;
+}
+
+ErrCode BundleDataMgr::GetLauncherAbilityInfoSync(const Want &want, const int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        LOG_E(BMS_TAG_QUERY, "request user id is invalid");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    ElementName element = want.GetElement();
+    std::string bundleName = element.GetBundleName();
+    const auto &item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        LOG_W(BMS_TAG_QUERY, "no bundleName %{public}s found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &info = item->second;
+    if(!BundlePermissionMgr::IsSystemApp()){
+        int32_t responseUserId = info.GetResponseUserId(userId);
+        if (responseUserId == Constants::INVALID_USERID) {
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
+    if (info.IsDisabled()) {
+        LOG_W(BMS_TAG_QUERY, "app %{public}s is disabled", info.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
+    }
+    if (info.GetBaseApplicationInfo().hideDesktopIcon) {
+        LOG_D(BMS_TAG_QUERY, "Bundle(%{public}s) hide desktop icon", bundleName.c_str());
+        return ERR_OK;
+    }
+    if (info.GetBaseBundleInfo().entryInstallationFree) {
+        LOG_D(BMS_TAG_QUERY, "Bundle(%{public}s) is atomic service, hide desktop icon", bundleName.c_str());
+        return ERR_OK;
+    }
+    // get installTime from innerBundleUserInfo
+    int64_t installTime = 0;
+    std::string userIdKey = info.GetBundleName() + "_" + std::to_string(userId);
+    std::string userZeroKey = info.GetBundleName() + "_" + std::to_string(0);
+    auto iter = std::find_if(info.GetInnerBundleUserInfos().begin(), info.GetInnerBundleUserInfos().end(),
+        [&userIdKey, &userZeroKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
+        return (infoMap.first == userIdKey || infoMap.first == userZeroKey);
+    });
+    if (iter != info.GetInnerBundleUserInfos().end()) {
+        installTime = iter->second.installTime;
+    }
+    GetMatchLauncherAbilityInfos(want, item->second, abilityInfos, installTime, userId);
+    FilterAbilityInfosByModuleName(element.GetModuleName(), abilityInfos);
+    return ERR_OK;
 }
 
 bool BundleDataMgr::QueryAbilityInfoByUri(

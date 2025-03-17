@@ -951,15 +951,15 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetLauncherAbilityByBundleName_0200, 
 }
 
 /**
- * @tc.number: BMS_GetLauncherAbilityByBundleNamePublic_0100
+ * @tc.number: BMS_GetLauncherAbilityInfoSync_0100
  * @tc.name: test GetAbilityInfo by LauncherService
  * @tc.desc: 1.install a low version hap
  *           2.install a high version hap
  *           3.get the application info of the high version hap by bundleName
  */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetLauncherAbilityByBundleNamePublic_0100, Function | MediumTest | Level1)
+HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetLauncherAbilityInfoSync_0100, Function | MediumTest | Level1)
 {
-    GTEST_LOG_(INFO) << "START BMS_GetLauncherAbilityByBundleNamePublic_0100";
+    GTEST_LOG_(INFO) << "START BMS_GetLauncherAbilityInfoSync_0100";
     std::string bundleName = TEST_BUNDLE_NAME;
     std::string bundleFilePath1 = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::vector<LauncherAbilityInfo> launcherAbilityInfos;
@@ -969,7 +969,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetLauncherAbilityByBundleNamePublic_
     EXPECT_EQ(message, "Success") << "install fail!";
 
     LauncherService launcherservice;
-    ErrCode result = launcherservice.GetLauncherAbilityByBundleNamePublic(
+    ErrCode result = launcherservice.GetLauncherAbilityInfoSync(
         bundleName, USERID, launcherAbilityInfos);
     EXPECT_EQ(result, ERR_OK);
     Uninstall(bundleName, message);
@@ -977,31 +977,31 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetLauncherAbilityByBundleNamePublic_
 }
 
 /**
- * @tc.number: BMS_GetLauncherAbilityByBundleNamePublic_0200
+ * @tc.number: BMS_GetLauncherAbilityInfoSync_0200
  * @tc.name: test GetAbilityInfo by LauncherService
  * @tc.desc: 1.install a low version hap
  *           2.install a high version hap
  *           3.get the application info of the high version hap by bundleName
  */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetLauncherAbilityByBundleNamePublic_0200, Function | MediumTest | Level1)
+HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetLauncherAbilityInfoSync_0200, Function | MediumTest | Level1)
 {
     std::vector<LauncherAbilityInfo> launcherAbilityInfos;
     LauncherService launcherservice;
-    ErrCode result = launcherservice.GetLauncherAbilityByBundleNamePublic(
+    ErrCode result = launcherservice.GetLauncherAbilityInfoSync(
         "", USERID, launcherAbilityInfos);
     EXPECT_NE(result, ERR_OK);
 }
 
 /**
- * @tc.number: BMS_GetLauncherAbilityByBundleNamePublic_0300
+ * @tc.number: BMS_GetLauncherAbilityInfoSync_0300
  * @tc.name: test GetAbilityInfo by LauncherService
  * @tc.desc: 1.install a low version hap
  *           2.install a high version hap
  *           3.get the application info of the high version hap by bundleName with invalid userId
  */
-HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetLauncherAbilityByBundleNamePublic_0300, Function | MediumTest | Level1)
+HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetLauncherAbilityInfoSync_0300, Function | MediumTest | Level1)
 {
-    GTEST_LOG_(INFO) << "START BMS_GetLauncherAbilityByBundleNamePublic_0300";
+    GTEST_LOG_(INFO) << "START BMS_GetLauncherAbilityInfoSync_0300";
     std::string bundleName = TEST_BUNDLE_NAME;
     std::string bundleFilePath1 = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::vector<LauncherAbilityInfo> launcherAbilityInfos;
@@ -1011,7 +1011,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetLauncherAbilityByBundleNamePublic_
     EXPECT_EQ(message, "Success") << "install fail!";
 
     LauncherService launcherservice;
-    ErrCode result = launcherservice.GetLauncherAbilityByBundleNamePublic(
+    ErrCode result = launcherservice.GetLauncherAbilityInfoSync(
         bundleName, Constants::INVALID_USERID, launcherAbilityInfos);
     EXPECT_NE(result, ERR_OK);
     Uninstall(bundleName, message);

@@ -559,7 +559,7 @@ public:
      * @param abilityInfos Indicates the obtained AbilityInfos object.
      * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
      */
-    virtual ErrCode QueryLauncherAbilityInfosPublic(
+    virtual ErrCode GetLauncherAbilityInfoSync(
         const std::string &bundleName, int32_t userId, std::vector<AbilityInfo> &abilityInfo)
     {
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
