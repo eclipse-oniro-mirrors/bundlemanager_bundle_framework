@@ -209,6 +209,9 @@ public:
     static std::string CreateTempDir(const std::string &tempDir);
     static std::string CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
         std::vector<std::string> &toDeletePaths, bool rename = false);
+    static std::string GetAppInstallPrefix(const std::string &bundleName, bool rename);
+    static void RestoreAppInstallHaps();
+    static void RestoreHaps(const std::string &sourcePath, const std::string &bundleName, const std::string &userId);
     static void DeleteTempDirs(const std::vector<std::string> &tempDirs);
     static std::string GenerateUuid();
     static std::string GetHexHash(const std::string &s);
