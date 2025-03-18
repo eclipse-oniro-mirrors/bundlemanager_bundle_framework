@@ -425,7 +425,7 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     CHECK_RESULT(result, "Check install permission failed %{public}d");
 
     // check hsp install condition
-    result = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyResults);
+    result = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyResults, IPCSkeleton::GetCallingUid());
     CHECK_RESULT(result, "Check hsp install condition failed %{public}d");
 
     // check device type
