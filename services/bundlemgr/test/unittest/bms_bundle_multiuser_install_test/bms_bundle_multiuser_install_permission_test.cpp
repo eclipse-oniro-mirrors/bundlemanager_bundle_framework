@@ -102,4 +102,17 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, RecoverHapToken_0100, Function
     EXPECT_EQ(res, false);
     installer.dataMgr_->DeleteUninstallBundleInfo("test", 100);
 }
+
+/**
+ * @tc.number: CreateDataDir_0100
+ * @tc.name: CreateDataDir by BundleMultiUserInstaller
+ * @tc.desc: test CreateDataDir
+ */
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, CreateDataDir_0100, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    InnerBundleInfo info;
+    auto res = installer.CreateDataDir(info, 100, -1);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // OHOS
