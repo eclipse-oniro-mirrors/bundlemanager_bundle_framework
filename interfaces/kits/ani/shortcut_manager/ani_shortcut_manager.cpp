@@ -17,19 +17,26 @@
 #include "bundle_errors.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
-#include "business_error.h"
+#include "business_error_ani.h"
 #include "common_fun_ani.h"
 #include "common_func.h"
 #include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* ADD_DESKTOP_SHORTCUT_INFO = "AddDesktopShortcutInfo";
+constexpr const char* DELETE_DESKTOP_SHORTCUT_INFO = "DeleteDesktopShortcutInfo";
+constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo";
+constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortcutInfo";
+}
 
 static void AddDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_object info, ani_int userId)
 {
     ShortcutInfo shortcutInfo;
     if (!CommonFunAni::ParseShortcutInfo(env, info, shortcutInfo) ||
         !CommonFunc::CheckShortcutInfo(shortcutInfo)) {
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
         APP_LOGE("Parse shortcutInfo err. userId:%{public}d", userId);
         return;
     }
@@ -37,11 +44,14 @@ static void AddDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_object inf
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowError(env, ERR_APPEXECFWK_SERVICE_NOT_READY, ADD_DESKTOP_SHORTCUT_INFO);
         return;
     }
     ErrCode ret = iBundleMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
     if (ret != ERR_OK) {
         APP_LOGE("AddDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, userId);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ret, ADD_DESKTOP_SHORTCUT_INFO, Constants::PERMISSION_MANAGER_SHORTCUT);
     }
 }
 
@@ -51,17 +61,21 @@ static void DeleteDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_object 
     if (!CommonFunAni::ParseShortcutInfo(env, info, shortcutInfo) ||
         !CommonFunc::CheckShortcutInfo(shortcutInfo)) {
         APP_LOGE("Parse shortcutInfo err. userId:%{public}d", userId);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
         return;
     }
 
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowError(env, ERR_APPEXECFWK_SERVICE_NOT_READY, DELETE_DESKTOP_SHORTCUT_INFO);
         return;
     }
     ErrCode ret = iBundleMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
     if (ret != ERR_OK) {
         APP_LOGE("DeleteDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, userId);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ret, DELETE_DESKTOP_SHORTCUT_INFO, Constants::PERMISSION_MANAGER_SHORTCUT);
     }
 }
 
@@ -71,11 +85,14 @@ static ani_ref GetAllDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_int 
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowError(env, ERR_APPEXECFWK_SERVICE_NOT_READY, GET_ALL_DESKTOP_SHORTCUT_INFO);
         return nullptr;
     }
     ErrCode ret = iBundleMgr->GetAllDesktopShortcutInfo(userId, shortcutInfos);
     if (ret != ERR_OK) {
         APP_LOGE("GetAllDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, userId);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ret, GET_ALL_DESKTOP_SHORTCUT_INFO, Constants::PERMISSION_MANAGER_SHORTCUT);
         return nullptr;
     }
     ani_ref shortcutInfosRef = CommonFunAni::ConvertAniArray(env, shortcutInfos, CommonFunAni::ConvertShortcutInfo);
