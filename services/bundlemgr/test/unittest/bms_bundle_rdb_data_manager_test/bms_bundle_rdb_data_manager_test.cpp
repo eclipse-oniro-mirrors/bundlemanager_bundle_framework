@@ -31,6 +31,9 @@ const std::string DB_NAME = "rdbTestDb.db";
 const std::string TABLE_NAME = "rdbTestTable";
 const std::string KEY_ONE = "KEY_ONE";
 const std::string VALUE_ONE = "VALUE_ONE";
+const std::string BMS_BACK_UP_RDB_NAME = "bms-backup.db";
+const std::string BMS_KEY = "KEY";
+const std::string BMS_VALUE = "VALUE";
 } // namespace
 
 class BmsBundleRdbDataManagerTest : public testing::Test {
@@ -252,6 +255,221 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1100, Function | SmallTest 
 }
 
 /**
+ * @tc.number: RdbDataManager_1200
+ * @tc.name: Test GetRdbStore
+ * @tc.desc: 1.GetRdbStore
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1200, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    auto store = std::make_shared<MockAppProvisionInfo>();
+    rdbDataManager->rdbStore_ = store;
+    auto ret = rdbDataManager->GetRdbStore();
+    ASSERT_EQ(ret, store);
+}
+
+/**
+ * @tc.number: RdbDataManager_1300
+ * @tc.name: Test GetRdbStore
+ * @tc.desc: 1.GetRdbStore
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1300, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    rdbDataManager->rdbStore_ = nullptr;
+    rdbDataManager->bmsRdbConfig_.dbName = "";
+    auto ret = rdbDataManager->GetRdbStore();
+    ASSERT_EQ(ret, nullptr);
+}
+
+/**
+ * @tc.number: RdbDataManager_1400
+ * @tc.name: Test GetRdbStore
+ * @tc.desc: 1.GetRdbStore
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1400, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    rdbDataManager->rdbStore_ = nullptr;
+    rdbDataManager->bmsRdbConfig_.dbName = BMS_BACK_UP_RDB_NAME;
+    auto ret = rdbDataManager->GetRdbStore();
+    ASSERT_EQ(ret, nullptr);
+}
+
+/**
+ * @tc.number: RdbDataManager_1500
+ * @tc.name: Test GetRdbStore
+ * @tc.desc: 1.GetRdbStore
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1500, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    rdbDataManager->rdbStore_ = nullptr;
+    auto store = std::make_shared<MockAppProvisionInfo>();
+    MockGetRdbStore(store);
+    rdbDataManager->bmsRdbConfig_.dbName = BMS_BACK_UP_RDB_NAME;
+    auto ret = rdbDataManager->GetRdbStore();
+    ASSERT_NE(ret, nullptr);
+}
+
+/**
+ * @tc.number: RdbDataManager_1600
+ * @tc.name: Test GetRdbStore
+ * @tc.desc: 1.GetRdbStore
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1600, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    rdbDataManager->rdbStore_ = nullptr;
+    auto store = std::make_shared<MockAppProvisionInfo>();
+    MockGetRdbStore(store);
+    rdbDataManager->bmsRdbConfig_.dbName = BMS_BACK_UP_RDB_NAME;
+    rdbDataManager->isInitial_ = false;
+    auto ret = rdbDataManager->GetRdbStore();
+    ASSERT_NE(ret, nullptr);
+}
+
+/**
+ * @tc.number: RdbDataManager_1700
+ * @tc.name: Test InsertData
+ * @tc.desc: 1.InsertData
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1700, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    rdbDataManager->ClearCache();
+    auto store = std::make_shared<MockAppProvisionInfo>();
+    MockGetRdbStore(store);
+    auto ret = rdbDataManager->InsertData(KEY_ONE, VALUE_ONE);
+    EXPECT_EQ(ret, NativeRdb::E_OK);
+}
+
+/**
+ * @tc.number: RdbDataManager_1800
+ * @tc.name: Test InsertData
+ * @tc.desc: 1.InsertData
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1800, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    rdbDataManager->ClearCache();
+    auto store = std::make_shared<MockAppProvisionInfo>();
+    MockGetRdbStore(store);
+    NativeRdb::ValuesBucket valuesBucket;
+    valuesBucket.PutString(BMS_KEY, KEY_ONE);
+    valuesBucket.PutString(BMS_VALUE, VALUE_ONE);
+    auto ret = rdbDataManager->InsertData(valuesBucket);
+    EXPECT_EQ(ret, NativeRdb::E_OK);
+}
+
+/**
+ * @tc.number: RdbDataManager_1900
+ * @tc.name: Test BatchInsert
+ * @tc.desc: 1.BatchInsert
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1900, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    auto store = std::make_shared<MockAppProvisionInfo>();
+    MockGetRdbStore(store);
+    int64_t outInsertNum = 0;
+    std::vector<NativeRdb::ValuesBucket> valuesBuckets;
+    bool ret = rdbDataManager->BatchInsert(outInsertNum, valuesBuckets);
+    EXPECT_EQ(ret, NativeRdb::E_OK);
+}
+
+/**
+ * @tc.number: RdbDataManager_2000
+ * @tc.name: Test UpdateData
+ * @tc.desc: 1.UpdateData
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_2000, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    auto store = std::make_shared<MockAppProvisionInfo>();
+    MockGetRdbStore(store);
+    bool ret = rdbDataManager->UpdateData(KEY_ONE, VALUE_ONE);
+    EXPECT_EQ(ret, NativeRdb::E_OK);
+}
+
+/**
+ * @tc.number: RdbDataManager_2100
+ * @tc.name: Test UpdateData
+ * @tc.desc: 1.UpdateData
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_2100, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    auto store = std::make_shared<MockAppProvisionInfo>();
+    MockGetRdbStore(store);
+    NativeRdb::ValuesBucket valuesBucket;
+    NativeRdb::AbsRdbPredicates absRdbPredicates(KEY_ONE);
+    bool ret = rdbDataManager->UpdateData(valuesBucket, absRdbPredicates);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RdbDataManager_2200
+ * @tc.name: Test UpdateData
+ * @tc.desc: 1.UpdateData
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_2200, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    auto store = std::make_shared<MockAppProvisionInfo>();
+    MockGetRdbStore(store);
+    NativeRdb::ValuesBucket valuesBucket;
+    NativeRdb::AbsRdbPredicates absRdbPredicates(TABLE_NAME);
+    bool ret = rdbDataManager->UpdateData(valuesBucket, absRdbPredicates);
+    EXPECT_EQ(ret, NativeRdb::E_OK);
+}
+
+/**
+ * @tc.number: RdbDataManager_2300
+ * @tc.name: Test UpdateOrInsertData
+ * @tc.desc: 1.UpdateOrInsertData
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_2300, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    auto store = std::make_shared<MockAppProvisionInfo>();
+    MockGetRdbStore(store);
+    NativeRdb::ValuesBucket valuesBucket;
+    NativeRdb::AbsRdbPredicates absRdbPredicates(KEY_ONE);
+    bool ret = rdbDataManager->UpdateOrInsertData(valuesBucket, absRdbPredicates);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RdbDataManager_2400
+ * @tc.name: Test UpdateOrInsertData
+ * @tc.desc: 1.UpdateOrInsertData
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_2400, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+    auto store = std::make_shared<MockAppProvisionInfo>();
+    MockGetRdbStore(store);
+    NativeRdb::ValuesBucket valuesBucket;
+    NativeRdb::AbsRdbPredicates absRdbPredicates(KEY_ONE);
+    bool ret = rdbDataManager->UpdateOrInsertData(valuesBucket, absRdbPredicates);
+    EXPECT_EQ(ret, NativeRdb::E_OK);
+}
+
+/**
  * @tc.number: BmsRdbOpenCallback_0100
  * @tc.name: Test OnUpgrade
  * @tc.desc: 1.OnUpgrade
@@ -293,6 +511,34 @@ HWTEST_F(BmsBundleRdbDataManagerTest, BmsRdbOpenCallback_0300, Function | SmallT
     BmsRdbConfig bmsRdbConfig;
     BmsRdbOpenCallback callback(bmsRdbConfig);
     auto ret = callback.onCorruption(TABLE_NAME);
+    EXPECT_EQ(ret, NativeRdb::E_OK);
+}
+
+/**
+ * @tc.number: BmsRdbOpenCallback_0400
+ * @tc.name: Test OnCreate
+ * @tc.desc: 1.OnCreate
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, BmsRdbOpenCallback_0400, Function | SmallTest | Level1)
+{
+    BmsRdbConfig bmsRdbConfig;
+    BmsRdbOpenCallback callback(bmsRdbConfig);
+    MockAppProvisionInfo Store;
+    auto ret = callback.OnCreate(Store);
+    EXPECT_EQ(ret, NativeRdb::E_OK);
+}
+
+/**
+ * @tc.number: BmsRdbOpenCallback_0500
+ * @tc.name: Test OnCreate
+ * @tc.desc: 1.OnCreate
+ */
+HWTEST_F(BmsBundleRdbDataManagerTest, BmsRdbOpenCallback_0500, Function | SmallTest | Level1)
+{
+    BmsRdbConfig bmsRdbConfig;
+    BmsRdbOpenCallback callback(bmsRdbConfig);
+    MockAppProvisionInfo Store;
+    auto ret = callback.OnOpen(Store);
     EXPECT_EQ(ret, NativeRdb::E_OK);
 }
 } // OHOS
