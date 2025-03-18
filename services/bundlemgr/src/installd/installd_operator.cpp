@@ -1035,16 +1035,16 @@ bool InstalldOperator::MkOwnerDir(const std::string &path, int mode, const int u
         LOG_E(BMS_TAG_INSTALLD, "mkdir failed, errno: %{public}d", errno);
         return false;
     }
+    if (IsPathNeedChown(path, mode, isPathExist)) {
+        if (chown(path.c_str(), INSTALLS_UID, INSTALLS_UID) != 0) {
+            LOG_W(BMS_TAG_INSTALLD, "fail to change %{public}s ownership, errno:%{public}d", path.c_str(), errno);
+        }
+    }
     // only modify parent dir mode
     if (chmod(path.c_str(), mode) != 0) {
         LOG_E(BMS_TAG_INSTALLD, "chmod path:%{public}s mode:%{public}d failed, errno:%{public}d",
             path.c_str(), mode, errno);
         return false;
-    }
-    if (IsPathNeedChown(path, mode, isPathExist)) {
-        if (chown(path.c_str(), INSTALLS_UID, INSTALLS_UID) != 0) {
-            LOG_W(BMS_TAG_INSTALLD, "fail to change %{public}s ownership, errno:%{public}d", path.c_str(), errno);
-        }
     }
     if (!ChangeDirOwnerRecursively(path, uid, gid)) {
         LOG_E(BMS_TAG_INSTALLD, "ChangeDirOwnerRecursively failed, errno: %{public}d", errno);
