@@ -36,6 +36,9 @@ const int8_t DIMENSION_2_3 = 8;
 #ifndef FORM_DIMENSION_3_3
 const int8_t DIMENSION_3_3 = 9;
 #endif
+#ifndef FORM_DIMENSION_3_4
+const int8_t DIMENSION_3_4 = 10;
+#endif
 constexpr const char* FORM_COLOR_MODE_MAP_KEY[] = {
     "auto",
     "dark",
@@ -65,7 +68,8 @@ constexpr const char* DIMENSION_MAP_KEY[] = {
     "1*1",
     "6*4",
     "2*3",
-    "3*3"
+    "3*3",
+    "3*4"
 };
 const int32_t DIMENSION_MAP_VALUE[] = {
     1,
@@ -76,7 +80,8 @@ const int32_t DIMENSION_MAP_VALUE[] = {
     6,
     7,
     8,
-    9
+    9,
+    10
 };
 constexpr const char* SHAPE_MAP_KEY[] = {
     "rect",
@@ -408,20 +413,21 @@ bool CheckFormNameIsValid(const std::string &name)
     return true;
 }
 
-bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+void supportFormDimension(std::set<int32_t> &supportDimensionSet, const ExtensionFormProfileInfo &form)
 {
-    std::set<int32_t> supportDimensionSet {};
-    size_t len = sizeof(DIMENSION_MAP_KEY) / sizeof(DIMENSION_MAP_KEY[0]);
     size_t i = 0;
+    size_t len = sizeof(DIMENSION_MAP_KEY) / sizeof(DIMENSION_MAP_KEY[0]);
     for (const auto &dimension: form.supportDimensions) {
         for (i = 0; i < len; i++) {
-            if (DIMENSION_MAP_KEY[i] == dimension) break;
+            if (DIMENSION_MAP_KEY[i] == dimension) {
+                break;
+            }
         }
         if (i == len) {
             APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
             continue;
         }
-                
+
         int32_t dimensionItem = DIMENSION_MAP_VALUE[i];
         #ifndef FORM_DIMENSION_2_3
             if (dimensionItem == DIMENSION_2_3) {
@@ -437,13 +443,29 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
             }
         #endif
 
+        #ifndef FORM_DIMENSION_3_4
+            if (dimensionItem == DIMENSION_3_4) {
+                APP_LOGW("dimension invalid in TV Device form %{public}d", dimensionItem);
+                continue;
+            }
+        #endif
+        
         supportDimensionSet.emplace(dimensionItem);
     }
+}
+
+bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
+    std::set<int32_t> supportDimensionSet {};
+    size_t len = sizeof(DIMENSION_MAP_KEY) / sizeof(DIMENSION_MAP_KEY[0]);
+    size_t i = 0;
+    supportFormDimension(supportDimensionSet, form);
     for (i = 0; i < len; i++) {
         if (DIMENSION_MAP_KEY[i] == form.defaultDimension) {
             break;
         }
     }
+
     if (i == len) {
         APP_LOGW("defaultDimension invalid form %{public}s", form.name.c_str());
         return false;

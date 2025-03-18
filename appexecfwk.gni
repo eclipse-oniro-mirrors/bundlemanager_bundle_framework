@@ -52,6 +52,7 @@ declare_args() {
   bundle_framework_bundle_resource = true
   bundle_framework_form_dimension_2_3 = false
   bundle_framework_form_dimension_3_3 = false
+  bundle_framework_form_dimension_3_4 = false
 
   ability_runtime_enable = true
   account_enable = true
