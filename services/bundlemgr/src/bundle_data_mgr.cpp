@@ -10190,11 +10190,10 @@ bool BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, Abilit
     return ExplicitQueryAbilityInfo(want, flags, userId, abilityInfo);
 }
 
-ErrCode BundleDataMgr::AddPluginInfo(const InnerBundleInfo &innerBundleInfo,
+ErrCode BundleDataMgr::AddPluginInfo(const std::string &bundleName,
     const PluginBundleInfo &pluginBundleInfo, const int32_t userId)
 {
     APP_LOGD("start AddPluginInfo");
-    std::string bundleName = innerBundleInfo.GetBundleName();
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
@@ -10214,11 +10213,10 @@ ErrCode BundleDataMgr::AddPluginInfo(const InnerBundleInfo &innerBundleInfo,
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::RemovePluginInfo(const InnerBundleInfo &innerBundleInfo,
+ErrCode BundleDataMgr::RemovePluginInfo(const std::string &bundleName,
     const std::string &pluginBundleName, const int32_t userId)
 {
     APP_LOGD("start RemovePluginInfo");
-    std::string bundleName = innerBundleInfo.GetBundleName();
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
@@ -10239,7 +10237,7 @@ ErrCode BundleDataMgr::RemovePluginInfo(const InnerBundleInfo &innerBundleInfo,
 }
 
 bool BundleDataMgr::GetPluginBundleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
-    PluginBundleInfo &pluginBundleInfo, const int32_t userId)
+    const int32_t userId, PluginBundleInfo &pluginBundleInfo)
 {
     APP_LOGD("bundleName:%{public}s start GetPluginBundleInfo", hostBundleName.c_str());
     if (hostBundleName.empty() || pluginBundleName.empty()) {
@@ -10254,25 +10252,97 @@ bool BundleDataMgr::GetPluginBundleInfo(const std::string &hostBundleName, const
             pluginBundleName.c_str());
         return false;
     }
-
-    if (userId == Constants::ALL_USERID) {
-        auto &infos = infoItem->second.GetInnerBundleUserInfos();
-        for (auto &info : infos) {
-            if (info.second.GetPluginBundleInfo(pluginBundleName, pluginBundleInfo)) {
-                APP_LOGD("%{public}s GetPluginBundleInfo success %{public}s", hostBundleName.c_str(),
-                    pluginBundleName.c_str());
-                return true;
-            }
-        }
-    } else {
-        InnerBundleUserInfo innerBundleUserInfo;
-        if (!infoItem->second.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-            APP_LOGE("GetInnerBundleUserInfo failed");
-            return false;
-        }
-        return innerBundleUserInfo.GetPluginBundleInfo(pluginBundleName, pluginBundleInfo);
+    std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos;
+    if (!infoItem->second.GetPluginBundleInfos(userId, pluginBundleInfos)) {
+        APP_LOGE("bundleName:%{public}s can not find userId %{public}d", hostBundleName.c_str(), userId);
+        return false;
     }
+    auto it = pluginBundleInfos.find(pluginBundleName);
+    if (it == pluginBundleInfos.end()) {
+        APP_LOGE("bundleName:%{public}s can not find plugin info for %{public}s in user(%{public}d)",
+            hostBundleName.c_str(), pluginBundleName.c_str(), userId);
+        return false;
+    }
+    pluginBundleInfo = it->second;
+    return true;
+}
+
+bool BundleDataMgr::FetchPluginBundleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+    PluginBundleInfo &pluginBundleInfo)
+{
+    APP_LOGD("bundleName:%{public}s start FetchPluginBundleInfo, plugin:%{public}s",
+        hostBundleName.c_str(), pluginBundleName.c_str());
+    if (hostBundleName.empty() || pluginBundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return false;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(hostBundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW_NOFUNC("%{public}s FetchPluginBundleInfo not found %{public}s", hostBundleName.c_str(),
+            pluginBundleName.c_str());
+        return false;
+    }
+    std::unordered_map<std::string, PluginBundleInfo> pluginInfoMap = infoItem->second.GetAllPluginBundleInfo();
+    auto iter = pluginInfoMap.find(pluginBundleName);
+    if (iter != pluginInfoMap.end()) {
+        pluginBundleInfo = iter->second;
+        return true;
+    }
+    APP_LOGE("bundleName:%{public}s can not find plugin info, plugin:%{public}s",
+        hostBundleName.c_str(), pluginBundleName.c_str());
     return false;
+}
+
+ErrCode BundleDataMgr::UpdatePluginBundleInfo(const std::string &hostBundleName,
+    const PluginBundleInfo &pluginBundleInfo)
+{
+    APP_LOGD("hostBundleName:%{public}s start UpdatePluginBundleInfo, plugin:%{public}s",
+        hostBundleName.c_str(), pluginBundleInfo.pluginBundleName.c_str());
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(hostBundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", hostBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo newInfo = item->second;
+    if (!newInfo.UpdatePluginBundleInfo(pluginBundleInfo)) {
+        APP_LOGE("%{public}s update plugin info failed", hostBundleName.c_str());
+        return ERR_APPEXECFWK_ADD_PLUGIN_INFO_ERROR;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(newInfo)) {
+        APP_LOGE("save InnerBundleInfo:%{public}s failed, plugin:%{public}s",
+            hostBundleName.c_str(), pluginBundleInfo.pluginBundleName.c_str());
+        return ERR_APPEXECFWK_ADD_PLUGIN_INFO_ERROR;
+    }
+    bundleInfos_.at(hostBundleName) = newInfo;
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::RemovePluginFromUserInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+    const int32_t userId)
+{
+    APP_LOGD("hostBundleName:%{public}s start RemovePluginFromUserInfo, plugin:%{public}s",
+        hostBundleName.c_str(), pluginBundleName.c_str());
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(hostBundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", hostBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo newInfo = item->second;
+    if (!newInfo.RemovePluginFromUserInfo(pluginBundleName, userId)) {
+        APP_LOGE("%{public}s reomve plugin info failed", hostBundleName.c_str());
+        return ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(newInfo)) {
+        APP_LOGE("save InnerBundleInfo:%{public}s failed, plugin:%{public}s",
+            hostBundleName.c_str(), pluginBundleName.c_str());
+        return ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR;
+    }
+    bundleInfos_.at(hostBundleName) = newInfo;
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

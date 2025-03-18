@@ -35,6 +35,11 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const char* SEPARATOR = "/";
+const std::unordered_map<int32_t, int32_t> IPC_ERR_MAP = {
+    {29201, ERR_APPEXECFWK_IPC_REPLY_ERROR},
+    {29202, ERR_APPEXECFWK_IPC_REMOTE_FROZEN_ERROR},
+    {29189, ERR_APPEXECFWK_IPC_REMOTE_DEAD_ERROR}
+};
 } // namespace
 
 BundleInstallerProxy::BundleInstallerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IBundleInstaller>(object)
@@ -287,11 +292,11 @@ ErrCode BundleInstallerProxy::InstallPlugin(const std::string &hostBundleName,
         return ERR_APPEXECFWK_PLUGIN_INSTALL_WRITE_PARCEL_ERROR;
     }
 
-    bool ret =
-        SendInstallRequest(BundleInstallerInterfaceCode::INSTALL_PLUGIN_APP, data, reply, option);
-    if (!ret) {
+    ErrCode ret =
+        SendInstallRequestWithErrCode(BundleInstallerInterfaceCode::INSTALL_PLUGIN_APP, data, reply, option);
+    if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "InstallPlugin failed due to send request fail");
-        return ERR_APPEXECFWK_PLUGIN_INSTALL_SEND_REQUEST_ERROR;
+        return ret;
     }
     return reply.ReadInt32();
 }
@@ -320,11 +325,11 @@ ErrCode BundleInstallerProxy::UninstallPlugin(const std::string &hostBundleName,
         LOG_E(BMS_TAG_INSTALLER, "failed to UninstallPlugin due to write installParam fail");
         return ERR_APPEXECFWK_PLUGIN_INSTALL_WRITE_PARCEL_ERROR;
     }
-    bool ret =
-        SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL_PLUGIN_APP, data, reply, option);
-    if (!ret) {
+    ErrCode ret =
+        SendInstallRequestWithErrCode(BundleInstallerInterfaceCode::UNINSTALL_PLUGIN_APP, data, reply, option);
+    if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "UninstallPlugin failed due to send request fail");
-        return ERR_APPEXECFWK_PLUGIN_INSTALL_SEND_REQUEST_ERROR;
+        return ret;
     }
     return reply.ReadInt32();
 }
@@ -761,6 +766,27 @@ bool BundleInstallerProxy::SendInstallRequest(
         return false;
     }
     return true;
+}
+
+ErrCode BundleInstallerProxy::SendInstallRequestWithErrCode(
+    BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "Remote() is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    int32_t ret = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (ret != NO_ERROR) {
+        LOG_E(BMS_TAG_INSTALLER, "fail to sendRequest, for transact is failed and error code is: %{public}d", ret);
+        auto it = IPC_ERR_MAP.find(ret);
+        if (it != IPC_ERR_MAP.end()) {
+            return it->second;
+        }
+        return ret;
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleInstallerProxy::InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex)

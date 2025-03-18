@@ -819,6 +819,7 @@ private:
     bool IsAllowEnterPrise();
     void MarkIsForceUninstall(const std::string &bundleName, bool isForceUninstalled);
     bool CheckCanInstallPreBundle(const std::string &bundleName, const int32_t userId);
+    void RemovePluginOnlyInCurrentUser(const InnerBundleInfo &info);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

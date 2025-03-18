@@ -1687,6 +1687,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 bundleName.c_str());
             MarkIsForceUninstall(bundleName, isForcedUninstall);
         }
+        RemovePluginOnlyInCurrentUser(oldInfo);
         auto res = RemoveBundleUserData(oldInfo, installParam.isKeepData, !installParam.isRemoveUser);
         if (res != ERR_OK) {
             return res;
@@ -7214,6 +7215,41 @@ void BaseBundleInstaller::CheckPreBundleRecoverResult(ErrCode &result)
         sysEventInfo_.callingUid != Constants::ROOT_UID) {
         LOG_E(BMS_TAG_INSTALLER, "install failed, result = %{public}d, only restore to preinstalled", result);
         result = ERR_APPEXECFWK_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED;
+    }
+}
+
+void BaseBundleInstaller::RemovePluginOnlyInCurrentUser(const InnerBundleInfo &info)
+{
+    InnerBundleUserInfo userInfo;
+    std::string hostBundleName = info.GetBundleName();
+    if (!info.GetInnerBundleUserInfo(userId_, userInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "%{public}s get user %{public}d failed",
+            hostBundleName.c_str(), userId_);
+        return;
+    }
+    if (!InitDataMgr()) {
+        return;
+    }
+    std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos = info.GetAllPluginBundleInfo();
+    for (const auto &pluginName : userInfo.installedPluginSet) {
+        if (info.HasMultiUserPlugin(pluginName)) {
+            continue;
+        }
+        LOG_I(BMS_TAG_INSTALLER, "%{public}s remove plugin %{public}s", hostBundleName.c_str(), pluginName.c_str());
+        if (dataMgr_->RemovePluginInfo(hostBundleName, pluginName, userId_) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "remove plugin %{public}s fail when uninstall %{public}s",
+                pluginName.c_str(), hostBundleName.c_str());
+            continue;
+        }
+        auto it = pluginBundleInfos.find(pluginName);
+        if (it == pluginBundleInfos.end()) {
+            LOG_E(BMS_TAG_INSTALLER, "can not find plugin %{public}s when uninstall %{public}s",
+                pluginName.c_str(), hostBundleName.c_str());
+            continue;
+        }
+        if ((InstalldClient::GetInstance()->RemoveDir(it->second.codePath)) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", it->second.codePath.c_str());
+        }
     }
 }
 }  // namespace AppExecFwk

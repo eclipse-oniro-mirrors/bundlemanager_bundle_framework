@@ -73,8 +73,8 @@ private:
     std::vector<std::string> pluginIds_;
     // the key is the real path of each hsp file
     std::unordered_map<std::string, InnerBundleInfo> parsedBundles_;
-    std::unordered_set<int32_t> hasInstalledUsers_;
     PluginBundleInfo oldPluginInfo_;
+    std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
 
     DISALLOW_COPY_AND_MOVE(PluginInstaller);
 
@@ -87,10 +87,9 @@ private:
     ErrCode CheckPluginAppLabelInfo();
     void MergePluginBundleInfo(InnerBundleInfo &pluginBundleInfo);
     ErrCode SavePluginInfoToStorage(const InnerBundleInfo &pluginInfo, const InnerBundleInfo &hostBundleInfo);
-    void PluginRollBack(const InnerBundleInfo &hostBundleInfo);
+    void PluginRollBack(const std::string &hostBundleName);
     ErrCode RemovePluginDir(const InnerBundleInfo &hostBundleInfo);
-    ErrCode RemovePluginInfo(const InnerBundleInfo &hostBundleInfo);
-    ErrCode CheckSupportPluginPermission(const InnerBundleInfo &hostBundleInfo);
+    ErrCode CheckSupportPluginPermission(const std::string &hostBundleName);
     ErrCode SaveHspToInstallDir(const std::string &bundlePath, const std::string &pluginBundleDir,
         const std::string &moduleName, InnerBundleInfo &newInfo);
     void RemoveEmptyDirs(const std::string &pluginDir) const;
@@ -112,8 +111,10 @@ private:
         bool isEnterpriseBundle, bool isCompileSdkOpenHarmony) const;
     bool ParsePluginId(const std::string &appServiceCapabilities, std::vector<std::string> &pluginIds);
     void RemoveOldInstallDir();
-    void UninstallRollBack(const InnerBundleInfo &hostBundleInfo);
-    std::string GetPluginBundleDir();
+    void UninstallRollBack(const std::string &hostBundleName);
+    bool InitDataMgr();
+    ErrCode ParseHapPaths(const InstallPluginParam &installPluginParam,
+        const std::vector<std::string> &inBundlePaths, std::vector<std::string> &parsedPaths);
 
 #define CHECK_RESULT(errcode, errmsg)                                              \
     do {                                                                           \

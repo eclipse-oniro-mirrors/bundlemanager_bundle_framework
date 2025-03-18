@@ -130,6 +130,7 @@ constexpr const char* EXT_RESOURCE_FILE_PATH = "filePath";
 constexpr const char* DEVELOPER_ID = "developerId";
 constexpr const char* ODID = "odid";
 constexpr const char* UNINSTALL_STATE = "uninstallState";
+constexpr const char* PLUGIN_BUNDLE_INFOS = "pluginBundleInfos";
 constexpr int8_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -322,6 +323,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->developerId_ = info.developerId_;
     this->odid_ = info.odid_;
     this->uninstallState_ = info.uninstallState_;
+    this->pluginBundleInfos_ = info.pluginBundleInfos_;
     return *this;
 }
 
@@ -487,6 +489,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[OVERLAY_TYPE] = overlayType_;
     jsonObject[APPLY_QUICK_FIX_FREQUENCY] = applyQuickFixFrequency_;
     jsonObject[DATA_GROUP_INFOS] = dataGroupInfos_;
+    jsonObject[PLUGIN_BUNDLE_INFOS] = pluginBundleInfos_;
     jsonObject[DEVELOPER_ID] = developerId_;
     jsonObject[ODID] = odid_;
     jsonObject[UNINSTALL_STATE] = uninstallState_;
@@ -1411,6 +1414,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         jsonObjectEnd,
         DATA_GROUP_INFOS,
         dataGroupInfos_,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::unordered_map<std::string, PluginBundleInfo>>(jsonObject,
+        jsonObjectEnd,
+        PLUGIN_BUNDLE_INFOS,
+        pluginBundleInfos_,
         JsonType::OBJECT,
         false,
         parseResult,
@@ -4881,7 +4892,7 @@ void InnerBundleInfo::SetDFXParamStatus()
     SetUbsanEnabled(IsUbsanEnabled());
 }
 
-bool InnerBundleInfo::GetPluginBundleInfo(const std::string &bundleName,
+bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
     PluginBundleInfo &pluginBundleInfo) const
 {
     pluginBundleInfo.pluginBundleName = GetBundleName();
@@ -4893,6 +4904,7 @@ bool InnerBundleInfo::GetPluginBundleInfo(const std::string &bundleName,
     pluginBundleInfo.icon = baseApplicationInfo_->icon;
     pluginBundleInfo.labelId = baseApplicationInfo_->labelId;
     pluginBundleInfo.iconId = baseApplicationInfo_->iconId;
+    pluginBundleInfo.codePath = baseApplicationInfo_->codePath;
     for (const auto &info : innerModuleInfos_) {
         PluginModuleInfo pluginModuleInfo;
         pluginModuleInfo.moduleName = info.second.name;
@@ -4917,8 +4929,9 @@ bool InnerBundleInfo::AddPluginBundleInfo(const PluginBundleInfo &pluginBundleIn
             pluginBundleInfo.pluginBundleName.c_str(), userId, GetBundleName().c_str());
         return false;
     }
-    auto &infos = infoItem->second.pluginBundleInfos;
-    infos[pluginBundleInfo.pluginBundleName] = pluginBundleInfo;
+    auto &pluginSet = infoItem->second.installedPluginSet;
+    pluginSet.insert(pluginBundleInfo.pluginBundleName);
+    pluginBundleInfos_[pluginBundleInfo.pluginBundleName] = pluginBundleInfo;
     APP_LOGD("bundleName: %{public}s add plugin info, userId: %{public}d, plugin:%{public}s",
         GetBundleName().c_str(), userId, pluginBundleInfo.pluginBundleName.c_str());
     return true;
@@ -4933,8 +4946,9 @@ bool InnerBundleInfo::RemovePluginBundleInfo(const std::string &pluginBundleName
             pluginBundleName.c_str(), userId, GetBundleName().c_str());
         return false;
     }
-    auto &infos = infoItem->second.pluginBundleInfos;
-    infos.erase(pluginBundleName);
+    auto &pluginSet = infoItem->second.installedPluginSet;
+    pluginSet.erase(pluginBundleName);
+    pluginBundleInfos_.erase(pluginBundleName);
     APP_LOGD("bundleName: %{public}s remove plugin info, userId: %{public}d, plugin:%{public}s",
         GetBundleName().c_str(), userId, pluginBundleName.c_str());
     return true;
@@ -4945,25 +4959,58 @@ bool InnerBundleInfo::HasMultiUserPlugin(const std::string &pluginBundleName) co
     if (innerBundleUserInfos_.size() <= 1) {
         return false;
     }
-    PluginBundleInfo pluginBundleInfo;
     int32_t cnt = 0;
     for (auto &info : innerBundleUserInfos_) {
-        if (info.second.GetPluginBundleInfo(pluginBundleName, pluginBundleInfo)) {
+        if (info.second.IsPluginInstalled(pluginBundleName)) {
             cnt++;
         }
     }
     return cnt > 1;
 }
 
-void InnerBundleInfo::GetPluginInstalledUser(const std::string &pluginBundleName,
-    std::unordered_set<int32_t> &userIds) const
+bool InnerBundleInfo::UpdatePluginBundleInfo(const PluginBundleInfo &pluginBundleInfo)
 {
-    PluginBundleInfo pluginBundleInfo;
-    for (auto &info : innerBundleUserInfos_) {
-        if (info.second.GetPluginBundleInfo(pluginBundleName, pluginBundleInfo)) {
-            userIds.insert(info.second.bundleUserInfo.userId);
+    auto it = pluginBundleInfos_.find(pluginBundleInfo.pluginBundleName);
+    if (it == pluginBundleInfos_.end()) {
+        APP_LOGW("bundleName: %{public}s can not find plugin:%{public}s",
+            GetBundleName().c_str(), pluginBundleInfo.pluginBundleName.c_str());
+        return false;
+    }
+    it->second = pluginBundleInfo;
+    return true;
+}
+
+bool InnerBundleInfo::RemovePluginFromUserInfo(const std::string &pluginBundleName, const int32_t userId)
+{
+    auto key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE("remove plugin:%{public}s from userInfo failed, userId: %{public}d not found in bundleName:%{public}s",
+            pluginBundleName.c_str(), userId, GetBundleName().c_str());
+        return false;
+    }
+    auto &pluginSet = infoItem->second.installedPluginSet;
+    pluginSet.erase(pluginBundleName);
+    APP_LOGD("bundleName: %{public}s remove plugin from userInfo, userId: %{public}d, plugin:%{public}s",
+        GetBundleName().c_str(), userId, pluginBundleName.c_str());
+    return true;
+}
+
+bool InnerBundleInfo::GetPluginBundleInfos(const int32_t userId,
+    std::unordered_map<std::string, PluginBundleInfo> &pluginBundleInfos) const
+{
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        APP_LOGD("can not find userId %{public}d when GetPluginBundleInfos", userId);
+        return false;
+    }
+    for (const auto &pluginName : innerBundleUserInfo.installedPluginSet) {
+        auto it = pluginBundleInfos_.find(pluginName);
+        if (it != pluginBundleInfos_.end()) {
+            pluginBundleInfos.emplace(it->first, it->second);
         }
     }
+    return true;
 }
 
 }  // namespace AppExecFwk

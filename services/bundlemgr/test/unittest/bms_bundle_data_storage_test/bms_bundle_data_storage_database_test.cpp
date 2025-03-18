@@ -4898,15 +4898,15 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12700, Function | Sma
 
 /**
  * @tc.number: InnerBundleInfo_12800
- * @tc.name: Test GetPluginBundleInfo
- * @tc.desc: Test the GetPluginBundleInfo of InnerBundleInfo
+ * @tc.name: Test ConvertPluginBundleInfo
+ * @tc.desc: Test the ConvertPluginBundleInfo of InnerBundleInfo
  */
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_12800, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     EXPECT_EQ(info.FromJson(innerBundleInfoJson_), OHOS::ERR_OK);
     PluginBundleInfo pluginBundleInfo;
-    info.GetPluginBundleInfo(BUNDLE_NAME, pluginBundleInfo);
+    info.ConvertPluginBundleInfo(BUNDLE_NAME, pluginBundleInfo);
     EXPECT_EQ(pluginBundleInfo.pluginBundleName, info.GetBundleName());
     EXPECT_EQ(pluginBundleInfo.pluginModuleInfos.size(), info.innerModuleInfos_.size());
 }
@@ -4980,22 +4980,4 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13100, Function | Sma
     result = info.HasMultiUserPlugin(TEST_BUNDLE_NAME);
     EXPECT_EQ(result, false);
 }
-
-/**
- * @tc.number: InnerBundleInfo_13200
- * @tc.name: Test GetPluginInstalledUser
- * @tc.desc: Test the GetPluginInstalledUser of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13200, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    InnerBundleUserInfo innerBundleUserInfo1;
-    innerBundleUserInfo1.bundleUserInfo.userId = 100;
-    info.AddInnerBundleUserInfo(innerBundleUserInfo1);
-
-    std::unordered_set<int32_t> userIds;
-    info.GetPluginInstalledUser(TEST_BUNDLE_NAME, userIds);
-    EXPECT_EQ(userIds.size(), 0);
-}
-
 } // OHOS

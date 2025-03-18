@@ -8178,12 +8178,12 @@ HWTEST_F(BmsBundleDataMgrTest, AddPluginInfo_0001, Function | MediumTest | Level
     pluginBundleInfo.pluginBundleName = BUNDLE_TEST1;
     ErrCode result = ERR_OK;
 
-    result = bundleDataMgr->AddPluginInfo(innerBundleInfo, pluginBundleInfo, USERID);
+    result = bundleDataMgr->AddPluginInfo(innerBundleInfo.GetBundleName(), pluginBundleInfo, USERID);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_TEST2;
     bundleDataMgr->bundleInfos_.emplace(BUNDLE_TEST2, innerBundleInfo);
-    result = bundleDataMgr->AddPluginInfo(innerBundleInfo, pluginBundleInfo, USERID);
+    result = bundleDataMgr->AddPluginInfo(BUNDLE_TEST2, pluginBundleInfo, USERID);
     EXPECT_EQ(result, ERR_APPEXECFWK_ADD_PLUGIN_INFO_ERROR);
 
     InnerBundleUserInfo userInfo;
@@ -8192,7 +8192,7 @@ HWTEST_F(BmsBundleDataMgrTest, AddPluginInfo_0001, Function | MediumTest | Level
     innerBundleInfo.AddInnerBundleUserInfo(userInfo);
     auto res = bundleDataMgr->UpdateInnerBundleInfo(innerBundleInfo, true);
     EXPECT_EQ(res, true);
-    result = bundleDataMgr->AddPluginInfo(innerBundleInfo, pluginBundleInfo, USERID);
+    result = bundleDataMgr->AddPluginInfo(BUNDLE_TEST2, pluginBundleInfo, USERID);
     EXPECT_EQ(result, ERR_OK);
 }
 
@@ -8213,12 +8213,12 @@ HWTEST_F(BmsBundleDataMgrTest, RemovePluginInfo_0001, Function | MediumTest | Le
     pluginBundleInfo.pluginBundleName = BUNDLE_TEST1;
     ErrCode result = ERR_OK;
 
-    result = bundleDataMgr->RemovePluginInfo(innerBundleInfo, pluginBundleName, USERID);
+    result = bundleDataMgr->RemovePluginInfo(innerBundleInfo.GetBundleName(), pluginBundleName, USERID);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_TEST2;
     bundleDataMgr->bundleInfos_.emplace(BUNDLE_TEST2, innerBundleInfo);
-    result = bundleDataMgr->RemovePluginInfo(innerBundleInfo, pluginBundleName, ServiceConstants::NOT_EXIST_USERID);
+    result = bundleDataMgr->RemovePluginInfo(BUNDLE_TEST2, pluginBundleName, ServiceConstants::NOT_EXIST_USERID);
     EXPECT_EQ(result, ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR);
 
     InnerBundleUserInfo userInfo;
@@ -8227,10 +8227,10 @@ HWTEST_F(BmsBundleDataMgrTest, RemovePluginInfo_0001, Function | MediumTest | Le
     innerBundleInfo.AddInnerBundleUserInfo(userInfo);
     auto res = bundleDataMgr->UpdateInnerBundleInfo(innerBundleInfo, true);
     EXPECT_EQ(res, true);
-    result = bundleDataMgr->AddPluginInfo(innerBundleInfo, pluginBundleInfo, USERID);
+    result = bundleDataMgr->AddPluginInfo(BUNDLE_TEST2, pluginBundleInfo, USERID);
     EXPECT_EQ(result, ERR_OK);
 
-    result = bundleDataMgr->RemovePluginInfo(innerBundleInfo, pluginBundleName, USERID);
+    result = bundleDataMgr->RemovePluginInfo(BUNDLE_TEST2, pluginBundleName, USERID);
     EXPECT_EQ(result, ERR_OK);
 }
 
@@ -8250,10 +8250,10 @@ HWTEST_F(BmsBundleDataMgrTest, GetPluginBundleInfo_0001, Function | MediumTest |
     PluginBundleInfo pluginBundleInfo;
     bool result = true;
 
-    result = bundleDataMgr->GetPluginBundleInfo("", "", pluginBundleInfo, USERID);
+    result = bundleDataMgr->GetPluginBundleInfo("", "", USERID, pluginBundleInfo);
     EXPECT_EQ(result, false);
     result = bundleDataMgr->GetPluginBundleInfo(hostBundleName, pluginBundleName,
-        pluginBundleInfo, USERID);
+        USERID, pluginBundleInfo);
     EXPECT_EQ(result, false);
 
     InnerBundleInfo innerBundleInfo;
@@ -8265,17 +8265,54 @@ HWTEST_F(BmsBundleDataMgrTest, GetPluginBundleInfo_0001, Function | MediumTest |
     bundleDataMgr->bundleInfos_.emplace(BUNDLE_TEST2, innerBundleInfo);
 
     pluginBundleInfo.pluginBundleName = BUNDLE_TEST1;
-    auto res = bundleDataMgr->AddPluginInfo(innerBundleInfo, pluginBundleInfo, USERID);
+    auto res = bundleDataMgr->AddPluginInfo(hostBundleName, pluginBundleInfo, USERID);
     EXPECT_EQ(res, ERR_OK);
 
-    result = bundleDataMgr->GetPluginBundleInfo(hostBundleName, pluginBundleName, pluginBundleInfo);
-    EXPECT_EQ(result, true);
-
-    result = bundleDataMgr->GetPluginBundleInfo(hostBundleName, pluginBundleName, pluginBundleInfo, USERID);
+    result = bundleDataMgr->GetPluginBundleInfo(hostBundleName, pluginBundleName, USERID, pluginBundleInfo);
     EXPECT_EQ(result, true);
 
     result = bundleDataMgr->GetPluginBundleInfo(hostBundleName, pluginBundleName,
-        pluginBundleInfo, ServiceConstants::NOT_EXIST_USERID);
+        ServiceConstants::NOT_EXIST_USERID, pluginBundleInfo);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: FetchPluginBundleInfo_0001
+ * @tc.name: FetchPluginBundleInfo_0001
+ * @tc.desc: test FetchPluginBundleInfo_0001(const std::string &hostBundleName, const std::string &pluginBundleName,
+    PluginBundleInfo &pluginBundleInfo)
+ */
+HWTEST_F(BmsBundleDataMgrTest, FetchPluginBundleInfo_0001, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    
+    std::string pluginBundleName = BUNDLE_TEST1;
+    std::string hostBundleName = BUNDLE_TEST2;
+    PluginBundleInfo pluginBundleInfo;
+    bool result = true;
+
+    result = bundleDataMgr->FetchPluginBundleInfo("", "", pluginBundleInfo);
+    EXPECT_EQ(result, false);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.bundleName = BUNDLE_TEST2;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_TEST2;
+    bundleDataMgr->bundleInfos_.emplace(BUNDLE_TEST2, innerBundleInfo);
+
+    pluginBundleInfo.pluginBundleName = BUNDLE_TEST1;
+    auto res = bundleDataMgr->AddPluginInfo(hostBundleName, pluginBundleInfo, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    result = bundleDataMgr->FetchPluginBundleInfo(hostBundleName, pluginBundleName, pluginBundleInfo);
+    EXPECT_EQ(result, true);
+
+    std::string pluginBundleName2 = BUNDLE_TEST3;
+    result = bundleDataMgr->FetchPluginBundleInfo(hostBundleName, pluginBundleName2,
+        pluginBundleInfo);
     EXPECT_EQ(result, false);
 }
 } // OHOS

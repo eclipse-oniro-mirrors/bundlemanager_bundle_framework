@@ -20,6 +20,7 @@
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bundle_mgr_service.h"
+#include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
@@ -39,6 +40,7 @@ constexpr const char* PERMISSION_KEY = "ohos.permission.kernel.SUPPORT_PLUGIN";
 constexpr const char* PLUGIN_ID = "pluginDistributionIDs";
 constexpr const char* PLUGIN_ID_SEPARATOR = "|";
 constexpr const char* REMOVE_TMP_SUFFIX = "_removed";
+constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install/";
 }
 
 PluginInstaller::PluginInstaller()
@@ -58,11 +60,9 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
     const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to install plugin");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to install plugin for %{public}s", hostBundleName.c_str());
 
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
+    if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
     // check userId
@@ -70,15 +70,15 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
         APP_LOGE("userId(%{public}d) invalid", installPluginParam.userId);
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
-    if (!dataMgr->HasUserId(installPluginParam.userId)) {
+    if (!dataMgr_->HasUserId(installPluginParam.userId)) {
         APP_LOGE("user %{public}d not exist", installPluginParam.userId);
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
-    auto &mtx = dataMgr->GetBundleMutex(hostBundleName);
+    auto &mtx = dataMgr_->GetBundleMutex(hostBundleName);
     std::lock_guard lock {mtx};
     // check host application exist in userId
     InnerBundleInfo hostBundleInfo;
-    if (!dataMgr->FetchInnerBundleInfo(hostBundleName, hostBundleInfo)) {
+    if (!dataMgr_->FetchInnerBundleInfo(hostBundleName, hostBundleInfo)) {
         APP_LOGE("hostBundleName:%{public}s get bundle info failed", hostBundleName.c_str());
         return ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND;
     }
@@ -87,11 +87,11 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
             hostBundleName.c_str(), installPluginParam.userId);
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
+    userId_ = installPluginParam.userId;
     // check host application permission
     ErrCode result = ERR_OK;
-    result = CheckSupportPluginPermission(hostBundleInfo);
+    result = CheckSupportPluginPermission(hostBundleInfo.GetBundleName());
     CHECK_RESULT(result, "check host application permission failed %{public}d");
-    userId_ = installPluginParam.userId;
     // parse hsp file
     result = ParseFiles(pluginFilePaths, installPluginParam);
     CHECK_RESULT(result, "parse file failed %{public}d");
@@ -111,12 +111,11 @@ ErrCode PluginInstaller::UninstallPlugin(const std::string &hostBundleName, cons
     const InstallPluginParam &installPluginParam)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to uninstall plugin");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to uninstall plugin %{public}s for %{public}s",
+        pluginBundleName.c_str(), hostBundleName.c_str());
 
     ErrCode result = ERR_OK;
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
+    if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
     // check userId
@@ -124,15 +123,15 @@ ErrCode PluginInstaller::UninstallPlugin(const std::string &hostBundleName, cons
         APP_LOGE("userId(%{public}d) invalid", installPluginParam.userId);
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
-    if (!dataMgr->HasUserId(installPluginParam.userId)) {
+    if (!dataMgr_->HasUserId(installPluginParam.userId)) {
         APP_LOGE("user %{public}d not exist", installPluginParam.userId);
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
-    auto &mtx = dataMgr->GetBundleMutex(hostBundleName);
+    auto &mtx = dataMgr_->GetBundleMutex(hostBundleName);
     std::lock_guard lock {mtx};
     // check host application exist in userId
     InnerBundleInfo hostBundleInfo;
-    if (!dataMgr->FetchInnerBundleInfo(hostBundleName, hostBundleInfo)) {
+    if (!dataMgr_->FetchInnerBundleInfo(hostBundleName, hostBundleInfo)) {
         APP_LOGE("hostBundleName:%{public}s get bundle info failed", hostBundleName.c_str());
         return ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND;
     }
@@ -142,8 +141,8 @@ ErrCode PluginInstaller::UninstallPlugin(const std::string &hostBundleName, cons
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
     // check plugin exist in host application
-    isPluginExist_ = dataMgr->GetPluginBundleInfo(hostBundleName, pluginBundleName,
-        oldPluginInfo_, installPluginParam.userId);
+    isPluginExist_ = dataMgr_->GetPluginBundleInfo(hostBundleName, pluginBundleName,
+        installPluginParam.userId, oldPluginInfo_);
     if (!isPluginExist_) {
         APP_LOGE("plugin: %{public}s not installed in host application:%{public}s user %{public}d",
             pluginBundleName.c_str(), hostBundleName.c_str(), installPluginParam.userId);
@@ -165,9 +164,12 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
         GetJsonStrFromInfo(pluginFilePaths).c_str());
     ErrCode result = ERR_OK;
 
+    std::vector<std::string> parsedPaths;
+    result = ParseHapPaths(installPluginParam, pluginFilePaths, parsedPaths);
+    CHECK_RESULT(result, "hsp file parse failed %{public}d");
     // check file paths
     std::vector<std::string> inBundlePaths;
-    result = BundleUtil::CheckFilePath(pluginFilePaths, inBundlePaths);
+    result = BundleUtil::CheckFilePath(parsedPaths, inBundlePaths);
     CHECK_RESULT(result, "hsp files check failed %{public}d");
 
     // copy the haps to the dir which cannot be accessed from caller
@@ -251,6 +253,35 @@ ErrCode PluginInstaller::MkdirIfNotExist(const std::string &dir)
         CHECK_RESULT(result, "create dir failed %{public}d");
     }
     return result;
+}
+
+ErrCode PluginInstaller::ParseHapPaths(const InstallPluginParam &installPluginParam,
+    const std::vector<std::string> &inBundlePaths, std::vector<std::string> &parsedPaths)
+{
+    parsedPaths.reserve(inBundlePaths.size());
+    if (!inBundlePaths.empty() && inBundlePaths.front().find(APP_INSTALL_SANDBOX_PATH) != 0) {
+        parsedPaths.assign(inBundlePaths.begin(), inBundlePaths.end());
+        return ERR_OK;
+    }
+    APP_LOGI("rename install");
+    const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR;
+
+    for (const auto &bundlePath : inBundlePaths) {
+        if (bundlePath.find("..") != std::string::npos) {
+            APP_LOGE("path invalid: %{public}s", bundlePath.c_str());
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
+        if (bundlePath.find(APP_INSTALL_SANDBOX_PATH) == 0) {
+            std::string newPath = newPrefix + bundlePath.substr(std::strlen(APP_INSTALL_SANDBOX_PATH));
+            parsedPaths.push_back(newPath);
+            APP_LOGD("parsed path: %{public}s", newPath.c_str());
+        } else {
+            APP_LOGE("path invalid: %{public}s", bundlePath.c_str());
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
+    }
+    return ERR_OK;
 }
 
 ErrCode PluginInstaller::CopyHspToSecurityDir(std::vector<std::string> &bundlePaths,
@@ -455,12 +486,13 @@ bool PluginInstaller::ParsePluginId(const std::string &appServiceCapabilities,
     auto appServiceCapabilityMap = BundleUtil::ParseMapFromJson(appServiceCapabilities);
     for (auto &item : appServiceCapabilityMap) {
         if (item.first == PERMISSION_KEY) {
-            auto pluginIdMap = BundleUtil::ParseMapFromJson(item.second);
-            if (pluginIdMap.find(PLUGIN_ID) == pluginIdMap.end()) {
+            std::unordered_map<std::string, std::string> pluginIdMap = BundleUtil::ParseMapFromJson(item.second);
+            auto it = pluginIdMap.find(PLUGIN_ID);
+            if (it == pluginIdMap.end()) {
                 APP_LOGE("pluginDistributionIDs not found in appServiceCapability");
                 return false;
             }
-            OHOS::SplitStr(pluginIdMap.at(PLUGIN_ID), PLUGIN_ID_SEPARATOR, pluginIds);
+            OHOS::SplitStr(it->second, PLUGIN_ID_SEPARATOR, pluginIds);
             return true;
         }
     }
@@ -468,17 +500,14 @@ bool PluginInstaller::ParsePluginId(const std::string &appServiceCapabilities,
     return false;
 }
 
-ErrCode PluginInstaller::CheckSupportPluginPermission(const InnerBundleInfo &hostBundleInfo)
+ErrCode PluginInstaller::CheckSupportPluginPermission(const std::string &hostBundleName)
 {
-    std::vector<RequestPermission> reqPermissions = hostBundleInfo.GetAllRequestPermissions();
-    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission &permission) {
-        return permission.name == ServiceConstants::PERMISSION_SUPPORT_PLUGIN;
-    });
-    if (it == reqPermissions.end()) {
-        APP_LOGE("bundleName:%{public}s check support permission failed", hostBundleInfo.GetBundleName().c_str());
-        return ERR_APPEXECFWK_SUPPORT_PLUGIN_PERMISSION_ERROR;
+    if (BundlePermissionMgr::VerifyPermission(hostBundleName, ServiceConstants::PERMISSION_SUPPORT_PLUGIN,
+        userId_) == AccessToken::PermissionState::PERMISSION_GRANTED) {
+        APP_LOGD("verify support plugin permission success");
+        return ERR_OK;
     }
-    return ERR_OK;
+    return ERR_APPEXECFWK_SUPPORT_PLUGIN_PERMISSION_ERROR;
 }
 
 ErrCode PluginInstaller::CheckPluginAppLabelInfo()
@@ -503,16 +532,14 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
         APP_LOGD("no bundle to install");
         return ERR_OK;
     }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
+    if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
     ErrCode result = ERR_OK;
     std::string pluginDir;
     result = CheckPluginDir(hostBundleInfo.GetBundleName(), pluginDir);
     CHECK_RESULT(result, "plugin dir check failed %{public}d");
-    isPluginExist_ = dataMgr->GetPluginBundleInfo(hostBundleInfo.GetBundleName(), bundleName_, oldPluginInfo_);
+    isPluginExist_ = dataMgr_->FetchPluginBundleInfo(hostBundleInfo.GetBundleName(), bundleName_, oldPluginInfo_);
     if (isPluginExist_) {
         if (!CheckAppIdentifier()) {
             return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
@@ -527,7 +554,7 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
         CHECK_RESULT(result, "extract plugin bundles failed %{public}d");
     }
 
-    ScopeGuard dataRollBackGuard([&] { PluginRollBack(hostBundleInfo);});
+    ScopeGuard dataRollBackGuard([&] { PluginRollBack(hostBundleInfo.GetBundleName());});
     InnerBundleInfo pluginInfo;
     MergePluginBundleInfo(pluginInfo);
     result = SavePluginInfoToStorage(pluginInfo, hostBundleInfo);
@@ -616,14 +643,12 @@ void PluginInstaller::MergePluginBundleInfo(InnerBundleInfo &pluginBundleInfo)
     pluginBundleInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
     iter++;
 
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
+    if (!InitDataMgr()) {
         return;
     }
     for (; iter != parsedBundles_.end(); ++iter) {
         InnerBundleInfo &currentInfo = iter->second;
-        dataMgr->AddNewModuleInfo(currentInfo, pluginBundleInfo);
+        dataMgr_->AddNewModuleInfo(currentInfo, pluginBundleInfo);
     }
 }
 
@@ -632,59 +657,43 @@ ErrCode PluginInstaller::SavePluginInfoToStorage(const InnerBundleInfo &pluginIn
 {
     ErrCode result = ERR_OK;
     PluginBundleInfo pluginBundleInfo;
-    pluginInfo.GetPluginBundleInfo(bundleNameWithTime_, pluginBundleInfo);
+    pluginInfo.ConvertPluginBundleInfo(bundleNameWithTime_, pluginBundleInfo);
 
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("get dataMgr failed");
+    if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    if (isPluginExist_) {
-        hostBundleInfo.GetPluginInstalledUser(bundleName_, hasInstalledUsers_);
-    }
-    std::unordered_set<int32_t> userIds(hasInstalledUsers_);
-    userIds.insert(userId_);
-    for (const auto &userId : userIds) {
-        result = dataMgr->AddPluginInfo(hostBundleInfo, pluginBundleInfo, userId);
-        if (result != ERR_OK) {
-            APP_LOGE("save pluginInfo to storage failed %{public}d, userId:%{public}d",
-                result, userId);
-            return result;
-        }
+    result = dataMgr_->AddPluginInfo(hostBundleInfo.GetBundleName(), pluginBundleInfo, userId_);
+    if (result != ERR_OK) {
+        APP_LOGE("save pluginInfo to storage failed %{public}d, userId:%{public}d",
+            result, userId_);
+        return result;
     }
     APP_LOGI("save pluginInfo:%{public}s success", bundleName_.c_str());
     return ERR_OK;
 }
 
-void PluginInstaller::PluginRollBack(const InnerBundleInfo &hostBundleInfo)
+void PluginInstaller::PluginRollBack(const std::string &hostBundleName)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("get dataMgr failed");
+    if (!InitDataMgr()) {
         return;
     }
+    ErrCode result = ERR_OK;
     if (!isPluginExist_) {
         //rollback database
-        ErrCode err = dataMgr->RemovePluginInfo(hostBundleInfo, bundleName_, userId_);
-        if (err != ERR_OK) {
+        result = dataMgr_->RemovePluginInfo(hostBundleName, bundleName_, userId_);
+        if (result != ERR_OK) {
             APP_LOGW("plugin:%{public}s clean PluginInfo failed", bundleName_.c_str());
         }
         return;
     }
     // for update
-    for (const auto &userId : hasInstalledUsers_) {
-        ErrCode err = dataMgr->AddPluginInfo(hostBundleInfo, oldPluginInfo_, userId);
-        if (err != ERR_OK) {
-            APP_LOGW("save old pluginInfo failed %{public}d, userId:%{public}d",
-                err, userId);
-        }
+    result = dataMgr_->UpdatePluginBundleInfo(hostBundleName, oldPluginInfo_);
+    if (result != ERR_OK) {
+        APP_LOGW("save old pluginInfo failed %{public}d when rollback", result);
     }
-    // current user has not install plugin before update, need to remove
-    if (hasInstalledUsers_.find(userId_) == hasInstalledUsers_.end()) {
-        ErrCode err = dataMgr->RemovePluginInfo(hostBundleInfo, bundleName_, userId_);
-        if (err != ERR_OK) {
-            APP_LOGW("plugin:%{public}s clean PluginInfo failed", bundleName_.c_str());
-        }
+    result = dataMgr_->RemovePluginFromUserInfo(hostBundleName, bundleName_, userId_);
+    if (result != ERR_OK) {
+        APP_LOGW("plugin:%{public}s clean Plugin from userInfo failed", bundleName_.c_str());
     }
 }
 
@@ -695,21 +704,6 @@ ErrCode PluginInstaller::RemovePluginDir(const InnerBundleInfo &hostBundleInfo)
     ErrCode err = InstalldClient::GetInstance()->RemoveDir(pluginBundleDir);
     if (err != ERR_OK) {
         APP_LOGW("remove dir of %{public}s failed: %{public}s", bundleName_.c_str(), pluginBundleDir.c_str());
-        return err;
-    }
-    return ERR_OK;
-}
-
-ErrCode PluginInstaller::RemovePluginInfo(const InnerBundleInfo &hostBundleInfo)
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("get dataMgr failed");
-        return ERR_APPEXECFWK_NULL_PTR;
-    }
-    ErrCode err = dataMgr->RemovePluginInfo(hostBundleInfo, bundleName_, userId_);
-    if (err != ERR_OK) {
-        APP_LOGW("plugin:%{public}s clean PluginInfo failed", bundleName_.c_str());
         return err;
     }
     return ERR_OK;
@@ -776,44 +770,45 @@ void PluginInstaller::RemoveDir(const std::string &dir) const
 ErrCode PluginInstaller::ProcessPluginUninstall(const InnerBundleInfo &hostBundleInfo)
 {
     ErrCode result = ERR_OK;
+    if (!InitDataMgr()) {
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::string hostBundleName = hostBundleInfo.GetBundleName();
     bool isMultiUser = hostBundleInfo.HasMultiUserPlugin(bundleName_);
-    ScopeGuard removeDataGuard([&] { UninstallRollBack(hostBundleInfo); });
-    result = RemovePluginInfo(hostBundleInfo);
+    if (isMultiUser) {
+        result = dataMgr_->RemovePluginFromUserInfo(hostBundleName, bundleName_, userId_);
+        if (result != ERR_OK) {
+            APP_LOGE("bundleName:%{public}s remove plugin:%{public}s from userInfo failed",
+                hostBundleName.c_str(), bundleName_.c_str());
+            return ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR;
+        }
+        return ERR_OK;
+    }
+
+    ScopeGuard removeDataGuard([&] { UninstallRollBack(hostBundleName); });
+    result = dataMgr_->RemovePluginInfo(hostBundleName, bundleName_, userId_);
     if (result != ERR_OK) {
-        APP_LOGE("bundleName:%{public}s remove plugin:%{public}s info failed",
+        APP_LOGE("bundleName:%{public}s remove plugin info %{public}s failed",
             hostBundleInfo.GetBundleName().c_str(), bundleName_.c_str());
         return ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR;
     }
     removeDataGuard.Dismiss();
-    if (!isMultiUser) {
-        std::string pluginBundleDir = GetPluginBundleDir();
-        std::string deleteDir = pluginBundleDir + REMOVE_TMP_SUFFIX;
-        if (!BundleUtil::RenameFile(pluginBundleDir, deleteDir)) {
-            APP_LOGW("rename failed, %{public}s -> %{public}s", pluginBundleDir.c_str(), deleteDir.c_str());
-            result = InstalldClient::GetInstance()->RemoveDir(pluginBundleDir);
-        } else {
-            result = InstalldClient::GetInstance()->RemoveDir(deleteDir);
-        }
-        if (result != ERR_OK) {
-            APP_LOGW("bundleName:%{public}s remove plugin:%{public}s dir failed",
-                hostBundleInfo.GetBundleName().c_str(), bundleName_.c_str());
-        }
-        InstalldClient::GetInstance()->RemoveSignProfile(bundleName_);
-    }
-    return ERR_OK;
-}
 
-std::string PluginInstaller::GetPluginBundleDir()
-{
-    for (const auto &item : oldPluginInfo_.pluginModuleInfos) {
-        if (!item.hapPath.empty()) {
-            auto pos = item.hapPath.rfind(ServiceConstants::PATH_SEPARATOR);
-            if (pos != std::string::npos) {
-                return item.hapPath.substr(0, pos);
-            }
-        }
+    std::string pluginBundleDir = oldPluginInfo_.codePath;
+    std::string deleteDir = pluginBundleDir + REMOVE_TMP_SUFFIX;
+    if (!BundleUtil::RenameFile(pluginBundleDir, deleteDir)) {
+        APP_LOGW("rename failed, %{public}s -> %{public}s", pluginBundleDir.c_str(), deleteDir.c_str());
+        result = InstalldClient::GetInstance()->RemoveDir(pluginBundleDir);
+    } else {
+        result = InstalldClient::GetInstance()->RemoveDir(deleteDir);
     }
-    return "";
+    if (result != ERR_OK) {
+        APP_LOGW("bundleName:%{public}s remove plugin:%{public}s dir failed",
+            hostBundleInfo.GetBundleName().c_str(), bundleName_.c_str());
+    }
+    InstalldClient::GetInstance()->RemoveSignProfile(bundleName_);
+
+    return ERR_OK;
 }
 
 void PluginInstaller::RemoveOldInstallDir()
@@ -821,22 +816,31 @@ void PluginInstaller::RemoveOldInstallDir()
     if (!isPluginExist_) {
         return;
     }
-    std::string path = GetPluginBundleDir();
-    RemoveDir(path);
-    APP_LOGI("remove old install dir:%{public}s", path.c_str());
+    RemoveDir(oldPluginInfo_.codePath);
+    APP_LOGI("remove old install dir:%{public}s", oldPluginInfo_.codePath.c_str());
 }
 
-void PluginInstaller::UninstallRollBack(const InnerBundleInfo &hostBundleInfo)
+void PluginInstaller::UninstallRollBack(const std::string &hostBundleName)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("get dataMgr failed");
+    if (!InitDataMgr()) {
         return;
     }
-    ErrCode err = dataMgr->AddPluginInfo(hostBundleInfo, oldPluginInfo_, userId_);
+    ErrCode err = dataMgr_->AddPluginInfo(hostBundleName, oldPluginInfo_, userId_);
     if (err != ERR_OK) {
         APP_LOGW("save old pluginInfo failed %{public}d, userId:%{public}d", err, userId_);
     }
+}
+
+bool PluginInstaller::InitDataMgr()
+{
+    if (dataMgr_ == nullptr) {
+        dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr_ == nullptr) {
+            LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
+            return false;
+        }
+    }
+    return true;
 }
 } // AppExecFwk
 } // OHOS
