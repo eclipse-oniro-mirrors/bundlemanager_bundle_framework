@@ -82,12 +82,5 @@ export interface BundleResourceInfo {
    * @systemapi
    * @since 12
    */
-  readonly appIndex: int;
-}
-
-class BundleResourceInfoInner implements BundleResourceInfo {
-    readonly bundleName: string = '';
-    readonly icon: string = '';
-    readonly label: string = '';
-    readonly appIndex: int;
+  readonly appIndex: number;
 }
