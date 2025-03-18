@@ -14,7 +14,7 @@
  */
 
 import { BundleInfo } from './BundleInfo';
-import { AsyncCallback, BusinessError } from './@ohos.base';
+import { AsyncCallback, BusinessError } from '@ohos.base';
 import { ApplicationInfo } from './ApplicationInfo';
 
 namespace bundleManager {

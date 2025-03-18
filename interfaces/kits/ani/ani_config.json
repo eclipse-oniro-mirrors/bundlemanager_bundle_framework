@@ -38,7 +38,7 @@
         "./ets/@ohos.bundle.bundleManager.ets"
       ],
       "@ohos.base": [
-        "./ets/@ohos.base.ets"
+        "../../../../../../interface/sdk-js/api/@ohos.base.d.ets"
       ]
     }
   },
