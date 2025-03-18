@@ -16,5 +16,5 @@ import("../../../../appexecfwk.gni")
 
 ohos_copy("copy_ohos_test") {
   sources = [ "./ohos_test.xml" ]
-  outputs = [ "$root_out_dir/tests/systemtest/bundle_framework/bundlemgrsst/resource/ohos_test.xml" ]
+  outputs = [ "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/ohos_test.xml" ]
 }

@@ -18,7 +18,7 @@ ohos_hap("version1_oneExtension2_entry_hap") {
   hap_profile = "src/main/module.json"
   hap_name = "version1_oneExtension2_entry_hap"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundlemgrsst/resource/extensionDirTest/${hap_name}.hap"
+  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/extensionDirTest/${hap_name}.hap"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",

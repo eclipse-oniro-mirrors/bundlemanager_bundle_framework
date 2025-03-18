@@ -18,7 +18,7 @@ ohos_hap("hspASystemtestFeature7") {
   hap_profile = "entry/src/main/module.json"
   hap_name = "hspASystemtestFeature7"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundlemgrsst/resource/bundle_hsp/${hap_name}.hsp"
+  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/bundle_hsp/${hap_name}.hsp"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",

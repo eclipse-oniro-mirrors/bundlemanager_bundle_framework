@@ -1563,7 +1563,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoExt(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(hapFilePath)) {
-        APP_LOGE("fail to GetBundleArchiveInfoV9 due to write hapFilePath fail");
+        APP_LOGE("fail to GetBundleArchiveInfoExt due to write hapFilePath fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteFileDescriptor(fd)) {

@@ -18,7 +18,7 @@ ohos_hap("bmsVendorBundle1") {
   hap_profile = "./src/main/config.json"
   hap_name = "bmsVendorBundle1"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundlemgrsst/resource/stVendorBundle/${hap_name}.hap"
+  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/stVendorBundle/${hap_name}.hap"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",

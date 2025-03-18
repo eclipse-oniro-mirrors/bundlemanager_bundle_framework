@@ -18,7 +18,7 @@ ohos_hap("hapSectionContainsoFeature3") {
   hap_profile = "src/main/module.json"
   hap_name = "hapSectionContainsoFeature3"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundlemgrsst/resource/testHapNoSo/${hap_name}.hap"
+  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/testHapNoSo/${hap_name}.hap"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",

@@ -14,6 +14,14 @@
  * limitations under the License.
  -->
 <configuration ver="2.0">
+  <target name="zip_test">
+    <preparer>
+      <option name="push" 
+        value="test_bundle/resourceManagerTest.hap -> /data/test/resource/bms/test_zip/" 
+        src="res" />
+      <option name="push" value="ohos_test.xml -> /data/test/resource/bms/test_zip/" src="res" />
+    </preparer>
+  </target>
   <target name="BmsBundleAppControlTest">
   <preparer>
       <option name="push" value="test_bundle/bmsThirdBundle1.hap -> /data/test/resource/bms/app_control/"
@@ -163,30 +171,6 @@
               src="res"/>
       <option name="push" value="test_bundle/second_right.hap -> /data/test/resource/bms/install_bundle/test/"
               src="res"/>
-    </preparer>
-  </target>
-    <target name="BmsBundleUpdateDebugTest">
-    <preparer>
-      <option name="push" value="bundle_update_debug/entry_v1debug.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_update_debug/entry_v2debug.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_update_debug/entry_v1release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_update_debug/entry_v2release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_update_debug/feature_v1debug.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_update_debug/feature_v2debug.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_update_debug/feature_v1release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_update_debug/feature_v2release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_update_debug/library_v1debug.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_update_debug/library_v2debug.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_update_debug/library_v1release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_update_debug/library_v2release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-    </preparer>
-  </target>
-  <target name="BmsBundlePermissionTest">
-    <preparer>
-      <option name="push" value="bundle_permission_test/entry_hap.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_permission_test/entry2_hap.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_permission_test/feature_hap.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="bundle_permission_test/feature2_hap.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
   <target name="BmsBundleUpdaterTest">

@@ -18,7 +18,7 @@ ohos_hap("priority_0") {
   hap_profile = "entry/src/main/module.json"
   hap_name = "priority_0"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundlemgrsst/resource/testOverlay/internal/test2/${hap_name}.hsp"
+  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/testOverlay/internal/test2/${hap_name}.hsp"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",
