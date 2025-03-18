@@ -16,11 +16,11 @@
 export interface Resource {
   bundleName: string;
   moduleName: string;
-  id: int;
+  id: number;
 }
 
 export class ResourceInner implements Resource {
   bundleName: string = "";
   moduleName: string = "";
-  id: int;
+  id: number;
 }

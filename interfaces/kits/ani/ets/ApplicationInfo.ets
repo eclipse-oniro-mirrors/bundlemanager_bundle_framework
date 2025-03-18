@@ -22,20 +22,20 @@ import { ResourceInner } from './resource';
 export interface ApplicationInfo {
   readonly name: string;
   readonly description: string;
-  readonly descriptionId: int;
+  readonly descriptionId: number;
   readonly enabled: boolean;
   readonly label: string;
-  readonly labelId: int;
+  readonly labelId: number;
   readonly icon: string;
-  readonly iconId: int;
+  readonly iconId: number;
   readonly process: string;
   readonly permissions: Array<string>;
   readonly codePath: string;
   readonly metadata: Map<string, Array<Metadata>>;
   readonly metadataArray: Array<ModuleMetadata>;
   readonly removable: boolean;
-  readonly accessTokenId: int;
-  readonly uid: int;
+  readonly accessTokenId: number;
+  readonly uid: number;
   readonly iconResource: Resource;
   readonly labelResource: Resource;
   readonly descriptionResource: Resource;
@@ -47,11 +47,11 @@ export interface ApplicationInfo {
   readonly dataUnclearable: boolean;
   readonly nativeLibraryPath: string;
   readonly multiAppMode: MultiAppMode;
-  readonly appIndex: int;
+  readonly appIndex: number;
   readonly installSource: string;
   readonly releaseType: string;
   readonly cloudFileSyncEnabled: boolean;
-  readonly flags?: int;
+  readonly flags?: number;
 }
 
 export interface ModuleMetadata {
@@ -61,34 +61,34 @@ export interface ModuleMetadata {
 
 export interface MultiAppMode {
   readonly multiAppModeType: bundleManager.MultiAppModeType;
-  readonly maxCount: int;
+  readonly maxCount: number;
 }
 
 export interface PreinstalledApplicationInfo {
   readonly bundleName: string;
   readonly moduleName: string;
-  readonly iconId: int;
-  readonly labelId: int;
+  readonly iconId: number;
+  readonly labelId: number;
 }
 
 
 export class ApplicationInfoInner implements ApplicationInfo {
   readonly name: string = "";
   readonly description: string = "";
-  readonly descriptionId: int;
+  readonly descriptionId: number;
   readonly enabled: boolean;
   readonly label: string = "";
-  readonly labelId: int;
+  readonly labelId: number;
   readonly icon: string = "";
-  readonly iconId: int;
+  readonly iconId: number;
   readonly process: string = "";
   readonly permissions: Array<string> = new Array<string>;
   readonly codePath: string = "";
   readonly metadata: Map<string, Array<Metadata>> = new Map<string, Array<Metadata>>;
   readonly metadataArray: Array<ModuleMetadata> = new Array<ModuleMetadata>;
   readonly removable: boolean;
-  readonly accessTokenId: int;
-  readonly uid: int;
+  readonly accessTokenId: number;
+  readonly uid: number;
   readonly iconResource: Resource = new ResourceInner;
   readonly labelResource: Resource = new ResourceInner;
   readonly descriptionResource: Resource = new ResourceInner;
@@ -100,11 +100,11 @@ export class ApplicationInfoInner implements ApplicationInfo {
   readonly dataUnclearable: boolean;
   readonly nativeLibraryPath: string = "";
   readonly multiAppMode: MultiAppMode = new MultiAppModeInner;
-  readonly appIndex: int;
+  readonly appIndex: number;
   readonly installSource: string = "";
   readonly releaseType: string = "";
   readonly cloudFileSyncEnabled: boolean;
-  readonly flags?: int|undefined;
+  readonly flags?: number|undefined;
 }
 
 class ModuleMetadataInner implements ModuleMetadata {
@@ -114,12 +114,12 @@ class ModuleMetadataInner implements ModuleMetadata {
 
 class MultiAppModeInner implements MultiAppMode {
   readonly multiAppModeType: bundleManager.MultiAppModeType = bundleManager.MultiAppModeType.UNSPECIFIED;
-  readonly maxCount: int;
+  readonly maxCount: number;
 }
 
 class PreinstalledApplicationInfoInner implements PreinstalledApplicationInfo {
   readonly bundleName: string = "";
   readonly moduleName: string = "";
-  readonly iconId: int;
-  readonly labelId: int;
+  readonly iconId: number;
+  readonly labelId: number;
 }

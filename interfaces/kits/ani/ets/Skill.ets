@@ -14,42 +14,42 @@
  */
 
 export interface Skill {
-    readonly actions: Array<string>;
-    readonly entities: Array<string>;
-    readonly uris: Array<SkillUri>;
-    readonly domainVerify: boolean;
+  readonly actions: Array<string>;
+  readonly entities: Array<string>;
+  readonly uris: Array<SkillUri>;
+  readonly domainVerify: boolean;
 }
   
 export interface SkillUri {
-    readonly scheme: string;
-    readonly host: string;
-    readonly port: int;
-    readonly path: string;
-    readonly pathStartWith: string;
-    readonly pathRegex: string;
-    readonly type: string;
-    readonly utd: string;
-    readonly maxFileSupported: int;
-    readonly linkFeature: string;
+  readonly scheme: string;
+  readonly host: string;
+  readonly port: number;
+  readonly path: string;
+  readonly pathStartWith: string;
+  readonly pathRegex: string;
+  readonly type: string;
+  readonly utd: string;
+  readonly maxFileSupported: number;
+  readonly linkFeature: string;
 }
 
 
 export class SkillInner implements Skill {
-    readonly actions: Array<string> = new Array<string>;
-    readonly entities: Array<string> = new Array<string>;
-    readonly uris: Array<SkillUri> = new Array<SkillUri>;
-    readonly domainVerify: boolean;
+  readonly actions: Array<string> = new Array<string>;
+  readonly entities: Array<string> = new Array<string>;
+  readonly uris: Array<SkillUri> = new Array<SkillUri>;
+  readonly domainVerify: boolean;
 }
   
 class SkillUriInner implements SkillUri {
-    readonly scheme: string = "";
-    readonly host: string = "";
-    readonly port: int;
-    readonly path: string = "";
-    readonly pathStartWith: string = "";
-    readonly pathRegex: string = "";
-    readonly type: string = "";
-    readonly utd: string = "";
-    readonly maxFileSupported: int;
-    readonly linkFeature: string = "";
+  readonly scheme: string = "";
+  readonly host: string = "";
+  readonly port: number;
+  readonly path: string = "";
+  readonly pathStartWith: string = "";
+  readonly pathRegex: string = "";
+  readonly type: string = "";
+  readonly utd: string = "";
+  readonly maxFileSupported: number;
+  readonly linkFeature: string = "";
 }
