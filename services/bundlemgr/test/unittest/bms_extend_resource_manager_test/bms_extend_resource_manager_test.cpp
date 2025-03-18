@@ -884,4 +884,51 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1003, Function | SmallTes
     ret = impl.BeforeAddExtResource(bundleName, filePaths);
     EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_INVALID_PATH_FAILED);
 }
+
+/**
+ * @tc.number: ResetBundleResourceIcon_0200
+ * @tc.name: test ResetBundleResourceIcon
+ * @tc.desc: 1.reset bundle resource icon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0200, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    DelayedSingleton<BundleResourceInfo>::GetInstance();
+    auto manager = DelayedSingleton<BundleResourceInfo>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ResetBundleResourceIcon_0300
+ * @tc.name: test ResetBundleResourceIcon
+ * @tc.desc: 1.reset bundle resource icon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0300, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    DelayedSingleton<BundleResourceInfo>::GetInstance();
+    auto manager = DelayedSingleton<BundleResourceInfo>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    bool ret = impl.ResetBundleResourceIcon("");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ParseBundleResource_0200
+ * @tc.name: test ParseBundleResource
+ * @tc.desc: 1.analyze bundled package resources
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0200, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string bundleName = BUNDLE_NAME;
+    std::vector<std::string> iconId;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.filePath = "";
+    extendResourceInfo.iconId = 0;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo);
+    EXPECT_FALSE(ret);
+}
 } // OHOS

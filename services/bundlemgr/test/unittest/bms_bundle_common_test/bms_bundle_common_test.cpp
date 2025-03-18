@@ -217,4 +217,88 @@ HWTEST_F(BmsBundleCommonTest, SingleDelayedTaskMgr_0300, Function | SmallTest | 
     mgr->SetTaskFinished();
     EXPECT_FALSE(mgr->isRunning_);
 }
+
+/**
+ * @tc.number: UpdateUninstallBundleInfo
+ * @tc.name: ReScheduleDelayTask_0100
+ * @tc.desc: test bool UninstallDataMgrStorageRdb::UpdateUninstallBundleInfo(
+ *  const std::string &bundleName, const UninstallBundleInfo &uninstallbundleInfo)
+ */
+HWTEST_F(BmsBundleCommonTest, ReScheduleDelayTask_0100, Function | SmallTest | Level1)
+{
+    std::string queueName;
+    SerialQueue serialQueue(queueName);
+    auto registerEventListenerFunc = []() {
+        return;
+    };
+    std::string taskName = "task";
+    uint64_t ms = 1000;
+    serialQueue.ReScheduleDelayTask(taskName, ms, registerEventListenerFunc);
+    serialQueue.CancelDelayTask(taskName);
+    EXPECT_EQ(serialQueue.taskMap_.size(), 0);
+}
+
+/**
+ * @tc.number: UpdateUninstallBundleInfo
+ * @tc.name: ReScheduleDelayTask_0200_MsOverflow
+ * @tc.desc: test bool UninstallDataMgrStorageRdb::UpdateUninstallBundleInfo(
+ *  const std::string &bundleName, const UninstallBundleInfo &uninstallbundleInfo)
+ */
+HWTEST_F(BmsBundleCommonTest, ReScheduleDelayTask_0200, Function | SmallTest | Level1)
+{
+    std::string queueName;
+    SerialQueue serialQueue(queueName);
+    auto registerEventListenerFunc = []() {
+        return;
+    };
+    std::string taskName = "task";
+    uint64_t ms = std::numeric_limits<uint64_t>::max() / 1000 + 1;
+    serialQueue.ReScheduleDelayTask(taskName, ms, registerEventListenerFunc);
+    EXPECT_EQ(serialQueue.taskMap_.size(), 0);
+}
+
+/**
+ * @tc.number: UpdateUninstallBundleInfo
+ * @tc.name: ReScheduleDelayTask_0300_ExistingTask
+ * @tc.desc: test bool UninstallDataMgrStorageRdb::UpdateUninstallBundleInfo(
+ *  const std::string &bundleName, const UninstallBundleInfo &uninstallbundleInfo)
+ */
+HWTEST_F(BmsBundleCommonTest, ReScheduleDelayTask_0300, Function | SmallTest | Level1)
+{
+    std::string queueName;
+    SerialQueue serialQueue(queueName);
+    auto registerEventListenerFunc = []() {
+        return;
+    };
+    std::string taskName = "task";
+    uint64_t ms = 1000;
+    // first add task
+    serialQueue.ReScheduleDelayTask(taskName, ms, registerEventListenerFunc);
+    EXPECT_EQ(serialQueue.taskMap_.size(), 1);
+    // second add task, overwrite the first task
+    serialQueue.ReScheduleDelayTask(taskName, ms, registerEventListenerFunc);
+    EXPECT_EQ(serialQueue.taskMap_.size(), 1);
+}
+
+/**
+ * @tc.number: UpdateUninstallBundleInfo
+ * @tc.name: ReScheduleDelayTask_0400_CancelFailed
+ * @tc.desc: test bool UninstallDataMgrStorageRdb::UpdateUninstallBundleInfo(
+ *  const std::string &bundleName, const UninstallBundleInfo &uninstallbundleInfo)
+ */
+HWTEST_F(BmsBundleCommonTest, ReScheduleDelayTask_0400, Function | SmallTest | Level1)
+{
+    std::string queueName;
+    SerialQueue serialQueue(queueName);
+    auto registerEventListenerFunc = []() {
+        return;
+    };
+    std::string taskName = "task";
+    uint64_t ms = 1000;
+    serialQueue.ReScheduleDelayTask(taskName, ms, registerEventListenerFunc);
+    EXPECT_EQ(serialQueue.taskMap_.size(), 1);
+    serialQueue.taskMap_[taskName] = nullptr;
+    serialQueue.ReScheduleDelayTask(taskName, ms, registerEventListenerFunc);
+    EXPECT_EQ(serialQueue.taskMap_.size(), 1);
+}
 } // OHOS
