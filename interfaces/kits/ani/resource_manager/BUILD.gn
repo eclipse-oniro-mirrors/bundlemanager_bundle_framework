@@ -67,7 +67,10 @@ ohos_shared_library("ani_bundle_res_manager") {
 
 generate_static_abc("bundle_resource_info") {
   base_url = "./ets"
-  files = [ "./ets/bundleManager/BundleResourceInfo.ets" ]
+  files = [
+    "./ets/bundleManager/BundleResourceInfo.ets",
+    "./ets/bundleManager/BundleResourceInfoInner.ets",
+  ]
   is_boot_abc = "True"
   device_dst_file = "/system/framework/bundle_resource_info.abc"
 }
