@@ -25,30 +25,30 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_FLAG = "L@ohos/bundle/bundleManager/bundleManager/BundleFlag";
-constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE = "L@ohos/bundle/bundleManager/bundleManager/BundleType";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_FLAG = "L@ohos/bundle/bundleManager/bundleManager/BundleFlag;";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE = "L@ohos/bundle/bundleManager/bundleManager/BundleType;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_MULTIAPPMODE_TYPE =
-    "L@ohos/bundle/bundleManager/bundleManager/MultiAppModeType";
-constexpr const char* CLASSNAME_BUNDLEMANAGER_ABILITY_TYPE = "L@ohos/bundle/bundleManager/bundleManager/AbilityType";
+    "L@ohos/bundle/bundleManager/bundleManager/MultiAppModeType;";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_ABILITY_TYPE = "L@ohos/bundle/bundleManager/bundleManager/AbilityType;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_DISPLAYORIENTATION =
-    "L@ohos/bundle/bundleManager/bundleManager/DisplayOrientation";
-constexpr const char* CLASSNAME_BUNDLEMANAGER_LAUNCH_TYPE = "L@ohos/bundle/bundleManager/bundleManager/LaunchType";
+    "L@ohos/bundle/bundleManager/bundleManager/DisplayOrientation;";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_LAUNCH_TYPE = "L@ohos/bundle/bundleManager/bundleManager/LaunchType;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_SUPPORTWINDOWMODE =
-    "L@ohos/bundle/bundleManager/bundleManager/SupportWindowMode";
+    "L@ohos/bundle/bundleManager/bundleManager/SupportWindowMode;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_EXTENSIONABILITY_TYPE =
-    "L@ohos/bundle/bundleManager/bundleManager/ExtensionAbilityType";
-constexpr const char* CLASSNAME_BUNDLEMANAGER_MODULE_TYPE = "L@ohos/bundle/bundleManager/bundleManager/ModuleType";
+    "L@ohos/bundle/bundleManager/bundleManager/ExtensionAbilityType;";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_MODULE_TYPE = "L@ohos/bundle/bundleManager/bundleManager/ModuleType;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_PERMISSIONGRANTSTATE =
-    "L@ohos/bundle/bundleManager/bundleManager/PermissionGrantState";
+    "L@ohos/bundle/bundleManager/bundleManager/PermissionGrantState;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_APPLICATION_FLAG =
-    "L@ohos/bundle/bundleManager/bundleManager/ApplicationFlag";
-constexpr const char* CLASSNAME_BUNDLE_DISPLAYORIENTATION = "L@ohos/bundle/bundle/DisplayOrientation";
-constexpr const char* CLASSNAME_BUNDLE_ABILITY_TYPE = "L@ohos/bundle/bundle/AbilityType";
-constexpr const char* CLASSNAME_BUNDLE_ABILITYSUB_TYPE = "L@ohos/bundle/bundle/AbilitySubType";
-constexpr const char* CLASSNAME_BUNDLE_LAUNCHMODE = "L@ohos/bundle/bundle/LaunchMode";
-constexpr const char* CLASSNAME_ZLIB_COMPRESSLEVEL = "L@ohos/zlib/zlib/CompressLevel";
-constexpr const char* CLASSNAME_ZLIB_MEMLEVEL = "L@ohos/zlib/zlib/MemLevel";
-constexpr const char* CLASSNAME_ZLIB_COMPRESSSTRATEGY = "L@ohos/zlib/zlib/CompressStrategy";
+    "L@ohos/bundle/bundleManager/bundleManager/ApplicationFlag;";
+constexpr const char* CLASSNAME_BUNDLE_DISPLAYORIENTATION = "L@ohos/bundle/bundle/DisplayOrientation;";
+constexpr const char* CLASSNAME_BUNDLE_ABILITY_TYPE = "L@ohos/bundle/bundle/AbilityType;";
+constexpr const char* CLASSNAME_BUNDLE_ABILITYSUB_TYPE = "L@ohos/bundle/bundle/AbilitySubType;";
+constexpr const char* CLASSNAME_BUNDLE_LAUNCHMODE = "L@ohos/bundle/bundle/LaunchMode;";
+constexpr const char* CLASSNAME_ZLIB_COMPRESSLEVEL = "L@ohos/zlib/zlib/CompressLevel;";
+constexpr const char* CLASSNAME_ZLIB_MEMLEVEL = "L@ohos/zlib/zlib/MemLevel;";
+constexpr const char* CLASSNAME_ZLIB_COMPRESSSTRATEGY = "L@ohos/zlib/zlib/CompressStrategy;";
 } // namespace
 class EnumUtils {
 private:
