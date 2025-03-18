@@ -1559,7 +1559,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoExt(
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleArchiveInfoV9 due to write InterfaceToken fail");
+        APP_LOGE("fail to GetBundleArchiveInfoExt due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(hapFilePath)) {
