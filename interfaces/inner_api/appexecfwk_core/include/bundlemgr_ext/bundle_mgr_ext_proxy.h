@@ -43,7 +43,7 @@ private:
      * @param reply Indicates the reply to be sent;
      * @return Returns true if message send successfully; returns false otherwise.
      */
-    bool SendTransactCmd(BundleMgrExtInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+    ErrCode SendTransactCmd(BundleMgrExtInterfaceCode code, MessageParcel &data, MessageParcel &reply);
 
     static inline BrokerDelegator<BundleMgrExtProxy> delegator_;
 };

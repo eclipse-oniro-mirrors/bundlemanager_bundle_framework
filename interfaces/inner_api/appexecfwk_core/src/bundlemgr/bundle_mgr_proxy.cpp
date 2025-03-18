@@ -26,6 +26,7 @@
 
 #include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
+#include "appexecfwk_core_constants.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
@@ -43,11 +44,6 @@ namespace AppExecFwk {
 namespace {
 constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
-const std::unordered_map<int32_t, int32_t> IPC_ERR_MAP = {
-    {29201, ERR_APPEXECFWK_IPC_REPLY_ERROR},
-    {29202, ERR_APPEXECFWK_IPC_REMOTE_FROZEN_ERROR},
-    {29189, ERR_APPEXECFWK_IPC_REMOTE_DEAD_ERROR}
-};
 
 bool GetData(void *&buffer, size_t size, const void *data)
 {
@@ -3425,10 +3421,12 @@ sptr<IBundleMgrExt> BundleMgrProxy::GetBundleMgrExtProxy()
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to get app control proxy due to write InterfaceToken failed");
+        APP_LOGE("write InterfaceToken failed");
         return nullptr;
     }
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_MGR_EXT_PROXY, data, reply)) {
+    ErrCode ret = SendTransactCmdWithErrCode(BundleMgrInterfaceCode::GET_BUNDLE_MGR_EXT_PROXY, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE("SendTransactCmd fail %{public}d", ret);
         return nullptr;
     }
 
@@ -4784,8 +4782,8 @@ ErrCode BundleMgrProxy::SendTransactCmdWithErrCode(BundleMgrInterfaceCode code, 
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
-        if (IPC_ERR_MAP.find(result) != IPC_ERR_MAP.end()) {
-            return IPC_ERR_MAP.at(result);
+        if (CoreConstants::IPC_ERR_MAP.find(result) != CoreConstants::IPC_ERR_MAP.end()) {
+            return CoreConstants::IPC_ERR_MAP.at(result);
         }
         return result;
     }
@@ -4811,8 +4809,8 @@ ErrCode BundleMgrProxy::SendTransactCmdWithLogErrCode(BundleMgrInterfaceCode cod
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
-        if (IPC_ERR_MAP.find(result) != IPC_ERR_MAP.end()) {
-            return IPC_ERR_MAP.at(result);
+        if (CoreConstants::IPC_ERR_MAP.find(result) != CoreConstants::IPC_ERR_MAP.end()) {
+            return CoreConstants::IPC_ERR_MAP.at(result);
         }
         return result;
     }
