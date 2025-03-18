@@ -5639,6 +5639,15 @@ void BundleDataMgr::CreateAppInstallDir(int32_t userId)
         Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID);
     if (ret != ERR_OK) {
         APP_LOGE("create app install %{public}d failed", userId);
+        return;
+    }
+
+    std::string appClonePath = path + ServiceConstants::GALLERY_CLONE_PATH;
+    ret = InstalldClient::GetInstance()->Mkdir(appClonePath,
+        S_IRWXU | S_IRWXG | S_IXOTH | S_ISGID,
+        Constants::FOUNDATION_UID, ServiceConstants::APP_INSTALL_GID);
+    if (ret != ERR_OK) {
+        APP_LOGE("create app clone %{public}d failed", userId);
     }
 }
 

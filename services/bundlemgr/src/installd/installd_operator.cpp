@@ -1008,16 +1008,28 @@ bool InstalldOperator::CheckPathIsSame(const std::string &path, int32_t mode, co
     return false;
 }
 
+bool InstalldOperator::IsPathNeedChown(const std::string &path, int32_t mode, bool isPathExist)
+{
+    if (isPathExist) {
+        return true;
+    }
+    struct stat s;
+    if (stat(path.c_str(), &s) != 0) {
+        LOG_D(BMS_TAG_INSTALLD, "path :%{public}s is not exist, not need, errno:%{public}d", path.c_str(), errno);
+        return false;
+    }
+    if (((mode & S_ISGID) == S_ISGID) && (static_cast<int32_t>(s.st_gid) != INSTALLS_UID)) {
+        LOG_W(BMS_TAG_INSTALLD, "path :%{public}s need chown when first create", path.c_str());
+        return true;
+    }
+    return false;
+}
+
 bool InstalldOperator::MkOwnerDir(const std::string &path, int mode, const int uid, const int gid)
 {
     bool isPathExist = false;
     if (CheckPathIsSame(path, mode, uid, gid, isPathExist)) {
         return true;
-    }
-    if (isPathExist) {
-        if (chown(path.c_str(), INSTALLS_UID, INSTALLS_UID) != 0) {
-            LOG_W(BMS_TAG_INSTALLD, "fail to change %{public}s ownership, errno:%{public}d", path.c_str(), errno);
-        }
     }
     if (!OHOS::ForceCreateDirectory(path)) {
         LOG_E(BMS_TAG_INSTALLD, "mkdir failed, errno: %{public}d", errno);
@@ -1028,6 +1040,11 @@ bool InstalldOperator::MkOwnerDir(const std::string &path, int mode, const int u
         LOG_E(BMS_TAG_INSTALLD, "chmod path:%{public}s mode:%{public}d failed, errno:%{public}d",
             path.c_str(), mode, errno);
         return false;
+    }
+    if (IsPathNeedChown(path, mode, isPathExist)) {
+        if (chown(path.c_str(), INSTALLS_UID, INSTALLS_UID) != 0) {
+            LOG_W(BMS_TAG_INSTALLD, "fail to change %{public}s ownership, errno:%{public}d", path.c_str(), errno);
+        }
     }
     if (!ChangeDirOwnerRecursively(path, uid, gid)) {
         LOG_E(BMS_TAG_INSTALLD, "ChangeDirOwnerRecursively failed, errno: %{public}d", errno);
