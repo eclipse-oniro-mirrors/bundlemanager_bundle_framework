@@ -33,6 +33,7 @@ const char* PLUGIN_BUNDLE_INFO_LABEL_ID = "labelId";
 const char* PLUGIN_BUNDLE_INFO_VERSION_CODE = "versionCode";
 const char* PLUGIN_BUNDLE_INFO_APP_IDENTIFIER = "appIdentifier";
 const char* PLUGIN_BUNDLE_INFO_APP_ID = "appId";
+const char* PLUGIN_BUNDLE_INFO_CODE_PATH = "codePath";
 const char* PLUGIN_BUNDLE_INFO_MODULE_INFOS = "pluginModuleInfos";
 }
 
@@ -48,6 +49,7 @@ bool PluginBundleInfo::ReadFromParcel(Parcel &parcel)
     versionName = parcel.ReadString();
     appIdentifier = parcel.ReadString();
     appId = parcel.ReadString();
+    codePath = parcel.ReadString();
 
     int32_t size;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, size);
@@ -76,6 +78,7 @@ bool PluginBundleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, versionName);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, appIdentifier);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, appId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codePath);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, pluginModuleInfos.size());
     for (auto &info : pluginModuleInfos) {
@@ -108,7 +111,8 @@ void to_json(nlohmann::json &jsonObject, const PluginBundleInfo &pluginBundleInf
         {PLUGIN_BUNDLE_INFO_ICON_ID, pluginBundleInfo.iconId},
         {PLUGIN_BUNDLE_INFO_LABEL_ID, pluginBundleInfo.labelId},
         {PLUGIN_BUNDLE_INFO_VERSION_CODE, pluginBundleInfo.versionCode},
-        {PLUGIN_BUNDLE_INFO_MODULE_INFOS, pluginBundleInfo.pluginModuleInfos}
+        {PLUGIN_BUNDLE_INFO_MODULE_INFOS, pluginBundleInfo.pluginModuleInfos},
+        {PLUGIN_BUNDLE_INFO_CODE_PATH, pluginBundleInfo.codePath}
     };
 }
 
@@ -184,6 +188,12 @@ void from_json(const nlohmann::json &jsonObject, PluginBundleInfo &pluginBundleI
         false,
         parseResult,
         ArrayType::OBJECT);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        PLUGIN_BUNDLE_INFO_CODE_PATH,
+        pluginBundleInfo.codePath,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read pluginBundleInfo error : %{public}d", parseResult);
     }

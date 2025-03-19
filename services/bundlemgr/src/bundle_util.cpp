@@ -1270,7 +1270,7 @@ std::unordered_map<std::string, std::string> BundleUtil::ParseMapFromJson(const 
         return result;
     }
     for (const auto& [key, value] : jsonBuf.items()) {
-        result[key] = value.dump();
+        result[key] = value.is_string() ? value.get<std::string>() : value.dump();
     }
     return result;
 }

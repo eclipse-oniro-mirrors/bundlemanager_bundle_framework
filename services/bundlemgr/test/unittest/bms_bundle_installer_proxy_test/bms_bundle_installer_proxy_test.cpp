@@ -884,7 +884,7 @@ HWTEST_F(BmsBundleInstallerProxyTest, InstallPlugin_0100, Function | MediumTest 
     std::vector<std::string> pluginFilePaths;
     pluginFilePaths.emplace_back("bundlePath");
     auto res = bundleInstallerProxy.InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
-    EXPECT_EQ(res, ERR_APPEXECFWK_PLUGIN_INSTALL_SEND_REQUEST_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**
@@ -902,7 +902,7 @@ HWTEST_F(BmsBundleInstallerProxyTest, UninstallPlugin_0100, Function | MediumTes
     installPluginParam.userId = 100;
     std::string pluginBundleName = "pluginName";
     auto res = bundleInstallerProxy.UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);
-    EXPECT_EQ(res, ERR_APPEXECFWK_PLUGIN_INSTALL_SEND_REQUEST_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 }
 }

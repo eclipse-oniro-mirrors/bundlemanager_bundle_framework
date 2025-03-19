@@ -165,6 +165,9 @@ private:
 
     ErrCode GetFileNameByFilePath(const std::string &filePath, std::string &fileName);
 
+    ErrCode SendInstallRequestWithErrCode(BundleInstallerInterfaceCode code, MessageParcel& data,
+        MessageParcel& reply, MessageOption& option);
+
     static inline BrokerDelegator<BundleInstallerProxy> delegator_;
 };
 }  // namespace AppExecFwk

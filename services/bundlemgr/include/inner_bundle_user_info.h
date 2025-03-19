@@ -49,7 +49,9 @@ struct InnerBundleUserInfo {
 
     // appIndex -> cloneInfo
     std::map<std::string, InnerBundleCloneInfo> cloneInfos;
-    std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos;
+
+    // use to record plugin that exist in current user
+    std::unordered_set<std::string> installedPluginSet;
     BundleUserInfo bundleUserInfo;
 
     bool operator() (const InnerBundleUserInfo& info) const
@@ -66,15 +68,9 @@ struct InnerBundleUserInfo {
         return std::to_string(appIndex);
     }
 
-    bool GetPluginBundleInfo(const std::string &pluginBundleName, PluginBundleInfo &pluginBundleInfo) const
+    bool IsPluginInstalled(const std::string &pluginBundleName) const
     {
-        for (auto &item : pluginBundleInfos) {
-            if (item.first == pluginBundleName) {
-                pluginBundleInfo = item.second;
-                return true;
-            }
-        }
-        return false;
+        return installedPluginSet.find(pluginBundleName) != installedPluginSet.end();
     }
 };
 

@@ -1124,6 +1124,8 @@ private:
     bool IsAppLinking(int32_t flags) const;
     std::string GetCallerName();
     void CallAbilityManager(int32_t resultCode, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack);
+    bool GetPluginBundleInfo(const std::string &bundleName, const int32_t userId,
+        std::unordered_map<std::string, PluginBundleInfo> &pluginBundleInfos);
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

@@ -2140,6 +2140,14 @@ public:
         baseApplicationInfo_->installedForAllUser = installedForAllUser;
     }
 
+    std::unordered_map<std::string, PluginBundleInfo> GetAllPluginBundleInfo() const
+    {
+        APP_LOGI("pluginBundleInfos size: %{public}zu", pluginBundleInfos_.size());
+        return pluginBundleInfos_;
+    }
+
+    bool GetPluginBundleInfos(const int32_t userId,
+        std::unordered_map<std::string, PluginBundleInfo> &pluginBundleInfos) const;
     void SetApplicationFlags(ApplicationInfoFlag flag);
 
     void UpdateExtensionSandboxInfo(const std::vector<std::string> &typeList);
@@ -2288,11 +2296,12 @@ public:
     {
         return baseApplicationInfo_->applicationFlags;
     }
-    bool GetPluginBundleInfo(const std::string &bundleName, PluginBundleInfo &pluginBundleInfo) const;
+    bool ConvertPluginBundleInfo(const std::string &bundleName, PluginBundleInfo &pluginBundleInfo) const;
     bool AddPluginBundleInfo(const PluginBundleInfo &pluginBundleInfo, const int32_t userId);
     bool RemovePluginBundleInfo(const std::string &pluginBundleName, const int32_t userId);
     bool HasMultiUserPlugin(const std::string &pluginBundleName) const;
-    void GetPluginInstalledUser(const std::string &pluginBundleName, std::unordered_set<int32_t> &userIds) const;
+    bool UpdatePluginBundleInfo(const PluginBundleInfo &pluginBundleInfo);
+    bool RemovePluginFromUserInfo(const std::string &pluginBundleName, const int32_t userId);
 
 private:
     bool IsExistLauncherAbility() const;
@@ -2389,6 +2398,9 @@ private:
 
     // data group info
     std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos_;
+
+    // pluginBundleName -> pluginBundleInfo
+    std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos_;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

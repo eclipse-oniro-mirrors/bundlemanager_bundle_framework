@@ -35,6 +35,7 @@ struct PluginBundleInfo : public Parcelable {
     std::string versionName;
     std::string appIdentifier;
     std::string appId;
+    std::string codePath;
     std::vector<PluginModuleInfo> pluginModuleInfos;
 
     bool ReadFromParcel(Parcel &parcel);

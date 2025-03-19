@@ -2089,7 +2089,11 @@ bool BundleMgrHostImpl::DumpBundleInfo(
         return false;
     }
     innerBundleUserInfos.emplace_back(innerBundleUserInfo);
-
+    std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos;
+    if (!GetPluginBundleInfo(bundleName, userId, pluginBundleInfos)) {
+        APP_LOGE("get plugin info in bundle(%{public}s) failed", bundleName.c_str());
+        return false;
+    }
     BundleInfo bundleInfo;
     if (!GetBundleInfo(bundleName,
         BundleFlag::GET_BUNDLE_WITH_ABILITIES |
@@ -2111,6 +2115,7 @@ bool BundleMgrHostImpl::DumpBundleInfo(
     jsonObject["applicationInfo"] = bundleInfo.applicationInfo;
     jsonObject["userInfo"] = innerBundleUserInfos;
     jsonObject["appIdentifier"] = bundleInfo.signatureInfo.appIdentifier;
+    jsonObject["pluginBundleInfos"] = pluginBundleInfos;
     try {
         result.append(jsonObject.dump(Constants::DUMP_INDENT));
     } catch (const nlohmann::json::type_error &e) {
@@ -5121,6 +5126,22 @@ void BundleMgrHostImpl::CallAbilityManager(
     if (callBack->SendRequest(ERR_OK, data, reply, option) != ERR_OK) {
         APP_LOGE("SendRequest failed");
     }
+}
+
+bool BundleMgrHostImpl::GetPluginBundleInfo(const std::string &bundleName, const int32_t userId,
+    std::unordered_map<std::string, PluginBundleInfo> &pluginBundleInfos)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    InnerBundleInfo info;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("can not get bundleinfo of %{public}s", bundleName.c_str());
+        return false;
+    }
+    return info.GetPluginBundleInfos(userId, pluginBundleInfos);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
