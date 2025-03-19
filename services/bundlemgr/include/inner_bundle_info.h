@@ -118,7 +118,7 @@ struct InnerModuleInfo {
     std::string routerMap;
     std::string packageName;
     std::string appStartup;
-    std::string language = "ArkTS1.0";
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
     // all user's value of isRemovable
     // key:userId
     // value:isRemovable true or flase
@@ -2225,6 +2225,7 @@ public:
     std::set<int32_t> GetCloneBundleAppIndexes() const;
     static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
     void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
+    std::string GetApplicationCodeLanguage() const;
 
 private:
     bool IsExistLauncherAbility() const;

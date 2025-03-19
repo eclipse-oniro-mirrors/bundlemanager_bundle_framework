@@ -168,11 +168,11 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::string resourcePath;
     std::string hapPath;
     std::string process;
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
     CompileMode compileMode = CompileMode::JS_BUNDLE;
     // for NAPI, save self query cache
     int32_t uid = -1;
     int32_t appIndex = 0;
-    std::string language = "ArkTS1.0";
 
     // for Check flags, add to abilityInfo and extensionAbilityInfo
     std::vector<SkillUriForAbilityAndExtension> skillUri;

@@ -199,8 +199,8 @@ struct AbilityInfo : public Parcelable {
     LaunchMode launchMode = LaunchMode::SINGLETON;
     std::string srcPath;
     std::string srcLanguage = "js";
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
     std::vector<std::string> permissions;
-    std::string language = "ArkTS1.0";
 
     std::string process;
     std::vector<std::string> deviceTypes;
