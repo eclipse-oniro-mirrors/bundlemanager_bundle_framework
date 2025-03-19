@@ -14,14 +14,13 @@
  */
 #include <gtest/gtest.h>
 #include <vector>
-
+#define private public
 #include "system_ability_definition.h"
 #include "system_ability.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_installer_proxy.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
-#define private public
 #include "bundle_multiuser_installer.h"
 
 using namespace testing::ext;
@@ -330,5 +329,254 @@ HWTEST_F(BmsBundleMultiuserInstallIPCTest, RecoverHapToken_0100, Function | Smal
     auto res = installer.RecoverHapToken("test", 100, accessTokenIdEx, innerBundleInfo);
     EXPECT_EQ(res, true);
     installer.dataMgr_->DeleteUninstallBundleInfo("test", 100);
+}
+
+/**
+ * @tc.number: InstallExistedApp_0200
+ * @tc.name: InstallExistedApp by BundleMultiUserInstaller
+ * @tc.desc: test InstallExistedApp
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, InstallExistedApp_0200, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(installer.dataMgr_, nullptr);
+    std::string bundleName;
+    auto res = installer.InstallExistedApp(bundleName, TEST_INSTALLER_UID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ProcessBundleInstall_0200
+ * @tc.name: ProcessBundleInstall by BundleMultiUserInstaller
+ * @tc.desc: test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, ProcessBundleInstall_0200, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    std::string bundleName;
+    auto res = installer.ProcessBundleInstall(bundleName, TEST_INSTALLER_UID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ProcessBundleInstall_0300
+ * @tc.name: ProcessBundleInstall by BundleMultiUserInstaller
+ * @tc.desc: test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, ProcessBundleInstall_0300, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    std::string bundleName = "test";
+    auto res = installer.ProcessBundleInstall(bundleName, INVAILD_ID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: ProcessBundleInstall_0400
+ * @tc.name: ProcessBundleInstall by BundleMultiUserInstaller
+ * @tc.desc: test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, ProcessBundleInstall_0400, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(installer.dataMgr_, nullptr);
+    std::string bundleName = "test";
+    auto res = installer.ProcessBundleInstall(bundleName, TEST_INSTALLER_UID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: ProcessBundleInstall_0500
+ * @tc.name: ProcessBundleInstall by BundleMultiUserInstaller
+ * @tc.desc: test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, ProcessBundleInstall_0500, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(installer.dataMgr_, nullptr);
+    std::string bundleName = "test";
+    InnerBundleInfo info;
+    installer.dataMgr_->bundleInfos_.try_emplace(bundleName, info);
+    auto res = installer.ProcessBundleInstall(bundleName, 1);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: ProcessBundleInstall_0600
+ * @tc.name: ProcessBundleInstall by BundleMultiUserInstaller
+ * @tc.desc: test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, ProcessBundleInstall_0600, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(installer.dataMgr_, nullptr);
+    std::string bundleName = "test";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
+    EXPECT_NE(info.baseApplicationInfo_, nullptr);
+    info.baseApplicationInfo_->bundleName = bundleName;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = TEST_INSTALLER_UID;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    installer.dataMgr_->bundleInfos_.try_emplace(bundleName, info);
+    installer.dataMgr_->multiUserIdsSet_.insert(TEST_INSTALLER_UID);
+    auto res = installer.ProcessBundleInstall(bundleName, TEST_INSTALLER_UID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: ProcessBundleInstall_0700
+ * @tc.name: ProcessBundleInstall by BundleMultiUserInstaller
+ * @tc.desc: test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, ProcessBundleInstall_0700, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(installer.dataMgr_, nullptr);
+    std::string bundleName = "test";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
+    EXPECT_NE(info.baseApplicationInfo_, nullptr);
+    info.baseApplicationInfo_->appDistributionType = Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE;
+    installer.dataMgr_->bundleInfos_.try_emplace(bundleName, info);
+    installer.dataMgr_->multiUserIdsSet_.insert(TEST_INSTALLER_UID);
+    auto res = installer.ProcessBundleInstall(bundleName, TEST_INSTALLER_UID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED);
+}
+
+/**
+ * @tc.number: ProcessBundleInstall_0800
+ * @tc.name: ProcessBundleInstall by BundleMultiUserInstaller
+ * @tc.desc: test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, ProcessBundleInstall_0800, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(installer.dataMgr_, nullptr);
+    std::string bundleName = "test";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
+    EXPECT_NE(info.baseApplicationInfo_, nullptr);
+    info.baseApplicationInfo_->appDistributionType = Constants::APP_DISTRIBUTION_TYPE_INTERNALTESTING;
+    installer.dataMgr_->bundleInfos_.try_emplace(bundleName, info);
+    installer.dataMgr_->multiUserIdsSet_.insert(TEST_INSTALLER_UID);
+    auto res = installer.ProcessBundleInstall(bundleName, TEST_INSTALLER_UID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED);
+}
+
+/**
+ * @tc.number: ProcessBundleInstall_0900
+ * @tc.name: ProcessBundleInstall by BundleMultiUserInstaller
+ * @tc.desc: test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, ProcessBundleInstall_0900, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(installer.dataMgr_, nullptr);
+    std::string bundleName = "test";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
+    EXPECT_NE(info.baseApplicationInfo_, nullptr);
+    installer.dataMgr_->bundleInfos_.try_emplace(bundleName, info);
+    installer.dataMgr_->multiUserIdsSet_.insert(TEST_INSTALLER_UID);
+    auto res = installer.ProcessBundleInstall(bundleName, TEST_INSTALLER_UID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateEl5Dir_0100
+ * @tc.name: CreateEl5Dir by BundleMultiUserInstaller
+ * @tc.desc: test CreateEl5Dir
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, CreateEl5Dir_0100, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    InnerBundleInfo info;
+    installer.CreateEl5Dir(info, TEST_INSTALLER_UID, INVAILD_ID);
+    EXPECT_EQ(info.GetAllRequestPermissions().size(), 0);
+}
+
+/**
+ * @tc.number: CreateEl5Dir_0200
+ * @tc.name: CreateEl5Dir by BundleMultiUserInstaller
+ * @tc.desc: test CreateEl5Dir
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, CreateEl5Dir_0200, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    InnerBundleInfo info;
+    RequestPermission permission;
+    permission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "entry";
+    innerModuleInfo.requestPermissions.emplace_back(permission);
+    info.innerModuleInfos_.try_emplace("test", innerModuleInfo);
+    installer.CreateEl5Dir(info, TEST_INSTALLER_UID, INVAILD_ID);
+    EXPECT_TRUE(installer.GetDataMgr() != ERR_OK);
+}
+
+/**
+ * @tc.number: CreateEl5Dir_0300
+ * @tc.name: CreateEl5Dir by BundleMultiUserInstaller
+ * @tc.desc: test CreateEl5Dir
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, CreateEl5Dir_0300, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    InnerBundleInfo info;
+    RequestPermission permission;
+    permission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "entry";
+    innerModuleInfo.requestPermissions.emplace_back(permission);
+    info.innerModuleInfos_.try_emplace("test", innerModuleInfo);
+    installer.CreateEl5Dir(info, TEST_INSTALLER_UID, INVAILD_ID);
+    EXPECT_TRUE(installer.GetDataMgr() == ERR_OK);
+}
+
+/**
+ * @tc.number: CreateDataGroupDir_0100
+ * @tc.name: CreateDataGroupDir by BundleMultiUserInstaller
+ * @tc.desc: test CreateDataGroupDir
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, CreateDataGroupDir_0100, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    installer.CreateDataGroupDir("test", TEST_INSTALLER_UID);
+    EXPECT_TRUE(installer.GetDataMgr() == ERR_OK);
+}
+
+/**
+ * @tc.number: CreateDataGroupDir_0200
+ * @tc.name: CreateDataGroupDir by BundleMultiUserInstaller
+ * @tc.desc: test CreateDataGroupDir
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, CreateDataGroupDir_0200, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.CreateDataGroupDir("test", TEST_INSTALLER_UID);
+    EXPECT_TRUE(installer.GetDataMgr() != ERR_OK);
+}
+
+/**
+ * @tc.number: GetDataMgr_0200
+ * @tc.name: GetDataMgr by BundleMultiUserInstaller
+ * @tc.desc: test GetDataMgr
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, GetDataMgr_0200, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    auto res = installer.GetDataMgr();
+    EXPECT_EQ(res, ERR_OK);
 }
 } // OHOS
