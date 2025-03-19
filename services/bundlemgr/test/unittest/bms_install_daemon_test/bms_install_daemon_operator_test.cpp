@@ -62,6 +62,10 @@ const std::string HAP_FILE_PATH = "/data/app/el1/bundle/public/com.example.test/
 const std::string HAP_FILE_PATH_BACKUP = "/data/app/el1/bundle/public/com.example.test/patch_1000002/entry.hqf";
 const std::string HAP_PATH = "/data/app/el1/bundle/public/com.example.test";
 const std::string OVER_MAX_PATH_SIZE(300, 'x');
+const std::string TEST_MODULE_PATH = "/system/app/ShellAssistant/ShellAssistant_Feature_Anco.hap";
+const std::string TEST_V8A_CPU_ABI = "arm64-v8a";
+const std::string TEST_TARGET_SO_PATH = "/data/app/el1/bundle/public/libs/arm64/";
+const std::string TEST_APP_IDENTIFIER = "5765880207854632823";
 }; // namespace
 class BmsInstallDaemonOperatorTest : public testing::Test {
 public:
@@ -1874,6 +1878,23 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11600, Function | Sm
     EXPECT_NE(ret, ERR_OK);
 #else
     EXPECT_EQ(ret, ERR_OK);
+#endif
+
+    codeSignatureParam.modulePath = TEST_MODULE_PATH;
+    codeSignatureParam.cpuAbi = TEST_V8A_CPU_ABI;
+    codeSignatureParam.targetSoPath = TEST_TARGET_SO_PATH;
+    codeSignatureParam.appIdentifier = TEST_APP_IDENTIFIER;
+    codeSignatureParam.signatureFileDir = "";
+    codeSignatureParam.isCompileSdkOpenHarmony = true;
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.isPreInstalledBundle = true;
+    codeSignatureParam.isInternaltestingBundle = false;
+    codeSignatureParam.isCompressNativeLibrary = true;
+    ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+#ifdef USE_ARM64
+    EXPECT_NE(ret, ERR_OK);
+#else
+    EXPECT_NE(ret, ERR_OK);
 #endif
 }
 

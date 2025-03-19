@@ -96,21 +96,6 @@ const std::vector<std::string> DRIVER_EXECUTE_DIR {
     "/print_service/sane/backend",
     "/print_service/cups/serverbin/backend"
 };
-const std::unordered_map<int32_t, int32_t> CODE_SIGNATURE_ERR_MAP = {
-    {1, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_CS_SUCCESS_END},
-    {-0x101, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_PATH_INVALID},
-    {-0x200, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_PARAM_INVALID},
-    {-0x205, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_NO_OWNER_ID},
-    {-0x214, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_OPENSSL_BIO},
-    {-0x212, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_OPENSSL_PKCS7},
-    {-0x301, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FSVREITY_NOT_SUPPORTED},
-    {-0x302, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FSVERITY_NOT_ENABLED},
-    {-0x303, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_INVALID_OWNER_ID},
-    {-0x306, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_ENABLE_TIMEOUT},
-    {-0x622, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_INVALID_EXTENSION_OFFSET},
-    {-0x623, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_INVALID_PAGE_INFO_EXTENSION},
-    {-0x624, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_EXTENSION_SIGN_SIZE},
-};
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -1576,7 +1561,7 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
 }
 #endif
 
-bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
+ErrCode InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
     BundleExtractor extractor(codeSignatureParam.modulePath);
     if (!extractor.Init()) {
@@ -1587,7 +1572,7 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
     if (!ObtainNativeSoFile(extractor, codeSignatureParam.cpuAbi, soEntryFiles)) {
         return ERR_APPEXECFWK_INSTALL_ENCRYPTION_OBTAIN_SO_FAILED;
     }
- 
+
     if (soEntryFiles.empty()) {
         LOG_D(BMS_TAG_INSTALLD, "soEntryFiles is empty");
         return ERR_OK;

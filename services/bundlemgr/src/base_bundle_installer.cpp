@@ -5035,9 +5035,10 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 LOG_E(BMS_TAG_INSTALLER, "Move hap to install path failed");
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
             }
-            if (VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLER, "enable code signature failed");
-                return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+            result = VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second);
+            if (result != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "enable code signature failed: %{public}d", result);
+                return result;
             }
         }
     }
