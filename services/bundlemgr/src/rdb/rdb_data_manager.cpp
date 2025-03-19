@@ -69,7 +69,6 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
     rdbStoreConfig.SetAllowRebuild(true);
-    rdbStoreConfig.SetBundleName(ServiceConstants::CALLER_NAME_BMS);
     // for check db exist or not
     bool isNeedRebuildDb = false;
     std::string rdbFilePath = bmsRdbConfig_.dbPath + std::string("/") + std::string(BMS_BACK_UP_RDB_NAME);
