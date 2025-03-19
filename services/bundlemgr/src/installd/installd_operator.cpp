@@ -96,6 +96,21 @@ const std::vector<std::string> DRIVER_EXECUTE_DIR {
     "/print_service/sane/backend",
     "/print_service/cups/serverbin/backend"
 };
+const std::unordered_map<int32_t, int32_t> CODE_SIGNATURE_ERR_MAP = {
+    {1, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_CS_SUCCESS_END},
+    {-0x101, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_PATH_INVALID},
+    {-0x200, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_PARAM_INVALID},
+    {-0x205, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_NO_OWNER_ID},
+    {-0x214, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_OPENSSL_BIO},
+    {-0x212, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_OPENSSL_PKCS7},
+    {-0x301, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FSVREITY_NOT_SUPPORTED},
+    {-0x302, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FSVERITY_NOT_ENABLED},
+    {-0x303, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_INVALID_OWNER_ID},
+    {-0x306, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_ENABLE_TIMEOUT},
+    {-0x622, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_INVALID_EXTENSION_OFFSET},
+    {-0x623, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_INVALID_PAGE_INFO_EXTENSION},
+    {-0x624, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_EXTENSION_SIGN_SIZE},
+};
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -1565,32 +1580,35 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
 {
     BundleExtractor extractor(codeSignatureParam.modulePath);
     if (!extractor.Init()) {
-        return false;
+        return ERR_APPEXECFWK_INSTALL_ENCRYPTION_EXTRACTOR_INIT_FAILED;
     }
-
+ 
     std::vector<std::string> soEntryFiles;
     if (!ObtainNativeSoFile(extractor, codeSignatureParam.cpuAbi, soEntryFiles)) {
-        return false;
+        return ERR_APPEXECFWK_INSTALL_ENCRYPTION_OBTAIN_SO_FAILED;
     }
-
+ 
     if (soEntryFiles.empty()) {
         LOG_D(BMS_TAG_INSTALLD, "soEntryFiles is empty");
-        return true;
+        return ERR_OK;
     }
-
+ 
 #if defined(CODE_SIGNATURE_ENABLE)
     Security::CodeSign::EntryMap entryMap;
     if (!PrepareEntryMap(codeSignatureParam, soEntryFiles, entryMap)) {
-        return false;
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-
+ 
     ErrCode ret = PerformCodeSignatureCheck(codeSignatureParam, entryMap);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "VerifyCode failed due to %{public}d", ret);
-        return false;
+        if (CODE_SIGNATURE_ERR_MAP.find(ret) != CODE_SIGNATURE_ERR_MAP.end()) {
+            return CODE_SIGNATURE_ERR_MAP.at(ret);
+        }
+        return ret;
     }
 #endif
-    return true;
+    return ERR_OK;
 }
 
 ErrCode InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)

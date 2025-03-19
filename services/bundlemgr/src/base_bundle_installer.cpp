@@ -4235,7 +4235,7 @@ ErrCode BaseBundleInstaller::CheckInstallCondition(
         LOG_E(BMS_TAG_INSTALLER, "CheckIsolationMode failed due to errorCode : %{public}d", ret);
         return ret;
     }
-    ret = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyRes);
+    ret = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyRes, sysEventInfo_.callingUid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "CheckInstallCondition failed due to errorCode : %{public}d", ret);
         return ret;
@@ -5015,8 +5015,8 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     // size of code signature files should be same with the size of hap and hsp
     if (!signatureFileMap_.empty() && (signatureFileMap_.size() != hapPathRecords_.size())) {
-        LOG_E(BMS_TAG_INSTALLER, "each hap or hsp needs to be verified code signature");
-        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+        LOG_E(BMS_TAG_INSTALLER, "code signature file size not same with the size of hap and hsp");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
     // 1. copy hsp or hap file to temp installation dir
     ErrCode result = ERR_OK;
