@@ -90,6 +90,15 @@ extern "C" {
         APP_LOGI("BundleManager::FfiOHOSGetBundleInfoForSelf success");
         return cjInfo;
     }
+
+    RetBundleInfoV2 FfiOHOSGetBundleInfoForSelfV2(int32_t bundleFlags)
+    {
+        APP_LOGI("BundleManager::FfiOHOSGetBundleInfoForSelf");
+        AppExecFwk::BundleInfo bundleInfo = BundleManagerImpl::GetBundleInfoForSelf(bundleFlags);
+        RetBundleInfoV2 cjInfo = ConvertBundleInfoV2(bundleInfo, bundleFlags);
+        APP_LOGI("BundleManager::FfiOHOSGetBundleInfoForSelf success");
+        return cjInfo;
+    }
  
     int32_t FfiOHOSVerifyAbc(CArrString cAbcPaths, bool deleteOriginalFiles)
     {
