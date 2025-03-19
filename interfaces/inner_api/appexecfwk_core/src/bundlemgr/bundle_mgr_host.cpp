@@ -2840,7 +2840,7 @@ ErrCode BundleMgrHost::HandleGetBundleMgrExtProxy(MessageParcel &data, MessagePa
     sptr<IBundleMgrExt> bundleMgrExtProxy = GetBundleMgrExtProxy();
     if (bundleMgrExtProxy == nullptr) {
         APP_LOGE("bundleMgrExtProxy is nullptr");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     if (!reply.WriteRemoteObject(bundleMgrExtProxy->AsObject())) {

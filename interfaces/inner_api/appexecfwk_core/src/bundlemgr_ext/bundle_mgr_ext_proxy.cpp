@@ -16,6 +16,7 @@
 #include "bundle_mgr_ext_proxy.h"
 
 #include "app_log_tag_wrapper.h"
+#include "appexecfwk_core_constants.h"
 #include "appexecfwk_errors.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
@@ -48,11 +49,12 @@ ErrCode BundleMgrExtProxy::GetBundleNamesForUidExt(const int32_t uid, std::vecto
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrExtInterfaceCode::GET_BUNDLE_NAMES_FOR_UID_EXT, data, reply)) {
-        LOG_E(BMS_TAG_EXT, "fail to get bundleNames server");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    ErrCode ret = SendTransactCmd(BundleMgrExtInterfaceCode::GET_BUNDLE_NAMES_FOR_UID_EXT, data, reply);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_EXT, "SendTransactCmd fail %{public}d", ret);
+        return ret;
     }
-    ErrCode ret = reply.ReadInt32();
+    ret = reply.ReadInt32();
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_EXT, "reply err:%{public}d", ret);
         return ret;
@@ -64,22 +66,25 @@ ErrCode BundleMgrExtProxy::GetBundleNamesForUidExt(const int32_t uid, std::vecto
     return ret;
 }
 
-bool BundleMgrExtProxy::SendTransactCmd(BundleMgrExtInterfaceCode code, MessageParcel &data, MessageParcel &reply)
+ErrCode BundleMgrExtProxy::SendTransactCmd(BundleMgrExtInterfaceCode code, MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         LOG_E(BMS_TAG_EXT, "fail send transact cmd %{public}d due remote object", static_cast<int32_t>(code));
-        return false;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
         LOG_E(BMS_TAG_EXT, "receive error transact code %{public}d in transact cmd %{public}d",
             result, static_cast<int32_t>(code));
-        return false;
+        if (CoreConstants::IPC_ERR_MAP.find(result) != CoreConstants::IPC_ERR_MAP.end()) {
+            return CoreConstants::IPC_ERR_MAP.at(result);
+        }
+        return result;
     }
-    return true;
+    return ERR_OK;
 }
 } // AppExecFwk
 } // OHOS
