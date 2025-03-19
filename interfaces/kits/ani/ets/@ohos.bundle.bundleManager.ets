@@ -180,21 +180,27 @@ namespace bundleManager {
   export native function getApplicationInfoSync(bundleName: string, applicationFlags: number, userId: number): ApplicationInfo;
 
   export function getBundleInfoForSelf(bundleFlags: number, callback: AsyncCallback<BundleInfo, void>):void {
-    let p1 = taskpool.execute(bundleManager.getBundleInfoForSelfSync, bundleFlags);
+    let execFun = (): BundleInfo => {
+      return bundleManager.getBundleInfoForSelfSync(bundleFlags);
+    };
+    let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
-        let resultBundleInfo = e as BundleInfo;
-        let r: BusinessError = { code: 0, name: "error", message: "error", data: undefined };
-        callback(r, resultBundleInfo);
+      let resultBundleInfo: BundleInfo = e as BundleInfo;
+      let r: BusinessError = { code: 0, name: "error", message: "error", data: undefined };
+      callback(r, resultBundleInfo);
     }, (err: Object): void => {
     });
   }
 
   export function getBundleInfoForSelf(bundleFlags: number):Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Object) => void) => {
-        let p1 = taskpool.execute(bundleManager.getBundleInfoForSelfSync, bundleFlags);
+      let execFun = (): BundleInfo => {
+        return bundleManager.getBundleInfoForSelfSync(bundleFlags);
+      };
+      let p1 = taskpool.execute(execFun);
         p1.then((e: NullishType) => {
-            let resultBundleInfo = e as BundleInfo;
-            resolve(resultBundleInfo);
+          let resultBundleInfo: BundleInfo = e as BundleInfo;
+          resolve(resultBundleInfo);
         }, (err: Object): void => {
         });
     }
@@ -208,43 +214,43 @@ namespace bundleManager {
 
   export function getBundleInfo(bundleName: string, bundleFlags: number, userId?: number): Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Object) => void) => {
-        let userIdInfo: number = userId ?? -500;
-        let execFun = (bundleName: string, bundleFlags: number, userId: number): BundleInfo => {
-          return bundleManager.getBundleInfoSync(bundleName, bundleFlags, userId);
-        };
-        let p1 = taskpool.execute(execFun, bundleName, bundleFlags, userIdInfo);
-        p1.then((e: NullishType) => {
-            let resultBundleInfo = e as BundleInfo;
-            resolve(resultBundleInfo);
-        }, (err: Object): void => {
-        });
+      let userIdInfo: number = userId ?? -500;
+      let execFun = (): BundleInfo => {
+        return bundleManager.getBundleInfoSync(bundleName, bundleFlags, userIdInfo);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let resultBundleInfo: BundleInfo = e as BundleInfo;
+        resolve(resultBundleInfo);
+      }, (err: Object): void => {
+      });
     }
     );
     return p;
   }
 
   export function getBundleInfo(bundleName: string, bundleFlags: number, callback: AsyncCallback<BundleInfo, void>): void {
-    let execFun = (bundleName: string, bundleFlags: number): BundleInfo => {
+    let execFun = (): BundleInfo => {
       return bundleManager.getBundleInfoSync(bundleName, bundleFlags);
     };
-    let p1 = taskpool.execute(execFun, bundleName, bundleFlags);
+    let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
-        let resultBundleInfo = e as BundleInfo;
-        let r: BusinessError = { code: 0, name: "error", message: "error", data: undefined };
-        callback(r, resultBundleInfo);
+      let resultBundleInfo: BundleInfo = e as BundleInfo;
+      let r: BusinessError = { code: 0, name: "error", message: "error", data: undefined };
+      callback(r, resultBundleInfo);
     }, (err: Object): void => {
     });
   }
 
   export function getBundleInfo(bundleName: string, bundleFlags: number, userId: number, callback: AsyncCallback<BundleInfo, void>): void {
-    let execFun = (bundleName: string, bundleFlags: number, userId: number): BundleInfo => {
+    let execFun = (): BundleInfo => {
       return bundleManager.getBundleInfoSync(bundleName, bundleFlags, userId);
     };
-    let p1 = taskpool.execute(execFun, bundleName, bundleFlags, userId);
+    let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
-        let resultBundleInfo = e as BundleInfo;
-        let r: BusinessError = { code: 0, name: "error", message: "error", data: undefined };
-        callback(r, resultBundleInfo);
+      let resultBundleInfo: BundleInfo = e as BundleInfo;
+      let r: BusinessError = { code: 0, name: "error", message: "error", data: undefined };
+      callback(r, resultBundleInfo);
     }, (err: Object): void => {
     });
   }
