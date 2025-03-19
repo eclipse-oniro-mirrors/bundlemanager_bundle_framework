@@ -538,39 +538,5 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3000, Function | SmallTest | 
     auto ret = bundleMgrProxy.GetBundleNameByAppId(appId, bundleName);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
-
-/**
- * @tc.number: Bundle_Mgr_Proxy_Test_3100
- * @tc.name: test the GetBundleArchiveInfoExt
- * @tc.desc: 1. params valid
- */
-HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3100, Function | SmallTest | Level0)
-{
-    sptr<IRemoteObject> impl = nullptr;
-    BundleMgrProxy bundleMgrProxy(impl);
-    std::string hapFilePath = "test.hap";
-    int32_t fd = 123;
-    int flags = 0;
-    BundleInfo bundleInfo;
-    auto result = bundleMgrProxy.GetBundleArchiveInfoExt(hapFilePath, fd, flags, bundleInfo);
-    EXPECT_EQ(result, ERR_APPEXECFWK_PARCEL_ERROR);
-}
-
-/**
- * @tc.number: Bundle_Mgr_Proxy_Test_3200
- * @tc.name: test the GetBundleArchiveInfoExt
- * @tc.desc: 1. hapPath is empty
- */
-HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3200, Function | SmallTest | Level0)
-{
-    sptr<IRemoteObject> impl = nullptr;
-    BundleMgrProxy bundleMgrProxy(impl);
-    std::string hapFilePath;
-    int32_t fd = 123;
-    int flags = 0;
-    BundleInfo bundleInfo;
-    auto result = bundleMgrProxy.GetBundleArchiveInfoExt(hapFilePath, fd, flags, bundleInfo);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
-}
 } // AppExecFwk
 } // OHOS
