@@ -28,8 +28,6 @@ namespace  {
     constexpr int32_t INVALID_INT = -500;
     constexpr int32_t DEFAULT_RES_FLAG = 1;
     constexpr int32_t DEFAULT_IDX = 0;
-    constexpr const char* BUNDLE_NAME = "bundleName";
-    constexpr const char* TYPE_STRING = "string";
     constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
     constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
 }
@@ -40,7 +38,8 @@ static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_strin
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
     auto resourceMgr = ResourceHelper::GetBundleResourceMgr();

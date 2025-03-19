@@ -14,13 +14,13 @@
  */
 
 import { BusinessError } from '@ohos.base';
-import { ShortcutInfo } from 'bundleManager.ShortcutInfo';
+import { ShortcutInfo as _ShortcutInfo, ShortcutWant as _ShortcutWant, ParameterItem as _ParameterItem } from 'bundleManager.ShortcutInfo';
 
 export default namespace launcherBundleManager {
     loadLibrary("ani_launcher_bundle_manager.z");
 
     export native function StartShortcutSync(shortcutInfo: ShortcutInfo): void;
-    export native function GetShortcutInfoSync(bundleName: string, userId: int) : Array<ShortcutInfo>;
+    export native function GetShortcutInfoSync(bundleName: string, userId: number) : Array<ShortcutInfo>;
 
     export function startShortcut(shortcutInfo: ShortcutInfo): Promise<void> {
       let p:Promise<void> = new Promise<void>((resolve:(v:undefined) =>void, reject: (error: Object) => void):void=> {
@@ -41,6 +41,10 @@ export default namespace launcherBundleManager {
     }
 
     export function getShortcutInfoSync(bundleName: string, userId: number) : Array<ShortcutInfo> {
-      return launcherBundleManager.GetShortcutInfoSync(bundleName, userId as int);
+      return launcherBundleManager.GetShortcutInfoSync(bundleName, userId);
     }
+
+  export type ShortcutInfo = _ShortcutInfo;
+  export type ShortcutWant = _ShortcutWant;
+  export type ParameterItem = _ParameterItem;
 }
