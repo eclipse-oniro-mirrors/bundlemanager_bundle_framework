@@ -162,7 +162,7 @@ public:
             APP_LOGE("value too large");
             return false;
         }
-        if (fromValue < static_cast<double>(std::numeric_limits<toType>::min())) {
+        if (fromValue < static_cast<double>(std::numeric_limits<toType>::lowest())) {
             APP_LOGE("value too small");
             return false;
         }
@@ -375,9 +375,8 @@ public:
                     env->Object_CallMethodByName_Char(reinterpret_cast<ani_object>(ref), "charValue", nullptr, value);
             } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
                                  std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
-                                 std::is_same_v<valueType, ani_long> || std::is_same_v<valueType, uint64_t> ||
+                                 std::is_same_v<valueType, ani_long> ||
                                  std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
-                // uint64_t -> BigInt later
                 double d = 0;
                 status =
                     env->Object_CallMethodByName_Double(reinterpret_cast<ani_object>(ref), "doubleValue", nullptr, &d);
@@ -422,9 +421,8 @@ public:
 
         if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
                       std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
-                      std::is_same_v<valueType, ani_long> || std::is_same_v<valueType, uint64_t> ||
+                      std::is_same_v<valueType, ani_long> ||
                       std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
-            // uint64_t -> BigInt later
             status = env->Object_CallMethod_Void(object, setter, static_cast<double>(value));
         } else {
             status = env->Object_CallMethod_Void(object, setter, value);
@@ -477,9 +475,8 @@ public:
             ctorSig = "C:V";
         } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
                              std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
-                             std::is_same_v<valueType, ani_long> || std::is_same_v<valueType, uint64_t> ||
+                             std::is_same_v<valueType, ani_long> ||
                              std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
-            // uint64_t -> BigInt later
             valueClassName = "Lstd/core/Double;";
             ctorSig = "D:V";
         } else {
@@ -504,11 +501,12 @@ public:
         ani_object valueObj = nullptr;
         if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
                       std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
-                      std::is_same_v<valueType, ani_long> || std::is_same_v<valueType, uint64_t> ||
+                      std::is_same_v<valueType, ani_long> ||
                       std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
             status = env->Object_New(valueClass, ctor, &valueObj, static_cast<double>(value));
         } else {
-            status = env->Object_New(valueClass, ctor, &valueObj, value);
+            APP_LOGE("Classname %{public}s Unsupported", propertyName);
+            return false;
         }
 
         if (status != ANI_OK) {

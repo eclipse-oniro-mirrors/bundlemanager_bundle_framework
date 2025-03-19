@@ -242,7 +242,7 @@ static ani_object getApplicationInfoSync([[maybe_unused]] ani_env* env,
     ApplicationInfo appInfo;
     ErrCode ret = iBundleMgr->GetApplicationInfoV9(bundleName, applicationFlagsInt, userIdInt, appInfo);
     if (ret != ERR_OK) {
-        APP_LOGE("GetApplicationInfoV9 failed ret: %{public}d,userIdInt: %{public}d", ret, getuid());
+        APP_LOGE("GetApplicationInfoV9 failed ret: %{public}d,userIdInt: %{public}d", ret, userIdInt);
         BusinessErrorAni::ThrowParameterTypeError(env, ret, GET_APPLICATION_INFO_SYNC, BUNDLE_PERMISSIONS);
         return nullptr;
     }
