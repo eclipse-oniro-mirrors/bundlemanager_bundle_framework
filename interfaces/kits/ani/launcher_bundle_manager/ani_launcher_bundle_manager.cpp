@@ -20,6 +20,7 @@
 #include "app_log_wrapper.h"
 #include "business_error_ani.h"
 #include "common_fun_ani.h"
+#include "common_func.h"
 #include "js_launcher_service.h"
 #include "launcher_ability_info.h"
 #include "shortcut_info.h"
@@ -79,7 +80,7 @@ static void StartShortcutSync([[maybe_unused]] ani_env *env, ani_object aniShort
     result = iter == START_SHORTCUT_RES_MAP.end() ? ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED : iter->second;
     if (result != ERR_OK) {
         APP_LOGE("StartShortcut failed, result: %{public}d", result);
-        BusinessErrorAni::CreateCommonError(env, result);
+        BusinessErrorAni::CreateCommonError(env, CommonFunc::ConvertErrCode(result));
     }
 }
 
@@ -104,7 +105,7 @@ static ani_object GetShortcutInfoSync([[maybe_unused]] ani_env *env, ani_string 
     }
     std::vector<ShortcutInfo> shortcutInfos;
     ErrCode ret =
-        BusinessErrorAni::ConvertErrCode(launcherService->GetShortcutInfoV9(bundleName, shortcutInfos, userId));
+        CommonFunc::ConvertErrCode(launcherService->GetShortcutInfoV9(bundleName, shortcutInfos, userId));
     if (ret != ERR_OK) {
         APP_LOGE("GetShortcutInfoV9 failed, ret %{public}d", ret);
         BusinessErrorAni::CreateCommonError(
