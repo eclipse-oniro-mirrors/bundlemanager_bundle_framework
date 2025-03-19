@@ -29,15 +29,24 @@ constexpr const char* ADD_DESKTOP_SHORTCUT_INFO = "AddDesktopShortcutInfo";
 constexpr const char* DELETE_DESKTOP_SHORTCUT_INFO = "DeleteDesktopShortcutInfo";
 constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo";
 constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortcutInfo";
+constexpr const char* USER_ID = "userId";
+constexpr const char* TYPE_INT32 = "int32";
 }
 
-static void AddDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_object info, ani_int userId)
+static void AddDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_object info, ani_double userId)
 {
+    int32_t userIdInt = 0;
+    if (!CommonFunAni::TryCastDoubleTo(userId, &userIdInt)) {
+        APP_LOGE("Cast userId failed");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_INT32);
+        return;
+    }
+    
     ShortcutInfo shortcutInfo;
     if (!CommonFunAni::ParseShortcutInfo(env, info, shortcutInfo) ||
         !CommonFunc::CheckShortcutInfo(shortcutInfo)) {
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
-        APP_LOGE("Parse shortcutInfo err. userId:%{public}d", userId);
+        APP_LOGE("Parse shortcutInfo err. userId:%{public}d", userIdInt);
         return;
     }
 
@@ -47,20 +56,27 @@ static void AddDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_object inf
         BusinessErrorAni::ThrowError(env, ERR_APPEXECFWK_SERVICE_NOT_READY, ADD_DESKTOP_SHORTCUT_INFO);
         return;
     }
-    ErrCode ret = iBundleMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
+    ErrCode ret = iBundleMgr->AddDesktopShortcutInfo(shortcutInfo, userIdInt);
     if (ret != ERR_OK) {
-        APP_LOGE("AddDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, userId);
+        APP_LOGE("AddDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, userIdInt);
         BusinessErrorAni::ThrowParameterTypeError(
-            env, ret, ADD_DESKTOP_SHORTCUT_INFO, Constants::PERMISSION_MANAGER_SHORTCUT);
+            env, CommonFunc::ConvertErrCode(ret), ADD_DESKTOP_SHORTCUT_INFO, Constants::PERMISSION_MANAGER_SHORTCUT);
     }
 }
 
 static void DeleteDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_object info, ani_int userId)
 {
+    int32_t userIdInt = 0;
+    if (!CommonFunAni::TryCastDoubleTo(userId, &userIdInt)) {
+        APP_LOGE("Cast userId failed");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_INT32);
+        return;
+    }
+
     ShortcutInfo shortcutInfo;
     if (!CommonFunAni::ParseShortcutInfo(env, info, shortcutInfo) ||
         !CommonFunc::CheckShortcutInfo(shortcutInfo)) {
-        APP_LOGE("Parse shortcutInfo err. userId:%{public}d", userId);
+        APP_LOGE("Parse shortcutInfo err. userId:%{public}d", userIdInt);
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
         return;
     }
@@ -71,16 +87,24 @@ static void DeleteDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_object 
         BusinessErrorAni::ThrowError(env, ERR_APPEXECFWK_SERVICE_NOT_READY, DELETE_DESKTOP_SHORTCUT_INFO);
         return;
     }
-    ErrCode ret = iBundleMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    ErrCode ret = iBundleMgr->DeleteDesktopShortcutInfo(shortcutInfo, userIdInt);
     if (ret != ERR_OK) {
-        APP_LOGE("DeleteDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, userId);
+        APP_LOGE("DeleteDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, userIdInt);
         BusinessErrorAni::ThrowParameterTypeError(
-            env, ret, DELETE_DESKTOP_SHORTCUT_INFO, Constants::PERMISSION_MANAGER_SHORTCUT);
+            env, CommonFunc::ConvertErrCode(ret),
+            DELETE_DESKTOP_SHORTCUT_INFO, Constants::PERMISSION_MANAGER_SHORTCUT);
     }
 }
 
-static ani_ref GetAllDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_int userId)
+static ani_ref GetAllDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_double userId)
 {
+    int32_t userIdInt = 0;
+    if (!CommonFunAni::TryCastDoubleTo(userId, &userIdInt)) {
+        APP_LOGE("Cast userId failed");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_INT32);
+        return nullptr;
+    }
+
     std::vector<ShortcutInfo> shortcutInfos;
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -88,11 +112,12 @@ static ani_ref GetAllDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_int 
         BusinessErrorAni::ThrowError(env, ERR_APPEXECFWK_SERVICE_NOT_READY, GET_ALL_DESKTOP_SHORTCUT_INFO);
         return nullptr;
     }
-    ErrCode ret = iBundleMgr->GetAllDesktopShortcutInfo(userId, shortcutInfos);
+    ErrCode ret = iBundleMgr->GetAllDesktopShortcutInfo(userIdInt, shortcutInfos);
     if (ret != ERR_OK) {
-        APP_LOGE("GetAllDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, userId);
+        APP_LOGE("GetAllDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, userIdInt);
         BusinessErrorAni::ThrowParameterTypeError(
-            env, ret, GET_ALL_DESKTOP_SHORTCUT_INFO, Constants::PERMISSION_MANAGER_SHORTCUT);
+            env, CommonFunc::ConvertErrCode(ret),
+            GET_ALL_DESKTOP_SHORTCUT_INFO, Constants::PERMISSION_MANAGER_SHORTCUT);
         return nullptr;
     }
     ani_ref shortcutInfosRef = CommonFunAni::ConvertAniArray(env, shortcutInfos, CommonFunAni::ConvertShortcutInfo);
@@ -123,17 +148,17 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     std::array methods = {
         ani_native_function {
             "AddDesktopShortcutInfo",
-            "LbundleManager/ShortcutInfo/ShortcutInfo;I:V",
+            "LbundleManager/ShortcutInfo/ShortcutInfo;D:V",
             reinterpret_cast<void*>(AddDesktopShortcutInfo)
         },
         ani_native_function {
             "DeleteDesktopShortcutInfo",
-            "LbundleManager/ShortcutInfo/ShortcutInfo;I:V",
+            "LbundleManager/ShortcutInfo/ShortcutInfo;D:V",
             reinterpret_cast<void*>(DeleteDesktopShortcutInfo)
         },
         ani_native_function {
             "GetAllDesktopShortcutInfo",
-            "I:Lescompat/Array;",
+            "D:Lescompat/Array;",
             reinterpret_cast<void*>(GetAllDesktopShortcutInfo)
         },
     };

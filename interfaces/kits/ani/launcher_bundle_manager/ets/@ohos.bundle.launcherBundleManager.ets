@@ -20,7 +20,7 @@ export default namespace launcherBundleManager {
     loadLibrary("ani_launcher_bundle_manager.z");
 
     export native function StartShortcutSync(shortcutInfo: ShortcutInfo): void;
-    export native function GetShortcutInfoSync(bundleName: string, userId: int) : Array<ShortcutInfo>
+    export native function GetShortcutInfoSync(bundleName: string, userId: int) : Array<ShortcutInfo>;
 
     export function startShortcut(shortcutInfo: ShortcutInfo): Promise<void> {
       let p:Promise<void> = new Promise<void>((resolve:(v:undefined) =>void, reject: (error: Object) => void):void=> {
@@ -34,10 +34,6 @@ export default namespace launcherBundleManager {
           });
         });
       return p;
-    }
-
-    export function startShortcutSync(shortcutInfo: ShortcutInfo): void {
-      return launcherBundleManager.StartShortcutSync(shortcutInfo);
     }
 
     export function getShortcutInfoSync(bundleName: string): Array<ShortcutInfo>{

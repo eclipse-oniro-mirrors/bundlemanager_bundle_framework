@@ -33,7 +33,6 @@ public:
         const std::string &parameter, const std::string &type);
     static void ThrowEnumError(ani_env *env, const std::string &parameter, const std::string &type);
     static void ThrowError(ani_env *env, int32_t err, const std::string &msg = "");
-    static int32_t ConvertErrCode(ErrCode nativeErrCode);
 private:
     static void ThrowError(ani_env *env, ani_object err);
 };

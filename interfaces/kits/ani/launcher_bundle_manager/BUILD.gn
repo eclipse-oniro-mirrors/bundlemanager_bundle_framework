@@ -38,6 +38,7 @@ ohos_shared_library("ani_launcher_bundle_manager") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${kits_path}/ani/common:bms_ani_common",
+    "${kits_path}/js/common:bundle_napi_common",
     "${kits_path}/js/launcher_bundle_manager:launcherbundlemanager_common",
   ]
 
@@ -48,6 +49,7 @@ ohos_shared_library("ani_launcher_bundle_manager") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "napi:ace_napi",
     "runtime_core:ani",
   ]
 
