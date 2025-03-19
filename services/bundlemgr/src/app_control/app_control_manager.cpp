@@ -335,11 +335,15 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
 {
     if (!CheckCanDispose(appId, userId)) {
         LOG_E(BMS_TAG_DEFAULT, "appid in white-list");
+        LOG_I(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
+            callerName.c_str(), userId, appIndex);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto ret = appControlManagerDb_->SetDisposedRule(callerName, appId, rule, appIndex, userId);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "SetDisposedStatus to rdb failed");
+        LOG_I(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
+            callerName.c_str(), userId, appIndex);
         return ret;
     }
     std::string key = appId + std::string("_") + std::to_string(userId) + std::string("_") + std::to_string(appIndex);

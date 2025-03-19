@@ -244,6 +244,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallBundle finished -n %{public}s -u %{public}d",
         bundleName_.c_str(), installParam.userId);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "czlczlczl--------------------------");
     return result;
 }
 
