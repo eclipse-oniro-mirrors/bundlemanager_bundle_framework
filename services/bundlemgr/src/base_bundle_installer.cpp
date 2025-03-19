@@ -4235,7 +4235,7 @@ ErrCode BaseBundleInstaller::CheckInstallCondition(
         LOG_E(BMS_TAG_INSTALLER, "CheckIsolationMode failed due to errorCode : %{public}d", ret);
         return ret;
     }
-    ret = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyRes);
+    ret = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyRes, sysEventInfo_.callingUid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "CheckInstallCondition failed due to errorCode : %{public}d", ret);
         return ret;
