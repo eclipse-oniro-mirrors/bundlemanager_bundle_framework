@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { BundleInfo } from './BundleInfo';
+import { BundleInfo } from 'bundleManager.BundleInfo';
 import { AsyncCallback, BusinessError } from '@ohos.base';
-import { ApplicationInfo } from './ApplicationInfo';
+import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
 
 namespace bundleManager {
 

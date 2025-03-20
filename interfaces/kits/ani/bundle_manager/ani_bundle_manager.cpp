@@ -271,13 +271,14 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     }
 
     std::array methods = {
-        ani_native_function {
-            "isApplicationEnabledSync", "Lstd/core/String;:Z", reinterpret_cast<void*>(isApplicationEnabledSync) },
-        ani_native_function { "getBundleInfoForSelfSync", "D:LBundleInfo/BundleInfo;",
+        ani_native_function { "isApplicationEnabledSync", "Lstd/core/String;:Z",
+            reinterpret_cast<void*>(isApplicationEnabledSync) },
+        ani_native_function { "getBundleInfoForSelfSync", "D:LbundleManager/BundleInfo/BundleInfo;",
             reinterpret_cast<void*>(getBundleInfoForSelfSync) },
-        ani_native_function { "getBundleInfoSync", "Lstd/core/String;DD:LBundleInfo/BundleInfo;",
+        ani_native_function { "getBundleInfoSync", "Lstd/core/String;DD:LbundleManager/BundleInfo/BundleInfo;",
             reinterpret_cast<void*>(getBundleInfoSync) },
-        ani_native_function { "getApplicationInfoSync", "Lstd/core/String;DD:LApplicationInfo/ApplicationInfo;",
+        ani_native_function { "getApplicationInfoSync",
+            "Lstd/core/String;DD:LbundleManager/ApplicationInfo/ApplicationInfo;",
             reinterpret_cast<void*>(getApplicationInfoSync) },
     };
 

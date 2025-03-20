@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-import { AbilityInfo } from './AbilityInfo';
-import { ExtensionAbilityInfo } from './ExtensionAbilityInfo';
-import { Metadata } from './Metadata';
-import bundleManager from './@ohos.bundle.bundleManager';
+import { AbilityInfo } from 'bundleManager.AbilityInfo';
+import { ExtensionAbilityInfo } from 'bundleManager.ExtensionAbilityInfo';
+import { Metadata } from 'bundleManager.Metadata';
+import bundleManager from '@ohos.bundle.bundleManager';
 
 export interface HapModuleInfo {
   readonly name: string;
@@ -63,51 +63,4 @@ export interface RouterItem {
 export interface DataItem {
   readonly key: string;
   readonly value: string;
-}
-
-class HapModuleInfoInner implements HapModuleInfo {
-  readonly name: string = "";
-  readonly icon: string = "";
-  readonly iconId: number;
-  readonly label: string = "";
-  readonly labelId: number;
-  readonly description: string = "";
-  readonly descriptionId: number;
-  readonly mainElementName: string = "";
-  readonly abilitiesInfo: Array<AbilityInfo> = new Array<AbilityInfo>;
-  readonly extensionAbilitiesInfo: Array<ExtensionAbilityInfo> = new Array<ExtensionAbilityInfo>;
-  readonly metadata: Array<Metadata> = new Array<Metadata>;
-  readonly deviceTypes: Array<string> = new Array<string>;
-  readonly installationFree: boolean;
-  readonly hashValue: string = "";
-  readonly type: bundleManager.ModuleType = bundleManager.ModuleType.ENTRY;
-  readonly dependencies: Array<Dependency> = new Array<Dependency>;
-  readonly preloads: Array<PreloadItem> = new Array<PreloadItem>;
-  readonly fileContextMenuConfig: string = "";
-  readonly routerMap: Array<RouterItem> = new Array<RouterItem>;
-  readonly nativeLibraryPath: string = "";
-  readonly codePath: string = "";
-}
-
-class DependencyInner implements Dependency {
-  readonly moduleName: string = "";
-  readonly bundleName: string = "";
-  readonly versionCode: number;
-}
-
-class PreloadItemInner implements PreloadItem {
-  readonly moduleName: string = "";
-}
-
-class RouterItemInner implements RouterItem {
-  readonly name: string = "";
-  readonly pageSourceFile: string = "";
-  readonly buildFunction: string = "";
-  readonly customData: string = "";
-  readonly data: Array<DataItem> = new Array<DataItem>;
-}
-
-class DataItemInner implements DataItem {
-  readonly key: string = "";
-  readonly value: string = "";
 }

@@ -18,9 +18,3 @@ export interface Metadata {
   value: string;
   resource: string;
 }
-
-export class MetadataInner implements Metadata {
-  name: string = "";
-  value: string = "";
-  resource: string = "";
-}

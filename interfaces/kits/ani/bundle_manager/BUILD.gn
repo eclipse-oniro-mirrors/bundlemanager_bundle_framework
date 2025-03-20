@@ -58,18 +58,155 @@ ohos_shared_library("anibundlemanager") {
   part_name = "bundle_framework"
 }
 
-generate_static_abc("bundleManager2abc") {
-  arktsconfig = "${kits_path}/ani/ani_config.json"
-  dst_file = "$target_out_dir/BundleManager.abc"
-  out_puts = [ "$target_out_dir/BundleManager.abc" ]
+generate_static_abc("bundle_manager") {
+  base_url = "./ets"
+  files = [ "./ets/@ohos.bundle.bundleManager.ets" ]
   is_boot_abc = "True"
-  device_dst_file = "/system/framework/BundleManager.abc"
+  device_dst_file = "/system/framework/bundle_manager.abc"
 }
 
-ohos_prebuilt_etc("bundleManager2abc_etc") {
-  source = "$target_out_dir/BundleManager.abc"
+ohos_prebuilt_etc("bundle_manager_etc") {
+  source = "$target_out_dir/bundle_manager.abc"
   module_install_dir = "framework"
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
-  deps = [ ":bundleManager2abc" ]
+  deps = [ ":bundle_manager" ]
+}
+
+generate_static_abc("bundle_info") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/BundleInfo.ets",
+    "./ets/bundleManager/BundleInfoInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/bundle_info.abc"
+}
+
+ohos_prebuilt_etc("bundle_info_etc") {
+  source = "$target_out_dir/bundle_info.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":bundle_info" ]
+}
+
+generate_static_abc("application_info") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/ApplicationInfo.ets",
+    "./ets/bundleManager/ApplicationInfoInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/application_info.abc"
+  external_dependencies = [ "resource_management:copy_resourceManager_ets" ]
+}
+
+ohos_prebuilt_etc("application_info_etc") {
+  source = "$target_out_dir/application_info.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":application_info" ]
+}
+
+generate_static_abc("ability_info") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/AbilityInfo.ets",
+    "./ets/bundleManager/AbilityInfoInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/ability_info.abc"
+}
+
+ohos_prebuilt_etc("ability_info_etc") {
+  source = "$target_out_dir/ability_info.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":ability_info" ]
+}
+
+generate_static_abc("extension_ability_info") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/ExtensionAbilityInfo.ets",
+    "./ets/bundleManager/ExtensionAbilityInfoInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/extension_ability_info.abc"
+}
+
+ohos_prebuilt_etc("extension_ability_info_etc") {
+  source = "$target_out_dir/extension_ability_info.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":extension_ability_info" ]
+}
+
+generate_static_abc("hap_module_info") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/HapModuleInfo.ets",
+    "./ets/bundleManager/HapModuleInfoInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/hap_module_info.abc"
+}
+
+ohos_prebuilt_etc("hap_module_info_etc") {
+  source = "$target_out_dir/hap_module_info.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":hap_module_info" ]
+}
+
+generate_static_abc("metadata") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/Metadata.ets",
+    "./ets/bundleManager/MetadataInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/metadata.abc"
+}
+
+ohos_prebuilt_etc("metadata_etc") {
+  source = "$target_out_dir/metadata.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":metadata" ]
+}
+
+generate_static_abc("skill") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/Skill.ets",
+    "./ets/bundleManager/SkillInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/skill.abc"
+}
+
+ohos_prebuilt_etc("skill_etc") {
+  source = "$target_out_dir/skill.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":skill" ]
+}
+
+ohos_copy("copy_bundleManager_ets") {
+  sources = [
+    "./ets/bundleManager/AbilityInfoInner.ets",
+    "./ets/bundleManager/ApplicationInfoInner.ets",
+    "./ets/bundleManager/ExtensionAbilityInfoInner.ets",
+  ]
+  outputs = [ "$ohos_ets_inner_path/bundleManager/{{source_file_part}}" ]
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
 }

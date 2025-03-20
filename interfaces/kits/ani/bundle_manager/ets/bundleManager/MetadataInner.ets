@@ -13,14 +13,10 @@
  * limitations under the License.
  */
 
-export interface Resource {
-  bundleName: string;
-  moduleName: string;
-  id: number;
-}
+import { Metadata } from 'bundleManager.Metadata'
 
-export class ResourceInner implements Resource {
-  bundleName: string = "";
-  moduleName: string = "";
-  id: number;
+export class MetadataInner implements Metadata {
+  name: string = "";
+  value: string = "";
+  resource: string = "";
 }

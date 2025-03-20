@@ -13,56 +13,13 @@
  * limitations under the License.
  */
 
-import { ApplicationInfo } from './ApplicationInfo';
-import { HapModuleInfo, RouterItem } from './HapModuleInfo';
-import bundleManager from './@ohos.bundle.bundleManager';
+import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
+import { HapModuleInfo, RouterItem } from 'bundleManager.HapModuleInfo';
+import bundleManager from '@ohos.bundle.bundleManager';
+import { BundleInfo, ReqPermissionDetail, UsedScene, SignatureInfo, AppCloneIdentity } from 'bundleManager.BundleInfo';
+import { ApplicationInfoInner } from './ApplicationInfoInner';
 
-import { ApplicationInfoInner } from './ApplicationInfo';
-
-export interface BundleInfo {
-  readonly name: string;
-  readonly vendor: string;
-  readonly versionCode: number;
-  readonly versionName: string;
-  readonly minCompatibleVersionCode: number;
-  readonly targetVersion: number;
-  readonly appInfo: ApplicationInfo;
-  readonly hapModulesInfo: Array<HapModuleInfo>;
-  readonly reqPermissionDetails: Array<ReqPermissionDetail>;
-  readonly permissionGrantStates: Array<bundleManager.PermissionGrantState>;
-  readonly signatureInfo: SignatureInfo;
-  readonly installTime: number;
-  readonly updateTime: number;
-  readonly routerMap: Array<RouterItem>;
-  readonly appIndex: number;
-}
-
-export interface ReqPermissionDetail {
-  name: string;
-  moduleName: string;
-  reason: string;
-  reasonId: number;
-  usedScene: UsedScene;
-}
-
-export interface UsedScene {
-  abilities: Array<string>;
-  when: string;
-}
-
-export interface SignatureInfo {
-  readonly appId: string;
-  readonly fingerprint: string;
-  readonly appIdentifier: string;
-  readonly certificate?: string;
-}
-
-export interface AppCloneIdentity {
-  readonly bundleName: string;
-  readonly appIndex: number;
-}
-
-class BundleInfoInner implements BundleInfo {
+export class BundleInfoInner implements BundleInfo {
   readonly name: string = "";
   readonly vendor: string = "";
   readonly versionCode: number;
@@ -80,7 +37,7 @@ class BundleInfoInner implements BundleInfo {
   readonly appIndex: number;
 }
 
-class ReqPermissionDetailInner implements ReqPermissionDetail {
+export class ReqPermissionDetailInner implements ReqPermissionDetail {
   name: string = "";
   moduleName: string = "";
   reason: string = "";
@@ -93,7 +50,7 @@ export class UsedSceneInner implements UsedScene {
   when: string = "";
 }
 
-class SignatureInfoInner implements SignatureInfo {
+export class SignatureInfoInner implements SignatureInfo {
   readonly appId: string = "";
   readonly fingerprint: string = "";
   readonly appIdentifier: string = "";

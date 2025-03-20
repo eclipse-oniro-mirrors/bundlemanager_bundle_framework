@@ -13,12 +13,10 @@
  * limitations under the License.
  */
 
-import { ApplicationInfo } from './ApplicationInfo';
-import { Metadata } from './Metadata';
-import bundleManager from './@ohos.bundle.bundleManager';
-import { Skill } from './Skill';
-
-import { ApplicationInfoInner } from './ApplicationInfo';
+import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
+import { Metadata } from 'bundleManager.Metadata';
+import bundleManager from '@ohos.bundle.bundleManager';
+import { Skill } from 'bundleManager.Skill';
 
 export interface ExtensionAbilityInfo {
   readonly bundleName: string;
@@ -40,22 +38,3 @@ export interface ExtensionAbilityInfo {
   readonly appIndex: number;
 }
 
-class ExtensionAbilityInfoInner implements ExtensionAbilityInfo {
-  readonly bundleName: string = "";
-  readonly moduleName: string = "";
-  readonly name: string = "";
-  readonly labelId: number;
-  readonly descriptionId: number;
-  readonly iconId: number;
-  readonly exported: boolean;
-  readonly extensionAbilityType: bundleManager.ExtensionAbilityType = bundleManager.ExtensionAbilityType.UNSPECIFIED;
-  readonly extensionAbilityTypeName: string = "";
-  readonly permissions: Array<string> = new Array<string>;
-  readonly applicationInfo: ApplicationInfo = new ApplicationInfoInner;
-  readonly metadata: Array<Metadata> = new Array<Metadata>;
-  readonly enabled: boolean;
-  readonly readPermission: string = "";
-  readonly writePermission: string = "";
-  readonly skills: Array<Skill> = new Array<Skill>;
-  readonly appIndex: number;
-}
