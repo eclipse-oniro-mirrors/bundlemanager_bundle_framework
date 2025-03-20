@@ -109,8 +109,8 @@ export default namespace bundleResourceManager {
   {
       let resFlag = resourceFlags ?? -500;
       let appIdx = appIndex ?? -500;
-      return bundleResourceManager.getBundleResourceInfo(bundleName, resFlag as int, appIdx as int);
+      return bundleResourceManager.getBundleResourceInfoNative(bundleName, resFlag, appIdx);
   }
 
-  native function getBundleResourceInfo(bundleName: string, resourceFlags: int, appIndex: int): BundleResourceInfo;
+  export native function getBundleResourceInfoNative(bundleName: string, resourceFlags: number, appIndex: number): BundleResourceInfo;
 }

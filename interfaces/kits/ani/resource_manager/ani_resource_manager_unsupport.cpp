@@ -23,7 +23,7 @@ namespace  {
 }
 
 static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_string aniBundleName,
-    ani_int resFlag, ani_int appIdx)
+    ani_double resFlag, ani_double appIdx)
 {
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     BusinessErrorAni::ThrowParameterTypeError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_BUNDLE_RESOURCE_INFO, "");
@@ -49,8 +49,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 
     std::array methods = {
         ani_native_function {
-            "getBundleResourceInfo",
-            "Lstd/core/String;II:LbundleManager/BundleResourceInfo/BundleResourceInfo;",
+            "getBundleResourceInfoNative",
+            "Lstd/core/String;DD:LbundleManager/BundleResourceInfo/BundleResourceInfo;",
             reinterpret_cast<void*>(GetBundleResourceInfo)
         }
     };
