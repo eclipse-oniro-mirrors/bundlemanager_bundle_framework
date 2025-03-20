@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#define private public
+#define protected public
+
 #include <gtest/gtest.h>
 
 #include "bundle_mgr_proxy.h"
@@ -30,6 +33,7 @@
 #include "app_log_tag_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
+#include "bundle_mgr_ext_proxy.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_proxy.h"
 #endif
@@ -537,6 +541,67 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3000, Function | SmallTest | 
     std::string bundleName;
     auto ret = bundleMgrProxy.GetBundleNameByAppId(appId, bundleName);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_3300
+ * @tc.name: test the GetBundleArchiveInfoExt
+ * @tc.desc: 1. hapPath is empty
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3300, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrExtProxy bundleMgrExtProxy(impl);
+    int32_t uid = -1;
+    std::vector<std::string> bundleNames;
+    auto result = bundleMgrExtProxy.GetBundleNamesForUidExt(uid, bundleNames);
+    EXPECT_EQ(result, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_3400
+ * @tc.name: test the GetBundleNamesForUidExt
+ * @tc.desc: 1. hapPath is empty
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3400, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrExtProxy bundleMgrExtProxy(impl);
+    int32_t uid = -1;
+    std::vector<std::string> bundleNames;
+    auto result = bundleMgrExtProxy.GetBundleNamesForUidExt(uid, bundleNames);
+    EXPECT_EQ(result, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_3500
+ * @tc.name: test the GetBundleNamesForUidExt
+ * @tc.desc: 1. hapPath is empty
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3500, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrExtProxy bundleMgrExtProxy(impl);
+    BundleMgrExtInterfaceCode code = BundleMgrExtInterfaceCode::GET_BUNDLE_NAMES_FOR_UID_EXT;
+    MessageParcel data;
+    MessageParcel reply;
+    auto result = bundleMgrExtProxy.SendTransactCmd(code, data, reply);
+    EXPECT_EQ(result, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_3600
+ * @tc.name: test the GetParcelInfoFromAshMem
+ * @tc.desc: 1. hapPath is empty
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3600, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    MessageParcel reply;
+    void *data = nullptr;
+    auto result = bundleMgrProxy.GetParcelInfoFromAshMem(reply, data);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 } // AppExecFwk
 } // OHOS

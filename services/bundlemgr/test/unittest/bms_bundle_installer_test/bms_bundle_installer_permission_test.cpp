@@ -33,10 +33,15 @@
 #ifdef APP_DOMAIN_VERIFY_ENABLED
 #include "app_domain_verify_mgr_client.h"
 #endif
+#include "app_provision_info_manager.h"
 #include "app_service_fwk/app_service_fwk_installer.h"
+#include "bundle_clone_installer.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_multiuser_installer.h"
+#include "bundle_sandbox_data_mgr.h"
+#include "bundle_sandbox_installer.h"
 #include "directory_ex.h"
 #include "install_param.h"
 #include "installd/installd_service.h"
@@ -81,7 +86,7 @@ public:
     void StopBundleService();
     ErrCode InstallThirdPartyBundle(const std::string &filePath) const;
     ErrCode UpdateThirdPartyBundle(const std::string &filePath) const;
-    ErrCode UnInstallBundle(const std::string &bundleName) const;
+    ErrCode UnInstallBundle(const std::string &bundleName, bool keepData = false) const;
     void CreateInstallerManager();
     void ClearBundleInfo();
     void ClearDataMgr();
@@ -183,7 +188,7 @@ ErrCode BmsBundleInstallerPermissionTest::UpdateThirdPartyBundle(const std::stri
     return receiver->GetResultCode();
 }
 
-ErrCode BmsBundleInstallerPermissionTest::UnInstallBundle(const std::string &bundleName) const
+ErrCode BmsBundleInstallerPermissionTest::UnInstallBundle(const std::string &bundleName, bool keepData) const
 {
     bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     auto installer = bundleMgrService_->GetBundleInstaller();
@@ -198,6 +203,7 @@ ErrCode BmsBundleInstallerPermissionTest::UnInstallBundle(const std::string &bun
     }
     InstallParam installParam;
     installParam.userId = USERID;
+    installParam.isKeepData = keepData;
     installParam.installFlag = InstallFlag::NORMAL;
     bool result = installer->Uninstall(bundleName, installParam, receiver);
     EXPECT_TRUE(result);
@@ -795,4 +801,186 @@ HWTEST_F(BmsBundleInstallerPermissionTest, UpdateHapToken_0100, Function | Small
     ErrCode ret = installer.UpdateHapToken(false, newInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
 }
+
+/**
+ * @tc.number: BaseBundleInstaller_0001
+ * @tc.name: test InnerProcessInstallByPreInstallInfo
+ * @tc.desc: test InnerProcessInstallByPreInstallInfo of BaseBundleInstaller without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, BaseBundleInstaller_0001, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    bundleMgrService_->GetDataMgr()->AddUserId(101);
+
+    std::string bundleName = "com.ohos.settings";
+    InstallParam installParam;
+    installParam.userId = 101;
+    int32_t uid = -1;
+    ErrCode ret = installer.InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    bundleMgrService_->GetDataMgr()->RemoveUserId(101);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0002
+ * @tc.name: test UpdateHapToken
+ * @tc.desc: test UpdateHapToken of BaseBundleInstaller without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, BaseBundleInstaller_0002, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    installer.bundleName_ = "test";
+
+    InnerBundleInfo info;
+    int32_t uid = -1;
+    ErrCode ret = installer.ProcessBundleInstallStatus(info, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0003
+ * @tc.name: test RecoverHapToken
+ * @tc.desc: test RecoverHapToken of BaseBundleInstaller without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, BaseBundleInstaller_0003, Function | SmallTest | Level0)
+{
+    std::string bundleName = "test";
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallDataUserInfo;
+    uninstallBundleInfo.userInfos["100"] = uninstallDataUserInfo;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo));
+
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    installer.bundleName_ = bundleName;
+
+    InnerBundleInfo oldInnerBundleInfo;
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.versionCode = 100;
+    oldInnerBundleInfo.SetBaseBundleInfo(oldBundleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    oldInnerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+
+    auto ret = installer.RecoverHapToken(bundleName, 100, accessTokenIdEx, oldInnerBundleInfo);
+    EXPECT_EQ(ret, false);
+    EXPECT_TRUE(dataMgr->DeleteUninstallBundleInfo(bundleName, 100));
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0001
+ * @tc.name: test RecoverHapToken
+ * @tc.desc: test RecoverHapToken of BaseBundleInstaller without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, BundleMultiUserInstaller_0001, Function | SmallTest | Level0)
+{
+    std::string bundleName = "test";
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallDataUserInfo;
+    uninstallBundleInfo.userInfos["100"] = uninstallDataUserInfo;
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo));
+
+    BundleMultiUserInstaller installer;
+    EXPECT_EQ(installer.GetDataMgr(), ERR_OK);
+
+    InnerBundleInfo oldInnerBundleInfo;
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.versionCode = 100;
+    oldInnerBundleInfo.SetBaseBundleInfo(oldBundleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    oldInnerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+
+    auto ret = installer.RecoverHapToken(bundleName, 100, accessTokenIdEx, oldInnerBundleInfo);
+    EXPECT_EQ(ret, false);
+    EXPECT_TRUE(dataMgr->DeleteUninstallBundleInfo(bundleName, 100));
+}
+
+/**
+ * @tc.number: BundleMultiUserInstaller_0002
+ * @tc.name: test RecoverHapToken
+ * @tc.desc: test RecoverHapToken of BaseBundleInstaller without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, BundleMultiUserInstaller_0002, Function | SmallTest | Level0)
+{
+    std::string bundleName = "test";
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    UninstallBundleInfo uninstallBundleInfo;
+    EXPECT_TRUE(dataMgr->uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo));
+
+    BundleMultiUserInstaller installer;
+    EXPECT_EQ(installer.GetDataMgr(), ERR_OK);
+
+    InnerBundleInfo oldInnerBundleInfo;
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.versionCode = 100;
+    oldInnerBundleInfo.SetBaseBundleInfo(oldBundleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    oldInnerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+
+    auto ret = installer.RecoverHapToken(bundleName, 100, accessTokenIdEx, oldInnerBundleInfo);
+    EXPECT_EQ(ret, false);
+    EXPECT_TRUE(dataMgr->uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName));
+}
+
+/**
+ * @tc.number: BundleSandboxInstaller_0001
+ * @tc.name: test InstallSandboxApp
+ * @tc.desc: test InstallSandboxApp of BaseBundleInstaller without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, BundleSandboxInstaller_0001, Function | SmallTest | Level0)
+{
+    std::string bundleName = "com.ohos.settings";
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+
+    BundleSandboxInstaller installer;
+    installer.dataMgr_ = bundleMgrService_->GetDataMgr();
+    int32_t appIndex = 0;
+
+    auto ret = installer.InstallSandboxApp(bundleName, 1, 100, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+}
+
+/**
+ * @tc.number: BundleSandboxInstaller_0002
+ * @tc.name: test InstallSandboxApp
+ * @tc.desc: test InstallSandboxApp of BaseBundleInstaller without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, BundleSandboxInstaller_0002, Function | SmallTest | Level0)
+{
+    std::string bundleName = "com.ohos.settings";
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    AppProvisionInfo appProvisionInfo;
+    auto result = dataMgr->GetAppProvisionInfo(bundleName, 100, appProvisionInfo);
+    EXPECT_EQ(result, ERR_OK);
+    auto deleteRes = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName);
+    EXPECT_TRUE(deleteRes);
+
+    BundleSandboxInstaller installer;
+    installer.dataMgr_ = bundleMgrService_->GetDataMgr();
+    int32_t appIndex = 0;
+
+    auto ret = installer.InstallSandboxApp(bundleName, 1, 100, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+
+    auto addRes = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
+        bundleName, appProvisionInfo);
+    EXPECT_TRUE(addRes);
+}
+
+
 } // OHOS

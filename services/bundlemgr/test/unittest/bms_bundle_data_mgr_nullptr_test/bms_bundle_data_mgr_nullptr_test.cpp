@@ -14,6 +14,7 @@
 */
 
 #define private public
+#define protected public
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -21,12 +22,15 @@
 #include "app_provision_info_manager.h"
 #include "base_bundle_installer.h"
 #include "bundle_cache_mgr.h"
+#include "bundle_clone_installer.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
+#include "bundle_sandbox_installer.h"
 #include "data_group_info.h"
 #include "hmp_bundle_installer.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
+#include "parameters.h"
 #include "scope_guard.h"
 
 using namespace testing::ext;
@@ -587,5 +591,136 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0023, Function | Mediu
     InnerBundleInfo newInfo;
     auto ret = installer.UpdateEncryptedStatus(newInfo);
     EXPECT_NE(ret, true);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0024
+ * @tc.name: test RemoveBundleUserData
+ * @tc.desc: 1.Test RemoveBundleUserData the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0024, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = Constants::ALL_USERID;
+
+    InnerBundleInfo newInfo;
+    auto ret = installer.RemoveBundleUserData(newInfo, false, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0025
+ * @tc.name: test OnSingletonChange
+ * @tc.desc: 1.Test OnSingletonChange the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0025, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = Constants::ALL_USERID;
+    installer.singletonState_ = AppExecFwk::BaseBundleInstaller::SingletonState::SINGLETON_TO_NON;
+
+    installer.OnSingletonChange(false);
+    EXPECT_EQ(installer.singletonState_, AppExecFwk::BaseBundleInstaller::SingletonState::SINGLETON_TO_NON);
+}
+
+/**
+* @tc.number: BaseBundleInstaller_0026
+ * @tc.name: test UpdateHapToken
+ * @tc.desc: 1.Test UpdateHapToken the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0026, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+
+    InnerBundleInfo newInfo;
+    auto ret = installer.UpdateHapToken(false, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0027
+ * @tc.name: test RollbackHmpUserInfo
+ * @tc.desc: 1.Test RollbackHmpUserInfo the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0027, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+
+    std::string bundleName = "test";
+    auto ret = installer.RollbackHmpUserInfo(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0028
+ * @tc.name: test RollbackHmpUserInfo
+ * @tc.desc: 1.Test RollbackHmpUserInfo the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0028, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+
+    std::string bundleName = "test";
+    auto ret = installer.RollbackHmpUserInfo(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0029
+ * @tc.name: test IsEnterpriseForAllUser
+ * @tc.desc: 1.Test IsEnterpriseForAllUser the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0029, Function | MediumTest | Level1)
+{
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true"));
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.parameters["ohos.bms.param.enterpriseForAllUser"] = "true";
+
+    std::string bundleName = "test";
+    auto ret = installer.IsEnterpriseForAllUser(installParam, bundleName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0030
+ * @tc.name: test UpdateKillApplicationProcess
+ * @tc.desc: 1.Test UpdateKillApplicationProcess the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0030, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    installer.UpdateKillApplicationProcess(oldInfo);
+    EXPECT_EQ(oldInfo.GetBundleName().empty(), true);
+}
+
+/**
+ * @tc.number: BundleSandboxInstaller_0010
+ * @tc.name: test GetInnerBundleInfoWithDisable
+ * @tc.desc: 1.Test GetInnerBundleInfoWithDisable the BundleSandboxInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BundleSandboxInstaller_0010, Function | MediumTest | Level1)
+{
+    BundleSandboxInstaller installer;
+    InnerBundleInfo oldInfo;
+    bool isAppExist = false;
+    auto ret = installer.GetInnerBundleInfoWithDisable(oldInfo, isAppExist);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleCloneInstaller_0010
+ * @tc.name: test UninstallAllCloneApps
+ * @tc.desc: 1.Test UninstallAllCloneApps the BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCloneInstaller_0010, Function | MediumTest | Level1)
+{
+    BundleCloneInstaller installer;
+    std::string bundleName = "test";
+    bool sync = false;
+    int32_t userId = 100;
+    auto ret = installer.UninstallAllCloneApps(bundleName, sync, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR);
 }
 } // OHOS

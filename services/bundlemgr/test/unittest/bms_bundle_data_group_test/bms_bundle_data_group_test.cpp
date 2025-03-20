@@ -25,6 +25,7 @@
 #include "data_group_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
+#include "migrate_data_user_auth_callback.h"
 #include "scope_guard.h"
 
 using namespace testing::ext;
@@ -658,5 +659,64 @@ HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupUuidAndUid_0010, Function | Sm
         EXPECT_EQ(dataGroupInfo.uid, dataGroupInfo.gid);
         EXPECT_NE(dataGroupInfo.uuid, "");
     }
+}
+
+/**
+ * @tc.number: MigrateDataUserAuthCallback_0010
+ * @tc.name: test OnResult
+ * @tc.desc: 1.Test OnResult the MigrateDataUserAuthCallback
+*/
+HWTEST_F(BmsBundleDataGroupTest, MigrateDataUserAuthCallback_0010, Function | MediumTest | Level1)
+{
+    MigrateDataUserAuthCallback callback;
+    int32_t result = 0;
+    Attributes extraInfo;
+    callback.OnResult(result, extraInfo);
+    EXPECT_EQ(callback.result_, result);
+}
+
+/**
+ * @tc.number: MigrateDataUserAuthCallback_0020
+ * @tc.name: test OnResult
+ * @tc.desc: 1.Test OnResult the MigrateDataUserAuthCallback
+*/
+HWTEST_F(BmsBundleDataGroupTest, MigrateDataUserAuthCallback_0020, Function | MediumTest | Level1)
+{
+    MigrateDataUserAuthCallback callback;
+    callback.isComplete_.store(true);
+
+    int32_t result = 0;
+    Attributes extraInfo;
+    callback.OnAcquireInfo(0, 1, extraInfo);
+    callback.OnResult(result, extraInfo);
+    EXPECT_EQ(callback.isComplete_, true);
+}
+
+/**
+ * @tc.number: MigrateDataUserAuthCallback_0030
+ * @tc.name: test GetUserAuthResult
+ * @tc.desc: 1.Test GetUserAuthResult the MigrateDataUserAuthCallback
+*/
+HWTEST_F(BmsBundleDataGroupTest, MigrateDataUserAuthCallback_0030, Function | MediumTest | Level1)
+{
+    MigrateDataUserAuthCallback callback;
+    callback.isComplete_.store(true);
+
+    auto ret = callback.GetUserAuthResult();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_TIME_OUT);
+}
+
+/**
+ * @tc.number: MigrateDataUserAuthCallback_0040
+ * @tc.name: test GetUserAuthResult
+ * @tc.desc: 1.Test GetUserAuthResult the MigrateDataUserAuthCallback
+*/
+HWTEST_F(BmsBundleDataGroupTest, MigrateDataUserAuthCallback_0040, Function | MediumTest | Level1)
+{
+    MigrateDataUserAuthCallback callback;
+    callback.isComplete_.store(false);
+
+    auto ret = callback.GetUserAuthResult();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_TIME_OUT);
 }
 } // OHOS

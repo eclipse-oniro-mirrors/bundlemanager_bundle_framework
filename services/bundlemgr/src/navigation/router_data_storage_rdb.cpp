@@ -32,7 +32,7 @@ const int8_t ROUTER_INFO_INDEX = 2;
 }
 RouterDataStorageRdb::RouterDataStorageRdb()
 {
-    APP_LOGI("RouterDataStorageRdb instance is created");
+    APP_LOGI("instance is created");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = ROUTER_RDB_TABLE_NAME;
