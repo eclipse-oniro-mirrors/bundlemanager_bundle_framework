@@ -24,12 +24,14 @@
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t U32_AT_SIZE = 4;
-constexpr uint32_t CODE_MAX = 170;
-
+constexpr uint32_t CODE_MAX = 180;
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     for (uint32_t code = 0; code <= CODE_MAX; code++) {
+        if (code == 178) { // 178 is BundleMgrInterfaceCode
+            continue;
+        }
         MessageParcel datas;
         std::u16string descriptor = BundleMgrHost::GetDescriptor();
         datas.WriteInterfaceToken(descriptor);
