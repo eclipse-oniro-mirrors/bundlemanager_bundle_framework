@@ -8806,7 +8806,7 @@ HWTEST_F(BmsBundleInstallerTest, HandleInstallPlugin_0200, Function | SmallTest 
     bundleInstallerHost.HandleInstallPlugin(data, reply);
 
     int32_t ret = reply.ReadInt32();
-    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
 }
 
 /**
@@ -8830,7 +8830,7 @@ HWTEST_F(BmsBundleInstallerTest, HandleUninstallPlugin_0100, Function | SmallTes
     bundleInstallerHost.HandleUninstallPlugin(data, reply);
 
     int32_t ret = reply.ReadInt32();
-    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
 }
 
 /**
@@ -8871,6 +8871,11 @@ HWTEST_F(BmsBundleInstallerTest, UninstallPlugin_0100, Function | SmallTest | Le
     int32_t ret = bundleInstallerHost.UninstallPlugin(hostBundleName, pluginBundleName,
         installPluginParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+
+    ret = bundleInstallerHost.UninstallPlugin("", pluginBundleName, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+    ret = bundleInstallerHost.UninstallPlugin(hostBundleName, "", installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
 }
 
 /**
