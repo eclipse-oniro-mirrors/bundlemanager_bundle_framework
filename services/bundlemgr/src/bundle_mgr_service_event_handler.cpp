@@ -2123,20 +2123,20 @@ bool BMSEventHandler::HotPatchAppProcessing(const std::string &bundleName, uint3
         LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s empty", bundleName.c_str());
         return false;
     }
+    // obtains the users to which the app is installed
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+    userIds = dataMgr->GetUserIds(bundleName);
 
     if (IsQuickfixPatchApp(bundleName, hasInstallVersionCode)) {
         LOG_I(BMS_TAG_DEFAULT, "hasInstallVersionCode: %{public}u, hapVersionCode: %{public}u",
             hasInstallVersionCode, hapVersionCode);
         // installed patch application version greater than or equal to OTA Preconfigured APP Version
         if (hasInstallVersionCode >= hapVersionCode) {
-            // obtains the users to which the app is installed
             LOG_I(BMS_TAG_DEFAULT, "get patch success, bundleName: %{public}s", bundleName.c_str());
-            auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-            if (dataMgr == nullptr) {
-                LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-                return false;
-            }
-            userIds = dataMgr->GetUserIds(bundleName);
             // uninstall the patch app
             SystemBundleInstaller installer;
             if (!installer.UninstallSystemBundle(bundleName, true)) {
