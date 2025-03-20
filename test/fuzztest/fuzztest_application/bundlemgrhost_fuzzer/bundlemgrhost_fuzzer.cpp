@@ -24,12 +24,26 @@
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t U32_AT_SIZE = 4;
-constexpr uint32_t CODE_MAX = 180;
+constexpr uint32_t CODE_MAX = 177;
+constexpr uint32_t CODE_MAXONE = 179;
+constexpr uint32_t CODE_MAXTWO = 180;
 
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     for (uint32_t code = 0; code <= CODE_MAX; code++) {
+        MessageParcel datas;
+        std::u16string descriptor = BundleMgrHost::GetDescriptor();
+        datas.WriteInterfaceToken(descriptor);
+        datas.WriteBuffer(data, size);
+        datas.RewindRead(0);
+        MessageParcel reply;
+        MessageOption option;
+        BundleMgrHost bundleMgrHost;
+        bundleMgrHost.OnRemoteRequest(code, datas, reply, option);
+    }
+
+    for (uint32_t code = CODE_MAXONE; code <= CODE_MAXTWO; code++) {
         MessageParcel datas;
         std::u16string descriptor = BundleMgrHost::GetDescriptor();
         datas.WriteInterfaceToken(descriptor);
