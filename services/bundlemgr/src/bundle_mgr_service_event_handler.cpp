@@ -1484,8 +1484,7 @@ void BMSEventHandler::CheckBundleCloneEl1ShaderCacheLocal(const std::string &bun
     std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
     el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"),
         1, std::to_string(userId));
-    el1ShaderCachePath = el1ShaderCachePath + cloneBundleName + ServiceConstants::PATH_SEPARATOR +
-        ServiceConstants::SHADER_CACHE;
+    el1ShaderCachePath = el1ShaderCachePath + cloneBundleName;
     bool isExist = true;
     ErrCode result = InstalldClient::GetInstance()->IsExistDir(el1ShaderCachePath, isExist);
     if (result == ERR_OK && isExist) {
@@ -1509,6 +1508,15 @@ void BMSEventHandler::CheckAllBundleEl1ShaderCacheLocal()
     }
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     for (const auto &userId : userIds) {
+        std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+        el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"),
+            1, std::to_string(userId));
+        bool isExist = true;
+        ErrCode result = InstalldClient::GetInstance()->IsExistDir(el1ShaderCachePath, isExist);
+        if (result != ERR_OK || !isExist) {
+            LOG_W(BMS_TAG_DEFAULT, "shadercache not exist: %{public}s ", el1ShaderCachePath.c_str());
+            continue;
+        }
         std::map<std::string, InnerBundleInfo> infos = dataMgr->GetAllInnerBundleInfos();
         for (auto &infoPair : infos) {
             auto &info = infoPair.second;
@@ -1536,8 +1544,7 @@ void BMSEventHandler::CleanBundleCloneEl1ShaderCacheLocal(const std::string &bun
     std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
     el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"),
         1, std::to_string(userId));
-    el1ShaderCachePath = el1ShaderCachePath + cloneBundleName + ServiceConstants::PATH_SEPARATOR +
-        ServiceConstants::SHADER_CACHE;
+    el1ShaderCachePath = el1ShaderCachePath + cloneBundleName;
     ErrCode res = InstalldClient::GetInstance()->CleanBundleDataDir(el1ShaderCachePath);
     if (res != ERR_OK) {
         LOG_NOFUNC_W(BMS_TAG_DEFAULT, "%{public}s clean shader cache fail %{public}d",
@@ -1555,6 +1562,15 @@ void BMSEventHandler::CleanAllBundleEl1ShaderCacheLocal()
     }
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     for (const auto &userId : userIds) {
+        std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+        el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"),
+            1, std::to_string(userId));
+        bool isExist = true;
+        ErrCode result = InstalldClient::GetInstance()->IsExistDir(el1ShaderCachePath, isExist);
+        if (result != ERR_OK || !isExist) {
+            LOG_W(BMS_TAG_DEFAULT, "shadercache not exist: %{public}s ", el1ShaderCachePath.c_str());
+            continue;
+        }
         std::map<std::string, InnerBundleInfo> infos = dataMgr->GetAllInnerBundleInfos();
         for (auto &infoPair : infos) {
             auto &info = infoPair.second;
