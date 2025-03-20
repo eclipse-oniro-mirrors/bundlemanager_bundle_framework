@@ -494,4 +494,15 @@
       <option name="push" value="bundle_update_debug/library_v2release.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
+  <target name="BmsPluginInstallerTest">
+    <preparer>
+      <option name="push" value="plugin_installer_test/hostBundleTest1.hap -> /data/test/resource/bms/plugin_installer/" src="res" />
+      <option name="push" value="plugin_installer_test/hostBundleTest2.hap -> /data/test/resource/bms/plugin_installer/" src="res" />
+      <option name="push" value="plugin_installer_test/plugin.hsp -> /data/test/resource/bms/plugin_installer/" src="res" />
+      <option name="push" value="plugin_installer_test/pluginV2.hsp -> /data/test/resource/bms/plugin_installer/" src="res" />
+      <option name="push" value="plugin_installer_test/pluginWithWrongId.hsp -> /data/test/resource/bms/plugin_installer/" src="res" />
+      <option name="push" value="plugin_installer_test/pluginWithWrongProf.hsp -> /data/test/resource/bms/plugin_installer/" src="res" />
+      <option name="push" value="test_bundle/resourceManagerTest.hap -> /data/test/resource/bms/resource_manager/" src="res" />
+    </preparer>
+  </target>
 </configuration>

@@ -1,0 +1,42 @@
+{
+    "module": {
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777218,
+                "icon": "$media:app_icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777219,
+                "name": "MainAbility",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "exported": true
+            }
+        ],
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777220,
+        "deviceTypes": [
+            "2in1",
+            "tablet",
+            "default"
+        ],
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "name": "hsp_A",
+        "pages": "$profile:main_pages",
+        "srcEntry": "./ets/Application/AbilityStage.ts",
+        "type": "shared",
+        "virtualMachine": "ark"
+    }
+}
