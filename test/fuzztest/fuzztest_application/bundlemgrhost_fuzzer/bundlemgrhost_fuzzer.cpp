@@ -29,7 +29,7 @@ constexpr uint32_t CODE_MAX = 180;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     for (uint32_t code = 0; code <= CODE_MAX; code++) {
-        if (code == 178) {
+        if (code == 178) { // 178 is BundleMgrInterfaceCode
             continue;
         }
         MessageParcel datas;
@@ -42,7 +42,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
         BundleMgrHost bundleMgrHost;
         bundleMgrHost.OnRemoteRequest(code, datas, reply, option);
     }
-
     return true;
 }
 }
