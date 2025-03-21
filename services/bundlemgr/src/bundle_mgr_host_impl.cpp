@@ -4952,6 +4952,26 @@ ErrCode BundleMgrHostImpl::GetCompatibleDeviceType(const std::string &bundleName
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
+    std::vector<PluginBundleInfo> &pluginBundleInfos)
+{
+    APP_LOGD("start GetAllPluginInfo");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
+}
+
 ErrCode BundleMgrHostImpl::GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
 {
     APP_LOGD("start GetBundleNameByAppId");

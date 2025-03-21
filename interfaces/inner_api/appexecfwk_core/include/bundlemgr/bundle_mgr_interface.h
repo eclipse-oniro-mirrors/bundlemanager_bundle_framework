@@ -37,6 +37,7 @@
 #include "default_app_interface.h"
 #include "extend_resource_manager_interface.h"
 #include "overlay_manager_interface.h"
+#include "plugin/plugin_bundle_info.h"
 #include "quick_fix_manager_interface.h"
 #include "verify_manager_interface.h"
 #include "distributed_bundle_info.h"
@@ -1669,6 +1670,12 @@ public:
     }
 
     virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
+        std::vector<PluginBundleInfo> &pluginBundleInfos)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

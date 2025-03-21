@@ -628,6 +628,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_NAME_BY_APP_ID_OR_APP_IDENTIFIER):
             errCode = HandleGetBundleNameByAppId(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_PLUGIN_INFO):
+            errCode = HandleGetAllPluginInfo(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DIR_BY_BUNDLENAME_AND_APPINDEX):
             errCode = HandleGetDirByBundleNameAndAppIndex(data, reply);
             break;
@@ -4381,6 +4384,26 @@ ErrCode BundleMgrHost::HandleCleanAllBundleCache(MessageParcel &data, MessagePar
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllPluginInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string hostBundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(pluginBundleInfos, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }
