@@ -82,7 +82,7 @@ private:
     ErrCode DeliveryProfileToCodeSign(std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const;
     ErrCode CheckPluginId(const std::string &hostBundleName);
     ErrCode ProcessPluginInstall(const InnerBundleInfo &hostBundleInfo);
-    ErrCode CheckPluginDir(const std::string &hostBundleName, std::string &pluginDir);
+    ErrCode CreatePluginDir(const std::string &hostBundleName, std::string &pluginDir);
     ErrCode ExtractPluginBundles(const std::string &bundlePath, InnerBundleInfo &newInfo, const std::string &pluginDir);
     ErrCode CheckPluginAppLabelInfo();
     void MergePluginBundleInfo(InnerBundleInfo &pluginBundleInfo);

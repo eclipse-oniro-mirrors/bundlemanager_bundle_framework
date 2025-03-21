@@ -34,7 +34,7 @@ using namespace OHOS::Security;
 namespace {
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
-constexpr const char* PLUGINS = "plugins";
+constexpr const char* PLUGINS = "+plugins";
 constexpr const char* LIBS_TMP = "libs_tmp";
 constexpr const char* PERMISSION_KEY = "ohos.permission.kernel.SUPPORT_PLUGIN";
 constexpr const char* PLUGIN_ID = "pluginDistributionIDs";
@@ -85,7 +85,7 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
     if (!hostBundleInfo.HasInnerBundleUserInfo(installPluginParam.userId)) {
         APP_LOGE("HostBundleName: %{public}s not installed in user %{public}d",
             hostBundleName.c_str(), installPluginParam.userId);
-        return ERR_APPEXECFWK_USER_NOT_EXIST;
+        return ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND;
     }
     userId_ = installPluginParam.userId;
     // check host application permission
@@ -95,6 +95,10 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
     // parse hsp file
     result = ParseFiles(pluginFilePaths, installPluginParam);
     CHECK_RESULT(result, "parse file failed %{public}d");
+    if (bundleName_ == hostBundleName) {
+        APP_LOGE("plugin name:%{public}s same as host bundle name", bundleName_.c_str());
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_SAME_BUNDLE_NAME;
+    }
     bundleNameWithTime_ = bundleName_ + "." + std::to_string(BundleUtil::GetCurrentTimeNs());
     // check host application and plugin
     result = CheckPluginId(hostBundleName);
@@ -138,7 +142,7 @@ ErrCode PluginInstaller::UninstallPlugin(const std::string &hostBundleName, cons
     if (!hostBundleInfo.HasInnerBundleUserInfo(installPluginParam.userId)) {
         APP_LOGE("HostBundleName: %{public}s not installed in user %{public}d",
             hostBundleName.c_str(), installPluginParam.userId);
-        return ERR_APPEXECFWK_USER_NOT_EXIST;
+        return ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND;
     }
     // check plugin exist in host application
     isPluginExist_ = dataMgr_->GetPluginBundleInfo(hostBundleName, pluginBundleName,
@@ -190,7 +194,10 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
     result = bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyResults);
-    CHECK_RESULT(result, "hap files check signature info failed %{public}d");
+    if (result != ERR_OK) {
+        APP_LOGE("check multi hap signature info failed %{public}d", result);
+        return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
+    }
 
     // parse bundle infos
     InstallCheckParam checkParam;
@@ -200,9 +207,11 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
         APP_LOGE("parse haps file failed %{public}d", result);
         return ERR_APPEXECFWK_PLUGIN_PARSER_ERROR;
     }
-    // check install permission
-    result = bundleInstallChecker_->CheckInstallPermission(checkParam, hapVerifyResults);
-    CHECK_RESULT(result, "check install permission failed %{public}d");
+    if (!parsedBundles_.empty() &&
+        parsedBundles_.begin()->second.GetApplicationBundleType() != BundleType::APP_PLUGIN) {
+        result = ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW;
+        CHECK_RESULT(result, "plugin bundle type  %{public}d");
+    }
 
     // check hsp install condition
     result = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyResults);
@@ -260,7 +269,13 @@ ErrCode PluginInstaller::ParseHapPaths(const InstallPluginParam &installPluginPa
 {
     parsedPaths.reserve(inBundlePaths.size());
     if (!inBundlePaths.empty() && inBundlePaths.front().find(APP_INSTALL_SANDBOX_PATH) != 0) {
-        parsedPaths.assign(inBundlePaths.begin(), inBundlePaths.end());
+        for (auto &bundlePath : inBundlePaths) {
+            if (bundlePath.find("..") != std::string::npos) {
+                APP_LOGE("path invalid: %{public}s", bundlePath.c_str());
+                return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+            }
+            parsedPaths.emplace_back(bundlePath);
+        }
         return ERR_OK;
     }
     APP_LOGI("rename install");
@@ -537,7 +552,7 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
     }
     ErrCode result = ERR_OK;
     std::string pluginDir;
-    result = CheckPluginDir(hostBundleInfo.GetBundleName(), pluginDir);
+    result = CreatePluginDir(hostBundleInfo.GetBundleName(), pluginDir);
     CHECK_RESULT(result, "plugin dir check failed %{public}d");
     isPluginExist_ = dataMgr_->FetchPluginBundleInfo(hostBundleInfo.GetBundleName(), bundleName_, oldPluginInfo_);
     if (isPluginExist_) {
@@ -568,7 +583,7 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
     return result;
 }
 
-ErrCode PluginInstaller::CheckPluginDir(const std::string &hostBundleName, std::string &pluginDir)
+ErrCode PluginInstaller::CreatePluginDir(const std::string &hostBundleName, std::string &pluginDir)
 {
     ErrCode result = ERR_OK;
     std::string bundleDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + hostBundleName;
