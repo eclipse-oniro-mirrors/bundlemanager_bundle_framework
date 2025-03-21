@@ -14,6 +14,7 @@
  */
 
 #define private public
+#define protected public
 
 #include <cstdio>
 #include <gtest/gtest.h>
@@ -2615,5 +2616,22 @@ HWTEST_F(BmsBundleInstallCheckerTest, BaseBundleInstaller_0100, Function | Small
 
     auto ret = baseBundleInstaller.CheckMDMUpdateBundleForSelf(installParam, oldInfo, newInfos, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0200
+ * @tc.name: Test IsEnterpriseForAllUser
+ * @tc.desc: 1.Test IsEnterpriseForAllUser
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, BaseBundleInstaller_0200, Function | SmallTest | Level1)
+{
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false"));
+
+    BaseBundleInstaller baseBundleInstaller;
+    InstallParam installParam;
+    installParam.parameters["ohos.bms.param.enterpriseForAllUser"] = "true";
+
+    auto ret = baseBundleInstaller.IsEnterpriseForAllUser(installParam, "");
+    EXPECT_EQ(ret, false);
 }
 } // OHOS

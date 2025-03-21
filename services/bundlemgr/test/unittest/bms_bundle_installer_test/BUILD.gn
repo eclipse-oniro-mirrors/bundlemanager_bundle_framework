@@ -1679,6 +1679,7 @@ ohos_unittest("BmsBundleInstallerPermissionTest") {
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = bundle_mgr_source
+  sources += sandbox_app
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
@@ -1771,6 +1772,10 @@ ohos_unittest("BmsBundleInstallerPermissionTest") {
       "ets_runtime:libcompiler_service",
     ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
+
+    if (bundle_framework_sandbox_app) {
+      defines += [ "BUNDLE_FRAMEWORK_SANDBOX_APP" ]
+    }
   }
 
   if (configpolicy_enable) {
