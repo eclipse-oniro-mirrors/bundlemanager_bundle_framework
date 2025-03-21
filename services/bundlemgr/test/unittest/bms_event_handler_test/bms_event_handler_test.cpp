@@ -2112,7 +2112,7 @@ HWTEST_F(BmsEventHandlerTest, OnRegenerateAppKey_0001, Function | SmallTest | Le
 {
     El5FilekeyCallback callback;
     std::vector<Security::AccessToken::AppKeyInfo> infos;
-    callback.OnRegenerateAppKey(infos);
+    EXPECT_EQ(callback.OnRegenerateAppKey(infos), ERR_INVALID_DATA);
     EXPECT_EQ(infos.size(), 0);
 
     Security::AccessToken::AppKeyInfo infoApp;
@@ -2121,7 +2121,7 @@ HWTEST_F(BmsEventHandlerTest, OnRegenerateAppKey_0001, Function | SmallTest | Le
     infoGroup.type = Security::AccessToken::AppKeyType::GROUPID;
     infos.emplace_back(infoApp);
     infos.emplace_back(infoGroup);
-    callback.OnRegenerateAppKey(infos);
+    EXPECT_EQ(callback.OnRegenerateAppKey(infos), ERR_OK);
     EXPECT_EQ(infos.size(), 2);
 }
 
