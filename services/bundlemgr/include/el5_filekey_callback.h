@@ -21,13 +21,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class El5FilekeyCallback : public Security::AccessToken::El5FilekeyCallbackStub {
+class El5FilekeyCallback : public Security::AccessToken::El5FilekeyCallbackInterfaceStub {
 public:
     El5FilekeyCallback() = default;
 
     ~El5FilekeyCallback() = default;
 
-    void OnRegenerateAppKey(std::vector<Security::AccessToken::AppKeyInfo> &infos) override;
+    ErrCode OnRegenerateAppKey(std::vector<Security::AccessToken::AppKeyInfo> &infos) override;
 
     void CheckEl5Dir(const Security::AccessToken::AppKeyInfo &info, const InnerBundleInfo &bundleInfo,
         const std::string &bundleName);
