@@ -483,10 +483,10 @@ ErrCode BundleInstallChecker::CheckEnterpriseForAllUser(std::unordered_map<std::
 }
 
 ErrCode BundleInstallChecker::CheckHspInstallCondition(
-    std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, int32_t callingUid)
 {
     ErrCode result = ERR_OK;
-    if ((result = CheckDeveloperMode(hapVerifyRes)) != ERR_OK) {
+    if ((result = CheckDeveloperMode(hapVerifyRes, callingUid)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "install failed due to debug mode");
         return result;
     }
@@ -1606,9 +1606,13 @@ ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signature
 }
 
 ErrCode BundleInstallChecker::CheckDeveloperMode(
-    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, int32_t callingUid) const
 {
     if (system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, true)) {
+        return ERR_OK;
+    }
+    if (Constants::DEV_ASSISTANT_UID == callingUid) {
+        LOG_I(BMS_TAG_INSTALLER, "dev assistant is allowed to install debug bundle");
         return ERR_OK;
     }
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {

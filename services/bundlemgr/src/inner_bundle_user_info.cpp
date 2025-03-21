@@ -83,7 +83,7 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
         innerBundleUserInfo.keyId, false, parseResult);
     GetValueIfFindKey<std::unordered_set<std::string>>(jsonObject, jsonObjectEnd,
         INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET,
-        innerBundleUserInfo.installedPluginSet, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+        innerBundleUserInfo.installedPluginSet, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

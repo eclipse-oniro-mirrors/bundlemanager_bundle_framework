@@ -33,7 +33,7 @@ BundleMgrExtHost::~BundleMgrExtHost()
     LOG_D(BMS_TAG_EXT, "destroy BundleMgrExtHost");
 }
 
-int BundleMgrExtHost::OnRemoteRequest(
+int32_t BundleMgrExtHost::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     BundleMemoryGuard memoryGuard;

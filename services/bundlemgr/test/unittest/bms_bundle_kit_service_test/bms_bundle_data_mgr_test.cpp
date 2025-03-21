@@ -8145,24 +8145,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetSignatureInfo_0003, Function | MediumTest | Le
 }
 
 /**
- * @tc.number: GetBundleArchiveInfoExt_0010
- * @tc.name: GetBundleArchiveInfoExt
- * @tc.desc: test GetBundleArchiveInfoExt of BmsExtensionDataMgr
- */
-HWTEST_F(BmsBundleDataMgrTest, GetBundleArchiveInfoExt_0010, Function | MediumTest | Level1)
-{
-    auto extensionDataMgr = std::make_shared<BmsExtensionDataMgr>();
-    ASSERT_NE(extensionDataMgr, nullptr);
-    extensionDataMgr->handler_ = nullptr;
-
-    std::string hapFilePath;
-    int32_t fd = 0;
-    BundleInfo bundleInfo;
-    ErrCode res = extensionDataMgr->GetBundleArchiveInfoExt(hapFilePath, fd, bundleInfo);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-}
-
-/**
  * @tc.number: AddPluginInfo_0001
  * @tc.name: AddPluginInfo_0001
  * @tc.desc: test AddPluginInfo_0001(const InnerBundleInfo &innerBundleInfo,

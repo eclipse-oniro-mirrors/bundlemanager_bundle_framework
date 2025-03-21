@@ -192,7 +192,7 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED,
         ERROR_DESTINATION_PATH_ACCESS_FAILED_FAILED },
     { ERR_APPEXECFWK_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED, ERROR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED },
-    { ERR_APPEXECFWK_PLUGIN_INSTALL_PARAM_ERROR, ERROR_PARAM_CHECK_ERROR },
+    { ERR_APPEXECFWK_PLUGIN_INSTALL_FILEPATH_INVALID, ERROR_INSTALL_HAP_FILEPATH_INVALID },
     { ERR_APPEXECFWK_PLUGIN_INSTALL_CHECK_PLUGINID_ERROR, ERROR_PLUGIN_ID_CHECK_ERROR },
     { ERR_APPEXECFWK_SUPPORT_PLUGIN_PERMISSION_ERROR, ERROR_CHECK_SUPPORT_PERMISSION },
     { ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND, ERROR_BUNDLE_NOT_EXIST },
@@ -1900,6 +1900,69 @@ void CommonFunc::ConvertDependency(napi_env env, const Dependency &dependency, n
     napi_value nVersionCode;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, dependency.versionCode, &nVersionCode));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "versionCode", nVersionCode));
+}
+
+void CommonFunc::ConvertPluginBundleInfo(napi_env env, const PluginBundleInfo &pluginBundleInfo, napi_value value)
+{
+    napi_value nIconId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, pluginBundleInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "iconId", nIconId));
+
+    napi_value nLabelId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, pluginBundleInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "labelId", nLabelId));
+
+    napi_value nVersionCode;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, pluginBundleInfo.versionCode, &nVersionCode));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "versionCode", nVersionCode));
+
+    napi_value nPluginBundleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, pluginBundleInfo.pluginBundleName.c_str(), NAPI_AUTO_LENGTH, &nPluginBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "pluginBundleName", nPluginBundleName));
+
+    napi_value nLabel;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, pluginBundleInfo.label.c_str(), NAPI_AUTO_LENGTH, &nLabel));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "label", nLabel));
+
+    napi_value nIcon;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, pluginBundleInfo.icon.c_str(), NAPI_AUTO_LENGTH, &nIcon));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "icon", nIcon));
+
+    napi_value nVersionName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, pluginBundleInfo.versionName.c_str(), NAPI_AUTO_LENGTH, &nVersionName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "versionName", nVersionName));
+
+    napi_value nPluginModuleInfos;
+    size_t size = pluginBundleInfo.pluginModuleInfos.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nPluginModuleInfos));
+    for (size_t index = 0; index < size; ++index) {
+        napi_value nPluginModuleInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nPluginModuleInfo));
+        ConvertPluginModuleInfo(env, pluginBundleInfo.pluginModuleInfos[index], nPluginModuleInfo);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPluginModuleInfos, index, nPluginModuleInfo));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "pluginModuleInfos", nPluginModuleInfos));
+}
+
+void CommonFunc::ConvertPluginModuleInfo(napi_env env, const PluginModuleInfo &pluginModuleInfo, napi_value value)
+{
+    napi_value nDescriptionId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, pluginModuleInfo.descriptionId, &nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "descriptionId", nDescriptionId));
+
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, pluginModuleInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "moduleName", nModuleName));
+
+    napi_value nDescription;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, pluginModuleInfo.description.c_str(), NAPI_AUTO_LENGTH, &nDescription));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "description", nDescription));
 }
 
 void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_value objBundleInfo, int32_t flags)

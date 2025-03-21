@@ -673,9 +673,13 @@ ErrCode BundleInstallerHost::UninstallSandboxApp(const std::string &bundleName, 
 ErrCode BundleInstallerHost::InstallPlugin(const std::string &hostBundleName,
     const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam)
 {
-    if (hostBundleName.empty() || pluginFilePaths.empty()) {
+    if (hostBundleName.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "install plugin failed due to empty hostBundleName");
-        return ERR_APPEXECFWK_PLUGIN_INSTALL_PARAM_ERROR;
+        return ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND;
+    }
+    if (pluginFilePaths.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "install plugin failed due to empty pluginFilePaths");
+        return ERR_APPEXECFWK_PLUGIN_INSTALL_FILEPATH_INVALID;
     }
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");
@@ -700,9 +704,13 @@ ErrCode BundleInstallerHost::InstallPlugin(const std::string &hostBundleName,
 ErrCode BundleInstallerHost::UninstallPlugin(const std::string &hostBundleName, const std::string &pluginBundleName,
     const InstallPluginParam &installPluginParam)
 {
-    if (hostBundleName.empty() || pluginBundleName.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "uninstall plugin failed due to empty BundleName");
-        return ERR_APPEXECFWK_PLUGIN_INSTALL_PARAM_ERROR;
+    if (hostBundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall plugin failed due to empty hostBundleName");
+        return ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND;
+    }
+    if (pluginBundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall plugin failed due to empty pluginBundleName");
+        return ERR_APPEXECFWK_PLUGIN_NOT_FOUND;
     }
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api");

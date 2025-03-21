@@ -37,6 +37,7 @@
 #include "default_app_interface.h"
 #include "extend_resource_manager_interface.h"
 #include "overlay_manager_interface.h"
+#include "plugin/plugin_bundle_info.h"
 #include "quick_fix_manager_interface.h"
 #include "verify_manager_interface.h"
 #include "distributed_bundle_info.h"
@@ -670,19 +671,6 @@ public:
      */
     virtual ErrCode GetBundleArchiveInfoV9(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
-    {
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-    }
-    /**
-     * @brief Obtains information about an application bundle contained in an ohos Ability Package (HAP).
-     * @param hapFilePath Indicates the absolute file path of the HAP.
-     * @param fd Indicates the FileDescriptor.
-     * @param flags Indicates the information contained in the BundleInfo object to be returned.
-     * @param bundleInfo Indicates the obtained BundleInfo object.
-     * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
-     */
-    virtual ErrCode GetBundleArchiveInfoExt(
-        const std::string &hapFilePath, int32_t fd, int32_t flags, BundleInfo &bundleInfo)
     {
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -1682,6 +1670,12 @@ public:
     }
 
     virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
+        std::vector<PluginBundleInfo> &pluginBundleInfos)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

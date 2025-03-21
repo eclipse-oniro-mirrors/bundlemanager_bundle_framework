@@ -1070,12 +1070,12 @@ public:
     virtual ErrCode GetCompatibleDeviceTypeNative(std::string &deviceType) override;
     virtual ErrCode GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType) override;
     virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName) override;
+    virtual ErrCode GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
+        std::vector<PluginBundleInfo> &pluginBundleInfos) override;
     virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir) override;
     virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) override;
     virtual ErrCode SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums) override;
-    virtual ErrCode GetBundleArchiveInfoExt(const std::string &hapFilePath, int32_t fd,
-        int32_t flags, BundleInfo &bundleInfo) override;
 
 private:
     ErrCode MigrateDataUserAuthentication();

@@ -117,9 +117,6 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9):
             errCode = this->HandleGetApplicationInfoWithIntFlagsV9(data, reply);
             break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_EXT):
-            errCode = this->HandleGetBundleArchiveInfoExt(data, reply);
-            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS_WITH_INT_FLAGS):
             errCode = this->HandleGetApplicationInfosWithIntFlags(data, reply);
             break;
@@ -631,6 +628,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_NAME_BY_APP_ID_OR_APP_IDENTIFIER):
             errCode = HandleGetBundleNameByAppId(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_PLUGIN_INFO):
+            errCode = HandleGetAllPluginInfo(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DIR_BY_BUNDLENAME_AND_APPINDEX):
             errCode = HandleGetDirByBundleNameAndAppIndex(data, reply);
             break;
@@ -713,29 +713,6 @@ ErrCode BundleMgrHost::HandleGetApplicationInfoWithIntFlagsV9(MessageParcel &dat
 
     ApplicationInfo info;
     auto ret = GetApplicationInfoV9(name, flags, userId, info);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (ret == ERR_OK) {
-        if (!reply.WriteParcelable(&info)) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleGetBundleArchiveInfoExt(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string hapFilePath = data.ReadString();
-    int32_t fd = data.ReadFileDescriptor();
-    int32_t flags = data.ReadInt32();
-    APP_LOGD("hapFilePath %{private}s, fd %{public}d", hapFilePath.c_str(), fd);
-
-    BundleInfo info;
-    ErrCode ret = GetBundleArchiveInfoExt(hapFilePath, fd, flags, info);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -2866,7 +2843,7 @@ ErrCode BundleMgrHost::HandleGetBundleMgrExtProxy(MessageParcel &data, MessagePa
     sptr<IBundleMgrExt> bundleMgrExtProxy = GetBundleMgrExtProxy();
     if (bundleMgrExtProxy == nullptr) {
         APP_LOGE("bundleMgrExtProxy is nullptr");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     if (!reply.WriteRemoteObject(bundleMgrExtProxy->AsObject())) {
@@ -4407,6 +4384,26 @@ ErrCode BundleMgrHost::HandleCleanAllBundleCache(MessageParcel &data, MessagePar
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllPluginInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string hostBundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(pluginBundleInfos, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }

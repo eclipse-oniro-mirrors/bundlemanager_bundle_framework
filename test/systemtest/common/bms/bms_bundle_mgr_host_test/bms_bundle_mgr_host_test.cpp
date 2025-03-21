@@ -2110,7 +2110,7 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleMgrExtProxy_0001, Function | Mediu
     MessageParcel data;
     MessageParcel reply;
     auto ret = bundleMgrHost.HandleGetBundleMgrExtProxy(data, reply);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
 }
 } // AppExecFwk
 } // OHOS
