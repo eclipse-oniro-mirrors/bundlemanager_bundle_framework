@@ -2154,6 +2154,8 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "call ioctl failed errno:%{public}d", errno);
         close(fd);
+        fd = INVALID_FILE_DESCRIPTOR;
+        return ret;
     }
 
     struct code_decrypt_arg secondArg;
@@ -2167,6 +2169,7 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "call ioctl failed errno:%{public}d", errno);
         close(fd);
+        fd = INVALID_FILE_DESCRIPTOR;
     }
     return ret;
 }
