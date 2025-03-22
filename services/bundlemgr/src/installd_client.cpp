@@ -248,16 +248,12 @@ void InstalldClient::ResetInstalldProxy()
     if ((installdProxy_ != nullptr) && (installdProxy_->AsObject() != nullptr)) {
         installdProxy_->AsObject()->RemoveDeathRecipient(recipient_);
     }
-    SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID);
     installdProxy_ = nullptr;
 }
 
 bool InstalldClient::LoadInstalldService()
 {
-    {
-        std::unique_lock<std::mutex> lock(loadSaMutex_);
-        loadSaFinished_ = false;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
     auto systemAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityMgr == nullptr) {
         APP_LOGE("Failed to get SystemAbilityManager");
@@ -274,26 +270,26 @@ bool InstalldClient::LoadInstalldService()
         return false;
     }
 
-    {
-        std::unique_lock<std::mutex> lock(loadSaMutex_);
-        auto waitStatus = loadSaCondition_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
-            [this]() {
-                return loadSaFinished_;
-            });
-        if (!waitStatus) {
-            APP_LOGE("Wait for load sa timeout");
-            return false;
-        }
+    auto waitStatus = loadSaCondition_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
+        [this]() {
+            return installdProxy_ != nullptr;
+        });
+    if (!waitStatus) {
+        APP_LOGE("Wait for load sa timeout");
+        return false;
     }
     return true;
 }
 
 sptr<IInstalld> InstalldClient::GetInstalldProxy()
 {
-    std::lock_guard<std::mutex> lock(getProxyMutex_);
-    if (installdProxy_ != nullptr) {
-        APP_LOGD("installd ready");
-        return installdProxy_;
+    std::lock_guard<std::mutex> lockProxy(getProxyMutex_);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (installdProxy_ != nullptr) {
+            APP_LOGD("installd ready");
+            return installdProxy_;
+        }
     }
 
     APP_LOGI("try to get installd proxy");
@@ -301,6 +297,7 @@ sptr<IInstalld> InstalldClient::GetInstalldProxy()
         APP_LOGE("load installd service failed");
         return nullptr;
     }
+    std::lock_guard<std::mutex> lock(mutex_);
     if ((installdProxy_ == nullptr) || (installdProxy_->AsObject() == nullptr)) {
         APP_LOGE("the installd proxy or remote object is null");
         return nullptr;
@@ -492,30 +489,16 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
 
 void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject)
 {
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        installdProxy_ = iface_cast<IInstalld>(remoteObject);
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(loadSaMutex_);
-        loadSaFinished_ = true;
-        loadSaCondition_.notify_one();
-    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    installdProxy_ = iface_cast<IInstalld>(remoteObject);
+    loadSaCondition_.notify_one();
 }
 
 void InstalldClient::OnLoadSystemAbilityFail()
 {
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        installdProxy_ = nullptr;
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(loadSaMutex_);
-        loadSaFinished_ = true;
-        loadSaCondition_.notify_one();
-    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    installdProxy_ = nullptr;
+    loadSaCondition_.notify_one();
 }
 
 bool InstalldClient::StartInstalldService()
