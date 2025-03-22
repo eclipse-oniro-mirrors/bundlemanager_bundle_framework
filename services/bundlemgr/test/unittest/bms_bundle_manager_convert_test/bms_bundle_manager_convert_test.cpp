@@ -44,8 +44,8 @@ HWTEST_F(BundleManagerConvertTest, ConvertApplicationInfo_0001, Function | Small
 {
     ApplicationInfo cAppInfo;
     cAppInfo.appIndex = 1;
-    CJSystemapi::BundleManager::RetApplicationInfo retApplicationInfoTest =
-        CJSystemapi::BundleManager::Convert::ConvertApplicationInfo(cAppInfo);
+    CJSystemapi::BundleManager::RetApplicationInfoV2 retApplicationInfoTest =
+        CJSystemapi::BundleManager::Convert::ConvertApplicationInfoV2(cAppInfo);
     EXPECT_EQ(retApplicationInfoTest.appIndex, 1);
 }
 

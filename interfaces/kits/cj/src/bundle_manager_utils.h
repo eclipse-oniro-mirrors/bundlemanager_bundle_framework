@@ -85,11 +85,6 @@ namespace BundleManager {
         bool debug;
         bool dataUnclearable;
         bool cloudFileSyncEnabled;
-        char* nativeLibraryPath;
-        MultiAppMode multiAppMode;
-        int32_t appIndex;
-        char* installSource;
-        char* releaseType;
     };
 
     struct CArrInt32 {
@@ -157,9 +152,6 @@ namespace BundleManager {
         bool enabled;
         CArrInt32 supportWindowModes;
         RetWindowSize windowSize;
-        bool excludeFromDock;
-        RetCArrSkill skills;
-        int32_t appIndex;
     };
 
     struct CArrRetAbilityInfo {
@@ -183,8 +175,6 @@ namespace BundleManager {
         char* readPermission;
         char* writePermission;
         char* extensionAbilityTypeName;
-        RetCArrSkill skills;
-        int32_t appIndex;
     };
 
     struct CArrRetExtensionAbilityInfo {
@@ -253,9 +243,6 @@ namespace BundleManager {
         CArrRetPreloadItem preloads;
         CArrRetDependency dependencies;
         char* fileContextMenuConfig;
-        CArrRouterItem routerMap;
-        char* codePath;
-        char* nativeLibraryPath;
     };
 
     struct CArrHapInfo {
@@ -324,8 +311,6 @@ namespace BundleManager {
         int64_t installTime;
         int64_t updateTime;
         int32_t uid;
-        CArrRouterItem routerMap;
-        int32_t appIndex;
     };
 
     enum BundleFlag {
@@ -356,6 +341,144 @@ namespace BundleManager {
         GET_BUNDLE_INFO_WITH_MENU = 0x00000100,
         GET_BUNDLE_INFO_WITH_ROUTER_MAP = 0x00000200,
         GET_BUNDLE_INFO_WITH_SKILL = 0x00000800,
+    };
+
+
+    struct RetApplicationInfoV2 {
+        char* name;
+        char* description;
+        uint32_t descriptionId;
+        bool enabled;
+        char* label;
+        uint32_t labelId;
+        char* icon;
+        uint32_t iconId;
+        char* process;
+        CArrString permissions;
+        char* codePath;
+        CArrMoMeta metadataArray;
+        bool removable;
+        uint32_t accessTokenId;
+        int32_t uid;
+        CResource iconResource;
+        CResource labelResource;
+        CResource descriptionResource;
+        char* appDistributionType;
+        char* appProvisionType;
+        bool systemApp;
+        int32_t bundleType;
+        bool debug;
+        bool dataUnclearable;
+        bool cloudFileSyncEnabled;
+        char* nativeLibraryPath;
+        MultiAppMode multiAppMode;
+        int32_t appIndex;
+        char* installSource;
+        char* releaseType;
+    };
+
+    struct RetAbilityInfoV2 {
+        char* bundleName;
+        char* moduleName;
+        char* name;
+        char* label;
+        uint32_t labelId;
+        char* description;
+        uint32_t descriptionId;
+        char* icon;
+        uint32_t iconId;
+        char* process;
+        bool exported;
+        int32_t orientation;
+        int32_t launchType;
+        CArrString permissions;
+        CArrString deviceTypes;
+        RetApplicationInfoV2 applicationInfo;
+        CArrMetadata metadata;
+        bool enabled;
+        CArrInt32 supportWindowModes;
+        RetWindowSize windowSize;
+        bool excludeFromDock;
+        RetCArrSkill skills;
+        int32_t appIndex;
+    };
+
+    struct CArrRetAbilityInfoV2 {
+        RetAbilityInfoV2* head;
+        int64_t size;
+    };
+
+    struct RetExtensionAbilityInfoV2 {
+        char* bundleName;
+        char* moduleName;
+        char* name;
+        uint32_t labelId;
+        uint32_t descriptionId;
+        uint32_t iconId;
+        bool exported;
+        int32_t extensionAbilityType;
+        CArrString permissions;
+        RetApplicationInfoV2 applicationInfo;
+        CArrMetadata metadata;
+        bool enabled;
+        char* readPermission;
+        char* writePermission;
+        char* extensionAbilityTypeName;
+        RetCArrSkill skills;
+        int32_t appIndex;
+    };
+
+    struct CArrRetExtensionAbilityInfoV2 {
+        RetExtensionAbilityInfoV2* head;
+        int64_t size;
+    };
+
+    struct RetHapModuleInfoV2 {
+        char* name;
+        char* icon;
+        uint32_t iconId;
+        char* label;
+        uint32_t labelId;
+        char* description;
+        uint32_t descriptionId;
+        char* mainElementName;
+        CArrRetAbilityInfoV2 abilitiesInfo;
+        CArrRetExtensionAbilityInfoV2 extensionAbilitiesInfo;
+        CArrMetadata metadata;
+        CArrString deviceTypes;
+        bool installationFree;
+        char* hashValue;
+        int32_t moduleType;
+        CArrRetPreloadItem preloads;
+        CArrRetDependency dependencies;
+        char* fileContextMenuConfig;
+        CArrRouterItem routerMap;
+        char* codePath;
+        char* nativeLibraryPath;
+    };
+
+    struct CArrHapInfoV2 {
+        RetHapModuleInfoV2* head;
+        int64_t size;
+    };
+
+    struct RetBundleInfoV2 {
+        char* name;
+        char* vendor;
+        uint32_t versionCode;
+        char* versionName;
+        uint32_t minCompatibleVersionCode;
+        uint32_t targetVersion;
+        RetApplicationInfoV2 appInfo;
+        CArrHapInfoV2 hapInfo;
+        CArrReqPerDetail perDetail;
+        CArrInt32 state;
+        RetSignatureInfo signInfo;
+        int64_t installTime;
+        int64_t updateTime;
+        int32_t uid;
+        CArrRouterItem routerMap;
+        int32_t appIndex;
     };
 } // BundleManager
 } // CJSystemapi

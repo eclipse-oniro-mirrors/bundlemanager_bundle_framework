@@ -34,6 +34,13 @@ namespace Convert {
     RetAbilityInfo ConvertAbilityInfo(const AppExecFwk::AbilityInfo& cAbilityInfos);
     RetHapModuleInfo ConvertHapModuleInfo(const AppExecFwk::HapModuleInfo& hapModuleInfo);
     RetBundleInfo ConvertBundleInfo(const AppExecFwk::BundleInfo& cBundleInfo, int32_t flags);
+    RetApplicationInfoV2 ConvertApplicationInfoV2(const AppExecFwk::ApplicationInfo& cAppInfo);
+    RetExtensionAbilityInfoV2 ConvertExtensionAbilityInfoV2(const AppExecFwk::ExtensionAbilityInfo& extensionInfos);
+    CArrRetExtensionAbilityInfoV2 ConvertArrExtensionAbilityInfoV2(
+        const std::vector<AppExecFwk::ExtensionAbilityInfo>& extensionInfos);
+    RetAbilityInfoV2 ConvertAbilityInfoV2(const AppExecFwk::AbilityInfo& cAbilityInfos);
+    RetHapModuleInfoV2 ConvertHapModuleInfoV2(const AppExecFwk::HapModuleInfo& hapModuleInfo);
+    RetBundleInfoV2 ConvertBundleInfoV2(const AppExecFwk::BundleInfo& cBundleInfo, int32_t flags);
 } // Convert
  
 } // BundleManager
