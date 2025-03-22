@@ -90,6 +90,7 @@ group("unittest") {
       "unittest/bms_bundle_resource_manager_test:unittest",
       "unittest/bms_bundle_resource_test:unittest",
       "unittest/bms_bundle_sandbox_app_test:unittest",
+      "unittest/bms_bundle_src_entry_delegator_test:unittest",
       "unittest/bms_bundle_stream_installer_host_impl:unittest",
       "unittest/bms_bundle_uninstaller_test:unittest",
       "unittest/bms_bundle_update_debug_test:unittest",
