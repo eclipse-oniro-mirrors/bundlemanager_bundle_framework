@@ -1680,6 +1680,11 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode GetPluginInfosForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir)
     {
