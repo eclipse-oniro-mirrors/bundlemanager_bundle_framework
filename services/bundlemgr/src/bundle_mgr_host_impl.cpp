@@ -2073,9 +2073,9 @@ bool BundleMgrHostImpl::DumpBundleInfo(
     }
     innerBundleUserInfos.emplace_back(innerBundleUserInfo);
     std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos;
-    if (!GetPluginBundleInfo(bundleName, userId, pluginBundleInfos)) {
+    if (!GetPluginBundleInfo(bundleName, userId, pluginBundleInfos) &&
+        !GetPluginBundleInfo(bundleName, Constants::DEFAULT_USERID, pluginBundleInfos)) {
         APP_LOGE("get plugin info in bundle(%{public}s) failed", bundleName.c_str());
-        return false;
     }
     BundleInfo bundleInfo;
     if (!GetBundleInfo(bundleName,
