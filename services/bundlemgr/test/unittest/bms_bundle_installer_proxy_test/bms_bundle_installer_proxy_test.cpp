@@ -884,7 +884,7 @@ HWTEST_F(BmsBundleInstallerProxyTest, InstallPlugin_0100, Function | MediumTest 
     std::vector<std::string> pluginFilePaths;
     pluginFilePaths.emplace_back("bundlePath");
     auto res = bundleInstallerProxy.InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
-    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
 }
 
 /**

@@ -275,11 +275,18 @@ ErrCode BundleInstallerProxy::InstallPlugin(const std::string &hostBundleName,
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
 
+    for (auto &path : pluginFilePaths) {
+        if (access(path.c_str(), F_OK) != 0) {
+            APP_LOGE("can not access the plugin file path: %{public}s, errno:%{public}d", path.c_str(), errno);
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
+    }
+    
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_INSTALLER, "failed to InstallPlugin due to write MessageParcel fail");
         return ERR_APPEXECFWK_PLUGIN_INSTALL_WRITE_PARCEL_ERROR;
     }
-    if (!data.WriteString16(Str8ToStr16(hostBundleName))) {
+    if (!data.WriteString(hostBundleName)) {
         LOG_E(BMS_TAG_INSTALLER, "failed to InstallPlugin due to write hostBundleName fail");
         return ERR_APPEXECFWK_PLUGIN_INSTALL_WRITE_PARCEL_ERROR;
     }

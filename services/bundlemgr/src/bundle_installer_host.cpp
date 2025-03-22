@@ -292,7 +292,7 @@ void BundleInstallerHost::HandleUninstallSandboxApp(MessageParcel &data, Message
 void BundleInstallerHost::HandleInstallPlugin(MessageParcel &data, MessageParcel &reply)
 {
     LOG_D(BMS_TAG_INSTALLER, "handle install plugin application");
-    std::string hostBundleName = Str16ToStr8(data.ReadString16());
+    std::string hostBundleName = data.ReadString();
     std::vector<std::string> pluginFilePaths;
     if (!data.ReadStringVector(&pluginFilePaths)) {
         reply.WriteInt32(ERR_APPEXECFWK_PLUGIN_INSTALL_READ_PARCEL_ERROR);
@@ -691,7 +691,7 @@ ErrCode BundleInstallerHost::InstallPlugin(const std::string &hostBundleName,
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_PLUGIN)) {
         LOG_E(BMS_TAG_INSTALLER, "InstallPlugin permission denied");
-        return ERR_APPEXECFWK_PERMISSION_DENIED;
+        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
     }
     std::shared_ptr<PluginInstaller> pluginInstaller = std::make_shared<PluginInstaller>();
     auto ret = pluginInstaller->InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
@@ -718,7 +718,7 @@ ErrCode BundleInstallerHost::UninstallPlugin(const std::string &hostBundleName, 
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_UNINSTALL_PLUGIN)) {
         LOG_E(BMS_TAG_INSTALLER, "UninstallPlugin permission denied");
-        return ERR_APPEXECFWK_PERMISSION_DENIED;
+        return ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED;
     }
     std::shared_ptr<PluginInstaller> pluginInstaller = std::make_shared<PluginInstaller>();
     auto ret = pluginInstaller->UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);

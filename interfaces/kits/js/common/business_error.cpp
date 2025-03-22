@@ -170,6 +170,8 @@ constexpr const char* ERROR_MSG_PLUGIN_ID_PARSE_ERROR =
     "Failed to install the plugin because the plugin id fails to be parsed.";
 constexpr const char* ERROR_MSG_PLUGIN_NOT_FOUND =
     "Failed to uninstall the plugin because the specified plugin is not found.";
+constexpr const char* ERROR_MSG_PLUGIN_SAME_BUNDLE_NAME =
+    "Failed to install the plugin because the plugin name is same as host bundle name.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -259,7 +261,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_CHECK_SUPPORT_PERMISSION, ERR_MSG_CHECK_SUPPORT_PERMISSION},
     { ERROR_DEVICE_NOT_SUPPORT_PLUGIN, ERROR_MSG_DEVICE_NOT_SUPPORT_PLUGIN},
     { ERROR_PLUGIN_ID_PARSE_ERROR, ERROR_MSG_PLUGIN_ID_PARSE_ERROR },
-    { ERROR_PLUGIN_NOT_FOUND, ERROR_MSG_PLUGIN_NOT_FOUND }
+    { ERROR_PLUGIN_NOT_FOUND, ERROR_MSG_PLUGIN_NOT_FOUND },
+    { ERROR_PLUGIN_SAME_BUNDLE_NAME, ERROR_MSG_PLUGIN_SAME_BUNDLE_NAME}
 };
 } // namespace
 
