@@ -116,12 +116,11 @@ bool BmsEventHandlerTest::CheckShaderCachePathExist(const std::string &bundleNam
     }
     std::string newShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
     newShaderCachePath = newShaderCachePath.replace(newShaderCachePath.find("%"), 1, std::to_string(userId));
-    newShaderCachePath = newShaderCachePath + bundleName +
-        ServiceConstants::PATH_SEPARATOR + ServiceConstants::SHADER_CACHE;
+    newShaderCachePath = newShaderCachePath + cloneBundleName;
     if (access(newShaderCachePath.c_str(), F_OK) == 0) {
         isExist = true;
     } else {
-        LOG_E(BMS_TAG_INSTALLD, "senlin %{public}s can not access, errno: %{public}d",
+        LOG_E(BMS_TAG_INSTALLD, "%{public}s can not access, errno: %{public}d",
             newShaderCachePath.c_str(), errno);
     }
     return isExist;
@@ -2208,12 +2207,14 @@ HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0100, Function | Sm
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     // test first time mkdir with invalid uid
     setuid(Constants::FOUNDATION_UID);
     handler->CheckBundleCloneEl1ShaderCacheLocal(TEST_SHADER_CACHE_NAME_ONE,
         1, Constants::DEFAULT_USERID, Constants::INVALID_UID);
     bool isExist = CheckShaderCachePathExist(TEST_SHADER_CACHE_NAME_ONE, 1, Constants::START_USERID);
     EXPECT_FALSE(isExist) << "test1: mkdir shader cache succeed: " << TEST_SHADER_CACHE_NAME_ONE;
+    setuid(Constants::ROOT_UID);
 }
 
 /**
@@ -2225,8 +2226,7 @@ HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0200, Function | Sm
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     // test first time mkdir with no permission uid
     setuid(Constants::ROOT_UID);
     handler->CheckBundleCloneEl1ShaderCacheLocal(TEST_SHADER_CACHE_NAME_ONE,
@@ -2242,19 +2242,29 @@ HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0200, Function | Sm
  */
 HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0300, Function | SmallTest | Level0)
 {
+    std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
+        std::to_string(Constants::START_USERID));
+    ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->CreateBundleDir(el1ShaderCachePath);
+    EXPECT_EQ(ret, ERR_OK);
+
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-
-    // test shader cache already exist and mkdir second time
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    // test first time mkdir shadercache
+    setuid(Constants::FOUNDATION_UID);
+    handler->CheckBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME,
+        0, Constants::START_USERID, TEST_UID);
     bool isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
     EXPECT_TRUE(isExist) << "the shader cache path does not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
-    setuid(Constants::FOUNDATION_UID);
+    // test shader cache already exist and mkdir second time
     handler->CheckBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME,
         0, Constants::START_USERID, TEST_UID);
     isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
     EXPECT_TRUE(isExist) << "the shader cache path second time mkdir failed: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+    setuid(Constants::ROOT_UID);
 }
 
 /**
@@ -2266,8 +2276,7 @@ HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0400, Function | Sm
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     // test CleanBundleCloneEl1ShaderCacheLocal
     setuid(Constants::ROOT_UID);
     handler->CleanBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
@@ -2278,6 +2287,12 @@ HWTEST_F(BmsEventHandlerTest, BundleCloneEl1ShaderCacheLocal_0400, Function | Sm
     handler->CleanBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
     isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
     EXPECT_TRUE(isExist) << "the shader cache path was deleted: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+
+    // test for invalid app index
+    handler->CleanBundleCloneEl1ShaderCacheLocal(UNINSTALL_PREINSTALL_BUNDLE_NAME, 1, Constants::START_USERID);
+    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 1, Constants::START_USERID);
+    EXPECT_FALSE(isExist) << "the shader cache path was deleted: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+    setuid(Constants::ROOT_UID);
 }
 
 /**
@@ -2291,19 +2306,62 @@ HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTe
     ASSERT_NE(handler, nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
-    bool isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_TRUE(isExist) << "the shader cache path does not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+    dataMgr->AddUserId(Constants::START_USERID);
+
+    InnerBundleInfo innerBundleInfo;
+    // set application
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    // set innerBundleUserInfo
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.uid = TEST_UID;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    // set cloneinfo
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.userId = Constants::START_USERID;
+    cloneInfo.uid = 1001;
+    cloneInfo.appIndex = 1;
+    cloneInfo.accessTokenId = 20000;
+    ErrCode r1 = innerBundleInfo.AddCloneBundle(cloneInfo);
+    EXPECT_EQ(r1, ERR_OK);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    // mkdir /data/app/el1/100/shader_cache
+    std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
+        std::to_string(Constants::START_USERID));
+    setuid(Constants::FOUNDATION_UID);
+    ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
+    ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->CreateBundleDir(el1ShaderCachePath);
+    EXPECT_EQ(ret, ERR_OK);
     
-    // test CleanAllBundleEl1ShaderCacheLocal
     setuid(Constants::FOUNDATION_UID);
+    // test CheckAllBundleEl1ShaderCacheLocal succeed
+    handler->CheckAllBundleEl1ShaderCacheLocal();
+    bool isExist = CheckShaderCachePathExist(BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_TRUE(isExist) << "the shader cache path not exist: " << BUNDLE_NAME;
+
+    // test CleanAllBundleEl1ShaderCacheLocal succeed
     handler->CleanAllBundleEl1ShaderCacheLocal();
-    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_TRUE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
- 
-    // test CheckAllBundleEl1ShaderCacheLocal
-    setuid(Constants::FOUNDATION_UID);
+    isExist = CheckShaderCachePathExist(BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_FALSE(isExist) << "the shader cache path not exist: " << BUNDLE_NAME;
+
+    // test when shader cache path no exist
+    ErrCode removeRet = AppExecFwk::InstalldClient::GetInstance()->RemoveDir(el1ShaderCachePath);
+    EXPECT_EQ(removeRet, ERR_OK);
     handler->CheckAllBundleEl1ShaderCacheLocal();
     isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
-    EXPECT_TRUE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+    EXPECT_FALSE(isExist) << "the shader cache path exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+
+    handler->CleanAllBundleEl1ShaderCacheLocal();
+    isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
+    EXPECT_FALSE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+    setuid(Constants::ROOT_UID);
 }
 } // OHOS
