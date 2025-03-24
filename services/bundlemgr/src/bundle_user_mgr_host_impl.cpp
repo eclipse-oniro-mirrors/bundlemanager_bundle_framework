@@ -95,7 +95,7 @@ private:
     bool needReInstall_ = false;
 };
 
-bool BundleUserMgrHostImpl::SkipThirdPreloadAppInstallation(const int32_t userId, const PreInstallBundleInfo& preInfo)
+bool BundleUserMgrHostImpl::SkipThirdPreloadAppInstallation(const int32_t userId, const PreInstallBundleInfo &preInfo)
 {
     if (userId == Constants::START_USERID) {
         return false;
