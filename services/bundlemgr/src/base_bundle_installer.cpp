@@ -6427,6 +6427,7 @@ void BaseBundleInstaller::SetVerifyPermissionResult(const Security::AccessToken:
 {
     auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
     SetCheckResultMsg(result);
+    LOG_NOFUNC_E(BMS_TAG_INSTALLER, "%{public}s", result.c_str());
 }
 
 bool BaseBundleInstaller::VerifyActivationLock() const
