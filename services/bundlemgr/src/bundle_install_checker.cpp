@@ -1611,7 +1611,7 @@ ErrCode BundleInstallChecker::CheckDeveloperMode(
     if (system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, true)) {
         return ERR_OK;
     }
-    if (Constants::DEV_ASSISTANT_UID == callingUid) {
+    if (Constants::DEV_ASSISTANT_UID == callingUid && BundlePermissionMgr::IsNativeTokenType()) {
         LOG_I(BMS_TAG_INSTALLER, "dev assistant is allowed to install debug bundle");
         return ERR_OK;
     }
