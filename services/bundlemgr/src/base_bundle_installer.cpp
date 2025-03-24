@@ -463,6 +463,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
 
 ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName)
 {
+    InstallParam installParam;
     LOG_D(BMS_TAG_INSTALLER, "begin to process hsp bundle %{public}s uninstall", bundleName.c_str());
     // remove bundle dir first, then delete data in bundle data manager
     ErrCode errCode;
@@ -476,16 +477,27 @@ ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const
     }
     if ((errCode = InstalldClient::GetInstance()->RemoveDir(uninstallDir)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", uninstallDir.c_str());
+        SendBundleSystemEvent(
+            bundleName,
+            BundleEventType::UNINSTALL,
+            installParam,
+            sysEventInfo_.preBundleScene,
+            errCode);
         return errCode;
     }
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "update uninstall success failed");
+        SendBundleSystemEvent(
+            bundleName,
+            BundleEventType::UNINSTALL,
+            installParam,
+            sysEventInfo_.preBundleScene,
+            errCode);
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed", bundleName.c_str());
     }
-    InstallParam installParam;
     versionCode_ = Constants::ALL_VERSIONCODE;
     userId_ = Constants::ALL_USERID;
     SendBundleSystemEvent(
@@ -505,26 +517,51 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
     LOG_D(BMS_TAG_INSTALLER, "begin to process hsp bundle %{public}s uninstall", info.GetBundleName().c_str());
     // remove bundle dir first, then delete data in innerBundleInfo
     ErrCode errCode;
+    InstallParam installParam;
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
     if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall start failed");
+        SendBundleSystemEvent(
+            info.GetBundleName(),
+            BundleEventType::UNINSTALL,
+            installParam,
+            sysEventInfo_.preBundleScene,
+            errCode);
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
     if ((errCode = InstalldClient::GetInstance()->RemoveDir(uninstallDir)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", uninstallDir.c_str());
+        SendBundleSystemEvent(
+            info.GetBundleName(),
+            BundleEventType::UNINSTALL,
+            installParam,
+            sysEventInfo_.preBundleScene,
+            errCode);
         return errCode;
     }
     if (!dataMgr_->RemoveHspModuleByVersionCode(versionCode, info)) {
         LOG_E(BMS_TAG_INSTALLER, "remove hsp module by versionCode failed");
+        SendBundleSystemEvent(
+            info.GetBundleName(),
+            BundleEventType::UNINSTALL,
+            installParam,
+            sysEventInfo_.preBundleScene,
+            errCode);
         return ERR_APPEXECFWK_RMV_HSP_BY_VERSION_ERROR;
     }
     if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::INSTALL_SUCCESS)) {
         LOG_E(BMS_TAG_INSTALLER, "update install success failed");
+        SendBundleSystemEvent(
+            info.GetBundleName(),
+            BundleEventType::UNINSTALL,
+            installParam,
+            sysEventInfo_.preBundleScene,
+            errCode);
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
-    InstallParam installParam;
+
     versionCode_ = Constants::ALL_VERSIONCODE;
     userId_ = Constants::ALL_USERID;
     std::string bundleName = info.GetBundleName();
