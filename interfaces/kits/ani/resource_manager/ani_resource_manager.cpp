@@ -28,12 +28,14 @@ namespace  {
     constexpr int32_t INVALID_INT = -500;
     constexpr int32_t DEFAULT_RES_FLAG = 1;
     constexpr int32_t DEFAULT_IDX = 0;
+    constexpr const char* APP_INDEX = "appIndex";
+    constexpr const char* BUNDLE_RESOURCE_FLAG = "ResourceFlag";
     constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
     constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
 }
 
 static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_string aniBundleName,
-    ani_int resFlag, ani_int appIdx)
+    ani_double resFlag, ani_double appIdx)
 {
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
@@ -42,22 +44,35 @@ static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_strin
             env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
+    int32_t resFlagInt = 0;
+    if (!CommonFunAni::TryCastDoubleTo(resFlag, &resFlagInt)) {
+        APP_LOGE("Cast resFlag failed");
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, BUNDLE_RESOURCE_FLAG, CommonFunAniNS::TYPE_INT);
+        return nullptr;
+    }
+    int32_t appIdxInt = 0;
+    if (!CommonFunAni::TryCastDoubleTo(appIdx, &appIdxInt)) {
+        APP_LOGE("Cast appIdx failed");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, CommonFunAniNS::TYPE_INT);
+        return nullptr;
+    }
     auto resourceMgr = ResourceHelper::GetBundleResourceMgr();
     if (resourceMgr == nullptr) {
         APP_LOGE("GetBundleResourceMgr failed");
         return nullptr;
     }
 
-    if (resFlag == INVALID_INT) {
-        resFlag = DEFAULT_RES_FLAG;
+    if (resFlagInt == INVALID_INT) {
+        resFlagInt = DEFAULT_RES_FLAG;
     }
 
-    if (appIdx == INVALID_INT) {
-        appIdx = DEFAULT_IDX;
+    if (appIdxInt == INVALID_INT) {
+        appIdxInt = DEFAULT_IDX;
     }
 
     BundleResourceInfo bundleResInfo;
-    int32_t ret = resourceMgr->GetBundleResourceInfo(bundleName, resFlag, bundleResInfo, appIdx);
+    int32_t ret = resourceMgr->GetBundleResourceInfo(bundleName, resFlagInt, bundleResInfo, appIdxInt);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleResourceInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowParameterTypeError(
@@ -87,8 +102,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 
     std::array methods = {
         ani_native_function {
-            "getBundleResourceInfo",
-            "Lstd/core/String;II:LbundleManager/BundleResourceInfo/BundleResourceInfo;",
+            "getBundleResourceInfoNative",
+            "Lstd/core/String;DD:LbundleManager/BundleResourceInfo/BundleResourceInfo;",
             reinterpret_cast<void*>(GetBundleResourceInfo)
         }
     };
