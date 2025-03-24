@@ -335,8 +335,7 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
     const DisposedRule& rule, int32_t appIndex, int32_t userId)
 {
     if (!CheckCanDispose(appId, userId)) {
-        LOG_E(BMS_TAG_DEFAULT, "appid in white-list");
-        LOG_I(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
+        LOG_E(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
             callerName.c_str(), userId, appIndex);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -354,7 +353,7 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
             abilityRunningControlRuleCache_.erase(iter);
         }
     }
-    LOG_I(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
+    LOG_D(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
         callerName.c_str(), userId, appIndex);
     commonEventMgr_->NotifySetDiposedRule(appId, userId, rule.ToString(), appIndex);
     return ERR_OK;
