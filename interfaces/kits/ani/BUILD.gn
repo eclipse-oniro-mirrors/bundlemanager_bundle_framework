@@ -30,5 +30,7 @@ group("ani_bms_packages") {
     "shortcut_manager:anishortcutmanager",
     "shortcut_manager:shortcut_info_etc",
     "shortcut_manager:shortcut_manager_etc",
+    "zlib:ani_zlib",
+    "zlib:zlib_etc",
   ]
 }
