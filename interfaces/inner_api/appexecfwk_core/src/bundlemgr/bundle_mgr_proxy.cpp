@@ -244,7 +244,7 @@ ErrCode BundleMgrProxy::GetApplicationInfosV9(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_D(BMS_TAG_QUERY, "begin to get GetApplicationInfosV9 of specific userId id %{private}d", userId);
+    LOG_D(BMS_TAG_QUERY, "begin to get GetApplicationInfosV9 of specific userId id is %{private}d", userId);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "fail to GetApplicationInfosV9 due to write MessageParcel fail");

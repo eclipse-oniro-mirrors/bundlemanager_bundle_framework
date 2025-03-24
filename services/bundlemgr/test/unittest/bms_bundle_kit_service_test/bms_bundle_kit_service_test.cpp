@@ -14209,4 +14209,70 @@ HWTEST_F(BmsBundleKitServiceTest, CheckPrerequisite_0003, Function | SmallTest |
     bool ret = bundleAgingMgr.CheckPrerequisite(type);
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.number: Process_0001
+ * @tc.name: test AgingHandlerChain of Process
+ * @tc.desc: Process is isPassed
+ */
+HWTEST_F(BmsBundleKitServiceTest, Process_0001, Function | SmallTest | Level0)
+{
+    AgingHandlerChain agingHandlerChain;
+    AgingRequest request;
+    RecentlyUnuseBundleAgingHandler ruAgingHandler;
+    auto handler = std::make_shared<RecentlyUnuseBundleAgingHandler>(ruAgingHandler);
+    agingHandlerChain.AddHandler(handler);
+    request.SetTotalDataBytes(1);
+    request.totalDataBytesThreshold_ = 2;
+    bool ret = agingHandlerChain.Process(request);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: Dump_0001
+ * @tc.name: test aging_request of Process
+ * @tc.desc: Dump is void
+ */
+HWTEST_F(BmsBundleKitServiceTest, Dump_0001, Function | SmallTest | Level0)
+{
+    DeviceUsageStats::BundleActiveClient::GetInstance();
+    AppExecFwk::AgingRequest agingRequest;
+    AppExecFwk::AgingBundleInfo bundleInfo("com.example.app1", 1, 2);
+    agingRequest.AddAgingBundle(bundleInfo);
+    agingRequest.Dump();
+    EXPECT_EQ(agingRequest.agingBundles_[0].GetStartCount(), 2);
+}
+
+/**
+ * @tc.number: InitAgingRequest_0002
+ * @tc.name: test BundleAgingMgr of Process
+ * @tc.desc: InitAgingRequest is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, InitAgingRequest_0002, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    bundleAgingMgr.request_.totalDataBytesThreshold_ = 0;
+    bundleAgingMgr.request_.SetTotalDataBytes(1);
+    bool ret = bundleAgingMgr.InitAgingRequest();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InitAgingRequest_0003
+ * @tc.name: test BundleAgingMgr of Process
+ * @tc.desc: InitAgingRequest is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, InitAgingRequest_0003, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    const int64_t allBundleDataBytes = bundleAgingMgr.request_.GetTotalDataBytesThreshold() + 1;
+    bundleAgingMgr.request_.SetTotalDataBytes(allBundleDataBytes);
+    auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->AddUserId(1001);
+    dataMgr->AddUserId(1002);
+    bool ret = bundleAgingMgr.InitAgingRequest();
+    EXPECT_FALSE(ret);
+    dataMgr->RemoveUserId(1001);
+    dataMgr->RemoveUserId(1002);
+}
 }
