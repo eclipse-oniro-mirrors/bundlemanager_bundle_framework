@@ -342,7 +342,7 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
     auto ret = appControlManagerDb_->SetDisposedRule(callerName, appId, rule, appIndex, userId);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "SetDisposedStatus to rdb failed, %{public}s set rule, user:%{public}d index:%{public}d",
-          callerName.c_str(), userId, appIndex);
+            callerName.c_str(), userId, appIndex);
         return ret;
     }
     std::string key = appId + std::string("_") + std::to_string(userId) + std::string("_") + std::to_string(appIndex);
