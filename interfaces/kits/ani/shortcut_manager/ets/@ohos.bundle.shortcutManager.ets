@@ -59,7 +59,7 @@ namespace shortcutManager {
       let cb = ():(Array<ShortcutInfo>)=>{return shortcutManager.GetAllDesktopShortcutInfo(userId);};
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
-        let resultShortcutInfo = e as Array<ShortcutInfo>;
+        let resultShortcutInfo: Array<ShortcutInfo> = e as Array<ShortcutInfo>;
         resolve(resultShortcutInfo);
       }, (err: Object): void => {
         let br = err as BusinessError<void>;
