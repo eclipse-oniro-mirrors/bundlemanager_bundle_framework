@@ -212,8 +212,7 @@ ErrCode AppControlManager::GetAppJumpControlRule(const std::string &callerBundle
 ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Want& want, int32_t userId)
 {
     if (!CheckCanDispose(appId, userId)) {
-        LOG_E(BMS_TAG_DEFAULT, "appid in white-list,%{public}s set rule, user:%{public}d index:%{public}d",
-            callerName.c_str(), userId, appIndex);
+        LOG_E(BMS_TAG_DEFAULT, "appid in white-list");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto ret = appControlManagerDb_->SetDisposedStatus(APP_MARKET_CALLING, appId, want, userId);
@@ -228,8 +227,6 @@ ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Wan
         appRunningControlRuleResult_.erase(iter);
     }
 
-    LOG_D(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
-        callerName.c_str(), userId, appIndex);
     commonEventMgr_->NotifySetDiposedRule(appId, userId, want.ToString(), Constants::MAIN_APP_INDEX);
     return ERR_OK;
 }
@@ -357,6 +354,8 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
             abilityRunningControlRuleCache_.erase(iter);
         }
     }
+    LOG_I(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
+        callerName.c_str(), userId, appIndex);
     commonEventMgr_->NotifySetDiposedRule(appId, userId, rule.ToString(), appIndex);
     return ERR_OK;
 }
