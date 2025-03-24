@@ -45,6 +45,8 @@ private:
     void CreateDataGroupDir(const std::string &bundleName, const int32_t userId);
     ErrCode RemoveDataDir(const std::string bundleName, int32_t userId);
     ErrCode GetDataMgr();
+    bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
+        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
 
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     int32_t uid_ = 0;

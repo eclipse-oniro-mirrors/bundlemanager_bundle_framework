@@ -758,6 +758,8 @@ private:
 #endif
     void ProcessAddResourceInfo(const InstallParam &installParam, const std::string &bundleName, int32_t userId);
     ErrCode CheckShellCanInstallPreApp(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
+        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
     void UpdateKillApplicationProcess(const InnerBundleInfo &innerBundleInfo);
 
     InstallerState state_ = InstallerState::INSTALL_START;
