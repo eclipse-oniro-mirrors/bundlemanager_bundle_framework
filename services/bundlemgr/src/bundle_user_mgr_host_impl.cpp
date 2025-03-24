@@ -95,6 +95,28 @@ private:
     bool needReInstall_ = false;
 };
 
+bool BundleUserMgrHostImpl::SkipThirdPreloadAppInstallation(const int32_t userId, const PreInstallBundleInfo &preInfo)
+{
+    if (userId == Constants::START_USERID) {
+        return false;
+    }
+    const std::vector<std::string> bundlePaths = preInfo.GetBundlePaths();
+    if (bundlePaths.empty()) {
+        return false;
+    }
+    const std::string firstBundlePath = bundlePaths.front();
+    if (firstBundlePath.rfind(DATA_PRELOAD_APP, 0) == 0) {
+        APP_LOGI("-n %{public}s -u %{public}d not install data preload app", preInfo.GetBundleName().c_str(), userId);
+        return true;
+    }
+    bool multiUserInstallThirdPreloadApp = OHOS::system::GetBoolParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, true);
+    if (firstBundlePath.rfind(PRELOAD_APP, 0) == 0 && !multiUserInstallThirdPreloadApp) {
+        APP_LOGI("-n %{public}s -u %{public}d not install preload app", preInfo.GetBundleName().c_str(), userId);
+        return true;
+    }
+    return false;
+}
+
 ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList,
     const std::optional<std::vector<std::string>> &allowList)
 {
@@ -218,11 +240,6 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
     }
 
     bool isStartUser = userId == Constants::START_USERID;
-    bool multiUserInstallThirdPreloadApp = true;
-    if (!isStartUser) {
-        multiUserInstallThirdPreloadApp = OHOS::system::GetBoolParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, true);
-        APP_LOGI("multiUserInstallThirdPreloadApp: %{public}d", multiUserInstallThirdPreloadApp);
-    }
     std::vector<PreInstallBundleInfo> allPreInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
     // Scan preset applications and parse package information.
     std::vector<std::string> allowLst = allowList.value_or(std::vector<std::string>());
@@ -250,14 +267,7 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
             APP_LOGI("-n %{public}s -u %{public}d skip install", preInfo.GetBundleName().c_str(), userId);
             continue;
         }
-        if (!isStartUser && !preInfo.GetBundlePaths().empty() &&
-            (preInfo.GetBundlePaths().front().find(DATA_PRELOAD_APP) == 0)) {
-            APP_LOGW("data preload app only install in 100 ,bundleName: %{public}s", preInfo.GetBundleName().c_str());
-            continue;
-        }
-        if (!isStartUser && !preInfo.GetBundlePaths().empty() &&
-            (preInfo.GetBundlePaths().front().rfind(PRELOAD_APP, 0) == 0) && !multiUserInstallThirdPreloadApp) {
-            APP_LOGI("-n %{public}s -u %{public}d not install preload app", preInfo.GetBundleName().c_str(), userId);
+        if (SkipThirdPreloadAppInstallation(userId, preInfo)) {
             continue;
         }
         if (isStartUser) {
