@@ -778,9 +778,11 @@ std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::
     auto permissionName = checkResult.permCheckResult.permissionName;
     auto reason = checkResult.permCheckResult.rule;
     if (reason == Security::AccessToken::PERMISSION_ACL_RULE) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "PermissionName: %{public}s", result.c_str());
         result = "PermissionName: " + permissionName;
         return result;
     }
+    LOG_NOFUNC_E(BMS_TAG_INSTALLER, "%{public}s", result.c_str());
     return result;
 }
 }  // namespace AppExecFwk
