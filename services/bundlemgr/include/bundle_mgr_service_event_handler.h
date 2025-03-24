@@ -628,18 +628,11 @@ private:
         std::map<std::string, std::vector<std::string>> &moduleUpdateMap, bool isAppService);
     std::string GetBundleNameByPreInstallPath(const std::string& path);
     bool GetRemovableInfo(const std::string& bundleDir);
-    bool GetRevertHmpList(std::vector<std::string> &hmpList,
-        std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
-        std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap);
     void GetHmpList(std::vector<std::string> &hmpList,
         std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
         std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap);
-    void HandleInstallHmpResult();
     void ModuleUpdateRollBack();
     void ProcessModuleUpdateSystemParameters();
-    void ProcessRevertAppPath(
-        std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
-        std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap);
     void HandleHmpUninstall();
     void SaveHmpBundlePathInfo(const std::string &hmpName,
         const std::string &bundleName, const std::string bundlePath, bool isAppService);

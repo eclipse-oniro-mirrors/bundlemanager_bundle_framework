@@ -2584,12 +2584,13 @@ void BMSEventHandler::HandleModuleUpdate()
         LOG_E(BMS_TAG_DEFAULT, "get module update path map failed");
         return;
     }
-    ProcessRevertAppPath(moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap);
+    // 2. process rollback if needed
+    ModuleUpdateRollBack();
     // 2. install all hmp, if install failed,
     HandleInstallHmp(moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap);
-    // 3. handle install result
-    HandleInstallHmpResult();
-    // 4. handle module update uninstall
+    // 3. update system parmeters
+    ProcessModuleUpdateSystemParameters();
+    // 4. uninstall redundant module
     HandleHmpUninstall();
 }
 
@@ -2656,36 +2657,6 @@ bool BMSEventHandler::HandleInstallHmp(
         moduleUpdateInstallResults_[item.first] = true;
     }
     return true;
-}
-
-void BMSEventHandler::ProcessRevertAppPath(
-    std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
-    std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap)
-{
-    if (moduleUpdateStatus_ != ModuleUpdateStatus::REVERT) {
-        return;
-    }
-    std::vector<std::string> hmpList;
-    if (!GetRevertHmpList(hmpList, moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap)) {
-        LOG_E(BMS_TAG_DEFAULT, "get hmp path failed");
-        return;
-    }
-    LOG_I(BMS_TAG_DEFAULT, "revert hmp list: %{public}s", BundleUtil::ToString(hmpList).c_str());
-    for (auto it = moduleUpdateAppServiceMap.begin(); it != moduleUpdateAppServiceMap.end();) {
-        if (std::find(hmpList.begin(), hmpList.end(), it->first) == hmpList.end()) {
-            it = moduleUpdateAppServiceMap.erase(it);
-        } else {
-            ++it;
-        }
-    }
-
-    for (auto it = moduleUpdateNotAppServiceMap.begin(); it != moduleUpdateNotAppServiceMap.end();) {
-        if (std::find(hmpList.begin(), hmpList.end(), it->first) == hmpList.end()) {
-            it = moduleUpdateNotAppServiceMap.erase(it);
-        } else {
-            ++it;
-        }
-    }
 }
 
 bool BMSEventHandler::HandleInstallModuleUpdateSystemHsp(const std::vector<std::string> &appDirList)
@@ -2820,25 +2791,6 @@ void BMSEventHandler::SaveHmpBundlePathInfo(const std::string &hmpName,
     hmpBundlePathInfos_[bundleName] = info;
 }
 
-bool BMSEventHandler::GetRevertHmpList(std::vector<std::string> &revertHmpList,
-    std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
-    std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap)
-{
-    std::vector<std::string> hmpList;
-    GetHmpList(hmpList, moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap);
-    for (const std::string &hmp : hmpList) {
-        std::string hmpInstallPara = MODULE_UPDATE_INSTALL_RESULT + hmp;
-        std::string paramValue;
-        if (!GetSystemParameter(hmpInstallPara, paramValue) || paramValue != MODULE_UPDATE_INSTALL_RESULT_FALSE) {
-            continue;
-        }
-
-        LOG_I(BMS_TAG_DEFAULT, "hmp %{public}s need to revert", hmp.c_str());
-        revertHmpList.emplace_back(hmp);
-    }
-    return true;
-}
-
 void BMSEventHandler::GetHmpList(std::vector<std::string> &hmpList,
     std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
     std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap)
@@ -2872,27 +2824,23 @@ std::string BMSEventHandler::GetBundleNameByPreInstallPath(const std::string& pa
     }
 }
 
-void BMSEventHandler::HandleInstallHmpResult()
-{
-    ModuleUpdateRollBack();
-    ProcessModuleUpdateSystemParameters();
-}
-
 void BMSEventHandler::ModuleUpdateRollBack()
 {
-    if (moduleUpdateStatus_ != ModuleUpdateStatus::UPDATE) {
+    if (moduleUpdateStatus_ != ModuleUpdateStatus::REVERT) {
         return;
     }
-    for (const auto &item : moduleUpdateInstallResults_) {
-        LOG_I(BMS_TAG_DEFAULT, "hmp %{public}s install result %{public}d", item.first.c_str(), item.second);
-        if (item.second) {
-            continue;
-        }
-        LOG_W(BMS_TAG_DEFAULT, "hmp %{public}s need to rollback", item.first.c_str());
-        // rollback hmp which install failed
-        std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();
-        installer->RollbackHmpBundle(moduleUpdateAppService_[item.first], moduleUpdateNormalApp_[item.first]);
+    std::set<std::string> normalAppSet;
+    std::set<std::string> appServiceSet;
+    for (const auto &item : moduleUpdateNormalApp_) {
+        normalAppSet.insert(item.second.begin(), item.second.end());
     }
+    for (const auto &item : moduleUpdateAppService_) {
+        appServiceSet.insert(item.second.begin(), item.second.end());
+    }
+    LOG_W(BMS_TAG_DEFAULT, "hmp need to rollback");
+    // rollback hmp which install failed
+    std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();
+    installer->RollbackHmpBundle(appServiceSet, normalAppSet);
 }
 
 void BMSEventHandler::ProcessModuleUpdateSystemParameters()
