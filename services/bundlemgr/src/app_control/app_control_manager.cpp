@@ -227,6 +227,7 @@ ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Wan
     if (iter != appRunningControlRuleResult_.end()) {
         appRunningControlRuleResult_.erase(iter);
     }
+
     LOG_D(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
         callerName.c_str(), userId, appIndex);
     commonEventMgr_->NotifySetDiposedRule(appId, userId, want.ToString(), Constants::MAIN_APP_INDEX);
