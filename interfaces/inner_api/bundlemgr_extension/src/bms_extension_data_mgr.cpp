@@ -83,11 +83,16 @@ bool BmsExtensionDataMgr::CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sd
     if ((Init() == ERR_OK) && handler_) {
         auto bundleMgrExtPtr =
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+        bool res = false;
         if (bundleMgrExtPtr) {
-            return bundleMgrExtPtr->CheckApiInfo(bundleInfo);
+            res = bundleMgrExtPtr->CheckApiInfo(bundleInfo);
+            if (!res) {
+                APP_LOGE("CheckApiInfo in bms-extension failed");
+            }
+            return res;
         }
         APP_LOGE("create class: %{public}s failed", bmsExtension_.bmsExtensionBundleMgr.extensionName.c_str());
-        return false;
+        return res;
     }
     APP_LOGW("access bms-extension failed");
     return CheckApiInfo(bundleInfo.compatibleVersion, sdkVersion);
@@ -97,7 +102,12 @@ bool BmsExtensionDataMgr::CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkV
 {
     APP_LOGD("CheckApiInfo with compatibleVersion:%{public}d, sdkVersion:%{public}d", compatibleVersion, sdkVersion);
     uint32_t compatibleVersionOHOS = compatibleVersion % API_VERSION_BASE;
-    return compatibleVersionOHOS <= sdkVersion;
+    bool res = compatibleVersionOHOS <= sdkVersion;
+    if (!res) {
+        APP_LOGE("Ext CheckApiInfo failed with compatibleVersion:%{public}d, sdkVersion:%{public}d",
+            compatibleVersionOHOS, sdkVersion);
+    }
+    return res;
 }
 
 ErrCode BmsExtensionDataMgr::HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult)
