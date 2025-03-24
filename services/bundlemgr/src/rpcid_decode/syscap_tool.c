@@ -116,7 +116,7 @@ int32_t RPCIDStreamDecodeToBuffer(
 
         ret = strncat_s(bufferPtr, SINGLE_SYSCAP_LENGTH, sysCapArrayPtr + i * SINGLE_FEAT_LENGTH, SINGLE_FEAT_LENGTH);
         if (ret != EOK) {
-            HILOG_ERROR(LOG_CORE, "strncat_s failed, (%s, %d, %s, %d)\n",
+            HILOG_ERROR(LOG_CORE, "strncat_s failed, (%{public}s, %{public}d, %{public}s, %{public}d)\n",
                 bufferPtr, SINGLE_SYSCAP_LENGTH, sysCapArrayPtr + i * SINGLE_FEAT_LENGTH, SINGLE_FEAT_LENGTH);
             (void)free(syscapBuf);
             return ERROR;
