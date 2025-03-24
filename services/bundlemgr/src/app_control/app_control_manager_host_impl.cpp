@@ -483,6 +483,7 @@ void AppControlManagerHostImpl::GetCallerByUid(const int32_t uid, std::string &c
     }
     auto ret = dataMgr_->GetNameForUid(uid, callerName);
     if (ret != ERR_OK) {
+        LOG_D(BMS_TAG_DEFAULT, "caller not recognized");
         callerName = std::to_string(uid);
     }
 }
