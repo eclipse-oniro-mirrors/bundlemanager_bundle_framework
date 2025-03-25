@@ -602,12 +602,10 @@ ohos_shared_library("installs") {
 
   if (dfx_sigdump_handler_enabled) {
     external_deps += [
-      "faultloggerd:backtrace_local",
       "faultloggerd:dfx_sigdump_handler",
       "faultloggerd:libbacktrace_local",
       "faultloggerd:libdfx_procinfo",
       "faultloggerd:libfaultloggerd",
-      "faultloggerd:libunwinder",
     ]
     defines += [ "DFX_SIGDUMP_HANDLER_ENABLE" ]
   }
