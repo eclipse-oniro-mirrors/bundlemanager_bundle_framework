@@ -205,6 +205,10 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_BUNDLE_MGR_EXT_PROXY = 180,
     GET_ALL_PLUGIN_INFO = 181,
     GET_PLUGIN_INFOS_FOR_SELF = 182,
+    GET_PLUGIN_ABILITY_INFO = 183,
+    GET_PLUGIN_HAP_MODULE_INFO = 184,
+    REGISTER_PLUGIN_EVENT_CALLBACK = 185,
+    UNREGISTER_PLUGIN_EVENT_CALLBACK = 186,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

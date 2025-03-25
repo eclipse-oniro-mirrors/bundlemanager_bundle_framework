@@ -1077,6 +1077,13 @@ public:
         std::string &dataDir) override;
     virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) override;
     virtual ErrCode SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums) override;
+    virtual ErrCode GetPluginAbilityInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const std::string &pluginModuleName, const std::string &pluginAbilityName,
+        const int32_t userId, AbilityInfo &abilityInfo) override;
+    virtual ErrCode GetPluginHapModuleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const std::string &pluginModuleName, const int32_t userId, HapModuleInfo &hapModuleInfo) override;
+    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
+    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
 
 private:
     ErrCode MigrateDataUserAuthentication();

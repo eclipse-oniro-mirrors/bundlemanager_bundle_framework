@@ -874,7 +874,11 @@ private:
     ErrCode HandleGetPluginInfosForSelf(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetDirByBundleNameAndAppIndex(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllBundleDirs(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleRegisterPluginEventCallback(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleUnregisterPluginEventCallback(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetAppDistributionTypes(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetPluginAbilityInfo(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetPluginHapModuleInfo(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

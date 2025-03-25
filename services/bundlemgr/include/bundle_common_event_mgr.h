@@ -86,7 +86,7 @@ public:
         const std::string &bundleName, bool isEnableDynamicIcon, int32_t userId, int32_t appIndex);
     void NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type);
     void NotifyDefaultAppChanged(const int32_t userId, std::vector<std::string> &utdIdVec);
-
+    void NotifyPluginEvents(const NotifyBundleEvents &event, const std::shared_ptr<BundleDataMgr> &dataMgr);
 private:
     std::string GetCommonEventData(const NotifyType &type);
     void SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBundleEvents &installResult);

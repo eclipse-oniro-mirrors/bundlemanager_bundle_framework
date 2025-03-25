@@ -5164,5 +5164,92 @@ bool BundleMgrHostImpl::GetPluginBundleInfo(const std::string &bundleName, const
     }
     return info.GetPluginBundleInfos(userId, pluginBundleInfos);
 }
+
+ErrCode BundleMgrHostImpl::GetPluginAbilityInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+    const std::string &pluginModuleName, const std::string &pluginAbilityName,
+    const int32_t userId, AbilityInfo &abilityInfo)
+{
+    LOG_D(BMS_TAG_QUERY,
+        "start GetPluginAbilityInfo bundleName:%{public}s pluginName:%{public}s abilityName:%{public}s",
+        hostBundleName.c_str(), pluginBundleName.c_str(), pluginAbilityName.c_str());
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetPluginAbilityInfo(hostBundleName,
+        pluginBundleName, pluginModuleName, pluginAbilityName, userId, abilityInfo);
+}
+
+ErrCode BundleMgrHostImpl::GetPluginHapModuleInfo(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const std::string &pluginModuleName,
+    const int32_t userId, HapModuleInfo &hapModuleInfo)
+{
+    LOG_D(BMS_TAG_QUERY,
+        "start GetPluginHapModuleInfo bundleName:%{public}s pluginName:%{public}s moduleName:%{public}s",
+        hostBundleName.c_str(), pluginBundleName.c_str(), pluginModuleName.c_str());
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetPluginHapModuleInfo(hostBundleName, pluginBundleName, pluginModuleName, userId, hapModuleInfo);
+}
+
+ErrCode BundleMgrHostImpl::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+{
+    APP_LOGD("begin");
+    if (pluginEventCallback == nullptr) {
+        APP_LOGE("pluginEventCallback is null");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->RegisterPluginEventCallback(pluginEventCallback);
+}
+
+ErrCode BundleMgrHostImpl::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+{
+    APP_LOGD("begin");
+    if (pluginEventCallback == nullptr) {
+        APP_LOGE("pluginEventCallback is null");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->UnregisterPluginEventCallback(pluginEventCallback);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

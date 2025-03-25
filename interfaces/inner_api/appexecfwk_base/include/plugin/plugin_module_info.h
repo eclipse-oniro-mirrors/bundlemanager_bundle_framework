@@ -24,8 +24,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct PluginModuleInfo : public Parcelable {
+    bool compressNativeLibs = true;
+    bool isLibIsolated = false;
+    
     uint32_t descriptionId = 0;
     std::string moduleName;
+    std::string packageName;
     std::string description;
     std::string hapPath;
     std::string cpuAbi;

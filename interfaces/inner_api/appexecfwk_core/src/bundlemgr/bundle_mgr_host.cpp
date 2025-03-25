@@ -652,6 +652,18 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::MIGRATE_DATA):
             errCode = HandleMigrateData(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PLUGIN_ABILITY_INFO):
+            errCode = HandleGetPluginAbilityInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PLUGIN_HAP_MODULE_INFO):
+            errCode = HandleGetPluginHapModuleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::REGISTER_PLUGIN_EVENT_CALLBACK):
+            errCode = HandleRegisterPluginEventCallback(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::UNREGISTER_PLUGIN_EVENT_CALLBACK):
+            errCode = HandleUnregisterPluginEventCallback(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -4448,6 +4460,48 @@ ErrCode BundleMgrHost::HandleGetAllBundleDirs(MessageParcel &data, MessageParcel
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleRegisterPluginEventCallback(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("read IRemoteObject failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<IBundleEventCallback> pluginEventCallback = iface_cast<IBundleEventCallback>(object);
+    if (pluginEventCallback == nullptr) {
+        APP_LOGE("Get pluginEventCallback failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = RegisterPluginEventCallback(pluginEventCallback);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleUnregisterPluginEventCallback(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("read IRemoteObject failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<IBundleEventCallback> pluginEventCallback = iface_cast<IBundleEventCallback>(object);
+    if (pluginEventCallback == nullptr) {
+        APP_LOGE("Get pluginEventCallback failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = UnregisterPluginEventCallback(pluginEventCallback);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleSetAppDistributionTypes(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -4495,6 +4549,54 @@ ErrCode BundleMgrHost::WriteParcelableIntoAshmem(MessageParcel &tempParcel, Mess
     if (!reply.WriteAshmem(ashmem)) {
         APP_LOGE("Write ashmem to tempParcel fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetPluginAbilityInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    AbilityInfo info;
+    std::string hostBundleName = data.ReadString();
+    std::string pluginBundleName = data.ReadString();
+    std::string pluginModuleName = data.ReadString();
+    std::string pluginAbilityName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+
+    ErrCode ret = GetPluginAbilityInfo(hostBundleName, pluginBundleName,
+        pluginModuleName, pluginAbilityName, userId, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteParcelable(&info)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetPluginHapModuleInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HapModuleInfo info;
+    std::string hostBundleName = data.ReadString();
+    std::string pluginBundleName = data.ReadString();
+    std::string pluginModuleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+
+    ErrCode ret = GetPluginHapModuleInfo(hostBundleName, pluginBundleName, pluginModuleName, userId, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteParcelable(&info)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }

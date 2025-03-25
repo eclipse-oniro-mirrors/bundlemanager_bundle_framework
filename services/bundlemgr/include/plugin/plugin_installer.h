@@ -115,6 +115,8 @@ private:
     bool InitDataMgr();
     ErrCode ParseHapPaths(const InstallPluginParam &installPluginParam,
         const std::vector<std::string> &inBundlePaths, std::vector<std::string> &parsedPaths);
+    void NotifyPluginEvents(const NotifyType &type, int32_t uid);
+    std::string GetModuleNames();
 
 #define CHECK_RESULT(errcode, errmsg)                                              \
     do {                                                                           \
