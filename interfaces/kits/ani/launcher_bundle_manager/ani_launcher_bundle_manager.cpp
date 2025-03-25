@@ -84,7 +84,7 @@ static void StartShortcutSync([[maybe_unused]] ani_env *env, ani_object aniShort
     }
 }
 
-static ani_object GetShortcutInfoSync([[maybe_unused]] ani_env *env, ani_string aniBundleName, ani_int aniUserId)
+static ani_object GetShortcutInfoSync([[maybe_unused]] ani_env *env, ani_string aniBundleName, ani_double aniUserId)
 {
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
@@ -92,7 +92,13 @@ static ani_object GetShortcutInfoSync([[maybe_unused]] ani_env *env, ani_string 
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, ERROR_EMPTY_BUNDLE_NAME);
         return nullptr;
     }
-    int32_t userId = aniUserId;
+    int32_t userId = 0;
+    if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
+        APP_LOGE("try cast userId failed");
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_INT);
+        return nullptr;
+    }
     if (userId == EMPTY_USER_ID) {
         userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
@@ -104,8 +110,8 @@ static ani_object GetShortcutInfoSync([[maybe_unused]] ani_env *env, ani_string 
         return nullptr;
     }
     std::vector<ShortcutInfo> shortcutInfos;
-    ErrCode ret =
-        CommonFunc::ConvertErrCode(launcherService->GetShortcutInfoV9(bundleName, shortcutInfos, userId));
+    ErrCode result = launcherService->GetShortcutInfoV9(bundleName, shortcutInfos, userId);
+    ErrCode ret = CommonFunc::ConvertErrCode(result);
     if (ret != ERR_OK) {
         APP_LOGE("GetShortcutInfoV9 failed, ret %{public}d", ret);
         BusinessErrorAni::CreateCommonError(
@@ -148,12 +154,12 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     std::array methods = {
         ani_native_function {
             "StartShortcutSync",
-            "LShortcutInfo/ShortcutInfo;:V",
+            "LbundleManager/ShortcutInfo/ShortcutInfo;:V",
             reinterpret_cast<void*>(StartShortcutSync)
         },
         ani_native_function {
             "GetShortcutInfoSync",
-            "Lstd/core/String;I:Lescompat/Array;",
+            "Lstd/core/String;D:Lescompat/Array;",
             reinterpret_cast<void*>(GetShortcutInfoSync)
         },
     };

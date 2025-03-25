@@ -29,6 +29,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace CommonFunAniNS {
+constexpr const char* TYPE_INT = "int";
+constexpr const char* TYPE_STRING = "string";
+} // namespace CommonFunAniNS
 
 #define RETURN_NULL_IF_NULL(ptr)     \
     do {                             \

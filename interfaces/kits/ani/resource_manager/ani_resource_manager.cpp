@@ -28,9 +28,6 @@ namespace  {
     constexpr int32_t INVALID_INT = -500;
     constexpr int32_t DEFAULT_RES_FLAG = 1;
     constexpr int32_t DEFAULT_IDX = 0;
-    constexpr const char* BUNDLE_NAME = "bundleName";
-    constexpr const char* TYPE_STRING = "string";
-    constexpr const char* TYPE_INT32 = "int32";
     constexpr const char* APP_INDEX = "appIndex";
     constexpr const char* BUNDLE_RESOURCE_FLAG = "ResourceFlag";
     constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
@@ -43,19 +40,21 @@ static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_strin
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
     int32_t resFlagInt = 0;
     if (!CommonFunAni::TryCastDoubleTo(resFlag, &resFlagInt)) {
         APP_LOGE("Cast resFlag failed");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_RESOURCE_FLAG, TYPE_INT32);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, BUNDLE_RESOURCE_FLAG, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
     int32_t appIdxInt = 0;
     if (!CommonFunAni::TryCastDoubleTo(appIdx, &appIdxInt)) {
         APP_LOGE("Cast appIdx failed");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_INT32);
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
     auto resourceMgr = ResourceHelper::GetBundleResourceMgr();

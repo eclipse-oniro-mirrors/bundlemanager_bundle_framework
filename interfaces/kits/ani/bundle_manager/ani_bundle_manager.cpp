@@ -38,12 +38,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* APPLICATION_FLAGS = "applicationFlags";
-constexpr const char* USER_ID = "userId";
-constexpr const char* TYPE_STRING = "string";
-constexpr const char* TYPE_INT32 = "int32";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 const std::string IS_APPLICATION_ENABLED_SYNC = "IsApplicationEnabledSync";
 const std::string GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
@@ -81,7 +77,8 @@ static ani_boolean isApplicationEnabledSync([[maybe_unused]] ani_env* env, ani_s
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return isEnable;
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
@@ -103,7 +100,8 @@ static ani_object getBundleInfoForSelfSync([[maybe_unused]] ani_env* env, ani_do
     int32_t bundleFlagsInt = 0;
     if (!CommonFunAni::TryCastDoubleTo(bundleFlags, &bundleFlagsInt)) {
         APP_LOGE("Cast bundleFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, TYPE_INT32);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
@@ -146,13 +144,15 @@ static ani_object getBundleInfoSync([[maybe_unused]] ani_env* env,
     int32_t bundleFlagsInt = 0;
     if (!CommonFunAni::TryCastDoubleTo(bundleFlags, &bundleFlagsInt)) {
         APP_LOGE("Cast bundleFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, TYPE_INT32);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
     int32_t userIdInt = 0;
     if (!CommonFunAni::TryCastDoubleTo(userId, &userIdInt)) {
         APP_LOGE("Cast userId failed");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_INT32);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
@@ -162,7 +162,8 @@ static ani_object getBundleInfoSync([[maybe_unused]] ani_env* env,
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("Bundle name is empty.");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
 
@@ -204,19 +205,22 @@ static ani_object getApplicationInfoSync([[maybe_unused]] ani_env* env,
     int32_t applicationFlagsInt = 0;
     if (!CommonFunAni::TryCastDoubleTo(applicationFlags, &applicationFlagsInt)) {
         APP_LOGE("Cast applicationFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APPLICATION_FLAGS, TYPE_INT32);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, APPLICATION_FLAGS, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
     int32_t userIdInt = 0;
     if (!CommonFunAni::TryCastDoubleTo(userId, &userIdInt)) {
         APP_LOGE("Cast userId failed");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_INT32);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
