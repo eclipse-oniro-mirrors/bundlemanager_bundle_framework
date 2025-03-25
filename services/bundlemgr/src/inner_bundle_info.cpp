@@ -4672,28 +4672,24 @@ void InnerBundleInfo::PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_
 
 std::string InnerBundleInfo::GetApplicationCodeLanguage() const
 {
-    bool foundLanguage1_1 = false;
-    bool foundLanguage1_2 = false;
+    size_t language1_1_cnt = 0;
+    size_t language1_2_cnt = 0;
     for (const auto& [moduleName, innerModuleInfo] : innerModuleInfos_) {
         if (innerModuleInfo.codeLanguage == Constants::CODE_LANGUAGE_1_1) {
-            foundLanguage1_1 = true;
+            language1_1_cnt++;
         }
         if (innerModuleInfo.codeLanguage == Constants::CODE_LANGUAGE_1_2) {
-            foundLanguage1_2 = true;
+            language1_2_cnt++;
         }
     }
-
-    if (foundLanguage1_1 && foundLanguage1_2) {
-        return Constants::CODE_LANGUAGE_HYBRID;
-    }
-    if (foundLanguage1_1) {
+    size_t moduleSize = innerModuleInfos_.size();
+    if (language1_1_cnt == moduleSize) {
         return Constants::CODE_LANGUAGE_1_1;
     }
-    if (foundLanguage1_2) {
+    if (language1_2_cnt == moduleSize) {
         return Constants::CODE_LANGUAGE_1_2;
     }
-    APP_LOGW_NOFUNC("invalid codeLanguage");
-    return Constants::CODE_LANGUAGE_1_1;
+    return Constants::CODE_LANGUAGE_HYBRID;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
