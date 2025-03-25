@@ -1776,7 +1776,7 @@ HWTEST_F(BmsBundleDefaultAppTest, AOT_EXECUTOR_0100, Function | SmallTest | Leve
     std::string hapPath = "/data/test.hap";
     uint32_t offset = 0;
     uint32_t length = 0;
-    ret = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, offset, length);
+    ret = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, Constants::CODE_LANGUAGE_1_1, offset, length);
     EXPECT_EQ(ret, false);
 
     AOTArgs completeArgs;

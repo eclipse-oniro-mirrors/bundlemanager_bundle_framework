@@ -256,6 +256,7 @@ void InnerBundleInfo::GetInternalDependentHspInfo(
         hspInfo.bundleName = baseApplicationInfo_->bundleName;
         hspInfo.moduleName = item->second.moduleName;
         hspInfo.hapPath = item->second.hapPath;
+        hspInfo.codeLanguage = item->second.codeLanguage;
         hspInfoVector.emplace_back(hspInfo);
     }
 }
@@ -4694,6 +4695,16 @@ std::string InnerBundleInfo::GetApplicationCodeLanguage() const
     }
     APP_LOGW_NOFUNC("invalid codeLanguage");
     return Constants::CODE_LANGUAGE_1_1;
+}
+
+std::string InnerBundleInfo::GetModuleCodeLanguage(const std::string &moduleName) const
+{
+    auto item = innerModuleInfos_.find(moduleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGW_NOFUNC("moduleName %{public}s not exist", moduleName.c_str());
+        return Constants::EMPTY_STRING;
+    }
+    return item->second.codeLanguage;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
