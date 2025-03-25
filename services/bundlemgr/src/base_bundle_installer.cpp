@@ -4309,12 +4309,17 @@ bool BaseBundleInstaller::CheckApiInfo(const std::unordered_map<std::string, Inn
 {
     std::string compileSdkType = infos.begin()->second.GetBaseApplicationInfo().compileSdkType;
     auto bundleInfo = infos.begin()->second.GetBaseBundleInfo();
+    uint32_t systemApiVersion = static_cast<uint32_t>(GetSdkApiVersion());
     if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
-        return bundleInfo.compatibleVersion <= static_cast<uint32_t>(GetSdkApiVersion());
+        bool res = bundleInfo.compatibleVersion <= systemApiVersion;
+        if (!res) {
+            LOG_E(BMS_TAG_INSTALLER, "CheckApiInfo failed with compatibleVersion:%{public}d, sysApiVer:%{public}d",
+                bundleInfo.compatibleVersion, systemApiVersion);
+        }
+        return res;
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    return bmsExtensionDataMgr.CheckApiInfo(infos.begin()->second.GetBaseBundleInfo(),
-        static_cast<uint32_t>(GetSdkApiVersion()));
+    return bmsExtensionDataMgr.CheckApiInfo(infos.begin()->second.GetBaseBundleInfo(), systemApiVersion);
 }
 
 ErrCode BaseBundleInstaller::CheckMultiNativeFile(
