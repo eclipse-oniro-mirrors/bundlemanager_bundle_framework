@@ -2431,13 +2431,19 @@ int32_t InstalldOperator::InnerMigrateData(
         return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED;
     }
     auto result = RESULT_OK;
+    std::string targetPath = destinationPath;
+    result = MigrateDataCreateAhead(sourcePaths, targetPath, info);
+    if (result != RESULT_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "migrate data create ahead failed");
+        return result;
+    }
     if (!S_ISDIR(buf.st_mode)) {
         std::string fileName = sourcePaths;
         auto pos = sourcePaths.rfind(ServiceConstants::PATH_SEPARATOR);
         if (pos != std::string::npos) {
             fileName = sourcePaths.substr(pos + 1);
         }
-        std::string destPath = OHOS::IncludeTrailingPathDelimiter(destinationPath) + fileName;
+        std::string destPath = OHOS::IncludeTrailingPathDelimiter(targetPath) + fileName;
         result = MigrateDataCopyFile(sourcePaths, destPath, info);
         if (result != RESULT_OK) {
             LOG_E(BMS_TAG_INSTALLD, "migrate data source:%{private}s to destination %{public}s failed",
@@ -2445,8 +2451,7 @@ int32_t InstalldOperator::InnerMigrateData(
         }
         return result;
     }
-
-    result = MigrateDataCopyDir(sourcePaths, destinationPath, info);
+    result = MigrateDataCopyDir(sourcePaths, targetPath, info);
     if (result != RESULT_OK) {
         LOG_E(BMS_TAG_INSTALLD, "migrate data copy dir failed, source:%{private}s to destination %{public}s",
             sourcePaths.c_str(), destinationPath.c_str());
@@ -2507,7 +2512,7 @@ int32_t InstalldOperator::MigrateDataCopyDir(
         std::string subPath = OHOS::IncludeTrailingPathDelimiter(sourcePath) + std::string(ptr->d_name);
         std::string destPath = OHOS::IncludeTrailingPathDelimiter(destinationPath) + std::string(ptr->d_name);
         if (ptr->d_type == DT_DIR) {
-            result = InnerMigrateData(subPath, destPath, info);
+            result = MigrateDataCopyDir(subPath, destPath, info);
             if (result != RESULT_OK) {
                 LOG_E(BMS_TAG_INSTALLD, "migrate data failed, result:%{public}d", result);
             }
@@ -2594,7 +2599,6 @@ int32_t InstalldOperator::ForceCreateDirectory(const std::string &path, const Ow
         LOG_D(BMS_TAG_INSTALLD, "path already exists");
         return RESULT_OK;
     }
-
     LOG_D(BMS_TAG_INSTALLD, "need crate dir: %{public}s", path.c_str());
     if (!OHOS::ForceCreateDirectory(path)) {
         LOG_E(BMS_TAG_INSTALLD, "mkdir failed");
@@ -2608,6 +2612,44 @@ int32_t InstalldOperator::ForceCreateDirectory(const std::string &path, const Ow
         LOG_E(BMS_TAG_INSTALLD, "failed to set uid and gid for new file: %{public}s", path.c_str());
         return result;
     }
+    return RESULT_OK;
+}
+
+int32_t InstalldOperator::MigrateDataCreateAhead(
+    const std::string &sourcePaths, std::string &destinationPath, const OwnershipInfo &info)
+{
+    if (sourcePaths.empty() || destinationPath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "incoming path exception");
+        return sourcePaths.empty() ? ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID
+                                   : ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+    // to set the directory properties correctly
+    std::vector<std::string> parts;
+    size_t pos = 0;
+    size_t nextPos = 0;
+    while ((nextPos = sourcePaths.find('/', pos + 1)) != std::string::npos) {
+        parts.push_back(sourcePaths.substr(pos, nextPos - pos));
+        pos = nextPos;
+    }
+    if (std::filesystem::is_directory(sourcePaths) && pos < sourcePaths.length()) {
+        parts.push_back(sourcePaths.substr(pos));
+    }
+    if (parts.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "parts is empty");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
+    }
+    std::string destPath = OHOS::ExcludeTrailingPathDelimiter(destinationPath);
+    for (const auto &dir : parts) {
+        destPath += dir;
+        LOG_D(BMS_TAG_INSTALLD, "will be destPath(%{public}s)", destPath.c_str());
+        auto resutl = ForceCreateDirectory(destPath, info);
+        if (resutl != RESULT_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "create destPath failed");
+            return resutl;
+        }
+    }
+    // new target path
+    destinationPath = destPath;
     return RESULT_OK;
 }
 
