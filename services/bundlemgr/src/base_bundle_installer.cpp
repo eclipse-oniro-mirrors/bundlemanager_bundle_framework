@@ -1770,7 +1770,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             MarkIsForceUninstall(bundleName, isForcedUninstall);
         }
     }
-    
+
     DeleteEncryptedStatus(bundleName, uid);
     BundleResourceHelper::DeleteResourceInfo(bundleName, userId_);
     DeleteRouterInfo(bundleName);
@@ -3207,7 +3207,7 @@ void BaseBundleInstaller::CreateEl5AndSetPolicy(InnerBundleInfo &info)
     params.emplace_back(el5Param);
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId_, userInfo)) {
-        APP_LOGE("get user info failed");
+        APP_LOGE("get user failed");
         return;
     }
     for (const auto &cloneInfo : userInfo.cloneInfos) {
@@ -7170,7 +7170,7 @@ void BaseBundleInstaller::MarkIsForceUninstall(const std::string &bundleName, bo
         LOG_E(BMS_TAG_INSTALLER, "dataMgr is nullptr");
         return;
     }
- 
+
     PreInstallBundleInfo preInstallBundleInfo;
     preInstallBundleInfo.SetBundleName(bundleName);
     if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
