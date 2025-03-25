@@ -21,7 +21,10 @@ ohos_unittest("BundleMgrProxyTest") {
   module_out_path = module_output_path
   use_exceptions = true
   include_dirs = [ "${core_path}/include/bundlemgr" ]
-  sources = [ "bundle_mgr_proxy_test.cpp" ]
+  sources = [
+    "${core_path}/src/bundlemgr/bundle_mgr_proxy.cpp",
+    "bundle_mgr_proxy_test.cpp",
+  ]
 
   deps = [
     "${base_path}:appexecfwk_base",

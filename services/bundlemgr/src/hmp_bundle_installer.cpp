@@ -428,7 +428,7 @@ void HmpBundleInstaller::UpdateBundleInfoForHmp(const std::string &filePath, std
 bool HmpBundleInstaller::GetIsRemovable(const std::string &bundleName)
 {
     if (!InitDataMgr()) {
-        APP_LOGE("InitDataMgr fail");
+        APP_LOGE("init fail");
         return true;
     }
     InnerBundleInfo info;

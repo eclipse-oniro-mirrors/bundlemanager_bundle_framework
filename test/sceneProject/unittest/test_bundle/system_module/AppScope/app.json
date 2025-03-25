@@ -18,6 +18,10 @@
         "keepAlive":true,
         "removable":false,
         "userDataClearable":false,
-        "accessible":true
+        "accessible":true,
+        "multiAppMode": {
+            "multiAppModeType": "appClone",
+            "maxCount": 5
+        }
     }
 }

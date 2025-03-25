@@ -2340,7 +2340,7 @@ HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTe
     ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
     ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->CreateBundleDir(el1ShaderCachePath);
     EXPECT_EQ(ret, ERR_OK);
-    
+
     setuid(Constants::FOUNDATION_UID);
     // test CheckAllBundleEl1ShaderCacheLocal succeed
     handler->CheckAllBundleEl1ShaderCacheLocal();
@@ -2363,5 +2363,29 @@ HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTe
     isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
     EXPECT_FALSE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
     setuid(Constants::ROOT_UID);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0100
+ * @tc.name: UpdateRemovable
+ * @tc.desc: test UpdateRemovable
+ */
+HWTEST_F(BmsEventHandlerTest, InnerBundleInfo_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.UpdateRemovable(false, true);
+    EXPECT_TRUE(innerBundleInfo.IsRemovable());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0100
+ * @tc.name: UpdateRemovable
+ * @tc.desc: test UpdateRemovable
+ */
+HWTEST_F(BmsEventHandlerTest, InnerBundleInfo_0200, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.UpdateRemovable(true, true);
+    EXPECT_TRUE(innerBundleInfo.IsRemovable());
 }
 } // OHOS

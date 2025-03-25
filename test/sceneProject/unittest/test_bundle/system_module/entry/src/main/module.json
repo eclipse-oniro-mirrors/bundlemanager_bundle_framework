@@ -149,14 +149,24 @@
          ]
       }
     ],
-		"requestPermissions": [{
-			"name": "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED",
-			"reason": "$string:reason",
-			"usedScene": {
-				"abilities": ["FormAbility"],
-				"when": "inuse"
-			}
-		}],
+		"requestPermissions": [
+            {
+                "name": "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED",
+                "reason": "$string:reason",
+                "usedScene": {
+                    "abilities": ["FormAbility"],
+                    "when": "inuse"
+                }
+		    },
+            {
+                "name": "ohos.permission.PROTECT_SCREEN_LOCK_DATA",
+                "reason": "$string:reason",
+                "usedScene": {
+                    "abilities": ["FormAbility"],
+                    "when": "inuse"
+                }
+		    }
+        ],
         "definePermissions":[
             {
                 "name":"ohos.abilitydemo.permission.PROVIDER",
