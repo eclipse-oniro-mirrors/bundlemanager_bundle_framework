@@ -40,7 +40,7 @@ int AppControlHost::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     BundleMemoryGuard memoryGuard;
-    LOG_I(BMS_TAG_DEFAULT, "AppControlHost OnRemoteRequest, message code : %{public}u", code);
+    APP_LOGD("AppControlHost OnRemoteRequest, message code : %{public}u", code);
     std::u16string descriptor = AppControlHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
