@@ -727,13 +727,13 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
     RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionInfo.name, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
 
-    // labelId: int
+    // labelId: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, extensionInfo.labelId));
 
-    // descriptionId: int
+    // descriptionId: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, extensionInfo.descriptionId));
 
-    // iconId: int
+    // iconId: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, extensionInfo.iconId));
 
     // exported: boolean
@@ -778,7 +778,7 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
     RETURN_NULL_IF_NULL(aSkillsObject);
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SKILLS, aSkillsObject));
 
-    // appIndex: int
+    // appIndex: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, extensionInfo.appIndex));
 
     return object;
@@ -804,7 +804,7 @@ ani_object CommonFunAni::ConvertResource(ani_env* env, const Resource& resource)
     RETURN_NULL_IF_FALSE(StringToAniStr(env, resource.moduleName, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
 
-    // id: int
+    // id: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ID, resource.id));
 
     return object;
@@ -834,9 +834,10 @@ ani_object CommonFunAni::ConvertSignatureInfo(ani_env* env, const SignatureInfo&
     RETURN_NULL_IF_FALSE(StringToAniStr(env, signatureInfo.appIdentifier, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPIDENTIFIER, string));
 
-    // certificate: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, signatureInfo.certificate, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_CERTIFICATE, string));
+    // certificate?: string
+    if (StringToAniStr(env, signatureInfo.certificate, string)) {
+        RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_CERTIFICATE, string));
+    }
 
     return object;
 }
@@ -930,7 +931,7 @@ ani_object CommonFunAni::ConvertRequestPermission(ani_env* env, const RequestPer
     RETURN_NULL_IF_FALSE(StringToAniStr(env, requestPermission.reason, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_REASON, string));
 
-    // reasonId: int
+    // reasonId: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_REASONID, requestPermission.reasonId));
 
     // usedScene: UsedScene
@@ -1003,7 +1004,7 @@ ani_object CommonFunAni::ConvertDependency(ani_env* env, const Dependency& depen
     RETURN_NULL_IF_FALSE(StringToAniStr(env, dependency.bundleName, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
 
-    // versionCode: int
+    // versionCode: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONCODE, dependency.versionCode));
 
     return object;
@@ -1212,7 +1213,7 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
     RETURN_NULL_IF_FALSE(StringToAniStr(env, skillUri.host, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_HOST, string));
 
-    // port: int
+    // port: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PORT, std::stoi(skillUri.port)));
 
     // path: string
@@ -1235,7 +1236,7 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
     RETURN_NULL_IF_FALSE(StringToAniStr(env, skillUri.utd, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_UTD, string));
 
-    // maxFileSupported: int
+    // maxFileSupported: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MAXFILESUPPORTED, skillUri.maxFileSupported));
 
     if (!isExtension) {
@@ -1326,49 +1327,49 @@ ani_object CommonFunAni::ConvertShortcutInfo(ani_env* env, const ShortcutInfo& s
 
     ani_string string = nullptr;
 
-    // id: string;
+    // id: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, shortcutInfo.id, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ID, string));
 
-    // bundleName: string;
+    // bundleName: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, shortcutInfo.bundleName, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
 
-    // moduleName?: string;
+    // moduleName?: string
     if (StringToAniStr(env, shortcutInfo.moduleName, string)) {
         RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_MODULENAME, string));
     }
 
-    // hostAbility?: string;
+    // hostAbility?: string
     if (StringToAniStr(env, shortcutInfo.hostAbility, string)) {
         RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_HOSTABILITY, string));
     }
 
-    // icon?: string;
+    // icon?: string
     if (StringToAniStr(env, shortcutInfo.icon, string)) {
         RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_ICON, string));
     }
 
-    // iconId?: int;
+    // iconId?: number
     RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_ICONID, shortcutInfo.iconId));
 
-    // label?: string;
+    // label?: string
     if (StringToAniStr(env, shortcutInfo.label, string)) {
         RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_LABEL, string));
     }
 
-    // labelId?: int;
+    // labelId?: number
     RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_LABELID, shortcutInfo.labelId));
 
-    // wants?: Array<ShortcutWant>;
+    // wants?: Array<ShortcutWant>
     ani_object aShortcutWantObject = ConvertAniArray(env, shortcutInfo.intents, ConvertShortcutIntent);
     RETURN_NULL_IF_NULL(aShortcutWantObject);
     RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_WANTS, aShortcutWantObject));
 
-    // appIndex: int;
+    // appIndex: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, shortcutInfo.appIndex));
 
-    // sourceType: int;
+    // sourceType: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SOURCETYPE, shortcutInfo.sourceType));
 
     return object;
@@ -1386,20 +1387,20 @@ ani_object CommonFunAni::ConvertShortcutIntent(ani_env* env, const ShortcutInten
 
     ani_string string = nullptr;
 
-    // targetBundle: string;
+    // targetBundle: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, shortcutIntent.targetBundle, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TARGETBUNDLE, string));
 
-    // targetModule?: string;
+    // targetModule?: string
     if (StringToAniStr(env, shortcutIntent.targetModule, string)) {
         RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_TARGETMODULE, string));
     }
 
-    // targetAbility: string;
+    // targetAbility: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, shortcutIntent.targetClass, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TARGETABILITY, string));
 
-    // parameters?: Array<ParameterItem>;
+    // parameters?: Array<ParameterItem>
     ani_object aParameters = ConvertAniArray(env, shortcutIntent.parameters, ConvertShortcutIntentParameter);
     RETURN_NULL_IF_NULL(aParameters);
     RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_PARAMETERS, aParameters));
@@ -1444,7 +1445,7 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
         shortcutInfo.icon = AniStrToString(env, string);
     }
 
-    // iconId?: int
+    // iconId?: number
     if (CallGetterOptional(env, object, PROPERTYNAME_ICONID, &intValue)) {
         shortcutInfo.iconId = intValue;
     }
@@ -1454,7 +1455,7 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
         shortcutInfo.label = AniStrToString(env, string);
     }
 
-    // labelId?: int
+    // labelId?: number
     if (CallGetterOptional(env, object, PROPERTYNAME_LABELID, &intValue)) {
         shortcutInfo.labelId = intValue;
     }
@@ -1465,11 +1466,11 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
         RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, shortcutInfo.intents, ParseShortcutIntent));
     }
 
-    // appIndex: int
+    // appIndex: number
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPINDEX, &intValue));
     shortcutInfo.appIndex = intValue;
 
-    // sourceType: int
+    // sourceType: number
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SOURCETYPE, &intValue));
     shortcutInfo.sourceType = intValue;
 
