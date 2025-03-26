@@ -724,6 +724,9 @@ private:
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    ErrCode DeleteEl1ShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
+    ErrCode DeleteBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
+        const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
     ErrCode CleanBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
         const std::string &bundleName, int32_t userId) const;
