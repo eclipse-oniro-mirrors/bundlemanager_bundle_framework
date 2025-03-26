@@ -60,6 +60,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     // 1. check whether original application installed or not
     InnerBundleInfo info;
     bool isExist = false;
+    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
         APP_LOGE("the bundle is not installed");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_APP_NOT_EXISTED;
