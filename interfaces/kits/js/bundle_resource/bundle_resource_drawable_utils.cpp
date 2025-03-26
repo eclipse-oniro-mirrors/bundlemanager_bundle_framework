@@ -72,7 +72,6 @@ napi_value BundleResourceDrawableUtils::ConvertToDrawableDescriptor(napi_env env
     for (size_t index = 0; index < lenBackground; ++index) {
         backgroundPtr[index] = background[index];
     }
-    std::unique_ptr<uint8_t[]> jsonBuf;
     std::string themeMask = (resourceManager_ == nullptr) ? "" : resourceManager_->GetThemeMask();
 
     std::pair<std::unique_ptr<uint8_t[]>, size_t> foregroundPair;
@@ -81,10 +80,12 @@ napi_value BundleResourceDrawableUtils::ConvertToDrawableDescriptor(napi_env env
     std::pair<std::unique_ptr<uint8_t[]>, size_t> backgroundPair;
     backgroundPair.first = std::move(backgroundPtr);
     backgroundPair.second = lenBackground;
+    std::pair<int32_t, int32_t> decoderSize;
+    decoderSize.first = decodeSize;
+    decoderSize.second = decodeSize;
     std::unique_ptr<Ace::Napi::DrawableDescriptor> drawableDescriptor =
-        std::make_unique<Ace::Napi::LayeredDrawableDescriptor>(std::move(jsonBuf), 0, resourceManager_, themeMask, 1,
-        foregroundPair, backgroundPair);
-    drawableDescriptor->SetDecodeSize(decodeSize, decodeSize);
+        std::make_unique<Ace::Napi::LayeredDrawableDescriptor>(0, themeMask, 1, foregroundPair, backgroundPair,
+        decoderSize);
     return Ace::Napi::JsDrawableDescriptor::ToNapi(env, drawableDescriptor.release(),
         Ace::Napi::DrawableDescriptor::DrawableType::LAYERED);
 #else
