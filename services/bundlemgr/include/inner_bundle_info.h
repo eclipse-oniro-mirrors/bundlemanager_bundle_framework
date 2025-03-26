@@ -2226,6 +2226,7 @@ public:
     static uint8_t GetSanitizerFlag(GetInnerModuleInfoFlag flag);
     void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
     std::string GetApplicationCodeLanguage() const;
+    std::string GetModuleCodeLanguage(const std::string &moduleName) const;
 
 private:
     bool IsExistLauncherAbility() const;

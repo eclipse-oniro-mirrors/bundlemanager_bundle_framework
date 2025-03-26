@@ -1316,10 +1316,10 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1700, Function | SmallTest | Level0)
     std::string hapPath = "";
     uint32_t offset = OFFSET;
     uint32_t length = LENGTH;
-    bool result = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, offset, length);
+    bool result = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, Constants::CODE_LANGUAGE_1_1, offset, length);
     EXPECT_FALSE(result);
     hapPath = HAP_PATH;
-    result = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, offset, length);
+    result = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, Constants::CODE_LANGUAGE_1_1, offset, length);
     EXPECT_FALSE(result);
 }
 

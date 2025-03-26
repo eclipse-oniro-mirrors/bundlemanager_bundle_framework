@@ -27,6 +27,7 @@ struct HspInfo : public Parcelable {
     std::string hapPath;
     uint32_t offset = 0;
     uint32_t length = 0;
+    std::string codeLanguage;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);
@@ -53,6 +54,7 @@ struct AOTArgs : public Parcelable {
     std::string optBCRangeList;
     uint32_t isScreenOff = 0;
     uint32_t isEnableBaselinePgo = 0;
+    std::string codeLanguage;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);

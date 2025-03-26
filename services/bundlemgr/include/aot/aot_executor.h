@@ -44,7 +44,9 @@ private:
 
     std::string DecToHex(uint32_t decimal) const;
     bool CheckArgs(const AOTArgs &aotArgs) const;
-    bool GetAbcFileInfo(const std::string &hapPath, uint32_t &offset, uint32_t &length) const;
+    std::string GetAbcRelativePath(const std::string &codeLanguage) const;
+    bool GetAbcFileInfo(const std::string &hapPath, const std::string &codeLanguage,
+        uint32_t &offset, uint32_t &length) const;
     ErrCode PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) const;
     nlohmann::json GetSubjectInfo(const AOTArgs &aotArgs) const;
     void MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap);
