@@ -21,6 +21,7 @@
 #include "bms_rdb_config.h"
 #include "bms_rdb_open_callback.h"
 #include "rdb_helper.h"
+#include "single_delayed_task_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -62,6 +63,7 @@ public:
     void SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode);
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
+    void GetRdbStoreFromNative();
     int32_t InsertWithRetry(std::shared_ptr<NativeRdb::RdbStore> rdbStore, int64_t &rowId,
         const NativeRdb::ValuesBucket &valuesBucket);
     bool IsRetryErrCode(int32_t errCode);
@@ -72,6 +74,7 @@ private:
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
 
     BmsRdbConfig bmsRdbConfig_;
+    std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -30,7 +30,7 @@ constexpr const char* BMS_VALUE = "VALUE";
 constexpr int8_t BMS_KEY_INDEX = 0;
 constexpr int8_t BMS_VALUE_INDEX = 1;
 constexpr int16_t WRITE_TIMEOUT = 300; // 300s
-constexpr int8_t CLOSE_TIME = 20; // delay 20s stop rdbStore
+constexpr int32_t CLOSE_TIME = 20 * 1000; // delay 20s stop rdbStore
 constexpr const char* BMS_BACK_UP_RDB_NAME = "bms-backup.db";
 constexpr int32_t OPERATION_TYPE_OF_INSUFFICIENT_DISK = 3;
 static std::atomic<int64_t> g_lastReportTime = 0;
@@ -46,6 +46,7 @@ std::mutex RdbDataManager::restoreRdbMutex_;
 RdbDataManager::RdbDataManager(const BmsRdbConfig &bmsRdbConfig)
     : bmsRdbConfig_(bmsRdbConfig)
 {
+    delayedTaskMgr_ = std::make_shared<SingleDelayedTaskMgr>(bmsRdbConfig.tableName, CLOSE_TIME);
 }
 
 RdbDataManager::~RdbDataManager()
@@ -58,12 +59,8 @@ void RdbDataManager::ClearCache()
     NativeRdb::RdbHelper::ClearCache();
 }
 
-std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
+void RdbDataManager::GetRdbStoreFromNative()
 {
-    std::lock_guard<std::mutex> lock(rdbMutex_);
-    if (rdbStore_ != nullptr) {
-        return rdbStore_;
-    }
     std::lock_guard<std::mutex> restoreLock(restoreRdbMutex_);
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
@@ -88,7 +85,7 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     if (rdbStore_ == nullptr) {
         APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
         SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::OPEN), errCode);
-        return nullptr;
+        return;
     }
     CheckSystemSizeAndHisysEvent(bmsRdbConfig_.dbPath, bmsRdbConfig_.dbName);
     if (!isInitial_ && !isNeedRebuildDb) {
@@ -105,6 +102,14 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
             APP_LOGE("rdb restore failed ret:%{public}d", restoreRet);
         }
         SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), rebuildCode);
+    }
+}
+
+std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
+{
+    std::lock_guard<std::mutex> lock(rdbMutex_);
+    if (rdbStore_ == nullptr) {
+        GetRdbStoreFromNative();
     }
 
     if (rdbStore_ != nullptr) {
@@ -404,7 +409,7 @@ bool RdbDataManager::CreateTable()
     }
     int ret = rdbStore->ExecuteSql(createTableSql);
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("CreateTable failed, ret: %{public}d", ret);
+        APP_LOGE("CreateTable %{public}s failed, ret: %{public}d", bmsRdbConfig_.tableName.c_str(), ret);
         return false;
     }
     for (const auto &sql : bmsRdbConfig_.insertColumnSql) {
@@ -421,20 +426,16 @@ void RdbDataManager::DelayCloseRdbStore()
     APP_LOGD("RdbDataManager DelayCloseRdbStore start");
     std::weak_ptr<RdbDataManager> weakPtr = shared_from_this();
     auto task = [weakPtr]() {
-        APP_LOGD("RdbDataManager DelayCloseRdbStore thread begin");
-        std::this_thread::sleep_for(std::chrono::seconds(CLOSE_TIME));
+        APP_LOGD("DelayCloseRdbStore thread begin");
         auto sharedPtr = weakPtr.lock();
         if (sharedPtr == nullptr) {
             return;
         }
         std::lock_guard<std::mutex> lock(sharedPtr->rdbMutex_);
         sharedPtr->rdbStore_ = nullptr;
-        APP_LOGD("RdbDataManager DelayCloseRdbStore thread end");
+        APP_LOGD("DelayCloseRdbStore of %{public}s thread end", sharedPtr->bmsRdbConfig_.tableName.c_str());
     };
-    APP_LOGI_NOFUNC("th");
-    std::thread closeRdbStoreThread(task);
-    APP_LOGI_NOFUNC("th end");
-    closeRdbStoreThread.detach();
+    delayedTaskMgr_->ScheduleDelayedTask(task);
 }
 
 bool RdbDataManager::RdbIntegrityCheckNeedRestore()
