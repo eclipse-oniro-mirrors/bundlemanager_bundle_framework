@@ -558,54 +558,46 @@ static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
         napi_get_undefined(env,  &promise);
     }
 
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, "JSLauncherServiceOn", NAPI_AUTO_LENGTH, &resource);
-
-    napi_create_async_work(
-        env, nullptr, resource,
-        [](napi_env env, void* data) {
-            APP_LOGI("JSLauncherServiceOn asyn work done");
-        },
-        [](napi_env env, napi_status status, void* data) {
-            AsyncHandleBundleContext *asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext *>(data);
-            if (!asyncCallbackInfo->err) {
-                asyncCallbackInfo->ret = InnerJSLauncherServiceOn(env, asyncCallbackInfo->bundleStatusCallback);
-            }
-            napi_value result[2] = { 0 };
-            // wrap result
-            if (asyncCallbackInfo->err) {
-                napi_create_uint32(env, asyncCallbackInfo->err, &result[0]);
-                napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(), NAPI_AUTO_LENGTH, &result[1]);
+    auto task = [env, asyncCallbackInfo]() {
+        APP_LOGI("JSLauncherServiceOn start");
+        if (!asyncCallbackInfo->err) {
+            asyncCallbackInfo->ret = InnerJSLauncherServiceOn(env, asyncCallbackInfo->bundleStatusCallback);
+        }
+        napi_value result[2] = { 0 };
+        // wrap result
+        if (asyncCallbackInfo->err) {
+            napi_create_uint32(env, asyncCallbackInfo->err, &result[0]);
+            napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(), NAPI_AUTO_LENGTH, &result[1]);
+        } else {
+            if (asyncCallbackInfo->ret) {
+                napi_create_uint32(env, OPERATION_SUCESS, &result[0]);
+                napi_create_string_utf8(env, "register success", NAPI_AUTO_LENGTH, &result[1]);
             } else {
-                if (asyncCallbackInfo->ret) {
-                    napi_create_uint32(env, OPERATION_SUCESS, &result[0]);
-                    napi_create_string_utf8(env, "register success", NAPI_AUTO_LENGTH, &result[1]);
-                } else {
-                    napi_create_uint32(env, OPERATION_FAILED, &result[0]);
-                    napi_create_string_utf8(env, "register failed", NAPI_AUTO_LENGTH, &result[1]);
-                }
+                napi_create_uint32(env, OPERATION_FAILED, &result[0]);
+                napi_create_string_utf8(env, "register failed", NAPI_AUTO_LENGTH, &result[1]);
             }
-            // callback or promise return
-            if (asyncCallbackInfo->deferred) {
-                if (asyncCallbackInfo->ret) {
-                    napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]);
-                } else {
-                    napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]);
-                }
+        }
+        // callback or promise return
+        if (asyncCallbackInfo->deferred) {
+            if (asyncCallbackInfo->ret) {
+                napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]);
             } else {
-                napi_value callback = nullptr;
-                napi_value placeHolder = nullptr;
-                napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
-                napi_call_function(env, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
-                napi_delete_reference(env, asyncCallbackInfo->callbackRef);
+                napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]);
             }
-            napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
-            delete asyncCallbackInfo;
-            asyncCallbackInfo = nullptr;
-        },
-        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
-    napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
-
+        } else {
+            napi_value callback = nullptr;
+            napi_value placeHolder = nullptr;
+            napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
+            napi_call_function(env, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
+            napi_delete_reference(env, asyncCallbackInfo->callbackRef);
+        }
+        napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
+        delete asyncCallbackInfo;
+        APP_LOGI("JSLauncherServiceOn end");
+    };
+    if (napi_status::napi_ok != napi_send_event(env, task, napi_eprio_high)) {
+        APP_LOGE("napi_send_event failed");
+    }
     return promise;
 }
 
@@ -625,36 +617,41 @@ static bool InnerJSLauncherServiceOff()
     return true;
 }
 
-static void LauncherServiceOffComplete(napi_env env, napi_status status, void* data)
+static void LauncherServiceOffSendEvent(napi_env env, AsyncHandleBundleContext *asyncCallbackInfo)
 {
-    AsyncHandleBundleContext *asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext*>(data);
-    if (!asyncCallbackInfo->err) {
-        asyncCallbackInfo->ret = InnerJSLauncherServiceOff();
-    }
-    napi_value result[INDEX_TWO] = { 0 };
-    if (asyncCallbackInfo->ret) {
-        napi_create_uint32(env, 0, &result[0]);
-        napi_create_string_utf8(env, "unregister success", NAPI_AUTO_LENGTH, &result[INDEX_ONE]);
-    } else {
-        napi_create_uint32(env, INDEX_ONE, &result[0]);
-        napi_create_string_utf8(env, "unregister failed", NAPI_AUTO_LENGTH, &result[INDEX_ONE]);
-    }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->ret) {
-            napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[INDEX_ONE]);
-        } else {
-            napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]);
+    auto task = [env, asyncCallbackInfo]() {
+        APP_LOGI("JSLauncherServiceOff start");
+        if (!asyncCallbackInfo->err) {
+            asyncCallbackInfo->ret = InnerJSLauncherServiceOff();
         }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
-        napi_delete_reference(env, asyncCallbackInfo->callbackRef);
+        napi_value result[INDEX_TWO] = { 0 };
+        if (asyncCallbackInfo->ret) {
+            napi_create_uint32(env, 0, &result[0]);
+            napi_create_string_utf8(env, "unregister success", NAPI_AUTO_LENGTH, &result[INDEX_ONE]);
+        } else {
+            napi_create_uint32(env, INDEX_ONE, &result[0]);
+            napi_create_string_utf8(env, "unregister failed", NAPI_AUTO_LENGTH, &result[INDEX_ONE]);
+        }
+        if (asyncCallbackInfo->deferred) {
+            if (asyncCallbackInfo->ret) {
+                napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[INDEX_ONE]);
+            } else {
+                napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]);
+            }
+        } else {
+            napi_value callback = nullptr;
+            napi_value placeHolder = nullptr;
+            napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
+            napi_call_function(env, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
+            napi_delete_reference(env, asyncCallbackInfo->callbackRef);
+        }
+        napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
+        delete asyncCallbackInfo;
+        APP_LOGI("JSLauncherServiceOff end");
+    };
+    if (napi_status::napi_ok != napi_send_event(env, task, napi_eprio_high)) {
+        APP_LOGE("napi_send_event failed");
     }
-    napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
-    delete asyncCallbackInfo;
-    asyncCallbackInfo = nullptr;
 }
 
 static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
@@ -698,13 +695,7 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
     } else {
         napi_get_undefined(env,  &promise);
     }
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, "JSLauncherServiceOn", NAPI_AUTO_LENGTH, &resource);
-    napi_create_async_work(
-        env, nullptr, resource, [](napi_env env, void* data) {
-            APP_LOGI("JSLauncherServiceOn asyn work done");
-        }, LauncherServiceOffComplete, reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
-    napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
+    LauncherServiceOffSendEvent(env, asyncCallbackInfo);
     return promise;
 }
 
