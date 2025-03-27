@@ -461,11 +461,24 @@ HWTEST_F(BmsBundleCloneInstallerTest, GetDeveloperId_0100, Function | SmallTest 
 HWTEST_F(BmsBundleCloneInstallerTest, RemoveEl5Dir_0100, Function | SmallTest | Level1)
 {
     InnerBundleUserInfo userInfo;
-    int32_t uid = 0;
-    int32_t appIndex = 0;
-    int32_t userId = 0;
+    int32_t uid = 1;
+    int32_t appIndex = 1;
+    int32_t userId = 1;
     bundleCloneInstall_->RemoveEl5Dir(userInfo, uid, userId, appIndex);
     EXPECT_EQ(userInfo.cloneInfos.find(std::to_string(appIndex)), userInfo.cloneInfos.end());
+
+    InnerBundleCloneInfo InnerBundleCloneInfotest;
+    appIndex = 100;
+    std::string key = std::to_string(appIndex);
+    userInfo.cloneInfos.insert({key, InnerBundleCloneInfotest});
+    bundleCloneInstall_->RemoveEl5Dir(userInfo, uid, userId, appIndex);
+    EXPECT_NE(userInfo.cloneInfos.find(std::to_string(appIndex)), userInfo.cloneInfos.end());
+
+    userInfo.cloneInfos[key].keyId = "test_key";
+    bundleCloneInstall_->RemoveEl5Dir(userInfo, uid, userId, appIndex);
+    auto it = userInfo.cloneInfos.find(std::to_string(appIndex));
+    EXPECT_FALSE(it->second.keyId.empty());
+    userInfo.cloneInfos.clear();
 }
 
 /**
@@ -481,6 +494,15 @@ HWTEST_F(BmsBundleCloneInstallerTest, CreateEl5Dir_0100, Function | SmallTest | 
     int32_t appIndex = 0;
     bundleCloneInstall_->CreateEl5Dir(innerBundleInfo, uid, userId, appIndex);
     EXPECT_EQ(innerBundleInfo.GetBundleName(), "");
+
+    RequestPermission requestPermission;
+    requestPermission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "testname";
+    innerModuleInfo.requestPermissions.emplace_back(requestPermission);
+    innerBundleInfo.innerModuleInfos_.try_emplace("test", innerModuleInfo);
+    bundleCloneInstall_->CreateEl5Dir(innerBundleInfo, uid, userId, appIndex);
+    EXPECT_EQ(bundleCloneInstall_->GetDataMgr(), ERR_OK);
 }
 
 /**
