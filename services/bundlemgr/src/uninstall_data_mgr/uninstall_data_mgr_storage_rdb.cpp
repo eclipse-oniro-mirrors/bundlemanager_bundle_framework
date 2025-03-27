@@ -24,7 +24,6 @@ namespace {
 const char* const UNINSTALL_BUNDLE_TABLE_NAME = "uninstall_bundle_info";
 const char* const BUNDLENAME = "BUNDLENAME";
 const char* const UNINSTALL_BUNDLE_INFO = "UNINSTALL_BUNDLE_INFO";
-const int8_t KEY_INDEX = 0;
 const int8_t BUNDLE_INFO_INDEX = 1;
 }
 UninstallDataMgrStorageRdb::UninstallDataMgrStorageRdb()

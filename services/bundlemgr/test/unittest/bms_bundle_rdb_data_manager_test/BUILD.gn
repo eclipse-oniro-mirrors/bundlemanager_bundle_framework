@@ -33,6 +33,7 @@ ohos_unittest("BmsBundleRdbDataManagerTest") {
   ]
   sources = [
     "${services_path}/bundlemgr/src/bundle_util.cpp",
+    "${services_path}/bundlemgr/src/common/single_delayed_task_mgr.cpp",
     "${services_path}/bundlemgr/src/event_report.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",

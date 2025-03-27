@@ -27,7 +27,6 @@ const char* const BUNDLE_NAME = "BUNDLE_NAME";
 const char* const MODULE_NAME = "MODULE_NAME";
 const char* const ROUTER_MAP_INFO = "ROUTER_MAP_INFO";
 const int8_t BUNDLE_NAME_INDEX = 0;
-const int8_t MODULE_NAME_INDEX = 1;
 const int8_t ROUTER_INFO_INDEX = 2;
 }
 RouterDataStorageRdb::RouterDataStorageRdb()
