@@ -77,6 +77,13 @@ private:
     ErrCode SetDefaultApplicationInternal(
         int32_t userId, const std::string& normalizedType, const Element& element) const;
     ErrCode ResetDefaultApplicationInternal(int32_t userId, const std::string& normalizedType) const;
+    void GetDefaultInfo(const int32_t userId, const std::vector<std::string>& normalizedTypeVec,
+        std::unordered_map<std::string, std::pair<bool, Element>>& defaultInfo) const;
+    bool SendDefaultAppChangeEventIfNeeded(const int32_t userId, const std::vector<std::string>& normalizedTypeVec,
+        const std::unordered_map<std::string, std::pair<bool, Element>>& originMap) const;
+    bool ShouldSendEvent(
+        bool originalResult, const Element& originalElement, bool currentResult, const Element& currentElement) const;
+    bool SendDefaultAppChangeEvent(const int32_t userId, const std::vector<std::string>& typeVec) const;
 
     std::shared_ptr<IDefaultAppDb> defaultAppDb_;
     mutable std::mutex mutex_;

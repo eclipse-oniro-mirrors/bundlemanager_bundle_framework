@@ -27,7 +27,7 @@ struct Element {
     std::string extensionName;
     std::string type;
 
-    bool operator==(const Element& other)
+    bool operator==(const Element& other) const
     {
         if (this->bundleName == other.bundleName && this->moduleName == other.moduleName
             && this->abilityName == other.abilityName && this->extensionName == other.extensionName) {
