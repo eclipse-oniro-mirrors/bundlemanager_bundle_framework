@@ -27,6 +27,7 @@ namespace BundleManager {
 extern "C" {
     FFI_EXPORT int32_t FfiOHOSGetCallingUid();
     FFI_EXPORT RetBundleInfo FfiOHOSGetBundleInfoForSelf(int32_t bundleFlags);
+    FFI_EXPORT RetBundleInfoV2 FfiOHOSGetBundleInfoForSelfV2(int32_t bundleFlags);
     FFI_EXPORT int32_t FfiOHOSVerifyAbc(CArrString cAbcPaths, bool deleteOriginalFiles);
     FFI_EXPORT RetCArrString FfiGetProfileByExtensionAbility(
         char* moduleName, char* extensionAbilityName, char* metadataName);
