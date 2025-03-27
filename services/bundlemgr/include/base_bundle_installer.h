@@ -643,6 +643,8 @@ private:
     void DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName = "");
     ErrCode UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName);
     ErrCode UninstallHspVersion(std::string &uninstallDir, int32_t versionCode, InnerBundleInfo &info);
+    ErrCode UninstallHspAndBundle(InnerBundleInfo &info, int32_t &versionCode,
+        std::string &uninstallDir);
     ErrCode CheckProxyDatas(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool CheckDuplicateProxyData(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool CheckDuplicateProxyData(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo);
