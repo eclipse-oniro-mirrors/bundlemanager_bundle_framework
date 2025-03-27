@@ -149,6 +149,7 @@ struct HapModuleInfo : public Parcelable {
     std::string bundleName;
     std::string mainElementName;
     std::string pages;
+    std::string systemTheme;
     std::string process;
     std::string resourcePath;
     std::string srcEntrance;
