@@ -871,6 +871,7 @@ private:
     ErrCode HandleGetBundleNameByAppId(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAllPluginInfo(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetPluginInfosForSelf(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetDirByBundleNameAndAppIndex(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllBundleDirs(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetAppDistributionTypes(MessageParcel &data, MessageParcel &reply);

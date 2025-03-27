@@ -204,6 +204,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_LAUNCHER_ABILITY_INFO_SYNC = 179,
     GET_BUNDLE_MGR_EXT_PROXY = 180,
     GET_ALL_PLUGIN_INFO = 181,
+    GET_PLUGIN_INFOS_FOR_SELF = 182,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

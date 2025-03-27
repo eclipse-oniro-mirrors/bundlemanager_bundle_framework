@@ -1072,6 +1072,7 @@ public:
     virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName) override;
     virtual ErrCode GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
         std::vector<PluginBundleInfo> &pluginBundleInfos) override;
+    virtual ErrCode GetPluginInfosForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos) override;
     virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir) override;
     virtual ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs) override;

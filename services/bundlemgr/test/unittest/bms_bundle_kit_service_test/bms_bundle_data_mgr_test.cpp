@@ -7837,6 +7837,65 @@ HWTEST_F(BmsBundleDataMgrTest, IsBundleInstalled_0005, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: GetAllPluginInfo_0001
+ * @tc.name: GetAllPluginInfo
+ * @tc.desc: test GetAllPluginInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllPluginInfo_0001, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = bundleDataMgr->GetAllPluginInfo(BUNDLE_NAME_TEST, 200, pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetAllPluginInfo_0002
+ * @tc.name: GetAllPluginInfo
+ * @tc.desc: test GetAllPluginInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllPluginInfo_0002, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    bundleDataMgr->AddUserId(100);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = bundleDataMgr->GetAllPluginInfo(BUNDLE_NAME_TEST, 100, pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ret = bundleDataMgr->GetAllPluginInfo("", 100, pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAllPluginInfo_0003
+ * @tc.name: GetAllPluginInfo
+ * @tc.desc: test GetAllPluginInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllPluginInfo_0003, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    bundleDataMgr->AddUserId(100);
+    bundleDataMgr->AddUserId(101);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_TEST;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_NAME_TEST + "_100", innerBundleUserInfo);
+    bundleDataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret1 = bundleDataMgr->GetAllPluginInfo(BUNDLE_NAME_TEST, 100, pluginBundleInfos);
+    EXPECT_EQ(ret1, ERR_OK);
+    auto ret2 = bundleDataMgr->GetAllPluginInfo(BUNDLE_NAME_TEST, 101, pluginBundleInfos);
+    EXPECT_EQ(ret2, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
  * @tc.number: GetAllBundleDirs_0001
  * @tc.name: GetAllBundleDirs
  * @tc.desc: test GetAllBundleDirs

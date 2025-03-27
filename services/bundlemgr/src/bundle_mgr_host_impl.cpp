@@ -4972,6 +4972,24 @@ ErrCode BundleMgrHostImpl::GetAllPluginInfo(const std::string &hostBundleName, i
     return dataMgr->GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
 }
 
+ErrCode BundleMgrHostImpl::GetPluginInfosForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos)
+{
+    APP_LOGD("start GetPluginInfosForSelf");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::string callingBundleName;
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    ErrCode ret = dataMgr->GetNameForUid(uid, callingBundleName);
+    if (ret != ERR_OK) {
+        APP_LOGE("get bundleName failed %{public}d %{public}d", ret, uid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    return dataMgr->GetAllPluginInfo(callingBundleName, BundleUtil::GetUserIdByUid(uid), pluginBundleInfos);
+}
+
 ErrCode BundleMgrHostImpl::GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
 {
     APP_LOGD("start GetBundleNameByAppId");
