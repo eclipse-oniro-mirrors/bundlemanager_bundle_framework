@@ -56,7 +56,7 @@ public:
 private:
     ErrCode CreateSandboxDataDir(InnerBundleInfo &info, const int32_t &uid, const int32_t &appIndex) const;
     void SandboxAppRollBack(InnerBundleInfo &info, const int32_t &userId);
-    bool GetInnerBundleInfoWithDisable(InnerBundleInfo &info, bool &isAppExist);
+    bool FetchInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist);
     ErrCode GetDataMgr();
     ErrCode GetSandboxDataMgr();
 

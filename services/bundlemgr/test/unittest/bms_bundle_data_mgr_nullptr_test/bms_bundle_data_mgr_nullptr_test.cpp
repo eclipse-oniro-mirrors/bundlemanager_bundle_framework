@@ -697,15 +697,15 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0030, Function | Mediu
 
 /**
  * @tc.number: BundleSandboxInstaller_0010
- * @tc.name: test GetInnerBundleInfoWithDisable
- * @tc.desc: 1.Test GetInnerBundleInfoWithDisable the BundleSandboxInstaller
+ * @tc.name: test FetchInnerBundleInfo
+ * @tc.desc: 1.Test FetchInnerBundleInfo the BundleSandboxInstaller
 */
 HWTEST_F(BmsBundleDataMgrNullptrTest, BundleSandboxInstaller_0010, Function | MediumTest | Level1)
 {
     BundleSandboxInstaller installer;
     InnerBundleInfo oldInfo;
     bool isAppExist = false;
-    auto ret = installer.GetInnerBundleInfoWithDisable(oldInfo, isAppExist);
+    auto ret = installer.FetchInnerBundleInfo(oldInfo, isAppExist);
     EXPECT_EQ(ret, false);
 }
 
