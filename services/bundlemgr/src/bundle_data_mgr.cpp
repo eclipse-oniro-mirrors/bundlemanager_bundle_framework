@@ -5354,6 +5354,11 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
         return nullptr;
     }
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    if (resourceManager == nullptr) {
+        APP_LOGE("InitResMgr failed, -h:%{public}s", hapPath.c_str());
+        return nullptr;
+    }
+
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
     if (!resConfig) {
         APP_LOGE("resConfig is nullptr");
@@ -6683,6 +6688,10 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
     BundleInfo bundleInfo;
     innerBundleInfo.GetBundleInfo(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, responseUserId);
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    if (resourceManager == nullptr) {
+        APP_LOGE("InitResourceManager failed, bundleName:%{public}s", bundleName.c_str());
+        return nullptr;
+    }
 
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
     if (!resConfig) {
