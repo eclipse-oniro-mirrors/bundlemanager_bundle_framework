@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <charconv>
+
 #include "app_log_wrapper.h"
 #include "common_fun_ani.h"
 #include "enum_util.h"
@@ -22,7 +24,8 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* CLASSNAME_STDSTRING = "Lstd/core/String;";
 constexpr const char* CLASSNAME_ABILITYINFO = "LbundleManager/AbilityInfoInner/AbilityInfoInner;";
-constexpr const char* CLASSNAME_EXTENSIONABILITYINFO = "LbundleManager/ExtensionAbilityInfo/ExtensionAbilityInfoInner;";
+constexpr const char* CLASSNAME_EXTENSIONABILITYINFO =
+    "LbundleManager/ExtensionAbilityInfoInner/ExtensionAbilityInfoInner;";
 constexpr const char* CLASSNAME_WINDOWSIZE = "LbundleManager/AbilityInfoInner/WindowSizeInner;";
 constexpr const char* CLASSNAME_APPLICATIONINFO = "LbundleManager/ApplicationInfoInner/ApplicationInfoInner;";
 constexpr const char* CLASSNAME_MODULEMETADATA = "LbundleManager/ApplicationInfoInner/ModuleMetadataInner;";
@@ -1214,7 +1217,15 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_HOST, string));
 
     // port: number
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PORT, std::stoi(skillUri.port)));
+    int32_t nPort = 0;
+    if (!skillUri.port.empty()) {
+        auto [ptr, ec] = std::from_chars(skillUri.port.data(), skillUri.port.data() + skillUri.port.size(), nPort);
+        if (ec != std::errc() || ptr != skillUri.port.data() + skillUri.port.size()) {
+            APP_LOGE("skillUri port convert failed");
+            return nullptr;
+        }
+    }
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PORT, nPort));
 
     // path: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, skillUri.path, string));
