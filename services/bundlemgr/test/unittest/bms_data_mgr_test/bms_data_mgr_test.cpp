@@ -3038,7 +3038,7 @@ HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0001, Function | MediumTest | Le
 {
     std::string hapPath;
     std::vector<ShortcutInfo> shortcutInfos;
-    bool result = dataMgr_->InnerProcessShortcutId(hapPath, shortcutInfos);
+    bool result = dataMgr_->InnerProcessShortcutId(0, hapPath, shortcutInfos);
     EXPECT_FALSE(result);
 }
 
@@ -3054,7 +3054,7 @@ HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0002, Function | MediumTest | Le
     shortcutInfo.id = "id_1";
     shortcutInfos.emplace_back(shortcutInfo);
     std::string hapPath;
-    bool result = dataMgr_->InnerProcessShortcutId(hapPath, shortcutInfos);
+    bool result = dataMgr_->InnerProcessShortcutId(0, hapPath, shortcutInfos);
     EXPECT_FALSE(result);
 }
 
@@ -3069,8 +3069,14 @@ HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0003, Function | MediumTest | Le
     ShortcutInfo shortcutInfo;
     shortcutInfo.id = "$string:11111";
     shortcutInfos.emplace_back(shortcutInfo);
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    EXPECT_NE(bmsPara, nullptr);
+    if (bmsPara) {
+        bool ret = bmsPara->SaveBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, "100");
+        EXPECT_TRUE(ret);
+    }
     std::string hapPath;
-    bool result = dataMgr_->InnerProcessShortcutId(hapPath, shortcutInfos);
+    bool result = dataMgr_->InnerProcessShortcutId(101, hapPath, shortcutInfos);
     EXPECT_FALSE(result);
 }
 
@@ -3091,9 +3097,14 @@ HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0004, Function | MediumTest | Le
     ShortcutInfo shortcutInfo_3;
     shortcutInfo_3.id = "$string:xxxx";
     shortcutInfos.emplace_back(shortcutInfo_3);
-
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    EXPECT_NE(bmsPara, nullptr);
+    if (bmsPara) {
+        bool ret = bmsPara->SaveBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, "100");
+        EXPECT_TRUE(ret);
+    }
     std::string hapPath = HAP_FILE_PATH1;
-    bool result = dataMgr_->InnerProcessShortcutId(hapPath, shortcutInfos);
+    bool result = dataMgr_->InnerProcessShortcutId(101, hapPath, shortcutInfos);
     EXPECT_TRUE(result);
     if (!shortcutInfos.empty()) {
         EXPECT_EQ(shortcutInfos[0].id, shortcutInfo_1.id);
@@ -3113,13 +3124,40 @@ HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0005, Function | MediumTest | Le
     ShortcutInfo shortcutInfo;
     shortcutInfo.id = "$string:16777216";
     shortcutInfos.emplace_back(shortcutInfo);
-
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    EXPECT_NE(bmsPara, nullptr);
+    if (bmsPara) {
+        bool ret = bmsPara->SaveBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, "100");
+        EXPECT_TRUE(ret);
+    }
     std::string hapPath = HAP_FILE_PATH1;
-    bool result = dataMgr_->InnerProcessShortcutId(hapPath, shortcutInfos);
+    bool result = dataMgr_->InnerProcessShortcutId(101, hapPath, shortcutInfos);
     EXPECT_TRUE(result);
     if (!shortcutInfos.empty()) {
         EXPECT_NE(shortcutInfos[0].id, shortcutInfo.id);
     }
+}
+
+/**
+ * @tc.number: InnerProcessShortcutId_0006
+ * @tc.name: InnerProcessShortcutId
+ * @tc.desc: test InnerProcessShortcutId
+ */
+HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0006, Function | MediumTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.id = "$string:11111";
+    shortcutInfos.emplace_back(shortcutInfo);
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    EXPECT_NE(bmsPara, nullptr);
+    if (bmsPara) {
+        bool ret = bmsPara->SaveBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, "100");
+        EXPECT_TRUE(ret);
+    }
+    std::string hapPath;
+    bool result = dataMgr_->InnerProcessShortcutId(0, hapPath, shortcutInfos);
+    EXPECT_FALSE(result);
 }
 
 /**

@@ -1319,7 +1319,9 @@ private:
         const AbilityInfo &abilityInfo) const;
     void RestoreUidAndGidFromUninstallInfo();
     ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
-    bool InnerProcessShortcutId(const std::string &hapPath, std::vector<ShortcutInfo> &shortcutInfos) const;
+    bool CheckUpdateTimeWithBmsParam(const int64_t updateTime) const;
+    bool InnerProcessShortcutId(const int64_t updateTime, const std::string &hapPath,
+        std::vector<ShortcutInfo> &shortcutInfos) const;
 
 private:
     bool initialUserFlag_ = false;

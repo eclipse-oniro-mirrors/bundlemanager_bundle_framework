@@ -222,6 +222,9 @@ constexpr const char* JSON_SUFFIX = ".json";
 
 // app temp path
 constexpr const char* BMS_APP_TEMP_PATH = "/data/service/el1/public/bms/bundle_manager_service/app_temp";
+
+// time
+constexpr const char* BMS_SYSTEM_TIME_FOR_SHORTCUT = "SystemTimeForShortcut";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS
