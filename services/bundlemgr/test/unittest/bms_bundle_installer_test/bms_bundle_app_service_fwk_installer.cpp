@@ -37,6 +37,12 @@
 #include "shared/shared_bundle_installer.h"
 #include "system_bundle_installer.h"
 
+namespace OHOS {
+namespace AppExecFwk {
+    std::string ObtainTempSoPath(const std::string &moduleName, const std::string &nativeLibPath);
+}
+}
+
 using namespace testing::ext;
 using namespace std::chrono_literals;
 using namespace OHOS::AppExecFwk;
@@ -1984,5 +1990,90 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckAndParseFiles_0010, Function 
 
     auto res = installer.CheckAndParseFiles(hspPaths, installParam, newInfos);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: AppServiceFwkInstallerTest_0001
+ * @tc.name: test ObtainTempSoPath
+ * @tc.desc: 1.test ObtainTempSoPath
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, AppServiceFwkInstallerTest_0001, Function | SmallTest | Level1)
+{
+    std::string moduleName;
+    std::string nativeLibPath;
+    std::string res = ObtainTempSoPath(moduleName, nativeLibPath);
+    EXPECT_EQ(res, "");
+}
+
+/**
+ * @tc.number: AppServiceFwkInstallerTest_0002
+ * @tc.name: test ObtainTempSoPath
+ * @tc.desc: 1.test ObtainTempSoPath
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, AppServiceFwkInstallerTest_0002, Function | SmallTest | Level1)
+{
+    std::string moduleName = "entry";
+    std::string nativeLibPath = "data/entry";
+    std::string res = ObtainTempSoPath(moduleName, nativeLibPath);
+    EXPECT_NE(res, "");
+}
+
+/**
+ * @tc.number: AppServiceFwkInstallerTest_0003
+ * @tc.name: test ObtainTempSoPath
+ * @tc.desc: 1.test ObtainTempSoPath
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, AppServiceFwkInstallerTest_0003, Function | SmallTest | Level1)
+{
+    std::string moduleName = "entry";
+    std::string nativeLibPath = "data/feature";
+    std::string res = ObtainTempSoPath(moduleName, nativeLibPath);
+    EXPECT_NE(res, "");
+}
+
+/**
+ * @tc.number: AppServiceFwkInstallerTest_0004
+ * @tc.name: test Install
+ * @tc.desc: 1.test Install
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, AppServiceFwkInstallerTest_0004, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+
+    std::vector<std::string> hspPaths;
+    hspPaths.emplace_back("data/test.hsp");
+    InstallParam installParam;
+    installParam.copyHapToInstallPath = true;
+
+    auto res = installer.Install(hspPaths, installParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: AppServiceFwkInstallerTest_0005
+ * @tc.name: test Install
+ * @tc.desc: 1.test Install
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, AppServiceFwkInstallerTest_0005, Function | SmallTest | Level1)
+{
+    ASSERT_NE(bundleMgrService_, nullptr);
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AppServiceFwkInstaller installer;
+    installer.dataMgr_ = dataMgr;
+    installer.bundleName_ = "test";
+    PreInstallBundleInfo preInstallBundleInfo;
+    std::string bundleName = "test";
+    auto saveRes = dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+
+
+    std::vector<std::string> hspPaths;
+    hspPaths.emplace_back("data/test.hsp");
+    InstallParam installParam;
+    installParam.copyHapToInstallPath = true;
+
+    auto res = installer.Install(hspPaths, installParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
 }
 }

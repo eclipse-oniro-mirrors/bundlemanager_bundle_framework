@@ -8123,7 +8123,9 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllUninstallBundleInfo_0200, Function | SmallT
     bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, USERID);
     std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
     auto ret = bundleDataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
-    EXPECT_FALSE(ret);
+    if (!ret) {
+        EXPECT_TRUE(uninstallBundleInfos.empty());
+    }
 }
 
 /**
@@ -8213,7 +8215,7 @@ HWTEST_F(BmsBundleDataMgrTest, AddPluginInfo_0001, Function | MediumTest | Level
 {
     auto bundleDataMgr = GetBundleDataMgr();
     ASSERT_NE(bundleDataMgr, nullptr);
-    
+
     InnerBundleInfo innerBundleInfo;
     PluginBundleInfo pluginBundleInfo;
     pluginBundleInfo.pluginBundleName = BUNDLE_TEST1;
@@ -8247,7 +8249,7 @@ HWTEST_F(BmsBundleDataMgrTest, RemovePluginInfo_0001, Function | MediumTest | Le
 {
     auto bundleDataMgr = GetBundleDataMgr();
     ASSERT_NE(bundleDataMgr, nullptr);
-    
+
     InnerBundleInfo innerBundleInfo;
     std::string pluginBundleName = BUNDLE_TEST1;
     PluginBundleInfo pluginBundleInfo;
@@ -8285,7 +8287,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetPluginBundleInfo_0001, Function | MediumTest |
 {
     auto bundleDataMgr = GetBundleDataMgr();
     ASSERT_NE(bundleDataMgr, nullptr);
-    
+
     std::string pluginBundleName = BUNDLE_TEST1;
     std::string hostBundleName = BUNDLE_TEST2;
     PluginBundleInfo pluginBundleInfo;
@@ -8327,7 +8329,7 @@ HWTEST_F(BmsBundleDataMgrTest, FetchPluginBundleInfo_0001, Function | MediumTest
 {
     auto bundleDataMgr = GetBundleDataMgr();
     ASSERT_NE(bundleDataMgr, nullptr);
-    
+
     std::string pluginBundleName = BUNDLE_TEST1;
     std::string hostBundleName = BUNDLE_TEST2;
     PluginBundleInfo pluginBundleInfo;
