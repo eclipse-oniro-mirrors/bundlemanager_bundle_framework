@@ -354,7 +354,9 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     if (result == ERR_OK) {
         UtdHandler::UninstallUtdAsync(bundleName, userId_);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-        DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
+        if (!installParam.isRemoveUser) {
+            DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
+        }
 #endif
     }
 

@@ -45,6 +45,8 @@ constexpr const char* RESULT_CODE = "resultCode";
 constexpr const char* PERMISSION_GET_DISPOSED_STATUS = "ohos.permission.GET_DISPOSED_APP_STATUS";
 constexpr const char* ASSET_ACCESS_GROUPS = "assetAccessGroups";
 constexpr const char* DEVELOPERID = "developerId";
+constexpr const char* CHANGE_DEFAULT_APPLICATION = "ohos.permission.CHANGE_DEFAULT_APPLICATION";
+constexpr const char* UTD_IDS = "utdIds";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -299,6 +301,23 @@ void BundleCommonEventMgr::NotifyBundleResourcesChanged(const int32_t userId, co
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
         APP_LOGE("PublishCommonEvent failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+}
+
+void BundleCommonEventMgr::NotifyDefaultAppChanged(const int32_t userId, std::vector<std::string> &utdIdVec)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(DEFAULT_APP_CHANGED);
+    want.SetParam(Constants::USER_ID, userId);
+    want.SetParam(UTD_IDS, utdIdVec);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { CHANGE_DEFAULT_APPLICATION };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("Publish defaultApp changed event failed");
     }
     IPCSkeleton::SetCallingIdentity(identity);
 }

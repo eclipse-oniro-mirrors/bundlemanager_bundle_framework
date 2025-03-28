@@ -52,8 +52,23 @@ const std::string EMAIL = "EMAIL";
 const int32_t USER_ID = 100;
 const int32_t ALL_USER_ID = -4;
 const int32_t UID = 20000001;
+const int32_t WAIT_TIME = 5;
+const std::string IMAGE_UTD_ID = "general.image";
+const std::string PNG_UTD_ID = "general.png";
+const std::string WORD = "WORD";
+const std::string WORD_DOC_UTD_ID = "com.microsoft.word.doc";
+const std::string WORD_DOT_UTD_ID = "com.microsoft.word.dot";
+const std::string WORD_DOCUMENT_UTD_ID = "org.openxmlformats.wordprocessingml.document";
+const std::string WORD_TEMPLATE_UTD_ID = "org.openxmlformats.wordprocessingml.template";
+const std::string PDF_UTD_ID = "com.adobe.pdf";
+const std::string MP4_UTD_ID = "general.mpeg-4";
+const std::string BROWSER = "BROWSER";
+const std::string DEFAULT_APP_CHANGED_EVENT = "usual.event.DEFAULT_APP_CHANGED";
+const std::string UTD_IDS = "utdIds";
+const std::string USER_ID_STRING = "userId";
 } // namespace
 
+class DefaultAppChangedTestEventSubscriber;
 class BmsBundleDefaultAppMgrTest : public testing::Test {
 public:
     BmsBundleDefaultAppMgrTest();
@@ -66,9 +81,34 @@ public:
     void ResetDataMgr();
     void AddInnerBundleInfo(const std::string bundleName, int32_t flag);
     void UninstallBundleInfo(const std::string bundleName);
-
+    void SubscribeDefaultAppChangedEvent();
+    void UnSubscribeDefaultAppChangedEvent();
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<DefaultAppChangedTestEventSubscriber> subscriber_ = nullptr;
+    static std::condition_variable cv_;
+    static std::mutex mutex_;
 };
+
+class DefaultAppChangedTestEventSubscriber final : public EventFwk::CommonEventSubscriber {
+public:
+    explicit DefaultAppChangedTestEventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
+        :CommonEventSubscriber(subscribeInfo) {}
+
+    void OnReceiveEvent(const EventFwk::CommonEventData &data)
+    {
+        auto want = data.GetWant();
+        if (want.GetAction() == DEFAULT_APP_CHANGED_EVENT) {
+            utdId = want.GetStringArrayParam(UTD_IDS);
+            userId = want.GetParams().GetIntParam(USER_ID_STRING, -1);
+        }
+        BmsBundleDefaultAppMgrTest::cv_.notify_one();
+    }
+    std::vector<std::string> utdId;
+    int32_t userId;
+};
+
+std::condition_variable BmsBundleDefaultAppMgrTest::cv_;
+std::mutex BmsBundleDefaultAppMgrTest::mutex_;
 
 BmsBundleDefaultAppMgrTest::BmsBundleDefaultAppMgrTest() {}
 
@@ -164,6 +204,20 @@ void BmsBundleDefaultAppMgrTest::UninstallBundleInfo(const std::string bundleNam
 
     EXPECT_TRUE(startRet);
     EXPECT_TRUE(finishRet);
+}
+
+void BmsBundleDefaultAppMgrTest::SubscribeDefaultAppChangedEvent()
+{
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(DEFAULT_APP_CHANGED_EVENT);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    subscriber_ = std::make_shared<DefaultAppChangedTestEventSubscriber>(subscribeInfo);
+    EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
+}
+
+void BmsBundleDefaultAppMgrTest::UnSubscribeDefaultAppChangedEvent()
+{
+    EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
 }
 
 /**
@@ -663,6 +717,233 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, ResetDefaultApplicationInternal_0100, Funct
 {
     auto ret = DefaultAppMgr::GetInstance().ResetDefaultApplicationInternal(USER_ID, ABILITY_NAME);
     EXPECT_EQ(ERR_OK, ret);
+}
+
+/**
+ * @tc.number: GetDefaultInfo_0100
+ * @tc.name: Test GetDefaultInfo by DefaultAppMgr
+ * @tc.desc: 1.GetDefaultInfo, because there is no content corresponding to utdId in the database, it is false
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, GetDefaultInfo_0100, Function | SmallTest | Level1)
+{
+    std::unordered_map<std::string, std::pair<bool, Element>> defaultInfo;
+    DefaultAppMgr::GetInstance().GetDefaultInfo(USER_ID, {WORD_DOC_UTD_ID, WORD_DOT_UTD_ID}, defaultInfo);
+    EXPECT_FALSE(defaultInfo.empty());
+}
+
+/**
+ * @tc.number: SendDefaultAppChangeEventIfNeeded_0100
+ * @tc.name: Test SendDefaultAppChangeEventIfNeeded by DefaultAppMgr
+ * @tc.desc: 1.SendDefaultAppChangeEventIfNeeded, because the last parameter is empty, it is false
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEventIfNeeded_0100, Function | SmallTest | Level1)
+{
+    bool ret =
+        DefaultAppMgr::GetInstance().SendDefaultAppChangeEventIfNeeded(USER_ID, {WORD_DOC_UTD_ID, WORD_DOT_UTD_ID}, {});
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ShouldSendEvent_0100
+ * @tc.name: Test ShouldSendEvent by DefaultAppMgr
+ * @tc.desc: 1.ShouldSendEvent, covering the combined state of originalResult and current Result Boolean parameters
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, ShouldSendEvent_0100, Function | SmallTest | Level1)
+{
+    bool originalResult = true;
+    Element originalElement;
+    originalElement.bundleName = BUNDLE_NAME;
+    originalElement.moduleName = MODULE_NAME;
+    originalElement.abilityName = ABILITY_NAME;
+    bool currentResult = true;
+    Element currentElement;
+    currentElement.bundleName = BUNDLE_NAME;
+    currentElement.moduleName = MODULE_NAME;
+    currentElement.abilityName = ABILITY_NAME;
+    auto ret = DefaultAppMgr::GetInstance().ShouldSendEvent(
+        originalResult, originalElement, currentResult, currentElement);
+    EXPECT_FALSE(ret);
+
+    currentElement.abilityName ="";
+    ret = DefaultAppMgr::GetInstance().ShouldSendEvent(originalResult, originalElement, currentResult, currentElement);
+    EXPECT_TRUE(ret);
+
+    currentResult = false;
+    ret = DefaultAppMgr::GetInstance().ShouldSendEvent(originalResult, originalElement, currentResult, currentElement);
+    EXPECT_TRUE(ret);
+
+    originalResult = false;
+    ret = DefaultAppMgr::GetInstance().ShouldSendEvent(originalResult, originalElement, currentResult, currentElement);
+    EXPECT_FALSE(ret);
+
+    currentResult = true;
+    ret = DefaultAppMgr::GetInstance().ShouldSendEvent(originalResult, originalElement, currentResult, currentElement);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: SendDefaultAppChangeEvent_0100
+ * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
+ * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to 'general.image', successfully sending and receiving events
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0100, Function | SmallTest | Level1)
+{
+    SubscribeDefaultAppChangedEvent();
+    auto ret = DefaultAppMgr::GetInstance().SendDefaultAppChangeEvent(USER_ID, {IMAGE_UTD_ID});
+    EXPECT_TRUE(ret);
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        auto waitRet = cv_.wait_for(lock, std::chrono::seconds(WAIT_TIME), [lockCallback = subscriber_]() {
+            return (!lockCallback->utdId.empty() &&
+                lockCallback->utdId.at(0) == IMAGE_UTD_ID &&
+                lockCallback->userId == USER_ID);
+        });
+        EXPECT_TRUE(waitRet);
+    }
+    UnSubscribeDefaultAppChangedEvent();
+}
+
+/**
+ * @tc.number: SendDefaultAppChangeEvent_0200
+ * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
+ * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to 'general.png', successfully sending and receiving events
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0200, Function | SmallTest | Level1)
+{
+    SubscribeDefaultAppChangedEvent();
+    auto ret = DefaultAppMgr::GetInstance().SendDefaultAppChangeEvent(USER_ID, {PNG_UTD_ID});
+    EXPECT_TRUE(ret);
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        auto waitRet = cv_.wait_for(lock, std::chrono::seconds(WAIT_TIME), [lockCallback = subscriber_]() {
+            return (!lockCallback->utdId.empty() &&
+                lockCallback->utdId.at(0) == PNG_UTD_ID &&
+                lockCallback->userId == USER_ID);
+        });
+        EXPECT_TRUE(waitRet);
+    }
+    UnSubscribeDefaultAppChangedEvent();
+}
+
+/**
+ * @tc.number: SendDefaultAppChangeEvent_0300
+ * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
+ * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to 'WORD', successfully sending and receiving events
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0300, Function | SmallTest | Level1)
+{
+    SubscribeDefaultAppChangedEvent();
+    auto ret = DefaultAppMgr::GetInstance().SendDefaultAppChangeEvent(USER_ID, {WORD});
+    EXPECT_TRUE(ret);
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        auto waitRet = cv_.wait_for(lock, std::chrono::seconds(WAIT_TIME), [lockCallback = subscriber_]() {
+            return (!lockCallback->utdId.empty() &&
+                (lockCallback->utdId.at(0) == WORD_DOC_UTD_ID ||
+                lockCallback->utdId.at(0) == WORD_DOT_UTD_ID ||
+                lockCallback->utdId.at(0) == WORD_DOCUMENT_UTD_ID ||
+                lockCallback->utdId.at(0) == WORD_TEMPLATE_UTD_ID) &&
+                lockCallback->userId == USER_ID);
+        });
+        EXPECT_TRUE(waitRet);
+    }
+    UnSubscribeDefaultAppChangedEvent();
+}
+
+/**
+ * @tc.number: SendDefaultAppChangeEvent_0400
+ * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
+ * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to com.microsoft.word.dot, successfully sending and receiving
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0400, Function | SmallTest | Level1)
+{
+    SubscribeDefaultAppChangedEvent();
+    auto ret = DefaultAppMgr::GetInstance().SendDefaultAppChangeEvent(USER_ID, {WORD_DOT_UTD_ID});
+    EXPECT_TRUE(ret);
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        auto waitRet = cv_.wait_for(lock, std::chrono::seconds(WAIT_TIME), [lockCallback = subscriber_]() {
+            return (!lockCallback->utdId.empty() &&
+                lockCallback->utdId.at(0) == WORD_DOT_UTD_ID &&
+                lockCallback->userId == USER_ID);
+        });
+        EXPECT_TRUE(waitRet);
+    }
+    UnSubscribeDefaultAppChangedEvent();
+}
+
+/**
+ * @tc.number: SendDefaultAppChangeEvent_0500
+ * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
+ * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to '"com.adobe.pdf', successfully sending and receiving events
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0500, Function | SmallTest | Level1)
+{
+    SubscribeDefaultAppChangedEvent();
+    auto ret = DefaultAppMgr::GetInstance().SendDefaultAppChangeEvent(USER_ID, {PDF_UTD_ID});
+    EXPECT_TRUE(ret);
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        auto waitRet = cv_.wait_for(lock, std::chrono::seconds(WAIT_TIME), [lockCallback = subscriber_]() {
+            return (!lockCallback->utdId.empty() &&
+                lockCallback->utdId.at(0) == PDF_UTD_ID &&
+                lockCallback->userId == USER_ID);
+        });
+        EXPECT_TRUE(waitRet);
+    }
+    UnSubscribeDefaultAppChangedEvent();
+}
+
+/**
+ * @tc.number: SendDefaultAppChangeEvent_0600
+ * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
+ * @tc.desc: 1.SendDefaultAppChangeEvent
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0600, Function | SmallTest | Level1)
+{
+    auto ret = DefaultAppMgr::GetInstance().SendDefaultAppChangeEvent(USER_ID, {BROWSER});
+    EXPECT_FALSE(ret);
+
+    ret = DefaultAppMgr::GetInstance().SendDefaultAppChangeEvent(USER_ID, {EMAIL});
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SendDefaultAppChangeEvent_0700
+ * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
+ * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to 'general.png, WORD', successfully sending and receiving events
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0700, Function | SmallTest | Level1)
+{
+    SubscribeDefaultAppChangedEvent();
+    auto ret = DefaultAppMgr::GetInstance().SendDefaultAppChangeEvent(USER_ID, {WORD, PNG_UTD_ID});
+    EXPECT_TRUE(ret);
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        auto waitRet = cv_.wait_for(lock, std::chrono::seconds(WAIT_TIME), [lockCallback = subscriber_]() {
+            return (!lockCallback->utdId.empty() &&
+                (lockCallback->utdId.at(0) == WORD_DOC_UTD_ID ||
+                lockCallback->utdId.at(0) == WORD_DOT_UTD_ID ||
+                lockCallback->utdId.at(0) == WORD_DOCUMENT_UTD_ID ||
+                lockCallback->utdId.at(0) == WORD_TEMPLATE_UTD_ID ||
+                lockCallback->utdId.at(0) == PNG_UTD_ID) &&
+                lockCallback->userId == USER_ID);
+        });
+        EXPECT_TRUE(waitRet);
+    }
+    UnSubscribeDefaultAppChangedEvent();
+}
+
+/**
+ * @tc.number: SendDefaultAppChangeEvent_0800
+ * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
+ * @tc.desc: 1.SendDefaultAppChangeEvent, typeVec is empty, successfully sending event failed
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0800, Function | SmallTest | Level1)
+{
+    SubscribeDefaultAppChangedEvent();
+    auto ret = DefaultAppMgr::GetInstance().SendDefaultAppChangeEvent(USER_ID, {});
+    EXPECT_FALSE(ret);
 }
 
 /**

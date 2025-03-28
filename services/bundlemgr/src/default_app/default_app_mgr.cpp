@@ -65,20 +65,35 @@ constexpr const char* APP_TYPES_KEY[] = {
     IMAGE, AUDIO, VIDEO, PDF, WORD, EXCEL, PPT
 };
 const std::set<std::string> APP_TYPES_VALUE[] = {
-    {"image/*"},
-    {"audio/*"},
-    {"video/*"},
-    {"application/pdf"},
-    {"application/msword",
-        "application/vnd.ms-word.document",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.template"},
-    {"application/vnd.ms-excel",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.template"},
-    {"application/vnd.ms-powerpoint",
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "application/vnd.openxmlformats-officedocument.presentationml.template"},
+    {"general.image"},
+    {"general.audio"},
+    {"general.video"},
+    {"com.adobe.pdf"},
+    {"com.microsoft.word.doc",
+        "com.microsoft.word.dot",
+        "org.openxmlformats.wordprocessingml.document",
+        "org.openxmlformats.wordprocessingml.template",
+        "org.openxmlformats.wordprocessingml.document.macroenabled",
+        "org.openxmlformats.wordprocessingml.template.macroenabled"},
+    {"com.microsoft.excel.xls",
+        "com.microsoft.excel.xlt",
+        "com.microsoft.excel.dif",
+        "org.openxmlformats.spreadsheetml.sheet",
+        "org.openxmlformats.spreadsheetml.template",
+        "org.openxmlformats.spreadsheetml.template.macroenabled",
+        "org.openxmlformats.spreadsheetml.addin.macroenabled",
+        "org.openxmlformats.spreadsheetml.binary.macroenabled",
+        "org.openxmlformats.spreadsheetml.sheet.macroenabled"},
+    {"com.microsoft.powerpoint.ppt",
+        "com.microsoft.powerpoint.pps",
+        "com.microsoft.powerpoint.pot",
+        "org.openxmlformats.presentationml.presentation",
+        "org.openxmlformats.presentationml.template",
+        "org.openxmlformats.presentationml.slideshow",
+        "org.openxmlformats.presentationml.addin.macroenabled",
+        "org.openxmlformats.presentationml.presentation.macroenabled",
+        "org.openxmlformats.presentationml.slideshow.macroenabled",
+        "org.openxmlformats.presentationml.template.macroenabled"}
 };
 const std::set<std::string> supportAppTypes = {BROWSER, IMAGE, AUDIO, VIDEO, PDF, WORD, EXCEL, PPT, EMAIL};
 }
@@ -238,7 +253,8 @@ ErrCode DefaultAppMgr::SetDefaultApplication(
         LOG_W(BMS_TAG_DEFAULT, "normalizedTypeVector empty");
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
-
+    std::unordered_map<std::string, std::pair<bool, Element>> originStateMap;
+    GetDefaultInfo(userId, normalizedTypeVector, originStateMap);
     bool isAnySet = false;
     std::unordered_map<std::string, ErrCode> setResultMap;
     for (const std::string& normalizedType : normalizedTypeVector) {
@@ -259,6 +275,7 @@ ErrCode DefaultAppMgr::SetDefaultApplication(
             (void)SetDefaultApplicationInternal(userId, item.first, element);
         }
     }
+    SendDefaultAppChangeEventIfNeeded(userId, normalizedTypeVector, originStateMap);
     return ERR_OK;
 }
 
@@ -314,6 +331,8 @@ ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 
+    std::unordered_map<std::string, std::pair<bool, Element>> originStateMap;
+    GetDefaultInfo(userId, normalizedTypeVector, originStateMap);
     bool isAnySet = false;
     for (const std::string& normalizedType : normalizedTypeVector) {
         ret = ResetDefaultApplicationInternal(userId, normalizedType);
@@ -321,6 +340,8 @@ ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string
             isAnySet = true;
         }
     }
+
+    SendDefaultAppChangeEventIfNeeded(userId, normalizedTypeVector, originStateMap);
     return isAnySet ? ERR_OK : ret;
 }
 
@@ -362,20 +383,24 @@ void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bun
     }
     // if type exist in default_app.json, use it
     std::map<std::string, Element> newInfos;
+    std::vector<std::string> changedTypeVec;
     for (const auto& item : currentInfos) {
-        if (item.second.bundleName == bundleName) {
-            Element element;
-            if (defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, item.first, element)) {
-                LOG_I(BMS_TAG_DEFAULT, "set default application to preset, type : %{public}s", item.first.c_str());
-                newInfos.emplace(item.first, element);
-            } else {
-                LOG_D(BMS_TAG_DEFAULT, "erase uninstalled application type:%{public}s", item.first.c_str());
-            }
-        } else {
+        if (item.second.bundleName != bundleName) {
             newInfos.emplace(item.first, item.second);
+            continue;
         }
+        Element element;
+        if (defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, item.first, element) &&
+            element.bundleName != bundleName) {
+            LOG_I(BMS_TAG_DEFAULT, "set default application to preset, type : %{public}s", item.first.c_str());
+            newInfos.emplace(item.first, element);
+        } else {
+            LOG_D(BMS_TAG_DEFAULT, "erase uninstalled application type:%{public}s", item.first.c_str());
+        }
+        changedTypeVec.emplace_back(item.first);
     }
     defaultAppDb_->SetDefaultApplicationInfos(userId, newInfos);
+    (void)SendDefaultAppChangeEvent(userId, changedTypeVec);
 }
 
 void DefaultAppMgr::HandleCreateUser(int32_t userId) const
@@ -545,8 +570,8 @@ ErrCode DefaultAppMgr::GetBundleInfoByUtd(
         }
         if (i == len) continue;
         Skill skill;
-        for (const auto& mimeType : APP_TYPES_VALUE[i]) {
-            if (skill.MatchType(utd, mimeType) && GetBundleInfo(userId, utd, item.second, bundleInfo)) {
+        for (const auto& utdId : APP_TYPES_VALUE[i]) {
+            if (skill.MatchType(utd, utdId) && GetBundleInfo(userId, utd, item.second, bundleInfo)) {
                 LOG_I(BMS_TAG_DEFAULT, "match default app type success");
                 return ERR_OK;
             }
@@ -652,8 +677,8 @@ bool DefaultAppMgr::MatchAppType(const std::string& type, const std::vector<Skil
         LOG_E(BMS_TAG_DEFAULT, "invalid app type : %{public}s", type.c_str());
         return false;
     }
-    for (const std::string& mimeType : APP_TYPES_VALUE[i]) {
-        if (MatchActionAndType(ACTION_VIEW_DATA, mimeType, skills)) {
+    for (const std::string& utdId : APP_TYPES_VALUE[i]) {
+        if (MatchActionAndType(ACTION_VIEW_DATA, utdId, skills)) {
             return true;
         }
     }
@@ -863,6 +888,82 @@ bool DefaultAppMgr::IsSpecificMimeType(const std::string& param)
     }
     LOG_W(BMS_TAG_DEFAULT, "not specific mimeType");
     return false;
+}
+
+void DefaultAppMgr::GetDefaultInfo(const int32_t userId, const std::vector<std::string>& normalizedTypeVec,
+    std::unordered_map<std::string, std::pair<bool, Element>>& defaultInfo) const
+{
+    for (const std::string& normalizedType : normalizedTypeVec) {
+        Element element;
+        bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, normalizedType, element);
+        defaultInfo[normalizedType] = std::make_pair(ret, element);
+    }
+}
+
+bool DefaultAppMgr::SendDefaultAppChangeEventIfNeeded(
+    const int32_t userId, const std::vector<std::string>& normalizedTypeVec,
+    const std::unordered_map<std::string, std::pair<bool, Element>>& originStateMap) const
+{
+    std::unordered_map<std::string, std::pair<bool, Element>> currentStateMap;
+    GetDefaultInfo(userId, normalizedTypeVec, currentStateMap);
+    std::vector<std::string> changedTypeVec;
+    for (const auto& originState : originStateMap) {
+        auto currentState = currentStateMap.find(originState.first);
+        if (currentState == currentStateMap.end()) {
+            LOG_W(BMS_TAG_DEFAULT, "currentStateMap not contains type: %{public}s", originState.first.c_str());
+            continue;
+        }
+        if (ShouldSendEvent(originState.second.first, originState.second.second, currentState->second.first,
+            currentState->second.second)) {
+            changedTypeVec.emplace_back(originState.first);
+        }
+    }
+    return SendDefaultAppChangeEvent(userId, changedTypeVec);
+}
+
+bool DefaultAppMgr::ShouldSendEvent(
+    bool originalResult, const Element& originalElement, bool currentResult, const Element& currentElement) const
+{
+    if (originalResult && currentResult) {
+        return !(originalElement == currentElement);
+    }
+    return originalResult || currentResult;
+}
+
+bool DefaultAppMgr::SendDefaultAppChangeEvent(const int32_t userId, const std::vector<std::string>& typeVec) const
+{
+    if (typeVec.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "typeVec is empty");
+        return false;
+    }
+    std::vector<std::string> utdIdVec;
+    for (const auto& type : typeVec) {
+        if (!IsAppType(type)) {
+            utdIdVec.emplace_back(type);
+            continue;
+        }
+
+        size_t i = 0;
+        size_t len = sizeof(APP_TYPES_KEY) / sizeof(APP_TYPES_KEY[0]);
+        for (i = 0; i < len; i++) {
+            if (APP_TYPES_KEY[i] == type) break;
+        }
+        if (i == len) {
+            LOG_W(BMS_TAG_DEFAULT, "APP_TYPES_KEY not contains type: %{public}s", type.c_str());
+            continue;
+        }
+        for (const std::string& utdId : APP_TYPES_VALUE[i]) {
+            utdIdVec.emplace_back(utdId);
+        }
+    }
+    if (utdIdVec.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "utdIdVec is empty");
+        return false;
+    }
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyDefaultAppChanged(userId, utdIdVec);
+    LOG_I(BMS_TAG_DEFAULT, "Send default app change event success");
+    return true;
 }
 }
 }
