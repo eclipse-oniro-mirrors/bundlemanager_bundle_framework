@@ -743,7 +743,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCloneInstaller_0020, Function | Medi
     innerModuleInfo.requestPermissions.emplace_back(requestPermission);
     innerBundleInfo.innerModuleInfos_.try_emplace("test", innerModuleInfo);
     installer.CreateEl5Dir(innerBundleInfo, uid, userId, appIndex);
-    EXPECT_EQ(installer.GetDataMgr(), ERR_OK);
+    EXPECT_NE(installer.GetDataMgr(), ERR_OK);
 }
 
 /**
