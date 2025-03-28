@@ -247,13 +247,48 @@ void BusinessErrorAni::ThrowError(ani_env *env, int32_t err, const std::string &
     ThrowError(env, error);
 }
 
-ani_object BusinessErrorAni::CreateError(ani_env *env, ani_int code, const std::string& msg)
+ani_object BusinessErrorAni::WrapError(ani_env *env, const std::string &msg)
 {
     if (env == nullptr) {
         return nullptr;
     }
     ani_class cls = nullptr;
-    ani_field field = nullptr;
+    ani_method method = nullptr;
+    ani_object obj = nullptr;
+
+    ani_string aniMsg = nullptr;
+    if (!CommonFunAni::StringToAniStr(env, msg, aniMsg)) {
+        APP_LOGE("StringToAniStr failed");
+        return nullptr;
+    }
+
+    ani_ref undefRef;
+    env->GetUndefined(&undefRef);
+
+    ani_status status = env->FindClass("Lescompat/Error;", &cls);
+    if (status != ANI_OK) {
+        APP_LOGE("FindClass : %{public}d", status);
+        return nullptr;
+    }
+    status = env->Class_FindMethod(cls, "<ctor>", "Lstd/core/String;Lescompat/ErrorOptions;:V", &method);
+    if (status != ANI_OK) {
+        APP_LOGE("Class_FindMethod : %{public}d", status);
+        return nullptr;
+    }
+    status = env->Object_New(cls, method, &obj, aniMsg, undefRef);
+    if (status != ANI_OK) {
+        APP_LOGE("Object_New : %{public}d", status);
+        return nullptr;
+    }
+    return obj;
+}
+
+ani_object BusinessErrorAni::CreateError(ani_env *env, int32_t code, const std::string& msg)
+{
+    if (env == nullptr) {
+        return nullptr;
+    }
+    ani_class cls = nullptr;
     ani_method method = nullptr;
     ani_object obj = nullptr;
     ani_status status = env->FindClass(BUSINESS_ERROR_CLASS, &cls);
@@ -261,41 +296,24 @@ ani_object BusinessErrorAni::CreateError(ani_env *env, ani_int code, const std::
         APP_LOGE("FindClass : %{public}d", status);
         return nullptr;
     }
-    status = env->Class_FindMethod(cls, "<ctor>", ":V", &method);
+    status = env->Class_FindMethod(cls, "<ctor>", "DLescompat/Error;:V", &method);
     if (status != ANI_OK) {
         APP_LOGE("Class_FindMethod : %{public}d", status);
         return nullptr;
     }
-    status = env->Object_New(cls, method, &obj);
+    ani_object error = WrapError(env, msg);
+    if (error == nullptr) {
+        APP_LOGE("WrapError failed");
+        return nullptr;
+    }
+    ani_double dCode(code);
+    status = env->Object_New(cls, method, &obj, dCode, error);
     if (status != ANI_OK) {
         APP_LOGE("Object_New : %{public}d", status);
         return nullptr;
     }
-    status = env->Class_FindField(cls, "code", &field);
-    if (status != ANI_OK) {
-        APP_LOGE("Class_FindField : %{public}d", status);
-        return nullptr;
-    }
-    status = env->Object_SetField_Double(obj, field, code);
-    if (status != ANI_OK) {
-        APP_LOGE("Object_SetField_Double : %{public}d", status);
-        return nullptr;
-    }
-    status = env->Class_FindField(cls, "message", &field);
-    if (status != ANI_OK) {
-        APP_LOGE("Class_FindField : %{public}d", status);
-        return nullptr;
-    }
-    ani_string string = nullptr;
-    env->String_NewUTF8(msg.c_str(), msg.size(), &string);
-    status = env->Object_SetField_Ref(obj, field, string);
-    if (status != ANI_OK) {
-        APP_LOGE("Object_SetField_Ref : %{public}d", status);
-        return nullptr;
-    }
     return obj;
 }
-
 
 void BusinessErrorAni::ThrowParameterTypeError(ani_env *env, int32_t err,
     const std::string &parameter, const std::string &type)
