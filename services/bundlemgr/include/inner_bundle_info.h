@@ -108,6 +108,7 @@ struct InnerModuleInfo {
     std::string srcPath;
     std::string hashValue;
     std::string pages;
+    std::string systemTheme;
     std::string process;
     std::string srcEntrance;
     std::string uiSyntax;

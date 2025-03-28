@@ -85,6 +85,7 @@ constexpr const char* MODULE_DEVICE_TYPES = "deviceTypes";
 constexpr const char* MODULE_VIRTUAL_MACHINE = "virtualMachine";
 constexpr const char* MODULE_UI_SYNTAX = "uiSyntax";
 constexpr const char* MODULE_PAGES = "pages";
+constexpr const char* MODULE_SYSTEM_THEME = "systemTheme";
 constexpr const char* MODULE_META_DATA = "metadata";
 constexpr const char* MODULE_REQUEST_PERMISSIONS = "requestPermissions";
 constexpr const char* MODULE_DEFINE_PERMISSIONS = "definePermissions";
@@ -406,6 +407,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_VIRTUAL_MACHINE, info.virtualMachine},
         {MODULE_UI_SYNTAX, info.uiSyntax},
         {MODULE_PAGES, info.pages},
+        {MODULE_SYSTEM_THEME, info.systemTheme},
         {MODULE_META_DATA, info.metadata},
         {MODULE_HNP_PACKAGE, info.hnpPackages},
         {MODULE_REQUEST_PERMISSIONS, info.requestPermissions},
@@ -728,6 +730,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_PAGES,
         info.pages,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_SYSTEM_THEME,
+        info.systemTheme,
         false,
         parseResult);
     GetValueIfFindKey<std::vector<Metadata>>(jsonObject,
@@ -1515,6 +1523,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.bundleName = baseApplicationInfo_->bundleName;
     hapInfo.mainElementName = it->second.mainAbility;
     hapInfo.pages = it->second.pages;
+    hapInfo.systemTheme = it->second.systemTheme;
     hapInfo.process = it->second.process;
     hapInfo.resourcePath = it->second.moduleResPath;
     hapInfo.srcEntrance = it->second.srcEntrance;

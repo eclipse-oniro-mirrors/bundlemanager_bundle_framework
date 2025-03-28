@@ -381,6 +381,7 @@ constexpr const char* MODULE_VIRTUAL_MACHINE_DEFAULT_VALUE = "default";
 constexpr const char* MODULE_UI_SYNTAX = "uiSyntax";
 constexpr const char* MODULE_UI_SYNTAX_DEFAULT_VALUE = "hml";
 constexpr const char* MODULE_PAGES = "pages";
+constexpr const char* MODULE_APP_SYSTEM_THEME = "systemTheme";
 constexpr const char* MODULE_ABILITIES = "abilities";
 constexpr const char* MODULE_EXTENSION_ABILITIES = "extensionAbilities";
 constexpr const char* MODULE_REQUEST_PERMISSIONS = "requestPermissions";

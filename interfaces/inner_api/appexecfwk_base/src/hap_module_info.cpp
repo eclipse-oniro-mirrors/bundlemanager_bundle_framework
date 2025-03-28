@@ -44,6 +44,7 @@ const char* HAP_MODULE_INFO_ABILITY_INFOS = "abilityInfos";
 const char* HAP_MODULE_INFO_COLOR_MODE = "colorMode";
 const char* HAP_MODULE_INFO_MAIN_ELEMENTNAME = "mainElementName";
 const char* HAP_MODULE_INFO_PAGES = "pages";
+const char *HAP_MODULE_INFO_SYSTEM_THEME = "systemTheme";
 const char* HAP_MODULE_INFO_PROCESS = "process";
 const char* HAP_MODULE_INFO_RESOURCE_PATH = "resourcePath";
 const char* HAP_MODULE_INFO_SRC_ENTRANCE = "srcEntrance";
@@ -533,6 +534,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     bundleName = Str16ToStr8(parcel.ReadString16());
     mainElementName = Str16ToStr8(parcel.ReadString16());
     pages = Str16ToStr8(parcel.ReadString16());
+    systemTheme = Str16ToStr8(parcel.ReadString16());
     process = Str16ToStr8(parcel.ReadString16());
     resourcePath = Str16ToStr8(parcel.ReadString16());
     srcEntrance = Str16ToStr8(parcel.ReadString16());
@@ -713,6 +715,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(mainElementName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pages));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(systemTheme));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(resourcePath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcEntrance));
@@ -805,6 +808,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {Constants::BUNDLE_NAME, hapModuleInfo.bundleName},
         {HAP_MODULE_INFO_MAIN_ELEMENTNAME, hapModuleInfo.mainElementName},
         {HAP_MODULE_INFO_PAGES, hapModuleInfo.pages},
+        {HAP_MODULE_INFO_SYSTEM_THEME, hapModuleInfo.systemTheme},
         {HAP_MODULE_INFO_PROCESS, hapModuleInfo.process},
         {HAP_MODULE_INFO_RESOURCE_PATH, hapModuleInfo.resourcePath},
         {HAP_MODULE_INFO_SRC_ENTRANCE, hapModuleInfo.srcEntrance},
@@ -995,6 +999,12 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         HAP_MODULE_INFO_PAGES,
         hapModuleInfo.pages,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_SYSTEM_THEME,
+        hapModuleInfo.systemTheme,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,

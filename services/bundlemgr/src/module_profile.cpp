@@ -308,6 +308,7 @@ struct Module {
     std::vector<std::string> deviceTypes;
     std::string virtualMachine = MODULE_VIRTUAL_MACHINE_DEFAULT_VALUE;
     std::string pages;
+    std::string systemTheme;
     std::vector<Metadata> metadata;
     std::vector<HnpPackage> hnpPackages;
     std::vector<Ability> abilities;
@@ -1340,6 +1341,12 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         jsonObjectEnd,
         MODULE_PAGES,
         module.pages,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_APP_SYSTEM_THEME,
+        module.systemTheme,
         false,
         g_parseResult);
     // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
@@ -2398,6 +2405,7 @@ bool ToInnerModuleInfo(
 
     innerModuleInfo.uiSyntax = Profile::MODULE_UI_SYNTAX_DEFAULT_VALUE;
     innerModuleInfo.pages = moduleJson.module.pages;
+    innerModuleInfo.systemTheme = moduleJson.module.systemTheme;
     if (!GetPermissions(moduleJson, transformParam, innerModuleInfo)) {
         APP_LOGE("GetPermissions failed");
         return false;
