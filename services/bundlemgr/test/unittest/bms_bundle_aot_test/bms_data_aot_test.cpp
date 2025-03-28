@@ -53,6 +53,7 @@ const std::string HAP_PATH = "/system/etc/graphic/bootpic.zip";
 const std::string NOHAP_PATH = "/data/test/resource/bms/aot_bundle/....right.hap";
 const std::string OUT_PUT_PATH = "/data/test/resource/bms/aot_bundle/";
 const std::string ABC_RELATIVE_PATH = "ets/modules.abc";
+const std::string STATIC_ABC_RELATIVE_PATH = "ets/modules_static.abc";
 const std::string AOT_BUNDLE_NAME = "aotBundleName";
 const std::string AOT_MODULE_NAME = "aotModuleName";
 const std::string STRING_TYPE_ONE = "string1";
@@ -141,6 +142,7 @@ HspInfo BmsAOTMgrTest::CreateHspInfo() const
     hspInfo.hapPath = "hapPath";
     hspInfo.offset = OFFSET;
     hspInfo.length = LENGTH;
+    hspInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
     return hspInfo;
 }
 
@@ -152,6 +154,7 @@ void BmsAOTMgrTest::CheckHspInfo(HspInfo &sourceHspInfo, HspInfo &targetHspInfo)
     EXPECT_EQ(sourceHspInfo.hapPath, targetHspInfo.hapPath);
     EXPECT_EQ(sourceHspInfo.offset, targetHspInfo.offset);
     EXPECT_EQ(sourceHspInfo.length, targetHspInfo.length);
+    EXPECT_EQ(sourceHspInfo.codeLanguage, targetHspInfo.codeLanguage);
 }
 
 void BmsAOTMgrTest::ClearDataMgr()
@@ -718,6 +721,7 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0200, Function | SmallTest | Level1)
     aotArgs.length = LENGTH;
     aotArgs.hspVector.emplace_back(CreateHspInfo());
     aotArgs.hspVector.emplace_back(CreateHspInfo());
+    aotArgs.codeLanguage = Constants::CODE_LANGUAGE_1_2;
 
     Parcel parcel;
     bool ret = aotArgs.Marshalling(parcel);
@@ -738,6 +742,7 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0200, Function | SmallTest | Level1)
     for (size_t i = 0; i < aotArgsPtr->hspVector.size(); ++i) {
         CheckHspInfo(aotArgsPtr->hspVector[i], aotArgs.hspVector[i]);
     }
+    EXPECT_EQ(aotArgsPtr->codeLanguage, aotArgs.codeLanguage);
     APP_LOGI("AOTArgs_0200 end");
 }
 
@@ -1366,6 +1371,18 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_2000, Function | SmallTest | Level0)
 {
     AOTExecutor::GetInstance().ResetState();
     EXPECT_FALSE(AOTExecutor::GetInstance().state_.running);
+}
+
+/**
+ * @tc.number: AOTExecutor_2100
+ * @tc.name: test GetAbcRelativePath
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_2100, Function | SmallTest | Level0)
+{
+    EXPECT_EQ(AOTExecutor::GetInstance().GetAbcRelativePath(Constants::CODE_LANGUAGE_1_1), ABC_RELATIVE_PATH);
+    EXPECT_EQ(AOTExecutor::GetInstance().GetAbcRelativePath(Constants::CODE_LANGUAGE_1_2), STATIC_ABC_RELATIVE_PATH);
+    EXPECT_EQ(AOTExecutor::GetInstance().GetAbcRelativePath(Constants::EMPTY_STRING), Constants::EMPTY_STRING);
 }
 
 /**
