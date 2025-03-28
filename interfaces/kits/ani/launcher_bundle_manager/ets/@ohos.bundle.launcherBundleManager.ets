@@ -22,7 +22,7 @@ export default namespace launcherBundleManager {
     export native function StartShortcutSync(shortcutInfo: ShortcutInfo): void;
     export native function GetShortcutInfoSync(bundleName: string, userId: number) : Array<ShortcutInfo>;
 
-    export function startShortcut(shortcutInfo: ShortcutInfo): Promise<void> {
+    function startShortcut(shortcutInfo: ShortcutInfo): Promise<void> {
       let p:Promise<void> = new Promise<void>((resolve:(v:undefined) =>void, reject: (error: Object) => void):void=> {
           let cb = ():NullishType=>{ launcherBundleManager.StartShortcutSync(shortcutInfo); }
           let p1 = taskpool.execute(cb);
@@ -36,11 +36,11 @@ export default namespace launcherBundleManager {
       return p;
     }
 
-    export function getShortcutInfoSync(bundleName: string): Array<ShortcutInfo>{
+    function getShortcutInfoSync(bundleName: string): Array<ShortcutInfo>{
       return launcherBundleManager.GetShortcutInfoSync(bundleName, -500);
     }
 
-    export function getShortcutInfoSync(bundleName: string, userId: number) : Array<ShortcutInfo> {
+    function getShortcutInfoSync(bundleName: string, userId: number) : Array<ShortcutInfo> {
       return launcherBundleManager.GetShortcutInfoSync(bundleName, userId);
     }
 
