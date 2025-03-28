@@ -14270,8 +14270,8 @@ HWTEST_F(BmsBundleKitServiceTest, InitAgingRequest_0003, Function | SmallTest | 
     const int64_t allBundleDataBytes = bundleAgingMgr.request_.GetTotalDataBytesThreshold() + 1;
     bundleAgingMgr.request_.SetTotalDataBytes(allBundleDataBytes);
     auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    int32_t bundleidone =1001;
-    int32_t bundleidtwo =1001;
+    int32_t bundleidone = 1001;
+    int32_t bundleidtwo = 1001;
     dataMgr->AddUserId(1001);
     dataMgr->AddUserId(1002);
     dataMgr->GenerateBundleId("app1", bundleidone);
