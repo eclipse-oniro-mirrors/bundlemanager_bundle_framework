@@ -3048,4 +3048,23 @@ HWTEST_F(BmsBundleAppControlTest, GetDisposedRuleFromResultSet_0100, Function | 
     auto res = rdb->GetDisposedRuleFromResultSet(nullptr, disposedRules);
     EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
+
+/**
+ * @tc.number: PrintDisposedRuleInfo_0100
+ * @tc.name: Test PrintDisposedRuleInfo_0100
+ * @tc.desc: PrintDisposedRuleInfo_0100 test
+ */
+HWTEST_F(BmsBundleAppControlTest, PrintDisposedRuleInfo_0100, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    DisposedRule rule;
+    rule.callerName = "com.xxx.xx";
+    rule.setTime = 11111111;
+    std::vector<DisposedRule> disposedRules;
+    disposedRules.emplace_back(rule);
+    EXPECT_NO_THROW(appControlManager->PrintDisposedRuleInfo(disposedRules));
+}
 } // OHOS
