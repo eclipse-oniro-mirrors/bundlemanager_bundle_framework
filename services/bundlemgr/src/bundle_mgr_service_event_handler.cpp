@@ -353,7 +353,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
     UpdateOtaFlag(OTAFlag::CHECK_INSTALL_SOURCE);
     UpdateOtaFlag(OTAFlag::DELETE_DEPRECATED_ARK_PATHS);
-    SaveBmsSystemTimeForShortcut();
+    (void)SaveBmsSystemTimeForShortcut();
     PerfProfile::GetInstance().Dump();
 }
 
@@ -370,7 +370,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         OnBundleRebootStart();
         HandleOTACodeEncryption();
         SaveSystemFingerprint();
-        SaveBmsSystemTimeForShortcut();
+        (void)SaveBmsSystemTimeForShortcut();
         AOTHandler::GetInstance().HandleOTA();
     } else {
         HandlePreInstallException();

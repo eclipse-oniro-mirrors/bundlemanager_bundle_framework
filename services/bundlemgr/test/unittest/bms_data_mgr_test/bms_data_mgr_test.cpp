@@ -3069,9 +3069,10 @@ HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0003, Function | MediumTest | Le
     ShortcutInfo shortcutInfo;
     shortcutInfo.id = "$string:11111";
     shortcutInfos.emplace_back(shortcutInfo);
-    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    auto bmsPara = std::make_shared<BmsParam>();
     EXPECT_NE(bmsPara, nullptr);
     if (bmsPara) {
+        bundleMgrService_->bmsParam_ = bmsPara;
         bool ret = bmsPara->SaveBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, "100");
         EXPECT_TRUE(ret);
     }
@@ -3097,9 +3098,10 @@ HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0004, Function | MediumTest | Le
     ShortcutInfo shortcutInfo_3;
     shortcutInfo_3.id = "$string:xxxx";
     shortcutInfos.emplace_back(shortcutInfo_3);
-    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    auto bmsPara = std::make_shared<BmsParam>();
     EXPECT_NE(bmsPara, nullptr);
     if (bmsPara) {
+        bundleMgrService_->bmsParam_ = bmsPara;
         bool ret = bmsPara->SaveBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, "100");
         EXPECT_TRUE(ret);
     }
@@ -3124,9 +3126,10 @@ HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0005, Function | MediumTest | Le
     ShortcutInfo shortcutInfo;
     shortcutInfo.id = "$string:16777216";
     shortcutInfos.emplace_back(shortcutInfo);
-    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    auto bmsPara = std::make_shared<BmsParam>();
     EXPECT_NE(bmsPara, nullptr);
     if (bmsPara) {
+        bundleMgrService_->bmsParam_ = bmsPara;
         bool ret = bmsPara->SaveBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, "100");
         EXPECT_TRUE(ret);
     }
@@ -3149,9 +3152,10 @@ HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0006, Function | MediumTest | Le
     ShortcutInfo shortcutInfo;
     shortcutInfo.id = "$string:11111";
     shortcutInfos.emplace_back(shortcutInfo);
-    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    auto bmsPara = std::make_shared<BmsParam>();
     EXPECT_NE(bmsPara, nullptr);
     if (bmsPara) {
+        bundleMgrService_->bmsParam_ = bmsPara;
         bool ret = bmsPara->SaveBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, "100");
         EXPECT_TRUE(ret);
     }
