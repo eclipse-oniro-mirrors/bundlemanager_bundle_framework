@@ -14223,9 +14223,9 @@ HWTEST_F(BmsBundleKitServiceTest, Process_0001, Function | SmallTest | Level0)
     auto handler = std::make_shared<RecentlyUnuseBundleAgingHandler>(ruAgingHandler);
     agingHandlerChain.AddHandler(handler);
     request.SetTotalDataBytes(1);
-    request.totalDataBytesThreshold_ = 2;
+    request.totalDataBytesThreshold_ = 0;
     bool ret = agingHandlerChain.Process(request);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -14265,14 +14265,85 @@ HWTEST_F(BmsBundleKitServiceTest, InitAgingRequest_0002, Function | SmallTest | 
 HWTEST_F(BmsBundleKitServiceTest, InitAgingRequest_0003, Function | SmallTest | Level0)
 {
     BundleAgingMgr bundleAgingMgr;
+    InnerBundleInfo innerBundleInfoOne;
+    InnerBundleInfo innerBundleInfoTwo;
     const int64_t allBundleDataBytes = bundleAgingMgr.request_.GetTotalDataBytesThreshold() + 1;
     bundleAgingMgr.request_.SetTotalDataBytes(allBundleDataBytes);
     auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    int32_t bundleidone =1001;
+    int32_t bundleidtwo =1001;
     dataMgr->AddUserId(1001);
     dataMgr->AddUserId(1002);
+    dataMgr->GenerateBundleId("app1", bundleidone);
+    dataMgr->GenerateBundleId("app2", bundleidtwo);
+    dataMgr->AddInnerBundleInfo("app1", innerBundleInfoOne, false);
+    dataMgr->AddInnerBundleInfo("app2", innerBundleInfoTwo, false);
+    dataMgr->UpdateBundleInstallState("app1", InstallState::INSTALL_SUCCESS, false);
+    dataMgr->UpdateBundleInstallState("app2", InstallState::INSTALL_SUCCESS, false);
+
     bool ret = bundleAgingMgr.InitAgingRequest();
     EXPECT_FALSE(ret);
     dataMgr->RemoveUserId(1001);
     dataMgr->RemoveUserId(1002);
+}
+
+/**
+ * @tc.number: AgingClean_0001
+ * @tc.name: test BundleAgingMgr of AgingClean
+ * @tc.desc: AgingClean is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, AgingClean_0001, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler ruBundleAgingHandler;
+    const AgingBundleInfo agingBundleInfo;
+    AgingRequest request;
+    request.SetAgingCleanType(AgingCleanType::CLEAN_OTHERS);
+    bool ret = ruBundleAgingHandler.AgingClean(agingBundleInfo, request);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: Start_0001
+ * @tc.name: test BundleAgingMgr of Start
+ * @tc.desc: Start is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, Start_0001, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    AppExecFwk::BundleAgingMgr::AgingTriggertype type = AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD;
+    DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().SetDisplayState(DisplayPowerMgr::DisplayState::DISPLAY_ON);
+    bundleAgingMgr.Start(type);
+    EXPECT_EQ(DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().GetDisplayState(), DisplayPowerMgr::DisplayState::DISPLAY_ON);
+}
+
+/**
+ * @tc.number: Start_0002
+ * @tc.name: test BundleAgingMgr of Start
+ * @tc.desc: Start is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, Start_0002, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    AppExecFwk::BundleAgingMgr::AgingTriggertype type = AppExecFwk::BundleAgingMgr::AgingTriggertype::FREE_INSTALL;
+    bundleAgingMgr.Start(type);
+    EXPECT_TRUE(bundleAgingMgr.running_);
+    bundleAgingMgr.Start(type);
+    EXPECT_TRUE(bundleAgingMgr.running_);
+}
+
+/**
+ * @tc.number: InnerProcess_0001
+ * @tc.name: test AgingHandlerChain of InnerProcess
+ * @tc.desc: Process is isPassed
+ */
+HWTEST_F(BmsBundleKitServiceTest, InnerProcess_0001, Function | SmallTest | Level0)
+{
+    AgingHandlerChain agingHandlerChain;
+    AgingRequest request;
+    RecentlyUnuseBundleAgingHandler ruAgingHandler;
+    auto handler = std::make_shared<RecentlyUnuseBundleAgingHandler>(ruAgingHandler);
+    agingHandlerChain.AddHandler(handler);
+    bool ret = agingHandlerChain.InnerProcess(request);
+    EXPECT_FALSE(ret);
 }
 }
