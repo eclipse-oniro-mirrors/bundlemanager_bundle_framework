@@ -723,4 +723,52 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCloneInstaller_0010, Function | Medi
     auto ret = installer.UninstallAllCloneApps(bundleName, sync, userId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR);
 }
+
+/**
+ * @tc.number: BundleCloneInstaller_0020
+ * @tc.name: test CreateEl5Dir
+ * @tc.desc: 1.Test CreateEl5Dir the BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCloneInstaller_0020, Function | MediumTest | Level1)
+{
+    BundleCloneInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    int32_t uid = 100;
+    int32_t userId = 101;
+    int32_t appIndex = 102;
+    RequestPermission requestPermission;
+    requestPermission.name = ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "testname";
+    innerModuleInfo.requestPermissions.emplace_back(requestPermission);
+    innerBundleInfo.innerModuleInfos_.try_emplace("test", innerModuleInfo);
+    installer.CreateEl5Dir(innerBundleInfo, uid, userId, appIndex);
+    EXPECT_NE(installer.GetDataMgr(), ERR_OK);
+}
+
+/**
+ * @tc.number: BundleCloneInstaller_0030
+ * @tc.name: test GetAssetAccessGroups
+ * @tc.desc: 1.Test GetAssetAccessGroups the BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCloneInstaller_0030, Function | MediumTest | Level1)
+{
+    BundleCloneInstaller installer;
+    std::string bundleName = "test";
+    auto ret = installer.GetAssetAccessGroups(bundleName);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: BundleCloneInstaller_0040
+ * @tc.name: test GetDeveloperId
+ * @tc.desc: 1.Test GetDeveloperId the BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCloneInstaller_0040, Function | MediumTest | Level1)
+{
+    BundleCloneInstaller installer;
+    std::string bundleName = "test";
+    auto ret = installer.GetDeveloperId(bundleName);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
 } // OHOS
