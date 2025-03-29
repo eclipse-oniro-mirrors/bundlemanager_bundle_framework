@@ -2072,8 +2072,10 @@ napi_value InstallPlugin(napi_env env, napi_callback_info info)
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, FILE_PATH, TYPE_ARRAY);
                 return nullptr;
             }
-        } else if (i == ARGS_POS_TWO && valueType == napi_object) {
-            ParseInstallPluginParam(env, args[i], asyncCallbackInfo->installPluginParam);
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_object) {
+                ParseInstallPluginParam(env, args[i], asyncCallbackInfo->installPluginParam);
+            }
         } else {
             APP_LOGW("The number of parameters is incorrect");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
@@ -2170,8 +2172,10 @@ napi_value UninstallPlugin(napi_env env, napi_callback_info info)
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PLUGIN_BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
-        } else if (i == ARGS_POS_TWO && valueType == napi_object) {
-            ParseInstallPluginParam(env, args[i], asyncCallbackInfo->installPluginParam);
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_object) {
+                ParseInstallPluginParam(env, args[i], asyncCallbackInfo->installPluginParam);
+            }
         } else {
             APP_LOGW("The number of parameters is incorrect");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
