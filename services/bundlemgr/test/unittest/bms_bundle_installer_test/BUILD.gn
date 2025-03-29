@@ -126,6 +126,9 @@ ohos_unittest("BmsBundleInstallerTest") {
     ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
+  if (current_cpu == "arm64") {
+    defines += [ "USE_EXTENSION_DATA" ]
+  }
 
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]

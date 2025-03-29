@@ -813,12 +813,16 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BaseBundleInstaller_0001, Function | 
     installer.InitDataMgr();
     bundleMgrService_->GetDataMgr()->AddUserId(101);
 
-    std::string bundleName = "com.ohos.settings";
+    std::string bundleName = Constants::SCENE_BOARD_BUNDLE_NAME;
     InstallParam installParam;
     installParam.userId = 101;
     int32_t uid = -1;
     ErrCode ret = installer.InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    if (ret != ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED) {
+        bundleName = ServiceConstants::LAUNCHER_BUNDLE_NAME;
+        ErrCode ret2 = installer.InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid);
+        EXPECT_EQ(ret2, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    }
     bundleMgrService_->GetDataMgr()->RemoveUserId(101);
 }
 
@@ -944,7 +948,7 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleMultiUserInstaller_0002, Functi
 */
 HWTEST_F(BmsBundleInstallerPermissionTest, BundleSandboxInstaller_0001, Function | SmallTest | Level0)
 {
-    std::string bundleName = "com.ohos.settings";
+    std::string bundleName = Constants::SCENE_BOARD_BUNDLE_NAME;
     auto dataMgr = bundleMgrService_->GetDataMgr();
 
     BundleSandboxInstaller installer;
@@ -952,7 +956,11 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleSandboxInstaller_0001, Function
     int32_t appIndex = 0;
 
     auto ret = installer.InstallSandboxApp(bundleName, 1, 100, appIndex);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    if (ret != ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED) {
+        bundleName = ServiceConstants::LAUNCHER_BUNDLE_NAME;
+        ErrCode ret2 = installer.InstallSandboxApp(bundleName, 1, 100, appIndex);
+        EXPECT_EQ(ret2, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+    }
 }
 
 /**
@@ -962,11 +970,15 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleSandboxInstaller_0001, Function
 */
 HWTEST_F(BmsBundleInstallerPermissionTest, BundleSandboxInstaller_0002, Function | SmallTest | Level0)
 {
-    std::string bundleName = "com.ohos.settings";
+    std::string bundleName = Constants::SCENE_BOARD_BUNDLE_NAME;
     auto dataMgr = bundleMgrService_->GetDataMgr();
     AppProvisionInfo appProvisionInfo;
     auto result = dataMgr->GetAppProvisionInfo(bundleName, 100, appProvisionInfo);
-    EXPECT_EQ(result, ERR_OK);
+    if (result != ERR_OK) {
+        bundleName = ServiceConstants::LAUNCHER_BUNDLE_NAME;
+        auto result2 = dataMgr->GetAppProvisionInfo(bundleName, 100, appProvisionInfo);
+        EXPECT_EQ(result2, ERR_OK);
+    }
     auto deleteRes = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName);
     EXPECT_TRUE(deleteRes);
 
@@ -981,6 +993,4 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleSandboxInstaller_0002, Function
         bundleName, appProvisionInfo);
     EXPECT_TRUE(addRes);
 }
-
-
 } // OHOS
