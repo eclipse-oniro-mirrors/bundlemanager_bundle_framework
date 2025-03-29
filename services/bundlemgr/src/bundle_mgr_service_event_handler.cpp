@@ -2152,6 +2152,10 @@ bool BMSEventHandler::HotPatchAppProcessing(const std::string &bundleName, uint3
             hasInstallVersionCode, hapVersionCode);
         // installed patch application version greater than or equal to OTA Preconfigured APP Version
         if (hasInstallVersionCode >= hapVersionCode) {
+            BundleInfo bundleInfo;
+            bundleInfo.name = bundleName;
+            bundleInfo.versionCode = hapVersionCode;
+            SendBundleUpdateFailedEvent(bundleInfo, ERR_APPEXECFWK_UNINSTALL_AND_INSTALL);
             LOG_I(BMS_TAG_DEFAULT, "get patch success, bundleName: %{public}s", bundleName.c_str());
             // uninstall the patch app
             SystemBundleInstaller installer;
@@ -4169,12 +4173,17 @@ void BMSEventHandler::ProcessAllBundleDataGroupInfo()
 
 void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
 {
+    SendBundleUpdateFailedEvent(bundleInfo, ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE);
+}
+
+void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, const int32_t errorCode)
+{
     LOG_I(BMS_TAG_DEFAULT, "SendBundleUpdateFailedEvent start, bundleName:%{public}s", bundleInfo.name.c_str());
     EventInfo eventInfo;
     eventInfo.userId = Constants::ANY_USERID;
     eventInfo.bundleName = bundleInfo.name;
     eventInfo.versionCode = bundleInfo.versionCode;
-    eventInfo.errCode = ERR_APPEXECFWK_OTA_INSTALL_VERSION_DOWNGRADE;
+    eventInfo.errCode = errorCode;
     eventInfo.isPreInstallApp = bundleInfo.isPreInstallApp;
     EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
 }
