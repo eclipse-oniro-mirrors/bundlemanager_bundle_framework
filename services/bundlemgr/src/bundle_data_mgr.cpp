@@ -5344,7 +5344,7 @@ bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
             shortcutInfo.bundleName.c_str(), shortcutInfo.id.c_str(), shortcutInfo.iconId, shortcutInfo.labelId);
         shortcutInfos.emplace_back(shortcutInfo);
     }
-    (void)InnerProcessShortcutId(abilityInfo.hapPath, shortcutInfos);
+    (void)InnerProcessShortcutId(info.GetBundleUpdateTime(Constants::ALL_USERID), abilityInfo.hapPath, shortcutInfos);
     return true;
 }
 
@@ -5366,11 +5366,6 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
         APP_LOGE("resConfig is nullptr");
         return nullptr;
     }
-#ifdef GLOBAL_I18_ENABLE
-    std::map<std::string, std::string> configs;
-    OHOS::Global::I18n::LocaleInfo locale(Global::I18n::LocaleConfig::GetEffectiveLanguage(), configs);
-    resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
-#endif
     resourceManager->UpdateResConfig(*resConfig);
     if (!resourceManager->AddResource(hapPath.c_str(), Global::Resource::SELECT_STRING)) {
         APP_LOGW("AddResource failed");
@@ -5379,7 +5374,27 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
 }
 #endif
 
-bool BundleDataMgr::InnerProcessShortcutId(const std::string &hapPath, std::vector<ShortcutInfo> &shortcutInfos) const
+bool BundleDataMgr::CheckUpdateTimeWithBmsParam(const int64_t updateTime) const
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
+        return false;
+    }
+    std::string val;
+    if (!bmsPara->GetBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, val)) {
+        LOG_E(BMS_TAG_DEFAULT, "GetBmsParam BMS_SYSTEM_TIME_FOR_SHORTCUT failed");
+        return false;
+    }
+    if (std::to_string(updateTime) < val) {
+        LOG_W(BMS_TAG_DEFAULT, "updateTime is less than val");
+        return false;
+    }
+    return true;
+}
+
+bool BundleDataMgr::InnerProcessShortcutId(const int64_t updateTime,
+    const std::string &hapPath, std::vector<ShortcutInfo> &shortcutInfos) const
 {
 #ifdef GLOBAL_RESMGR_ENABLE
     bool needToParseShortcutId = false;
@@ -5392,7 +5407,12 @@ bool BundleDataMgr::InnerProcessShortcutId(const std::string &hapPath, std::vect
     if (!needToParseShortcutId) {
         return false;
     }
-    APP_LOGI("shortcut id conatins $string:");
+
+    if (!CheckUpdateTimeWithBmsParam(updateTime)) {
+        return false;
+    }
+
+    APP_LOGI("shortcut id conatins $string: need parse");
     auto resourceManager = GetResourceManager(hapPath);
     if (resourceManager == nullptr) {
         APP_LOGI("create resource mgr failed");

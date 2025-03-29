@@ -2366,6 +2366,33 @@ HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTe
 }
 
 /**
+ * @tc.number: SaveBmsSystemTimeForShortcut_0100
+ * @tc.name: SaveBmsSystemTimeForShortcut
+ * @tc.desc: test SaveBmsSystemTimeForShortcut
+ */
+HWTEST_F(BmsEventHandlerTest, SaveBmsSystemTimeForShortcut_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = nullptr;
+        bool ret = handler->SaveBmsSystemTimeForShortcut();
+        EXPECT_FALSE(ret);
+        auto bmsParam = std::make_shared<BmsParam>();
+        EXPECT_NE(bmsParam, nullptr);
+        if (bmsParam) {
+            ret = bmsParam->DeleteBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT);
+            EXPECT_TRUE(ret);
+            DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = std::make_shared<BmsParam>();
+            ret = handler->SaveBmsSystemTimeForShortcut();
+            EXPECT_TRUE(ret);
+        }
+        ret = handler->SaveBmsSystemTimeForShortcut();
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
  * @tc.number: InnerBundleInfo_0100
  * @tc.name: UpdateRemovable
  * @tc.desc: test UpdateRemovable

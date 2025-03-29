@@ -353,6 +353,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
     UpdateOtaFlag(OTAFlag::CHECK_INSTALL_SOURCE);
     UpdateOtaFlag(OTAFlag::DELETE_DEPRECATED_ARK_PATHS);
+    (void)SaveBmsSystemTimeForShortcut();
     PerfProfile::GetInstance().Dump();
 }
 
@@ -369,6 +370,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         OnBundleRebootStart();
         HandleOTACodeEncryption();
         SaveSystemFingerprint();
+        (void)SaveBmsSystemTimeForShortcut();
         AOTHandler::GetInstance().HandleOTA();
     } else {
         HandlePreInstallException();
@@ -4572,6 +4574,27 @@ void BMSEventHandler::CheckBundleProvisionInfo()
     LOG_I(BMS_TAG_DEFAULT, "start");
     std::thread ProcessBundleProvisionInfoThread(InnerProcessStockBundleProvisionInfo);
     ProcessBundleProvisionInfoThread.detach();
+}
+
+bool BMSEventHandler::SaveBmsSystemTimeForShortcut()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
+        return false;
+    }
+    std::string val;
+    if (bmsPara->GetBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, val)) {
+        return true;
+    }
+
+    int64_t systemTime = BundleUtil::GetCurrentTimeMs();
+    if (!bmsPara->SaveBmsParam(ServiceConstants::BMS_SYSTEM_TIME_FOR_SHORTCUT, std::to_string(systemTime))) {
+        LOG_E(BMS_TAG_DEFAULT, "save BMS_SYSTEM_TIME_FOR_SHORTCUT failed");
+        return false;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "save BMS_SYSTEM_TIME_FOR_SHORTCUT succeed");
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

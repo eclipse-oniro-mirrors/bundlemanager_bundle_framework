@@ -133,6 +133,8 @@ public:
     static bool CheckOtaFlag(OTAFlag flag, bool &result);
 
     static bool UpdateOtaFlag(OTAFlag flag);
+
+    static bool SaveBmsSystemTimeForShortcut();
 private:
     /**
      * @brief Before Bms start.
