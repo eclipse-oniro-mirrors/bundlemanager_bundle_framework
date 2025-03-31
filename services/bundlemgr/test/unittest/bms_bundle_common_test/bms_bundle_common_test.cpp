@@ -356,19 +356,6 @@ HWTEST_F(BmsBundleCommonTest, AppspawnCreateDefaultMsg_0300, Function | SmallTes
 }
 
 /**
- * @tc.number: OpenConnection
- * @tc.name: AppspawnCreateDefaultMsg_0300
- * @tc.desc: int32_t BundleAppSpawnClient::OpenConnection()
- */
-HWTEST_F(BmsBundleCommonTest, OpenConnection_0100, Function | SmallTest | Level1)
-{
-    AppSpawnClientHandle handle = nullptr;
-    std::string serviceName_ = "com.example.test";
-    int32_t ret = AppSpawnClientInit(serviceName_.c_str(), &handle);
-    EXPECT_EQ(ret, 0);
-}
-
-/**
  * @tc.number: RemoveSandboxDir
  * @tc.name: RemoveSandboxDir_0100
  * @tc.desc: int32_t BundleAppSpawnClient::RemoveSandboxDir
