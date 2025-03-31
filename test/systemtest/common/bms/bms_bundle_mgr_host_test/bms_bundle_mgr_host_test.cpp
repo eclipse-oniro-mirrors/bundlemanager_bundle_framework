@@ -1950,6 +1950,36 @@ HWTEST_F(BmsBundleMgrHostTest, HandleIsBundleInstalled_0001, Function | MediumTe
 }
 
 /**
+ * @tc.number: HandleGetAllPluginInfo_0001
+ * @tc.name: test the HandleGetAllPluginInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetAllPluginInfo
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetAllPluginInfo_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetAllPluginInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetPluginInfosForSelf_0001
+ * @tc.name: test the HandleGetPluginInfosForSelf
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetPluginInfosForSelf
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetPluginInfosForSelf_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetPluginInfosForSelf(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: HandleGetCompatibleDeviceTypeNative_0001
  * @tc.name: test the HandleGetCompatibleDeviceTypeNative
  * @tc.desc: 1. system running normally

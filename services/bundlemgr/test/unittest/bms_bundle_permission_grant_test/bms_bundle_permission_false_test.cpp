@@ -1736,6 +1736,18 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_28000, Funct
 }
 
 /**
+ * @tc.number: GetAllPluginInfo_0001
+ * @tc.name: test GetAllPluginInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetAllPluginInfo_0001, Function | SmallTest | Level1)
+{
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    ErrCode testRet = bundleMgrHostImpl_->GetAllPluginInfo("", USERID, pluginBundleInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: IsBundleInstalled_0001
  * @tc.name: test IsBundleInstalled
  * @tc.desc: 1.system run normal

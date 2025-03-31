@@ -9151,6 +9151,77 @@ HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0003, Function | MediumTest | Level1)
     std::cout << "END CanOpenLink_0003" << std::endl;
 }
 
+
+/**
+ * @tc.number: GetAllPluginInfo_0001
+ * @tc.name: test GetAllPluginInfo interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call GetAllPluginInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllPluginInfo_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllPluginInfo_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto queryResult =
+        bundleMgrProxy->GetAllPluginInfo(appName, 100, pluginBundleInfos);
+    EXPECT_EQ(queryResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetAllPluginInfo_0001" << std::endl;
+}
+ 
+/**
+ * @tc.number: GetPluginInfosForSelf_0001
+ * @tc.name: test GetPluginInfosForSelf interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call GetPluginInfosForSelf
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetPluginInfosForSelf_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetPluginInfosForSelf_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    BundleInfo bundleInfo;
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    setuid(bundleInfo.uid);
+
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto queryResult =
+        bundleMgrProxy->GetPluginInfosForSelf(pluginBundleInfos);
+
+    setuid(Constants::ROOT_UID);
+    EXPECT_EQ(queryResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetPluginInfosForSelf_0001" << std::endl;
+}
+
 /**
  * @tc.number: GetOdid_0001
  * @tc.name: test GetOdid interface

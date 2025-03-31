@@ -4967,7 +4967,7 @@ ErrCode BundleMgrHostImpl::GetAllPluginInfo(const std::string &hostBundleName, i
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     return dataMgr->GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
 }
