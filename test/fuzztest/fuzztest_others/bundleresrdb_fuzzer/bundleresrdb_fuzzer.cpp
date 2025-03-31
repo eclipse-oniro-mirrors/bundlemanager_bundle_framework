@@ -16,6 +16,8 @@
 #define private public
 #include "bundleresrdb_fuzzer.h"
 
+#include <memory>
+
 #include "bundle_resource_rdb.h"
 #include "bundle_resource_register.h"
 #include "securec.h"
@@ -27,42 +29,62 @@ constexpr uint32_t CODE_MAX = 8;
 const int32_t USERID = 100;
 const std::string MODULE_NAME = "entry";
 const std::string ABILITY_NAME = "com.example.bmsaccesstoken1.MainAbility";
+namespace {
+class SingletonRdb {
+public:
+    static SingletonRdb& GetInstance()
+    {
+        return *instance_;
+    }
+
+    SingletonRdb& operator=(const SingletonRdb&) = delete;
+    SingletonRdb(const SingletonRdb&) = delete;
+
+    BundleResourceRdb bundleResourceRdb;
+private:
+    SingletonRdb() = default;
+    ~SingletonRdb() = default;
+    static std::unique_ptr<SingletonRdb> instance_;
+};
+}
+
+std::unique_ptr<SingletonRdb> SingletonRdb::instance_ = std::make_unique<SingletonRdb>();
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    BundleResourceRdb resourceRdb;
+    SingletonRdb& rdb = SingletonRdb::GetInstance();
     ResourceInfo resourceInfo;
     std::string bundleName(data, size);
     resourceInfo.bundleName_ = bundleName;
-    resourceRdb.AddResourceInfo(resourceInfo);
-    resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    rdb.bundleResourceRdb.AddResourceInfo(resourceInfo);
+    rdb.bundleResourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
     std::vector<ResourceInfo> resourceInfos;
     resourceInfos.push_back(resourceInfo);
-    resourceRdb.AddResourceInfos(resourceInfos);
-    resourceRdb.DeleteAllResourceInfo();
+    rdb.bundleResourceRdb.AddResourceInfos(resourceInfos);
+    rdb.bundleResourceRdb.DeleteAllResourceInfo();
     std::vector<std::string> keyNames;
-    resourceRdb.GetAllResourceName(keyNames);
+    rdb.bundleResourceRdb.GetAllResourceName(keyNames);
     int32_t appIndex = 1;
-    resourceRdb.GetResourceNameByBundleName(bundleName, appIndex, keyNames);
+    rdb.bundleResourceRdb.GetResourceNameByBundleName(bundleName, appIndex, keyNames);
     BundleResourceInfo info;
-    resourceRdb.GetBundleResourceInfo(resourceInfo.bundleName_,
+    rdb.bundleResourceRdb.GetBundleResourceInfo(resourceInfo.bundleName_,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), info);
     std::vector<LauncherAbilityResourceInfo> launcherInfos;
-    resourceRdb.GetLauncherAbilityResourceInfo(resourceInfo.bundleName_,
+    rdb.bundleResourceRdb.GetLauncherAbilityResourceInfo(resourceInfo.bundleName_,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), launcherInfos);
     std::vector<BundleResourceInfo> infos;
-    resourceRdb.GetAllBundleResourceInfo(
+    rdb.bundleResourceRdb.GetAllBundleResourceInfo(
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), infos);
-    resourceRdb.GetAllLauncherAbilityResourceInfo(
+    rdb.bundleResourceRdb.GetAllLauncherAbilityResourceInfo(
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), launcherInfos);
-    resourceRdb.UpdateResourceForSystemStateChanged(resourceInfos);
+    rdb.bundleResourceRdb.UpdateResourceForSystemStateChanged(resourceInfos);
     std::string systemState(data, size);
-    resourceRdb.GetCurrentSystemState(systemState);
-    resourceRdb.DeleteNotExistResourceInfo();
-    resourceRdb.ParseKey(resourceInfo.GetKey(), info);
+    rdb.bundleResourceRdb.GetCurrentSystemState(systemState);
+    rdb.bundleResourceRdb.DeleteNotExistResourceInfo();
+    rdb.bundleResourceRdb.ParseKey(resourceInfo.GetKey(), info);
     LauncherAbilityResourceInfo launcherInfo;
-    resourceRdb.ParseKey(resourceInfo.GetKey(), launcherInfo);
-    resourceRdb.BackupRdb();
+    rdb.bundleResourceRdb.ParseKey(resourceInfo.GetKey(), launcherInfo);
+    rdb.bundleResourceRdb.BackupRdb();
     BundleResourceRegister::RegisterConfigurationObserver();
     BundleResourceRegister::RegisterCommonEventSubscriber();
     resourceInfo.ConvertFromBundleResourceInfo(info);
