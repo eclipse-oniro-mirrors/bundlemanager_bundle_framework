@@ -198,6 +198,7 @@ ErrCode AppServiceFwkInstaller::UnInstall(
         APP_LOGE("uninstall failed, module %{public}s bundle %{public}s", moduleName.c_str(), bundleName.c_str());
         return result;
     }
+    APP_LOGI("uninstall -n %{public}s -m %{public}s success", bundleName.c_str(), moduleName.c_str());
     return ERR_OK;
 }
 

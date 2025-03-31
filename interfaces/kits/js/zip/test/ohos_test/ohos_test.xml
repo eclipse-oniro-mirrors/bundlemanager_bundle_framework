@@ -16,8 +16,8 @@
 <configuration ver="2.0">
   <target name="zip_test">
     <preparer>
-      <option name="push" 
-        value="../../bundlemgrservice/resource/test_bundle/resourceManagerTest.hap -> /data/test/resource/bms/test_zip/" 
+      <option name="push"
+        value="../../bundle_framework/resource/test_bundle/resourceManagerTest.hap -> /data/test/resource/bms/test_zip/"
         src="res" />
       <option name="push" value="ohos_test.xml -> /data/test/resource/bms/test_zip/" src="res" />
     </preparer>
