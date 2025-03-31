@@ -301,4 +301,102 @@ HWTEST_F(BmsBundleCommonTest, ReScheduleDelayTask_0400, Function | SmallTest | L
     serialQueue.ReScheduleDelayTask(taskName, ms, registerEventListenerFunc);
     EXPECT_EQ(serialQueue.taskMap_.size(), 1);
 }
+
+/**
+ * @tc.number: AppspawnCreateDefaultMsg
+ * @tc.name: AppspawnCreateDefaultMsg_0100
+ * @tc.desc: int32_t BundleAppSpawnClient::AppspawnCreateDefaultMsg
+ * (const AppSpawnRemoveSandboxDirMsg &removeSandboxDirMsg,AppSpawnReqMsgHandle reqHandle)
+ */
+HWTEST_F(BmsBundleCommonTest, AppspawnCreateDefaultMsg_0100, Function | SmallTest | Level1)
+{
+    AppSpawnRemoveSandboxDirMsg removeSandboxDirMsg = {
+        .bundleName = "com.example.test",
+        .bundleIndex = 0,
+    };
+    AppSpawnReqMsgHandle reqHandle = nullptr;
+    // AppSpawnReqMsgHandle reqHandle;
+    int32_t ret = AppSpawnReqMsgSetBundleInfo(reqHandle, removeSandboxDirMsg.bundleIndex,
+        removeSandboxDirMsg.bundleName.c_str());
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: AppspawnCreateDefaultMsg
+ * @tc.name: AppspawnCreateDefaultMsg_0200
+ * @tc.desc: int32_t BundleAppSpawnClient::AppspawnCreateDefaultMsg
+ * (const AppSpawnRemoveSandboxDirMsg &removeSandboxDirMsg,AppSpawnReqMsgHandle reqHandle)
+ */
+HWTEST_F(BmsBundleCommonTest, AppspawnCreateDefaultMsg_0200, Function | SmallTest | Level1)
+{
+    AppDacInfo appDacInfo = {0};
+    AppSpawnRemoveSandboxDirMsg removeSandboxDirMsg = {
+        .uid = 0,
+    };
+    AppSpawnReqMsgHandle reqHandle = nullptr;
+    appDacInfo.uid = removeSandboxDirMsg.uid;
+    int32_t ret = AppSpawnReqMsgSetAppDacInfo(reqHandle, &appDacInfo);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: AppspawnCreateDefaultMsg
+ * @tc.name: AppspawnCreateDefaultMsg_0300
+ * @tc.desc: int32_t BundleAppSpawnClient::AppspawnCreateDefaultMsg
+ * (const AppSpawnRemoveSandboxDirMsg &removeSandboxDirMsg,AppSpawnReqMsgHandle reqHandle)
+ */
+HWTEST_F(BmsBundleCommonTest, AppspawnCreateDefaultMsg_0300, Function | SmallTest | Level1)
+{
+    AppSpawnRemoveSandboxDirMsg removeSandboxDirMsg = {
+        .flags = APP_FLAGS_COLD_BOOT,
+    };
+    AppSpawnReqMsgHandle reqHandle = nullptr;
+    int32_t ret = AppSpawnReqMsgSetAppFlag(reqHandle, removeSandboxDirMsg.flags);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: OpenConnection
+ * @tc.name: AppspawnCreateDefaultMsg_0300
+ * @tc.desc: int32_t BundleAppSpawnClient::OpenConnection()
+ */
+HWTEST_F(BmsBundleCommonTest, OpenConnection_0100, Function | SmallTest | Level1)
+{
+    AppSpawnClientHandle handle = nullptr;
+    std::string serviceName_ = "com.example.test";
+    int32_t ret = AppSpawnClientInit(serviceName_.c_str(), &handle);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: RemoveSandboxDir
+ * @tc.name: RemoveSandboxDir_0100
+ * @tc.desc: int32_t BundleAppSpawnClient::RemoveSandboxDir
+ * (const AppSpawnRemoveSandboxDirMsg &removeSandboxDirMsg)
+ */
+HWTEST_F(BmsBundleCommonTest, RemoveSandboxDir_0100, Function | SmallTest | Level1)
+{
+    AppSpawnReqMsgHandle reqHandle = nullptr;
+    AppSpawnMsgType msgType = MSG_APP_SPAWN;
+    AppSpawnRemoveSandboxDirMsg removeSandboxDirMsg = {
+        .bundleName = "com.example.test"
+    };
+    int32_t ret = AppSpawnReqMsgCreate(msgType, removeSandboxDirMsg.bundleName.c_str(), &reqHandle);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: RemoveSandboxDir
+ * @tc.name: RemoveSandboxDir_0200
+ * @tc.desc: int32_t BundleAppSpawnClient::RemoveSandboxDir
+ * (const AppSpawnRemoveSandboxDirMsg &removeSandboxDirMsg)
+ */
+HWTEST_F(BmsBundleCommonTest, RemoveSandboxDir_0200, Function | SmallTest | Level1)
+{
+    AppSpawnClientHandle handle_ = nullptr;
+    AppSpawnResult result = {1};
+    AppSpawnReqMsgHandle reqHandle = nullptr;
+    int32_t ret = AppSpawnClientSendMsg(handle_, reqHandle, &result);
+    EXPECT_NE(ret, 0);
+}
 } // OHOS

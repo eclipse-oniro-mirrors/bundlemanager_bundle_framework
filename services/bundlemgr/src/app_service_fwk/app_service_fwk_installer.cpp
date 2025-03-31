@@ -74,7 +74,7 @@ void BuildCheckParam(
 AppServiceFwkInstaller::AppServiceFwkInstaller()
     : bundleInstallChecker_(std::make_unique<BundleInstallChecker>())
 {
-    APP_LOGI_NOFUNC("AppServiceFwk installer instance created");
+    APP_LOGI_NOFUNC("AppServiceFwk installer instance created ykp");
 }
 
 AppServiceFwkInstaller::~AppServiceFwkInstaller()
