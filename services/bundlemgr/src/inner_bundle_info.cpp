@@ -5040,5 +5040,72 @@ bool InnerBundleInfo::GetPluginBundleInfos(const int32_t userId,
     return true;
 }
 
+const std::string InnerBundleInfo::GetCurDynamicIconModule() const
+{
+    return curDynamicIconModule_;
+}
+
+void InnerBundleInfo::SetCurDynamicIconModule(const std::string &curDynamicIconModule)
+{
+    curDynamicIconModule_ = curDynamicIconModule;
+    for (auto &item : innerBundleUserInfos_) {
+        item.second.curDynamicIconModule = curDynamicIconModule_;
+        for (auto &cloneInfo : item.second.cloneInfos) {
+            cloneInfo.second.curDynamicIconModule = curDynamicIconModule_;
+        }
+    }
+}
+
+const std::string InnerBundleInfo::GetCurDynamicIconModule(const int32_t userId, const int32_t appIndex) const
+{
+    if ((userId == Constants::ALL_USERID) && (appIndex == Constants::ALL_USERID)) {
+        return GetCurDynamicIconModule();
+    }
+    std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE("can not find bundleUserInfo in userId: %{public}d", userId);
+        return "";
+    }
+    if (appIndex == 0) {
+        return infoItem->second.curDynamicIconModule;
+    }
+    
+    std::string cloneInfoKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    auto cloneInfoItem = infoItem->second.cloneInfos.find(cloneInfoKey);
+    if (cloneInfoItem == infoItem->second.cloneInfos.end()) {
+        APP_LOGE("can not find cloneInfo in userId: %{public}d appIndex: %{public}d", userId, appIndex);
+        return "";
+    }
+    return cloneInfoItem->second.curDynamicIconModule;
+}
+
+bool InnerBundleInfo::SetCurDynamicIconModule(
+    const std::string &curDynamicIconModule, const int32_t userId, const int32_t appIndex)
+{
+    if ((userId == Constants::ALL_USERID) && (appIndex == Constants::ALL_USERID)) {
+        SetCurDynamicIconModule(curDynamicIconModule);
+        return true;
+    }
+    std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE("can not find bundleUserInfo in userId: %{public}d", userId);
+        return false;
+    }
+    if (appIndex == 0) {
+        infoItem->second.curDynamicIconModule = curDynamicIconModule;
+        return true;
+    }
+
+    std::string cloneInfoKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    auto cloneInfoItem = infoItem->second.cloneInfos.find(cloneInfoKey);
+    if (cloneInfoItem == infoItem->second.cloneInfos.end()) {
+        APP_LOGE("can not find cloneInfo in userId: %{public}d appIndex: %{public}d", userId, appIndex);
+        return false;
+    }
+    cloneInfoItem->second.curDynamicIconModule = curDynamicIconModule;
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -33,11 +33,14 @@ public:
         const std::string &bundleName, const std::vector<std::string> &moduleNames) override;
     virtual ErrCode GetExtResource(
         const std::string &bundleName, std::vector<std::string> &moduleNames) override;
+
     virtual ErrCode EnableDynamicIcon(
-        const std::string &bundleName, const std::string &moduleName) override;
-    virtual ErrCode DisableDynamicIcon(const std::string &bundleName) override;
+        const std::string &bundleName, const std::string &moduleName,
+        const int32_t userId, const int32_t appIndex) override;
+    virtual ErrCode DisableDynamicIcon(const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex) override;
     virtual ErrCode GetDynamicIcon(
-        const std::string &bundleName, std::string &moduleName) override;
+        const std::string &bundleName, const int32_t userId, const int32_t appIndex, std::string &moduleName) override;
 
 private:
     virtual ErrCode CopyFiles(

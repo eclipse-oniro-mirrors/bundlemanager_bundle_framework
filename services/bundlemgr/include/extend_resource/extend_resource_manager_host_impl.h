@@ -32,10 +32,14 @@ public:
         const std::string &bundleName, const std::vector<std::string> &moduleNames) override;
     ErrCode GetExtResource(
         const std::string &bundleName, std::vector<std::string> &moduleNames) override;
-    ErrCode EnableDynamicIcon(
-        const std::string &bundleName, const std::string &moduleName) override;
-    ErrCode DisableDynamicIcon(const std::string &bundleName) override;
-    ErrCode GetDynamicIcon(const std::string &bundleName, std::string &moudleName) override;
+    virtual ErrCode EnableDynamicIcon(
+        const std::string &bundleName, const std::string &moduleName,
+        const int32_t userId, const int32_t appIndex) override;
+    virtual ErrCode DisableDynamicIcon(const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex) override;
+    virtual ErrCode GetDynamicIcon(
+        const std::string &bundleName, const int32_t userId, const int32_t appIndex, std::string &moduleName) override;
+
     ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
 
 private:
@@ -67,12 +71,19 @@ private:
         const std::string &bundleName, const std::vector<std::string> &moduleNames,
         std::vector<ExtendResourceInfo> &extResourceInfos);
     ErrCode GetExtendResourceInfo(const std::string &bundleName,
-        const std::string &moduleName, ExtendResourceInfo &extendResourceInfo);
+        const std::string &moduleName, ExtendResourceInfo &extendResourceInfo,
+        const int32_t userId = Constants::ALL_USERID, const int32_t appIndex = Constants::ALL_USERID);
     bool ParseBundleResource(
-        const std::string &bundleName, const ExtendResourceInfo &extendResourceInfo);
-    void SendBroadcast(const std::string &bundleName, bool isEnableDynamicIcon);
-    void SaveCurDynamicIcon(const std::string &bundleName, const std::string &moduleName);
-    bool ResetBundleResourceIcon(const std::string &bundleName);
+        const std::string &bundleName, const ExtendResourceInfo &extendResourceInfo,
+        const int32_t userId = Constants::ALL_USERID, const int32_t appIndex = Constants::ALL_USERID);
+    void SendBroadcast(const std::string &bundleName, bool isEnableDynamicIcon,
+        const int32_t userId = Constants::ALL_USERID, const int32_t appIndex = Constants::ALL_USERID);
+    void SaveCurDynamicIcon(const std::string &bundleName, const std::string &moduleName,
+        const int32_t userId = Constants::ALL_USERID, const int32_t appIndex = Constants::ALL_USERID);
+    bool ResetBundleResourceIcon(const std::string &bundleName,
+        const int32_t userId = Constants::ALL_USERID, const int32_t appIndex = Constants::ALL_USERID);
+    ErrCode CheckParamInvalid(const InnerBundleInfo &bundleInfo,
+        const int32_t userId, const int32_t appIndex);
 
     std::atomic<uint32_t> id_ = 0;
 };

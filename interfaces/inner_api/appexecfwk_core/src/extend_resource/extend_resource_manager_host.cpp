@@ -126,7 +126,9 @@ ErrCode ExtendResourceManagerHost::HandleEnableDynamicIcon(MessageParcel& data, 
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
-    ErrCode ret = EnableDynamicIcon(bundleName, moduleName);
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    ErrCode ret = EnableDynamicIcon(bundleName, moduleName, userId, appIndex);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -138,7 +140,9 @@ ErrCode ExtendResourceManagerHost::HandleDisableDynamicIcon(MessageParcel& data,
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
-    ErrCode ret = DisableDynamicIcon(bundleName);
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    ErrCode ret = DisableDynamicIcon(bundleName, userId, appIndex);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -150,8 +154,10 @@ ErrCode ExtendResourceManagerHost::HandleGetDynamicIcon(MessageParcel& data, Mes
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
     std::string moduleName;
-    ErrCode ret = GetDynamicIcon(bundleName, moduleName);
+    ErrCode ret = GetDynamicIcon(bundleName, userId, appIndex, moduleName);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

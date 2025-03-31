@@ -1244,15 +1244,14 @@ public:
         return extendResourceInfos_;
     }
 
-    const std::string &GetCurDynamicIconModule() const
-    {
-        return curDynamicIconModule_;
-    }
+    const std::string GetCurDynamicIconModule() const;
 
-    void SetCurDynamicIconModule(const std::string &curDynamicIconModule)
-    {
-        curDynamicIconModule_ = curDynamicIconModule;
-    }
+    void SetCurDynamicIconModule(const std::string &curDynamicIconModule);
+
+    const std::string GetCurDynamicIconModule(const int32_t userId, const int32_t appIndex) const;
+
+    bool SetCurDynamicIconModule(const std::string &curDynamicIconModule,
+        const int32_t userId, const int32_t appIndex);
 
     uint32_t GetIconId() const
     {

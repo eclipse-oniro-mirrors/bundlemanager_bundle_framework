@@ -416,10 +416,10 @@ ErrCode ExtendResourceManagerHostImpl::GetExtResource(
 }
 
 ErrCode ExtendResourceManagerHostImpl::EnableDynamicIcon(
-    const std::string &bundleName, const std::string &moduleName)
+    const std::string &bundleName, const std::string &moduleName, const int32_t userId, const int32_t appIndex)
 {
-    APP_LOGI("EnableDynamicIcon %{public}s, %{public}s",
-        bundleName.c_str(), moduleName.c_str());
+    APP_LOGI("EnableDynamicIcon %{public}s, %{public}s, %{public}d, %{public}d",
+        bundleName.c_str(), moduleName.c_str(), userId, appIndex);
     if (bundleName.empty()) {
         APP_LOGE("fail to EnableDynamicIcon due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -442,20 +442,20 @@ ErrCode ExtendResourceManagerHostImpl::EnableDynamicIcon(
     }
 
     ExtendResourceInfo extendResourceInfo;
-    ErrCode ret = GetExtendResourceInfo(bundleName, moduleName, extendResourceInfo);
+    ErrCode ret = GetExtendResourceInfo(bundleName, moduleName, extendResourceInfo, userId, appIndex);
     CHECK_RESULT(ret, "GetExtendResourceInfo failed %{public}d");
-    if (!ParseBundleResource(bundleName, extendResourceInfo)) {
+    if (!ParseBundleResource(bundleName, extendResourceInfo, userId, appIndex)) {
         APP_LOGE("%{public}s no extend Resources", bundleName.c_str());
         return ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED;
     }
 
-    SaveCurDynamicIcon(bundleName, moduleName);
-    SendBroadcast(bundleName, true);
+    SaveCurDynamicIcon(bundleName, moduleName, userId, appIndex);
+    SendBroadcast(bundleName, true, userId, appIndex);
     return ERR_OK;
 }
 
 void ExtendResourceManagerHostImpl::SaveCurDynamicIcon(
-    const std::string &bundleName, const std::string &moduleName)
+    const std::string &bundleName, const std::string &moduleName, const int32_t userId, const int32_t appIndex)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -463,18 +463,20 @@ void ExtendResourceManagerHostImpl::SaveCurDynamicIcon(
         return;
     }
 
-    dataMgr->UpateCurDynamicIconModule(bundleName, moduleName);
+    dataMgr->UpateCurDynamicIconModule(bundleName, moduleName, userId, appIndex);
 }
 
 void ExtendResourceManagerHostImpl::SendBroadcast(
-    const std::string &bundleName, bool isEnableDynamicIcon)
+    const std::string &bundleName, bool isEnableDynamicIcon,
+    const int32_t userId, const int32_t appIndex)
 {
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    commonEventMgr->NotifyDynamicIconEvent(bundleName, isEnableDynamicIcon);
+    commonEventMgr->NotifyDynamicIconEvent(bundleName, isEnableDynamicIcon, userId, appIndex);
 }
 
 bool ExtendResourceManagerHostImpl::ParseBundleResource(
-    const std::string &bundleName, const ExtendResourceInfo &extendResourceInfo)
+    const std::string &bundleName, const ExtendResourceInfo &extendResourceInfo,
+    const int32_t userId, const int32_t appIndex)
 {
     APP_LOGI("ParseBundleResource %{public}s", bundleName.c_str());
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -508,7 +510,8 @@ bool ExtendResourceManagerHostImpl::ParseBundleResource(
 }
 
 ErrCode ExtendResourceManagerHostImpl::GetExtendResourceInfo(const std::string &bundleName,
-    const std::string &moduleName, ExtendResourceInfo &extendResourceInfo)
+    const std::string &moduleName, ExtendResourceInfo &extendResourceInfo,
+    const int32_t userId, const int32_t appIndex)
 {
     InnerBundleInfo info;
     if (!GetInnerBundleInfo(bundleName, info)) {
@@ -525,11 +528,14 @@ ErrCode ExtendResourceManagerHostImpl::GetExtendResourceInfo(const std::string &
         APP_LOGE("%{public}s no %{public}s extend Resources", bundleName.c_str(), moduleName.c_str());
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
+    ErrCode ret = CheckParamInvalid(info, userId, appIndex);
+    CHECK_RESULT(ret, "check user or appIndex failed %{public}d");
     extendResourceInfo = iter->second;
     return ERR_OK;
 }
 
-ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bundleName)
+ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
 {
     APP_LOGI("DisableDynamicIcon %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
@@ -553,20 +559,23 @@ ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bun
         APP_LOGE("GetInnerBundleInfo failed %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    ErrCode ret = CheckParamInvalid(info, userId, appIndex);
+    CHECK_RESULT(ret, "check user or appIndex failed %{public}d");
 
-    std::string curDynamicModule = info.GetCurDynamicIconModule();
+    std::string curDynamicModule = info.GetCurDynamicIconModule(userId, appIndex);
     if (curDynamicModule.empty()) {
         APP_LOGE("%{public}s no enabled dynamic icon", bundleName.c_str());
         return ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED;
     }
 
-    SaveCurDynamicIcon(bundleName, "");
-    ResetBundleResourceIcon(bundleName);
-    SendBroadcast(bundleName, false);
+    SaveCurDynamicIcon(bundleName, "", userId, appIndex);
+    ResetBundleResourceIcon(bundleName, userId, appIndex);
+    SendBroadcast(bundleName, false, userId, appIndex);
     return ERR_OK;
 }
 
-bool ExtendResourceManagerHostImpl::ResetBundleResourceIcon(const std::string &bundleName)
+bool ExtendResourceManagerHostImpl::ResetBundleResourceIcon(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     APP_LOGI("ResetBundleResourceIcon %{public}s", bundleName.c_str());
@@ -597,7 +606,7 @@ bool ExtendResourceManagerHostImpl::ResetBundleResourceIcon(const std::string &b
 }
 
 ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
-    const std::string &bundleName, std::string &moudleName)
+    const std::string &bundleName, const int32_t userId, const int32_t appIndex, std::string &moudleName)
 {
     if (bundleName.empty()) {
         APP_LOGE("fail to GetDynamicIcon due to param is empty");
@@ -620,8 +629,10 @@ ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
         APP_LOGE("GetInnerBundleInfo failed %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    ErrCode ret = CheckParamInvalid(info, userId, appIndex);
+    CHECK_RESULT(ret, "check user or appIndex failed %{public}d");
 
-    std::string curDynamicModule = info.GetCurDynamicIconModule();
+    std::string curDynamicModule = info.GetCurDynamicIconModule(userId, appIndex);
     if (curDynamicModule.empty()) {
         APP_LOGE("%{public}s no enabled dynamic icon", bundleName.c_str());
         return ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED;
@@ -666,6 +677,38 @@ ErrCode ExtendResourceManagerHostImpl::CreateFd(
         APP_LOGE("create file descriptor failed");
         BundleUtil::DeleteDir(tmpDir);
         return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode ExtendResourceManagerHostImpl::CheckParamInvalid(const InnerBundleInfo &bundleInfo,
+    const int32_t userId, const int32_t appIndex)
+{
+    if ((userId == Constants::ALL_USERID) && (appIndex == Constants::ALL_USERID)) {
+        return ERR_OK;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    if (!dataMgr->HasUserId(userId)) {
+        APP_LOGE("userId %{public}d not exist", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    InnerBundleUserInfo userInfo;
+    if (!bundleInfo.GetInnerBundleUserInfo(userId, userInfo)) {
+        APP_LOGE("bundle %{public}s not exist in userId %{public}d", bundleInfo.GetBundleName().c_str(), userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (appIndex == 0) {
+        return ERR_OK;
+    }
+    std::string cloneInfoKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    if (userInfo.cloneInfos.find(cloneInfoKey) == userInfo.cloneInfos.end()) {
+        APP_LOGE("bundle %{public}s not exist in userId %{public}d appIndex %{public}d",
+            bundleInfo.GetBundleName().c_str(), userId, appIndex);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
     return ERR_OK;
 }

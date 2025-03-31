@@ -153,7 +153,7 @@ ErrCode ExtendResourceManagerProxy::GetExtResource(
 }
 
 ErrCode ExtendResourceManagerProxy::EnableDynamicIcon(
-    const std::string &bundleName, const std::string &moduleName)
+    const std::string &bundleName, const std::string &moduleName, const int32_t userId, const int32_t appIndex)
 {
     APP_LOGD("begin to EnableDynamicIcon");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -178,6 +178,14 @@ ErrCode ExtendResourceManagerProxy::EnableDynamicIcon(
         APP_LOGE("fail to EnableDynamicIcon due to write moduleName failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to EnableDynamicIcon due to write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to EnableDynamicIcon due to write appIndex failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
 
     MessageParcel reply;
     if (!SendRequest(ExtendResourceManagerInterfaceCode::ENABLE_DYNAMIC_ICON, data, reply)) {
@@ -188,7 +196,8 @@ ErrCode ExtendResourceManagerProxy::EnableDynamicIcon(
     return reply.ReadInt32();
 }
 
-ErrCode ExtendResourceManagerProxy::DisableDynamicIcon(const std::string &bundleName)
+ErrCode ExtendResourceManagerProxy::DisableDynamicIcon(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
 {
     APP_LOGD("begin to DisableDynamicIcon");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -205,6 +214,14 @@ ErrCode ExtendResourceManagerProxy::DisableDynamicIcon(const std::string &bundle
         APP_LOGE("fail to DisableDynamicIcon due to write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to DisableDynamicIcon due to write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to DisableDynamicIcon due to write appIndex failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
 
     MessageParcel reply;
     if (!SendRequest(ExtendResourceManagerInterfaceCode::DISABLE_DYNAMIC_ICON, data, reply)) {
@@ -216,7 +233,7 @@ ErrCode ExtendResourceManagerProxy::DisableDynamicIcon(const std::string &bundle
 }
 
 ErrCode ExtendResourceManagerProxy::GetDynamicIcon(
-    const std::string &bundleName, std::string &moduleName)
+    const std::string &bundleName, const int32_t userId, const int32_t appIndex, std::string &moduleName)
 {
     APP_LOGD("begin to GetDynamicIcon");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -231,6 +248,14 @@ ErrCode ExtendResourceManagerProxy::GetDynamicIcon(
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to GetDynamicIcon due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetDynamicIcon due to write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to GetDynamicIcon due to write appIndex failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 

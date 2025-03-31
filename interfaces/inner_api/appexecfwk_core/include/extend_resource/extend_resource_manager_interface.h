@@ -20,6 +20,7 @@
 #include <string>
 
 #include "appexecfwk_errors.h"
+#include "bundle_constants.h"
 #include "iremote_broker.h"
 
 namespace OHOS {
@@ -47,17 +48,34 @@ public:
     }
 
     virtual ErrCode EnableDynamicIcon(
-        const std::string &bundleName, const std::string &moudleName)
+        const std::string &bundleName, const std::string &moduleName)
+    {
+        return EnableDynamicIcon(bundleName, moduleName, Constants::ALL_USERID, Constants::ALL_USERID);
+    }
+
+    virtual ErrCode EnableDynamicIcon(
+        const std::string &bundleName, const std::string &moduleName, const int32_t userId, const int32_t appIndex)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     virtual ErrCode DisableDynamicIcon(const std::string &bundleName)
     {
+        return DisableDynamicIcon(bundleName, Constants::ALL_USERID, Constants::ALL_USERID);
+    }
+
+    virtual ErrCode DisableDynamicIcon(const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+    {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode GetDynamicIcon(const std::string &bundleName, std::string &moudleName)
+    virtual ErrCode GetDynamicIcon(const std::string &bundleName, std::string &moduleName)
+    {
+        return GetDynamicIcon(bundleName, Constants::ALL_USERID, Constants::ALL_USERID, moduleName);
+    }
+
+    virtual ErrCode GetDynamicIcon(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, std::string &moduleName)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

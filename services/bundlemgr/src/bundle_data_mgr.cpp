@@ -2704,7 +2704,7 @@ bool BundleDataMgr::RemoveExtResources(const std::string &bundleName,
 }
 
 bool BundleDataMgr::UpateCurDynamicIconModule(
-    const std::string &bundleName, const std::string &moduleName)
+    const std::string &bundleName, const std::string &moduleName, const int32_t userId, const int32_t appIndex)
 {
     if (bundleName.empty()) {
         APP_LOGW("bundleName is empty");
@@ -2719,7 +2719,7 @@ bool BundleDataMgr::UpateCurDynamicIconModule(
     }
 
     auto info = infoItem->second;
-    info.SetCurDynamicIconModule(moduleName);
+    info.SetCurDynamicIconModule(moduleName, userId, appIndex);
     if (!dataStorage_->SaveStorageBundleInfo(info)) {
         APP_LOGW("SaveStorageBundleInfo failed %{public}s", bundleName.c_str());
         return false;

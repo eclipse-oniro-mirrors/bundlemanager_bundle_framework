@@ -269,7 +269,7 @@ void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int
 }
 
 void BundleCommonEventMgr::NotifyDynamicIconEvent(
-    const std::string &bundleName, bool isEnableDynamicIcon)
+    const std::string &bundleName, bool isEnableDynamicIcon, int32_t userId, int32_t appIndex)
 {
     APP_LOGI("NotifyDynamicIconEvent bundleName: %{public}s, %{public}d",
         bundleName.c_str(), isEnableDynamicIcon);
@@ -279,6 +279,10 @@ void BundleCommonEventMgr::NotifyDynamicIconEvent(
     element.SetBundleName(bundleName);
     want.SetElement(element);
     want.SetParam(IS_ENABLE_DYNAMIC_ICON, isEnableDynamicIcon);
+    if ((userId != Constants::ALL_USERID) && (appIndex != Constants::ALL_USERID)) {
+        want.SetParam(Constants::USER_ID, userId);
+        want.SetParam(Constants::APP_INDEX, appIndex);
+    }
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     std::string identity = IPCSkeleton::ResetCallingIdentity();
