@@ -24,7 +24,8 @@ namespace OHOS {
 namespace AppExecFwk {
 class BusinessErrorAni {
 public:
-    static ani_object CreateError(ani_env *env, ani_int code, const std::string &msg);
+    static ani_object WrapError(ani_env *env, const std::string &msg);
+    static ani_object CreateError(ani_env *env, int32_t code, const std::string &msg);
     static ani_object CreateCommonError(
         ani_env *env, int32_t err, const std::string &functionName = "", const std::string &permissionName = "");
     static ani_object CreateEnumError(ani_env *env, const std::string &parameter, const std::string &enumClass);
