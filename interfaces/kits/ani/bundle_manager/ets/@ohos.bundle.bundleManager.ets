@@ -179,7 +179,7 @@ namespace bundleManager {
 
   export native function getApplicationInfoSync(bundleName: string, applicationFlags: number, userId: number): ApplicationInfo;
 
-  export function getBundleInfoForSelf(bundleFlags: number, callback: AsyncCallback<BundleInfo, void>):void {
+  function getBundleInfoForSelf(bundleFlags: number, callback: AsyncCallback<BundleInfo, void>):void {
     let execFun = (): BundleInfo => {
       return bundleManager.getBundleInfoForSelfSync(bundleFlags);
     };
@@ -192,7 +192,7 @@ namespace bundleManager {
     });
   }
 
-  export function getBundleInfoForSelf(bundleFlags: number):Promise<BundleInfo> {
+  function getBundleInfoForSelf(bundleFlags: number):Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Object) => void) => {
       let execFun = (): BundleInfo => {
         return bundleManager.getBundleInfoForSelfSync(bundleFlags);
@@ -208,11 +208,11 @@ namespace bundleManager {
     return p;
   }
 
-  export function getBundleInfoSync(bundleName: string, bundleFlags: number): BundleInfo {
+  function getBundleInfoSync(bundleName: string, bundleFlags: number): BundleInfo {
     return bundleManager.getBundleInfoSync(bundleName, bundleFlags, -500);
   }
 
-  export function getBundleInfo(bundleName: string, bundleFlags: number, userId?: number): Promise<BundleInfo> {
+  function getBundleInfo(bundleName: string, bundleFlags: number, userId?: number): Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Object) => void) => {
       let userIdInfo: number = userId ?? -500;
       let execFun = (): BundleInfo => {
@@ -229,7 +229,7 @@ namespace bundleManager {
     return p;
   }
 
-  export function getBundleInfo(bundleName: string, bundleFlags: number, callback: AsyncCallback<BundleInfo, void>): void {
+  function getBundleInfo(bundleName: string, bundleFlags: number, callback: AsyncCallback<BundleInfo, void>): void {
     let execFun = (): BundleInfo => {
       return bundleManager.getBundleInfoSync(bundleName, bundleFlags);
     };
@@ -242,7 +242,7 @@ namespace bundleManager {
     });
   }
 
-  export function getBundleInfo(bundleName: string, bundleFlags: number, userId: number, callback: AsyncCallback<BundleInfo, void>): void {
+  function getBundleInfo(bundleName: string, bundleFlags: number, userId: number, callback: AsyncCallback<BundleInfo, void>): void {
     let execFun = (): BundleInfo => {
       return bundleManager.getBundleInfoSync(bundleName, bundleFlags, userId);
     };
@@ -255,7 +255,7 @@ namespace bundleManager {
     });
   }
 
-  export function getApplicationInfoSync(bundleName: string, applicationFlags: number): ApplicationInfo {
+  function getApplicationInfoSync(bundleName: string, applicationFlags: number): ApplicationInfo {
     return bundleManager.getApplicationInfoSync(bundleName, applicationFlags, -500);
   }
 }

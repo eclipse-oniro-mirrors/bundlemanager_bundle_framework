@@ -105,7 +105,7 @@ export default namespace bundleResourceManager {
    * @systemapi
    * @since 12
    */
-  export function getBundleResourceInfo(bundleName: string, resourceFlags?: number, appIndex?: number): BundleResourceInfo
+  function getBundleResourceInfo(bundleName: string, resourceFlags?: number, appIndex?: number): BundleResourceInfo
   {
       let resFlag = resourceFlags ?? -500;
       let appIdx = appIndex ?? -500;
