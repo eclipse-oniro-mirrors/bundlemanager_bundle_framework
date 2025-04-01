@@ -117,7 +117,7 @@ ErrCode AppServiceFwkInstaller::Install(
         hspPaths,
         BundleEventType::INSTALL,
         installParam,
-        InstallScene::BOOT,
+        (installParam.isOTA ? InstallScene::REBOOT : InstallScene::BOOT),
         result);
     return result;
 }
