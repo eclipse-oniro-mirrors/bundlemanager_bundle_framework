@@ -263,6 +263,7 @@ void InnerBundleInfo::GetInternalDependentHspInfo(
         hspInfo.bundleName = baseApplicationInfo_->bundleName;
         hspInfo.moduleName = item->second.moduleName;
         hspInfo.hapPath = item->second.hapPath;
+        hspInfo.codeLanguage = item->second.codeLanguage;
         hspInfoVector.emplace_back(hspInfo);
     }
 }
@@ -384,6 +385,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_METADATA, info.metaData},
         {MODULE_COLOR_MODE, info.colorMode},
         {MODULE_DISTRO, info.distro},
+        {Constants::CODE_LANGUAGE, info.codeLanguage},
         {MODULE_DESCRIPTION, info.description},
         {MODULE_DESCRIPTION_ID, info.descriptionId},
         {MODULE_ICON, info.icon},
@@ -580,6 +582,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::CODE_LANGUAGE,
+        info.codeLanguage,
+        false,
+        parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_DESCRIPTION,
@@ -1582,6 +1590,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.packageName = it->second.packageName;
     hapInfo.abilitySrcEntryDelegator = it->second.abilitySrcEntryDelegator;
     hapInfo.abilityStageSrcEntryDelegator = it->second.abilityStageSrcEntryDelegator;
+    hapInfo.codeLanguage = it->second.codeLanguage;
     return hapInfo;
 }
 
@@ -2237,6 +2246,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
     appInfo = *baseApplicationInfo_;
+    appInfo.codeLanguage = GetApplicationCodeLanguage();
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
         return;
     }
@@ -2297,6 +2307,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
+    appInfo.codeLanguage = GetApplicationCodeLanguage();
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -2457,6 +2468,7 @@ bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo)
     bundleInfo = *baseBundleInfo_;
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, Constants::ALL_USERID);
     bundleInfo.applicationInfo = *baseApplicationInfo_;
+    bundleInfo.applicationInfo.codeLanguage = GetApplicationCodeLanguage();
     return true;
 }
 
@@ -4115,6 +4127,7 @@ ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
     }
     bundleInfo = *baseBundleInfo_;
     bundleInfo.applicationInfo = *baseApplicationInfo_;
+    bundleInfo.applicationInfo.codeLanguage = GetApplicationCodeLanguage();
     for (const auto &info : innerModuleInfos_) {
         if (info.second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
             auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, Constants::ALL_USERID);
@@ -5031,5 +5044,37 @@ bool InnerBundleInfo::GetPluginBundleInfos(const int32_t userId,
     return true;
 }
 
+std::string InnerBundleInfo::GetApplicationCodeLanguage() const
+{
+    size_t language1_1_cnt = 0;
+    size_t language1_2_cnt = 0;
+    for (const auto& [moduleName, innerModuleInfo] : innerModuleInfos_) {
+        if (innerModuleInfo.codeLanguage == Constants::CODE_LANGUAGE_1_1) {
+            language1_1_cnt++;
+        }
+        if (innerModuleInfo.codeLanguage == Constants::CODE_LANGUAGE_1_2) {
+            language1_2_cnt++;
+        }
+    }
+
+    size_t moduleSize = innerModuleInfos_.size();
+    if (language1_1_cnt == moduleSize) {
+        return Constants::CODE_LANGUAGE_1_1;
+    }
+    if (language1_2_cnt == moduleSize) {
+        return Constants::CODE_LANGUAGE_1_2;
+    }
+    return Constants::CODE_LANGUAGE_HYBRID;
+}
+
+std::string InnerBundleInfo::GetModuleCodeLanguage(const std::string &moduleName) const
+{
+    auto item = innerModuleInfos_.find(moduleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGW_NOFUNC("moduleName %{public}s not exist", moduleName.c_str());
+        return Constants::EMPTY_STRING;
+    }
+    return item->second.codeLanguage;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

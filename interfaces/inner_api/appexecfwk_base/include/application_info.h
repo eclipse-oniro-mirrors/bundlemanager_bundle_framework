@@ -308,6 +308,7 @@ struct ApplicationInfo : public Parcelable {
 
     std::string installSource;
     std::string configuration;
+    std::string codeLanguage;
     Resource iconResource;
     Resource labelResource;
     Resource descriptionResource;

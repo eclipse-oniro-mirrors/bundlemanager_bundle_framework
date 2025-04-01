@@ -27,6 +27,7 @@ struct HspInfo : public Parcelable {
     std::string bundleName;
     std::string moduleName;
     std::string hapPath;
+    std::string codeLanguage;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);
@@ -52,6 +53,7 @@ struct AOTArgs : public Parcelable {
     std::string anFileName;
     std::string appIdentifier;
     std::string optBCRangeList;
+    std::string codeLanguage;
     std::vector<HspInfo> hspVector;
 
     std::string ToString() const;

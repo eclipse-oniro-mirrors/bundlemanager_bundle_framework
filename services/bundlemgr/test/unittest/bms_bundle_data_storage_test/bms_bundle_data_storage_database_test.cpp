@@ -73,6 +73,7 @@ int32_t userId = 1;
 int32_t userId2 = 2;
 int32_t appIndex = 1;
 const int32_t FLAG = 0;
+const int32_t INFO_COUNT = 16;
 const nlohmann::json EXTEND_RESOURCE_INFO_ERROR_JSON = R"(
 {
     "moduleName":[]
@@ -852,6 +853,7 @@ protected:
                     "applicationName": "com.ohos.launcher",
                     "backgroundModes": 0,
                     "bundleName": "com.ohos.launcher",
+                    "codeLanguage": "1.1",
                     "codePath": "",
                     "compileMode": 0,
                     "configChanges": [
@@ -1105,6 +1107,7 @@ protected:
                 "asanLogPath": "",
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
+                "codeLanguage": "1.1",
                 "codePath": "/data/app/el1/bundle/public/com.ohos.launcher",
                 "compileSdkType":"OpenHarmony",
                 "compileSdkVersion":"",
@@ -4980,4 +4983,309 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13100, Function | Sma
     result = info.HasMultiUserPlugin(TEST_BUNDLE_NAME);
     EXPECT_EQ(result, false);
 }
-} // OHOS
+
+/**
+ * @tc.number: GetApplicationCodeLanguage_0001
+ * @tc.name: test GetApplicationCodeLanguage
+ * @tc.desc: 1. test GetApplicationCodeLanguage of InnerBundleInfo on empty innerModuleInfos_
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationCodeLanguage_0001, Function | SmallTest | Level1)
+
+{
+    InnerBundleInfo innerBundleInfo;
+    EXPECT_EQ(innerBundleInfo.GetApplicationCodeLanguage(), Constants::CODE_LANGUAGE_1_1);
+}
+
+/**
+ * @tc.number: GetApplicationCodeLanguage_0002
+ * @tc.name: test GetApplicationCodeLanguage
+ * @tc.desc: 1. test GetApplicationCodeLanguage of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationCodeLanguage_0002, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    for (int32_t i = 0; i < INFO_COUNT; ++i) {
+        InnerModuleInfo innerModuleInfo;
+        innerModuleInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+        innerBundleInfo.innerModuleInfos_.insert(std::make_pair(std::to_string(i), innerModuleInfo));
+    }
+
+    EXPECT_EQ(innerBundleInfo.GetApplicationCodeLanguage(), Constants::CODE_LANGUAGE_1_1);
+}
+
+/**
+ * @tc.number: GetApplicationCodeLanguage_0003
+ * @tc.name: test GetApplicationCodeLanguage
+ * @tc.desc: 1. test GetApplicationCodeLanguage of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationCodeLanguage_0003, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    for (int32_t i = 0; i < INFO_COUNT; ++i) {
+        InnerModuleInfo innerModuleInfo;
+        innerModuleInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+        innerBundleInfo.innerModuleInfos_.insert(std::make_pair(std::to_string(i), innerModuleInfo));
+    }
+
+    EXPECT_EQ(innerBundleInfo.GetApplicationCodeLanguage(), Constants::CODE_LANGUAGE_1_2);
+}
+
+/**
+ * @tc.number: GetApplicationCodeLanguage_0004
+ * @tc.name: test GetApplicationCodeLanguage
+ * @tc.desc: 1. test GetApplicationCodeLanguage of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationCodeLanguage_0004, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    for (int32_t i = 0; i < INFO_COUNT; ++i) {
+        InnerModuleInfo innerModuleInfo;
+        innerModuleInfo.codeLanguage = i % 3 == 0 ? Constants::CODE_LANGUAGE_1_2 : Constants::CODE_LANGUAGE_1_1;
+        innerBundleInfo.innerModuleInfos_.insert(std::make_pair(std::to_string(i), innerModuleInfo));
+    }
+
+    EXPECT_EQ(innerBundleInfo.GetApplicationCodeLanguage(), Constants::CODE_LANGUAGE_HYBRID);
+}
+
+/**
+ * @tc.number: GetModuleCodeLanguage_0001
+ * @tc.name: test GetModuleCodeLanguage
+ * @tc.desc: 1. test GetModuleCodeLanguage of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetModuleCodeLanguage_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    for (int32_t i = 0; i < INFO_COUNT; ++i) {
+        InnerModuleInfo innerModuleInfo;
+        innerModuleInfo.codeLanguage = i % 3 == 0 ? Constants::CODE_LANGUAGE_1_2 : Constants::CODE_LANGUAGE_1_1;
+        innerBundleInfo.innerModuleInfos_.insert(std::make_pair(std::to_string(i), innerModuleInfo));
+    }
+
+    std::string result = innerBundleInfo.GetModuleCodeLanguage(std::to_string(INFO_COUNT));
+    EXPECT_EQ(result, Constants::EMPTY_STRING);
+    for (int32_t i = 0; i < INFO_COUNT; ++i) {
+        result = innerBundleInfo.GetModuleCodeLanguage(std::to_string(i));
+        EXPECT_EQ(result, i % 3 == 0 ? Constants::CODE_LANGUAGE_1_2 : Constants::CODE_LANGUAGE_1_1);
+    }
+}
+
+/**
+ * @tc.number: AbilityInfo_0001
+ * @tc.name: test AbilityInfo
+ * @tc.desc: 1. test AbilityInfo fromJson/toJson
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfo_0001, Function | SmallTest | Level1)
+{
+    AbilityInfo sourceInfo;
+    nlohmann::json jsonObject = sourceInfo;
+    AbilityInfo fromJsonInfo = jsonObject;
+    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    jsonObject = sourceInfo;
+    fromJsonInfo = jsonObject;
+    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    jsonObject = sourceInfo;
+    fromJsonInfo = jsonObject;
+    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+}
+
+/**
+ * @tc.number: AbilityInfo_0002
+ * @tc.name: test AbilityInfo
+ * @tc.desc: 1. test AbilityInfo Marshalling/ReadFromParcel
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfo_0002, Function | SmallTest | Level1)
+{
+    AbilityInfo sourceInfo;
+    Parcel parcel;
+    bool ret = sourceInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    AbilityInfo targetInfo;
+    ret = targetInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    ret = sourceInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    ret = targetInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    ret = sourceInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    ret = targetInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+}
+
+/**
+ * @tc.number: ExtensionAbilityInfo_0001
+ * @tc.name: test ExtensionAbilityInfo
+ * @tc.desc: 1. test ExtensionAbilityInfo fromJson/toJson
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ExtensionAbilityInfo_0001, Function | SmallTest | Level1)
+{
+    ExtensionAbilityInfo sourceInfo;
+    nlohmann::json jsonObject = sourceInfo;
+    ExtensionAbilityInfo fromJsonInfo = jsonObject;
+    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    jsonObject = sourceInfo;
+    fromJsonInfo = jsonObject;
+    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    jsonObject = sourceInfo;
+    fromJsonInfo = jsonObject;
+    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+}
+
+/**
+ * @tc.number: ExtensionAbilityInfo_0002
+ * @tc.name: test ExtensionAbilityInfo
+ * @tc.desc: 1. test ExtensionAbilityInfo Marshalling/ReadFromParcel
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ExtensionAbilityInfo_0002, Function | SmallTest | Level1)
+{
+    ExtensionAbilityInfo sourceInfo;
+    Parcel parcel;
+    bool ret = sourceInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    ExtensionAbilityInfo targetInfo;
+    ret = targetInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    ret = sourceInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    ret = targetInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    ret = sourceInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    ret = targetInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+}
+
+/**
+ * @tc.number: HapModuleInfo_0001
+ * @tc.name: test HapModuleInfo
+ * @tc.desc: 1. test HapModuleInfo fromJson/toJson
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, HapModuleInfo_0001, Function | SmallTest | Level1)
+{
+    HapModuleInfo sourceInfo;
+    nlohmann::json jsonObject = sourceInfo;
+    HapModuleInfo fromJsonInfo = jsonObject;
+    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    jsonObject = sourceInfo;
+    fromJsonInfo = jsonObject;
+    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    jsonObject = sourceInfo;
+    fromJsonInfo = jsonObject;
+    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+}
+
+/**
+ * @tc.number: HapModuleInfo_0002
+ * @tc.name: test HapModuleInfo
+ * @tc.desc: 1. test HapModuleInfo Marshalling/ReadFromParcel
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, HapModuleInfo_0002, Function | SmallTest | Level1)
+{
+    HapModuleInfo sourceInfo;
+    Parcel parcel;
+    bool ret = sourceInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    HapModuleInfo targetInfo;
+    ret = targetInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    ret = sourceInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    ret = targetInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    ret = sourceInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    ret = targetInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+}
+
+/**
+ * @tc.number: ApplicationInfo_0001
+ * @tc.name: test ApplicationInfo
+ * @tc.desc: 1. test ApplicationInfo fromJson/toJson
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfo_0001, Function | SmallTest | Level1)
+{
+    ApplicationInfo sourceInfo;
+    nlohmann::json jsonObject = sourceInfo;
+    ApplicationInfo fromJsonInfo = jsonObject;
+    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::EMPTY_STRING);
+
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    jsonObject = sourceInfo;
+    fromJsonInfo = jsonObject;
+    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    jsonObject = sourceInfo;
+    fromJsonInfo = jsonObject;
+    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+}
+
+/**
+ * @tc.number: ApplicationInfo_0002
+ * @tc.name: test ApplicationInfo
+ * @tc.desc: 1. test ApplicationInfo Marshalling/ReadFromParcel
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfo_0002, Function | SmallTest | Level1)
+{
+    ApplicationInfo sourceInfo;
+    Parcel parcel;
+    bool ret = sourceInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    ApplicationInfo targetInfo;
+    ret = targetInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(targetInfo.codeLanguage, Constants::EMPTY_STRING);
+    
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    ret = sourceInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    ret = targetInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+
+    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    ret = sourceInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    ret = targetInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+}
+} // namespace OHOS
