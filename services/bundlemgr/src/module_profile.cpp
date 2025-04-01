@@ -2581,7 +2581,7 @@ bool ToInnerBundleInfo(
         ToExtensionAbilitySkills(extension.skills, extensionInfo);
         innerBundleInfo.InsertExtensionInfo(key, extensionInfo);
     }
-    if (!findEntry) {
+    if (!findEntry && !transformParam.isPreInstallApp) {
         applicationInfo.needAppDetail = true;
         if (BundleUtil::IsExistDir(ServiceConstants::SYSTEM_LIB64)) {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;
