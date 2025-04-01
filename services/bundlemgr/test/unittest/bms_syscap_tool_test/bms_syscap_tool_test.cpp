@@ -161,12 +161,76 @@ HWTEST_F(BmsSyscapToolTest, RPCIDStreamDecodeToBuffer_0500, Function | SmallTest
     char *contextBuffer = reinterpret_cast<char *>(&headPtr);
     char *syscapSetBuf;
     uint32_t *syscapSetLength = nullptr;
-    uint32_t bufferLen =  32;
+    uint32_t bufferLen = 32;
     int32_t ret = RPCIDStreamDecodeToBuffer(contextBuffer, bufferLen, &syscapSetBuf, syscapSetLength);
     EXPECT_EQ(ret, -1);
 
-    syscapSetBuf = nullptr;
-    ret = RPCIDStreamDecodeToBuffer(contextBuffer, bufferLen, &syscapSetBuf, syscapSetLength);
+    ret = RPCIDStreamDecodeToBuffer(contextBuffer, bufferLen, nullptr, syscapSetLength);
     EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: RPCIDStreamDecodeToBuffer_0600
+ * @tc.name: test the stream decode to buffer
+ * @tc.desc: RPCIDStreamDecodeToBuffer
+ */
+HWTEST_F(BmsSyscapToolTest, RPCIDStreamDecodeToBuffer_0600, Function | SmallTest | Level0)
+{
+    char buff[8] = {0xFF, 0xFF, 0, 2, 5, 0, 7, 0};
+    char *contextBuffer = buff;
+    char *syscapSetBuf;
+    uint32_t syscapSetLength = 0;
+    uint32_t bufferLen =  32;
+    int32_t ret = RPCIDStreamDecodeToBuffer(contextBuffer, bufferLen, &syscapSetBuf, &syscapSetLength);
+    EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: RPCIDStreamDecodeToBuffer_0700
+ * @tc.name: test the stream decode to buffer
+ * @tc.desc: RPCIDStreamDecodeToBuffer
+ */
+HWTEST_F(BmsSyscapToolTest, RPCIDStreamDecodeToBuffer_0700, Function | SmallTest | Level0)
+{
+    char buff[8] = {0xFF, 0xFF, 0, 2, 0, 1, 7, 0};
+    char *contextBuffer = buff;
+    char *syscapSetBuf;
+    uint32_t syscapSetLength = 0;
+    uint32_t bufferLen =  7;
+    int32_t ret = RPCIDStreamDecodeToBuffer(contextBuffer, bufferLen, &syscapSetBuf, &syscapSetLength);
+    EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: RPCIDStreamDecodeToBuffer_0800
+ * @tc.name: test the stream decode to buffer
+ * @tc.desc: RPCIDStreamDecodeToBuffer
+ */
+HWTEST_F(BmsSyscapToolTest, RPCIDStreamDecodeToBuffer_0800, Function | SmallTest | Level0)
+{
+    char buff[9] = {0xFF, 0xFF, 0, 2, 1, 0, 0xFF, 0xFF, 0xFF};
+    char *contextBuffer = buff;
+    char *syscapSetBuf;
+    uint32_t syscapSetLength = 0;
+    uint32_t bufferLen =  270;
+    int32_t ret = RPCIDStreamDecodeToBuffer(contextBuffer, bufferLen, &syscapSetBuf, &syscapSetLength);
+    EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: RPCIDStreamDecodeToBuffer_0900
+ * @tc.name: test the stream decode to buffer
+ * @tc.desc: RPCIDStreamDecodeToBuffer
+ */
+HWTEST_F(BmsSyscapToolTest, RPCIDStreamDecodeToBuffer_0900, Function | SmallTest | Level0)
+{
+    char buff[262] = {0xFF, 0xFF, 0, 2, 1, 0, 0xFF, 0xFF, 0xFF};
+    buff[261] = '\0';
+    char *contextBuffer = buff;
+    char *syscapSetBuf;
+    uint32_t syscapSetLength = 0;
+    uint32_t bufferLen =  270;
+    int32_t ret = RPCIDStreamDecodeToBuffer(contextBuffer, bufferLen, &syscapSetBuf, &syscapSetLength);
+    EXPECT_EQ(ret, 0);
 }
 } // OHOS
