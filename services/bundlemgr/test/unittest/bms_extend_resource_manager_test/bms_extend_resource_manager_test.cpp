@@ -726,6 +726,209 @@ HWTEST_F(BmsExtendResourceManagerTest, GetExtendResourceInfo_0400, Function | Sm
 }
 
 /**
+ * @tc.number: GetExtendResourceInfo_0500
+ * @tc.name: Test GetExtendResourceInfo
+ * @tc.desc: 1.GetExtendResourceInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetExtendResourceInfo_0500, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    ExtendResourceInfo extendResourceInfo;
+    info.extendResourceInfos_.emplace(TEST_MODULE, extendResourceInfo);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    dataMgr->AddUserId(USER_ID);
+    auto res = impl.GetExtendResourceInfo(BUNDLE_NAME, TEST_MODULE, extendResourceInfo, -10, 0);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    res = impl.GetExtendResourceInfo(BUNDLE_NAME, TEST_MODULE, extendResourceInfo, USER_ID, 0);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    res = impl.GetExtendResourceInfo(BUNDLE_NAME, TEST_MODULE, extendResourceInfo, USER_ID, 0);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = impl.GetExtendResourceInfo(BUNDLE_NAME, TEST_MODULE, extendResourceInfo, USER_ID, USER_ID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+
+    res = impl.GetExtendResourceInfo(BUNDLE_NAME, TEST_MODULE, extendResourceInfo, USER_ID, 1);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckParamInvalid_0100
+ * @tc.name: Test CheckParamInvalid
+ * @tc.desc: 1.CheckParamInvalid
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CheckParamInvalid_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    ExtendResourceInfo extendResourceInfo;
+    info.extendResourceInfos_.emplace(TEST_MODULE, extendResourceInfo);
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    dataMgr->AddUserId(USER_ID);
+
+    auto res = impl.CheckParamInvalid(info, -2, 0);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = impl.CheckParamInvalid(info, -100, 0);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    res = impl.CheckParamInvalid(info, USER_ID, 0);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    res = impl.CheckParamInvalid(info, USER_ID, 0);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = impl.CheckParamInvalid(info, USER_ID, USER_ID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+
+    res = impl.CheckParamInvalid(info, USER_ID, 1);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetCurDynamicIconModule_0010
+ * @tc.name: test GetCurDynamicIconModule
+ * @tc.desc: 1.GetCurDynamicIconModule
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetCurDynamicIconModule_0010, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string name = info.GetCurDynamicIconModule();
+    EXPECT_TRUE(name.empty());
+    name = info.GetCurDynamicIconModule(Constants::ALL_USERID, Constants::ALL_USERID);
+    EXPECT_TRUE(name.empty());
+    name = info.GetCurDynamicIconModule(Constants::ALL_USERID, 0);
+    EXPECT_TRUE(name.empty());
+}
+
+/**
+ * @tc.number: SetCurDynamicIconModule_0010
+ * @tc.name: test SetCurDynamicIconModule
+ * @tc.desc: 1.SetCurDynamicIconModule
+ */
+HWTEST_F(BmsExtendResourceManagerTest, SetCurDynamicIconModule_0010, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.SetCurDynamicIconModule(BUNDLE_NAME);
+    std::string name = info.GetCurDynamicIconModule();
+    EXPECT_EQ(name, BUNDLE_NAME);
+    name = info.GetCurDynamicIconModule(USER_ID, 0);
+    EXPECT_TRUE(name.empty());
+}
+
+/**
+ * @tc.number: SetCurDynamicIconModule_0020
+ * @tc.name: test SetCurDynamicIconModule
+ * @tc.desc: 1.SetCurDynamicIconModule
+ */
+HWTEST_F(BmsExtendResourceManagerTest, SetCurDynamicIconModule_0020, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    InnerBundleInfo info;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    info.SetCurDynamicIconModule(BUNDLE_NAME);
+    std::string name = info.GetCurDynamicIconModule(USER_ID, 0);
+    EXPECT_EQ(name, BUNDLE_NAME);
+
+    name = info.GetCurDynamicIconModule(101, 0);
+    EXPECT_TRUE(name.empty());
+
+    name = info.GetCurDynamicIconModule(USER_ID, 1);
+    EXPECT_TRUE(name.empty());
+}
+
+/**
+ * @tc.number: SetCurDynamicIconModule_0030
+ * @tc.name: test SetCurDynamicIconModule
+ * @tc.desc: 1.SetCurDynamicIconModule
+ */
+HWTEST_F(BmsExtendResourceManagerTest, SetCurDynamicIconModule_0030, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    InnerBundleInfo info;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    info.SetCurDynamicIconModule(BUNDLE_NAME);
+
+    std::string name = info.GetCurDynamicIconModule();
+    EXPECT_EQ(name, BUNDLE_NAME);
+
+    name = info.GetCurDynamicIconModule(USER_ID, 0);
+    EXPECT_EQ(name, BUNDLE_NAME);
+
+    name = info.GetCurDynamicIconModule(USER_ID, 1);
+    EXPECT_EQ(name, BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: SetCurDynamicIconModule_0040
+ * @tc.name: test SetCurDynamicIconModule
+ * @tc.desc: 1.SetCurDynamicIconModule
+ */
+HWTEST_F(BmsExtendResourceManagerTest, SetCurDynamicIconModule_0040, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    InnerBundleInfo info;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    bool ret = info.SetCurDynamicIconModule(BUNDLE_NAME, 0, 2);
+    EXPECT_FALSE(ret);
+
+    ret = info.SetCurDynamicIconModule(BUNDLE_NAME, USER_ID, 2);
+    EXPECT_FALSE(ret);
+
+    ret = info.SetCurDynamicIconModule(BUNDLE_NAME, USER_ID, 1);
+    EXPECT_TRUE(ret);
+
+    std::string name = info.GetCurDynamicIconModule();
+    EXPECT_TRUE(name.empty());
+
+    name = info.GetCurDynamicIconModule(0, 0);
+    EXPECT_TRUE(name.empty());
+
+    name = info.GetCurDynamicIconModule(USER_ID, USER_ID);
+    EXPECT_TRUE(name.empty());
+
+    name = info.GetCurDynamicIconModule(USER_ID, 0);
+    EXPECT_TRUE(name.empty());
+
+    name = info.GetCurDynamicIconModule(USER_ID, 1);
+    EXPECT_EQ(name, BUNDLE_NAME);
+}
+
+/**
  * @tc.number: DisableDynamicIcon_0100
  * @tc.name: Test DisableDynamicIcon
  * @tc.desc: 1.DisableDynamicIcon

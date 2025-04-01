@@ -21,6 +21,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_constants.h"
 #include "bundle_file_util.h"
 #include "directory_ex.h"
 #include "hitrace_meter.h"
@@ -153,6 +154,12 @@ ErrCode ExtendResourceManagerProxy::GetExtResource(
 }
 
 ErrCode ExtendResourceManagerProxy::EnableDynamicIcon(
+    const std::string &bundleName, const std::string &moduleName)
+{
+    return EnableDynamicIcon(bundleName, moduleName, Constants::UNSPECIFIED_USERID, Constants::DEFAULT_APP_INDEX);
+}
+
+ErrCode ExtendResourceManagerProxy::EnableDynamicIcon(
     const std::string &bundleName, const std::string &moduleName, const int32_t userId, const int32_t appIndex)
 {
     APP_LOGD("begin to EnableDynamicIcon");
@@ -196,6 +203,11 @@ ErrCode ExtendResourceManagerProxy::EnableDynamicIcon(
     return reply.ReadInt32();
 }
 
+ErrCode ExtendResourceManagerProxy::DisableDynamicIcon(const std::string &bundleName)
+{
+    return DisableDynamicIcon(bundleName, Constants::UNSPECIFIED_USERID, Constants::DEFAULT_APP_INDEX);
+}
+
 ErrCode ExtendResourceManagerProxy::DisableDynamicIcon(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex)
 {
@@ -230,6 +242,12 @@ ErrCode ExtendResourceManagerProxy::DisableDynamicIcon(const std::string &bundle
     }
 
     return reply.ReadInt32();
+}
+
+ErrCode ExtendResourceManagerProxy::GetDynamicIcon(
+    const std::string &bundleName, std::string &moduleName)
+{
+    return GetDynamicIcon(bundleName, Constants::UNSPECIFIED_USERID, Constants::DEFAULT_APP_INDEX, moduleName);
 }
 
 ErrCode ExtendResourceManagerProxy::GetDynamicIcon(

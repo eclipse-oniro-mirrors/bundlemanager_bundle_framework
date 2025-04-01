@@ -5058,7 +5058,7 @@ void InnerBundleInfo::SetCurDynamicIconModule(const std::string &curDynamicIconM
 
 const std::string InnerBundleInfo::GetCurDynamicIconModule(const int32_t userId, const int32_t appIndex) const
 {
-    if ((userId == Constants::ALL_USERID) && (appIndex == Constants::ALL_USERID)) {
+    if ((userId == Constants::UNSPECIFIED_USERID) && (appIndex == Constants::DEFAULT_APP_INDEX)) {
         return GetCurDynamicIconModule();
     }
     std::string key = NameAndUserIdToKey(GetBundleName(), userId);
@@ -5083,7 +5083,7 @@ const std::string InnerBundleInfo::GetCurDynamicIconModule(const int32_t userId,
 bool InnerBundleInfo::SetCurDynamicIconModule(
     const std::string &curDynamicIconModule, const int32_t userId, const int32_t appIndex)
 {
-    if ((userId == Constants::ALL_USERID) && (appIndex == Constants::ALL_USERID)) {
+    if ((userId == Constants::UNSPECIFIED_USERID) && (appIndex == Constants::DEFAULT_APP_INDEX)) {
         SetCurDynamicIconModule(curDynamicIconModule);
         return true;
     }

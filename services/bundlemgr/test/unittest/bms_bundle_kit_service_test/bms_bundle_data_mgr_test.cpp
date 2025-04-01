@@ -7420,7 +7420,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetCommonEventData_0100, Function | MediumTest | 
     std::string bundleName;
     bool isEnableDynamicIcon = false;
     ASSERT_NE(commonEventMgr_, nullptr);
-    commonEventMgr_->NotifyDynamicIconEvent(bundleName, isEnableDynamicIcon);
+    commonEventMgr_->NotifyDynamicIconEvent(bundleName, isEnableDynamicIcon, -2, 0);
 
     commonEventMgr_->commonEventMap_.clear();
     NotifyType type = (NotifyType)14;

@@ -279,7 +279,7 @@ void BundleCommonEventMgr::NotifyDynamicIconEvent(
     element.SetBundleName(bundleName);
     want.SetElement(element);
     want.SetParam(IS_ENABLE_DYNAMIC_ICON, isEnableDynamicIcon);
-    if ((userId != Constants::ALL_USERID) && (appIndex != Constants::ALL_USERID)) {
+    if (!((userId == Constants::UNSPECIFIED_USERID) && (appIndex == Constants::DEFAULT_APP_INDEX))) {
         want.SetParam(Constants::USER_ID, userId);
         want.SetParam(Constants::APP_INDEX, appIndex);
     }

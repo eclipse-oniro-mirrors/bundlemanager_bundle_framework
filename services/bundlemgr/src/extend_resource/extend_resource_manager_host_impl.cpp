@@ -16,6 +16,7 @@
 #include "extend_resource_manager_host_impl.h"
 
 #include "account_helper.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
@@ -416,6 +417,12 @@ ErrCode ExtendResourceManagerHostImpl::GetExtResource(
 }
 
 ErrCode ExtendResourceManagerHostImpl::EnableDynamicIcon(
+    const std::string &bundleName, const std::string &moduleName)
+{
+    return EnableDynamicIcon(bundleName, moduleName, Constants::UNSPECIFIED_USERID, Constants::DEFAULT_APP_INDEX);
+}
+
+ErrCode ExtendResourceManagerHostImpl::EnableDynamicIcon(
     const std::string &bundleName, const std::string &moduleName, const int32_t userId, const int32_t appIndex)
 {
     APP_LOGI("EnableDynamicIcon %{public}s, %{public}s, %{public}d, %{public}d",
@@ -534,10 +541,16 @@ ErrCode ExtendResourceManagerHostImpl::GetExtendResourceInfo(const std::string &
     return ERR_OK;
 }
 
+ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bundleName)
+{
+    return DisableDynamicIcon(bundleName, Constants::UNSPECIFIED_USERID, Constants::DEFAULT_APP_INDEX);
+}
+
 ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex)
 {
-    APP_LOGI("DisableDynamicIcon %{public}s", bundleName.c_str());
+    APP_LOGI("DisableDynamicIcon %{public}s userId %{public}d appIndex %{public}d", bundleName.c_str(),
+        userId, appIndex);
     if (bundleName.empty()) {
         APP_LOGE("fail to DisableDynamicIcon due to param is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -603,6 +616,12 @@ bool ExtendResourceManagerHostImpl::ResetBundleResourceIcon(const std::string &b
 #else
     return false;
 #endif
+}
+
+ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
+    const std::string &bundleName, std::string &moduleName)
+{
+    return GetDynamicIcon(bundleName, Constants::UNSPECIFIED_USERID, Constants::DEFAULT_APP_INDEX, moduleName);
 }
 
 ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
@@ -684,7 +703,7 @@ ErrCode ExtendResourceManagerHostImpl::CreateFd(
 ErrCode ExtendResourceManagerHostImpl::CheckParamInvalid(const InnerBundleInfo &bundleInfo,
     const int32_t userId, const int32_t appIndex)
 {
-    if ((userId == Constants::ALL_USERID) && (appIndex == Constants::ALL_USERID)) {
+    if ((userId == Constants::UNSPECIFIED_USERID) && (appIndex == Constants::DEFAULT_APP_INDEX)) {
         return ERR_OK;
     }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
