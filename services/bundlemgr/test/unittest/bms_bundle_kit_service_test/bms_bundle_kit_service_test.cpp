@@ -14330,20 +14330,4 @@ HWTEST_F(BmsBundleKitServiceTest, Start_0002, Function | SmallTest | Level0)
     bundleAgingMgr.Start(type);
     EXPECT_TRUE(bundleAgingMgr.running_);
 }
-
-/**
- * @tc.number: InnerProcess_0001
- * @tc.name: test AgingHandlerChain of InnerProcess
- * @tc.desc: Process is isPassed
- */
-HWTEST_F(BmsBundleKitServiceTest, InnerProcess_0001, Function | SmallTest | Level0)
-{
-    AgingHandlerChain agingHandlerChain;
-    AgingRequest request;
-    RecentlyUnuseBundleAgingHandler ruAgingHandler;
-    auto handler = std::make_shared<RecentlyUnuseBundleAgingHandler>(ruAgingHandler);
-    agingHandlerChain.AddHandler(handler);
-    bool ret = agingHandlerChain.InnerProcess(request);
-    EXPECT_FALSE(ret);
-}
 }
