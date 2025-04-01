@@ -931,4 +931,42 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0200, Function | Smal
     bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: ResetBundleResourceIcon_0500
+ * @tc.name: Test invalid path case
+ * @tc.desc: Verify function fails with invalid resource path
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0500, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.ResetBundleResourceIcon(EMPTY_STRING);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ResetBundleResourceIcon_0700
+ * @tc.name: Test path security check
+ * @tc.desc: Verify function rejects path traversal attempts
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0700, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.ResetBundleResourceIcon(INVALID_PATH);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ResetBundleResourceIcon_DeleteFail_1000
+ * @tc.name: Test delete resource failure (path not exist)
+ * @tc.desc: Verify function returns false when resource path not exist
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_1000, Function | SmallTest | Level1) {
+    std::string cmd = "rm -rf /data/service/el1/public/bms/bundle_resource/" + BUNDLE_NAME;
+    system(cmd.c_str());
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME);
+    
+    EXPECT_FALSE(ret);
+}
 } // OHOS
