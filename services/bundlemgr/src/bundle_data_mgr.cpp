@@ -1509,8 +1509,8 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfosV9(const Want &want, int32_t fla
     MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
     if (appIndex == 0) {
         for (const auto &item : bundleInfos_) {
-            InnerBundleInfo innerBundleInfo;
-            ErrCode ret = GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId);
+            const InnerBundleInfo &innerBundleInfo = item.second;
+            ErrCode ret = CheckBundleAndAbilityDisabled(innerBundleInfo, flags, userId);
             if (ret != ERR_OK) {
                 LOG_NOFUNC_W(BMS_TAG_QUERY, "GetInnerBundleInfoWithFlagsV9 failed -n %{public}s", item.first.c_str());
                 continue;
@@ -3246,6 +3246,38 @@ ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlagsV9(
         }
     } else {
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::CheckBundleAndAbilityDisabled(
+    const InnerBundleInfo &info, int32_t flags, int32_t userId) const
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    if (info.IsDisabled()) {
+        LOG_NOFUNC_E(BMS_TAG_COMMON, "bundle disabled -n %{public}s -u %{public}d -f %{public}d",
+            info.GetBundleName().c_str(), userId, flags);
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
+
+    int32_t responseUserId = info.GetResponseUserId(requestUserId);
+    bool isEnabled = false;
+    auto ret = info.GetApplicationEnabledV9(responseUserId, isEnabled);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("GetApplicationEnabledV9 failed ret:%{public}d -n %{public}s",
+            ret, info.GetBundleName().c_str());
+        return ret;
+    }
+    if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))
+        && !isEnabled) {
+        LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false -n %{public}s -u %{public}d -f %{public}d",
+            info.GetBundleName().c_str(), responseUserId, flags);
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
     return ERR_OK;
 }
@@ -5825,8 +5857,8 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t f
     // query from bundleInfos_
     if (appIndex == 0) {
         for (const auto &item : bundleInfos_) {
-            InnerBundleInfo innerBundleInfo;
-            ErrCode ret = GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId);
+            const InnerBundleInfo &innerBundleInfo = item.second;
+            ErrCode ret = CheckBundleAndAbilityDisabled(innerBundleInfo, flags, userId);
             if (ret != ERR_OK) {
                 LOG_D(BMS_TAG_QUERY, "ImplicitQueryExtensionAbilityInfos failed, bundleName:%{public}s",
                     item.first.c_str());
