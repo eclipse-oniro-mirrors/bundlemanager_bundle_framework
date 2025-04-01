@@ -266,6 +266,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
         dataGroupIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     customProcess = Str16ToStr8(parcel.ReadString16());
+    codeLanguage = parcel.ReadString();
     return true;
 }
 
@@ -351,6 +352,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(customProcess));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
     return true;
 }
 
@@ -389,7 +391,8 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {NEED_CREATE_SANDBOX, extensionInfo.needCreateSandbox},
         {DATA_GROUP_IDS, extensionInfo.dataGroupIds},
         {JSON_KEY_VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds},
-        {JSON_KEY_CUSTOM_PROCESS, extensionInfo.customProcess}
+        {JSON_KEY_CUSTOM_PROCESS, extensionInfo.customProcess},
+        {Constants::CODE_LANGUAGE, extensionInfo.codeLanguage}
     };
 }
 
@@ -616,6 +619,12 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         jsonObjectEnd,
         JSON_KEY_CUSTOM_PROCESS,
         extensionInfo.customProcess,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::CODE_LANGUAGE,
+        extensionInfo.codeLanguage,
         false,
         parseResult);
     if (parseResult != ERR_OK) {

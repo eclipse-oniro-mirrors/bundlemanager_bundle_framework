@@ -177,6 +177,7 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::string hapPath;
     std::string process;
     std::string customProcess;
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
     std::vector<std::string> permissions;
     std::vector<Metadata> metadata;
 
