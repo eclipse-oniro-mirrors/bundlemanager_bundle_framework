@@ -24,6 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleUserMgrHostImpl : public BundleUserMgrHost {
 public:
+    static bool SkipThirdPreloadAppInstallation(const int32_t userId, const PreInstallBundleInfo &preInfo);
     /**
      * @brief Create new user.
      * @param userId Indicates the userId.
