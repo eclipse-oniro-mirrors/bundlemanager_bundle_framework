@@ -130,9 +130,6 @@ void InstalldService::Stop()
         LOG_NOFUNC_W(BMS_TAG_INSTALLD, "the installd service is already stopped");
         return;
     }
-    // remove installd service from system ability manager.
-    // since we can't handle the fail case, just ignore the result.
-    SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID);
     isReady_ = false;
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service stop successfully");
 }
