@@ -18,7 +18,7 @@ ohos_hap("mstbmsThirdBundle1") {
   hap_profile = "./src/main/config.json"
   hap_name = "bmsThirdBundle1"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/moduletest/bundle_framework/mstbundlemgrservice/resource/mst_bundle/other_bundle/${hap_name}.hap"
+  final_hap_path = "$root_out_dir/tests/moduletest/bundle_framework/bundle_framework/resource/mst_bundle/other_bundle/${hap_name}.hap"
   testonly = true
   deps = [
     ":hjs_demo_js_assets",

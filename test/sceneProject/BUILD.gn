@@ -20,7 +20,6 @@ group("test_hap") {
     "benchmark:benchmark_hap",
     "moduletest:moduletest_hap",
     "systemtest:systemtest_hap",
-    "tools:tooltest_hap",
     "unittest:unittest_hap",
   ]
 }
