@@ -4394,6 +4394,14 @@ ErrCode BundleMgrProxy::MigrateData(const std::vector<std::string> &sourcePaths,
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("MigrateData Called");
+    if (sourcePaths.empty()) {
+        APP_LOGE("source paths empty!");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    if (destinationPath.empty()) {
+        APP_LOGE("destination path empty!");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("Write interfaceToken failed");

@@ -67,7 +67,7 @@ constexpr const char* LABEL_ID = "labelId";
 constexpr const char* STATE = "state";
 constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* SOURCE_PATHS = "sourcePaths";
-constexpr const char* DESTINATION_PATHS = "destinationPath";
+constexpr const char* DESTINATION_PATH = "destinationPath";
 constexpr const char* HOST_BUNDLE_NAME = "hostBundleName";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
@@ -5779,16 +5779,15 @@ napi_value MigrateData(napi_env env, napi_callback_info info)
 {
     APP_LOGI("begin to MigrateData");
     NapiArg args(env, info);
-    MigrateDataCallbackInfo *asyncCallbackInfo = new (std::nothrow) MigrateDataCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("VerifyCallbackInfo asyncCallbackInfo is null");
-        return nullptr;
-    }
-
-    std::unique_ptr<MigrateDataCallbackInfo> callbackPtr{ asyncCallbackInfo };
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
         APP_LOGE("MigrateData napi func init failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    std::unique_ptr<MigrateDataCallbackInfo> asyncCallbackInfo = std::make_unique<MigrateDataCallbackInfo>(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("VerifyCallbackInfo asyncCallbackInfo is null");
         return nullptr;
     }
 
@@ -5800,13 +5799,13 @@ napi_value MigrateData(napi_env env, napi_callback_info info)
 
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], asyncCallbackInfo->destinationPath)) {
         APP_LOGE("ParseString invalid");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DESTINATION_PATHS, TYPE_STRING);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DESTINATION_PATH, TYPE_STRING);
         return nullptr;
     }
 
     auto promise = CommonFunc::AsyncCallNativeMethod<MigrateDataCallbackInfo>(
-        env, asyncCallbackInfo, MIGRATE_DATA, MigrateDataExec, MigrateDataComplete);
-    callbackPtr.release();
+        env, asyncCallbackInfo.get(), MIGRATE_DATA, MigrateDataExec, MigrateDataComplete);
+    asyncCallbackInfo.release();
     APP_LOGI("call MigrateData done");
     return promise;
 }
