@@ -2056,7 +2056,6 @@ HWTEST_F(BmsBundleFreeInstallTest, ProcessPreloadRequestToServiceCenter_0002, Fu
     ASSERT_NE(bundleDataMgr_, nullptr);
 
     connectAbilityMgr->PreloadRequest(ServiceCenterFunction::CONNECT_PRELOAD_INSTALL, targetAbilityInfo);
-    connectAbilityMgr->LoadDownloadService();
 }
 
 /**

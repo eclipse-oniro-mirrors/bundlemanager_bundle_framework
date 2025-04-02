@@ -66,6 +66,7 @@ constexpr uint8_t DEFAULT_EMBEDDED_VALUE = 0;
 constexpr int16_t DMS_UID = 5522;
 // sa id
 constexpr int16_t DOWNLOAD_SERVICE_SA_ID = 3706;
+constexpr int16_t INSTALLD_SA_ID = 511;
 // replace want int ecological rule
 constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
 
@@ -128,7 +129,8 @@ void BundleConnectAbilityMgr::ProcessPreloadRequestToServiceCenter(int32_t flag,
             LOG_E(BMS_TAG_DEFAULT, "BundleConnectAbilityMgr is nullptr");
             return;
         }
-        mgr->LoadDownloadService();
+        mgr->LoadService(INSTALLD_SA_ID);
+        mgr->LoadService(DOWNLOAD_SERVICE_SA_ID);
     };
     std::thread loadServiceThread(task);
     loadServiceThread.detach();
@@ -396,7 +398,8 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
             LOG_E(BMS_TAG_DEFAULT, "BundleConnectAbilityMgr is nullptr");
             return;
         }
-        mgr->LoadDownloadService();
+        mgr->LoadService(INSTALLD_SA_ID);
+        mgr->LoadService(DOWNLOAD_SERVICE_SA_ID);
     };
     std::thread loadServiceThread(task);
     loadServiceThread.detach();
@@ -417,9 +420,9 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
     }
 }
 
-void BundleConnectAbilityMgr::LoadDownloadService() const
+void BundleConnectAbilityMgr::LoadService(int32_t saId) const
 {
-    LOG_I(BMS_TAG_DEFAULT, "LoadDownloadService start");
+    LOG_I(BMS_TAG_DEFAULT, "LoadService %{public}d start", saId);
     auto systemAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "Failed to get SystemAbilityManager");
@@ -430,13 +433,13 @@ void BundleConnectAbilityMgr::LoadDownloadService() const
         LOG_E(BMS_TAG_DEFAULT, "Create load callback failed");
         return;
     }
-    auto ret = systemAbilityMgr->LoadSystemAbility(DOWNLOAD_SERVICE_SA_ID, loadCallback);
+    auto ret = systemAbilityMgr->LoadSystemAbility(saId, loadCallback);
     if (ret != 0) {
         LOG_E(BMS_TAG_DEFAULT, "Load system ability %{public}d failed with %{public}d",
-            DOWNLOAD_SERVICE_SA_ID, ret);
+            saId, ret);
         return;
     }
-    LOG_I(BMS_TAG_DEFAULT, "LoadDownloadService end");
+    LOG_I(BMS_TAG_DEFAULT, "LoadService end");
 }
 
 void BundleConnectAbilityMgr::DisconnectAbility()
