@@ -29,18 +29,29 @@ ohos_systemtest("ExtendResourceManagerProxyTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${base_path}:appexecfwk_base",
+    "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso5:hapNotIncludeso5",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso5/feature1:hapNotIncludesoFeature1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso5/feature1:hapNotIncludesoFeature1Hsp",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
+    "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/googletest:gtest_main",
   ]
 
   defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
 
   external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+    "access_token:libtokenid_sdk",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
 }
 
