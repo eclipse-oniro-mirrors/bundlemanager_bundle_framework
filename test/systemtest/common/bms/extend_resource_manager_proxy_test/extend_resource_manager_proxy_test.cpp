@@ -43,7 +43,8 @@ const int32_t PERMS_INDEX_ONE = 1;
 const int32_t PERMS_INDEX_TWO = 2;
 const int32_t PERMS_INDEX_THREE = 3;
 const std::string BUNDLE_PATH_1 = "/data/test/resource/bms/resource_manager/hapNotIncludeso5.hap";
-const std::string BUNDLE_PATH_2 = "/data/test/resource/bms/resource_manager/hapNotIncludesoFeature1Hsp.hsp";
+const std::string BUNDLE_PATH_2 = "/data/test/resource/bms/resource_manager/hapNotIncludesoFeature1.hsp";
+const std::string BUNDLE_PATH_3 = "/data/test/resource/bms/resource_manager/hapNotIncludesoFeature1.hap";
 const std::string BUNDLE_NAME_DEMO = "com.example.hapNotIncludeso5";
 const std::string DYNAMIC_NAME = "feature1";
 const std::string MSG_SUCCESS = "[SUCCESS]";
@@ -118,7 +119,9 @@ public:
 };
 
 void ExtendResourceManagerProxyTest::SetUpTestCase()
-{}
+{
+    rename(BUNDLE_PATH_3.c_str(), BUNDLE_PATH_2.c_str());
+}
 
 void ExtendResourceManagerProxyTest::TearDownTestCase()
 {}
