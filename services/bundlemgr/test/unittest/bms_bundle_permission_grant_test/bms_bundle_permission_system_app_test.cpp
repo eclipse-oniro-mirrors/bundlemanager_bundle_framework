@@ -1500,6 +1500,19 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, MigrateData_0100, Function | Sma
 }
 
 /**
+ * @tc.number: GetAllPluginInfo_0001
+ * @tc.name: test GetAllPluginInfo
+ * @tc.desc: 1. system running normally
+ *           2. GetAllPluginInfo false by not system api.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, GetAllPluginInfo_0001, Function | SmallTest | Level1)
+{
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    ErrCode ret = bundleMgrHostImpl_->GetAllPluginInfo("", 100, pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
  * @tc.number: GetDeveloperIdsTest
  * @tc.name: test GetDeveloperIds of BundleMgrProxy
  * @tc.desc: system running normally

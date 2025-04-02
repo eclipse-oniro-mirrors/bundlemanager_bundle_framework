@@ -372,6 +372,37 @@ HWTEST_F(BmsBundleMgrProxyTest, GetBundleInfosV9_0100, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: GetAllPluginInfo_0100
+ * @tc.name: test the GetAllPluginInfo
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllPluginInfo
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAllPluginInfo_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    int32_t userId = 100;
+    auto res = bundleMgrProxy.GetAllPluginInfo("", userId, pluginBundleInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetPluginInfosForSelf_0100
+ * @tc.name: test the GetPluginInfosForSelf
+ * @tc.desc: 1. system running normally
+ *           2. test GetPluginInfosForSelf
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetPluginInfosForSelf_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto res = bundleMgrProxy.GetPluginInfosForSelf(pluginBundleInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
  * @tc.number: GetUidByBundleName_0100
  * @tc.name: test the GetUidByBundleName
  * @tc.desc: 1. system running normally

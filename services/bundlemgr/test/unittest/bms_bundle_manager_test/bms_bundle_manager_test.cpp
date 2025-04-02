@@ -3027,6 +3027,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1200, Function | MediumTest | L
     AAFwk::Want want;
     AbilityInfo abilityInfo;
     SharedBundleInfo sharedBundleInfo;
+    std::vector<PluginBundleInfo> pluginBundleInfos;
 
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
@@ -3071,6 +3072,12 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1200, Function | MediumTest | L
 
     retCode = hostImpl->GetLauncherAbilityInfoSync("", USERID, abilityInfos);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    retCode = hostImpl->GetAllPluginInfo("", USERID, pluginBundleInfos);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_NULL_PTR);
+
+    retCode = hostImpl->GetPluginInfosForSelf(pluginBundleInfos);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_NULL_PTR);
 
     retBool = hostImpl->IsPreInstallApp("");
     EXPECT_EQ(retBool, false);
@@ -4081,6 +4088,33 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0001, Function | SmallTest 
     ErrCode testRet = hostImpl->QueryLauncherAbilityInfos(
         want, USERID, abilityInfos);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAllPluginInfo_0001
+ * @tc.name: test GetAllPluginInfo
+ * @tc.desc: 1.system run normally
+ *           2.bundle not exist
+ */
+HWTEST_F(BmsBundleManagerTest, GetAllPluginInfo_0001, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    ErrCode retCode = hostImpl->GetAllPluginInfo("", USERID, pluginBundleInfos);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetPluginInfosForSelf_0001
+ * @tc.name: test GetPluginInfosForSelf
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetPluginInfosForSelf_0001, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    ErrCode retCode = hostImpl->GetPluginInfosForSelf(pluginBundleInfos);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
