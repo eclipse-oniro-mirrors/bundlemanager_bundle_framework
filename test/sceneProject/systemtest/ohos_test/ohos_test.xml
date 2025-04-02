@@ -323,7 +323,7 @@
     <preparer>
       <option name="push" value="testHapNoSo/hapNotIncludeso5.hap -> /data/test/resource/bms/resource_manager/"
         src="res" />
-      <option name="push" value="testHapNoSo/hapNotIncludesoFeature1Hsp.hsp -> /data/test/resource/bms/resource_manager/"
+      <option name="push" value="testHapNoSo/hapNotIncludesoFeature1.hap -> /data/test/resource/bms/resource_manager/"
         src="res" />
     </preparer>
   </target>

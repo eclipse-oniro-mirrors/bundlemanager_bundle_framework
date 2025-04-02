@@ -27,19 +27,6 @@ ohos_hap("hapNotIncludesoFeature1") {
   certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.example.hapNotIncludeso5.p7b"
 }
 
-ohos_hap("hapNotIncludesoFeature1Hsp") {
-  hap_profile = "src/main/module.json"
-  hap_name = "hapNotIncludesoFeature1Hsp"
-  subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/testHapNoSo/${hap_name}.hsp"
-  testonly = true
-  deps = [
-    ":hjs_demo_js_assets",
-    ":hjs_demo_resources",
-  ]
-  certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.example.hapNotIncludeso5.p7b"
-}
-
 ohos_app_scope("bmsstagedemoone_app_profile") {
   app_profile = "../AppScope/app.json"
   sources = [ "../AppScope/resources" ]

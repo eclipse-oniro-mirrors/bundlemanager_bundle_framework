@@ -33,7 +33,6 @@ ohos_systemtest("ExtendResourceManagerProxyTest") {
     "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso5:hapNotIncludeso5",
     "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso5/feature1:hapNotIncludesoFeature1",
-    "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso5/feature1:hapNotIncludesoFeature1Hsp",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
