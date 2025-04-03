@@ -233,7 +233,8 @@ ErrCode BundleParser::ParsePreInstallConfig(
     return preBundleProfile.TransformTo(jsonBuf, scanInfos);
 }
 
-ErrCode BundleParser::ParsePreAppListConfig(const std::string &configFile, std::set<PreScanInfo> &scanAppInfos) const
+ErrCode BundleParser::ParsePreAppListConfig(const std::string &configFile, std::set<PreScanInfo> &scanAppInfos,
+    std::set<PreScanInfo> &scanDemandInfos) const
 {
     APP_LOGD("parse preAppListInstallConfig from %{public}s", configFile.c_str());
     nlohmann::json jsonBuf;
@@ -242,12 +243,25 @@ ErrCode BundleParser::ParsePreAppListConfig(const std::string &configFile, std::
     }
 
     PreBundleProfile preBundleProfile;
-    ErrCode ret = preBundleProfile.TransformToAppList(jsonBuf, scanAppInfos);
+    ErrCode ret = preBundleProfile.TransformToAppList(jsonBuf, scanAppInfos, scanDemandInfos);
     if (ret != ERR_OK) {
         APP_LOGE_NOFUNC("set parameter BMS_DATA_PRELOAD false");
         OHOS::system::SetParameter(ServiceConstants::BMS_DATA_PRELOAD, "false");
     }
     return ret;
+}
+
+ErrCode BundleParser::ParseDemandInstallConfig(
+    const std::string &configFile, std::set<PreScanInfo> &scanInfos) const
+{
+    APP_LOGD("Parse onDemandInstallConfig from %{public}s", configFile.c_str());
+    nlohmann::json jsonBuf;
+    if (!ReadFileIntoJson(configFile, jsonBuf)) {
+        return ERR_APPEXECFWK_PARSE_FILE_FAILED;
+    }
+
+    PreBundleProfile preBundleProfile;
+    return preBundleProfile.TransformToDemandList(jsonBuf, scanInfos);
 }
 
 ErrCode BundleParser::ParsePreUnInstallConfig(
