@@ -63,7 +63,7 @@ const std::string WORD_TEMPLATE_UTD_ID = "org.openxmlformats.wordprocessingml.te
 const std::string PDF_UTD_ID = "com.adobe.pdf";
 const std::string MP4_UTD_ID = "general.mpeg-4";
 const std::string BROWSER = "BROWSER";
-const std::string DEFAULT_APP_CHANGED_EVENT = "usual.event.DEFAULT_APP_CHANGED";
+const std::string DEFAULT_APPLICATION_CHANGED_EVENT = "usual.event.DEFAULT_APPLICATION_CHANGED";
 const std::string UTD_IDS = "utdIds";
 const std::string USER_ID_STRING = "userId";
 } // namespace
@@ -97,7 +97,7 @@ public:
     void OnReceiveEvent(const EventFwk::CommonEventData &data)
     {
         auto want = data.GetWant();
-        if (want.GetAction() == DEFAULT_APP_CHANGED_EVENT) {
+        if (want.GetAction() == DEFAULT_APPLICATION_CHANGED_EVENT) {
             utdId = want.GetStringArrayParam(UTD_IDS);
             userId = want.GetParams().GetIntParam(USER_ID_STRING, -1);
         }
@@ -209,7 +209,7 @@ void BmsBundleDefaultAppMgrTest::UninstallBundleInfo(const std::string bundleNam
 void BmsBundleDefaultAppMgrTest::SubscribeDefaultAppChangedEvent()
 {
     EventFwk::MatchingSkills matchingSkills;
-    matchingSkills.AddEvent(DEFAULT_APP_CHANGED_EVENT);
+    matchingSkills.AddEvent(DEFAULT_APPLICATION_CHANGED_EVENT);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     subscriber_ = std::make_shared<DefaultAppChangedTestEventSubscriber>(subscribeInfo);
     EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
