@@ -106,6 +106,7 @@ group("unittest") {
       "unittest/bms_installd_client_test:unittest",
       "unittest/bms_installd_host_test:unittest",
       "unittest/bms_patch_parser_test:unittest",
+      "unittest/bms_plugin_installer_test:unittest",
       "unittest/bms_rdb_data_manager_test:unittest",
       "unittest/bms_service_bundle_scan_test:unittest",
       "unittest/bms_service_startup_test:unittest",
