@@ -589,7 +589,11 @@ bool BundleUtil::RenameFile(const std::string &oldPath, const std::string &newPa
         return false;
     }
 
-    return rename(oldPath.c_str(), newPath.c_str()) == 0;
+    if (rename(oldPath.c_str(), newPath.c_str()) != 0) {
+        APP_LOGE("rename failed, errno:%{public}d", errno);
+        return false;
+    }
+    return true;
 }
 
 bool BundleUtil::DeleteDir(const std::string &path)
