@@ -30,6 +30,7 @@ const std::string BUNDLE_CLONE_INFO_INSTALL_TIME = "installTime";
 const std::string BUNDLE_CLONE_INFO_ENCRYPTED_KEY_EXISTED = "encryptedKeyExisted";
 const std::string BUNDLE_CLONE_INFO_INFO_SET_ENABLED_CALLER = "setEnabledCaller";
 const std::string BUNDLE_CLONE_INFO_KEY_ID = "keyId";
+constexpr const char* INNER_BUNDLE_CLONE_INFO_CUR_DYNAMIC_ICON_MODULE = "curDynamicIconModule";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const InnerBundleCloneInfo& bundleCloneInfo)
@@ -46,7 +47,8 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleCloneInfo& bundleClone
         {BUNDLE_CLONE_INFO_INSTALL_TIME, bundleCloneInfo.installTime},
         {BUNDLE_CLONE_INFO_ENCRYPTED_KEY_EXISTED, bundleCloneInfo.encryptedKeyExisted},
         {BUNDLE_CLONE_INFO_INFO_SET_ENABLED_CALLER, bundleCloneInfo.setEnabledCaller},
-        {BUNDLE_CLONE_INFO_KEY_ID, bundleCloneInfo.keyId}
+        {BUNDLE_CLONE_INFO_KEY_ID, bundleCloneInfo.keyId},
+        {INNER_BUNDLE_CLONE_INFO_CUR_DYNAMIC_ICON_MODULE, bundleCloneInfo.curDynamicIconModule}
     };
 }
 
@@ -78,6 +80,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleClo
         bundleCloneInfo.setEnabledCaller, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_KEY_ID,
         bundleCloneInfo.keyId, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_CLONE_INFO_CUR_DYNAMIC_ICON_MODULE,
+        bundleCloneInfo.curDynamicIconModule, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read module bundleCloneInfo from jsonObject error, error code : %{public}d", parseResult);
     }

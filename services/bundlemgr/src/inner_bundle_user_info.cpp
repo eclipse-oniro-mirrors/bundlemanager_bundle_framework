@@ -31,6 +31,7 @@ constexpr const char* INNER_BUNDLE_USER_INFO_IS_REMOVABLE = "isRemovable";
 constexpr const char* INNER_BUNDLE_USER_INFO_CLONE_INFOS = "cloneInfos";
 constexpr const char* INNER_BUNDLE_USER_INFO_KEYID = "keyId";
 constexpr const char* INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET = "installedPluginSet";
+constexpr const char* INNER_BUNDLE_USER_INFO_CUR_DYNAMIC_ICON_MODULE = "curDynamicIconModule";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleUserInfo)
@@ -49,6 +50,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleU
         {INNER_BUNDLE_USER_INFO_CLONE_INFOS, innerBundleUserInfo.cloneInfos},
         {INNER_BUNDLE_USER_INFO_KEYID, innerBundleUserInfo.keyId},
         {INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET, innerBundleUserInfo.installedPluginSet},
+        {INNER_BUNDLE_USER_INFO_CUR_DYNAMIC_ICON_MODULE, innerBundleUserInfo.curDynamicIconModule},
     };
 }
 
@@ -84,6 +86,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
     GetValueIfFindKey<std::unordered_set<std::string>>(jsonObject, jsonObjectEnd,
         INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET,
         innerBundleUserInfo.installedPluginSet, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_CUR_DYNAMIC_ICON_MODULE,
+        innerBundleUserInfo.curDynamicIconModule, false, parseResult);
 }
 } // namespace AppExecFwk
 } // namespace OHOS
