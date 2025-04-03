@@ -62,6 +62,10 @@ const std::string HAP_FILE_PATH = "/data/app/el1/bundle/public/com.example.test/
 const std::string HAP_FILE_PATH_BACKUP = "/data/app/el1/bundle/public/com.example.test/patch_1000002/entry.hqf";
 const std::string HAP_PATH = "/data/app/el1/bundle/public/com.example.test";
 const std::string OVER_MAX_PATH_SIZE(300, 'x');
+const std::string TEST_MODULE_PATH = "/system/app/ShellAssistant/ShellAssistant_Feature_Anco.hap";
+const std::string TEST_V8A_CPU_ABI = "arm64-v8a";
+const std::string TEST_TARGET_SO_PATH = "/data/app/el1/bundle/public/libs/arm64/";
+const std::string TEST_APP_IDENTIFIER = "5765880207854632823";
 }; // namespace
 class BmsInstallDaemonOperatorTest : public testing::Test {
 public:
@@ -982,8 +986,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5900, Function | Sma
     codeSignatureParam.signatureFileDir = "";
     codeSignatureParam.isEnterpriseBundle = false;
     codeSignatureParam.appIdentifier = TEST_STRING;
-    auto ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
-    EXPECT_FALSE(ret);
+    ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -1113,8 +1117,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6800, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6900, Function | SmallTest | Level0)
 {
     CodeSignatureParam codeSignatureParam;
-    bool res = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
-    EXPECT_FALSE(res);
+    ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -1126,8 +1130,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7000, Function | Sma
 {
     CodeSignatureParam codeSignatureParam;
     codeSignatureParam.signatureFileDir = "/";
-    bool res = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
-    EXPECT_EQ(res, false);
+    ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -1559,8 +1563,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9700, Function | Sma
     codeSignatureParam.signatureFileDir = "";
     codeSignatureParam.isEnterpriseBundle = false;
     codeSignatureParam.appIdentifier = TEST_STRING;
-    auto ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
-    EXPECT_FALSE(ret);
+    ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -1851,7 +1855,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11500, Function | Sm
     codeSignatureParam.isEnterpriseBundle = true;
     codeSignatureParam.isPreInstalledBundle = true;
     ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
-    EXPECT_FALSE(ret);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -1871,9 +1875,26 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11600, Function | Sm
     codeSignatureParam.isPreInstalledBundle = false;
     ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
 #ifdef USE_ARM64
-    EXPECT_FALSE(ret);
+    EXPECT_NE(ret, ERR_OK);
 #else
-    EXPECT_TRUE(ret);
+    EXPECT_EQ(ret, ERR_OK);
+#endif
+
+    codeSignatureParam.modulePath = TEST_MODULE_PATH;
+    codeSignatureParam.cpuAbi = TEST_V8A_CPU_ABI;
+    codeSignatureParam.targetSoPath = TEST_TARGET_SO_PATH;
+    codeSignatureParam.appIdentifier = TEST_APP_IDENTIFIER;
+    codeSignatureParam.signatureFileDir = "";
+    codeSignatureParam.isCompileSdkOpenHarmony = true;
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.isPreInstalledBundle = true;
+    codeSignatureParam.isInternaltestingBundle = false;
+    codeSignatureParam.isCompressNativeLibrary = true;
+    ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+#ifdef USE_ARM64
+    EXPECT_NE(ret, ERR_OK);
+#else
+    EXPECT_NE(ret, ERR_OK);
 #endif
 }
 
@@ -1895,9 +1916,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11700, Function | Sm
     codeSignatureParam.isPreInstalledBundle = true;
     ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
 #ifdef USE_ARM64
-    EXPECT_FALSE(ret);
+    EXPECT_NE(ret, ERR_OK);
 #else
-    EXPECT_TRUE(ret);
+    EXPECT_EQ(ret, ERR_OK);
 #endif
 }
 

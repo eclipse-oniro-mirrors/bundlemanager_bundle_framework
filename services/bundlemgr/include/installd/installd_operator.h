@@ -261,7 +261,7 @@ public:
         const Security::CodeSign::EntryMap &entryMap);
 #endif
 
-    static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
+    static ErrCode VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
 
 #if defined(CODE_ENCRYPTION_ENABLE)
     static ErrCode EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap,

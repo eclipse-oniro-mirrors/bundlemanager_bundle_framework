@@ -1651,9 +1651,10 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSign
         LOG_E(BMS_TAG_INSTALLD, "Calling the function VerifyCodeSignature with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldOperator::VerifyCodeSignature(codeSignatureParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "verify code signature failed");
-        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    ErrCode ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "verify code signature failed: %{public}d", ret);
+        return ret;
     }
     return ERR_OK;
 }
@@ -1830,6 +1831,9 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
     }
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "hap or hsp code signature failed due to %{public}d", ret);
+        if (CODE_SIGNATURE_ERR_MAP.find(ret) != CODE_SIGNATURE_ERR_MAP.end()) {
+            return CODE_SIGNATURE_ERR_MAP.at(ret);
+        }
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
 #else

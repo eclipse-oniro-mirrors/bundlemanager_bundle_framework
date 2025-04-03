@@ -5024,8 +5024,8 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     // size of code signature files should be same with the size of hap and hsp
     if (!signatureFileMap_.empty() && (signatureFileMap_.size() != hapPathRecords_.size())) {
-        LOG_E(BMS_TAG_INSTALLER, "each hap or hsp needs to be verified code signature");
-        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+        LOG_E(BMS_TAG_INSTALLER, "code signature file size not same with the size of hap and hsp");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
     // 1. copy hsp or hap file to temp installation dir
     ErrCode result = ERR_OK;
@@ -5044,9 +5044,10 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 LOG_E(BMS_TAG_INSTALLER, "Move hap to install path failed");
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
             }
-            if (VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLER, "enable code signature failed");
-                return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+            result = VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second);
+            if (result != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "enable code signature failed: %{public}d", result);
+                return result;
             }
         }
     }

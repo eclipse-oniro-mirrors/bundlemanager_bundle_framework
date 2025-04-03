@@ -1561,36 +1561,39 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
 }
 #endif
 
-bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
+ErrCode InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
     BundleExtractor extractor(codeSignatureParam.modulePath);
     if (!extractor.Init()) {
-        return false;
+        return ERR_APPEXECFWK_INSTALL_ENCRYPTION_EXTRACTOR_INIT_FAILED;
     }
-
+ 
     std::vector<std::string> soEntryFiles;
     if (!ObtainNativeSoFile(extractor, codeSignatureParam.cpuAbi, soEntryFiles)) {
-        return false;
+        return ERR_APPEXECFWK_INSTALL_ENCRYPTION_OBTAIN_SO_FAILED;
     }
 
     if (soEntryFiles.empty()) {
         LOG_D(BMS_TAG_INSTALLD, "soEntryFiles is empty");
-        return true;
+        return ERR_OK;
     }
-
+ 
 #if defined(CODE_SIGNATURE_ENABLE)
     Security::CodeSign::EntryMap entryMap;
     if (!PrepareEntryMap(codeSignatureParam, soEntryFiles, entryMap)) {
-        return false;
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-
+ 
     ErrCode ret = PerformCodeSignatureCheck(codeSignatureParam, entryMap);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "VerifyCode failed due to %{public}d", ret);
-        return false;
+        if (CODE_SIGNATURE_ERR_MAP.find(ret) != CODE_SIGNATURE_ERR_MAP.end()) {
+            return CODE_SIGNATURE_ERR_MAP.at(ret);
+        }
+        return ret;
     }
 #endif
-    return true;
+    return ERR_OK;
 }
 
 ErrCode InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
