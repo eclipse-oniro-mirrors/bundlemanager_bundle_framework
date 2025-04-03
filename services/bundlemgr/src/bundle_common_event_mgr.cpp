@@ -308,7 +308,7 @@ void BundleCommonEventMgr::NotifyBundleResourcesChanged(const int32_t userId, co
 void BundleCommonEventMgr::NotifyDefaultAppChanged(const int32_t userId, std::vector<std::string> &utdIdVec)
 {
     OHOS::AAFwk::Want want;
-    want.SetAction(DEFAULT_APP_CHANGED);
+    want.SetAction(DEFAULT_APPLICATION_CHANGED);
     want.SetParam(Constants::USER_ID, userId);
     want.SetParam(UTD_IDS, utdIdVec);
     EventFwk::CommonEventData commonData { want };
