@@ -14,6 +14,54 @@
 import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
+ohos_shared_library("bundle_res_common") {
+  branch_protector_ret = "pac_ret"
+
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
+  sources = [ "resource_helper.cpp" ]
+
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+  ]
+
+  defines = [
+    "APP_LOG_TAG = \"BMS\"",
+    "LOG_DOMAIN = 0xD001120",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "runtime_core:ani",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
+
 ohos_shared_library("bundleresourcemanager") {
   branch_protector_ret = "pac_ret"
 
@@ -29,6 +77,7 @@ ohos_shared_library("bundleresourcemanager") {
   include_dirs = [
     "${inner_api_path}/bundlemgr_resource/include",
     "${kits_path}/js/common",
+    "${kits_path}/js/resource_comm",
   ]
   defines = [
     "APP_LOG_TAG = \"BMS\"",
@@ -37,6 +86,7 @@ ohos_shared_library("bundleresourcemanager") {
   sources = [ "native_module.cpp" ]
 
   deps = [
+    ":bundle_res_common",
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
