@@ -1,0 +1,73 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/config/components/ets_frontend/ets2abc_config.gni")
+import("//build/ohos.gni")
+import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
+
+ohos_shared_library("ani_launcher_bundle_manager") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  include_dirs = [
+    "${kits_path}/ani/common",
+    "${kits_path}/ani/launcher_bundle_manager",
+    "${kits_path}/js/launcher_bundle_manager",
+  ]
+  sources = [ "ani_launcher_bundle_manager.cpp" ]
+
+  defines = [
+    "APP_LOG_TAG = \"BMS\"",
+    "LOG_DOMAIN = 0xD001120",
+  ]
+
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "${kits_path}/ani/common:bms_ani_common",
+    "${kits_path}/js/common:bundle_napi_common",
+    "${kits_path}/js/launcher_bundle_manager:launcherbundlemanager_common",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_manager",
+    "ability_runtime:ability_start_options",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "napi:ace_napi",
+    "runtime_core:ani",
+  ]
+
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
+
+generate_static_abc("launcher_bundle_manager") {
+  base_url = "./ets"
+  files = [ "./ets/@ohos.bundle.launcherBundleManager.ets" ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/launcher_bundle_manager.abc"
+}
+
+ohos_prebuilt_etc("launcher_bundle_manager_etc") {
+  source = "$target_out_dir/launcher_bundle_manager.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":launcher_bundle_manager" ]
+}

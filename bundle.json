@@ -101,7 +101,8 @@
         "build": {
             "sub_component": [
                 "//foundation/bundlemanager/bundle_framework:bms_target",
-                "//foundation/bundlemanager/bundle_framework/etc:bms_para"
+                "//foundation/bundlemanager/bundle_framework/etc:bms_para",
+                "//foundation/bundlemanager/bundle_framework/interfaces/kits/ani:ani_bms_packages"
             ],
             "inner_kits": [
                 {
@@ -199,6 +200,16 @@
                     "visibility": [
                       "bundle_tool"
                     ]
+                  },
+                  {
+                    "header": {
+                      "header_base": "//foundation/bundlemanager/bundle_framework/interfaces/kits/ani/common/",
+                      "header_files": [
+                        "common_fun_ani.h",
+                        "enum_util.h"
+                      ]
+                    },
+                    "name": "//foundation/bundlemanager/bundle_framework/interfaces/kits/ani/common:bms_ani_common"
                   }
             ],
             "test": [

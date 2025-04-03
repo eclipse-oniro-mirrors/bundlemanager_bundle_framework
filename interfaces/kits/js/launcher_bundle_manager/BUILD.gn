@@ -14,6 +14,56 @@
 import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
+ohos_shared_library("launcherbundlemanager_common") {
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
+  defines = [
+    "APP_LOG_TAG = \"BMS\"",
+    "LOG_DOMAIN = 0xD001120",
+  ]
+
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  sources = [ "js_launcher_service.cpp" ]
+
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "../common:bundle_napi_common",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_manager",
+    "ability_runtime:ability_start_options",
+    "ability_runtime:napi_common",
+    "c_utils:utils",
+    "common_event_service:cesfwk_core",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "napi:ace_napi",
+  ]
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
+
 ohos_shared_library("launcherbundlemanager") {
   branch_protector_ret = "pac_ret"
 
@@ -45,10 +95,7 @@ ohos_shared_library("launcherbundlemanager") {
   sources = [ "native_module.cpp" ]
 
   if (bundle_framework_launcher) {
-    sources += [
-      "js_launcher_service.cpp",
-      "launcher_bundle_manager.cpp",
-    ]
+    sources += [ "launcher_bundle_manager.cpp" ]
   } else {
     sources += [ "launcher_bundle_manager_unsupported.cpp" ]
   }
@@ -59,6 +106,10 @@ ohos_shared_library("launcherbundlemanager") {
     "${core_path}:appexecfwk_core",
     "../common:bundle_napi_common",
   ]
+
+  if (bundle_framework_launcher) {
+    deps += [ ":launcherbundlemanager_common" ]
+  }
 
   external_deps = [
     "ability_base:want",
