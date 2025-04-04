@@ -83,7 +83,7 @@ public:
     void NotifySetDiposedRule(const std::string &appId, int32_t userId, const std::string &data, int32_t appIndex);
     void NotifyDeleteDiposedRule(const std::string &appId, int32_t userId, int32_t appIndex);
     void NotifyDynamicIconEvent(
-        const std::string &bundleName, bool isEnableDynamicIcon);
+        const std::string &bundleName, bool isEnableDynamicIcon, int32_t userId, int32_t appIndex);
     void NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type);
     void NotifyDefaultAppChanged(const int32_t userId, std::vector<std::string> &utdIdVec);
 

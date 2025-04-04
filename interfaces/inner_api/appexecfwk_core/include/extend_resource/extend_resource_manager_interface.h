@@ -47,7 +47,13 @@ public:
     }
 
     virtual ErrCode EnableDynamicIcon(
-        const std::string &bundleName, const std::string &moudleName)
+        const std::string &bundleName, const std::string &moduleName)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode EnableDynamicIcon(
+        const std::string &bundleName, const std::string &moduleName, const int32_t userId, const int32_t appIndex)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -57,7 +63,18 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode GetDynamicIcon(const std::string &bundleName, std::string &moudleName)
+    virtual ErrCode DisableDynamicIcon(const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetDynamicIcon(const std::string &bundleName, std::string &moduleName)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetDynamicIcon(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, std::string &moduleName)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

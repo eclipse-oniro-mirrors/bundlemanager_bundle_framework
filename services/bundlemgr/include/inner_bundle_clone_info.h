@@ -42,6 +42,9 @@ struct InnerBundleCloneInfo {
 
     uint64_t accessTokenIdEx = 0;
 
+    // dynamic icon
+    std::string curDynamicIconModule;
+
     std::string setEnabledCaller;
 
     std::string keyId;

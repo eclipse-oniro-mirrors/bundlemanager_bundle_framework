@@ -47,6 +47,9 @@ struct InnerBundleUserInfo {
     std::string keyId;
     std::vector<int32_t> gids;
 
+    // dynamic icon
+    std::string curDynamicIconModule;
+
     // appIndex -> cloneInfo
     std::map<std::string, InnerBundleCloneInfo> cloneInfos;
 
