@@ -122,6 +122,7 @@ struct BundleInfo : public Parcelable {
 
     bool entryInstallationFree = false; // application : false; atomic service : true
     bool isDifferentName = false;
+    bool hasPlugin = false;
 
     uint32_t versionCode = 0;
     uint32_t minCompatibleVersionCode = 0;

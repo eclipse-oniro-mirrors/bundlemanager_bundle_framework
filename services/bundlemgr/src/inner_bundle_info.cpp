@@ -2388,6 +2388,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
     }
     bundleInfo.overlayType = overlayType_;
     bundleInfo.isNewVersion = isNewVersion_;
+    bundleInfo.hasPlugin = innerBundleUserInfo.installedPluginSet.empty() ? false : true;
 
     GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
         bundleInfo.applicationInfo, appIndex);
@@ -2449,6 +2450,7 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
     }
     bundleInfo.overlayType = overlayType_;
     bundleInfo.isNewVersion = isNewVersion_;
+    bundleInfo.hasPlugin = innerBundleUserInfo.installedPluginSet.empty() ? false : true;
 
     for (const auto &info : innerModuleInfos_) {
         bundleInfo.hapModuleNames.emplace_back(info.second.modulePackage);
