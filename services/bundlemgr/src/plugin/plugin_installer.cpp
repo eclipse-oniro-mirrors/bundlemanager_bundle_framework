@@ -107,6 +107,8 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
     result = ProcessPluginInstall(hostBundleInfo);
     CHECK_RESULT(result, "process plugin install failed %{public}d");
 
+    int32_t uid = hostBundleInfo.GetUid(userId_);
+    NotifyPluginEvents(isPluginExist_ ? NotifyType::UPDATE : NotifyType::INSTALL, uid);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "install plugin finished");
     return ERR_OK;
 }
@@ -157,6 +159,8 @@ ErrCode PluginInstaller::UninstallPlugin(const std::string &hostBundleName, cons
     result = ProcessPluginUninstall(hostBundleInfo);
     CHECK_RESULT(result, "process plugin install failed %{public}d");
 
+    int32_t uid = hostBundleInfo.GetUid(userId_);
+    NotifyPluginEvents(NotifyType::UNINSTALL_BUNDLE, uid);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "uninstall plugin finish");
     return ERR_OK;
 }
@@ -856,6 +860,34 @@ bool PluginInstaller::InitDataMgr()
         }
     }
     return true;
+}
+
+std::string PluginInstaller::GetModuleNames()
+{
+    if (parsedBundles_.empty()) {
+        APP_LOGW("module name is empty");
+        return Constants::EMPTY_STRING;
+    }
+    std::string moduleNames;
+    for (const auto &item : parsedBundles_) {
+        moduleNames.append(item.second.GetCurrentModulePackage()).append(ServiceConstants::MODULE_NAME_SEPARATOR);
+    }
+    moduleNames.pop_back();
+    APP_LOGD("moduleNames : %{public}s", moduleNames.c_str());
+    return moduleNames;
+}
+
+void PluginInstaller::NotifyPluginEvents(const NotifyType &type, int32_t uid)
+{
+    NotifyBundleEvents event = {
+        .type = type,
+        .bundleType = static_cast<int32_t>(BundleType::APP_PLUGIN),
+        .bundleName = bundleName_,
+        .uid = uid,
+        .modulePackage = GetModuleNames(),
+    };
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyPluginEvents(event, dataMgr_);
 }
 } // AppExecFwk
 } // OHOS

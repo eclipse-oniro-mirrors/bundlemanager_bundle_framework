@@ -4934,6 +4934,10 @@ bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
     pluginBundleInfo.labelId = baseApplicationInfo_->labelId;
     pluginBundleInfo.iconId = baseApplicationInfo_->iconId;
     pluginBundleInfo.codePath = baseApplicationInfo_->codePath;
+    pluginBundleInfo.nativeLibraryPath = bundleName + ServiceConstants::PATH_SEPARATOR +
+        baseApplicationInfo_->nativeLibraryPath;
+    pluginBundleInfo.abilityInfos.insert(baseAbilityInfos_.begin(), baseAbilityInfos_.end());
+    pluginBundleInfo.appInfo = *baseApplicationInfo_;
     for (const auto &info : innerModuleInfos_) {
         PluginModuleInfo pluginModuleInfo;
         pluginModuleInfo.moduleName = info.second.name;
@@ -4944,6 +4948,9 @@ bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
         pluginModuleInfo.nativeLibraryFileNames = info.second.nativeLibraryFileNames;
         pluginModuleInfo.descriptionId = info.second.descriptionId;
         pluginModuleInfo.description = info.second.description;
+        pluginModuleInfo.compressNativeLibs = info.second.compressNativeLibs;
+        pluginModuleInfo.isLibIsolated =  info.second.isLibIsolated;
+        pluginModuleInfo.packageName = info.second.packageName;
         pluginBundleInfo.pluginModuleInfos.emplace_back(pluginModuleInfo);
     }
     return true;

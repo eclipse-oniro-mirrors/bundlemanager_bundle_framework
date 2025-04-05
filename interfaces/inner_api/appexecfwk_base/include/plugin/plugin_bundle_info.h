@@ -17,8 +17,11 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_PLUGIN_BUNDLE_INFO_H
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
+#include "ability_info.h"
+#include "hap_module_info.h"
 #include "parcel.h"
 #include "plugin_module_info.h"
 
@@ -36,7 +39,14 @@ struct PluginBundleInfo : public Parcelable {
     std::string appIdentifier;
     std::string appId;
     std::string codePath;
+    std::string nativeLibraryPath;
     std::vector<PluginModuleInfo> pluginModuleInfos;
+
+    std::unordered_map<std::string, AbilityInfo> abilityInfos;
+    ApplicationInfo appInfo;
+
+    bool GetAbilityInfoByName(const std::string &abilityName, const std::string &moduleName, AbilityInfo &info);
+    bool GetHapModuleInfo(const std::string &moduleName, HapModuleInfo &hapInfo);
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

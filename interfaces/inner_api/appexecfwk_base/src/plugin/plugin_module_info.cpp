@@ -32,16 +32,22 @@ const char* PLUGIN_MODULE_INFO_HAP_PATH = "hapPath";
 const char* PLUGIN_MODULE_INFO_CPU_ABI = "cpuAbi";
 const char* PLUGIN_MODULE_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 const char* PLUGIN_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
+const char* PLUGIN_MODULE_INFO_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
+const char* PLUGIN_MODULE_INFO_IS_LIB_ISOLATED = "isLibIsolated";
+const char* PLUGIN_MODULE_INFO_PACKAGE_NAME = "packageName";
 }
 
 bool PluginModuleInfo::ReadFromParcel(Parcel &parcel)
 {
+    compressNativeLibs = parcel.ReadBool();
+    isLibIsolated = parcel.ReadBool();
     descriptionId = parcel.ReadUint32();
     moduleName = parcel.ReadString();
     description = parcel.ReadString();
     hapPath = parcel.ReadString();
     cpuAbi = parcel.ReadString();
     nativeLibraryPath = parcel.ReadString();
+    packageName = parcel.ReadString();
     int32_t nativeLibraryFileNamesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNamesSize);
     CONTAINER_SECURITY_VERIFY(parcel, nativeLibraryFileNamesSize, &nativeLibraryFileNames);
@@ -53,12 +59,15 @@ bool PluginModuleInfo::ReadFromParcel(Parcel &parcel)
 
 bool PluginModuleInfo::Marshalling(Parcel &parcel) const
 {
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, compressNativeLibs);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isLibIsolated);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, moduleName);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, description);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, hapPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, cpuAbi);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, nativeLibraryPath);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, packageName);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNames.size());
     for (auto &fileName : nativeLibraryFileNames) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, fileName);
@@ -86,7 +95,10 @@ void to_json(nlohmann::json &jsonObject, const PluginModuleInfo &pluginModuleInf
         {PLUGIN_MODULE_INFO_HAP_PATH, pluginModuleInfo.hapPath},
         {PLUGIN_MODULE_INFO_CPU_ABI, pluginModuleInfo.cpuAbi},
         {PLUGIN_MODULE_INFO_NATIVE_LIBRARY_PATH, pluginModuleInfo.nativeLibraryPath},
-        {PLUGIN_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, pluginModuleInfo.nativeLibraryFileNames}
+        {PLUGIN_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, pluginModuleInfo.nativeLibraryFileNames},
+        {PLUGIN_MODULE_INFO_COMPRESS_NATIVE_LIBS, pluginModuleInfo.compressNativeLibs},
+        {PLUGIN_MODULE_INFO_IS_LIB_ISOLATED, pluginModuleInfo.isLibIsolated},
+        {PLUGIN_MODULE_INFO_PACKAGE_NAME, pluginModuleInfo.packageName},
     };
 }
 
@@ -117,6 +129,15 @@ void from_json(const nlohmann::json &jsonObject, PluginModuleInfo &pluginModuleI
         PLUGIN_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES,
         pluginModuleInfo.nativeLibraryFileNames, JsonType::ARRAY, false, parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd,
+        PLUGIN_MODULE_INFO_COMPRESS_NATIVE_LIBS,
+        pluginModuleInfo.compressNativeLibs, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd,
+        PLUGIN_MODULE_INFO_IS_LIB_ISOLATED,
+        pluginModuleInfo.isLibIsolated, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
+        PLUGIN_MODULE_INFO_PACKAGE_NAME,
+        pluginModuleInfo.packageName, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read pluginModuleInfo error : %{public}d", parseResult);
     }

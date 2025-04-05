@@ -10421,5 +10421,122 @@ ErrCode BundleDataMgr::RemovePluginFromUserInfo(const std::string &hostBundleNam
     bundleInfos_.at(hostBundleName) = newInfo;
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::GetPluginAbilityInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+    const std::string &pluginModuleName, const std::string &pluginAbilityName, const int32_t userId, AbilityInfo &abilityInfo)
+{
+    APP_LOGD("bundleName:%{public}s start GetPluginAbilityInfo, plugin:%{public}s, abilityName:%{public}s",
+        hostBundleName.c_str(), pluginBundleName.c_str(), pluginAbilityName.c_str());
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(hostBundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", hostBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    std::unordered_map<std::string, PluginBundleInfo> pluginInfos;
+    if (!item->second.GetPluginBundleInfos(userId, pluginInfos)) {
+        APP_LOGE("bundleName:%{public}s GetPluginBundleInfos failed, plugin:%{public}s, user: %{public}d",
+            hostBundleName.c_str(), pluginBundleName.c_str(), userId);
+        return ERR_APPEXECFWK_GET_PLUGIN_INFO_ERROR;
+    }
+    auto it = pluginInfos.find(pluginBundleName);
+    if (it == pluginInfos.end()) {
+        APP_LOGE("bundleName: %{public}s can not find plugin: %{public}s",
+            hostBundleName.c_str(), pluginBundleName.c_str());
+        return ERR_APPEXECFWK_PLUGIN_NOT_FOUND;
+    }
+    if (!it->second.GetAbilityInfoByName(pluginAbilityName, pluginModuleName, abilityInfo)) {
+        APP_LOGE("plugin: %{public}s can not find ability: %{public}s module: %{public}s",
+            pluginBundleName.c_str(), pluginAbilityName.c_str(), pluginModuleName.c_str());
+        return ERR_APPEXECFWK_PLUGIN_ABILITY_NOT_FOUND;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetPluginHapModuleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+    const std::string &pluginModuleName, const int32_t userId, HapModuleInfo &hapModuleInfo)
+{
+    APP_LOGD("bundleName:%{public}s start GetPluginHapModuleInfo, plugin:%{public}s, moduleName:%{public}s",
+        hostBundleName.c_str(), pluginBundleName.c_str(), pluginModuleName.c_str());
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid userid :%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    auto item = bundleInfos_.find(hostBundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", hostBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    std::unordered_map<std::string, PluginBundleInfo> pluginInfos;
+    if (!item->second.GetPluginBundleInfos(requestUserId, pluginInfos)) {
+        APP_LOGE("bundleName:%{public}s GetPluginBundleInfos failed, plugin:%{public}s, user: %{public}d",
+            hostBundleName.c_str(), pluginBundleName.c_str(), requestUserId);
+        return ERR_APPEXECFWK_GET_PLUGIN_INFO_ERROR;
+    }
+    auto it = pluginInfos.find(pluginBundleName);
+    if (it == pluginInfos.end()) {
+        APP_LOGE("bundleName: %{public}s can not find plugin: %{public}s",
+            hostBundleName.c_str(), pluginBundleName.c_str());
+        return ERR_APPEXECFWK_PLUGIN_NOT_FOUND;
+    }
+    if (!it->second.GetHapModuleInfo(pluginModuleName, hapModuleInfo)) {
+        APP_LOGE("plugin: %{public}s can not find module: %{public}s",
+            pluginBundleName.c_str(), pluginModuleName.c_str());
+        return ERR_APPEXECFWK_PLUGIN_MODULE_NOT_FOUND;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+{
+    if (pluginEventCallback == nullptr) {
+        APP_LOGW("pluginEventCallback is null");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::lock_guard lock(pluginCallbackMutex_);
+    if (pluginCallbackList_.size() >= MAX_EVENT_CALL_BACK_SIZE) {
+        APP_LOGW("pluginCallbackList_ reach max size %{public}d", MAX_EVENT_CALL_BACK_SIZE);
+        return ERR_APPEXECFWK_PLUGIN_CALLBACK_LIST_FULL;
+    }
+    if (pluginEventCallback->AsObject() != nullptr) {
+        sptr<BundleEventCallbackDeathRecipient> deathRecipient =
+            new (std::nothrow) BundleEventCallbackDeathRecipient();
+        if (deathRecipient == nullptr) {
+            APP_LOGW("deathRecipient is null");
+            return ERR_APPEXECFWK_NULL_PTR;
+        }
+        pluginEventCallback->AsObject()->AddDeathRecipient(deathRecipient);
+    }
+    pluginCallbackList_.emplace_back(pluginEventCallback);
+    APP_LOGI("success");
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+{
+    if (pluginEventCallback == nullptr) {
+        APP_LOGW("pluginEventCallback is null");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::lock_guard lock(pluginCallbackMutex_);
+    pluginCallbackList_.erase(std::remove_if(pluginCallbackList_.begin(), pluginCallbackList_.end(),
+        [&pluginEventCallback](const sptr<IBundleEventCallback> &callback) {
+            return callback->AsObject() == pluginEventCallback->AsObject();
+        }), pluginCallbackList_.end());
+    APP_LOGI("success");
+    return ERR_OK;
+}
+
+void BundleDataMgr::NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData)
+{
+    APP_LOGI("begin");
+    std::lock_guard lock(pluginCallbackMutex_);
+    for (const auto &callback : pluginCallbackList_) {
+        callback->OnReceiveEvent(eventData);
+    }
+    APP_LOGI("end");
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -1110,7 +1110,14 @@ public:
     ErrCode UpdatePluginBundleInfo(const std::string &hostBundleName, const PluginBundleInfo &pluginBundleInfo);
     ErrCode RemovePluginFromUserInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId);
-
+    ErrCode GetPluginAbilityInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const std::string &pluginModuleName, const std::string &pluginAbilityName,
+        const int32_t userId, AbilityInfo &abilityInfo);
+    ErrCode GetPluginHapModuleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const std::string &pluginModuleName, const int32_t userId, HapModuleInfo &hapModuleInfo);
+    ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
+    ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
+    void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData);
 private:
     /**
      * @brief Init transferStates.
@@ -1330,6 +1337,7 @@ private:
     mutable std::mutex stateMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex hspBundleNameMutex_;
+    mutable std::mutex pluginCallbackMutex_;
     mutable ffrt::mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleInfoMutex_;
     mutable std::shared_mutex bundleIdMapMutex_;
@@ -1365,6 +1373,8 @@ private:
     // save all created users.
     std::set<int32_t> multiUserIdsSet_;
     std::set<std::string> appServiceHspBundleName_;
+    // using for plugin event callback
+    std::vector<sptr<IBundleEventCallback>> pluginCallbackList_;
 
     static bool HasAppLinkingFlag(uint32_t flags);
 };

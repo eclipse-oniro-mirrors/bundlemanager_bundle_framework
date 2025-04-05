@@ -5743,6 +5743,62 @@ ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> 
         BundleMgrInterfaceCode::GET_ALL_BUNDLE_DIRS, data, bundleDirs);
 }
 
+ErrCode BundleMgrProxy::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin");
+    if (!pluginEventCallback) {
+        APP_LOGE("pluginEventCallback is null");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteRemoteObject(pluginEventCallback->AsObject())) {
+        APP_LOGE("for write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    ErrCode ret = SendTransactCmdWithErrCode(BundleMgrInterfaceCode::REGISTER_PLUGIN_EVENT_CALLBACK, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE("SendTransactCmd fail %{public}d", ret);
+        return ret;
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode BundleMgrProxy::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin");
+    if (!pluginEventCallback) {
+        APP_LOGE("pluginEventCallback is null");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteRemoteObject(pluginEventCallback->AsObject())) {
+        APP_LOGE("write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    ErrCode ret = SendTransactCmdWithErrCode(BundleMgrInterfaceCode::UNREGISTER_PLUGIN_EVENT_CALLBACK, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE("SendTransactCmd fail %{public}d", ret);
+        return ret;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&data)
 {
     sptr<Ashmem> ashMem = reply.ReadAshmem();
@@ -5778,5 +5834,85 @@ ErrCode BundleMgrProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&dat
     }
     return ERR_OK;
 }
+
+ErrCode BundleMgrProxy::GetPluginAbilityInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+    const std::string &pluginModuleName, const std::string &pluginAbilityName,
+    const int32_t userId, AbilityInfo &abilityInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    LOG_D(BMS_TAG_QUERY, "GetPluginAbilityInfo bundleName:%{public}s pluginName:%{public}s abilityName:%{public}s",
+        hostBundleName.c_str(), pluginBundleName.c_str(), pluginAbilityName.c_str());
+    if (hostBundleName.empty() || pluginBundleName.empty() || pluginAbilityName.empty()) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginAbilityInfo failed params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginAbilityInfo write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(hostBundleName)) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginAbilityInfo write hostBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(pluginBundleName)) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginAbilityInfo write pluginBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(pluginModuleName)) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginAbilityInfo write pluginModuleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(pluginAbilityName)) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginAbilityInfo write pluginAbilityName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginAbilityInfo write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfoWithErrCode<AbilityInfo>(
+        BundleMgrInterfaceCode::GET_PLUGIN_ABILITY_INFO, data, abilityInfo);
+}
+
+ErrCode BundleMgrProxy::GetPluginHapModuleInfo(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const std::string &pluginModuleName,
+    const int32_t userId, HapModuleInfo &hapModuleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    LOG_D(BMS_TAG_QUERY, "GetPluginHapModuleInfo bundleName:%{public}s pluginName:%{public}s moduleName:%{public}s",
+        hostBundleName.c_str(), pluginBundleName.c_str(), pluginModuleName.c_str());
+    if (hostBundleName.empty() || pluginBundleName.empty() || pluginModuleName.empty()) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginHapModuleInfo failed params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginHapModuleInfo write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(hostBundleName)) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginHapModuleInfo write hostBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(pluginBundleName)) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginHapModuleInfo write pluginName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(pluginModuleName)) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginHapModuleInfo write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_QUERY, "GetPluginHapModuleInfo write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfoWithErrCode<HapModuleInfo>(
+        BundleMgrInterfaceCode::GET_PLUGIN_HAP_MODULE_INFO, data, hapModuleInfo);
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

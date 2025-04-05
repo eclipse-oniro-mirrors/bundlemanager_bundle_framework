@@ -325,5 +325,26 @@ void BundleCommonEventMgr::NotifyDefaultAppChanged(const int32_t userId, std::ve
     }
     IPCSkeleton::SetCallingIdentity(identity);
 }
+
+void BundleCommonEventMgr::NotifyPluginEvents(const NotifyBundleEvents &event,
+    const std::shared_ptr<BundleDataMgr> &dataMgr)
+{
+    OHOS::AAFwk::Want want;
+    std::string eventData = GetCommonEventData(event.type);
+    want.SetAction(eventData);
+    ElementName element;
+    element.SetBundleName(event.bundleName);
+    element.SetModuleName(event.modulePackage);
+    want.SetElement(element);
+    want.SetParam(Constants::BUNDLE_NAME, event.bundleName);
+    want.SetParam(BUNDLE_TYPE, event.bundleType);
+    want.SetParam(Constants::UID, event.uid);
+    EventFwk::CommonEventData commonData { want };
+    if (dataMgr != nullptr) {
+        LOG_I(BMS_TAG_DEFAULT, "pluginEventBack begin");
+        dataMgr->NotifyPluginEventCallback(commonData);
+        LOG_I(BMS_TAG_DEFAULT, "pluginEventBack end");
+    }
+}
 } // AppExecFwk
 } // OHOS

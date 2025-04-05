@@ -35,6 +35,9 @@ const char* PLUGIN_BUNDLE_INFO_APP_IDENTIFIER = "appIdentifier";
 const char* PLUGIN_BUNDLE_INFO_APP_ID = "appId";
 const char* PLUGIN_BUNDLE_INFO_CODE_PATH = "codePath";
 const char* PLUGIN_BUNDLE_INFO_MODULE_INFOS = "pluginModuleInfos";
+const char* PLUGIN_BUNDLE_INFO_ABILITY_INFOS = "abilityInfos";
+const char* PLUGIN_BUNDLE_INFO_APPLICATION_INFO = "appInfo";
+const char* PLUGIN_BUNDLE_INFO_NATIVE_LIB_PATH = "nativeLibraryPath";
 }
 
 bool PluginBundleInfo::ReadFromParcel(Parcel &parcel)
@@ -50,6 +53,7 @@ bool PluginBundleInfo::ReadFromParcel(Parcel &parcel)
     appIdentifier = parcel.ReadString();
     appId = parcel.ReadString();
     codePath = parcel.ReadString();
+    nativeLibraryPath = parcel.ReadString();
 
     int32_t size;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, size);
@@ -62,6 +66,25 @@ bool PluginBundleInfo::ReadFromParcel(Parcel &parcel)
         }
         pluginModuleInfos.emplace_back(*info);
     }
+
+    int32_t abilityInfoSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfoSize);
+    CONTAINER_SECURITY_VERIFY(parcel, abilityInfoSize, &abilityInfos);
+    for (auto i = 0; i < abilityInfoSize; i++) {
+        std::string name = parcel.ReadString();
+        std::unique_ptr<AbilityInfo> info(parcel.ReadParcelable<AbilityInfo>());
+        if (!info) {
+            APP_LOGE("ReadParcelable<AbilityInfo> failed");
+            return false;
+        }
+        abilityInfos.emplace(name, *info);
+    }
+    std::unique_ptr<ApplicationInfo> applicationInfo(parcel.ReadParcelable<ApplicationInfo>());
+    if (!applicationInfo) {
+        APP_LOGE("ReadParcelable<ApplicationInfo> failed");
+        return false;
+    }
+    appInfo = *applicationInfo;
 
     return true;
 }
@@ -79,12 +102,18 @@ bool PluginBundleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, appIdentifier);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, appId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codePath);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, nativeLibraryPath);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, pluginModuleInfos.size());
     for (auto &info : pluginModuleInfos) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &info);
     }
-
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfos.size());
+    for (const auto &abilityInfo : abilityInfos) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, abilityInfo.first);
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &abilityInfo.second);
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &appInfo);
     return true;
 }
 
@@ -112,7 +141,10 @@ void to_json(nlohmann::json &jsonObject, const PluginBundleInfo &pluginBundleInf
         {PLUGIN_BUNDLE_INFO_LABEL_ID, pluginBundleInfo.labelId},
         {PLUGIN_BUNDLE_INFO_VERSION_CODE, pluginBundleInfo.versionCode},
         {PLUGIN_BUNDLE_INFO_MODULE_INFOS, pluginBundleInfo.pluginModuleInfos},
-        {PLUGIN_BUNDLE_INFO_CODE_PATH, pluginBundleInfo.codePath}
+        {PLUGIN_BUNDLE_INFO_CODE_PATH, pluginBundleInfo.codePath},
+        {PLUGIN_BUNDLE_INFO_NATIVE_LIB_PATH, pluginBundleInfo.nativeLibraryPath},
+        {PLUGIN_BUNDLE_INFO_ABILITY_INFOS, pluginBundleInfo.abilityInfos},
+        {PLUGIN_BUNDLE_INFO_APPLICATION_INFO, pluginBundleInfo.appInfo}
     };
 }
 
@@ -194,9 +226,80 @@ void from_json(const nlohmann::json &jsonObject, PluginBundleInfo &pluginBundleI
         pluginBundleInfo.codePath,
         false,
         parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        PLUGIN_BUNDLE_INFO_NATIVE_LIB_PATH,
+        pluginBundleInfo.nativeLibraryPath,
+        false,
+        parseResult);
+    GetValueIfFindKey<std::unordered_map<std::string, AbilityInfo>>(jsonObject,
+        jsonObjectEnd,
+        PLUGIN_BUNDLE_INFO_ABILITY_INFOS,
+        pluginBundleInfo.abilityInfos,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<ApplicationInfo>(jsonObject,
+        jsonObjectEnd,
+        PLUGIN_BUNDLE_INFO_APPLICATION_INFO,
+        pluginBundleInfo.appInfo,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read pluginBundleInfo error : %{public}d", parseResult);
     }
+}
+
+bool PluginBundleInfo::GetAbilityInfoByName(const std::string &abilityName,
+    const std::string &moduleName,
+    AbilityInfo &info)
+{
+    for (const auto &ability : abilityInfos) {
+        auto &abilityInfo = ability.second;
+        if ((abilityInfo.name == abilityName) &&
+            (moduleName.empty() || (abilityInfo.moduleName == moduleName))) {
+            info = abilityInfo;
+            info.applicationInfo = appInfo;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool PluginBundleInfo::GetHapModuleInfo(const std::string &moduleName,
+    HapModuleInfo &hapInfo)
+{
+    for (const auto &moduleInfo : pluginModuleInfos) {
+        if (moduleInfo.moduleName == moduleName) {
+            hapInfo.moduleName = moduleInfo.moduleName;
+            hapInfo.hapPath = moduleInfo.hapPath;
+            hapInfo.nativeLibraryPath = moduleInfo.nativeLibraryPath;
+            hapInfo.cpuAbi = moduleInfo.cpuAbi;
+            hapInfo.isLibIsolated = moduleInfo.isLibIsolated;
+            hapInfo.compressNativeLibs = moduleInfo.compressNativeLibs;
+            hapInfo.descriptionId = moduleInfo.descriptionId;
+            hapInfo.description = moduleInfo.description;
+            hapInfo.nativeLibraryFileNames = moduleInfo.nativeLibraryFileNames;
+            hapInfo.bundleName = pluginBundleName;
+            hapInfo.packageName = moduleInfo.packageName;
+            hapInfo.name = moduleInfo.moduleName;
+            hapInfo.package = moduleInfo.moduleName;
+            std::string key;
+            key.append(".").append(moduleName).append(".");
+            for (const auto &ability : abilityInfos) {
+                if ((ability.first.find(key) != std::string::npos) &&
+                    (ability.second.moduleName == hapInfo.moduleName)) {
+                    auto &abilityInfo = hapInfo.abilityInfos.emplace_back(ability.second);
+                    abilityInfo.applicationInfo = appInfo;
+                }
+            }
+            return true;
+        }
+    }
+    return false;
 }
 } // AppExecFwk
 } // OHOS
