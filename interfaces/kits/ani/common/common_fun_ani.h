@@ -132,7 +132,7 @@ public:
     {
         return ConvertAbilitySkillInner(env, skill, true);
     }
-    static ani_object ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo);
+    static ani_object ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo, int32_t flags);
 
     static ani_object ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo);
 
@@ -438,6 +438,23 @@ public:
         }
 
         return true;
+    }
+
+    // sets property to null
+    static bool CallSetterNull(ani_env* env, ani_class cls, ani_object object, const char* propertyName)
+    {
+        RETURN_FALSE_IF_NULL(env);
+        RETURN_FALSE_IF_NULL(cls);
+        RETURN_FALSE_IF_NULL(object);
+
+        ani_ref nullRef = nullptr;
+        ani_status status = env->GetNull(&nullRef);
+        if (status != ANI_OK) {
+            APP_LOGE("GetNull %{public}s failed %{public}d", propertyName, status);
+            return false;
+        }
+
+        return CallSetter(env, cls, object, propertyName, nullRef);
     }
 
     // sets optional property to undefined

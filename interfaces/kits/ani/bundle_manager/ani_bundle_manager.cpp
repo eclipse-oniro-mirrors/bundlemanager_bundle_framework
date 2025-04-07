@@ -130,7 +130,7 @@ static ani_object getBundleInfoForSelfSync([[maybe_unused]] ani_env* env, ani_do
         return nullptr;
     }
 
-    ani_object objectBundleInfo = CommonFunAni::ConvertBundleInfo(env, bundleInfo);
+    ani_object objectBundleInfo = CommonFunAni::ConvertBundleInfo(env, bundleInfo, bundleFlagsInt);
     if (!CommonFunc::CheckBundleFlagWithPermission(bundleFlagsInt)) {
         CheckToCache(env, bundleInfo.uid, uid, query, objectBundleInfo);
     }
@@ -191,7 +191,7 @@ static ani_object getBundleInfoSync([[maybe_unused]] ani_env* env,
         return nullptr;
     }
 
-    ani_object objectBundleInfo = CommonFunAni::ConvertBundleInfo(env, bundleInfo);
+    ani_object objectBundleInfo = CommonFunAni::ConvertBundleInfo(env, bundleInfo, bundleFlagsInt);
     if (!CommonFunc::CheckBundleFlagWithPermission(bundleFlagsInt)) {
         CheckToCache(env, bundleInfo.uid, callingUid, query, objectBundleInfo);
     }
