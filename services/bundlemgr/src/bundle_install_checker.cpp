@@ -171,7 +171,7 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
         std::vector<std::string> bundleSysCaps;
         result = bundleParser.ParseSysCap(bundlePath, bundleSysCaps);
         if (result != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "parse bundle syscap failed, error: %{public}d", result);
+            LOG_D(BMS_TAG_INSTALLER, "parse bundle syscap failed, error: %{public}d", result);
             return result;
         }
 

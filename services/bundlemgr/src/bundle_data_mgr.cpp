@@ -770,7 +770,7 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
     if (!bundleName.empty() && !abilityName.empty()) {
         bool ret = ExplicitQueryAbilityInfo(want, flags, requestUserId, abilityInfo, appIndex);
         if (!ret) {
-            LOG_NOFUNC_D(BMS_TAG_QUERY, "ExplicitQueryAbility error -n %{public}s -a %{public}s -u %{public}d"
+            LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility no match -n %{public}s -a %{public}s -u %{public}d"
                 " -i %{public}d", bundleName.c_str(), abilityName.c_str(), userId, appIndex);
             return false;
         }
@@ -852,10 +852,8 @@ bool BundleDataMgr::QueryAbilityInfos(
         }
         // get cloneApp's abilityInfos
         GetCloneAbilityInfos(abilityInfos, element, flags, userId);
-        if (abilityInfos.empty()) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility error -n %{public}s -a %{public}s -u %{public}d",
-                bundleName.c_str(), abilityName.c_str(), userId);
-        }
+        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility size:%{public}zu -n %{public}s -a %{public}s -u %{public}d",
+            abilityInfos.size(), bundleName.c_str(), abilityName.c_str(), userId);
         return !abilityInfos.empty();
     }
     // implicit query
@@ -895,9 +893,9 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
         }
         // get cloneApp's abilityInfos
         GetCloneAbilityInfosV9(abilityInfos, element, flags, userId);
+        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryAbility V9 size:%{public}zu -n %{public}s -a %{public}s -u %{public}d",
+            abilityInfos.size(), bundleName.c_str(), abilityName.c_str(), userId);
         if (abilityInfos.empty()) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility V9 error -n %{public}s -a %{public}s -u %{public}d",
-                bundleName.c_str(), abilityName.c_str(), userId);
             return ret;
         }
         return ERR_OK;
@@ -1015,8 +1013,8 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     auto ability = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, responseUserId);
     if (!ability) {
-        LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility not found UIAbility -n %{public}s -m %{public}s "
-            "-a %{public}s -u %{public}d", bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), responseUserId);
+        LOG_D(BMS_TAG_QUERY, "ExplicitQueryAbility not found UIAbility -n %{public}s -m %{public}s -a %{public}s"
+            " -u %{public}d", bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), responseUserId);
         return false;
     }
     return QueryAbilityInfoWithFlags(ability, flags, responseUserId, innerBundleInfo, abilityInfo);
@@ -1063,7 +1061,7 @@ ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flag
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     auto ability = innerBundleInfo.FindAbilityInfoV9(moduleName, abilityName);
     if (!ability) {
-        LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbilityInfoV9 not found UIAbility -n %{public}s -m %{public}s "
+        LOG_D(BMS_TAG_QUERY, "ExplicitQueryAbilityInfoV9 not found UIAbility -n %{public}s -m %{public}s "
             "-a %{public}s", bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
@@ -3517,8 +3515,8 @@ ErrCode BundleDataMgr::CheckBundleAndAbilityDisabled(
     bool isEnabled = false;
     auto ret = info.GetApplicationEnabledV9(responseUserId, isEnabled);
     if (ret != ERR_OK) {
-        APP_LOGE_NOFUNC("GetApplicationEnabledV9 failed ret:%{public}d -n %{public}s",
-            ret, info.GetBundleName().c_str());
+        LOG_NOFUNC_W(BMS_TAG_COMMON, "bundle %{public}s not install in user %{public}d ret:%{public}d",
+                info.GetBundleName().c_str(), responseUserId, ret);
         return ret;
     }
     if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))
@@ -4118,7 +4116,7 @@ ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
     int32_t appIndex = 0;
     ErrCode ret = GetBundleNameAndIndex(uid, name, appIndex);
     if (ret != ERR_OK) {
-        APP_LOGE("the uid(%{public}d) is not an application", uid);
+        APP_LOGD("the uid(%{public}d) is not an application", uid);
         return ret;
     }
     APP_LOGD("GetBundleNameForUid, uid %{public}d, bundleName %{public}s, appIndex %{public}d",
@@ -4433,15 +4431,16 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     if (appIndex == 0) {
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
             && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
-            LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
-                bundleName.c_str(), responseUserId, appIndex, flags);
+            LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false or not installed -n %{public}s -u %{public}d"
+                " -i %{public}d -f %{public}d", bundleName.c_str(), responseUserId, appIndex, flags);
             return false;
         }
     } else if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
         bool isEnabled = false;
         ErrCode ret = innerBundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled, appIndex);
         if (ret != ERR_OK) {
-            APP_LOGE_NOFUNC("GetApplicationEnabledV9 failed ret:%{public}d", ret);
+            LOG_NOFUNC_W(BMS_TAG_COMMON, "bundle %{public}s not install in user %{public}d -i %{public}d",
+                bundleName.c_str(), responseUserId, appIndex);
             return false;
         }
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE) && !isEnabled) {
@@ -4515,7 +4514,8 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     bool isEnabled = false;
     auto ret = innerBundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled, appIndex);
     if (ret != ERR_OK) {
-        APP_LOGE_NOFUNC("GetApplicationEnabledV9 failed ret:%{public}d -n %{public}s", ret, bundleName.c_str());
+        LOG_NOFUNC_W(BMS_TAG_COMMON, "bundle %{public}s not install in user %{public}d -i %{public}d",
+            bundleName.c_str(), responseUserId, appIndex);
         return ret;
     }
     if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))
@@ -5340,7 +5340,7 @@ bool BundleDataMgr::GetShortcutInfosByInnerBundleInfo(
         shortcutInfo.moduleName = abilityInfo.moduleName;
         info.InnerProcessShortcut(item, shortcutInfo);
         shortcutInfo.sourceType = 1;
-        APP_LOGI("shortcutInfo: -n %{public}s, id %{public}s, iconId %{public}d, labelId %{public}d",
+        APP_LOGI_NOFUNC("shortcutInfo: -n %{public}s, id %{public}s, iconId %{public}d, labelId %{public}d",
             shortcutInfo.bundleName.c_str(), shortcutInfo.id.c_str(), shortcutInfo.iconId, shortcutInfo.labelId);
         shortcutInfos.emplace_back(shortcutInfo);
     }
@@ -5749,14 +5749,12 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
     // explicit query
     if (!bundleName.empty() && !extensionName.empty()) {
         ExtensionAbilityInfo info;
-        bool ret = ExplicitQueryExtensionInfo(want, flags, requestUserId, info, appIndex);
-        if (!ret) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryExtension error -n %{public}s -e %{public}s -u %{public}d"
-                " -i %{public}d", bundleName.c_str(), extensionName.c_str(), userId, appIndex);
-            return false;
+        if (ExplicitQueryExtensionInfo(want, flags, requestUserId, info, appIndex)) {
+            extensionInfos.emplace_back(info);
         }
-        extensionInfos.emplace_back(info);
-        return true;
+        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryExtension size:%{public}zu -n %{public}s -e %{public}s -u %{public}d"
+            " -i %{public}d", extensionInfos.size(), bundleName.c_str(), extensionName.c_str(), userId, appIndex);
+        return !extensionInfos.empty();
     }
 
     bool ret = ImplicitQueryExtensionInfos(want, flags, requestUserId, extensionInfos, appIndex);
@@ -5795,13 +5793,13 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosV9(const Want &want, int32_t fl
     if (!bundleName.empty() && !extensionName.empty()) {
         ExtensionAbilityInfo info;
         ErrCode ret = ExplicitQueryExtensionInfoV9(want, flags, requestUserId, info, appIndex);
-        if (ret != ERR_OK) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryExtension V9 error -n %{public}s -e %{public}s -u %{public}d"
-                " -i %{public}d", bundleName.c_str(), extensionName.c_str(), userId, appIndex);
-            return ret;
+        if (ret == ERR_OK) {
+            extensionInfos.emplace_back(info);
         }
-        extensionInfos.emplace_back(info);
-        return ERR_OK;
+        LOG_NOFUNC_I(BMS_TAG_QUERY, "ExplicitQueryExtension V9 size:%{public}zu -n %{public}s -e %{public}s"
+            " -u %{public}d -i %{public}d", extensionInfos.size(), bundleName.c_str(), extensionName.c_str(),
+            userId, appIndex);
+        return ret;
     }
     ErrCode ret = ImplicitQueryExtensionInfosV9(want, flags, requestUserId, extensionInfos, appIndex);
     if (ret != ERR_OK) {
@@ -6961,7 +6959,8 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
         // get ability info
         ret = ExplicitQueryAbilityInfo(want, GET_ABILITY_INFO_DEFAULT, userId, abilityInfo);
         if (!ret) {
-            APP_LOGD("ExplicitQueryAbilityInfo failed, abilityName:%{public}s", element.abilityName.c_str());
+            LOG_I(BMS_TAG_QUERY, "ExplicitQueryAbility no match -n %{public}s -m %{public}s -a %{public}s"
+                " -u %{public}d", bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), userId);
             return false;
         }
     } else {

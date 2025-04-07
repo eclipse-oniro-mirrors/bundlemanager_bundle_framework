@@ -59,7 +59,7 @@ bool BundleStateStorage::HasBundleUserInfoJsonDb()
 {
     APP_LOGD("HasBundleUserInfoJsonDb start");
     if (BundleUtil::IsExistFile(BUNDLE_USER_INFO_PATH)) {
-        APP_LOGD("Json db exist");
+        APP_LOGI("Json db exist");
         return true;
     }
 
