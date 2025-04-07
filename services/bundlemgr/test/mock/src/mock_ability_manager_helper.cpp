@@ -90,4 +90,4 @@ int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName)
 #endif
 }
 }  // namespace AppExecFwk
-}  // namespace OHOS 
+}  // namespace OHOS
