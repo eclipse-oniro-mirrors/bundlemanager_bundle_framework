@@ -99,6 +99,7 @@ generate_static_abc("application_info") {
   ]
   is_boot_abc = "True"
   device_dst_file = "/system/framework/application_info.abc"
+  external_dependencies = [ "resource_management:copy_resourceManager_ets" ]
 }
 
 ohos_prebuilt_etc("application_info_etc") {

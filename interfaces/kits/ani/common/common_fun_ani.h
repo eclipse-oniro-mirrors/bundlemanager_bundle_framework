@@ -26,6 +26,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_resource_info.h"
+#include "install_param.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -61,6 +62,13 @@ constexpr const char* TYPE_STRING = "string";
             APP_LOGE("condition is false"); \
             return false;                   \
         }                                   \
+    } while (false)
+#define RETURN_ANI_STATUS_IF_NOT_OK(res, err) \
+    do {                                            \
+        if ((res) != ANI_OK) {                  \
+            APP_LOGE(err);                          \
+            return res;                       \
+        }                                           \
     } while (false)
 class CommonFunAni {
 public:
@@ -144,11 +152,19 @@ public:
     static bool ParseShortcutInfo(ani_env* env, ani_object object, ShortcutInfo& shortcutInfo);
     static bool ParseShortcutIntent(ani_env* env, ani_object object, ShortcutIntent& shortcutIntent);
     static bool ParseKeyValuePair(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
+    static bool ParseKeyValuePairWithName(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair,
+        const char* keyName, const char* valueName);
 
     static ani_class CreateClassByName(ani_env* env, const std::string& className);
     static ani_object CreateNewObjectByClass(ani_env* env, ani_class cls);
     static ani_ref ConvertAniArrayString(ani_env* env, const std::vector<std::string>& cArray);
 
+    static bool ParseStrArray(ani_env* env, ani_object arrayObj, std::vector<std::string>& strings);
+    static bool ParseInstallParam(ani_env* env, ani_object object, InstallParam& installParam);
+    static bool ParseHashParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
+    static bool ParseVerifyCodeParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
+    static bool ParsePgoParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
+    
     template<typename toType>
     static bool TryCastDoubleTo(const double fromValue, toType* toValue)
     {
@@ -269,7 +285,7 @@ public:
 
     template<typename T>
     static bool ParseAniArray(
-        ani_env* env, ani_array aniArray, std::vector<T>& nativeArray, bool (*parser)(ani_env*, ani_object, T&))
+        ani_env* env, ani_object aniArray, std::vector<T>& nativeArray, bool (*parser)(ani_env*, ani_object, T&))
     {
         RETURN_FALSE_IF_NULL(env);
         RETURN_FALSE_IF_NULL(aniArray);
@@ -373,10 +389,10 @@ public:
             status = ANI_ERROR;
             if constexpr (std::is_same_v<valueType, ani_boolean>) {
                 status = env->Object_CallMethodByName_Boolean(
-                    reinterpret_cast<ani_object>(ref), "booleanValue", nullptr, value);
+                    reinterpret_cast<ani_object>(ref), "unboxed", ":Z", value);
             } else if constexpr (std::is_same_v<valueType, ani_char>) {
                 status =
-                    env->Object_CallMethodByName_Char(reinterpret_cast<ani_object>(ref), "charValue", nullptr, value);
+                    env->Object_CallMethodByName_Char(reinterpret_cast<ani_object>(ref), "unboxed", ":C", value);
             } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
                                  std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
                                  std::is_same_v<valueType, ani_long> ||

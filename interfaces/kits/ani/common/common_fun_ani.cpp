@@ -14,6 +14,7 @@
  */
 
 #include <charconv>
+#include <vector>
 
 #include "app_log_wrapper.h"
 #include "common_fun_ani.h"
@@ -170,6 +171,18 @@ constexpr const char* PROPERTYNAME_TARGETBUNDLE = "targetBundle";
 constexpr const char* PROPERTYNAME_TARGETMODULE = "targetModule";
 constexpr const char* PROPERTYNAME_TARGETABILITY = "targetAbility";
 constexpr const char* PROPERTYNAME_PARAMETERS = "parameters";
+constexpr const char* PROPERTYNAME_HASHPARAMS = "hashParams";
+constexpr const char* PROPERTYNAME_SIGNATUREFILEPATH = "signatureFilePath";
+constexpr const char* PROPERTYNAME_VERIFYCODEPARAMS = "verifyCodeParams";
+constexpr const char* PROPERTYNAME_PGOFILEPATH = "pgoFilePath";
+constexpr const char* PROPERTYNAME_PGOPARAMS = "pgoParams";
+constexpr const char* PROPERTYNAME_USERID = "userId";
+constexpr const char* PROPERTYNAME_SPECIFIEDDISTRIBUTIONTYPE = "specifiedDistributionType";
+constexpr const char* PROPERTYNAME_ISKEEPDATA = "isKeepData";
+constexpr const char* PROPERTYNAME_INSTALLFLAG = "installFlag";
+constexpr const char* PROPERTYNAME_CROWDTESTDEADLINE = "crowdtestDeadline";
+constexpr const char* PROPERTYNAME_SHAREDBUNDLEDIRPATHS = "sharedBundleDirPaths";
+constexpr const char* PROPERTYNAME_ADDITIONALINFO = "additionalInfo";
 
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
 constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
@@ -1521,7 +1534,8 @@ bool CommonFunAni::ParseShortcutIntent(ani_env* env, ani_object object, Shortcut
     return true;
 }
 
-bool CommonFunAni::ParseKeyValuePair(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
+bool CommonFunAni::ParseKeyValuePairWithName(ani_env* env, ani_object object,
+    std::pair<std::string, std::string>& pair, const char* keyName, const char* valueName)
 {
     RETURN_FALSE_IF_NULL(env);
     RETURN_FALSE_IF_NULL(object);
@@ -1529,14 +1543,141 @@ bool CommonFunAni::ParseKeyValuePair(ani_env* env, ani_object object, std::pair<
     ani_string string = nullptr;
 
     // key: string
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_KEY, &string));
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, keyName, &string));
     pair.first = AniStrToString(env, string);
 
     // value: string
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_VALUE, &string));
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, valueName, &string));
     pair.second = AniStrToString(env, string);
 
     return true;
 }
+
+bool CommonFunAni::ParseKeyValuePair(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
+{
+    return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_KEY, PROPERTYNAME_VALUE);
+}
+
+bool CommonFunAni::ParseStrArray(ani_env* env, ani_object arrayObj, std::vector<std::string>& strings)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(arrayObj);
+
+    ani_double length;
+    ani_status res = env->Object_GetPropertyByName_Double(arrayObj, "length", &length);
+    RETURN_FALSE_IF_FALSE(res == ANI_OK);
+    for (int i = 0; i < int(length); i++) {
+        ani_ref stringEntryRef;
+        res = env->Object_CallMethodByName_Ref(arrayObj, "$_get", "I:Lstd/core/Object;", &stringEntryRef, (ani_int)i);
+        RETURN_FALSE_IF_FALSE(res == ANI_OK);
+        strings.emplace_back(AniStrToString(env, static_cast<ani_string>(stringEntryRef)));
+    }
+    return true;
+}
+
+bool CommonFunAni::ParseHashParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
+{
+    return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULENAME, PROPERTYNAME_HASHVALUE);
+}
+
+bool CommonFunAni::ParseVerifyCodeParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
+{
+    return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULENAME, PROPERTYNAME_SIGNATUREFILEPATH);
+}
+
+bool CommonFunAni::ParsePgoParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
+{
+    return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULENAME, PROPERTYNAME_PGOFILEPATH);
+}
+
+bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallParam& installParam)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+   
+    ani_array array = nullptr;
+    // hashParams?
+    if (CallGetterOptional(env, object, PROPERTYNAME_HASHPARAMS, &array)) {
+        std::vector<std::pair<std::string, std::string>> hashParams;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, hashParams, ParseHashParams));
+        for (const auto& parameter : hashParams) {
+            installParam.hashParams[parameter.first] = parameter.second;
+        }
+    }
+    // verifyCodeParams?
+    if (CallGetterOptional(env, object, PROPERTYNAME_VERIFYCODEPARAMS, &array)) {
+        std::vector<std::pair<std::string, std::string>> verifyCodeParams;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, verifyCodeParams, ParseVerifyCodeParams));
+        for (const auto& parameter : verifyCodeParams) {
+            installParam.verifyCodeParams[parameter.first] = parameter.second;
+        }
+    }
+    // pgoParams?
+    if (CallGetterOptional(env, object, PROPERTYNAME_PGOPARAMS, &array)) {
+        std::vector<std::pair<std::string, std::string>> pgoParams;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, pgoParams, ParsePgoParams));
+        for (const auto& parameter : pgoParams) {
+            installParam.pgoParams[parameter.first] = parameter.second;
+        }
+    }
+
+    ani_int intValue = 0;
+    // userId?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+        installParam.userId = intValue;
+    } else {
+        APP_LOGW("Parse userId failed,using default value");
+    }
+    // installFlag?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_INSTALLFLAG, &intValue)) {
+        if ((intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::NORMAL)) &&
+            (intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::REPLACE_EXISTING)) &&
+            (intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::FREE_INSTALL))) {
+            APP_LOGE("invalid installFlag param");
+            return false;
+        }
+        installParam.installFlag = static_cast<OHOS::AppExecFwk::InstallFlag>(intValue);
+    } else {
+        APP_LOGW("Parse installFlag failed,using default value");
+    }
+
+    ani_boolean boolValue = false;
+    // isKeepData?: boolean
+    if (CallGetterOptional(env, object, PROPERTYNAME_ISKEEPDATA, &boolValue)) {
+        installParam.isKeepData = boolValue;
+    } else {
+        APP_LOGW("Parse isKeepData failed,using default value");
+    }
+
+    // crowdtestDeadline?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_CROWDTESTDEADLINE, &intValue)) {
+        installParam.crowdtestDeadline = intValue;
+    } else {
+        APP_LOGW("Parse crowdtestDeadline failed,using default value");
+    }
+
+    // sharedBundleDirPaths?: Array<String>
+    if (CallGetterOptional(env, object, PROPERTYNAME_SHAREDBUNDLEDIRPATHS, &array)) {
+        RETURN_FALSE_IF_FALSE(ParseStrArray(env, array, installParam.sharedBundleDirPaths));
+    }
+
+    ani_string string = nullptr;
+
+    // specifiedDistributionType?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_SPECIFIEDDISTRIBUTIONTYPE, &string)) {
+        installParam.specifiedDistributionType = AniStrToString(env, string);
+    } else {
+        APP_LOGW("Parse specifiedDistributionType failed,using default value");
+    }
+
+    // additionalInfo?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_ADDITIONALINFO, &string)) {
+        installParam.specifiedDistributionType = AniStrToString(env, string);
+    } else {
+        APP_LOGW("Parse additionalInfo failed,using default value");
+    }
+    return true;
+}
+
 } // namespace AppExecFwk
 } // namespace OHOS
