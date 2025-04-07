@@ -235,6 +235,10 @@ ohos_unittest("BmsBundleKitServiceTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/ability_manager_helper.cpp" ]
+  sources += [
+    "${services_path}/bundlemgr/test/mock/src/mock_ability_manager_helper.cpp",
+  ]
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
