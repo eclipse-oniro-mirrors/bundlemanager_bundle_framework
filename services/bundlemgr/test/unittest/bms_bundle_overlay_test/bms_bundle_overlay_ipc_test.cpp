@@ -984,4 +984,111 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3700, Function | SmallTest | Le
     auto errCode = overlayProxy->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, info, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: OverlayIpcTest_3800
+ * @tc.name: test GetOverlayModuleInfo interface in OverlayManagerProxy.
+ * @tc.desc: 1.construct OverlayManagerProxy instance.
+ *           2.calling GetOverlayModuleInfo interface by using OverlayManagerProxy instance.
+ *           3.moduleName is empty.
+ *           4.return failed.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3800, Function | SmallTest | Level0)
+{
+    auto overlayProxy = GetOverlayProxy();
+    EXPECT_NE(overlayProxy, nullptr);
+
+    OverlayModuleInfo overlayModuleInfo;
+    auto errCode = overlayProxy->GetOverlayModuleInfo("", overlayModuleInfo, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_0390
+ * @tc.name: test GetOverlayModuleInfo interface in OverlayManagerProxy.
+ * @tc.desc: 1.construct OverlayManagerProxy instance.
+ *           2.calling GetOverlayModuleInfo interface by using OverlayManagerProxy instance.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0390, Function | SmallTest | Level0)
+{
+    auto overlayProxy = GetOverlayProxy();
+    EXPECT_NE(overlayProxy, nullptr);
+
+    OverlayModuleInfo overlayModuleInfo;
+    auto errCode = overlayProxy->GetOverlayModuleInfo(TEST_MODULE_NAME, overlayModuleInfo, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_4000
+ * @tc.name: test GetOverlayModuleInfo interface in OverlayManagerProxy.
+ * @tc.desc: 1.construct OverlayManagerProxy instance.
+ *           2.calling GetOverlayModuleInfo interface by using OverlayManagerProxy instance.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_4000, Function | SmallTest | Level0)
+{
+    auto overlayProxy = GetOverlayProxy();
+    EXPECT_NE(overlayProxy, nullptr);
+    MessageParcel reply;
+    bool isEnabled = false;
+    auto errCode = overlayProxy->SetOverlayEnabledForSelf("", isEnabled, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
+
+    std::string moduleName = TEST_MODULE_NAME;
+    errCode = overlayProxy->SetOverlayEnabledForSelf(moduleName, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
+    auto res = reply.ReadInt32();
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_4010
+ * @tc.name: test GetOverlayModuleInfo interface in OverlayManagerProxy.
+ * @tc.desc: 1.construct OverlayManagerProxy instance.
+ *           2.calling GetOverlayModuleInfo interface by using OverlayManagerProxy instance.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_4010, Function | SmallTest | Level0)
+{
+    auto overlayProxy = GetOverlayProxy();
+    EXPECT_NE(overlayProxy, nullptr);
+    bool isEnabled = false;
+    MessageParcel reply;
+    auto errCode = overlayProxy->SetOverlayEnabled("", TEST_TARGET_BUNDLE_NAME, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
+
+    std::string moduleName = TEST_TARGET_MODULE_NAME;
+    std::string bundleName = TEST_TARGET_BUNDLE_NAME;
+    errCode = overlayProxy->SetOverlayEnabled(bundleName, moduleName, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
+    auto res = reply.ReadInt32();
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_4020
+ * @tc.name: test GetOverlayModuleInfo interface in OverlayManagerProxy.
+ * @tc.desc: 1.construct OverlayManagerProxy instance.
+ *           2.calling GetOverlayModuleInfo interface by using OverlayManagerProxy instance.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_4020, Function | SmallTest | Level0)
+{
+    auto overlayProxy = GetOverlayProxy();
+    EXPECT_NE(overlayProxy, nullptr);
+    bool isEnabled = false;
+    MessageParcel reply;
+    auto errCode = overlayProxy->SetOverlayEnabled("", TEST_TARGET_BUNDLE_NAME, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
+
+    std::string bundleName = TEST_TARGET_BUNDLE_NAME;
+    std::string moduleName = TEST_TARGET_MODULE_NAME;
+    errCode = overlayProxy->SetOverlayEnabled(bundleName, moduleName, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
+    auto res = reply.ReadInt32();
+    EXPECT_EQ(res, ERR_OK);
+}
 } // OHOS

@@ -93,7 +93,7 @@ ErrCode AppServiceFwkInstaller::Install(
         PreInstallBundleInfo preInstallBundleInfo;
         if (!dataMgr_->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo) ||
             preInstallBundleInfo.GetBundlePaths().empty()) {
-            APP_LOGE("get preInstallBundleInfo failed");
+            APP_LOGE("get preInstallBundleInfo failed YKP");
             return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
         }
         ResetProperties();
