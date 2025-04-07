@@ -29,16 +29,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 class ZlibCallbackInfo {
-struct AsyncCallbackInfo {
-    napi_env env;
-    napi_ref callback;
-    napi_deferred deferred;
-    bool isCallBack = false;
-    ErrCode callbackResult;
-    bool deliverErrcode = false;
-    ZlibCallbackInfo *data = nullptr;
-};
-
 public:
     ZlibCallbackInfo() = default;
     ZlibCallbackInfo(napi_env env, napi_ref callback, napi_deferred deferred, bool isCallback);
@@ -51,7 +41,7 @@ public:
     void SetDeliverErrCode(bool isDeliverErrCode);
     void SetValid(bool valid);
 private:
-    bool ExcuteWork(AsyncCallbackInfo* asyncCallbackInfo);
+    int32_t ExcuteWork(uv_loop_s* loop, uv_work_t* work);
 private:
     napi_env env_ = nullptr;
     napi_ref callback_ = nullptr;
@@ -61,6 +51,16 @@ private:
     bool valid_ = true;
     std::mutex validMutex_;
     DISALLOW_COPY_AND_MOVE(ZlibCallbackInfo);
+};
+
+struct AsyncCallbackInfo {
+    napi_env env;
+    napi_ref callback;
+    napi_deferred deferred;
+    bool isCallBack = false;
+    ErrCode callbackResult;
+    bool deliverErrcode = false;
+    ZlibCallbackInfo *data = nullptr;
 };
 
 struct OriginalSizeCallbackInfo : public BaseCallbackInfo {

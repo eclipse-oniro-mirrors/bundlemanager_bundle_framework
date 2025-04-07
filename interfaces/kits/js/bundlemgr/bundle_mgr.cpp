@@ -5096,42 +5096,47 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
 
         napi_value resourceName;
         NAPI_CALL(env, napi_create_string_latin1(env, "GetBundleInstaller", NAPI_AUTO_LENGTH, &resourceName));
-        auto task = [env, asyncCallbackInfo]() {
-            APP_LOGI("GetBundleInstaller start");
-            if (asyncCallbackInfo == nullptr) {
-                APP_LOGE("asyncCallbackInfo is nullptr");
-                return;
-            }
-            std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
-            napi_value result[ARGS_SIZE_TWO] = {0};
-            napi_value callback = 0;
-            napi_value undefined = 0;
-            napi_value callResult = 0;
-            napi_value m_classBundleInstaller = nullptr;
-            if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) && VerifySystemApi()) {
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, g_classBundleInstaller,
-                    &m_classBundleInstaller));
-                NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
-                NAPI_CALL_RETURN_VOID(env, napi_new_instance(
-                    env, m_classBundleInstaller, 0, nullptr, &result[PARAM1]));
+        NAPI_CALL(env, napi_create_async_work(
+            env,
+            nullptr,
+            resourceName,
+            [](napi_env env, void *data) {},
+            [](napi_env env, napi_status status, void *data) {
+                AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    APP_LOGE("asyncCallbackInfo is nullptr");
+                    return;
+                }
+                std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
+                napi_value result[ARGS_SIZE_TWO] = {0};
+                napi_value callback = 0;
+                napi_value undefined = 0;
+                napi_value callResult = 0;
+                napi_value m_classBundleInstaller = nullptr;
+                if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) && VerifySystemApi()) {
+                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, g_classBundleInstaller,
+                        &m_classBundleInstaller));
+                    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
+                    NAPI_CALL_RETURN_VOID(env, napi_new_instance(
+                        env, m_classBundleInstaller, 0, nullptr, &result[PARAM1]));
 
-                result[PARAM0] = GetCallbackErrorValue(env, CODE_SUCCESS);
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(
-                    env, asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
-                    &result[PARAM0], &callResult));
-            } else {
-                napi_value placeHolder = nullptr;
-                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[PARAM0]));
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-                    sizeof(result) / sizeof(result[0]), result, &placeHolder));
-            }
-            APP_LOGI("GetBundleInstaller end");
-        };
-        if (napi_status::napi_ok != napi_send_event(env, task, napi_eprio_high)) {
-            APP_LOGE("napi_send_event failed");
-        }
+                    result[PARAM0] = GetCallbackErrorValue(env, CODE_SUCCESS);
+                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(
+                        env, asyncCallbackInfo->callback, &callback));
+                    NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
+                        &result[PARAM0], &callResult));
+                } else {
+                    napi_value placeHolder = nullptr;
+                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[PARAM0]));
+                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+                    NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+                        sizeof(result) / sizeof(result[0]), result, &placeHolder));
+                }
+            },
+            reinterpret_cast<void*>(asyncCallbackInfo),
+            &asyncCallbackInfo->asyncWork));
+        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
         napi_value result;
         napi_create_int32(env, NAPI_RETURN_ONE, &result);
@@ -5144,28 +5149,34 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
         APP_LOGI("GetBundleInstaller promise");
         napi_value resourceName;
         NAPI_CALL(env, napi_create_string_latin1(env, "GetBundleInstaller", NAPI_AUTO_LENGTH, &resourceName));
-        auto task = [env, asyncCallbackInfo]() {
-            APP_LOGI("GetBundleInstaller promise start");
-            if (asyncCallbackInfo == nullptr) {
-                APP_LOGE("asyncCallbackInfo is nullptr");
-                return;
-            }
-            std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
-            napi_value result;
-            napi_value m_classBundleInstaller = nullptr;
-            if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) && VerifySystemApi()) {
-                napi_get_reference_value(env, g_classBundleInstaller, &m_classBundleInstaller);
-                napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result);
-                napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred, result);
-            } else {
-                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result));
-                NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result));
-            }
-            APP_LOGI("GetBundleInstaller promise end");
-        };
-        if (napi_status::napi_ok != napi_send_event(env, task, napi_eprio_high)) {
-            APP_LOGE("napi_send_event failed");
-        }
+        NAPI_CALL(env, napi_create_async_work(
+            env,
+            nullptr,
+            resourceName,
+            [](napi_env env, void *data) { APP_LOGI("GetBundleInstaller promise async done"); },
+            [](napi_env env, napi_status status, void *data) {
+                APP_LOGI("=================load=================");
+                AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    APP_LOGE("asyncCallbackInfo is nullptr");
+                    return;
+                }
+                std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
+                napi_value result;
+                napi_value m_classBundleInstaller = nullptr;
+                if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) && VerifySystemApi()) {
+                    napi_get_reference_value(env, g_classBundleInstaller, &m_classBundleInstaller);
+                    napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result);
+                    napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred, result);
+                } else {
+                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result));
+                    NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result));
+                }
+            },
+            reinterpret_cast<void*>(asyncCallbackInfo),
+            &asyncCallbackInfo->asyncWork));
+        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
         callbackPtr.release();
         return promise;
     }
