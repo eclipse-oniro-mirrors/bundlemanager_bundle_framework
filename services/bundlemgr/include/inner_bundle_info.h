@@ -2249,6 +2249,8 @@ private:
     void InnerProcessRequestPermissions(
         const std::unordered_map<std::string, std::string> &moduleNameMap,
         std::vector<RequestPermission> &requestPermissions) const;
+    bool ShouldReplacePermission(const RequestPermission &oldPermission, const RequestPermission &newPermission,
+        const std::unordered_map<std::string, std::string> &moduleNameTypeMap) const;
     void PrintSetEnabledInfo(bool isEnabled, int32_t userId, int32_t appIndex,
         const std::string &bundleName, const std::string &caller) const;
     void GetPreInstallApplicationFlags(ApplicationInfo &appInfo) const;
