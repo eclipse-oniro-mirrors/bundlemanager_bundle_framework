@@ -119,7 +119,7 @@ namespace installer {
     isKeepData?: boolean;
     hashParams?: Array<HashParam>;
     crowdtestDeadline?: number;
-    sharedBundleDirPaths?: Array<String>;
+    sharedBundleDirPaths?: Array<string>;
     specifiedDistributionType?: string;
     additionalInfo?: string;
     verifyCodeParams?: Array<VerifyCodeParam>;

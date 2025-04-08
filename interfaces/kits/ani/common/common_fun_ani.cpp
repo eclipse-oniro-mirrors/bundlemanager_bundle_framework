@@ -50,6 +50,8 @@ constexpr const char* CLASSNAME_BUNDLERESINFO = "LbundleManager/BundleResourceIn
 constexpr const char* CLASSNAME_SHORTCUTINFO = "LbundleManager/ShortcutInfo/ShortcutInfoInner;";
 constexpr const char* CLASSNAME_SHORTCUTWANT = "LbundleManager/ShortcutInfo/ShortcutWantInner;";
 constexpr const char* CLASSNAME_SHORTCUT_PARAMETERITEM = "LbundleManager/ShortcutInfo/ParameterItemInner;";
+constexpr const char* CLASSNAME_LAUNCHER_ABILITY_INFO_INNER =
+    "LbundleManager/LauncherAbilityInfoInner/LauncherAbilityInfoInner;";
 
 constexpr const char* PROPERTYNAME_NAME = "name";
 constexpr const char* PROPERTYNAME_VENDOR = "vendor";
@@ -171,12 +173,13 @@ constexpr const char* PROPERTYNAME_TARGETBUNDLE = "targetBundle";
 constexpr const char* PROPERTYNAME_TARGETMODULE = "targetModule";
 constexpr const char* PROPERTYNAME_TARGETABILITY = "targetAbility";
 constexpr const char* PROPERTYNAME_PARAMETERS = "parameters";
+constexpr const char* PROPERTYNAME_ELEMENTNAME = "elementName";
+constexpr const char* PROPERTYNAME_USERID = "userId";
 constexpr const char* PROPERTYNAME_HASHPARAMS = "hashParams";
 constexpr const char* PROPERTYNAME_SIGNATUREFILEPATH = "signatureFilePath";
 constexpr const char* PROPERTYNAME_VERIFYCODEPARAMS = "verifyCodeParams";
 constexpr const char* PROPERTYNAME_PGOFILEPATH = "pgoFilePath";
 constexpr const char* PROPERTYNAME_PGOPARAMS = "pgoParams";
-constexpr const char* PROPERTYNAME_USERID = "userId";
 constexpr const char* PROPERTYNAME_SPECIFIEDDISTRIBUTIONTYPE = "specifiedDistributionType";
 constexpr const char* PROPERTYNAME_ISKEEPDATA = "isKeepData";
 constexpr const char* PROPERTYNAME_INSTALLFLAG = "installFlag";
@@ -1448,6 +1451,42 @@ inline ani_object CommonFunAni::ConvertShortcutIntentParameter(
     return ConvertKeyValuePair(env, item, CLASSNAME_SHORTCUT_PARAMETERITEM);
 }
 
+
+ani_object CommonFunAni::ConvertLauncherAbilityInfo(ani_env* env, const LauncherAbilityInfo &launcherAbility)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_LAUNCHER_ABILITY_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    // applicationInfo: ApplicationInfo
+    ani_object aObject = ConvertApplicationInfo(env, launcherAbility.applicationInfo);
+    RETURN_NULL_IF_NULL(aObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPLICATIONINFO, aObject));
+
+    // elementName: ElementName
+    ani_object aElementNameObject = ConvertElementName(env, launcherAbility.elementName);
+    RETURN_NULL_IF_NULL(aElementNameObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ELEMENTNAME, aElementNameObject));
+
+    // labelId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, launcherAbility.labelId));
+
+    // iconId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, launcherAbility.iconId));
+
+    // userId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_USERID, launcherAbility.userId));
+
+    // installTime: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_INSTALLTIME, launcherAbility.installTime));
+
+    return object;
+}
+
 bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutInfo& shortcutInfo)
 {
     RETURN_FALSE_IF_NULL(env);
@@ -1667,7 +1706,7 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
         APP_LOGW("Parse crowdtestDeadline failed,using default value");
     }
 
-    // sharedBundleDirPaths?: Array<String>
+    // sharedBundleDirPaths?: Array<string>
     if (CallGetterOptional(env, object, PROPERTYNAME_SHAREDBUNDLEDIRPATHS, &array)) {
         RETURN_FALSE_IF_FALSE(ParseStrArray(env, array, installParam.sharedBundleDirPaths));
     }
