@@ -4095,9 +4095,9 @@ ErrCode BundleMgrHostImpl::MigrateData(const std::vector<std::string> &sourcePat
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
-    std::vector<std::string> inspectionPassedSourcePaths = sourcePaths;
-    std::string inspectionPassedDestPath = destinationPath;
-    auto result = MigrateDataParameterCheck(inspectionPassedSourcePaths, inspectionPassedDestPath);
+    std::vector<std::string> filteredSourcePaths = sourcePaths;
+    std::string filteredDestPath = destinationPath;
+    auto result = MigrateDataParameterCheck(filteredSourcePaths, filteredDestPath);
     if (result != ERR_OK) {
         APP_LOGE("migrate data parameter check err:%{public}d", result);
         return result;
@@ -4115,7 +4115,7 @@ ErrCode BundleMgrHostImpl::MigrateData(const std::vector<std::string> &sourcePat
         return ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
     }
 
-    result = installdClient->MigrateData(inspectionPassedSourcePaths, inspectionPassedDestPath);
+    result = installdClient->MigrateData(filteredSourcePaths, filteredDestPath);
     if (result != ERR_OK) {
         APP_LOGE("migrate data filesd, errcode:%{public}d", result);
     }
