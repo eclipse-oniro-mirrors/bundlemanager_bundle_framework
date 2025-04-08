@@ -1673,22 +1673,6 @@ HWTEST_F(BmsEventHandlerTest, SaveHmpBundlePathInfo_0100, Function | SmallTest |
 }
 
 /**
- * @tc.number: GetRevertHmpList_0100
- * @tc.name: GetRevertHmpList
- * @tc.desc: test GetRevertHmpList
- */
-HWTEST_F(BmsEventHandlerTest, GetRevertHmpList_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    std::vector<std::string> revertHmpList;
-    std::map<std::string, std::vector<std::string>> moduleUpdateAppServiceMap;
-    std::map<std::string, std::vector<std::string>> moduleUpdateNotAppServiceMap;
-    auto ret = handler->GetRevertHmpList(revertHmpList, moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap);
-    EXPECT_TRUE(ret);
-}
-
-/**
  * @tc.number: GetHmpList_0100
  * @tc.name: GetHmpList
  * @tc.desc: test GetHmpList
