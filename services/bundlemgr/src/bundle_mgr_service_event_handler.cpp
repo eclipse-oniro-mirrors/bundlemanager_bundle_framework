@@ -39,6 +39,7 @@
 #include "hmp_bundle_installer.h"
 #include "inner_patch_info.h"
 #include "installd_client.h"
+#include "install_exception_mgr.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "patch_data_mgr.h"
@@ -292,6 +293,8 @@ void BMSEventHandler::OnBmsStarting()
 void BMSEventHandler::AfterBmsStart()
 {
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart start");
+    // need process install exception bundle
+    DelayedSingleton<InstallExceptionMgr>::GetInstance()->HandleAllBundleExceptionInfo();
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     if (OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
         DelayedSingleton<QuickFixBootScanner>::GetInstance()->ProcessQuickFixBootUp();

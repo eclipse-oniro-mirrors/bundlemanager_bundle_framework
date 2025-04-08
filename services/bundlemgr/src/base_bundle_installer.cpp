@@ -49,6 +49,7 @@
 #include "driver_installer.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
+#include "install_exception_mgr.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "perf_profile.h"
@@ -1329,17 +1330,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
             VerifyCodeSignatureForHap(newInfos, preinstalledAppPath, preinstalledAppPath);
         }
     }
-    // move so file to real installation dir
-    bool needDeleteOldLibraryPath = NeedDeleteOldNativeLib(newInfos, oldInfo);
-    result = MoveSoFileToRealInstallationDir(newInfos, needDeleteOldLibraryPath);
-    CHECK_RESULT_WITH_ROLLBACK(result, "move so file to install path failed %{public}d", newInfos, oldInfo);
-    result = FinalProcessHapAndSoForBundleUpdate(newInfos, installParam.copyHapToInstallPath, needDeleteOldLibraryPath);
-    CHECK_RESULT_WITH_ROLLBACK(result, "final process hap and so failed %{public}d", newInfos, oldInfo);
+    ScopeGuard codePathGuard([&] { RollbackCodePath(bundleName_, isFeatureNeedUninstall_); });
+    result = ProcessBundleCodePath(newInfos, oldInfo, bundleName_,
+        isFeatureNeedUninstall_, installParam.copyHapToInstallPath);
+    CHECK_RESULT_WITH_ROLLBACK(result, "final process code path failed %{public}d", newInfos, oldInfo);
 
-    // attention pls, rename operation shoule be almost the last operation to guarantee the rollback operation
-    // when someone failure occurs in the installation flow
-    result = RenameAllTempDir(newInfos);
-    CHECK_RESULT_WITH_ROLLBACK(result, "rename temp dirs failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_RENAMED);                         // ---- 90%
 
     // delete low-version hap or hsp when higher-version hap or hsp installed
@@ -1409,6 +1404,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
     }
     CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
+    ProcessOldCodePath(bundleName_, isFeatureNeedUninstall_);
     // create data group dir
     ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(oldInfo); });
     CreateDataGroupDirs(hapVerifyResults, oldInfo);
@@ -2444,7 +2440,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
     if (isAppExist_) {
         oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_NEW_START);
     }
-    std::string modulePath = newInfo.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_;
+    std::string modulePath = GetModulePath(newInfo, isFeatureNeedUninstall_, false);
     result = ExtractModule(newInfo, modulePath);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "extract module and rename failed");
@@ -2557,9 +2553,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     result = ProcessAsanDirectory(newInfo);
     CHECK_RESULT(result, "process asan log directory failed %{public}d");
 
-    moduleTmpDir_ = newInfo.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_
-        + ServiceConstants::TMP_SUFFIX;
-    result = ExtractModule(newInfo, moduleTmpDir_);
+    result = ExtractModule(newInfo, GetModulePath(newInfo, isFeatureNeedUninstall_, true));
     CHECK_RESULT(result, "extract module and rename failed %{public}d");
 
     result = ProcessBundleInstallNative(newInfo, userId_);
@@ -4523,10 +4517,12 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
     for (const auto &package : moduleVec) {
         if (find(packageVec.begin(), packageVec.end(), package) == packageVec.end()) {
             LOG_D(BMS_TAG_INSTALLER, "uninstall package %{public}s", package.c_str());
-            ErrCode result = RemoveModuleAndDataDir(info, package, Constants::UNSPECIFIED_USERID, true);
-            if (result != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLER, "remove module dir failed");
-                return result;
+            if (!isFeatureNeedUninstall_) {
+                ErrCode result = RemoveModuleAndDataDir(info, package, Constants::UNSPECIFIED_USERID, true);
+                if (result != ERR_OK) {
+                    LOG_E(BMS_TAG_INSTALLER, "remove module dir failed");
+                    return result;
+                }
             }
 
             // remove driver file
@@ -5439,26 +5435,14 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
     bool isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
         if (isCompressNativeLibrary) {
-            bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
-            // extract so file: if hap so is not isolated, then extract so to tmp path.
-            if (isLibIsolated) {
-                if (BundleUtil::EndWith(modulePath, ServiceConstants::TMP_SUFFIX)) {
-                    nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
-                }
-            } else {
-                nativeLibraryPath = info.GetCurrentModulePackage() + ServiceConstants::TMP_SUFFIX +
-                    ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
-            }
-            LOG_D(BMS_TAG_INSTALLER, "Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
-            targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
-                .append(info.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath)
-                .append(ServiceConstants::PATH_SEPARATOR);
+            InnerProcessTargetSoPath(info, isFeatureNeedUninstall_, modulePath, nativeLibraryPath, targetSoPath);
+            // for code signature
             targetSoPathMap_.emplace(info.GetCurModuleName(), targetSoPath);
         }
     }
 
-    LOG_D(BMS_TAG_INSTALLER, "begin extract module modulePath:%{public}s targetSoPath:%{public}s cpuAbi:%{public}s",
-        modulePath.c_str(), targetSoPath.c_str(), cpuAbi.c_str());
+    LOG_I(BMS_TAG_INSTALLER, "extract module %{public}s targetSo %{public}s abi:%{public}s compress %{public}d",
+        modulePath.c_str(), targetSoPath.c_str(), cpuAbi.c_str(), isCompressNativeLibrary);
     std::string signatureFileDir = "";
     auto ret = FindSignatureFileDir(info.GetCurModuleName(), signatureFileDir);
     if (ret != ERR_OK) {
@@ -5582,6 +5566,9 @@ ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std:
 void BaseBundleInstaller::ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const
 {
+    if (isFeatureNeedUninstall_) {
+        return;
+    }
     if (((oldVersionCode >= versionCode_) && !otaInstall_) || oldNativeLibraryPath.empty()) {
         return;
     }
@@ -5762,6 +5749,11 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
         return "";
     }
 
+    if (isFeatureNeedUninstall_) {
+        return std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+            std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + info.GetBundleName() +
+            ServiceConstants::PATH_SEPARATOR + hapPath.substr(posOfPathSep);
+    }
     std::string tempDir = hapPath.substr(0, posOfPathSep + 1) + info.GetCurrentModulePackage();
     if (installedModules_[info.GetCurrentModulePackage()]) {
         tempDir += ServiceConstants::TMP_SUFFIX;
@@ -7285,6 +7277,149 @@ void BaseBundleInstaller::RemovePluginOnlyInCurrentUser(const InnerBundleInfo &i
         if ((InstalldClient::GetInstance()->RemoveDir(it->second.codePath)) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", it->second.codePath.c_str());
         }
+    }
+}
+
+std::string BaseBundleInstaller::GetModulePath(
+    const InnerBundleInfo &info, const bool isBundleUpdate, const bool isModuleUpdate)
+{
+    if (isBundleUpdate) {
+        return std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+            std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + info.GetBundleName() +
+            ServiceConstants::PATH_SEPARATOR + info.GetCurrentModulePackage();
+    }
+    if (isModuleUpdate) {
+        return info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR +
+            info.GetCurrentModulePackage() + ServiceConstants::TMP_SUFFIX;
+    }
+    return info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + info.GetCurrentModulePackage();
+}
+
+ErrCode BaseBundleInstaller::ProcessBundleCodePath(
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InnerBundleInfo &oldInfo, const std::string &bundleName,
+    const bool isBundleUpdate, const bool needCopyHap)
+{
+    if (!isBundleUpdate) {
+        // move so file to real installation dir
+        bool needDeleteOldLibraryPath = NeedDeleteOldNativeLib(newInfos, oldInfo);
+        auto result = MoveSoFileToRealInstallationDir(newInfos, needDeleteOldLibraryPath);
+        CHECK_RESULT(result, "move so file to install path failed %{public}d");
+        result = FinalProcessHapAndSoForBundleUpdate(newInfos, needCopyHap, needDeleteOldLibraryPath);
+        CHECK_RESULT(result, "final process hap and so failed %{public}d");
+        // attention pls, rename operation shoule be almost the last operation to guarantee the rollback operation
+        // when someone failure occurs in the installation flow
+        result = RenameAllTempDir(newInfos);
+        CHECK_RESULT(result, "rename temp dirs failed with result %{public}d");
+        return result;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s processBundleCodePath start", bundleName.c_str());
+    // rename real code path to +old- code path
+    std::string realAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        bundleName;
+    std::string oldAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
+    auto result = InstalldClient::GetInstance()->RenameModuleDir(realAppCodePath, oldAppCodePath);
+    CHECK_RESULT(result, "rename module dir failed, error is %{public}d");
+    InstallExceptionInfo exceptionInfo;
+    exceptionInfo.status = InstallRenameExceptionStatus::RENAME_RELA_TO_OLD_PATH;
+    result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
+        exceptionInfo);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "save bundle exception failed, error is %{public}d", result);
+    }
+    // rename +new- code path to real code path
+    std::string newAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
+    result = InstalldClient::GetInstance()->RenameModuleDir(newAppCodePath, realAppCodePath);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "rename module dir failed, error is %{public}d, errno %{public}d", result, errno);
+        (void)InstalldClient::GetInstance()->RenameModuleDir(oldAppCodePath, realAppCodePath);
+        DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
+        return result;
+    }
+
+    exceptionInfo.status = InstallRenameExceptionStatus::RENAME_NEW_TO_RELA_PATH;
+    result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
+        exceptionInfo);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "save bundle exception failed, error is %{public}d", result);
+    }
+    RemoveEmptyDirs(newInfos);
+    LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s processBundleCodePath end", bundleName.c_str());
+    return ERR_OK;
+}
+
+void BaseBundleInstaller::ProcessOldCodePath(
+    const std::string &bundleName, const bool isBundleUpdate)
+{
+    if (!isBundleUpdate) {
+        return;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s ProcessOldCodePath start", bundleName.c_str());
+    InstallExceptionInfo exceptionInfo;
+    exceptionInfo.status = InstallRenameExceptionStatus::DELETE_OLD_PATH;
+    ErrCode result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
+        exceptionInfo);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "save bundle exception failed, error is %{public}d", result);
+    }
+    // delete +old- code path
+    std::string oldAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
+    result = InstalldClient::GetInstance()->RemoveDir(oldAppCodePath);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "remove bundle %{publicl}s old code path error is %{public}d",
+            bundleName.c_str(), result);
+    }
+    result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "delete bundle %{public}s exception error is %{public}d",
+            bundleName.c_str(), result);
+    }
+    LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s ProcessOldCodePath end", bundleName.c_str());
+}
+
+void BaseBundleInstaller::RollbackCodePath(const std::string &bundleName, bool isBundleUpdate)
+{
+    if (!isBundleUpdate) {
+        return;
+    }
+    std::string realAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        bundleName;
+    std::string oldAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
+    auto result = InstalldClient::GetInstance()->RenameModuleDir(oldAppCodePath, realAppCodePath);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s rename module dir failed, error is %{public}d",
+            bundleName.c_str(), result);
+    }
+    (void)DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
+}
+
+void BaseBundleInstaller::InnerProcessTargetSoPath(const InnerBundleInfo &info, const bool isBundleUpdate,
+    const std::string &modulePath, std::string &nativeLibraryPath, std::string &targetSoPath)
+{
+    bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
+    // extract so file: if hap so is not isolated, then extract so to tmp path.
+    if (isLibIsolated) {
+        if (BundleUtil::EndWith(modulePath, ServiceConstants::TMP_SUFFIX)) {
+            nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
+        }
+    } else {
+        nativeLibraryPath = isBundleUpdate ? nativeLibraryPath :
+            (info.GetCurrentModulePackage() + ServiceConstants::TMP_SUFFIX +
+            ServiceConstants::PATH_SEPARATOR + nativeLibraryPath);
+    }
+    if (isBundleUpdate) {
+        targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+            .append(ServiceConstants::BUNDLE_NEW_CODE_DIR).append(info.GetBundleName())
+            .append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath)
+            .append(ServiceConstants::PATH_SEPARATOR);
+    } else {
+        targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+            .append(info.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath)
+            .append(ServiceConstants::PATH_SEPARATOR);
     }
 }
 }  // namespace AppExecFwk

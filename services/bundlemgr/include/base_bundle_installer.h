@@ -825,11 +825,19 @@ private:
     void MarkIsForceUninstall(const std::string &bundleName, bool isForceUninstalled);
     bool CheckCanInstallPreBundle(const std::string &bundleName, const int32_t userId);
     void RemovePluginOnlyInCurrentUser(const InnerBundleInfo &info);
+    std::string GetModulePath(const InnerBundleInfo &info, const bool isBundleUpdate, const bool isModuleUpdate);
+    ErrCode ProcessBundleCodePath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const InnerBundleInfo &oldInfo, const std::string &bundleName,
+        const bool isBundleUpdate, const bool needCopyHap);
+    void ProcessOldCodePath(const std::string &bundleName, const bool isBundleUpdate);
+    void RollbackCodePath(const std::string &bundleName, bool isBundleUpdate);
+    void InnerProcessTargetSoPath(const InnerBundleInfo &info, const bool isBundleUpdate,
+        const std::string &modulePath, std::string &nativeLibraryPath, std::string &targetSoPath);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;
     bool isAppService_ = false;
-    // value is packageName for uninstalling
+    // used for bundle update
     bool isFeatureNeedUninstall_ = false;
     // for quick fix
     bool needDeleteQuickFixInfo_ = false;
@@ -854,7 +862,6 @@ private:
     SingletonState singletonState_ = SingletonState::DEFAULT;
     BundleType bundleType_ = BundleType::APP;
     std::string bundleName_;
-    std::string moduleTmpDir_;
     std::string modulePath_;
     std::string baseDataPath_;
     std::string modulePackage_;
