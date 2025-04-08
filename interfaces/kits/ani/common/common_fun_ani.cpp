@@ -262,7 +262,7 @@ ani_ref CommonFunAni::ConvertAniArrayString(ani_env* env, const std::vector<std:
     return aArrayRef;
 }
 
-ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo)
+ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo, int32_t flags)
 {
     RETURN_NULL_IF_NULL(env);
 
@@ -297,9 +297,14 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TARGETVERSION, bundleInfo.targetVersion));
 
     // appInfo: ApplicationInfo
-    ani_object aObject = ConvertApplicationInfo(env, bundleInfo.applicationInfo);
-    RETURN_NULL_IF_NULL(aObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINFO, aObject));
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) ==
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) {
+        ani_object aObject = ConvertApplicationInfo(env, bundleInfo.applicationInfo);
+        RETURN_NULL_IF_NULL(aObject);
+        RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINFO, aObject));
+    } else {
+        RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_APPINFO));
+    }
 
     // hapModulesInfo: Array<HapModuleInfo>
     ani_object aHapModuleInfosObject = ConvertAniArray(env, bundleInfo.hapModuleInfos, ConvertHapModuleInfo);
@@ -318,9 +323,14 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PERMISSIONGRANTSTATES, aPermissionGrantStates));
 
     // signatureInfo: SignatureInfo
-    ani_object aniSignatureInfoObj = ConvertSignatureInfo(env, bundleInfo.signatureInfo);
-    RETURN_NULL_IF_NULL(aniSignatureInfoObj);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SIGNATUREINFO, aniSignatureInfoObj));
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) ==
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
+        ani_object aniSignatureInfoObj = ConvertSignatureInfo(env, bundleInfo.signatureInfo);
+        RETURN_NULL_IF_NULL(aniSignatureInfoObj);
+        RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SIGNATUREINFO, aniSignatureInfoObj));
+    } else {
+        RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_SIGNATUREINFO));
+    }
 
     // installTime: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_INSTALLTIME, bundleInfo.installTime));
