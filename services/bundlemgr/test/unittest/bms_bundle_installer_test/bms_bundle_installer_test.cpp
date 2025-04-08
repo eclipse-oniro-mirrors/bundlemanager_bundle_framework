@@ -8500,6 +8500,59 @@ HWTEST_F(BmsBundleInstallerTest, UtdHandler_0400, Function | SmallTest | Level0)
     EXPECT_EQ(utdProfile, Constants::EMPTY_STRING);
 }
 
+/**
+ * @tc.number: GetAppInstallPrefix_0100
+ * @tc.name: test GetAppInstallPrefix
+ * @tc.desc: Test GetAppInstallPrefix
+*/
+HWTEST_F(BmsBundleInstallerTest, GetAppInstallPrefix_0100, Function | SmallTest | Level1)
+{
+    BundleUtil util;
+    std::string prefix = "/data/service/el1/public/bms/bundle_manager_service/app_install/";
+    std::string filePath = prefix + "100/com.test.test/entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, false), "");
+
+    EXPECT_EQ(util.GetAppInstallPrefix("entry.hap", true), "");
+
+    filePath = prefix + "entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
+
+    filePath = prefix + "com.test.test/entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
+
+    filePath = prefix + "app_install/100/com.test.test/entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
+
+    filePath = prefix + "100//entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "");
+
+    filePath = prefix + "100/com.test.test/entry.hap";
+    EXPECT_EQ(util.GetAppInstallPrefix(filePath, true), "+app_install+com.test.test+100+");
+}
+
+/**
+ * @tc.number: RestoreAppInstallHaps_0100
+ * @tc.name: test RestoreAppInstallHaps
+ * @tc.desc: Test RestoreAppInstallHaps
+*/
+HWTEST_F(BmsBundleInstallerTest, RestoreAppInstallHaps_0100, Function | SmallTest | Level1)
+{
+    std::string prefix = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::SECURITY_STREAM_INSTALL_PATH + ServiceConstants::PATH_SEPARATOR;
+    OHOS::ForceCreateDirectory(prefix + "test");
+    OHOS::ForceCreateDirectory(prefix + "+app_install+");
+    OHOS::ForceCreateDirectory(prefix + "+app_install+com.test.test");
+    OHOS::ForceCreateDirectory(prefix + "+app_install+com.test.test+100");
+    OHOS::ForceCreateDirectory(prefix + "+app_install+com.test.test+100+123123");
+    BundleUtil util;
+    util.RestoreAppInstallHaps();
+    EXPECT_TRUE(util.IsExistDir(prefix + "+app_install+com.test.test+100+123123"));
+
+    util.RestoreHaps("", "", "");
+    util.RestoreHaps(prefix + "+app_install+com.test.test+100+123123", "com.test.test", "100");
+    EXPECT_TRUE(util.IsExistDir(prefix + "+app_install+com.test.test+100+123123"));
+}
+
 /*
  * @tc.number: 20449gin_0100
  * @tc.name: test Install
