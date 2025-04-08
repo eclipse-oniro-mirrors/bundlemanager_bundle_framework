@@ -219,6 +219,7 @@ struct ApplicationInfo : public Parcelable {
     bool allowMultiProcess = false;
     bool gwpAsanEnabled = false;
     bool enabled = false;
+    bool hasPlugin = false;
 
     // switch
     bool multiProjects = false;

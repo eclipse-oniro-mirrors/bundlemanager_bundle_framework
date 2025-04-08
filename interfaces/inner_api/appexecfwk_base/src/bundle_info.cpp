@@ -83,7 +83,6 @@ const char* APP_IDENTIFIER = "appIdentifier";
 const char* BUNDLE_INFO_OLD_APPIDS = "oldAppIds";
 const char* BUNDLE_INFO_ROUTER_ARRAY = "routerArray";
 const char* BUNDLE_INFO_IS_NEW_VERSION = "isNewVersion";
-const char* BUNDLE_INFO_HAS_PLUGIN = "hasPlugin";
 const uint32_t BUNDLE_CAPACITY = 204800; // 200K
 }
 
@@ -406,7 +405,6 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
         routerArray.emplace_back(*routerItem);
     }
     isNewVersion = parcel.ReadBool();
-    hasPlugin = parcel.ReadBool();
     return true;
 }
 
@@ -527,7 +525,6 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &router);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isNewVersion);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasPlugin);
     return true;
 }
 
@@ -728,8 +725,7 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {OVERLAY_BUNDLE_INFO, bundleInfo.overlayBundleInfos},
         {BUNDLE_INFO_OLD_APPIDS, bundleInfo.oldAppIds},
         {BUNDLE_INFO_ROUTER_ARRAY, bundleInfo.routerArray},
-        {BUNDLE_INFO_IS_NEW_VERSION, bundleInfo.isNewVersion},
-        {BUNDLE_INFO_HAS_PLUGIN, bundleInfo.hasPlugin}
+        {BUNDLE_INFO_IS_NEW_VERSION, bundleInfo.isNewVersion}
     };
 }
 
@@ -1081,12 +1077,6 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         jsonObjectEnd,
         BUNDLE_INFO_IS_NEW_VERSION,
         bundleInfo.isNewVersion,
-        false,
-        parseResult);
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_INFO_HAS_PLUGIN,
-        bundleInfo.hasPlugin,
         false,
         parseResult);
     if (parseResult != ERR_OK) {
