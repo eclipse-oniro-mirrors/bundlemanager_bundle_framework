@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,7 @@
 #include "directory_ex.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
+#include "parcel_macro.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -388,6 +389,29 @@ ErrCode ExtendResourceManagerProxy::CopyFiles(
     return ERR_OK;
 }
 
+ErrCode ExtendResourceManagerProxy::GetAllDynamicIconInfo(std::vector<DynamicIconInfo> &dynamicInfos)
+{
+    return GetAllDynamicIconInfo(Constants::UNSPECIFIED_USERID, dynamicInfos);
+}
+
+ErrCode ExtendResourceManagerProxy::GetAllDynamicIconInfo(
+    const int32_t userId, std::vector<DynamicIconInfo> &dynamicInfos)
+{
+    APP_LOGD("begin to GetAllDynamicIconInfo");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAllDynamicIconInfo due to WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetAllDynamicIconInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<DynamicIconInfo>(
+        ExtendResourceManagerInterfaceCode::GET_ALL_DYNAMIC_ICON_INFO, data, dynamicInfos);
+}
+
 bool ExtendResourceManagerProxy::SendRequest(
     ExtendResourceManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply)
 {
@@ -403,6 +427,35 @@ bool ExtendResourceManagerProxy::SendRequest(
         return false;
     }
     return true;
+}
+
+template<typename T>
+ErrCode ExtendResourceManagerProxy::GetParcelableInfosWithErrCode(
+    ExtendResourceManagerInterfaceCode code, MessageParcel &data,
+    std::vector<T> &parcelableInfos)
+{
+    MessageParcel reply;
+    if (!SendRequest(code, data, reply)) {
+        APP_LOGE("SendRequest failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    ErrCode res = reply.ReadInt32();
+    if (res == ERR_OK) {
+        int32_t infoSize = reply.ReadInt32();
+        CONTAINER_SECURITY_VERIFY(reply, infoSize, &parcelableInfos);
+        for (int32_t i = 0; i < infoSize; i++) {
+            std::unique_ptr<T> info(reply.ReadParcelable<T>());
+            if (info == nullptr) {
+                APP_LOGE("Read Parcelable infos failed");
+                return ERR_APPEXECFWK_PARCEL_ERROR;
+            }
+            parcelableInfos.emplace_back(*info);
+        }
+        APP_LOGD("get parcelable infos success");
+    }
+    APP_LOGD("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
+    return res;
 }
 } // AppExecFwk
 } // OHOS

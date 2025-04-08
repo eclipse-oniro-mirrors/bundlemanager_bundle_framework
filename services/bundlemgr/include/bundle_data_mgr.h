@@ -44,6 +44,7 @@
 #include "bundle_state_storage.h"
 #include "bundle_status_callback_interface.h"
 #include "common_event_data.h"
+#include "dynamic_icon_info.h"
 #include "ffrt.h"
 #include "first_install_data_mgr_storage_rdb.h"
 #include "inner_bundle_clone_info.h"
@@ -1118,6 +1119,8 @@ public:
     ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
     ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
     void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData);
+    ErrCode GetAllDynamicInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos);
+
 private:
     /**
      * @brief Init transferStates.

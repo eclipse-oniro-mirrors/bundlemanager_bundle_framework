@@ -46,6 +46,10 @@ public:
 
     ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
 
+    ErrCode GetAllDynamicIconInfo(std::vector<DynamicIconInfo> &dynamicInfos) override;
+
+    ErrCode GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicInfos) override;
+
 private:
     ErrCode BeforeAddExtResource(
         const std::string &bundleName, const std::vector<std::string> &filePaths);

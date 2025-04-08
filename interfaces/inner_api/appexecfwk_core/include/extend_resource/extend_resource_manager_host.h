@@ -38,6 +38,9 @@ private:
     ErrCode HandleDisableDynamicIcon(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetDynamicIcon(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleCreateFd(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleGetAllDynamicInfo(MessageParcel& data, MessageParcel& reply);
+    template<typename T>
+    ErrCode WriteParcelableVector(std::vector<T> &parcelableVector, MessageParcel &reply);
 
     DISALLOW_COPY_AND_MOVE(ExtendResourceManagerHost);
 };

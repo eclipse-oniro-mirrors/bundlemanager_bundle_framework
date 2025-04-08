@@ -64,6 +64,8 @@ int ExtendResourceManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& dat
             return HandleGetDynamicIcon(data, reply);
         case static_cast<uint32_t>(ExtendResourceManagerInterfaceCode::CREATE_FD):
             return HandleCreateFd(data, reply);
+        case static_cast<uint32_t>(ExtendResourceManagerInterfaceCode::GET_ALL_DYNAMIC_ICON_INFO):
+            return HandleGetAllDynamicInfo(data, reply);
         default:
             APP_LOGW("ExtendResourceManagerHost receive unknown code %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -198,6 +200,39 @@ ErrCode ExtendResourceManagerHost::HandleCreateFd(MessageParcel& data, MessagePa
         }
     }
     close(fd);
+    return ERR_OK;
+}
+
+ErrCode ExtendResourceManagerHost::HandleGetAllDynamicInfo(MessageParcel& data, MessageParcel& reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t userId = data.ReadInt32();
+    std::vector<DynamicIconInfo> dynamicIconInfos;
+    ErrCode ret = GetAllDynamicIconInfo(userId, dynamicIconInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        return WriteParcelableVector<DynamicIconInfo>(dynamicIconInfos, reply);
+    }
+    return ERR_OK;
+}
+
+template<typename T>
+ErrCode ExtendResourceManagerHost::WriteParcelableVector(std::vector<T> &parcelableVector, MessageParcel &reply)
+{
+    if (!reply.WriteInt32(parcelableVector.size())) {
+        APP_LOGE("write ParcelableVector failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    for (auto &parcelable : parcelableVector) {
+        if (!reply.WriteParcelable(&parcelable)) {
+            APP_LOGE("write ParcelableVector failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
     return ERR_OK;
 }
 } // AppExecFwk

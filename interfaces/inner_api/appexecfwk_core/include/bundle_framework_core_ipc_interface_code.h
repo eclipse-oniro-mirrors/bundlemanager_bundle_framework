@@ -367,6 +367,7 @@ enum class ExtendResourceManagerInterfaceCode : uint8_t {
     DISABLE_DYNAMIC_ICON = 4,
     GET_DYNAMIC_ICON = 5,
     CREATE_FD = 6,
+    GET_ALL_DYNAMIC_ICON_INFO = 7,
 };
 
 /* SAID: 401-180 Interface No.180 subservice also provides the following interfaces */

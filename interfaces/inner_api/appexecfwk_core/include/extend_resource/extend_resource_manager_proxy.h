@@ -47,11 +47,18 @@ public:
     virtual ErrCode GetDynamicIcon(
         const std::string &bundleName, const int32_t userId, const int32_t appIndex, std::string &moduleName) override;
 
+    virtual ErrCode GetAllDynamicIconInfo(std::vector<DynamicIconInfo> &dynamicInfos) override;
+
+    virtual ErrCode GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicInfos) override;
+
 private:
     virtual ErrCode CopyFiles(
         const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles) override;
     virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
     bool SendRequest(ExtendResourceManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+    template<typename T>
+    ErrCode GetParcelableInfosWithErrCode(ExtendResourceManagerInterfaceCode code, MessageParcel &data,
+        std::vector<T> &parcelableInfos);
 
     static inline BrokerDelegator<ExtendResourceManagerProxy> delegator_;
 };
