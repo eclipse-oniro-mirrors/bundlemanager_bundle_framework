@@ -215,6 +215,10 @@ constexpr const char* INSTALL_SOURCE_PREINSTALL = "pre-installed";
 constexpr const char* INSTALL_SOURCE_OTA = "ota";
 constexpr const char* INSTALL_SOURCE_RECOVERY = "recovery";
 
+// bundle update
+constexpr const char* BUNDLE_NEW_CODE_DIR = "+new-";
+constexpr const char* BUNDLE_OLD_CODE_DIR = "+old-";
+
 //ability start window
 constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
