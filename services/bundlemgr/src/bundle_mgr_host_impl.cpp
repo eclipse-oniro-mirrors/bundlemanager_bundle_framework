@@ -23,6 +23,7 @@
 #include "bms_extension_data_mgr.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_service_constants.h"
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_proxy.h"
 #endif
@@ -40,6 +41,7 @@
 #ifdef BMS_USER_AUTH_FRAMEWORK_ENABLED
 #include "migrate_data_user_auth_callback.h"
 #endif
+#include "parameters.h"
 #include "system_ability_definition.h"
 #include "scope_guard.h"
 #ifdef BMS_USER_AUTH_FRAMEWORK_ENABLED
@@ -3855,15 +3857,9 @@ void BundleMgrHostImpl::SetBrokerServiceStatus(bool isServiceExisted)
 bool BundleMgrHostImpl::QueryAppGalleryBundleName(std::string &bundleName)
 {
     APP_LOGD("QueryAppGalleryBundleName in bundle host impl start");
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return false;
-    }
-    std::string abilityName;
-    bool ret = dataMgr->QueryAppGalleryAbilityName(bundleName, abilityName);
-    if (!ret) {
-        APP_LOGE("get bundleName failed");
+    bundleName = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
+    if (bundleName.empty()) {
+        APP_LOGW("AppGallery GetParameter is empty");
         return false;
     }
     APP_LOGD("bundleName is %{public}s", bundleName.c_str());
