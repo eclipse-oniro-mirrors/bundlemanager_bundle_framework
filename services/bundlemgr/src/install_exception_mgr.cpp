@@ -55,7 +55,7 @@ ErrCode InstallExceptionMgr::DeleteBundleExceptionInfo(const std::string &bundle
 void InstallExceptionMgr::HandleBundleExceptionInfo(
     const std::string &bundleName, const InstallExceptionInfo &installExceptionInfo)
 {
-    APP_LOGI("wtt bundle %{public}s install exception status %{public}d", bundleName.c_str(),
+    APP_LOGI("bundle %{public}s install exception status %{public}d", bundleName.c_str(),
         static_cast<int32_t>(installExceptionInfo.status));
     switch (installExceptionInfo.status) {
         case InstallRenameExceptionStatus::RENAME_RELA_TO_OLD_PATH :
@@ -90,9 +90,9 @@ void InstallExceptionMgr::HandleBundleExceptionInfo(
             break;
         }
         default :
-            (void)DeleteBundleExceptionInfo(bundleName);
             APP_LOGE("bundle %{public}s install unknown exception status %{public}d",
                 bundleName.c_str(), static_cast<int32_t>(installExceptionInfo.status));
+            (void)DeleteBundleExceptionInfo(bundleName);
     }
 }
 
