@@ -3929,7 +3929,7 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     BundleInfo bundleInfo;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId));
     if (ret != NO_ERROR) {
-        APP_LOGE_NOFUNC("GetBundleInfoV9 failed -n %{public}s -f %{public}d -u %{public}d",
+        APP_LOGD("GetBundleInfoV9 failed -n %{public}s -f %{public}d -u %{public}d",
             bundleName.c_str(), flags, userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);

@@ -509,7 +509,7 @@ bool BundleUtil::IsExistFile(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        APP_LOGE("fail stat errno:%{public}d", errno);
+        APP_LOGD("fail stat errno:%{public}d", errno);
         return false;
     }
 
