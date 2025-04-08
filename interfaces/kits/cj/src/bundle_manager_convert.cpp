@@ -741,7 +741,7 @@ extern "C" {
 #define EXPORT __attribute__((visibility("default")))
 EXPORT RetAbilityInfoV2 OHOS_ConvertAbilityInfoV2(void* param)
 {
-    RetAbilityInfoV2 retInfo;
+    RetAbilityInfoV2 retInfo = {};
     auto abilityInfo = reinterpret_cast<AppExecFwk::AbilityInfo*>(param);
     if (abilityInfo == nullptr) {
         return retInfo;
@@ -751,7 +751,7 @@ EXPORT RetAbilityInfoV2 OHOS_ConvertAbilityInfoV2(void* param)
 
 EXPORT RetHapModuleInfoV2 OHOS_ConvertHapInfoV2(void* param)
 {
-    RetHapModuleInfoV2 retInfo;
+    RetHapModuleInfoV2 retInfo = {};
     auto hapModuleInfo = reinterpret_cast<AppExecFwk::HapModuleInfo*>(param);
     if (hapModuleInfo == nullptr) {
         return retInfo;
