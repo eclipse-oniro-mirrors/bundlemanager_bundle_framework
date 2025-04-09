@@ -84,11 +84,28 @@ void RouterMapHelper::MergeRouter(const std::vector<RouterItem>& routerArrayList
 
 int32_t RouterMapHelper::CompareIdentifiers(const std::string& a, const std::string& b)
 {
-    if (!std::regex_match(a, ALNUM_REGEX) || !std::regex_match(b, ALNUM_REGEX)) {
+    try {
+        if (!std::regex_match(a, ALNUM_REGEX) || !std::regex_match(b, ALNUM_REGEX)) {
+            return 1;
+        }
+    } catch (const std::regex_error& e) {
+        APP_LOGE("regex error");
         return 1;
     }
-    bool anum = std::regex_match(a, NUM_REGEX);
-    bool bnum = std::regex_match(b, NUM_REGEX);
+
+    bool anum = false;
+    bool bnum = false;
+    try {
+        anum = std::regex_match(a, NUM_REGEX);
+        bnum = std::regex_match(b, NUM_REGEX);
+    } catch (const std::regex_error& e) {
+        APP_LOGE("regex error");
+        return 1;
+    } catch (const std::exception& e) {
+        APP_LOGE("exception error");
+        return 1;
+    }
+    
     if (anum && bnum) {
         auto diff = atoi(a.c_str()) - atoi(b.c_str());
         if (diff) {
