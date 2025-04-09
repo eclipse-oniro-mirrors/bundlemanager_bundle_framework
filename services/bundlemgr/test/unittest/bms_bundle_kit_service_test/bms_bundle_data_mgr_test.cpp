@@ -8357,4 +8357,169 @@ HWTEST_F(BmsBundleDataMgrTest, FetchPluginBundleInfo_0001, Function | MediumTest
         pluginBundleInfo);
     EXPECT_EQ(result, false);
 }
+
+/**
+ * @tc.number: UpdatePluginBundleInfo_0001
+ * @tc.name: UpdatePluginBundleInfo_0001
+ * @tc.desc: test UpdatePluginBundleInfo_0001
+ */
+HWTEST_F(BmsBundleDataMgrTest, UpdatePluginBundleInfo_0001, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string hostBundleName = BUNDLE_TEST1;
+    PluginBundleInfo pluginBundleInfo;
+
+    auto result1 = bundleDataMgr->UpdatePluginBundleInfo(hostBundleName, pluginBundleInfo);
+    EXPECT_EQ(result1, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.bundleName = BUNDLE_TEST1;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    innerBundleInfo.pluginBundleInfos_.emplace(BUNDLE_TEST2, pluginBundleInfo);
+    bundleDataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    PluginBundleInfo newPluginInfo;
+    newPluginInfo.pluginBundleName = BUNDLE_TEST3;
+    auto result2 = bundleDataMgr->UpdatePluginBundleInfo(hostBundleName, newPluginInfo);
+    EXPECT_EQ(result2, ERR_APPEXECFWK_ADD_PLUGIN_INFO_ERROR);
+
+    newPluginInfo.pluginBundleName = BUNDLE_TEST2;
+    auto result3 = bundleDataMgr->UpdatePluginBundleInfo(hostBundleName, newPluginInfo);
+    EXPECT_EQ(result3, ERR_OK);
+}
+
+/**
+ * @tc.number: RemovePluginFromUserInfo_0001
+ * @tc.name: RemovePluginFromUserInfo_0001
+ * @tc.desc: test RemovePluginFromUserInfo_0001
+ */
+HWTEST_F(BmsBundleDataMgrTest, RemovePluginFromUserInfo_0001, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    bundleDataMgr->bundleInfos_.clear();
+
+    std::string hostBundleName = BUNDLE_TEST1;
+    std::string pluginBundleName = BUNDLE_TEST2;
+
+    auto result1 = bundleDataMgr->RemovePluginFromUserInfo(hostBundleName, pluginBundleName, USERID);
+    EXPECT_EQ(result1, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.bundleName = BUNDLE_TEST1;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    bundleDataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    auto result2 = bundleDataMgr->RemovePluginFromUserInfo(hostBundleName, pluginBundleName, MULTI_USERID);
+    EXPECT_EQ(result2, ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR);
+
+    auto result3 = bundleDataMgr->RemovePluginFromUserInfo(hostBundleName, pluginBundleName, USERID);
+    EXPECT_EQ(result3, ERR_OK);
+}
+
+/**
+ * @tc.number: GetPluginAbilityInfo_0001
+ * @tc.name: GetPluginAbilityInfo_0001
+ * @tc.desc: test GetPluginAbilityInfo_0001
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginAbilityInfo_0001, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    bundleDataMgr->bundleInfos_.clear();
+
+    std::string hostBundleName = BUNDLE_TEST1;
+    std::string pluginBundleName = BUNDLE_TEST2;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = ABILITY_NAME_TEST;
+    PluginBundleInfo pluginInfo;
+    pluginInfo.abilityInfos.emplace(ABILITY_NAME_TEST, abilityInfo);
+
+    auto result1 = bundleDataMgr->GetPluginAbilityInfo(hostBundleName,
+        pluginBundleName, "", "", USERID, abilityInfo);
+    EXPECT_EQ(result1, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.bundleName = BUNDLE_TEST1;
+    userInfo.installedPluginSet.insert(BUNDLE_TEST2);
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    innerBundleInfo.pluginBundleInfos_.emplace(BUNDLE_TEST2, pluginInfo);
+    bundleDataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    auto result2 = bundleDataMgr->GetPluginAbilityInfo(hostBundleName,
+        pluginBundleName, "", "", MULTI_USERID, abilityInfo);
+    EXPECT_EQ(result2, ERR_APPEXECFWK_GET_PLUGIN_INFO_ERROR);
+
+    auto result3 = bundleDataMgr->GetPluginAbilityInfo(hostBundleName,
+        BUNDLE_TEST3, "", "", USERID, abilityInfo);
+    EXPECT_EQ(result3, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
+
+    auto result4 = bundleDataMgr->GetPluginAbilityInfo(hostBundleName,
+        pluginBundleName, "", ABILITY_NAME_TEST1, USERID, abilityInfo);
+    EXPECT_EQ(result4, ERR_APPEXECFWK_PLUGIN_ABILITY_NOT_FOUND);
+
+    AbilityInfo abilityInfo2;
+    auto result5 = bundleDataMgr->GetPluginAbilityInfo(hostBundleName,
+        pluginBundleName, "", ABILITY_NAME_TEST, USERID, abilityInfo2);
+    EXPECT_EQ(result5, ERR_OK);
+    EXPECT_EQ(abilityInfo2.name, abilityInfo.name);
+}
+
+/**
+ * @tc.number: GetPluginHapModuleInfo_0001
+ * @tc.name: GetPluginHapModuleInfo_0001
+ * @tc.desc: test GetPluginHapModuleInfo_0001
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginHapModuleInfo_0001, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    bundleDataMgr->bundleInfos_.clear();
+    bundleDataMgr->multiUserIdsSet_.insert(USERID);
+
+    std::string hostBundleName = BUNDLE_TEST1;
+    std::string pluginBundleName = BUNDLE_TEST2;
+    PluginModuleInfo pluginModuleInfo;
+    pluginModuleInfo.moduleName = MODULE_NAME_TEST;
+    PluginBundleInfo pluginInfo;
+    pluginInfo.pluginModuleInfos.emplace_back(pluginModuleInfo);
+
+    HapModuleInfo hapInfo;
+    auto result1 = bundleDataMgr->GetPluginHapModuleInfo(hostBundleName,
+        pluginBundleName, "", USERID, hapInfo);
+    EXPECT_EQ(result1, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.bundleName = BUNDLE_TEST1;
+    userInfo.installedPluginSet.insert(BUNDLE_TEST2);
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    innerBundleInfo.pluginBundleInfos_.emplace(BUNDLE_TEST2, pluginInfo);
+    bundleDataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    auto result2 = bundleDataMgr->GetPluginHapModuleInfo(hostBundleName,
+        pluginBundleName, "", MULTI_USERID, hapInfo);
+    EXPECT_EQ(result2, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    auto result3 = bundleDataMgr->GetPluginHapModuleInfo(hostBundleName,
+        BUNDLE_TEST3, "", USERID, hapInfo);
+    EXPECT_EQ(result3, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
+
+    auto result4 = bundleDataMgr->GetPluginHapModuleInfo(hostBundleName,
+        pluginBundleName, "", USERID, hapInfo);
+    EXPECT_EQ(result4, ERR_APPEXECFWK_PLUGIN_MODULE_NOT_FOUND);
+
+    auto result5 = bundleDataMgr->GetPluginHapModuleInfo(hostBundleName,
+        pluginBundleName, MODULE_NAME_TEST, USERID, hapInfo);
+    EXPECT_EQ(result5, ERR_OK);
+}
 } // OHOS

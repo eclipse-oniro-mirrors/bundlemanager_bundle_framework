@@ -287,6 +287,7 @@ bool PluginBundleInfo::GetHapModuleInfo(const std::string &moduleName,
             hapInfo.packageName = moduleInfo.packageName;
             hapInfo.name = moduleInfo.moduleName;
             hapInfo.package = moduleInfo.moduleName;
+            hapInfo.isModuleJson = true;
             std::string key;
             key.append(".").append(moduleName).append(".");
             for (const auto &ability : abilityInfos) {
