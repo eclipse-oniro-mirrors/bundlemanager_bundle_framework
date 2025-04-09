@@ -65,6 +65,7 @@ ohos_shared_library("installer") {
     "${kits_path}/js/bundlemgr/bundle_death_recipient.cpp",
     "${kits_path}/js/bundlemgr/installer_callback.cpp",
     "installer.cpp",
+    "installer_helper.cpp",
     "native_module.cpp",
   ]
   external_deps += [
