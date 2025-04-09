@@ -22,10 +22,13 @@
 
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "dynamic_icon_info.h"
 #include "extend_resource_manager_host_impl.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "parcel_macro.h"
+#include "string_ex.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -961,6 +964,183 @@ HWTEST_F(BmsExtendResourceManagerTest, GetDynamicIcon_0100, Function | SmallTest
     std::string moudleName;
     auto res = impl.GetDynamicIcon(BUNDLE_NAME, moudleName);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: DynamicIconInfo_0001
+ * @tc.name: Test DynamicIconInfo
+ * @tc.desc: 1.DynamicIconInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, DynamicIconInfo_0001, Function | SmallTest | Level1)
+{
+    DynamicIconInfo info;
+    info.bundleName = BUNDLE_NAME;
+    info.moduleName = BUNDLE_NAME2;
+    info.userId = USER_ID;
+    info.appIndex = 1;
+
+    Parcel parcel;
+    bool ret = info.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    DynamicIconInfo newInfo;
+    ret = newInfo.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(newInfo.bundleName, info.bundleName);
+    EXPECT_EQ(newInfo.moduleName, info.moduleName);
+    EXPECT_EQ(newInfo.userId, info.userId);
+    EXPECT_EQ(newInfo.appIndex, info.appIndex);
+}
+
+/**
+ * @tc.number: DynamicIconInfo_0002
+ * @tc.name: Test DynamicIconInfo
+ * @tc.desc: 1.DynamicIconInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, DynamicIconInfo_0002, Function | SmallTest | Level1)
+{
+    Parcel parcel;
+    DynamicIconInfo newInfo;
+    bool ret = newInfo.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
+
+    parcel.WriteString16(Str8ToStr16(newInfo.bundleName));
+    ret = newInfo.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
+
+    parcel.WriteString16(Str8ToStr16(newInfo.bundleName));
+    parcel.WriteString16(Str8ToStr16(newInfo.moduleName));
+    ret = newInfo.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
+
+    parcel.WriteString16(Str8ToStr16(newInfo.bundleName));
+    parcel.WriteString16(Str8ToStr16(newInfo.moduleName));
+    parcel.WriteInt32(newInfo.userId);
+    ret = newInfo.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
+
+    parcel.WriteString16(Str8ToStr16(newInfo.bundleName));
+    parcel.WriteString16(Str8ToStr16(newInfo.moduleName));
+    parcel.WriteInt32(newInfo.userId);
+    parcel.WriteInt32(newInfo.appIndex);
+    ret = newInfo.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DynamicIconInfo_0003
+ * @tc.name: Test DynamicIconInfo
+ * @tc.desc: 1.DynamicIconInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, DynamicIconInfo_0003, Function | SmallTest | Level1)
+{
+    Parcel parcel;
+    DynamicIconInfo *infoPtr = DynamicIconInfo::Unmarshalling(parcel);
+    EXPECT_EQ(infoPtr, nullptr);
+
+    DynamicIconInfo info;
+    info.bundleName = BUNDLE_NAME;
+    info.moduleName = BUNDLE_NAME2;
+    info.userId = USER_ID;
+    info.appIndex = 1;
+    bool ret = info.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    DynamicIconInfo *newInfoPtr = DynamicIconInfo::Unmarshalling(parcel);
+    ASSERT_NE(newInfoPtr, nullptr);
+    EXPECT_EQ(newInfoPtr->bundleName, info.bundleName);
+    EXPECT_EQ(newInfoPtr->moduleName, info.moduleName);
+    EXPECT_EQ(newInfoPtr->userId, info.userId);
+    EXPECT_EQ(newInfoPtr->appIndex, info.appIndex);
+    delete newInfoPtr;
+}
+
+/**
+ * @tc.number: GetAllDynamicIconInfo_0001
+ * @tc.name: Test GetAllDynamicIconInfo
+ * @tc.desc: 1.GetAllDynamicIconInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetAllDynamicIconInfo_0001, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.curDynamicIconModule = BUNDLE_NAME;
+    cloneInfo.appIndex = 1;
+    InnerBundleUserInfo userInfo;
+    userInfo.curDynamicIconModule = BUNDLE_NAME2;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    InnerBundleInfo info;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    std::vector<DynamicIconInfo> dynamicInfos;
+    ErrCode ret = impl.GetAllDynamicIconInfo(-2, dynamicInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(dynamicInfos.empty());
+
+    std::vector<DynamicIconInfo> dynamicInfos2;
+    ret = impl.GetAllDynamicIconInfo(-100, dynamicInfos2);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_TRUE(dynamicInfos2.empty());
+
+    std::vector<DynamicIconInfo> dynamicInfos3;
+    ret = impl.GetAllDynamicIconInfo(USER_ID, dynamicInfos3);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(dynamicInfos3.empty());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllDynamicIconInfo_0002
+ * @tc.name: Test GetAllDynamicIconInfo
+ * @tc.desc: 1.GetAllDynamicIconInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetAllDynamicIconInfo_0002, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::vector<DynamicIconInfo> dynamicInfos;
+    info.GetAllDynamicIconInfo(USER_ID, dynamicInfos);
+    EXPECT_TRUE(dynamicInfos.empty());
+
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.curDynamicIconModule = BUNDLE_NAME;
+    cloneInfo.appIndex = 1;
+    InnerBundleUserInfo userInfo;
+    userInfo.curDynamicIconModule = BUNDLE_NAME2;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    InnerBundleCloneInfo cloneInfo2;
+    cloneInfo2.curDynamicIconModule = "";
+    cloneInfo2.appIndex = 2;
+    userInfo.cloneInfos["2"] = cloneInfo2;
+    info.AddInnerBundleUserInfo(userInfo);
+
+    InnerBundleUserInfo userInfo2;
+    userInfo2.curDynamicIconModule = "";
+    userInfo2.bundleUserInfo.userId = 200;
+    userInfo2.cloneInfos["1"] = cloneInfo;
+    info.AddInnerBundleUserInfo(userInfo2);
+
+    info.GetAllDynamicIconInfo(USER_ID, dynamicInfos);
+    EXPECT_FALSE(dynamicInfos.empty());
+    EXPECT_EQ(dynamicInfos.size(), 2);
+
+    std::vector<DynamicIconInfo> dynamicInfos2;
+    info.GetAllDynamicIconInfo(-2, dynamicInfos2);
+    EXPECT_FALSE(dynamicInfos2.empty());
+    EXPECT_EQ(dynamicInfos2.size(), 3);
+
+    std::vector<DynamicIconInfo> dynamicInfos3;
+    info.GetAllDynamicIconInfo(-100, dynamicInfos3);
+    EXPECT_TRUE(dynamicInfos3.empty());
+
+    std::vector<DynamicIconInfo> dynamicInfos4;
+    info.GetAllDynamicIconInfo(200, dynamicInfos4);
+    EXPECT_FALSE(dynamicInfos4.empty());
+    EXPECT_EQ(dynamicInfos4.size(), 1);
 }
 
 /**
