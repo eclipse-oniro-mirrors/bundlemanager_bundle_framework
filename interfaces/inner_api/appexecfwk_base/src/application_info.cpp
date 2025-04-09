@@ -141,6 +141,7 @@ const char* APPLICATION_APPLICATION_FLAGS = "applicationFlags";
 const char* APPLICATION_ALLOW_MULTI_PROCESS = "allowMultiProcess";
 const char* APPLICATION_UBSAN_ENABLED = "ubsanEnabled";
 const char* APPLICATION_ASSET_ACCESS_GROUPS = "assetAccessGroups";
+const char* APPLICATION_HAS_PLUGIN = "hasPlugin";
 }
 
 bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
@@ -595,6 +596,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     ubsanEnabled = parcel.ReadBool();
     allowMultiProcess = parcel.ReadBool();
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, &assetAccessGroups);
+    hasPlugin = parcel.ReadBool();
     return true;
 }
 
@@ -774,6 +776,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, ubsanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowMultiProcess);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, assetAccessGroups);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasPlugin);
     return true;
 }
 
@@ -1022,7 +1025,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_APPLICATION_FLAGS, applicationInfo.applicationFlags},
         {APPLICATION_UBSAN_ENABLED, applicationInfo.ubsanEnabled},
         {APPLICATION_ALLOW_MULTI_PROCESS, applicationInfo.allowMultiProcess},
-        {APPLICATION_ASSET_ACCESS_GROUPS, applicationInfo.assetAccessGroups}
+        {APPLICATION_ASSET_ACCESS_GROUPS, applicationInfo.assetAccessGroups},
+        {APPLICATION_HAS_PLUGIN, applicationInfo.hasPlugin}
     };
 }
 
@@ -1232,6 +1236,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.allowMultiProcess, false, parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, APPLICATION_ASSET_ACCESS_GROUPS,
         applicationInfo.assetAccessGroups, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_HAS_PLUGIN,
+        applicationInfo.hasPlugin, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error : %{public}d", parseResult);
     }

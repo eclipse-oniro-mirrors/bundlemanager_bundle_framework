@@ -1226,7 +1226,8 @@ protected:
                 "configuration":"",
                 "cloudFileSyncEnabled": false,
                 "applicationFlags":1,
-                "installedForAllUser": false
+                "installedForAllUser": false,
+                "hasPlugin": false
             },
             "baseBundleInfo": {
                 "abilityInfos": [
