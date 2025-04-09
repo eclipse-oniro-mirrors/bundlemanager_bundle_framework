@@ -93,7 +93,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r: BusinessError = { code: 0, name: "noerror", message: "noerror", data: undefined };
+              let r = new BusinessError();
               callback(r, undefined);
           }, (err: BusinessError): void => {
               callback(err, undefined);
@@ -108,7 +108,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r: BusinessError = { code: 0, name: "noerror", message: "noerror", data: undefined };
+              let r = new BusinessError();
               callback(r, undefined);
           }, (err: BusinessError): void => {
               callback(err, undefined);
@@ -137,7 +137,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r: BusinessError = { code: 0, name: "noerror", message: "noerror", data: undefined };
+              let r = new BusinessError();
               callback(r, undefined);
           }, (err: BusinessError): void => {
               callback(err, undefined);
@@ -152,7 +152,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r: BusinessError = { code: 0, name: "noerror", message: "noerror", data: undefined };
+              let r = new BusinessError();
               callback(r, undefined);
           }, (err: BusinessError): void => {
               callback(err, undefined);
@@ -181,7 +181,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r: BusinessError = { code: 0, name: "noerror", message: "noerror", data: undefined };
+              let r = new BusinessError();
               callback(r, undefined);
           }, (err: BusinessError): void => {
               callback(err, undefined);
@@ -195,7 +195,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           let execFun = ():NullishType=>{ this.recoverNative(bundleName, emptyParam); }
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r: BusinessError = { code: 0, name: "noerror", message: "noerror", data: undefined };
+              let r = new BusinessError();
               callback(r, undefined);
           }, (err: BusinessError): void => {
               callback(err, undefined);
@@ -221,7 +221,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           let execFun = ():NullishType=>{ this.uninstallByOwnParam(uninstallParam); }
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r: BusinessError = { code: 0, name: "noerror", message: "noerror", data: undefined };
+              let r = new BusinessError();
               callback(r, undefined);
           }, (err: BusinessError): void => {
               callback(err, undefined);
@@ -249,7 +249,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           let execFun = ():NullishType=>{ this.updateBundleForSelfNative(hapFilePaths, installParam); }
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r: BusinessError = { code: 0, name: "noerror", message: "noerror", data: undefined };
+              let r = new BusinessError();
               callback(r, undefined);
           }, (err: BusinessError): void => {
               callback(err, undefined);
@@ -264,7 +264,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r: BusinessError = { code: 0, name: "noerror", message: "noerror", data: undefined };
+              let r = new BusinessError();
               callback(r, undefined);
           }, (err: BusinessError): void => {
               callback(err, undefined);

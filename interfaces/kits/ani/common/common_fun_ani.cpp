@@ -1455,6 +1455,7 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
 
     ani_string string = nullptr;
     ani_int intValue = 0;
+    uint32_t uintValue = 0;
 
     // id: string
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ID, &string));
@@ -1480,8 +1481,8 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
     }
 
     // iconId?: number
-    if (CallGetterOptional(env, object, PROPERTYNAME_ICONID, &intValue)) {
-        shortcutInfo.iconId = intValue;
+    if (CallGetterOptional(env, object, PROPERTYNAME_ICONID, &uintValue)) {
+        shortcutInfo.iconId = uintValue;
     }
 
     // label?: string
