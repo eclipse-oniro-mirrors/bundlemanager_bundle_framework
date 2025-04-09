@@ -260,6 +260,43 @@ RetApplicationInfo ConvertApplicationInfo(const AppExecFwk::ApplicationInfo& cAp
     appInfo.debug = cAppInfo.debug;
     appInfo.dataUnclearable = !cAppInfo.userDataClearable;
     appInfo.cloudFileSyncEnabled = cAppInfo.cloudFileSyncEnabled;
+    return appInfo;
+}
+
+RetApplicationInfoV2 ConvertApplicationInfoV2(const AppExecFwk::ApplicationInfo& cAppInfo)
+{
+    RetApplicationInfoV2 appInfo;
+    appInfo.name = MallocCString(cAppInfo.name);
+    appInfo.description = MallocCString(cAppInfo.description);
+    appInfo.descriptionId = cAppInfo.descriptionId;
+    appInfo.enabled = cAppInfo.enabled;
+    appInfo.label = MallocCString(cAppInfo.label);
+    appInfo.labelId = cAppInfo.labelId;
+    appInfo.icon = MallocCString(cAppInfo.iconPath);
+    appInfo.iconId = cAppInfo.iconId;
+    appInfo.process = MallocCString(cAppInfo.process);
+
+    appInfo.permissions = ConvertArrString(cAppInfo.permissions);
+
+    appInfo.codePath = MallocCString(cAppInfo.codePath);
+
+    appInfo.metadataArray = ConvertArrMoMeta(cAppInfo.metadata);
+
+    appInfo.removable = cAppInfo.removable;
+    appInfo.accessTokenId = cAppInfo.accessTokenId;
+    appInfo.uid = cAppInfo.uid;
+
+    appInfo.iconResource = ConvertResource(cAppInfo.iconResource);
+    appInfo.labelResource = ConvertResource(cAppInfo.labelResource);
+    appInfo.descriptionResource = ConvertResource(cAppInfo.descriptionResource);
+
+    appInfo.appDistributionType = MallocCString(cAppInfo.appDistributionType);
+    appInfo.appProvisionType = MallocCString(cAppInfo.appProvisionType);
+    appInfo.systemApp = cAppInfo.isSystemApp;
+    appInfo.bundleType = static_cast<int32_t>(cAppInfo.bundleType);
+    appInfo.debug = cAppInfo.debug;
+    appInfo.dataUnclearable = !cAppInfo.userDataClearable;
+    appInfo.cloudFileSyncEnabled = cAppInfo.cloudFileSyncEnabled;
     std::string externalNativeLibraryPath = "";
     if (!cAppInfo.nativeLibraryPath.empty()) {
         externalNativeLibraryPath = CONTEXT_DATA_STORAGE_BUNDLE + cAppInfo.nativeLibraryPath;
@@ -291,6 +328,27 @@ RetExtensionAbilityInfo ConvertExtensionAbilityInfo(const AppExecFwk::ExtensionA
     exInfo.readPermission = MallocCString(extensionInfos.readPermission);
     exInfo.writePermission = MallocCString(extensionInfos.writePermission);
     exInfo.extensionAbilityTypeName = MallocCString(extensionInfos.extensionTypeName);
+    return exInfo;
+}
+
+RetExtensionAbilityInfoV2 ConvertExtensionAbilityInfoV2(const AppExecFwk::ExtensionAbilityInfo& extensionInfos)
+{
+    RetExtensionAbilityInfoV2 exInfo;
+    exInfo.bundleName = MallocCString(extensionInfos.bundleName);
+    exInfo.moduleName = MallocCString(extensionInfos.moduleName);
+    exInfo.name = MallocCString(extensionInfos.name);
+    exInfo.labelId = extensionInfos.labelId;
+    exInfo.descriptionId = extensionInfos.descriptionId;
+    exInfo.iconId = extensionInfos.iconId;
+    exInfo.exported = extensionInfos.visible;
+    exInfo.extensionAbilityType = static_cast<int32_t>(extensionInfos.type);
+    exInfo.permissions = ConvertArrString(extensionInfos.permissions);
+    exInfo.applicationInfo = ConvertApplicationInfoV2(extensionInfos.applicationInfo);
+    exInfo.metadata = ConvertArrMetadata(extensionInfos.metadata);
+    exInfo.enabled = extensionInfos.enabled;
+    exInfo.readPermission = MallocCString(extensionInfos.readPermission);
+    exInfo.writePermission = MallocCString(extensionInfos.writePermission);
+    exInfo.extensionAbilityTypeName = MallocCString(extensionInfos.extensionTypeName);
     exInfo.skills = ConvertSkills(extensionInfos.skills);
     exInfo.appIndex = extensionInfos.appIndex;
     return exInfo;
@@ -308,6 +366,28 @@ CArrRetExtensionAbilityInfo ConvertArrExtensionAbilityInfo(
         if (retValue != nullptr) {
             for (int32_t i = 0; i < exAbInfo.size; i++) {
                 retValue[i] = ConvertExtensionAbilityInfo(extensionInfos[i]);
+            }
+            exAbInfo.head = retValue;
+        } else {
+            APP_LOGE("ConvertArrExtensionAbilityInfo malloc failed");
+            return exAbInfo;
+        }
+    }
+    return exAbInfo;
+}
+
+CArrRetExtensionAbilityInfoV2 ConvertArrExtensionAbilityInfoV2(
+    const std::vector<AppExecFwk::ExtensionAbilityInfo>& extensionInfos)
+{
+    CArrRetExtensionAbilityInfoV2 exAbInfo;
+    exAbInfo.size = static_cast<int64_t>(extensionInfos.size());
+    exAbInfo.head = nullptr;
+    if (exAbInfo.size > 0) {
+        RetExtensionAbilityInfoV2 *retValue = reinterpret_cast<RetExtensionAbilityInfoV2 *>
+        (malloc(sizeof(RetExtensionAbilityInfoV2) * exAbInfo.size));
+        if (retValue != nullptr) {
+            for (int32_t i = 0; i < exAbInfo.size; i++) {
+                retValue[i] = ConvertExtensionAbilityInfoV2(extensionInfos[i]);
             }
             exAbInfo.head = retValue;
         } else {
@@ -370,6 +450,52 @@ RetAbilityInfo ConvertAbilityInfo(const AppExecFwk::AbilityInfo& cAbilityInfos)
     abInfo.windowSize.minWindowWidth = cAbilityInfos.minWindowWidth;
     abInfo.windowSize.maxWindowHeight = cAbilityInfos.maxWindowHeight;
     abInfo.windowSize.minWindowHeight = cAbilityInfos.minWindowHeight;
+    return abInfo;
+}
+
+RetAbilityInfoV2 ConvertAbilityInfoV2(const AppExecFwk::AbilityInfo& cAbilityInfos)
+{
+    RetAbilityInfoV2 abInfo;
+    abInfo.bundleName = MallocCString(cAbilityInfos.bundleName);
+    abInfo.moduleName = MallocCString(cAbilityInfos.moduleName);
+    abInfo.name = MallocCString(cAbilityInfos.name);
+    abInfo.label = MallocCString(cAbilityInfos.label);
+    abInfo.labelId = cAbilityInfos.labelId;
+    abInfo.description = MallocCString(cAbilityInfos.description);
+    abInfo.descriptionId = cAbilityInfos.descriptionId;
+    abInfo.icon = MallocCString(cAbilityInfos.iconPath);
+    abInfo.iconId = cAbilityInfos.iconId;
+    abInfo.process = MallocCString(cAbilityInfos.process);
+    abInfo.exported = cAbilityInfos.visible;
+    abInfo.orientation = static_cast<int32_t>(cAbilityInfos.orientation);
+    abInfo.launchType = static_cast<int32_t>(cAbilityInfos.launchMode);
+    abInfo.permissions = ConvertArrString(cAbilityInfos.permissions);
+    abInfo.deviceTypes = ConvertArrString(cAbilityInfos.deviceTypes);
+    abInfo.applicationInfo = ConvertApplicationInfoV2(cAbilityInfos.applicationInfo);
+    abInfo.metadata = ConvertArrMetadata(cAbilityInfos.metadata);
+    abInfo.enabled = cAbilityInfos.enabled;
+
+    abInfo.supportWindowModes.size = static_cast<int64_t>(cAbilityInfos.windowModes.size());
+    abInfo.supportWindowModes.head = nullptr;
+    if (abInfo.supportWindowModes.size > 0) {
+        int32_t *retValue = static_cast<int32_t *>(malloc(sizeof(int32_t) * abInfo.supportWindowModes.size));
+        if (retValue != nullptr) {
+            for (int32_t i = 0; i < abInfo.supportWindowModes.size; i++) {
+                retValue[i] = static_cast<int32_t>(cAbilityInfos.windowModes[i]);
+            }
+            abInfo.supportWindowModes.head = retValue;
+        } else {
+            APP_LOGE("ConvertAbilityInfo malloc failed");
+            return abInfo;
+        }
+    }
+
+    abInfo.windowSize.maxWindowRatio = cAbilityInfos.maxWindowRatio;
+    abInfo.windowSize.minWindowRatio = cAbilityInfos.minWindowRatio;
+    abInfo.windowSize.maxWindowWidth = cAbilityInfos.maxWindowWidth;
+    abInfo.windowSize.minWindowWidth = cAbilityInfos.minWindowWidth;
+    abInfo.windowSize.maxWindowHeight = cAbilityInfos.maxWindowHeight;
+    abInfo.windowSize.minWindowHeight = cAbilityInfos.minWindowHeight;
 
     abInfo.excludeFromDock = cAbilityInfos.excludeFromDock;
     abInfo.skills = ConvertSkills(cAbilityInfos.skills);
@@ -386,6 +512,27 @@ CArrRetAbilityInfo ConvertArrAbilityInfo(const std::vector<AppExecFwk::AbilityIn
         if (retValue != nullptr) {
             for (int32_t i = 0; i < abInfo.size; i++) {
                 retValue[i] = ConvertAbilityInfo(abilityInfos[i]);
+            }
+            abInfo.head = retValue;
+        } else {
+            APP_LOGE("ConvertArrAbilityInfo malloc failed");
+            return abInfo;
+        }
+    }
+    return abInfo;
+}
+
+CArrRetAbilityInfoV2 ConvertArrAbilityInfoV2(const std::vector<AppExecFwk::AbilityInfo>& abilityInfos)
+{
+    CArrRetAbilityInfoV2 abInfo;
+    abInfo.size = static_cast<int64_t>(abilityInfos.size());
+    abInfo.head = nullptr;
+    if (abInfo.size > 0) {
+        RetAbilityInfoV2 *retValue =
+            reinterpret_cast<RetAbilityInfoV2 *>(malloc(sizeof(RetAbilityInfoV2) * abInfo.size));
+        if (retValue != nullptr) {
+            for (int32_t i = 0; i < abInfo.size; i++) {
+                retValue[i] = ConvertAbilityInfoV2(abilityInfos[i]);
             }
             abInfo.head = retValue;
         } else {
@@ -532,6 +679,42 @@ RetHapModuleInfo ConvertHapModuleInfo(const AppExecFwk::HapModuleInfo& hapModule
     } else {
         hapInfo.fileContextMenuConfig = MallocCString("");
     }
+    return hapInfo;
+}
+
+RetHapModuleInfoV2 ConvertHapModuleInfoV2(const AppExecFwk::HapModuleInfo& hapModuleInfo)
+{
+    RetHapModuleInfoV2 hapInfo;
+    hapInfo.name = MallocCString(hapModuleInfo.name);
+    hapInfo.icon = MallocCString(hapModuleInfo.iconPath);
+    hapInfo.iconId = hapModuleInfo.iconId;
+    hapInfo.label = MallocCString(hapModuleInfo.label);
+    hapInfo.labelId = hapModuleInfo.labelId;
+    hapInfo.description = MallocCString(hapModuleInfo.description);
+    hapInfo.descriptionId = hapModuleInfo.descriptionId;
+    hapInfo.mainElementName = MallocCString(hapModuleInfo.mainElementName);
+
+    hapInfo.abilitiesInfo = ConvertArrAbilityInfoV2(hapModuleInfo.abilityInfos);
+
+    hapInfo.extensionAbilitiesInfo = ConvertArrExtensionAbilityInfoV2(hapModuleInfo.extensionInfos);
+
+    hapInfo.metadata = ConvertArrMetadata(hapModuleInfo.metadata);
+
+    hapInfo.deviceTypes = ConvertArrString(hapModuleInfo.deviceTypes);
+
+    hapInfo.installationFree = hapModuleInfo.installationFree;
+    hapInfo.hashValue = MallocCString(hapModuleInfo.hashValue);
+    hapInfo.moduleType = static_cast<int32_t>(hapModuleInfo.moduleType);
+
+    hapInfo.preloads = ConvertPreloadItem(hapModuleInfo.preloads);
+
+    hapInfo.dependencies = ConvertDependency(hapModuleInfo.dependencies);
+
+    if (!hapModuleInfo.fileContextMenu.empty()) {
+        hapInfo.fileContextMenuConfig = MallocCString(hapModuleInfo.fileContextMenu);
+    } else {
+        hapInfo.fileContextMenuConfig = MallocCString("");
+    }
     hapInfo.routerMap = ConvertRouterMap(hapModuleInfo.routerArray);
 
     size_t result = hapModuleInfo.hapPath.find(PATH_PREFIX);
@@ -556,24 +739,24 @@ RetHapModuleInfo ConvertHapModuleInfo(const AppExecFwk::HapModuleInfo& hapModule
 
 extern "C" {
 #define EXPORT __attribute__((visibility("default")))
-EXPORT RetAbilityInfo OHOS_ConvertAbilityInfo(void* param)
+EXPORT RetAbilityInfoV2 OHOS_ConvertAbilityInfoV2(void* param)
 {
-    RetAbilityInfo retInfo;
+    RetAbilityInfoV2 retInfo;
     auto abilityInfo = reinterpret_cast<AppExecFwk::AbilityInfo*>(param);
     if (abilityInfo == nullptr) {
         return retInfo;
     }
-    return ConvertAbilityInfo(*abilityInfo);
+    return ConvertAbilityInfoV2(*abilityInfo);
 }
 
-EXPORT RetHapModuleInfo OHOS_ConvertHapInfo(void* param)
+EXPORT RetHapModuleInfoV2 OHOS_ConvertHapInfoV2(void* param)
 {
-    RetHapModuleInfo retInfo;
+    RetHapModuleInfoV2 retInfo;
     auto hapModuleInfo = reinterpret_cast<AppExecFwk::HapModuleInfo*>(param);
     if (hapModuleInfo == nullptr) {
         return retInfo;
     }
-    return ConvertHapModuleInfo(*hapModuleInfo);
+    return ConvertHapModuleInfoV2(*hapModuleInfo);
 }
 }
 
@@ -592,6 +775,27 @@ CArrHapInfo ConvertArrHapInfo(const std::vector<AppExecFwk::HapModuleInfo>& hapM
     }
     for (int32_t i = 0; i < hapInfos.size; i++) {
         retValue[i] = ConvertHapModuleInfo(hapModuleInfos[i]);
+    }
+    hapInfos.head = retValue;
+    return hapInfos;
+}
+
+CArrHapInfoV2 ConvertArrHapInfoV2(const std::vector<AppExecFwk::HapModuleInfo>& hapModuleInfos)
+{
+    CArrHapInfoV2 hapInfos;
+    hapInfos.size = static_cast<int64_t>(hapModuleInfos.size());
+    hapInfos.head = nullptr;
+    if (hapInfos.size == 0) {
+        return hapInfos;
+    }
+    RetHapModuleInfoV2 *retValue =
+        reinterpret_cast<RetHapModuleInfoV2 *>(malloc(sizeof(RetHapModuleInfoV2) * hapInfos.size));
+    if (retValue == nullptr) {
+        APP_LOGE("ConvertArrHapInfo malloc failed");
+        return hapInfos;
+    }
+    for (int32_t i = 0; i < hapInfos.size; i++) {
+        retValue[i] = ConvertHapModuleInfoV2(hapModuleInfos[i]);
     }
     hapInfos.head = retValue;
     return hapInfos;
@@ -652,6 +856,37 @@ RetApplicationInfo InitApplicationInfo()
     appInfo.debug = false;
     appInfo.dataUnclearable = false;
     appInfo.cloudFileSyncEnabled = false;
+    return appInfo;
+}
+
+RetApplicationInfoV2 InitApplicationInfoV2()
+{
+    RetApplicationInfoV2 appInfo;
+    appInfo.name = nullptr;
+    appInfo.description = nullptr;
+    appInfo.descriptionId = 0;
+    appInfo.enabled = true;
+    appInfo.label = nullptr;
+    appInfo.labelId = 0;
+    appInfo.icon = nullptr;
+    appInfo.iconId = 0;
+    appInfo.process = nullptr;
+    appInfo.permissions = {nullptr, 0};
+    appInfo.codePath = nullptr;
+    appInfo.metadataArray = {nullptr, 0};
+    appInfo.removable = true;
+    appInfo.accessTokenId = 0;
+    appInfo.uid = -1;
+    appInfo.iconResource = {nullptr, nullptr, 0};
+    appInfo.labelResource = {nullptr, nullptr, 0};
+    appInfo.descriptionResource = {nullptr, nullptr, 0};
+    appInfo.appDistributionType = MallocCString("none");
+    appInfo.appProvisionType = MallocCString("release");
+    appInfo.systemApp = false;
+    appInfo.bundleType = 0;
+    appInfo.debug = false;
+    appInfo.dataUnclearable = false;
+    appInfo.cloudFileSyncEnabled = false;
     appInfo.nativeLibraryPath = MallocCString("");
     appInfo.multiAppMode.multiAppModeType = static_cast<uint8_t>(0);
     appInfo.multiAppMode.count = 0;
@@ -679,6 +914,54 @@ RetBundleInfo ConvertBundleInfo(const AppExecFwk::BundleInfo& cBundleInfo, int32
     }
 
     bundleInfo.hapInfo = ConvertArrHapInfo(cBundleInfo.hapModuleInfos);
+    bundleInfo.perDetail = ConvertArrReqPerDetail(cBundleInfo.reqPermissionDetails);
+
+    bundleInfo.state.size = static_cast<int64_t>(cBundleInfo.reqPermissionStates.size());
+    bundleInfo.state.head = nullptr;
+    if (bundleInfo.state.size > 0) {
+        int32_t *retValue = static_cast<int32_t *>(malloc(sizeof(int32_t) * bundleInfo.state.size));
+        if (retValue != nullptr) {
+            for (int32_t i = 0; i < bundleInfo.state.size; i++) {
+                retValue[i] = static_cast<int32_t>(cBundleInfo.reqPermissionStates[i]);
+            }
+            bundleInfo.state.head = retValue;
+        } else {
+            APP_LOGE("ConvertBundleInfo malloc failed");
+            return bundleInfo;
+        }
+    }
+
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
+        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
+        bundleInfo.signInfo = ConvertSignatureInfo(cBundleInfo.signatureInfo);
+    } else {
+        bundleInfo.signInfo = InitSignInfo();
+    }
+    bundleInfo.installTime = cBundleInfo.installTime;
+    bundleInfo.updateTime = cBundleInfo.updateTime;
+    bundleInfo.uid = cBundleInfo.uid;
+    return bundleInfo;
+}
+
+RetBundleInfoV2 ConvertBundleInfoV2(const AppExecFwk::BundleInfo& cBundleInfo, int32_t flags)
+{
+    RetBundleInfoV2 bundleInfo;
+    bundleInfo.name = MallocCString(cBundleInfo.name);
+    bundleInfo.vendor = MallocCString(cBundleInfo.vendor);
+    bundleInfo.versionCode = cBundleInfo.versionCode;
+    bundleInfo.versionName = MallocCString(cBundleInfo.versionName);
+    bundleInfo.minCompatibleVersionCode = cBundleInfo.minCompatibleVersionCode;
+    bundleInfo.targetVersion = cBundleInfo.targetVersion;
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION))
+        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) {
+        bundleInfo.appInfo = ConvertApplicationInfoV2(cBundleInfo.applicationInfo);
+    } else {
+        bundleInfo.appInfo = InitApplicationInfoV2();
+    }
+
+    bundleInfo.hapInfo = ConvertArrHapInfoV2(cBundleInfo.hapModuleInfos);
     bundleInfo.perDetail = ConvertArrReqPerDetail(cBundleInfo.reqPermissionDetails);
 
     bundleInfo.state.size = static_cast<int64_t>(cBundleInfo.reqPermissionStates.size());
