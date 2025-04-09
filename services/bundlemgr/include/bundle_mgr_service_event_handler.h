@@ -593,6 +593,7 @@ private:
         std::vector<int32_t> &userIds);
     static bool GetValueFromJson(nlohmann::json &jsonObject);
     static void PatchSystemHspInstall(const std::string &path, bool isOta);
+    static void PatchSharedHspInstall(const std::string &path);
     static void PatchSystemBundleInstall(const std::string &path, bool isOta);
     void HandleOTACodeEncryption();
     void SaveCodeProtectFlag();

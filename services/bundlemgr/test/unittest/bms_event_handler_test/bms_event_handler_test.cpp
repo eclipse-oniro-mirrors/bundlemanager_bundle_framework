@@ -2087,6 +2087,23 @@ HWTEST_F(BmsEventHandlerTest, PatchDataStorageRdb_Nullptr_0001, Function | Small
 }
 
 /**
+ * @tc.number: PatchSharedHspInstall_0001
+ * @tc.name: test PatchSharedHspInstall
+ * @tc.desc: test PatchSharedHspInstall
+ */
+HWTEST_F(BmsEventHandlerTest, PatchSharedHspInstall_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::string path = "test";
+    handler->PatchSharedHspInstall(path);
+    EXPECT_EQ(path, "test");
+    path = "/system/app/shared_bundles";
+    handler->PatchSharedHspInstall(path);
+    EXPECT_EQ(path, "/system/app/shared_bundles");
+}
+
+/**
  * @tc.number: OnRegenerateAppKey_0001
  * @tc.name: test OnRegenerateAppKey
  * @tc.desc: test OnRegenerateAppKey
