@@ -87,10 +87,11 @@ static ani_boolean isApplicationEnabledSync([[maybe_unused]] ani_env* env, ani_s
         BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return isEnable;
     }
-    int32_t ret = iBundleMgr->IsApplicationEnabled(bundleName, isEnable);
+    ErrCode ret = iBundleMgr->IsApplicationEnabled(bundleName, isEnable);
     if (ret != ERR_OK) {
         APP_LOGE("IsApplicationEnabled failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(env, ret, IS_APPLICATION_ENABLED_SYNC, "");
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, CommonFunc::ConvertErrCode(ret), IS_APPLICATION_ENABLED_SYNC, "");
     }
     return isEnable;
 }
@@ -123,10 +124,11 @@ static ani_object getBundleInfoForSelfSync([[maybe_unused]] ani_env* env, ani_do
     }
 
     BundleInfo bundleInfo;
-    int32_t ret = iBundleMgr->GetBundleInfoForSelf(bundleFlagsInt, bundleInfo);
+    ErrCode ret = iBundleMgr->GetBundleInfoForSelf(bundleFlagsInt, bundleInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleInfoForSelf failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(env, ret, GET_BUNDLE_INFO_FOR_SELF_SYNC, BUNDLE_PERMISSIONS);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, CommonFunc::ConvertErrCode(ret), GET_BUNDLE_INFO_FOR_SELF_SYNC, BUNDLE_PERMISSIONS);
         return nullptr;
     }
 
@@ -187,7 +189,8 @@ static ani_object getBundleInfoSync([[maybe_unused]] ani_env* env,
     ErrCode ret = iBundleMgr->GetBundleInfoV9(bundleName, bundleFlagsInt, bundleInfo, userIdInt);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleInfoV9 failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, CommonFunc::ConvertErrCode(ret), GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
         return nullptr;
     }
 
@@ -247,7 +250,8 @@ static ani_object getApplicationInfoSync([[maybe_unused]] ani_env* env,
     ErrCode ret = iBundleMgr->GetApplicationInfoV9(bundleName, applicationFlagsInt, userIdInt, appInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GetApplicationInfoV9 failed ret: %{public}d,userIdInt: %{public}d", ret, userIdInt);
-        BusinessErrorAni::ThrowParameterTypeError(env, ret, GET_APPLICATION_INFO_SYNC, BUNDLE_PERMISSIONS);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, CommonFunc::ConvertErrCode(ret), GET_APPLICATION_INFO_SYNC, BUNDLE_PERMISSIONS);
         return nullptr;
     }
 
@@ -262,17 +266,13 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
     APP_LOGI("ANI_Constructor called");
     ani_env* env;
-    if (vm->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
-        APP_LOGE("Unsupported ANI_VERSION_1");
-        return (ani_status)9;
-    }
+    ani_status res = vm->GetEnv(ANI_VERSION_1, &env);
+    RETURN_ANI_STATUS_IF_NOT_OK(res, "Unsupported ANI_VERSION_1");
 
     static const char* nsName = "L@ohos/bundle/bundleManager/bundleManager;";
     ani_namespace kitNs;
-    if (env->FindNamespace(nsName, &kitNs) != ANI_OK) {
-        APP_LOGE("Not found nameSpace name: %{public}s", nsName);
-        return (ani_status)2;
-    }
+    res = env->FindNamespace(nsName, &kitNs);
+    RETURN_ANI_STATUS_IF_NOT_OK(res, "Not found nameSpace L@ohos/bundle/bundleManager/bundleManager;");
 
     std::array methods = {
         ani_native_function { "isApplicationEnabledSync", "Lstd/core/String;:Z",
@@ -286,10 +286,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(getApplicationInfoSync) },
     };
 
-    if (env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size()) != ANI_OK) {
-        APP_LOGE("Cannot bind native methods to %{public}s", nsName);
-        return (ani_status)3;
-    };
+    res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
+    RETURN_ANI_STATUS_IF_NOT_OK(res, "Cannot bind native methods");
 
     *result = ANI_VERSION_1;
 

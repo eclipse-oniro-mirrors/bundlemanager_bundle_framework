@@ -76,7 +76,7 @@ static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_strin
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleResourceInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowParameterTypeError(
-            env, ret, GET_BUNDLE_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+            env, CommonFunc::ConvertErrCode(ret), GET_BUNDLE_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
         return nullptr;
     }
 
@@ -88,17 +88,14 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
     APP_LOGI("ANI_Constructor resourceMgr called");
     ani_env* env;
-    if (vm->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
-        APP_LOGE("Unsupported ANI_VERSION_1");
-        return (ani_status)9;
-    }
+    ani_status res = vm->GetEnv(ANI_VERSION_1, &env);
+    RETURN_ANI_STATUS_IF_NOT_OK(res, "Unsupported ANI_VERSION_1");
 
     static const char* nsName = "L@ohos/bundle/bundleResourceManager/bundleResourceManager;";
     ani_namespace kitNs;
-    if (env->FindNamespace(nsName, &kitNs) != ANI_OK) {
-        APP_LOGE("Not found nameSpace name: %{public}s", nsName);
-        return (ani_status)2;
-    }
+    res = env->FindNamespace(nsName, &kitNs);
+    RETURN_ANI_STATUS_IF_NOT_OK(
+        res, "Not found nameSpace L@ohos/bundle/bundleResourceManager/bundleResourceManager;");
 
     std::array methods = {
         ani_native_function {
@@ -108,10 +105,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         }
     };
 
-    if (env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size()) != ANI_OK) {
-        APP_LOGE("Cannot bind native methods to %{public}s", nsName);
-        return (ani_status)3;
-    };
+    res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
+    RETURN_ANI_STATUS_IF_NOT_OK(res, "Cannot bind native methods");
 
     *result = ANI_VERSION_1;
 
