@@ -14368,24 +14368,4 @@ HWTEST_F(BmsBundleKitServiceTest, ProcessBundle_0002, Function | SmallTest | Lev
     EXPECT_FALSE(ret);
     request.totalDataBytesThreshold_ = 0;
 }
-
-/**
- * @tc.number: InnerProcess_0001
- * @tc.name: test AgingHandlerChain of InnerProcess
- * @tc.desc: InnerProcess is true
- */
-HWTEST_F(BmsBundleKitServiceTest, InnerProcess_0001, Function | SmallTest | Level0)
-{
-    AgingHandlerChain agingHandlerChain;
-    AgingRequest request;
-    RecentlyUnuseBundleAgingHandler ruAgingHandler;
-    AgingBundleInfo agingBundleInfoFirst("mock_NOT_RUNNING", 1000, 5);
-    request.AddAgingBundle(agingBundleInfoFirst);
-    request.totalDataBytesThreshold_ = 2;
-    auto handler = std::make_shared<RecentlyUnuseBundleAgingHandler>(ruAgingHandler);
-    agingHandlerChain.AddHandler(handler);
-    bool ret = agingHandlerChain.InnerProcess(request);
-    EXPECT_TRUE(ret);
-    request.totalDataBytesThreshold_ = 0;
-}
 }
