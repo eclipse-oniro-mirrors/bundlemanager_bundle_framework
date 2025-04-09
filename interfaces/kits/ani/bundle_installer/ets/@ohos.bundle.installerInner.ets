@@ -26,14 +26,14 @@ export class HashParamInner implements installer.HashParam {
   hashValue: string = "";
 }
 
-export class VerifyCodeParamInner implements installer.VerifyCodeParam {
-  moduleName: string = "";
-  signatureFilePath: string = "";
-}
-
 export class PGOParamInner implements installer.PGOParam {
   moduleName: string = "";
   pgoFilePath: string = "";
+}
+
+export class ParametersInner implements installer.Parameters {
+  key: string = "";
+  value: string = "";
 }
 
 export class InstallParamInner implements installer.InstallParam {
@@ -45,8 +45,8 @@ export class InstallParamInner implements installer.InstallParam {
   sharedBundleDirPaths?: Array<String>;
   specifiedDistributionType?: string;
   additionalInfo?: string;
-  verifyCodeParams?: Array<installer.VerifyCodeParam>;
   pgoParams?: Array<installer.PGOParam>;
+  parameters?: Array<installer.Parameters>;
 }
 
 export class UninstallParamInner implements installer.UninstallParam {
@@ -57,6 +57,16 @@ export class UninstallParamInner implements installer.UninstallParam {
 export class CreateAppCloneParamInner implements installer.CreateAppCloneParam {
   userId?: number;
   appIndex?: number;
+}
+
+export class DestroyAppCloneParamInner implements installer.DestroyAppCloneParam {
+  userId?: number;
+  parameters?: Array<installer.Parameters>;
+}
+
+export class PluginParamInner implements installer.PluginParam {
+  userId?: number;
+  parameters?: Array<installer.Parameters>;
 }
 
 export class BundleInstallerInner implements installer.BundleInstaller {
@@ -328,10 +338,9 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       return p;
   }
 
-  destroyAppClone(bundleName: string, appIndex: number, userId?: number): Promise<void> {
-      let userIdNum = userId ?? -500;
+  destroyAppClone(bundleName: string, appIndex: number, options?: number | installer.DestroyAppCloneParam): Promise<void> {
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
-      let execFun = ():NullishType=>{ this.destroyAppCloneNative(bundleName, appIndex, userIdNum); }
+      let execFun = ():NullishType=>{}
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
@@ -348,6 +357,32 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let execFun = ():NullishType=>{ this.installPreexistingAppNative(bundleName, userIdNum); }
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
+          resolve(undefined);
+        }, (err: BusinessError): void => {
+          reject(err);
+        });
+      });
+      return p;
+  }
+
+  installPlugin(hostBundleName: string, pluginFilePaths: Array<string>, pluginParam?: installer.PluginParam): Promise<void> {
+      let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
+      let execFun = ():NullishType=>{}
+      let p1 = taskpool.execute(execFun);
+      p1.then(():void => {
+          resolve(undefined);
+        }, (err: BusinessError): void => {
+          reject(err);
+        });
+      });
+      return p;
+  }
+
+  uninstallPlugin(hostBundleName: string, pluginBundleName: string, pluginParam?: installer.PluginParam): Promise<void> {
+      let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
+      let execFun = ():NullishType=>{}
+      let p1 = taskpool.execute(execFun);
+      p1.then(():void => {
           resolve(undefined);
         }, (err: BusinessError): void => {
           reject(err);

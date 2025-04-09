@@ -162,7 +162,6 @@ public:
     static bool ParseStrArray(ani_env* env, ani_object arrayObj, std::vector<std::string>& strings);
     static bool ParseInstallParam(ani_env* env, ani_object object, InstallParam& installParam);
     static bool ParseHashParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
-    static bool ParseVerifyCodeParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
     static bool ParsePgoParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
     
     template<typename toType>

@@ -29,7 +29,6 @@ constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_FLAG = "L@ohos/bundle/bundl
 constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE = "L@ohos/bundle/bundleManager/bundleManager/BundleType;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_MULTIAPPMODE_TYPE =
     "L@ohos/bundle/bundleManager/bundleManager/MultiAppModeType;";
-constexpr const char* CLASSNAME_BUNDLEMANAGER_ABILITY_TYPE = "L@ohos/bundle/bundleManager/bundleManager/AbilityType;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_DISPLAYORIENTATION =
     "L@ohos/bundle/bundleManager/bundleManager/DisplayOrientation;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_LAUNCH_TYPE = "L@ohos/bundle/bundleManager/bundleManager/LaunchType;";
@@ -159,9 +158,13 @@ private:
     //     ADS_SERVICE = 20,
     //     EMBEDDED_UI = 21,
     //     INSIGHT_INTENT_UI = 22,
+    //     FENCE = 24,
+    //     ASSET_ACCELERATION = 26,
+    //     FORM_EDIT = 27,
+    //     DISTRIBUTED = 28,
     //     UNSPECIFIED = 255
     // }
-    static constexpr std::array<int, 23> Array_BundleManager_ExtensionAbilityType = {
+    static constexpr std::array<int, 27> Array_BundleManager_ExtensionAbilityType = {
         0,
         1,
         2,
@@ -184,6 +187,10 @@ private:
         20,
         21,
         22,
+        24,
+        26,
+        27,
+        28,
         255,
     };
     // bundleManager.ApplicationFlag
@@ -275,17 +282,6 @@ public:
     static inline ani_enum_item EnumNativeToETS_BundleManager_MultiAppModeType(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_MULTIAPPMODE_TYPE, value, 0);
-    }
-
-    // bundleManager.AbilityType
-    // enum AbilityType {
-    //     PAGE = 1,
-    //     SERVICE = 2,
-    //     DATA = 3
-    // }
-    static inline ani_enum_item EnumNativeToETS_BundleManager_AbilityType(ani_env* env, const int32_t value)
-    {
-        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_ABILITY_TYPE, value, 1);
     }
 
     // bundleManager.DisplayOrientation

@@ -93,9 +93,13 @@ namespace installer {
 
     createAppClone(bundleName: string, createAppCloneParam?: CreateAppCloneParam): Promise<number>;
 
-    destroyAppClone(bundleName: string, appIndex: number, userId?: number): Promise<void>;
+    destroyAppClone(bundleName: string, appIndex: number, options?: number | DestroyAppCloneParam): Promise<void>;
 
     installPreexistingApp(bundleName: string, userId?: number): Promise<void>;
+
+    installPlugin(hostBundleName: string, pluginFilePaths: Array<string>, pluginParam?: PluginParam): Promise<void>;
+
+    uninstallPlugin(hostBundleName: string, pluginBundleName: string, pluginParam?: PluginParam): Promise<void>;
   }
 
   export interface HashParam {
@@ -103,14 +107,14 @@ namespace installer {
     hashValue: string;
   }
 
-  export interface VerifyCodeParam {
-    moduleName: string;
-    signatureFilePath: string;
-  }
-
   export interface PGOParam {
     moduleName: string;
     pgoFilePath: string;
+  }
+
+  export interface Parameters {
+    key: string;
+    value: string;
   }
 
   export interface InstallParam {
@@ -122,8 +126,8 @@ namespace installer {
     sharedBundleDirPaths?: Array<String>;
     specifiedDistributionType?: string;
     additionalInfo?: string;
-    verifyCodeParams?: Array<VerifyCodeParam>;
     pgoParams?: Array<PGOParam>;
+    parameters?: Array<Parameters>;
   }
 
   export interface UninstallParam {
@@ -134,6 +138,16 @@ namespace installer {
   export interface CreateAppCloneParam {
     userId?: number;
     appIndex?: number;
+  }
+
+  export interface DestroyAppCloneParam {
+    userId?: number;
+    parameters?: Array<Parameters>;
+  }
+
+  export interface PluginParam {
+    userId?: number;
+    parameters?: Array<Parameters>;
   }
 }
 

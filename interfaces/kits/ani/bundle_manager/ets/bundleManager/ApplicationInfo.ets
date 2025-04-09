@@ -29,7 +29,6 @@ export interface ApplicationInfo {
   readonly process: string;
   readonly permissions: Array<string>;
   readonly codePath: string;
-  readonly metadata: Map<string, Array<Metadata>>;
   readonly metadataArray: Array<ModuleMetadata>;
   readonly removable: boolean;
   readonly accessTokenId: number;
