@@ -148,7 +148,7 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
         LOG_E(BMS_TAG_INSTALLD, "extract %{public}s to %{public}s failed errno:%{public}d",
             srcModulePath.c_str(), targetPath.c_str(), errno);
         InstalldOperator::DeleteDir(targetPath);
-        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
     }
     return ERR_OK;
 }
@@ -168,7 +168,7 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
 
     if (!InstalldOperator::ExtractFiles(extractParam)) {
         LOG_E(BMS_TAG_INSTALLD, "extract failed errno:%{public}d", errno);
-        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+        return ERR_APPEXECFWK_INSTALLD_EXTRACT_FAILED;
     }
 
     return ERR_OK;

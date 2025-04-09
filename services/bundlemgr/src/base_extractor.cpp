@@ -95,7 +95,8 @@ bool BaseExtractor::ExtractFile(const std::string &fileName, const std::string &
         return false;
     }
     if ((!ExtractByName(fileName, fileStream)) || (!fileStream.good())) {
-        APP_LOGE("fail to extract %{public}s zip file into stream", fileName.c_str());
+        APP_LOGE("extract %{public}s failed, errno:%{public}d failbit:%{public}d badbit:%{public}d eofbit:%{public}d",
+            fileName.c_str(), errno, fileStream.fail(), fileStream.bad(), fileStream.eof());
         fileStream.clear();
         fileStream.close();
         if (remove(targetPath.c_str()) != 0) {
