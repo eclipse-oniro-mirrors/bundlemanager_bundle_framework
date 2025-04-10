@@ -23,7 +23,7 @@ group("ani_bms_packages") {
     "bundle_installer:ani_bundle_installer",
     "bundle_installer:bundle_installer_etc",
     "bundle_manager:ability_info_etc",
-    "bundle_manager:anibundlemanager",
+    "bundle_manager:ani_bundle_manager",
     "bundle_manager:application_info_etc",
     "bundle_manager:bundle_info_etc",
     "bundle_manager:bundle_manager_etc",

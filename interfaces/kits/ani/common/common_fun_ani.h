@@ -32,6 +32,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace CommonFunAniNS {
 constexpr const char* TYPE_INT = "int";
+constexpr const char* TYPE_NUMBER = "number";
 constexpr const char* TYPE_STRING = "string";
 } // namespace CommonFunAniNS
 
@@ -238,9 +239,8 @@ public:
         return arrayObj;
     }
 
-    template<typename nativeType, typename contanerType>
-    static ani_object ConvertAniArray(
-        ani_env* env, const contanerType& cArray, ani_object (*converter)(ani_env*, const nativeType&))
+    template<typename containerType, typename Converter, typename... Args>
+    static ani_object ConvertAniArray(ani_env* env, const containerType& cArray, Converter converter, Args&&... args)
     {
         RETURN_NULL_IF_NULL(env);
         RETURN_NULL_IF_NULL(converter);
@@ -269,7 +269,7 @@ public:
 
         ani_size i = 0;
         for (const auto& iter : cArray) {
-            ani_object item = converter(env, iter);
+            ani_object item = converter(env, iter, std::forward<Args>(args)...);
             RETURN_NULL_IF_NULL(item);
             status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", i, item);
             env->Reference_Delete(item);

@@ -43,7 +43,6 @@ namespace {
     constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
     constexpr const char* PARSE_START_OPTIONS = "parse StartOptions failed";
     constexpr const char* START_SHORTCUT = "StartShortcut";
-    const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 
     const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
         {ERR_OK, ERR_OK},
