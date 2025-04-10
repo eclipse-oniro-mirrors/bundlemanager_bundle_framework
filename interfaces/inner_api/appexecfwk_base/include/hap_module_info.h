@@ -159,6 +159,8 @@ struct HapModuleInfo : public Parcelable {
     std::string fileContextMenu;
     std::string routerMap;
     std::string packageName;
+    std::string abilitySrcEntryDelegator;
+    std::string abilityStageSrcEntryDelegator;
     std::string appStartup;
 
     // quick fix hqf info
