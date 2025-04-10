@@ -33,6 +33,9 @@ constexpr const char* SCENEBOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 // install list permissions file
 constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/app/install_list_permissions.json";
 constexpr int16_t BASE_API_VERSION = 1000;
+const char* IS_ROOT_MODE_PARAM = "const.debuggable";
+const int32_t ROOT_MODE = 1;
+const int32_t USER_MODE = 0;
 }
 
 using namespace OHOS::Security;
@@ -782,6 +785,29 @@ std::string BundlePermissionMgr::GetCheckResultMsg(const Security::AccessToken::
         return result;
     }
     return result;
+}
+
+bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
+{
+    // check if from shell call, specified user must be same with current active user
+    int32_t mode = GetIntParameter(IS_ROOT_MODE_PARAM, USER_MODE);
+    if (mode == ROOT_MODE) {
+        return true;
+    }
+    if (!BundlePermissionMgr::IsShellTokenType()) {
+        return true;
+    }
+    auto curUser = AccountHelper::GetCurrentActiveUserId();
+    if (curUser == Constants::INVALID_USERID) {
+        LOG_E(BMS_TAG_DEFAULT, "get current user fail");
+        return false;
+    }
+    if (userId != curUser && userId != Constants::DEFAULT_USERID && userId != Constants::UNSPECIFIED_USERID) {
+        LOG_E(BMS_TAG_DEFAULT, "specified user %{public}d is not same with current user %{public}d",
+            userId, curUser);
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
