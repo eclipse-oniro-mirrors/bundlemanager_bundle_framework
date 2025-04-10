@@ -68,7 +68,14 @@ bool EndsWith(const std::string &str, const std::string &searchFor)
 
 bool FilePathCheckValid(const std::string &str)
 {
-    return std::regex_match(str, FILE_PATH_REGEX);
+    try {
+        if (std::regex_match(str, FILE_PATH_REGEX)) {
+            return true;
+        }
+        return false;
+    } catch (const std::regex_error& e) {
+        return false;
+    }
 }
 
 }  // namespace LIBZIP
