@@ -18,7 +18,6 @@
 
 #include "appexecfwk_errors.h"
 #include "iremote_broker.h"
-#include <optional>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -31,8 +30,7 @@ public:
      * @param userId Indicates the userId.
      * @param disallowList Pass in the provisioned disallowList.
      */
-    virtual ErrCode CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList = {},
-        const std::optional<std::vector<std::string>> &allowList = std::nullopt)
+    virtual ErrCode CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList = {})
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
