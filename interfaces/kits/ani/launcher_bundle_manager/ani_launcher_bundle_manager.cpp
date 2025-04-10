@@ -40,6 +40,7 @@ const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = { { ERR_OK, ERR_OK },
     { ERR_NOT_SYSTEM_APP, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED } };
 
 constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
+constexpr const char* START_SHORTCUT = "StartShortcut";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
 constexpr const char* ERROR_EMPTY_BUNDLE_NAME = "bundle name is empty";
@@ -80,7 +81,8 @@ static void StartShortcutSync([[maybe_unused]] ani_env *env, ani_object aniShort
     result = iter == START_SHORTCUT_RES_MAP.end() ? ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED : iter->second;
     if (result != ERR_OK) {
         APP_LOGE("StartShortcut failed, result: %{public}d", result);
-        BusinessErrorAni::CreateCommonError(env, CommonFunc::ConvertErrCode(result));
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, CommonFunc::ConvertErrCode(result), START_SHORTCUT, Constants::PERMISSION_START_SHORTCUT);
     }
 }
 
@@ -114,7 +116,7 @@ static ani_object GetShortcutInfoSync([[maybe_unused]] ani_env *env, ani_string 
     ErrCode ret = CommonFunc::ConvertErrCode(result);
     if (ret != ERR_OK) {
         APP_LOGE("GetShortcutInfoV9 failed, ret %{public}d", ret);
-        BusinessErrorAni::CreateCommonError(
+        BusinessErrorAni::ThrowParameterTypeError(
             env, ret, GET_SHORTCUT_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
