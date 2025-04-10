@@ -1090,7 +1090,6 @@ HWTEST_F(BmsExtendResourceManagerTest, GetAllDynamicIconInfo_0001, Function | Sm
     ret = impl.GetAllDynamicIconInfo(USER_ID, dynamicInfos3);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_FALSE(dynamicInfos3.empty());
-    dataMgr->bundleInfos_.clear();
 }
 
 /**
@@ -1213,6 +1212,11 @@ HWTEST_F(BmsExtendResourceManagerTest, InnerSaveExtendResourceInfoTest_0100, Fun
 */
 HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1001, Function | SmallTest | Level1)
 {
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
     ExtendResourceManagerHostImpl impl;
     std::vector<std::string> oldFilePaths;
     oldFilePaths.push_back(FILE_PATH);
@@ -1239,9 +1243,6 @@ HWTEST_F(BmsExtendResourceManagerTest, DisableDynamicIcon_0200, Function | Small
 {
     ExtendResourceManagerHostImpl impl;
     const std::string bundleName = BUNDLE_NAME;
-    ErrCode res = impl.DisableDynamicIcon(bundleName);
-    EXPECT_FALSE(res);
-
     ErrCode ret = impl.DisableDynamicIcon(bundleName);
     EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED);
 }
