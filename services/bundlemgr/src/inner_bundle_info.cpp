@@ -5116,5 +5116,30 @@ bool InnerBundleInfo::SetCurDynamicIconModule(
     cloneInfoItem->second.curDynamicIconModule = curDynamicIconModule;
     return true;
 }
+
+void InnerBundleInfo::GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos) const
+{
+    for (const auto &item : innerBundleUserInfos_) {
+        if ((userId != Constants::UNSPECIFIED_USERID) && (userId != item.second.bundleUserInfo.userId)) {
+            continue;
+        }
+        DynamicIconInfo dynamicIconInfo;
+        dynamicIconInfo.bundleName = GetBundleName();
+        if (!item.second.curDynamicIconModule.empty()) {
+            dynamicIconInfo.moduleName = item.second.curDynamicIconModule;
+            dynamicIconInfo.userId = item.second.bundleUserInfo.userId;
+            dynamicIconInfo.appIndex = 0;
+            dynamicIconInfos.emplace_back(dynamicIconInfo);
+        }
+        for (const auto &clone : item.second.cloneInfos) {
+            if (!clone.second.curDynamicIconModule.empty()) {
+                dynamicIconInfo.moduleName = clone.second.curDynamicIconModule;
+                dynamicIconInfo.userId = clone.second.userId;
+                dynamicIconInfo.appIndex = clone.second.appIndex;
+                dynamicIconInfos.emplace_back(dynamicIconInfo);
+            }
+        }
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

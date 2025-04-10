@@ -28,6 +28,7 @@
 #include "common_profile.h"
 #include "data_group_info.h"
 #include "distributed_bundle_info.h"
+#include "dynamic_icon_info.h"
 #include "extension_ability_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
@@ -2304,6 +2305,7 @@ public:
     bool HasMultiUserPlugin(const std::string &pluginBundleName) const;
     bool UpdatePluginBundleInfo(const PluginBundleInfo &pluginBundleInfo);
     bool RemovePluginFromUserInfo(const std::string &pluginBundleName, const int32_t userId);
+    void GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos) const;
 
 private:
     bool IsExistLauncherAbility() const;

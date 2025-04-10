@@ -20,6 +20,7 @@
 #include <string>
 
 #include "appexecfwk_errors.h"
+#include "dynamic_icon_info.h"
 #include "iremote_broker.h"
 
 namespace OHOS {
@@ -88,6 +89,16 @@ public:
         const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
     {
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetAllDynamicIconInfo(std::vector<DynamicIconInfo> &dynamicInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 };
 } // AppExecFwk

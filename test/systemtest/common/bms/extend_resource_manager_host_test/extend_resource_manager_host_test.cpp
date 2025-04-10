@@ -29,7 +29,8 @@ const uint32_t ENABLE_DYNAMIC_ICON = 3;
 const uint32_t DISABLE_DYNAMIC_ICON = 4;
 const uint32_t GET_DYNAMIC_ICON = 5;
 const uint32_t CREATE_FD = 6;
-const uint32_t OTHER_CODE = 7;
+const uint32_t GET_ALL_DYNAMIC_ICON_INFO = 7;
+const uint32_t OTHER_CODE = 100;
 const uint32_t ERROR_CODE = 305;
 }
 namespace OHOS {
@@ -100,6 +101,11 @@ HWTEST_F(ExtendResourceManagerHostTest, OnRemoteRequest_0100, Function | MediumT
 
     data.WriteInterfaceToken(descriptor);
     code = CREATE_FD;
+    res = extendResource.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+
+    data.WriteInterfaceToken(descriptor);
+    code = GET_ALL_DYNAMIC_ICON_INFO;
     res = extendResource.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, ERR_OK);
 

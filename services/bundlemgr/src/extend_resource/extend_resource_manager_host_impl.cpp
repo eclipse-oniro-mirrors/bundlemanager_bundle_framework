@@ -731,5 +731,34 @@ ErrCode ExtendResourceManagerHostImpl::CheckParamInvalid(const InnerBundleInfo &
     }
     return ERR_OK;
 }
+
+ErrCode ExtendResourceManagerHostImpl::GetAllDynamicIconInfo(std::vector<DynamicIconInfo> &dynamicInfos)
+{
+    return GetAllDynamicIconInfo(Constants::UNSPECIFIED_USERID, dynamicInfos);
+}
+
+ErrCode ExtendResourceManagerHostImpl::GetAllDynamicIconInfo(
+    const int32_t userId, std::vector<DynamicIconInfo> &dynamicInfos)
+{
+    APP_LOGI("get all dynamic info userId %{public}d", userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    auto ret = dataMgr->GetAllDynamicInfo(userId, dynamicInfos);
+    if (ret == ERR_OK) {
+        APP_LOGI("get all dynamic info userId %{public}d size %{public}zu", userId, dynamicInfos.size());
+    }
+    return ret;
+}
 } // AppExecFwk
 } // namespace OHOS

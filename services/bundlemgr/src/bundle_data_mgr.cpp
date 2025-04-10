@@ -10537,5 +10537,21 @@ void BundleDataMgr::NotifyPluginEventCallback(const EventFwk::CommonEventData &e
     }
     APP_LOGI("end");
 }
+
+ErrCode BundleDataMgr::GetAllDynamicInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos)
+{
+    APP_LOGI("start userId %{public}d", userId);
+    if (userId != Constants::UNSPECIFIED_USERID) {
+        if (!HasUserId(userId)) {
+            APP_LOGE("userId %{public}d not exist", userId);
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        item.second.GetAllDynamicIconInfo(userId, dynamicIconInfos);
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
