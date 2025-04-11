@@ -1276,5 +1276,20 @@ std::unordered_map<std::string, std::string> BundleUtil::ParseMapFromJson(const 
     }
     return result;
 }
+
+void BundleUtil::SetBit(const uint8_t pos, uint8_t &num)
+{
+    num |= (1U << pos);
+}
+
+void BundleUtil::ResetBit(const uint8_t pos, uint8_t &num)
+{
+    num &= ~(1U << pos);
+}
+
+bool BundleUtil::GetBitValue(const uint8_t num, const uint8_t pos)
+{
+    return (num & (1U << pos)) != 0;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

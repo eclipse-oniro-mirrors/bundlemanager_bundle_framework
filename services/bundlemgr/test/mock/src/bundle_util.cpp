@@ -340,6 +340,17 @@ std::unordered_map<std::string, std::string> BundleUtil::ParseMapFromJson(const 
     std::unordered_map<std::string, std::string> result;
     return result;
 }
+
+void BundleUtil::SetBit(const uint8_t pos, uint8_t &num)
+{}
+
+void BundleUtil::ResetBit(const uint8_t pos, uint8_t &num)
+{}
+
+bool BundleUtil::GetBitValue(const uint8_t num, const uint8_t pos)
+{
+    return false;
+}
 #endif
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_UTIL_RETURN_FALSE
 ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &realPath)
@@ -658,6 +669,17 @@ std::unordered_map<std::string, std::string> BundleUtil::ParseMapFromJson(const 
 {
     std::unordered_map<std::string, std::string> result;
     return result;
+}
+
+void BundleUtil::SetBit(const uint8_t pos, uint8_t &num)
+{}
+
+void BundleUtil::ResetBit(const uint8_t pos, uint8_t &num)
+{}
+
+bool BundleUtil::GetBitValue(const uint8_t num, const uint8_t pos)
+{
+    return false;
 }
 #endif
 }  // namespace AppExecFwk
