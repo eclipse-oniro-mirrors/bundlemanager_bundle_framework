@@ -151,6 +151,10 @@ const std::vector<std::string> BUNDLE_DATA_SUB_DIRS = {
 const int32_t ADD_NEW_USERID = 200;
 const int32_t TEST_APP_INDEX1 = 1;
 const int32_t TEST_APP_INDEX2 = 2;
+const std::string BUNDLE_CODE_PATH_DIR_REAL = "/data/app/el1/bundle/public/com.example.example_test";
+const std::string BUNDLE_CODE_PATH_DIR_NEW = "/data/app/el1/bundle/public/+new-com.example.example_test";
+const std::string BUNDLE_CODE_PATH_DIR_OLD = "/data/app/el1/bundle/public/+old-com.example.example_test";
+const std::string BUNDLE_NAME_FOR_TEST = "com.example.example_test";
 }  // namespace
 
 class BmsBundleInstallerTest : public testing::Test {
@@ -5030,8 +5034,14 @@ HWTEST_F(BmsBundleInstallerTest, ProcessOldNativeLibraryPath_0010, TestSize.Leve
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     int32_t oldVersionCode = 1000;
     std::string nativeLibraryPath = "";
+    installer.isFeatureNeedUninstall_ = true;
     installer.ProcessOldNativeLibraryPath(newInfos, oldVersionCode, nativeLibraryPath);
     auto exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    installer.isFeatureNeedUninstall_ = false;
+    installer.ProcessOldNativeLibraryPath(newInfos, oldVersionCode, nativeLibraryPath);
+    exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
     EXPECT_EQ(exist, 0);
 
     nativeLibraryPath = "libs/arm";
@@ -9577,6 +9587,155 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9000, Function | MediumTest
     InnerBundleInfo oldInfo;
     installer.DeleteGroupDirsForException(oldInfo);
     EXPECT_TRUE(oldInfo.GetBundleName().empty());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_9100
+ * @tc.name: test GetModulePath
+ * @tc.desc: 1.Test GetModulePath
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9100, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    bool isBundleUpdate = true;
+    bool isModuleUpdate = true;
+    BaseBundleInstaller installer;
+    std::string path = installer.GetModulePath(info, isBundleUpdate, isModuleUpdate);
+    EXPECT_TRUE(path.find(ServiceConstants::BUNDLE_NEW_CODE_DIR) != std::string::npos);
+
+    isBundleUpdate = false;
+    path = installer.GetModulePath(info, isBundleUpdate, isModuleUpdate);
+    EXPECT_TRUE(path.find(ServiceConstants::TMP_SUFFIX) != std::string::npos);
+
+    isModuleUpdate = false;
+    path = installer.GetModulePath(info, isBundleUpdate, isModuleUpdate);
+    EXPECT_EQ(path, ServiceConstants::PATH_SEPARATOR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_9200
+ * @tc.name: test ProcessBundleCodePath
+ * @tc.desc: 1.Test ProcessBundleCodePath
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9200, Function | MediumTest | Level1)
+{
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo oldInfo;
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.ProcessBundleCodePath(newInfos, oldInfo, SYSTEMFIEID_NAME, false, true);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+* @tc.number: BaseBundleInstaller_9300
+* @tc.name: test ProcessBundleCodePath
+* @tc.desc: 1.Test ProcessBundleCodePath
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9300, Function | MediumTest | Level1)
+{
+   std::unordered_map<std::string, InnerBundleInfo> newInfos;
+   InnerBundleInfo oldInfo;
+   BaseBundleInstaller installer;
+   ErrCode ret = installer.ProcessBundleCodePath(newInfos, oldInfo, BUNDLE_NAME_FOR_TEST, true, true);
+   EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+
+   ret = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_CODE_PATH_DIR_REAL);
+   EXPECT_EQ(ret, ERR_OK);
+
+   ret = installer.ProcessBundleCodePath(newInfos, oldInfo, BUNDLE_NAME_FOR_TEST, true, true);
+   EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+
+   ret = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_CODE_PATH_DIR_NEW);
+   EXPECT_EQ(ret, ERR_OK);
+
+   ret = installer.ProcessBundleCodePath(newInfos, oldInfo, BUNDLE_NAME_FOR_TEST, true, true);
+   EXPECT_EQ(ret, ERR_OK);
+
+   auto exist = access(BUNDLE_CODE_PATH_DIR_REAL.c_str(), F_OK);
+   EXPECT_EQ(exist, 0);
+
+   exist = access(BUNDLE_CODE_PATH_DIR_NEW.c_str(), F_OK);
+   EXPECT_NE(exist, 0);
+
+   exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
+   EXPECT_EQ(exist, 0);
+
+   OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+   OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+   OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+}
+
+/**
+* @tc.number: BaseBundleInstaller_9400
+* @tc.name: test ProcessOldCodePath
+* @tc.desc: 1.Test ProcessOldCodePath
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9400, Function | MediumTest | Level1)
+{
+   ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_CODE_PATH_DIR_OLD);
+   EXPECT_EQ(ret, ERR_OK);
+
+   BaseBundleInstaller installer;
+   installer.ProcessOldCodePath(BUNDLE_NAME_FOR_TEST, false);
+   auto exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
+   EXPECT_EQ(exist, 0);
+
+   installer.ProcessOldCodePath(BUNDLE_NAME_FOR_TEST, true);
+   exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
+   EXPECT_NE(exist, 0);
+
+   OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+}
+
+/**
+* @tc.number: BaseBundleInstaller_9500
+* @tc.name: test RollbackCodePath
+* @tc.desc: 1.Test RollbackCodePath
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9500, Function | MediumTest | Level1)
+{
+   ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_CODE_PATH_DIR_OLD);
+   EXPECT_EQ(ret, ERR_OK);
+
+   BaseBundleInstaller installer;
+   installer.RollbackCodePath(BUNDLE_NAME_FOR_TEST, false);
+   auto exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
+   EXPECT_EQ(exist, 0);
+
+   installer.RollbackCodePath(BUNDLE_NAME_FOR_TEST, true);
+   exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
+   EXPECT_NE(exist, 0);
+
+   exist = access(BUNDLE_CODE_PATH_DIR_REAL.c_str(), F_OK);
+   EXPECT_EQ(exist, 0);
+
+   OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+   OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+}
+
+/**
+* @tc.number: BaseBundleInstaller_9600
+* @tc.name: test InnerProcessTargetSoPath
+* @tc.desc: 1.Test InnerProcessTargetSoPath
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9600, Function | MediumTest | Level1)
+{
+   InnerBundleInfo info;
+   info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST;
+   std::string nativeLibraryPath = "";
+   std::string modulePath = "";
+   std::string targetSoPath;
+
+   BaseBundleInstaller installer;
+   installer.InnerProcessTargetSoPath(info, false, modulePath, nativeLibraryPath, targetSoPath);
+   EXPECT_NE(nativeLibraryPath, "");
+   EXPECT_TRUE(targetSoPath.find(BUNDLE_CODE_PATH_DIR_REAL) == 0);
+
+   nativeLibraryPath = "";
+   targetSoPath = "";
+   installer.InnerProcessTargetSoPath(info, true, modulePath, nativeLibraryPath, targetSoPath);
+   EXPECT_EQ(nativeLibraryPath, "");
+   EXPECT_TRUE(targetSoPath.find(BUNDLE_CODE_PATH_DIR_NEW) == 0);
 }
 
 /**

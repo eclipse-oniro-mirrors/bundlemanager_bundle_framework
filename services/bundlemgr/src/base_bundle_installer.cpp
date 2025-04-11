@@ -1404,6 +1404,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
     }
     CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
+    codePathGuard.Dismiss();
     ProcessOldCodePath(bundleName_, isFeatureNeedUninstall_);
     // create data group dir
     ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(oldInfo); });
@@ -4519,10 +4520,7 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
             LOG_D(BMS_TAG_INSTALLER, "uninstall package %{public}s", package.c_str());
             if (!isFeatureNeedUninstall_) {
                 ErrCode result = RemoveModuleAndDataDir(info, package, Constants::UNSPECIFIED_USERID, true);
-                if (result != ERR_OK) {
-                    LOG_E(BMS_TAG_INSTALLER, "remove module dir failed");
-                    return result;
-                }
+                CHECK_RESULT(result, "remove module dir failed %{public}d");
             }
 
             // remove driver file
