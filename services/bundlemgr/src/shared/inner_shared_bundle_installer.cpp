@@ -21,6 +21,7 @@
 #include "bundle_mgr_service.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
+#include "patch_data_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -206,6 +207,8 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
 
     // save specifiedDistributionType and additionalInfo
     SaveInstallParamInfo(bundleName_, installParam);
+    PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, {parsedBundles_.begin()->first},
+        newBundleInfo_.GetBaseBundleInfo().versionCode, AppPatchType::SHARED_BUNDLES, installParam.isPatch);
     // check mark install finish
     result = MarkInstallFinish();
     if (result != ERR_OK) {
@@ -247,6 +250,8 @@ void InnerSharedBundleInstaller::RollBack()
     if (dataMgr->UpdateInnerBundleInfo(oldBundleInfo_)) {
         APP_LOGE("rollback old bundle failed : %{public}s", bundleName_.c_str());
     }
+
+    PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
 }
 
 bool InnerSharedBundleInstaller::CheckDependency(const Dependency &dependency) const

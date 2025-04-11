@@ -104,6 +104,7 @@ constexpr const char* SHARED_BUNDLES_INSTALL_LIST_CONFIG = "/shared_bundles_inst
 constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold";
 constexpr const char* SYSTEM_BUNDLE_PATH = "/internal";
+constexpr const char* SHARED_BUNDLE_PATH = "/shared_bundles";
 constexpr const char* RESTOR_BUNDLE_NAME_LIST = "list";
 constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/temp/quickfix_app_recover.json";
 constexpr const char* INNER_UNDER_LINE = "_";
@@ -2592,11 +2593,11 @@ void BMSEventHandler::HandleModuleUpdate()
     }
     // 2. process rollback if needed
     ModuleUpdateRollBack();
-    // 2. install all hmp, if install failed,
+    // 3. install all hmp, if install failed,
     HandleInstallHmp(moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap);
-    // 3. update system parmeters
+    // 4. update system parmeters
     ProcessModuleUpdateSystemParameters();
-    // 4. uninstall redundant module
+    // 5. uninstall redundant module
     HandleHmpUninstall();
 }
 
@@ -3925,8 +3926,10 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
 {
     LOG_I(BMS_TAG_DEFAULT, "start, isOta:%{public}d", isOta);
     std::string systemHspPath = path + ServiceConstants::PATH_SEPARATOR + MODULE_UPDATE_APP_SERVICE_DIR;
+    std::string sharedBundlePath = path + SHARED_BUNDLE_PATH;
     std::string systemBundlePath = path + SYSTEM_BUNDLE_PATH;
     PatchSystemHspInstall(systemHspPath, isOta);
+    PatchSharedHspInstall(sharedBundlePath);
     PatchSystemBundleInstall(systemBundlePath, isOta);
     LOG_I(BMS_TAG_DEFAULT, "end");
 }
@@ -3976,6 +3979,54 @@ void BMSEventHandler::PatchSystemHspInstall(const std::string &path, bool isOta)
         std::vector<std::string> filePaths { scanPathIter };
         if (installer.Install(filePaths, installParam) != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: install failed", bundleName.c_str());
+        }
+    }
+    LOG_I(BMS_TAG_DEFAULT, "end");
+}
+
+void BMSEventHandler::PatchSharedHspInstall(const std::string &path)
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    std::list<std::string> bundleDirs;
+    ProcessScanDir(path, bundleDirs);
+    if (bundleDirs.empty()) {
+        LOG_I(BMS_TAG_DEFAULT, "end, bundleDirs is empty");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    for (auto &scanPathIter : bundleDirs) {
+        std::unordered_map<std::string, InnerBundleInfo> infos;
+        if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
+            LOG_E(BMS_TAG_DEFAULT, "ParseHapFiles failed : %{public}s ", scanPathIter.c_str());
+            continue;
+        }
+        auto bundleName = infos.begin()->second.GetBundleName();
+        auto versionCode = infos.begin()->second.GetVersionCode();
+        InnerBundleInfo hasInstalledInfo;
+        auto hasBundleInstalled = dataMgr->FetchInnerBundleInfo(bundleName, hasInstalledInfo);
+        if (!hasBundleInstalled) {
+            LOG_W(BMS_TAG_DEFAULT, "bundleName %{public}s not exist", bundleName.c_str());
+            continue;
+        }
+        if ((versionCode <= hasInstalledInfo.GetVersionCode()) && IsHspPathExist(hasInstalledInfo)) {
+            LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s downgrade",
+                bundleName.c_str());
+            continue;
+        }
+        InstallParam installParam;
+        installParam.sharedBundleDirPaths = {scanPathIter};
+        installParam.SetKillProcess(false);
+        installParam.removable = false;
+        installParam.needSendEvent = false;
+        installParam.needSavePreInstallInfo = false;
+        installParam.isPatch = true;
+        SystemBundleInstaller installer;
+        if (!installer.InstallSystemSharedBundle(installParam, true, Constants::AppType::SYSTEM_APP)) {
+            LOG_W(BMS_TAG_DEFAULT, "patch shared bundle %{public}s failed", bundleName.c_str());
         }
     }
     LOG_I(BMS_TAG_DEFAULT, "end");
