@@ -1337,4 +1337,44 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, GetDefaultApplication_0500, Function | Smal
     auto res = impl.GetDefaultApplication(USER_ID, type, bundleInfo);
     EXPECT_NE(res, ERR_OK);
 }
+
+/**
+ * @tc.number: HandleUninstallBundle_0001
+ * @tc.name: Test HandleUninstallBundle by DefaultAppMgr
+ * @tc.desc: 1.HandleUninstallBundle
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, HandleUninstallBundle_0001, Function | SmallTest | Level1)
+{
+    int32_t userId = 0;
+    const std::string bundleName = "testname";
+    std::map<std::string, Element> currentInfos;
+    DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, bundleName);
+    EXPECT_FALSE(DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfos(userId, currentInfos));
+}
+
+/**
+ * @tc.number: HandleCreateUser_0001
+ * @tc.name: Test HandleCreateUser by DefaultAppMgr
+ * @tc.desc: 1.HandleCreateUser
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, HandleCreateUser_0001, Function | SmallTest | Level1)
+{
+    int32_t userId = 100;
+    std::map<std::string, Element> infos;
+    DefaultAppMgr::GetInstance().HandleCreateUser(userId);
+    EXPECT_FALSE(DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfos(-1, infos));
+}
+
+/**
+ * @tc.number: GetBundleInfoByUtd_0001
+ * @tc.name: Test GetBundleInfoByUtd by DefaultAppMgr
+ * @tc.desc: 1.GetBundleInfoByUtd
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, GetBundleInfoByUtd_0001, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    int32_t userId = 100;
+    auto ret = DefaultAppMgr::GetInstance().GetBundleInfoByUtd(userId, EMAIL, bundleInfo, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
+}
 } // namespace OHOS
