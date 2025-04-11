@@ -151,6 +151,7 @@ constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
 constexpr const char* MODULE_DEBUG = "debug";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
+constexpr const char* MODULE_BOOL_SET = "boolSet";
 constexpr uint32_t PREINSTALL_SOURCE_CLEAN_MASK = ~0B1110;
 constexpr int32_t CPM_KEY_NOT_EXIST = 0x7A000005;
 
@@ -450,6 +451,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_UBSAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
             InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED))},
         {MODULE_DEBUG, info.debug},
+        {MODULE_BOOL_SET, info.boolSet}
     };
 }
 
@@ -1010,6 +1012,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.debug,
         false,
         parseResult);
+    GetValueIfFindKey<uint8_t>(jsonObject,
+        jsonObjectEnd,
+        MODULE_BOOL_SET,
+        info.boolSet,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error code : %{public}d", parseResult);
     } else {
@@ -1526,6 +1536,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.isStageBasedModel = it->second.isStageBasedModel;
     hapInfo.deviceTypes = it->second.deviceTypes;
     hapInfo.appStartup = it->second.appStartup;
+    hapInfo.hasIntent = BundleUtil::GetBitValue(it->second.boolSet, InnerModuleInfoBoolFlag::HAS_INTENT);
     std::string moduleType = it->second.distro.moduleType;
     if (moduleType == Profile::MODULE_TYPE_ENTRY) {
         hapInfo.moduleType = ModuleType::ENTRY;

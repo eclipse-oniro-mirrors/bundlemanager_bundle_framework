@@ -8297,4 +8297,23 @@ HWTEST_F(BmsBundleDataMgrTest, FetchPluginBundleInfo_0001, Function | MediumTest
         pluginBundleInfo);
     EXPECT_EQ(result, false);
 }
+
+/**
+* @tc.number: SetBit_0001
+ * @tc.name: SetBit_0001
+ * @tc.desc: test SetBit_0001
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetBit_0001, Function | MediumTest | Level1)
+{
+    uint8_t num = 0;
+    uint8_t pos = 1;
+    BundleUtil::SetBit(pos, num);
+    EXPECT_EQ(num, 2);
+
+    auto ret1 = BundleUtil::GetBitValue(num, pos);
+    EXPECT_EQ(ret1, true);
+
+    BundleUtil::ResetBit(pos, num);
+    EXPECT_EQ(num, 0);
+}
 } // OHOS

@@ -395,6 +395,7 @@ constexpr const char* MODULE_ISOLATION_MODE = "isolationMode";
 constexpr const char* MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 constexpr const char* MODULE_QUERY_SCHEMES = "querySchemes";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
+constexpr const char* MODULE_HAS_INTENT = "hasInsightIntent";
 // module type
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";

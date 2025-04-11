@@ -82,6 +82,7 @@ struct InnerModuleInfo {
     bool tsanEnabled = false;
     bool needDelete = false;
     bool debug = false;
+    uint8_t boolSet = 0;
     uint32_t innerModuleInfoFlag = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
@@ -171,6 +172,10 @@ enum InstallExceptionStatus : uint8_t {
 enum class GetInnerModuleInfoFlag : uint8_t {
     GET_INNER_MODULE_INFO_WITH_HWASANENABLED = 1,
     GET_INNER_MODULE_INFO_WITH_UBSANENABLED = 2,
+};
+
+enum InnerModuleInfoBoolFlag : uint8_t {
+    HAS_INTENT = 0,
 };
 
 struct InstallMark {

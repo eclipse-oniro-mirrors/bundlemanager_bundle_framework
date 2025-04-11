@@ -188,6 +188,25 @@ public:
      * @return Returns result.
      */
     static bool DeleteDir(const std::string &path);
+    /**
+     * @brief set the bit to 1.
+     * @param pos Indicates the position.
+     * @param num Indicates the value to be processed.
+     */
+    static void SetBit(const uint8_t pos, uint8_t &num);
+    /**
+     * @brief set the bit to 0.
+     * @param pos Indicates the position.
+     * @param num Indicates the value to be processed.
+     */
+    static void ResetBit(const uint8_t pos, uint8_t &num);
+    /**
+     * @brief get the bit value.
+     * @param pos Indicates the position.
+     * @param num Indicates the value to be processed.
+     * @return If the bit value is 1, return true; return false otherwise.
+     */
+    static bool GetBitValue(const uint8_t num, const uint8_t pos);
     static bool IsUtd(const std::string &param);
     static bool IsSpecificUtd(const std::string &param);
     static std::vector<std::string> GetUtdVectorByMimeType(const std::string &mimeType);
