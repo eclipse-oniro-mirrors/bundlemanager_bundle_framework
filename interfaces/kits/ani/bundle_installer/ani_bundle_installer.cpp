@@ -66,7 +66,17 @@ constexpr const char* HAPS_FILE_NEEDED =
 } // namespace
 static bool g_isSystemApp = false;
 
-static bool CheckInstallParam(ani_env* env, InstallParam &installParam)
+static bool ParseInstallParamWithLog(ani_env* env, ani_object& aniInstParam, InstallParam& installParam)
+{
+    if (!CommonFunAni::ParseInstallParam(env, aniInstParam, installParam)) {
+        APP_LOGE("InstallParam parse invalid");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        return false;
+    }
+    return true;
+}
+
+static bool CheckInstallParam(ani_env* env, InstallParam& installParam)
 {
     if (installParam.specifiedDistributionType.size() > SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE) {
         APP_LOGE("Parse specifiedDistributionType size failed");
@@ -153,6 +163,43 @@ static void ProcessResult(ani_env* env, InstallResult& result, const InstallOpti
     }
 }
 
+void UninstallOrRecoverExecuter(std::string& bundleName, InstallParam& installParam, InstallResult& installResult,
+    InstallOption option)
+{
+    if (bundleName.empty()) {
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME);
+        return;
+    }
+    auto iBundleInstaller = CommonFunc::GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+        return;
+    }
+
+    sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
+    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
+    if (callback == nullptr || recipient == nullptr) {
+        APP_LOGE("callback or death recipient is nullptr");
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+        return;
+    }
+    iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
+    if (option == InstallOption::RECOVER) {
+        iBundleInstaller->Recover(bundleName, installParam, callback);
+    } else if (option == InstallOption::UNINSTALL) {
+        iBundleInstaller->Uninstall(bundleName, installParam, callback);
+    } else {
+        APP_LOGE("error install option %{public}d", option);
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+        return;
+    }
+    installResult.resultMsg = callback->GetResultMsg();
+    APP_LOGD("%{public}d resultMsg %{public}s", option, installResult.resultMsg.c_str());
+    installResult.resultCode = callback->GetResultCode();
+    APP_LOGD("%{public}d resultCode %{public}d", option, installResult.resultCode);
+}
+
 static void AniInstall(ani_env* env, [[maybe_unused]] ani_object installerObj,
     ani_array arrayObj, ani_object aniInstParam)
 {
@@ -164,9 +211,7 @@ static void AniInstall(ani_env* env, [[maybe_unused]] ani_object installerObj,
         return;
     }
     InstallParam installParam;
-    if (!CommonFunAni::ParseInstallParam(env, aniInstParam, installParam)) {
-        APP_LOGE("InstallParam parse invalid");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+    if (!ParseInstallParamWithLog(env, aniInstParam, installParam)) {
         return;
     }
     if (!CheckInstallParam(env, installParam)) {
@@ -181,16 +226,44 @@ static void AniInstall(ani_env* env, [[maybe_unused]] ani_object installerObj,
     ProcessResult(env, result, InstallOption::INSTALL);
 }
 
+static bool ParseBundleNameAndInstallParam(ani_env* env, ani_string& aniBundleName, ani_object& aniInstParam,
+    std::string& bundleName, InstallParam& installParam)
+{
+    bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
+    if (bundleName.empty()) {
+        APP_LOGE("Bundle name is empty.");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        return false;
+    }
+    return ParseInstallParamWithLog(env, aniInstParam, installParam);
+}
+
 static void AniUninstall(ani_env* env, [[maybe_unused]] ani_object installerObj,
-    ani_string bundleName, ani_object aniInstParam)
+    ani_string aniBundleName, ani_object aniInstParam)
 {
     APP_LOGI("Uninstall");
+    std::string bundleName;
+    InstallParam installParam;
+    if (!ParseBundleNameAndInstallParam(env, aniBundleName, aniInstParam, bundleName, installParam)) {
+        return;
+    }
+    InstallResult result;
+    UninstallOrRecoverExecuter(bundleName, installParam, result, InstallOption::UNINSTALL);
+    ProcessResult(env, result, InstallOption::UNINSTALL);
 }
 
 static void AniRecover(ani_env* env, [[maybe_unused]] ani_object installerObj,
-    ani_string bundleName, ani_object aniInstParam)
+    ani_string aniBundleName, ani_object aniInstParam)
 {
-    APP_LOGI("Recover");
+    APP_LOGI("AniRecover");
+    std::string bundleName;
+    InstallParam installParam;
+    if (!ParseBundleNameAndInstallParam(env, aniBundleName, aniInstParam, bundleName, installParam)) {
+        return;
+    }
+    InstallResult result;
+    UninstallOrRecoverExecuter(bundleName, installParam, result, InstallOption::RECOVER);
+    ProcessResult(env, result, InstallOption::RECOVER);
 }
 
 static void AniUninstallByUninstallParam(ani_env* env, [[maybe_unused]] ani_object installerObj,
