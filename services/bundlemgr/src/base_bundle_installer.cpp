@@ -5643,9 +5643,6 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
             LOG_E(BMS_TAG_INSTALLER, "copy file %{private}s to security dir failed", bundlePaths[index].c_str());
             return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
         }
-        if (bundlePaths[index].find(ServiceConstants::STREAM_INSTALL_PATH) != std::string::npos) {
-            BundleUtil::DeleteDir(bundlePaths[index]);
-        }
         bundlePaths[index] = destination;
     }
     bundlePaths_ = bundlePaths;
