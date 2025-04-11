@@ -5441,4 +5441,55 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerProxy_0400, Function | SmallTest 
     EXPECT_EQ(ret, ERR_CODE);
     DeleteFiles(sourceFiles);
 }
+
+/**
+ * @tc.number: QuickFixStatusCallbackHost_0200
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest by QuickFixStatusCallbackHost
+ * @tc.desc: OnRemoteRequest.
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixStatusCallbackHost_0200, Function | SmallTest | Level0)
+{
+    MockQuickFixCallback quickFixStatusCallbackHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    std::u16string token = QuickFixStatusCallbackHost::GetDescriptor();
+    data.WriteInterfaceToken(token);
+
+    uint32_t code = static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DEPLOYED);
+    int ret = quickFixStatusCallbackHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(ret, 0);
+
+    code = static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_SWITCHED);
+    ret = quickFixStatusCallbackHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DELETED);
+    ret = quickFixStatusCallbackHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = -1;
+    ret = quickFixStatusCallbackHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: QuickFixStatusCallbackHost_0300
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest by QuickFixStatusCallbackHost
+ * @tc.desc: OnRemoteRequest.
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixStatusCallbackHost_0300, Function | SmallTest | Level0)
+{
+    MockQuickFixCallback quickFixStatusCallbackHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(QuickFixStatusCallbackHost::GetDescriptor());
+
+    uint32_t invalidCode = 999;
+    int ret = quickFixStatusCallbackHost.OnRemoteRequest(invalidCode, data, reply, option);
+    EXPECT_NE(ret, -1);
+}
 } // OHOS
