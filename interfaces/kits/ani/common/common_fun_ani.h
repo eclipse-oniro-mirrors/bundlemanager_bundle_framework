@@ -164,7 +164,8 @@ public:
     static bool ParseHashParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
     static bool ParseVerifyCodeParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
     static bool ParsePgoParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
-    
+    static bool ParseUninstallParam(ani_env* env, ani_object object, UninstallParam& uninstallParam);
+
     template<typename toType>
     static bool TryCastDoubleTo(const double fromValue, toType* toValue)
     {

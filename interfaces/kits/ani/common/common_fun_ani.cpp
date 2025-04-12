@@ -1690,5 +1690,23 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
     return true;
 }
 
+bool CommonFunAni::ParseUninstallParam(ani_env* env, ani_object object, UninstallParam& uninstallParam)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+    ani_string string = nullptr;
+    // bundleName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
+    uninstallParam.bundleName = AniStrToString(env, string);
+    ani_int intValue = 0;
+    // versionCode?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_VERSIONCODE, &intValue)) {
+        uninstallParam.versionCode = intValue;
+    } else {
+        APP_LOGW("Parse crowdtestDeadline failed,using default value");
+    }
+    return true;
+}
+
 } // namespace AppExecFwk
 } // namespace OHOS
