@@ -109,12 +109,6 @@ namespace bundleManager {
     SPECIFIED = 2
   }
 
-  export enum AbilityType {
-    PAGE = 1,
-    SERVICE = 2,
-    DATA = 3
-  }
-
   export enum DisplayOrientation {
     UNSPECIFIED,
     LANDSCAPE,

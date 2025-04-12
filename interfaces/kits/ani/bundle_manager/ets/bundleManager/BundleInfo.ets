@@ -33,6 +33,7 @@ export interface BundleInfo {
   readonly updateTime: number;
   readonly routerMap: Array<RouterItem>;
   readonly appIndex: number;
+  readonly firstInstallTime?: number;
 }
 
 export interface ReqPermissionDetail {
