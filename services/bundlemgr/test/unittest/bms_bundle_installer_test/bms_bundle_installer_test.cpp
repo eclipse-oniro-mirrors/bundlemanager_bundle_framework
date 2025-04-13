@@ -47,6 +47,7 @@
 #include "mock_status_receiver.h"
 #include "parameter.h"
 #include "parameters.h"
+#include "plugin_installer.h"
 #include "scope_guard.h"
 #include "shared/shared_bundle_installer.h"
 #include "system_bundle_installer.h"
@@ -107,6 +108,13 @@ const std::string ATOMIC_FEATURE_V2_HAP = "versionUpdateTest7.hap";
 const std::string VERSION_UPDATE_BUNDLE_NAME = "com.example.versiontest";
 const std::string UNINSTALL_PREINSTALL_BUNDLE_NAME = "com.ohos.telephonydataability";
 const std::string GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
+const std::string TEST_HSP_PATH = "/data/test/resource/bms/install_bundle/hsp_A.hsp";
+const std::string APP_SERVICES_CAPABILITIES1 = R"(
+    {
+        "ohos.permission.kernel.SUPPORT_PLUGIN":{
+            "pluginDistributionIDs":"11111111|22222222"
+        }
+})";
 const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
 const int32_t ZERO_CODE = 0;
@@ -601,7 +609,7 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0020, Function | SmallTest | Level0
     // test CleanShaderCache succeed
     ret = installer.CleanShaderCache(info, BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, ERR_OK);
- 
+
     // test CleanBundleClonesShaderCache succeed
     std::vector<int32_t> allAppIndexes = {0, TEST_APP_INDEX1, TEST_APP_INDEX2};
     ret = installer.CleanBundleClonesShaderCache(allAppIndexes, BUNDLE_NAME, USERID);
@@ -618,13 +626,13 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0020, Function | SmallTest | Level0
     // test DeleteEl1ShaderCache succeed
     ret = installer.DeleteEl1ShaderCache(info, BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, ERR_OK);
- 
+
     // test DeleteCloudShader succeed
     ret = installer.DeleteCloudShader(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK);
     ClearBundleInfo();
 }
- 
+
 /**
  * @tc.number: ShaderCache_0030
  * @tc.name: test the right system bundle file can be installed, clean shader cache
@@ -663,7 +671,7 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0030, Function | SmallTest | Level0
     StopInstalldService();
     ret = installer.DeleteEl1ShaderCache(info, BUNDLE_NAME, USERID);
     EXPECT_NE(ret, ERR_OK);
- 
+
     // test CleanEl1UserShaderCache failed
     StopInstalldService();
     ret = installer.DeleteBundleClonesShaderCache(allAppIndexes, BUNDLE_NAME, USERID);
@@ -9569,5 +9577,1003 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9000, Function | MediumTest
     InnerBundleInfo oldInfo;
     installer.DeleteGroupDirsForException(oldInfo);
     EXPECT_TRUE(oldInfo.GetBundleName().empty());
+}
+
+/**
+ * @tc.number: PluginInstaller_0001
+ * @tc.name: test InstallPlugin
+ * @tc.desc: 1.Test InstallPlugin the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0001, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hostBundleName;
+    std::vector<std::string> pluginFilePaths;
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = -1;
+    auto ret = installer.InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+
+    std::string pluginBundleName;
+    auto uninstallRet = installer.UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);
+    EXPECT_EQ(uninstallRet, ERR_APPEXECFWK_USER_NOT_EXIST);
+
+    installPluginParam.userId = 12345;
+    auto ret2 = installer.InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret2, ERR_APPEXECFWK_USER_NOT_EXIST);
+
+    auto uninstallRet2 = installer.UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);
+    EXPECT_EQ(uninstallRet2, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: PluginInstaller_0002
+ * @tc.name: test InstallPlugin
+ * @tc.desc: 1.Test InstallPlugin the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0002, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hostBundleName = "wrong.bundleName";
+    std::vector<std::string> pluginFilePaths;
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = 100;
+    auto ret = installer.InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+
+    std::string pluginBundleName;
+    auto uninstallRet = installer.UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);
+    EXPECT_EQ(uninstallRet, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+}
+
+/**
+ * @tc.number: PluginInstaller_0003
+ * @tc.name: test InstallPlugin
+ * @tc.desc: 1.Test InstallPlugin the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0003, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string bundleName = "test.bundleName";
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = bundleName;
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    PluginInstaller installer;
+    std::vector<std::string> pluginFilePaths;
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = 100;
+    auto ret = installer.InstallPlugin(bundleName, pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+
+    std::string pluginBundleName;
+    auto uninstallRet = installer.UninstallPlugin(bundleName, pluginBundleName, installPluginParam);
+    EXPECT_EQ(uninstallRet, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: PluginInstaller_0004
+ * @tc.name: test InstallPlugin
+ * @tc.desc: 1.Test InstallPlugin the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0004, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string bundleName = "test.bundleName";
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = bundleName;
+    innerBundleInfo.innerBundleUserInfos_["test.bundleName_100"] = InnerBundleUserInfo();
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    PluginInstaller installer;
+    std::vector<std::string> pluginFilePaths;
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = 100;
+    auto ret = installer.InstallPlugin(bundleName, pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    std::string pluginBundleName;
+    auto uninstallRet = installer.UninstallPlugin(bundleName, pluginBundleName, installPluginParam);
+    EXPECT_EQ(uninstallRet, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
+
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: PluginInstaller_0005
+ * @tc.name: test ParseFiles
+ * @tc.desc: 1.Test ParseFiles the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0005, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> pluginFilePaths;
+    InstallPluginParam installPluginParam;
+    auto ret = installer.ParseFiles(pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: PluginInstaller_0006
+ * @tc.name: test ParseFiles
+ * @tc.desc: 1.Test ParseFiles the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0006, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> pluginFilePaths{ RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE };
+    InstallPluginParam installPluginParam;
+    auto ret = installer.ParseFiles(pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: PluginInstaller_0007
+ * @tc.name: test MkdirIfNotExist
+ * @tc.desc: 1.Test MkdirIfNotExist the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0007, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string dir;
+    auto ret = installer.MkdirIfNotExist(dir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    dir = "data/test/bms_insatller_test";
+    auto ret2 = installer.MkdirIfNotExist(dir);
+    EXPECT_EQ(ret2, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0008
+ * @tc.name: test ParseHapPaths
+ * @tc.desc: 1.Test ParseHapPaths the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0008, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InstallPluginParam installPluginParam;
+    std::vector<std::string> inBundlePaths { "../data/bms_app_install/" };
+    std::vector<std::string> parsedPaths;
+    auto ret = installer.ParseHapPaths(installPluginParam, inBundlePaths, parsedPaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: PluginInstaller_0009
+ * @tc.name: test ParseHapPaths
+ * @tc.desc: 1.Test ParseHapPaths the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0009, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InstallPluginParam installPluginParam;
+    std::vector<std::string> inBundlePaths { "/data/bms_app_install/entry.hap" };
+    std::vector<std::string> parsedPaths;
+    auto ret = installer.ParseHapPaths(installPluginParam, inBundlePaths, parsedPaths);
+    EXPECT_FALSE(parsedPaths.empty());
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0010
+ * @tc.name: test ParseHapPaths
+ * @tc.desc: 1.Test ParseHapPaths the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0010, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InstallPluginParam installPluginParam;
+    std::vector<std::string> inBundlePaths { "../data/entry.hap" };
+    std::vector<std::string> parsedPaths;
+    auto ret = installer.ParseHapPaths(installPluginParam, inBundlePaths, parsedPaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: PluginInstaller_0011
+ * @tc.name: test ParseHapPaths
+ * @tc.desc: 1.Test ParseHapPaths the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0011, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InstallPluginParam installPluginParam;
+    std::vector<std::string> inBundlePaths { "/data/entry.hap", "/data/bms_app_install/entry.hap" };
+    std::vector<std::string> parsedPaths;
+    auto ret = installer.ParseHapPaths(installPluginParam, inBundlePaths, parsedPaths);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0012
+ * @tc.name: test CopyHspToSecurityDir
+ * @tc.desc: 1.Test CopyHspToSecurityDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0012, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> bundlePaths;
+    InstallPluginParam installPluginParam;
+    auto ret = installer.CopyHspToSecurityDir(bundlePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0013
+ * @tc.name: test CopyHspToSecurityDir
+ * @tc.desc: 1.Test CopyHspToSecurityDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0013, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> bundlePaths {"data/test_bundle/"};
+    InstallPluginParam installPluginParam;
+    auto ret = installer.CopyHspToSecurityDir(bundlePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED);
+}
+
+/**
+ * @tc.number: PluginInstaller_0014
+ * @tc.name: test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0014, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> inBundlePaths;
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: PluginInstaller_0015
+ * @tc.name: test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0015, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> inBundlePaths{ "data/test-bundle/entry.hap" };
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: PluginInstaller_0016
+ * @tc.name: test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0016, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> inBundlePaths{ "data/test-bundle/library.hsp" };
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0017
+ * @tc.name: test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0017, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> inBundlePaths{ "data/test-bundle/entry.hap", "data/test-bundle/library.hsp" };
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: PluginInstaller_0018
+ * @tc.name: test ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0018, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> inBundlePaths{ "data/test-bundle/entry.sig", "data/test-bundle/library.hsp" };
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0019
+ * @tc.name: test ProcessNativeLibrary
+ * @tc.desc: 1.Test ProcessNativeLibrary the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0019, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath;
+    std::string moduleDir;
+    std::string moduleName;
+    std::string pluginBundleDir;
+    InnerBundleInfo newInfo;
+    auto ret = installer.ProcessNativeLibrary(bundlePath, moduleDir, moduleName, pluginBundleDir, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0020
+ * @tc.name: test ProcessNativeLibrary
+ * @tc.desc: 1.Test ProcessNativeLibrary the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0020, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    installer.nativeLibraryPath_ = "data/app/el1/public/";
+    std::string bundlePath;
+    std::string moduleDir;
+    std::string moduleName = "entry";
+    std::string pluginBundleDir;
+    InnerBundleInfo newInfo;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.compressNativeLibs = false;
+    newInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    auto ret = installer.ProcessNativeLibrary(bundlePath, moduleDir, moduleName, pluginBundleDir, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0021
+ * @tc.name: test ParseFiles
+ * @tc.desc: 1.Test ParseFiles the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0021, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> pluginFilePaths{ TEST_HSP_PATH };
+    InstallPluginParam installPluginParam;
+    auto ret = installer.ParseFiles(pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW);
+}
+
+/**
+ * @tc.number: PluginInstaller_0022
+ * @tc.name: test ProcessNativeLibrary
+ * @tc.desc: 1.Test ProcessNativeLibrary the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0022, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    installer.nativeLibraryPath_ = "data/app/el1/public/";
+    std::string bundlePath;
+    std::string moduleDir;
+    std::string moduleName = "entry";
+    std::string pluginBundleDir;
+    InnerBundleInfo newInfo;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.compressNativeLibs = true;
+    newInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    auto ret = installer.ProcessNativeLibrary(bundlePath, moduleDir, moduleName, pluginBundleDir, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0023
+ * @tc.name: test VerifyCodeSignatureForNativeFiles
+ * @tc.desc: 1.Test VerifyCodeSignatureForNativeFiles the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0023, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath;
+    std::string cpuAbi;
+    std::string targetSoPath;
+    std::string signatureFileDir;
+    bool isPreInstalledBundle = false;
+    auto ret = installer.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath, signatureFileDir,
+        isPreInstalledBundle);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0024
+ * @tc.name: test VerifyCodeSignatureForNativeFiles
+ * @tc.desc: 1.Test VerifyCodeSignatureForNativeFiles the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0024, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath;
+    std::string cpuAbi;
+    std::string targetSoPath;
+    std::string signatureFileDir;
+    bool isPreInstalledBundle = true;
+    auto ret = installer.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath, signatureFileDir,
+        isPreInstalledBundle);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED);
+}
+
+/**
+ * @tc.number: PluginInstaller_0025
+ * @tc.name: test VerifyCodeSignatureForHsp
+ * @tc.desc: 1.Test VerifyCodeSignatureForHsp the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0025, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hspPath;
+    std::string appIdentifier;
+    bool isEnterpriseBundle = true;
+    bool isCompileSdkOpenHarmony = true;
+    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, appIdentifier, isEnterpriseBundle,
+        isCompileSdkOpenHarmony);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED);
+}
+
+/**
+ * @tc.number: PluginInstaller_0026
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1.Test DeliveryProfileToCodeSign the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0026, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: PluginInstaller_0027
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1.Test DeliveryProfileToCodeSign the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0027, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    Security::Verify::ProvisionInfo info;
+    info.type = Security::Verify::ProvisionType::RELEASE;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyResult.SetProvisionInfo(info);
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults{ hapVerifyResult };
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0028
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1.Test DeliveryProfileToCodeSign the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0028, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    Security::Verify::ProvisionInfo info;
+    info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    info.type = Security::Verify::ProvisionType::DEBUG;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+
+    hapVerifyResult.SetProvisionInfo(info);
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults{ hapVerifyResult };
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE);
+}
+
+/**
+ * @tc.number: PluginInstaller_0029
+ * @tc.name: test DeliveryProfileToCodeSign
+ * @tc.desc: 1.Test DeliveryProfileToCodeSign the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0029, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    Security::Verify::ProvisionInfo info;
+    info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    info.type = Security::Verify::ProvisionType::DEBUG;
+    info.profileBlockLength = 1;
+    std::unique_ptr<unsigned char[]> source(new unsigned char[128]);
+    info.profileBlock = std::move(source);
+    Security::Verify::HapVerifyResult hapVerifyResult;
+
+    hapVerifyResult.SetProvisionInfo(info);
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults{ hapVerifyResult };
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0030
+ * @tc.name: test CheckPluginId
+ * @tc.desc: 1.Test CheckPluginId the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0030, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hostBundleName;
+    auto ret = installer.CheckPluginId(hostBundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_CHECK_PLUGINID_ERROR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0031
+ * @tc.name: test CheckPluginId
+ * @tc.desc: 1.Test CheckPluginId the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0031, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    installer.pluginIds_.emplace_back("test");
+    std::string hostBundleName = "wrong.bundleName";
+    auto ret = installer.CheckPluginId(hostBundleName);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0032
+ * @tc.name: test CheckPluginId
+ * @tc.desc: 1.Test CheckPluginId the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0032, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    installer.pluginIds_.emplace_back("test");
+    std::string hostBundleName = AppExecFwk::Profile::SYSTEM_RESOURCES_APP;
+    auto ret = installer.CheckPluginId(hostBundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_PARSE_PLUGINID_ERROR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0033
+ * @tc.name: test ParsePluginId
+ * @tc.desc: 1.Test ParsePluginId the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0033, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string appServiceCapabilities;
+    std::vector<std::string> pluginIds;
+    auto ret = installer.ParsePluginId(appServiceCapabilities, pluginIds);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: PluginInstaller_0034
+ * @tc.name: test ParsePluginId
+ * @tc.desc: 1.Test ParsePluginId the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0034, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string appServiceCapabilities = "{\"name\":\"John\"}";
+    std::vector<std::string> pluginIds;
+    auto ret = installer.ParsePluginId(appServiceCapabilities, pluginIds);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: PluginInstaller_0035
+ * @tc.name: test ParsePluginId
+ * @tc.desc: 1.Test ParsePluginId the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0035, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string appServiceCapabilities = APP_SERVICES_CAPABILITIES1;
+    std::vector<std::string> pluginIds;
+    auto ret = installer.ParsePluginId(appServiceCapabilities, pluginIds);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: PluginInstaller_0036
+ * @tc.name: test ParsePluginId
+ * @tc.desc: 1.Test ParsePluginId the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0036, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string appServiceCapabilities = R"({
+        "ohos.permission.kernel.SUPPORT_PLUGIN":{
+        }
+    })";
+    std::vector<std::string> pluginIds;
+    auto ret = installer.ParsePluginId(appServiceCapabilities, pluginIds);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: PluginInstaller_0037
+ * @tc.name: test CheckSupportPluginPermission
+ * @tc.desc: 1.Test CheckSupportPluginPermission the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0037, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hostBundleName;
+    auto ret = installer.CheckSupportPluginPermission(hostBundleName);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0038
+ * @tc.name: test CheckSupportPluginPermission
+ * @tc.desc: 1.Test CheckSupportPluginPermission the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0038, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    auto ret = installer.CheckPluginAppLabelInfo();
+    EXPECT_EQ(ret, ERR_OK);
+
+    InnerBundleInfo hostBundleInfo;
+    auto ret2 = installer.ProcessPluginInstall(hostBundleInfo);
+    EXPECT_EQ(ret2, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0039
+ * @tc.name: test CheckSupportPluginPermission
+ * @tc.desc: 1.Test CheckSupportPluginPermission the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0039, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test_bundleName";
+    installer.parsedBundles_["test_bundleName"] = innerBundleInfo;
+
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo2.baseApplicationInfo_->bundleName = "test_bundleName2";
+    installer.parsedBundles_["test_bundleName2"] = innerBundleInfo2;
+    auto ret = installer.CheckPluginAppLabelInfo();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_CHECK_APP_LABEL_ERROR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0040
+ * @tc.name: test CheckSupportPluginPermission
+ * @tc.desc: 1.Test CheckSupportPluginPermission the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0040, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto findRes = dataMgr->bundleInfos_.find(AppExecFwk::Profile::SYSTEM_RESOURCES_APP);
+    ASSERT_NE(findRes, dataMgr->bundleInfos_.end());
+
+    installer.parsedBundles_[AppExecFwk::Profile::SYSTEM_RESOURCES_APP] = findRes->second;
+
+    auto ret = installer.CheckPluginAppLabelInfo();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0041
+ * @tc.name: test CreatePluginDir
+ * @tc.desc: 1.Test CreatePluginDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0041, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hostBundleName;
+    std::string pluginDir;
+    auto ret = installer.CreatePluginDir(hostBundleName, pluginDir);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0042
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test CheckAppIdentifier the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0042, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test_bundleName";
+    innerBundleInfo.baseBundleInfo_->signatureInfo.appIdentifier = "testAppIdentifier";
+
+    installer.oldPluginInfo_.appIdentifier = "testAppIdentifier";
+    installer.parsedBundles_["test_bundleName"] = innerBundleInfo;
+
+    auto ret = installer.CheckAppIdentifier();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: PluginInstaller_0043
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test CheckAppIdentifier the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0043, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test_bundleName";
+    innerBundleInfo.baseBundleInfo_->signatureInfo.appIdentifier = "testAppIdentifier1";
+    innerBundleInfo.baseBundleInfo_->appId = "appId";
+
+    installer.oldPluginInfo_.appIdentifier = "testAppIdentifier";
+    installer.oldPluginInfo_.appId = "appId";
+    installer.parsedBundles_["test_bundleName"] = innerBundleInfo;
+
+    auto ret = installer.CheckAppIdentifier();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: PluginInstaller_0044
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test CheckAppIdentifier the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0044, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test_bundleName";
+    innerBundleInfo.baseBundleInfo_->signatureInfo.appIdentifier = "testAppIdentifier1";
+    innerBundleInfo.baseBundleInfo_->appId = "appId";
+
+    installer.oldPluginInfo_.appIdentifier = "testAppIdentifier";
+    installer.oldPluginInfo_.appId = "appId2";
+    installer.parsedBundles_["test_bundleName"] = innerBundleInfo;
+
+    auto ret = installer.CheckAppIdentifier();
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: PluginInstaller_0045
+ * @tc.name: test CheckVersionCodeForUpdate
+ * @tc.desc: 1.Test CheckVersionCodeForUpdate the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0045, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test_bundleName";
+    innerBundleInfo.baseBundleInfo_->versionCode = 1111;
+
+    installer.oldPluginInfo_.versionCode = 1112;
+    installer.parsedBundles_["test_bundleName"] = innerBundleInfo;
+
+    auto ret = installer.CheckVersionCodeForUpdate();
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: PluginInstaller_0046
+ * @tc.name: test CheckVersionCodeForUpdate
+ * @tc.desc: 1.Test CheckVersionCodeForUpdate the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0046, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test_bundleName";
+    innerBundleInfo.baseBundleInfo_->versionCode = 1112;
+
+    installer.oldPluginInfo_.versionCode = 1111;
+    installer.parsedBundles_["test_bundleName"] = innerBundleInfo;
+
+    auto ret = installer.CheckVersionCodeForUpdate();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: PluginInstaller_0047
+ * @tc.name: test ExtractPluginBundles
+ * @tc.desc: 1.Test ExtractPluginBundles the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0047, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath;
+    InnerBundleInfo newInfo;
+    std::string pluginDir;
+    auto ret = installer.ExtractPluginBundles(bundlePath, newInfo, pluginDir);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0048
+ * @tc.name: test MergePluginBundleInfo
+ * @tc.desc: 1.Test MergePluginBundleInfo the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0048, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test_bundleName";
+    installer.parsedBundles_["test_bundleName"] = innerBundleInfo;
+    InnerBundleInfo pluginBundleInfo;
+    installer.MergePluginBundleInfo(pluginBundleInfo);
+    EXPECT_EQ(pluginBundleInfo.GetBundleName().empty(), false);
+}
+
+/**
+ * @tc.number: PluginInstaller_0049
+ * @tc.name: test SavePluginInfoToStorage
+ * @tc.desc: 1.Test SavePluginInfoToStorage the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0049, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo pluginInfo;
+    InnerBundleInfo hostBundleInfo;
+    auto ret = installer.SavePluginInfoToStorage(pluginInfo, hostBundleInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0050
+ * @tc.name: test PluginRollBack
+ * @tc.desc: 1.Test PluginRollBack the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0050, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    installer.isPluginExist_ = false;
+    std::string hostBundleName;
+    installer.PluginRollBack(hostBundleName);
+    EXPECT_EQ(hostBundleName, "");
+
+    installer.isPluginExist_ = true;
+    installer.PluginRollBack(hostBundleName);
+    EXPECT_EQ(hostBundleName, "");
+}
+
+/**
+ * @tc.number: PluginInstaller_0051
+ * @tc.name: test PluginRollBack
+ * @tc.desc: 1.Test PluginRollBack the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0051, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo newInfo;
+    auto ret = installer.RemovePluginDir(newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0052
+ * @tc.name: test SaveHspToInstallDir
+ * @tc.desc: 1.Test SaveHspToInstallDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0052, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath;
+    std::string pluginBundleDir;
+    std::string moduleName;
+    InnerBundleInfo newInfo;
+    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0053
+ * @tc.name: test SaveHspToInstallDir
+ * @tc.desc: 1.Test SaveHspToInstallDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0053, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath;
+    std::string pluginBundleDir;
+    std::string moduleName;
+    InnerBundleInfo newInfo;
+    installer.signatureFileDir_ = "data/";
+    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0054
+ * @tc.name: test RemoveEmptyDirs
+ * @tc.desc: 1.Test RemoveEmptyDirs the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0054, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string pluginDir;
+    installer.RemoveEmptyDirs(pluginDir);
+    installer.RemoveDir(pluginDir);
+    EXPECT_EQ(pluginDir.empty(), true);
+}
+
+/**
+ * @tc.number: PluginInstaller_0055
+ * @tc.name: test ProcessPluginUninstall
+ * @tc.desc: 1.Test ProcessPluginUninstall the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0055, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo hostBundleInfo;
+    auto ret = installer.ProcessPluginUninstall(hostBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0056
+ * @tc.name: test ProcessPluginUninstall
+ * @tc.desc: 1.Test ProcessPluginUninstall the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0056, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    std::string bundleName = "test.bundleName";
+    innerBundleInfo.baseApplicationInfo_->bundleName = bundleName;
+
+    InnerBundleUserInfo innerBundleUserInfo1;
+    innerBundleUserInfo1.installedPluginSet.insert(bundleName);
+    innerBundleInfo.innerBundleUserInfos_["test.bundleName_100"] = innerBundleUserInfo1;
+
+    InnerBundleUserInfo innerBundleUserInfo2;
+    innerBundleUserInfo2.installedPluginSet.insert(bundleName);
+    innerBundleInfo.innerBundleUserInfos_["test.bundleName_101"] = innerBundleUserInfo2;
+    auto ret = installer.ProcessPluginUninstall(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0057
+ * @tc.name: test RemoveOldInstallDir
+ * @tc.desc: 1.Test RemoveOldInstallDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0057, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    installer.isPluginExist_ = true;
+    installer.RemoveOldInstallDir();
+
+    std::string hostBundleName;
+    installer.UninstallRollBack(hostBundleName);
+
+    NotifyType type = NotifyType::START_INSTALL;
+    int32_t uid = 1;
+    installer.NotifyPluginEvents(type, uid);
+    EXPECT_EQ(installer.isPluginExist_, true);
+}
+
+/**
+ * @tc.number: PluginInstaller_0058
+ * @tc.name: test GetModuleNames
+ * @tc.desc: 1.Test GetModuleNames the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0058, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    auto ret = installer.GetModuleNames();
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: PluginInstaller_0059
+ * @tc.name: test GetModuleNames
+ * @tc.desc: 1.Test GetModuleNames the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0059, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test_bundleName";
+    installer.parsedBundles_["test_bundleName"] = innerBundleInfo;
+    auto ret = installer.GetModuleNames();
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
 }
 } // OHOS

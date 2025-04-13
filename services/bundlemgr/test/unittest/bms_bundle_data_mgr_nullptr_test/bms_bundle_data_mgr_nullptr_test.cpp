@@ -31,6 +31,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "parameters.h"
+#include "plugin_installer.h"
 #include "scope_guard.h"
 
 using namespace testing::ext;
@@ -770,5 +771,131 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCloneInstaller_0040, Function | Medi
     std::string bundleName = "test";
     auto ret = installer.GetDeveloperId(bundleName);
     EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: PluginInstaller_0010
+ * @tc.name: test InstallPlugin
+ * @tc.desc: 1.Test InstallPlugin the PluginInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, PluginInstaller_0010, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hostBundleName;
+    std::vector<std::string> pluginFilePaths;
+    InstallPluginParam installPluginParam;
+    auto ret = installer.InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0020
+ * @tc.name: test UninstallPlugin
+ * @tc.desc: 1.Test UninstallPlugin the PluginInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, PluginInstaller_0020, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hostBundleName;
+    std::string pluginBundleName;
+    InstallPluginParam installPluginParam;
+    auto ret = installer.UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0030
+ * @tc.name: test ProcessPluginInstall
+ * @tc.desc: 1.Test ProcessPluginInstall the PluginInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, PluginInstaller_0030, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo hostBundleInfo;
+    auto ret = installer.ProcessPluginInstall(hostBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0040
+ * @tc.name: test ProcessPluginInstall
+ * @tc.desc: 1.Test ProcessPluginInstall the PluginInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, PluginInstaller_0040, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo hostBundleInfo;
+    installer.parsedBundles_.emplace("test", hostBundleInfo);
+    auto ret = installer.ProcessPluginInstall(hostBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0050
+ * @tc.name: test MergePluginBundleInfo
+ * @tc.desc: 1.Test MergePluginBundleInfo the PluginInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, PluginInstaller_0050, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "test";
+    InnerBundleInfo pluginBundleInfo;
+    installer.parsedBundles_.emplace("test", innerBundleInfo);
+    installer.MergePluginBundleInfo(pluginBundleInfo);
+    EXPECT_EQ(pluginBundleInfo.baseApplicationInfo_->bundleName, "test");
+}
+
+/**
+ * @tc.number: PluginInstaller_0060
+ * @tc.name: test MergePluginBundleInfo
+ * @tc.desc: 1.Test MergePluginBundleInfo the PluginInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, PluginInstaller_0060, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo pluginInfo;
+    InnerBundleInfo hostBundleInfo;
+    auto ret = installer.SavePluginInfoToStorage(pluginInfo, hostBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0070
+ * @tc.name: test PluginRollBack
+ * @tc.desc: 1.Test PluginRollBack the PluginInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, PluginInstaller_0070, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hostBundleName;
+    installer.PluginRollBack(hostBundleName);
+    EXPECT_EQ(hostBundleName.empty(), true);
+}
+
+/**
+ * @tc.number: PluginInstaller_0080
+ * @tc.name: test ProcessPluginUninstall
+ * @tc.desc: 1.Test ProcessPluginUninstall the PluginInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, PluginInstaller_0080, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo hostBundleInfo;
+    auto ret = installer.ProcessPluginUninstall(hostBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0090
+ * @tc.name: test PluginRollBack
+ * @tc.desc: 1.Test PluginRollBack the PluginInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, PluginInstaller_0090, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hostBundleName;
+    installer.UninstallRollBack(hostBundleName);
+    EXPECT_EQ(hostBundleName.empty(), true);
 }
 } // OHOS

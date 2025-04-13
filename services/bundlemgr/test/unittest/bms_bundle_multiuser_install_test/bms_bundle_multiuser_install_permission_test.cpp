@@ -22,6 +22,7 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
+#include "plugin_installer.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -114,5 +115,186 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, CreateDataDir_0100, Function |
     InnerBundleInfo info;
     auto res = installer.CreateDataDir(info, 100, -1);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0001
+ * @tc.name: test VerifyCodeSignatureForNativeFiles
+ * @tc.desc: 1.Test VerifyCodeSignatureForNativeFiles the PluginInstaller
+*/
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0001, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath;
+    std::string cpuAbi;
+    std::string targetSoPath;
+    std::string signatureFileDir;
+    bool isPreInstalledBundle = true;
+    auto ret = installer.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath, signatureFileDir,
+        isPreInstalledBundle);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0002
+ * @tc.name: test VerifyCodeSignatureForNativeFiles
+ * @tc.desc: 1.Test VerifyCodeSignatureForNativeFiles the PluginInstaller
+*/
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0002, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath;
+    std::string cpuAbi;
+    std::string targetSoPath;
+    std::string signatureFileDir;
+    bool isPreInstalledBundle = true;
+    auto ret = installer.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath, signatureFileDir,
+        isPreInstalledBundle);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0003
+ * @tc.name: test VerifyCodeSignatureForHsp
+ * @tc.desc: 1.Test VerifyCodeSignatureForHsp the PluginInstaller
+*/
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0003, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hspPath;
+    std::string appIdentifier;
+    bool isEnterpriseBundle = true;
+    bool isCompileSdkOpenHarmony = true;
+    auto ret = installer.VerifyCodeSignatureForHsp(hspPath, appIdentifier, isEnterpriseBundle,
+        isCompileSdkOpenHarmony);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0004
+ * @tc.name: test CreatePluginDir
+ * @tc.desc: 1.Test CreatePluginDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0004, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hostBundleName;
+    std::string pluginDir;
+    auto ret = installer.CreatePluginDir(hostBundleName, pluginDir);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0005
+ * @tc.name: test CreatePluginDir
+ * @tc.desc: 1.Test CreatePluginDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0005, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath;
+    InnerBundleInfo newInfo;
+    std::string pluginDir;
+    auto ret = installer.ExtractPluginBundles(bundlePath, newInfo, pluginDir);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0006
+ * @tc.name: test RemovePluginDir
+ * @tc.desc: 1.Test RemovePluginDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0006, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo newInfo;
+    auto ret = installer.RemovePluginDir(newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0007
+ * @tc.name: test SaveHspToInstallDir
+ * @tc.desc: 1.Test SaveHspToInstallDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0007, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath;
+    std::string pluginBundleDir;
+    std::string moduleName;
+    InnerBundleInfo newInfo;
+    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0008
+ * @tc.name: test SaveHspToInstallDir
+ * @tc.desc: 1.Test SaveHspToInstallDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0008, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath;
+    std::string pluginBundleDir;
+    std::string moduleName;
+    InnerBundleInfo newInfo;
+    installer.signatureFileDir_ = "data/";
+    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0009
+ * @tc.name: test RemoveEmptyDirs
+ * @tc.desc: 1.Test RemoveEmptyDirs the PluginInstaller
+*/
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0009, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string pluginDir;
+    installer.RemoveEmptyDirs(pluginDir);
+    installer.RemoveDir(pluginDir);
+    EXPECT_EQ(pluginDir.empty(), true);
+}
+
+/**
+ * @tc.number: PluginInstaller_0010
+ * @tc.name: test ProcessPluginUninstall
+ * @tc.desc: 1.Test ProcessPluginUninstall the PluginInstaller
+*/
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0010, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo hostBundleInfo;
+    auto ret = installer.ProcessPluginUninstall(hostBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0011
+ * @tc.name: test RemoveOldInstallDir
+ * @tc.desc: 1.Test RemoveOldInstallDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0011, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    installer.isPluginExist_ = false;
+    installer.RemoveOldInstallDir();
+    EXPECT_EQ(installer.isPluginExist_, false);
+}
+
+/**
+ * @tc.number: PluginInstaller_0012
+ * @tc.name: test RemoveOldInstallDir
+ * @tc.desc: 1.Test RemoveOldInstallDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0012, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    installer.isPluginExist_ = true;
+    installer.RemoveOldInstallDir();
+    EXPECT_EQ(installer.isPluginExist_, true);
 }
 } // OHOS

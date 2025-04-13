@@ -95,6 +95,7 @@
   </target>
   <target name="BmsBundleInstallerTest">
     <preparer>
+      <option name="push" value="bundle_hsp/hsp_A.hsp -> /data/test/resource/bms/install_bundle/" src="res" />
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/fifth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/fourth_right.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
