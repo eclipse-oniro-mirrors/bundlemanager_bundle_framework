@@ -5359,16 +5359,16 @@ ErrCode BundleMgrProxy::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutIn
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("DeleteDesktopShortcutInfo write InterfaceToken fail");
+        APP_LOGE("write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     auto ret = WriteParcelInfoIntelligent(shortcutInfo, data);
     if (ret != ERR_OK) {
-        APP_LOGE("DeleteDesktopShortcutInfo write ParcelInfo fail");
+        APP_LOGE("write ParcelInfo fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("DeleteDesktopShortcutInfo write userId fail");
+        APP_LOGE("write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
