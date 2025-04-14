@@ -263,8 +263,7 @@ bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
         std::string realPath = "";
         if (CheckFilePath(hapFilePath, realPath) != ERR_OK) {
             APP_LOGE("find invalid hap path %{public}s", hapFilePath.c_str());
-            closedir(dir);
-            return false;
+            continue;
         }
         hapFileList.emplace_back(realPath);
         APP_LOGD("find hap path %{public}s", realPath.c_str());

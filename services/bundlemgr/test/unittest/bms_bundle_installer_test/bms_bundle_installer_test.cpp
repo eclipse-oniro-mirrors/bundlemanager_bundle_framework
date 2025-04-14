@@ -7244,8 +7244,8 @@ HWTEST_F(BmsBundleInstallerTest, AddNotifyBundleEvents_0100, Function | SmallTes
 HWTEST_F(BmsBundleInstallerTest, HmpBundleInstaller_0100, Function | MediumTest | Level1)
 {
     HmpBundleInstaller installer;
-    ErrCode ret = installer.InstallSystemHspInHmp("/data");
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    ErrCode ret = installer.InstallSystemHspInHmp("/data/log");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
 
 /**
@@ -7256,8 +7256,8 @@ HWTEST_F(BmsBundleInstallerTest, HmpBundleInstaller_0100, Function | MediumTest 
 HWTEST_F(BmsBundleInstallerTest, HmpBundleInstaller_0200, Function | MediumTest | Level1)
 {
     HmpBundleInstaller installer;
-    ErrCode ret = installer.InstallNormalAppInHmp("/data");
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    ErrCode ret = installer.InstallNormalAppInHmp("/data/log");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
 
 /**
