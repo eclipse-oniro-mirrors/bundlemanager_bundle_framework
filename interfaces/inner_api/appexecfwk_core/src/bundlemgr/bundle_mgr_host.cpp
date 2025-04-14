@@ -487,6 +487,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ADDITIONAL_INFO):
             errCode = this->HandleGetAdditionalInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ADDITIONAL_INFO_FOR_ALL_USER):
+            errCode = this->HandleGetAdditionalInfoForAllUser(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_EXT_NAME_OR_MIME_TO_APP):
             errCode = this->HandleSetExtNameOrMIMEToApp(data, reply);
             break;
@@ -3402,6 +3405,23 @@ ErrCode BundleMgrHost::HandleGetAdditionalInfo(MessageParcel &data, MessageParce
     std::string bundleName = data.ReadString();
     std::string additionalInfo;
     ErrCode ret = GetAdditionalInfo(bundleName, additionalInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetAdditionalInfo write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteString(additionalInfo)) {
+        APP_LOGE("write additionalInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAdditionalInfoForAllUser(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string additionalInfo;
+    ErrCode ret = GetAdditionalInfoForAllUser(bundleName, additionalInfo);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("HandleGetAdditionalInfo write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

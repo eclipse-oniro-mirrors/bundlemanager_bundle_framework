@@ -1327,7 +1327,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         result = SaveHapToInstallPath(newInfos, oldInfo);
         CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
     } else {
-        ClearEncryptionStatus();
+        if ((result = CheckHapEncryption(newInfos, oldInfo, false)) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "check encryption of pre-hap failed %{public}d", result);
+        }
     }
 
     if (installParam.isDataPreloadHap) {
@@ -5761,7 +5763,7 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
 }
 
 ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos,
-    const InnerBundleInfo &oldInfo)
+    const InnerBundleInfo &oldInfo, bool isHapCopied)
 {
     LOG_I(BMS_TAG_INSTALLER, "begin");
     InnerBundleInfo newInfo;
@@ -5770,11 +5772,16 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         return ERR_APPEXECFWK_GET_INSTALL_TEMP_BUNDLE_ERROR;
     }
     for (const auto &info : infos) {
-        if (hapPathRecords_.find(info.first) == hapPathRecords_.end()) {
-            LOG_E(BMS_TAG_INSTALLER, "path %{public}s cannot be found in hapPathRecord", info.first.c_str());
-            return ERR_APPEXECFWK_HAP_ENCRYPTION_CHECK_ERROR;
+        std::string hapPath;
+        if (!isHapCopied) {
+            hapPath = info.first;
+        } else {
+            if (hapPathRecords_.find(info.first) == hapPathRecords_.end()) {
+                LOG_E(BMS_TAG_INSTALLER, "path %{public}s cannot be found in hapPathRecord", info.first.c_str());
+                return ERR_APPEXECFWK_HAP_ENCRYPTION_CHECK_ERROR;
+            }
+            hapPath = hapPathRecords_.at(info.first);
         }
-        std::string hapPath = hapPathRecords_.at(info.first);
         CheckEncryptionParam param;
         param.modulePath = hapPath;
         int uid = info.second.GetUid(userId_);
@@ -5787,7 +5794,9 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         }
         bool isEncrypted = false;
         ErrCode result = InstalldClient::GetInstance()->CheckEncryption(param, isEncrypted);
-        CHECK_RESULT(result, "fail to CheckHapEncryption, error is %{public}d");
+        if (isHapCopied) {
+            CHECK_RESULT(result, "fail to CheckHapEncryption, error is %{public}d");
+        }
         if ((info.second.GetBaseApplicationInfo().debug ||
             (info.second.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG)) && isEncrypted) {
             LOG_E(BMS_TAG_INSTALLER, "-n %{public}s debug encrypted bundle is not allowed to install",
@@ -5809,27 +5818,12 @@ void BaseBundleInstaller::UpdateEncryptionStatus(const std::unordered_map<std::s
     const InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo)
 {
     if (IsBundleEncrypted(infos, oldInfo, newInfo)) {
-        LOG_D(BMS_TAG_INSTALLER, "application contains encrypted module");
+        LOG_I(BMS_TAG_INSTALLER, "%{public}s is encrypted", newInfo.GetBundleName().c_str());
         newInfo.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
     } else {
         LOG_D(BMS_TAG_INSTALLER, "application does not contain encrypted module");
         newInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
     }
-}
-
-void BaseBundleInstaller::ClearEncryptionStatus()
-{
-    InnerBundleInfo newInfo;
-    if (!tempInfo_.GetTempBundleInfo(newInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
-        return;
-    }
-    newInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
-    if (dataMgr_ == nullptr || !tempInfo_.SetTempBundleInfo(newInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "UpdateInnerBundleInfo failed");
-        return;
-    }
-    LOG_I(BMS_TAG_INSTALLER, "encryption status is cleared for: %{public}s", bundleName_.c_str());
 }
 
 bool BaseBundleInstaller::IsBundleEncrypted(const std::unordered_map<std::string, InnerBundleInfo> &infos,

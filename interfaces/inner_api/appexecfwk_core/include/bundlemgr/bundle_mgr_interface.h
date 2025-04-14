@@ -1413,6 +1413,11 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode GetAdditionalInfoForAllUser(const std::string &bundleName, std::string &additionalInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const std::string &extName, const std::string &mimeType)
     {

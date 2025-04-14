@@ -928,6 +928,8 @@ public:
         std::string &specifiedDistributionType) override;
     virtual ErrCode GetAdditionalInfo(const std::string &bundleName,
         std::string &additionalInfo) override;
+    virtual ErrCode GetAdditionalInfoForAllUser(const std::string &bundleName,
+        std::string &additionalInfo) override;
     virtual ErrCode SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const std::string &extName, const std::string &mimeType) override;
     virtual ErrCode DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,

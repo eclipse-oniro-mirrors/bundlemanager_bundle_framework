@@ -3948,6 +3948,33 @@ ErrCode BundleMgrProxy::GetAdditionalInfo(const std::string &bundleName,
     return ret;
 }
 
+ErrCode BundleMgrProxy::GetAdditionalInfoForAllUser(const std::string &bundleName,
+    std::string &additionalInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAdditionalInfo due to write InterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ADDITIONAL_INFO_FOR_ALL_USER, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        additionalInfo = reply.ReadString();
+    }
+    return ret;
+}
+
 ErrCode BundleMgrProxy::SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, const std::string &extName, const std::string &mimeType)
 {
