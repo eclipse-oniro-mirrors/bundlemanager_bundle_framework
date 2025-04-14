@@ -578,5 +578,21 @@ HWTEST_F(BmsAppControlProxyTest, SendRequest_0100, Function | MediumTest | Level
     auto res = appControlProxy.SendRequest(code, data, reply);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
+
+/**
+ * @tc.number: DeleteUninstallDisposedRule_0100
+ * @tc.name: test the DeleteUninstallDisposedRule
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteUninstallDisposedRule
+ */
+HWTEST_F(BmsAppControlProxyTest, DeleteUninstallDisposedRule_0100, Function | MediumTest | Level1)
+{
+    AppControlProxy appControlProxy(nullptr);
+    std::string appId = "DeleteUninstallDisposedRule";
+    int32_t appIndex =  1234;
+    int32_t userId = 1234;
+    auto res = appControlProxy.DeleteUninstallDisposedRule(appId, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
 } // AppExecFwk
 } // OHOS

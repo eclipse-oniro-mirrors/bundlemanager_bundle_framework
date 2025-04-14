@@ -1349,7 +1349,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, HandleUninstallBundle_0001, Function | Smal
     const std::string bundleName = "testname";
     std::map<std::string, Element> currentInfos;
     DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, bundleName);
-    EXPECT_FALSE(DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfos(userId, currentInfos));
+    ASSERT_FALSE(DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfos(userId, currentInfos));
 }
 
 /**
@@ -1362,7 +1362,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, HandleCreateUser_0001, Function | SmallTest
     int32_t userId = 100;
     std::map<std::string, Element> infos;
     DefaultAppMgr::GetInstance().HandleCreateUser(userId);
-    EXPECT_FALSE(DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfos(-1, infos));
+    ASSERT_FALSE(DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfos(-1, infos));
 }
 
 /**
