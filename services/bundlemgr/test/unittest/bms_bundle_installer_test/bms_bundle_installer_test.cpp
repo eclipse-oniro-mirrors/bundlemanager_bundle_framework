@@ -619,16 +619,8 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0020, Function | SmallTest | Level0
     ret = installer.CleanBundleClonesShaderCache(allAppIndexes, BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, ERR_OK);
 
-    // test DeleteBundleClonesShaderCache succeed
-    ret = installer.DeleteBundleClonesShaderCache(allAppIndexes, BUNDLE_NAME, USERID);
-    EXPECT_EQ(ret, ERR_OK);
-
     // test DeleteShaderCache succeed
     ret = installer.DeleteShaderCache(BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_OK);
-
-    // test DeleteEl1ShaderCache succeed
-    ret = installer.DeleteEl1ShaderCache(info, BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, ERR_OK);
 
     // test DeleteCloudShader succeed
@@ -669,16 +661,6 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0030, Function | SmallTest | Level0
     // test DeleteShaderCache failed
     StopInstalldService();
     ret = installer.DeleteShaderCache(BUNDLE_NAME);
-    EXPECT_NE(ret, ERR_OK);
-
-    // test DeleteEl1ShaderCache failed
-    StopInstalldService();
-    ret = installer.DeleteEl1ShaderCache(info, BUNDLE_NAME, USERID);
-    EXPECT_NE(ret, ERR_OK);
-
-    // test CleanEl1UserShaderCache failed
-    StopInstalldService();
-    ret = installer.DeleteBundleClonesShaderCache(allAppIndexes, BUNDLE_NAME, USERID);
     EXPECT_NE(ret, ERR_OK);
     ClearBundleInfo();
 }

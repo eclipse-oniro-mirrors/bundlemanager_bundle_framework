@@ -1670,10 +1670,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_SAVE_FIRST_INSTALL_BUNDLE_ERROR;
     }
 
-    if (DeleteEl1ShaderCache(oldInfo, bundleName, userId_) != ERR_OK) {
-        APP_LOGW("remove el1 shader cache dir failed for %{public}s", bundleName.c_str());
-    }
-
     if (isMultiUser) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
         if (oldInfo.IsPreInstallApp() && isForcedUninstall) {
@@ -6409,36 +6405,6 @@ ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName,
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
     LOG_D(BMS_TAG_INSTALLER, "CreateShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, uid, gid);
-}
-
-ErrCode BaseBundleInstaller::DeleteBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
-    const std::string &bundleName, int32_t userId) const
-{
-    ErrCode ret = ERR_OK;
-    for (int32_t appIndex: allAppIndexes) {
-        std::string cloneBundleName = bundleName;
-        if (appIndex != 0) {
-            cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
-        }
-        std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-        el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
-        el1ShaderCachePath = el1ShaderCachePath + cloneBundleName;
-        ret = InstalldClient::GetInstance()->RemoveDir(el1ShaderCachePath);
-        if (ret != ERR_OK) {
-            LOG_W(BMS_TAG_DEFAULT, "%{public}s clean shader cache fail %{public}d", bundleName.c_str(), ret);
-            return ret;
-        }
-    }
-    return ret;
-}
-
-ErrCode BaseBundleInstaller::DeleteEl1ShaderCache(const InnerBundleInfo &oldInfo,
-    const std::string &bundleName, int32_t userId) const
-{
-    std::vector<int32_t> allAppIndexes = {0};
-    std::vector<int32_t> cloneAppIndexes = dataMgr_->GetCloneAppIndexesByInnerBundleInfo(oldInfo, userId);
-    allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
-    return DeleteBundleClonesShaderCache(allAppIndexes, bundleName, userId);
 }
 
 ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) const

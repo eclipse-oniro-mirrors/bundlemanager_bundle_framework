@@ -2238,6 +2238,17 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(
             LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
+        if (el == ServiceConstants::BUNDLE_EL[0]) {
+            std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+            el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1,
+                std::to_string(userId));
+            el1ShaderCachePath = el1ShaderCachePath + bundleName;
+            if (!InstalldOperator::DeleteDir(el1ShaderCachePath)) {
+                LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d",
+                    el1ShaderCachePath.c_str(), errno);
+                return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+            }
+        }
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             std::string logDir = dataDir + ServiceConstants::LOG + bundleName;
             if (!InstalldOperator::DeleteDir(logDir)) {

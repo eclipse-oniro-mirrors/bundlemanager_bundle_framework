@@ -187,7 +187,7 @@ constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
 constexpr const char* CLOUD_SHADER_COMMON_PATH = "/data/local/shader_cache/cloud/common";
 constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlename";
 // new shader
-constexpr int16_t NEW_SHADRE_CACHE_MODE = 02775;
+constexpr int16_t NEW_SHADRE_CACHE_MODE = 02771;
 constexpr int16_t NEW_SHADRE_CACHE_GID = 3099;
 constexpr const char* NEW_SHADER_CACHE_PATH = "/data/app/el1/%/shader_cache/";
 constexpr const char* NEW_CLOUD_SHADER_PATH = "/data/app/el1/public/shader_cache/cloud/";
