@@ -66,6 +66,26 @@ constexpr const char* HAPS_FILE_NEEDED =
 } // namespace
 static bool g_isSystemApp = false;
 
+static bool GetNativeInstallerWithDeathRecpt(InstallResult& installResult,
+    sptr<IBundleInstaller>& iBundleInstaller, sptr<InstallerCallback>& callback)
+{
+    iBundleInstaller = CommonFunc::GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+        return false;
+    }
+    callback = new (std::nothrow) InstallerCallback();
+    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
+    if (callback == nullptr ||recipient == nullptr) {
+        APP_LOGE("callback or recipient is nullptr");
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+        return false;
+    }
+    iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
+    return true;
+}
+
 static bool ParseInstallParamWithLog(ani_env* env, ani_object& aniInstParam, InstallParam& installParam)
 {
     if (!CommonFunAni::ParseInstallParam(env, aniInstParam, installParam)) {
@@ -100,20 +120,11 @@ static void ExecuteInstall(const std::vector<std::string>& hapFiles, InstallPara
         installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID);
         return;
     }
-    auto iBundleInstaller = CommonFunc::GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+    sptr<IBundleInstaller> iBundleInstaller;
+    sptr<InstallerCallback> callback;
+    if (!GetNativeInstallerWithDeathRecpt(installResult, iBundleInstaller, callback)) {
         return;
     }
-    sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
-    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
-    if (callback == nullptr || recipient == nullptr) {
-        APP_LOGE("callback or death recipient is nullptr");
-        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
-        return;
-    }
-    iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
     ErrCode res = iBundleInstaller->StreamInstall(hapFiles, installParam, callback);
     if (res == ERR_OK) {
         installResult.resultCode = callback->GetResultCode();
@@ -163,28 +174,18 @@ static void ProcessResult(ani_env* env, InstallResult& result, const InstallOpti
     }
 }
 
-void UninstallOrRecoverExecuter(std::string& bundleName, InstallParam& installParam, InstallResult& installResult,
-    InstallOption option)
+static void UninstallOrRecoverExecuter(std::string& bundleName, InstallParam& installParam,
+    InstallResult& installResult, InstallOption option)
 {
     if (bundleName.empty()) {
         installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME);
         return;
     }
-    auto iBundleInstaller = CommonFunc::GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+    sptr<IBundleInstaller> iBundleInstaller;
+    sptr<InstallerCallback> callback;
+    if (!GetNativeInstallerWithDeathRecpt(installResult, iBundleInstaller, callback)) {
         return;
     }
-
-    sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
-    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
-    if (callback == nullptr || recipient == nullptr) {
-        APP_LOGE("callback or death recipient is nullptr");
-        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
-        return;
-    }
-    iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
     if (option == InstallOption::RECOVER) {
         iBundleInstaller->Recover(bundleName, installParam, callback);
     } else if (option == InstallOption::UNINSTALL) {
@@ -266,10 +267,37 @@ static void AniRecover(ani_env* env, [[maybe_unused]] ani_object installerObj,
     ProcessResult(env, result, InstallOption::RECOVER);
 }
 
+static void ExeUninstallByUninstallParam(UninstallParam& uninstallParam, InstallResult& installResult)
+{
+    const std::string bundleName = uninstallParam.bundleName;
+    if (bundleName.empty()) {
+        installResult.resultCode =
+            static_cast<int32_t>(IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST);
+        return;
+    }
+    sptr<IBundleInstaller> iBundleInstaller;
+    sptr<InstallerCallback> callback;
+    if (!GetNativeInstallerWithDeathRecpt(installResult, iBundleInstaller, callback)) {
+        return;
+    }
+    iBundleInstaller->Uninstall(uninstallParam, callback);
+    installResult.resultMsg = callback->GetResultMsg();
+    installResult.resultCode = callback->GetResultCode();
+}
+
 static void AniUninstallByUninstallParam(ani_env* env, [[maybe_unused]] ani_object installerObj,
     ani_object aniUnInstParam)
 {
     APP_LOGI("UninstallByUninstallParam");
+    UninstallParam uninstallParam;
+    if (!CommonFunAni::ParseUninstallParam(env, aniUnInstParam, uninstallParam)) {
+        APP_LOGE("InstallParam parse invalid");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        return;
+    }
+    InstallResult result;
+    ExeUninstallByUninstallParam(uninstallParam, result);
+    ProcessResult(env, result, InstallOption::UNINSTALL);
 }
 
 static void AniUpdateBundleForSelf(ani_env* env, [[maybe_unused]] ani_object installerObj,
