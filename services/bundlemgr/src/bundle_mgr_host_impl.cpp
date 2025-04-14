@@ -1637,6 +1637,10 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     if (userId < 0) {
         APP_LOGE("userId is invalid");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
@@ -1761,6 +1765,11 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        return false;
+    }
+    if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
@@ -1947,6 +1956,10 @@ ErrCode BundleMgrHostImpl::CopyAp(const std::string &bundleName, bool isAllBundl
 bool BundleMgrHostImpl::DumpInfos(
     const DumpFlag flag, const std::string &bundleName, int32_t userId, std::string &result)
 {
+    if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
+        return false;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
         return false;
@@ -2268,6 +2281,10 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0, caller);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     if (!CheckCanSetEnable(bundleName)) {
         APP_LOGE("bundle in white-list");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -2408,6 +2425,10 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
         APP_LOGE("verify permission failed");
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
             userId, isEnabled, 0, caller);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (!CheckCanSetEnable(abilityInfo.bundleName)) {

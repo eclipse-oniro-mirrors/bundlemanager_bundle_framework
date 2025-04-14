@@ -204,6 +204,11 @@ bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
 {
     return false;
 }
+
+bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
+{
+    return false;
+}
 #else
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
 {
@@ -211,6 +216,11 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
 }
 
 bool BundlePermissionMgr::IsSystemApp()
+{
+    return true;
+}
+
+bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
 {
     return true;
 }

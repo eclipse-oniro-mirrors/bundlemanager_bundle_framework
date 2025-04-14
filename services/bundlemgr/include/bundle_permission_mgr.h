@@ -113,6 +113,8 @@ public:
 
     static bool IsCallingUidValid(int32_t uid);
 
+    static bool CheckUserFromShell(int32_t userId);
+
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
         const InnerBundleInfo &innerBundleInfo);

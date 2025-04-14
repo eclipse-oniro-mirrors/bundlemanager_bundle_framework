@@ -55,6 +55,10 @@ ErrCode OverlayManagerHostImpl::GetAllOverlayModuleInfo(const std::string &bundl
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
     }
+    if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+    }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
@@ -74,6 +78,10 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &bundleNa
         moduleName.c_str());
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_OVERLAY_MODULE_INFO);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+    if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+    }
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -100,6 +108,10 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &moduleNa
     if (moduleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
@@ -188,6 +200,10 @@ ErrCode OverlayManagerHostImpl::GetOverlayBundleInfoForTarget(const std::string 
     APP_LOGD("start to get target overlay bundleInfo of bundle %{public}s", targetBundleName.c_str());
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_OVERLAY_BUNDLE_INFOFOR_TARGET);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+    if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+    }
     if (targetBundleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -212,6 +228,10 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoForTarget(const std::string 
         targetBundleName.c_str(), targetModuleName.c_str());
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_OVERLAY_MODULE_INFOFOR_TARGET);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+    if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+    }
     if (targetBundleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
