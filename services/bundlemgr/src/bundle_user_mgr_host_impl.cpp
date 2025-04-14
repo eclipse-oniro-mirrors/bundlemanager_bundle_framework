@@ -117,8 +117,7 @@ bool BundleUserMgrHostImpl::SkipThirdPreloadAppInstallation(const int32_t userId
     return false;
 }
 
-ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList,
-    const std::optional<std::vector<std::string>> &allowList)
+ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList)
 {
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendCpuSceneEvent(ACCESSTOKEN_PROCESS_NAME, 1 << 1); // second scene
@@ -137,7 +136,7 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BeforeCreateNewUser(userId);
-    OnCreateNewUser(userId, needToSkipPreBundleInstall, disallowList, allowList);
+    OnCreateNewUser(userId, needToSkipPreBundleInstall, disallowList);
     UninstallBackupUninstallList(userId, needToSkipPreBundleInstall);
     AfterCreateNewUser(userId);
     if (needToSkipPreBundleInstall) {
@@ -159,7 +158,7 @@ void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
 }
 
 void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBundleInstall,
-    const std::vector<std::string> &disallowList, const std::optional<std::vector<std::string>> &allowList)
+    const std::vector<std::string> &disallowList)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -184,9 +183,8 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBu
     dataMgr->AddUserId(userId);
     dataMgr->CreateAppInstallDir(userId);
     std::set<PreInstallBundleInfo> preInstallBundleInfos;
-    if (!GetAllPreInstallBundleInfos(disallowList, userId, needToSkipPreBundleInstall,
-        preInstallBundleInfos, allowList)) {
-        APP_LOGE("GetAllPreInstallBundleInfos failed %{public}d", userId);
+    if (!GetAllPreInstallBundleInfos(disallowList, userId, needToSkipPreBundleInstall, preInstallBundleInfos)) {
+        APP_LOGE("GetAllPreInstallBundleInfos failed %{public}d.", userId);
         return;
     }
     GetAdditionalBundleInfos(preInstallBundleInfos);
@@ -230,8 +228,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBu
 bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
     const std::vector<std::string> &disallowList,
     int32_t userId, bool needToSkipPreBundleInstall,
-    std::set<PreInstallBundleInfo> &preInstallBundleInfos,
-    const std::optional<std::vector<std::string>> &allowList)
+    std::set<PreInstallBundleInfo> &preInstallBundleInfos)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -242,11 +239,6 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
     bool isStartUser = userId == Constants::START_USERID;
     std::vector<PreInstallBundleInfo> allPreInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
     // Scan preset applications and parse package information.
-    std::vector<std::string> allowLst = allowList.value_or(std::vector<std::string>());
-    std::unordered_set<std::string> allowSet = allowLst.empty() ? std::unordered_set<std::string>() :
-        std::unordered_set<std::string>(allowLst.begin(), allowLst.end());
-    std::unordered_set<std::string> disallowSet= disallowList.empty() ? std::unordered_set<std::string>() :
-        std::unordered_set<std::string>(disallowList.begin(), disallowList.end());
     for (auto &preInfo : allPreInstallBundleInfos) {
         InnerBundleInfo innerBundleInfo;
         if (dataMgr->FetchInnerBundleInfo(preInfo.GetBundleName(), innerBundleInfo)
@@ -254,12 +246,9 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
             APP_LOGI("BundleName is IsSingleton %{public}s", preInfo.GetBundleName().c_str());
             continue;
         }
-        if (disallowSet.find(preInfo.GetBundleName()) != disallowSet.end()) {
+        if (std::find(disallowList.begin(), disallowList.end(),
+            preInfo.GetBundleName()) != disallowList.end()) {
             APP_LOGI("BundleName is same as black list %{public}s", preInfo.GetBundleName().c_str());
-            continue;
-        }
-        if (allowList.has_value() && allowSet.find(preInfo.GetBundleName()) == allowSet.end()) {
-            APP_LOGI("BundleName is not in white list %{public}s", preInfo.GetBundleName().c_str());
             continue;
         }
         if (needToSkipPreBundleInstall && !preInfo.GetBundlePaths().empty() &&
@@ -349,7 +338,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
 
     std::vector<BundleInfo> bundleInfos;
     if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
-        APP_LOGE("get all bundle info failed when userId %{public}d", userId);
+        APP_LOGE("get all bundle info failed when userId is %{public}d", userId);
         RemoveArkProfile(userId);
         RemoveAsanLogDirectory(userId);
         dataMgr->RemoveUserId(userId);

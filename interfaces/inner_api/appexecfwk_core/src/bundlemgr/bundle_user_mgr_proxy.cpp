@@ -37,8 +37,7 @@ BundleUserMgrProxy::~BundleUserMgrProxy()
     APP_LOGD("destroy BundleUserMgrProxy instance");
 }
 
-ErrCode BundleUserMgrProxy::CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList,
-    const std::optional<std::vector<std::string>> &allowList)
+ErrCode BundleUserMgrProxy::CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList)
 {
     APP_LOGD("CreateNewUser %{public}d", userId);
     MessageParcel data;
@@ -50,21 +49,17 @@ ErrCode BundleUserMgrProxy::CreateNewUser(int32_t userId, const std::vector<std:
         APP_LOGE("fail to CreateNewUser due to write uid fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (WriteStrListToData(data, disallowList, DISALLOWLISTMAXSIZE) != ERR_OK) {
-        APP_LOGE("Write disallowList failed");
+    size_t disallowListMatchSize =
+        (disallowList.size() > DISALLOWLISTMAXSIZE) ? DISALLOWLISTMAXSIZE : disallowList.size();
+    if (!data.WriteInt32(disallowListMatchSize)) {
+        APP_LOGE("Write BundleNameListVector failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
-    if (!allowList.has_value()) {
-        data.WriteBool(false);
-    } else {
-        data.WriteBool(true);
-        std::vector<std::string> allowLst = allowList.value();
-        if (WriteStrListToData(data, allowLst, DISALLOWLISTMAXSIZE) != ERR_OK) {
-            APP_LOGE("Write allowLst failed");
+    for (size_t index = 0; index < disallowListMatchSize; ++index) {
+        if (!data.WriteString(disallowList.at(index))) {
+            APP_LOGE("Write BundleNameListVector failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
-        APP_LOGI("allowLst size %{public}zu", allowLst.size());
     }
 
     MessageParcel reply;
@@ -77,22 +72,6 @@ ErrCode BundleUserMgrProxy::CreateNewUser(int32_t userId, const std::vector<std:
     if (ret != ERR_OK) {
         APP_LOGE("host reply err %{public}d", ret);
         return ret;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleUserMgrProxy::WriteStrListToData(MessageParcel &data, const std::vector<std::string> &list,
-    size_t maxListSize)
-{
-    size_t listSize =
-        (list.size() > maxListSize) ? maxListSize : list.size();
-    if (!data.WriteInt32(listSize)) {
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    for (size_t index = 0; index < listSize; ++index) {
-        if (!data.WriteString(list.at(index))) {
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
     }
     return ERR_OK;
 }

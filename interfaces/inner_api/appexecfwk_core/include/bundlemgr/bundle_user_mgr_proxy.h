@@ -33,8 +33,7 @@ public:
      * @param userId Indicates the userId.
      * @param disallowList Pass in the provisioned disallowList.
      */
-    ErrCode CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList = {},
-        const std::optional<std::vector<std::string>> &allowList = std::nullopt) override;
+    ErrCode CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList = {}) override;
     /**
      * @brief Remove user.
      * @param userId Indicates the userId.
@@ -43,7 +42,6 @@ public:
 
 private:
     bool SendTransactCmd(BundleUserMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
-    ErrCode WriteStrListToData(MessageParcel &data, const std::vector<std::string> &list, size_t maxListSize);
     static inline BrokerDelegator<BundleUserMgrProxy> delegator_;
 };
 }  // namespace AppExecFwk

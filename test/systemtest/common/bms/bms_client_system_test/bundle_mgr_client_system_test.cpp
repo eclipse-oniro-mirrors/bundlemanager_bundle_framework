@@ -2058,59 +2058,6 @@ HWTEST_F(BundleMgrClientSystemTest, CreateNewUser_002, Function | SmallTest | Le
 }
 
 /**
- * @tc.number: CreateNewUser_003
- * @tc.name: CreateNewUser with empty AllowList
- * @tc.desc: 1.Test CreateNewUser and then remove it
- */
-HWTEST_F(BundleMgrClientSystemTest, CreateNewUser_003, Function | SmallTest | Level1)
-{
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    APP_LOGI("get bundle usermgr proxy success.");
-    constexpr int userId = 10001;
-    const std::vector<std::string> &disallowList = {};
-    const std::vector<std::string> &allowList = {};
-    auto bundleUserMgrProxy = iface_cast<BundleUserMgrProxy>(remoteObject);
-    ApplicationInfo appInfo;
-    bundleUserMgrProxy->CreateNewUser(userId, disallowList, std::make_optional<std::vector<std::string>>(allowList));
-    bool ret = GetBundleMgrProxy()->GetApplicationInfo(BUNDLE_NAME,
-        ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
-    EXPECT_FALSE(ret);
-    bundleUserMgrProxy->RemoveUser(userId);
-    ret = GetBundleMgrProxy()->GetApplicationInfo(BUNDLE_NAME,
-        ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
-    EXPECT_FALSE(ret);
-}
-
-
-/**
- * @tc.number: CreateNewUser_004
- * @tc.name: CreateNewUser
- * @tc.desc: 1.Test CreateNewUser and then remove it
- */
-HWTEST_F(BundleMgrClientSystemTest, CreateNewUser_004, Function | SmallTest | Level1)
-{
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    APP_LOGI("get bundle usermgr proxy success.");
-    constexpr int userId = 10001;
-    const std::vector<std::string> &disallowList = {"com.example.actsregisterjserrorrely"};
-    const std::vector<std::string> &allowList = {"com.example.actsregisterjserrorrely", BUNDLE_NAME};
-    auto bundleUserMgrProxy = iface_cast<BundleUserMgrProxy>(remoteObject);
-    ApplicationInfo appInfo;
-    bundleUserMgrProxy->CreateNewUser(userId, disallowList, std::make_optional<std::vector<std::string>>(allowList));
-    bool ret = GetBundleMgrProxy()->GetApplicationInfo(BUNDLE_NAME,
-        ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
-    EXPECT_FALSE(ret);
-    bundleUserMgrProxy->RemoveUser(userId);
-    ret = GetBundleMgrProxy()->GetApplicationInfo(BUNDLE_NAME,
-        ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, appInfo);
-    EXPECT_FALSE(ret);
-}
-
-/**
  * @tc.number: BundleMgrClientImpl_001
  * @tc.name: TransformFileToJsonString
  * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo

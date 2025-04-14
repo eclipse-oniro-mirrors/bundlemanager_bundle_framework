@@ -74,23 +74,7 @@ ErrCode BundleUserMgrHost::HandleCreateNewUser(Parcel &data, Parcel &reply)
     for (int32_t i = 0; i < vectorSize; i++) {
         disallowList.emplace_back(data.ReadString());
     }
-    std::optional<std::vector<std::string>> allowList;
-    const bool haveAllow = data.ReadBool();
-    if (haveAllow) {
-        const int32_t allowSize = data.ReadInt32();
-        if (allowSize > DISALLOWLISTMAXSIZE) {
-            APP_LOGE("Abnormal allowList data size reading form parcel, size %{public}d", vectorSize);
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-        std::vector<std::string> allowLst;
-        for (int32_t i = 0; i < allowSize; i++) {
-            allowLst.emplace_back(data.ReadString());
-        }
-        allowList = std::make_optional<std::vector<std::string>>(allowLst);
-    } else {
-        allowList = std::nullopt;
-    }
-    auto ret = CreateNewUser(userId, disallowList, allowList);
+    auto ret = CreateNewUser(userId, disallowList);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
