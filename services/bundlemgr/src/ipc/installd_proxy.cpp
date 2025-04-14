@@ -700,11 +700,11 @@ ErrCode InstalldProxy::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::CHECK_ENCRYPTION, data, reply, option);
+    isEncryption = reply.ReadBool();
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "CheckEncryption failed");
         return ret;
     }
-    isEncryption = reply.ReadBool();
     return ERR_OK;
 }
 

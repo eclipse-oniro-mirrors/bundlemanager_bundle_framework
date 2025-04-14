@@ -1037,7 +1037,7 @@ HWTEST_F(BmsEventHandlerTest, OTAInstallSystemHsp_0100, Function | SmallTest | L
     std::vector<std::string> filePaths;
     filePaths.push_back(BUNDLE_PATH);
     auto ret = handler->OTAInstallSystemHsp(filePaths);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
 
 /**
