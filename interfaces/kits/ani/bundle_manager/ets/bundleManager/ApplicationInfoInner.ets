@@ -41,7 +41,7 @@ export class ApplicationInfoInner implements ApplicationInfo {
   readonly appDistributionType: string = "";
   readonly appProvisionType: string = "";
   readonly systemApp: boolean;
-  readonly bundleType: bundleManager.BundleType;
+  readonly bundleType: bundleManager.BundleType = bundleManager.BundleType.APP;
   readonly debug: boolean;
   readonly dataUnclearable: boolean;
   readonly nativeLibraryPath: string = "";
@@ -59,7 +59,7 @@ export class ModuleMetadataInner implements ModuleMetadata {
 }
 
 export class MultiAppModeInner implements MultiAppMode {
-  readonly multiAppModeType: bundleManager.MultiAppModeType;
+  readonly multiAppModeType: bundleManager.MultiAppModeType = bundleManager.MultiAppModeType.UNSPECIFIED;
   readonly maxCount: number;
 }
 
