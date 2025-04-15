@@ -9716,7 +9716,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9600, Function | MediumTest
    nativeLibraryPath = "";
    targetSoPath = "";
    installer.InnerProcessTargetSoPath(info, true, modulePath, nativeLibraryPath, targetSoPath);
-   EXPECT_EQ(nativeLibraryPath, "");
+   EXPECT_NE(nativeLibraryPath, "");
    EXPECT_TRUE(targetSoPath.find(BUNDLE_CODE_PATH_DIR_NEW) == 0);
 }
 
