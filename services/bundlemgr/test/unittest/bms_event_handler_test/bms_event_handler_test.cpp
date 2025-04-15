@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <filesystem>
 #include <fstream>
 
 #include "app_log_wrapper.h"
@@ -2440,5 +2441,87 @@ HWTEST_F(BmsEventHandlerTest, CreateAppInstallDir_0100, Function | SmallTest | L
     EXPECT_EQ(BundleUtil::IsExistDir(path), false);
     std::string appClonePath = path + ServiceConstants::GALLERY_CLONE_PATH;
     EXPECT_EQ(BundleUtil::IsExistDir(appClonePath), false);
+}
+
+/**
+ * @tc.number: ProcessRebootBundleUninstall_0300
+ * @tc.name: ProcessRebootBundleUninstall
+ * @tc.desc: test ProcessRebootBundleUninstall
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessRebootBundleUninstall_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    PreInstallBundleInfo preInstallBundleInfo;
+    handler->loadExistData_.emplace(BUNDLE_NAME, preInstallBundleInfo);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    handler->ProcessRebootBundleUninstall();
+    std::string path = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::UNINSTALLED_PRELOAD_PATH + ServiceConstants::UNINSTALLED_PRELOAD_FILE;
+    bool isExist = false;
+    if (std::filesystem::exists(path)) {
+        isExist = true;
+    }
+    EXPECT_FALSE(isExist);
+}
+
+/**
+ * @tc.number: SaveUninstalledPreloadAppToFile_0100
+ * @tc.name: SaveUninstalledPreloadAppToFile
+ * @tc.desc: test SaveUninstalledPreloadAppToFile
+ */
+HWTEST_F(BmsEventHandlerTest, SaveUninstalledPreloadAppToFile_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    handler->RemoveUninstalledPreloadFile();
+    std::vector<std::string> preloadBundleNames;
+    handler->SaveUninstalledPreloadAppToFile(preloadBundleNames);
+    bool isExist = false;
+    std::string path = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::UNINSTALLED_PRELOAD_PATH + ServiceConstants::UNINSTALLED_PRELOAD_FILE;
+    if (std::filesystem::exists(path)) {
+        isExist = true;
+    }
+    EXPECT_FALSE(isExist);
+
+    preloadBundleNames.emplace_back(BUNDLE_NAME);
+    handler->SaveUninstalledPreloadAppToFile(preloadBundleNames);
+    if (std::filesystem::exists(path)) {
+        isExist = true;
+    }
+    EXPECT_TRUE(isExist);
+    handler->RemoveUninstalledPreloadFile();
+}
+
+/**
+ * @tc.number: SavePreloadAppUninstallInfo_0100
+ * @tc.name: SavePreloadAppUninstallInfo
+ * @tc.desc: test SavePreloadAppUninstallInfo
+ */
+HWTEST_F(BmsEventHandlerTest, SavePreloadAppUninstallInfo_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<std::string> preloadBundleNames;
+    dataMgr->bundleInfos_.clear();
+    handler->SavePreloadAppUninstallInfo(BUNDLE_NAME, preloadBundleNames);
+    EXPECT_FALSE(preloadBundleNames.empty());
+
+    InnerBundleInfo innerBundleInfo;
+    preloadBundleNames.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    handler->SavePreloadAppUninstallInfo(BUNDLE_NAME, preloadBundleNames);
+    EXPECT_TRUE(preloadBundleNames.empty());
 }
 } // OHOS
