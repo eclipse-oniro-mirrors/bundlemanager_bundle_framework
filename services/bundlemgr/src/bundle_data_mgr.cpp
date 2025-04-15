@@ -7796,6 +7796,24 @@ ErrCode BundleDataMgr::GetAdditionalInfo(
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetAdditionalInfoForAllUser(
+    const std::string &bundleName, std::string &additionalInfo)
+{
+    APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW_NOFUNC("%{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName,
+        additionalInfo)) {
+        APP_LOGW("bundleName:%{public}s GetAdditionalInfo failed", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, const std::string &extName, const std::string &mimeType)
 {
