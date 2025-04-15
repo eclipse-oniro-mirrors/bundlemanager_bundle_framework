@@ -3084,6 +3084,10 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
 ErrCode GetAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
     const std::string& moduleName, AbilityInfo& targetAbilityInfo)
 {
+    if (!bundleInfo.applicationInfo.enabled) {
+        APP_LOGE("bundle disabled");
+        return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
+    }
     bool ifExists = false;
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& abilityInfo : hapModuleInfo.abilityInfos) {
@@ -3111,6 +3115,10 @@ ErrCode GetAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::string
 ErrCode GetExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
     const std::string& moduleName, ExtensionAbilityInfo& targetExtensionInfo)
 {
+    if (!bundleInfo.applicationInfo.enabled) {
+        APP_LOGE("bundle disabled");
+        return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
+    }
     bool ifExists = false;
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& extensionInfo : hapModuleInfo.extensionInfos) {
@@ -3154,7 +3162,8 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
     }
     auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
-           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
     ErrCode result;
     BundleMgrClient client;
     BundleInfo bundleInfo;

@@ -794,6 +794,10 @@ ErrCode ParamsProcessGetProfileByAbilitySync(napi_env env, napi_callback_info in
 ErrCode CheckAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
     const std::string& moduleName, AbilityInfo& targetAbilityInfo)
 {
+    if (!bundleInfo.applicationInfo.enabled) {
+        APP_LOGE("bundle disabled");
+        return ERROR_BUNDLE_IS_DISABLED;
+    }
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& abilityInfo : hapModuleInfo.abilityInfos) {
             if (abilityInfo.name == abilityName && abilityInfo.moduleName == moduleName) {
@@ -827,7 +831,8 @@ napi_value GetProfileByAbilitySync(napi_env env, napi_callback_info info)
     }
     auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
-           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
     auto getAbilityFlag = baseFlag + static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
     BundleInfo bundleInfo;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoForSelf(getAbilityFlag, bundleInfo));
@@ -863,6 +868,10 @@ napi_value GetProfileByAbilitySync(napi_env env, napi_callback_info info)
 ErrCode CheckExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
     const std::string& moduleName, ExtensionAbilityInfo& targetExtensionInfo)
 {
+    if (!bundleInfo.applicationInfo.enabled) {
+        APP_LOGE("bundle disabled");
+        return ERROR_BUNDLE_IS_DISABLED;
+    }
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& extensionInfo : hapModuleInfo.extensionInfos) {
             if (extensionInfo.name == abilityName && extensionInfo.moduleName == moduleName) {
@@ -896,7 +905,8 @@ napi_value GetProfileByExAbilitySync(napi_env env, napi_callback_info info)
     }
     auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
-           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
     auto getExtensionFlag = baseFlag +
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY);
     BundleInfo bundleInfo;
