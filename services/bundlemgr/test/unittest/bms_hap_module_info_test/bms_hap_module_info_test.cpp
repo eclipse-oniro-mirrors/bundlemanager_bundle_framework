@@ -727,5 +727,34 @@ HWTEST_F(BmsHapModuleInfoTest, FromString_0100, Function | SmallTest | Level0)
     bool result = disPosedRule.FromString(ruleString, rule);
     EXPECT_FALSE(result);
 }
+
+/**
+ * @tc.number: BmsHapModuleInfoTest_DeleteDir_0100
+ * @tc.name: test DeleteDir when path is a valid directory.
+ */
+HWTEST_F(BmsHapModuleInfoTest, DeleteDir_0100, Function | SmallTest | Level0)
+{
+    std::string dirPath = "/tmp/testdir";
+    mkdir(dirPath.c_str(), 0777);
+    auto ret = BundleFileUtil::DeleteDir(dirPath);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(BundleFileUtil::IsExistDir(dirPath));
+}
+
+/**
+ * @tc.number: BmsHapModuleInfoTest_DeleteDir_0200
+ * @tc.name: test DeleteDir when path is invalid or directory deletion fails.
+ */
+HWTEST_F(BmsHapModuleInfoTest, DeleteDir_0200, Function | SmallTest | Level0)
+{
+    std::string invalidPath = "/tmp/nonexistentpath";
+    auto ret = BundleFileUtil::DeleteDir(invalidPath);
+    EXPECT_TRUE(ret);
+    std::string dirPath = "/tmp/testdir";
+    mkdir(dirPath.c_str(), 0777);
+    errno = EACCES;
+    auto ret1 = BundleFileUtil::DeleteDir(dirPath);
+    EXPECT_TRUE(ret1);
+}
 }
 }

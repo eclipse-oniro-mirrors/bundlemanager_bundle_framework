@@ -359,4 +359,25 @@ HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0013, Functi
     from_json(jsonObject, result);
     EXPECT_EQ(result.version, "version");
 }
+
+/**
+ * @tc.number: BmsBundleFreeInstallBaseTest_0014
+ * Function: ProgressMarshalling
+ * @tc.name: test ProgressMarshalling
+ * @tc.desc: ProgressMarshalling
+ */
+HWTEST_F(BmsBundleFreeInstallBaseTest, BmsBundleFreeInstallBaseTest_0014, Function | SmallTest | Level0)
+{
+    InstallResult installResult;
+    installResult.version = TRANSACT_ID;
+    installResult.result = Result();
+    installResult.progress = Progress();
+    Parcel parcel;
+    bool ret = installResult.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    InstallResult *result = InstallResult::Unmarshalling(parcel);
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result->version, TRANSACT_ID);
+    delete result;
+}
 }

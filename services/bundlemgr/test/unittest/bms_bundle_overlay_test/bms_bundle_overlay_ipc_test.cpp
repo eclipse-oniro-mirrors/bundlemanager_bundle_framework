@@ -997,7 +997,7 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3700, Function | SmallTest | Le
 HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3800, Function | SmallTest | Level0)
 {
     auto overlayProxy = GetOverlayProxy();
-    EXPECT_NE(overlayProxy, nullptr);
+    ASSERT_NE(overlayProxy, nullptr);
 
     OverlayModuleInfo overlayModuleInfo;
     auto errCode = overlayProxy->GetOverlayModuleInfo("", overlayModuleInfo, TEST_USER_ID);
@@ -1014,7 +1014,7 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3800, Function | SmallTest | Le
 HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0390, Function | SmallTest | Level0)
 {
     auto overlayProxy = GetOverlayProxy();
-    EXPECT_NE(overlayProxy, nullptr);
+    ASSERT_NE(overlayProxy, nullptr);
 
     OverlayModuleInfo overlayModuleInfo;
     auto errCode = overlayProxy->GetOverlayModuleInfo(TEST_MODULE_NAME, overlayModuleInfo, TEST_USER_ID);
@@ -1031,7 +1031,7 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0390, Function | SmallTest | Le
 HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_4000, Function | SmallTest | Level0)
 {
     auto overlayProxy = GetOverlayProxy();
-    EXPECT_NE(overlayProxy, nullptr);
+    ASSERT_NE(overlayProxy, nullptr);
     MessageParcel reply;
     bool isEnabled = false;
     auto errCode = overlayProxy->SetOverlayEnabledForSelf("", isEnabled, TEST_USER_ID);
@@ -1054,7 +1054,7 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_4000, Function | SmallTest | Le
 HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_4010, Function | SmallTest | Level0)
 {
     auto overlayProxy = GetOverlayProxy();
-    EXPECT_NE(overlayProxy, nullptr);
+    ASSERT_NE(overlayProxy, nullptr);
     bool isEnabled = false;
     MessageParcel reply;
     auto errCode = overlayProxy->SetOverlayEnabled("", TEST_TARGET_BUNDLE_NAME, isEnabled, TEST_USER_ID);
@@ -1078,7 +1078,7 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_4010, Function | SmallTest | Le
 HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_4020, Function | SmallTest | Level0)
 {
     auto overlayProxy = GetOverlayProxy();
-    EXPECT_NE(overlayProxy, nullptr);
+    ASSERT_NE(overlayProxy, nullptr);
     bool isEnabled = false;
     MessageParcel reply;
     auto errCode = overlayProxy->SetOverlayEnabled("", TEST_TARGET_BUNDLE_NAME, isEnabled, TEST_USER_ID);
