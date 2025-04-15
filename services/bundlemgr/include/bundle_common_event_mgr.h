@@ -53,6 +53,7 @@ struct NotifyBundleEvents {
     bool isAgingUninstall = false;
     bool isBmsExtensionUninstalled = false;
     bool isModuleUpdate = false;
+    bool isAppUpdate = false;
     NotifyType type = NotifyType::INSTALL;
     ErrCode resultCode = ERR_OK;
     uint32_t accessTokenId = 0;
