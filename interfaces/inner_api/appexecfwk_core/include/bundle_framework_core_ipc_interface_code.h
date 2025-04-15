@@ -209,6 +209,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_PLUGIN_HAP_MODULE_INFO = 184,
     REGISTER_PLUGIN_EVENT_CALLBACK = 185,
     UNREGISTER_PLUGIN_EVENT_CALLBACK = 186,
+    GET_ADDITIONAL_INFO_FOR_ALL_USER = 187,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
