@@ -34,9 +34,11 @@ ErrCode BundleOverlayInstallChecker::CheckOverlayInstallation(
     }
     bool isInternalOverlayExisted = false;
     bool isExternalOverlayExisted = false;
+    bool isNormalHapExisted = false;
     for (auto &info : newInfos) {
         info.second.SetUserId(userId);
         if (info.second.GetOverlayType() == NON_OVERLAY_TYPE) {
+            isNormalHapExisted = true;
             APP_LOGD("the hap is not overlay hap");
             continue;
         }
@@ -56,6 +58,10 @@ ErrCode BundleOverlayInstallChecker::CheckOverlayInstallation(
             APP_LOGE("check overlay installation failed due to errcode %{public}d", result);
             return result;
         }
+    }
+    if (isNormalHapExisted) {
+        overlayType = NON_OVERLAY_TYPE;
+        return ERR_OK;
     }
     overlayType = (newInfos.begin()->second).GetOverlayType();
     APP_LOGD("check overlay installation successfully and overlay type is %{public}d", overlayType);
