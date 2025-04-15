@@ -18,12 +18,10 @@
 
 #include "app_log_wrapper.h"
 #include "common_fun_ani.h"
-#include "enum_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* CLASSNAME_STDSTRING = "Lstd/core/String;";
 constexpr const char* CLASSNAME_ABILITYINFO = "LbundleManager/AbilityInfoInner/AbilityInfoInner;";
 constexpr const char* CLASSNAME_EXTENSIONABILITYINFO =
     "LbundleManager/ExtensionAbilityInfoInner/ExtensionAbilityInfoInner;";
@@ -246,34 +244,6 @@ ani_object CommonFunAni::CreateNewObjectByClass(ani_env* env, ani_class cls)
         return nullptr;
     }
     return object;
-}
-
-ani_ref CommonFunAni::ConvertAniArrayString(ani_env* env, const std::vector<std::string>& cArray)
-{
-    RETURN_NULL_IF_NULL(env);
-
-    ani_size length = cArray.size();
-    ani_array_ref aArrayRef = nullptr;
-    ani_class aStringcls = nullptr;
-    ani_status status = env->FindClass(CLASSNAME_STDSTRING, &aStringcls);
-    if (status != ANI_OK) {
-        APP_LOGE("FindClass failed %{public}d", status);
-        return nullptr;
-    }
-    status = env->Array_New_Ref(aStringcls, length, nullptr, &aArrayRef);
-    if (status != ANI_OK) {
-        APP_LOGE("Array_New_Ref failed %{public}d", status);
-        return nullptr;
-    }
-    ani_string aString = nullptr;
-    for (ani_size i = 0; i < length; ++i) {
-        if (StringToAniStr(env, cArray[i], aString)) {
-            env->Array_Set_Ref(aArrayRef, i, aString);
-        } else {
-            return nullptr;
-        }
-    }
-    return aArrayRef;
 }
 
 ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo, int32_t flags)
@@ -1590,23 +1560,6 @@ bool CommonFunAni::ParseKeyValuePair(ani_env* env, ani_object object, std::pair<
     return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_KEY, PROPERTYNAME_VALUE);
 }
 
-bool CommonFunAni::ParseStrArray(ani_env* env, ani_object arrayObj, std::vector<std::string>& strings)
-{
-    RETURN_FALSE_IF_NULL(env);
-    RETURN_FALSE_IF_NULL(arrayObj);
-
-    ani_double length;
-    ani_status res = env->Object_GetPropertyByName_Double(arrayObj, "length", &length);
-    RETURN_FALSE_IF_FALSE(res == ANI_OK);
-    for (int i = 0; i < int(length); i++) {
-        ani_ref stringEntryRef;
-        res = env->Object_CallMethodByName_Ref(arrayObj, "$_get", "I:Lstd/core/Object;", &stringEntryRef, (ani_int)i);
-        RETURN_FALSE_IF_FALSE(res == ANI_OK);
-        strings.emplace_back(AniStrToString(env, static_cast<ani_string>(stringEntryRef)));
-    }
-    return true;
-}
-
 bool CommonFunAni::ParseHashParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
 {
     return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULENAME, PROPERTYNAME_HASHVALUE);
@@ -1716,5 +1669,455 @@ bool CommonFunAni::ParseUninstallParam(ani_env* env, ani_object object, Uninstal
     return true;
 }
 
+bool CommonFunAni::ParseMetadata(ani_env* env, ani_object object, Metadata& metadata)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // name: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_NAME, &string));
+    metadata.name = AniStrToString(env, string);
+
+    // value: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_VALUE, &string));
+    metadata.value = AniStrToString(env, string);
+
+    // resource: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_RESOURCE, &string));
+    metadata.resource = AniStrToString(env, string);
+
+    return true;
+}
+
+bool CommonFunAni::ParseResource(ani_env* env, ani_object object, Resource& resource)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+    uint32_t uintValue = 0;
+
+    // bundleName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
+    resource.bundleName = AniStrToString(env, string);
+
+    // moduleName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MODULENAME, &string));
+    resource.moduleName = AniStrToString(env, string);
+
+    // id: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ID, &uintValue));
+    resource.id = uintValue;
+
+    return true;
+}
+
+bool CommonFunAni::ParseMultiAppMode(ani_env* env, ani_object object, MultiAppModeData& multiAppMode)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_enum_item enumItem = nullptr;
+    ani_int intValue = 0;
+
+    // maxCount: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MAXCOUNT, &intValue));
+    multiAppMode.maxCount = intValue;
+
+    // multiAppModeType: bundleManager.MultiAppModeType
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MULTIAPPMODETYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, multiAppMode.multiAppModeType));
+
+    return true;
+}
+
+bool CommonFunAni::ParseApplicationInfo(ani_env* env, ani_object object, ApplicationInfo& appInfo)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+    ani_object arrayObject = nullptr;
+    ani_object aniObject = nullptr;
+    ani_enum_item enumItem = nullptr;
+    ani_int intValue = 0;
+    ani_boolean boolValue = ANI_FALSE;
+    uint32_t uintValue = 0;
+
+    // name: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_NAME, &string));
+    appInfo.name = AniStrToString(env, string);
+
+    // description: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DESCRIPTION, &string));
+    appInfo.description = AniStrToString(env, string);
+
+    // descriptionId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DESCRIPTIONID, &uintValue));
+    appInfo.descriptionId = uintValue;
+
+    // enabled: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ENABLED, &boolValue));
+    appInfo.enabled = AniBooleanToBool(boolValue);
+
+    // label: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LABEL, &string));
+    appInfo.label = AniStrToString(env, string);
+
+    // labelId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LABELID, &uintValue));
+    appInfo.labelId = uintValue;
+
+    // icon: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ICON, &string));
+    appInfo.iconPath = AniStrToString(env, string);
+
+    // iconId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ICONID, &uintValue));
+    appInfo.iconId = uintValue;
+
+    // process: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PROCESS, &string));
+    appInfo.process = AniStrToString(env, string);
+
+    // permissions: Array<string>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PERMISSIONS, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, appInfo.permissions));
+
+    // codePath: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_CODEPATH, &string));
+    appInfo.codePath = AniStrToString(env, string);
+
+    // metadataArray: Array<ModuleMetadata>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_METADATAARRAY, &arrayObject));
+    RETURN_FALSE_IF_FALSE(AniArrayForeach(env, arrayObject, [env, &appInfo](ani_object itemModuleMetadataANI) {
+        // moduleName: string
+        ani_string stringValue = nullptr;
+        RETURN_FALSE_IF_FALSE(CallGetter(env, itemModuleMetadataANI, PROPERTYNAME_MODULENAME, &stringValue));
+        std::string key = AniStrToString(env, stringValue);
+        RETURN_FALSE_IF_FALSE(!key.empty());
+
+        // metadata: Array<Metadata>
+        ani_object arrayMetadataANI = nullptr;
+        RETURN_FALSE_IF_FALSE(CallGetter(env, itemModuleMetadataANI, PROPERTYNAME_METADATA, &arrayMetadataANI));
+        std::vector<Metadata> arrayMetadataNative;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, arrayMetadataANI, arrayMetadataNative, ParseMetadata));
+
+        appInfo.metadata.emplace(key, std::move(arrayMetadataNative));
+
+        return true;
+    }));
+
+    // removable: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_REMOVABLE, &boolValue));
+    appInfo.removable = AniBooleanToBool(boolValue);
+
+    // accessTokenId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ACCESSTOKENID, &uintValue));
+    appInfo.accessTokenId = uintValue;
+
+    // uid: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_UID, &intValue));
+    appInfo.uid = intValue;
+
+    // iconResource: Resource
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ICONRESOURCE, &aniObject));
+    RETURN_FALSE_IF_FALSE(ParseResource(env, aniObject, appInfo.iconResource));
+
+    // labelResource: Resource
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LABELRESOURCE, &aniObject));
+    RETURN_FALSE_IF_FALSE(ParseResource(env, aniObject, appInfo.labelResource));
+
+    // descriptionResource: Resource
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DESCRIPTIONRESOURCE, &aniObject));
+    RETURN_FALSE_IF_FALSE(ParseResource(env, aniObject, appInfo.descriptionResource));
+
+    // appDistributionType: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPDISTRIBUTIONTYPE, &string));
+    appInfo.appDistributionType = AniStrToString(env, string);
+
+    // appProvisionType: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPPROVISIONTYPE, &string));
+    appInfo.appProvisionType = AniStrToString(env, string);
+
+    // systemApp: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SYSTEMAPP, &boolValue));
+    appInfo.isSystemApp = AniBooleanToBool(boolValue);
+
+    // bundleType: bundleManager.BundleType
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLETYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, appInfo.bundleType));
+
+    // debug: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DEBUG, &boolValue));
+    appInfo.debug = AniBooleanToBool(boolValue);
+
+    // dataUnclearable: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DATAUNCLEARABLE, &boolValue));
+    appInfo.userDataClearable = AniBooleanToBool(!boolValue);
+
+    // nativeLibraryPath: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_NATIVELIBRARYPATH, &string));
+    appInfo.nativeLibraryPath = AniStrToString(env, string);
+
+    // multiAppMode: MultiAppMode
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MULTIAPPMODE, &aniObject));
+    RETURN_FALSE_IF_FALSE(ParseMultiAppMode(env, aniObject, appInfo.multiAppMode));
+
+    // appIndex: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPINDEX, &intValue));
+    appInfo.appIndex = intValue;
+
+    // installSource: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_INSTALLSOURCE, &string));
+    appInfo.installSource = AniStrToString(env, string);
+
+    // releaseType: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_RELEASETYPE, &string));
+    appInfo.apiReleaseType = AniStrToString(env, string);
+
+    // cloudFileSyncEnabled: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_CLOUDFILESYNCENABLED, &boolValue));
+    appInfo.cloudFileSyncEnabled = AniBooleanToBool(boolValue);
+
+    // flags?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_FLAGS, &intValue)) {
+        appInfo.flags = intValue;
+    }
+
+    return true;
+}
+
+bool CommonFunAni::ParseWindowSize(ani_env* env, ani_object object, AbilityInfo& abilityInfo)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_double doubleValue = 0;
+    uint32_t uintValue = 0;
+
+    // maxWindowRatio: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MAXWINDOWRATIO, &doubleValue));
+    abilityInfo.maxWindowRatio = doubleValue;
+
+    // minWindowRatio: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MINWINDOWRATIO, &doubleValue));
+    abilityInfo.minWindowRatio = doubleValue;
+
+    // maxWindowWidth: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MAXWINDOWWIDTH, &uintValue));
+    abilityInfo.maxWindowWidth = uintValue;
+
+    // minWindowWidth: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MINWINDOWWIDTH, &uintValue));
+    abilityInfo.minWindowWidth = uintValue;
+
+    // maxWindowHeight: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MAXWINDOWHEIGHT, &uintValue));
+    abilityInfo.maxWindowHeight = uintValue;
+
+    // minWindowHeight: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MINWINDOWHEIGHT, &uintValue));
+    abilityInfo.minWindowHeight = uintValue;
+
+    return object;
+}
+
+bool CommonFunAni::ParseAbilitySkillUriInner(ani_env* env, ani_object object, SkillUri& skillUri, bool isExtension)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+    ani_int intValue = 0;
+
+    // scheme: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SCHEME, &string));
+    skillUri.scheme = AniStrToString(env, string);
+
+    // host: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_HOST, &string));
+    skillUri.host = AniStrToString(env, string);
+
+    // port: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PORT, &intValue));
+    skillUri.port = std::to_string(intValue);
+
+    // path: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PATH, &string));
+    skillUri.path = AniStrToString(env, string);
+
+    // pathStartWith: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PATHSTARTWITH, &string));
+    skillUri.pathStartWith = AniStrToString(env, string);
+
+    // pathRegex: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PATHREGEX, &string));
+    skillUri.pathRegex = AniStrToString(env, string);
+
+    // type: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_TYPE, &string));
+    skillUri.type = AniStrToString(env, string);
+
+    // utd: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_UTD, &string));
+    skillUri.utd = AniStrToString(env, string);
+
+    // maxFileSupported: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MAXFILESUPPORTED, &intValue));
+    skillUri.maxFileSupported = intValue;
+
+    if (!isExtension) {
+        // linkFeature: string
+        RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LINKFEATURE, &string));
+        skillUri.linkFeature = AniStrToString(env, string);
+    }
+
+    return true;
+}
+
+bool CommonFunAni::ParseAbilitySkillInner(ani_env* env, ani_object object, Skill& skill, bool isExtension)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_object arrayObject = nullptr;
+    ani_boolean boolValue = ANI_FALSE;
+
+    // actions: Array<string>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ACTIONS, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, skill.actions));
+
+    // entities: Array<string>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ENTITIES, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, skill.entities));
+
+    // uris: Array<SkillUri>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_URIS, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseAniArray(env, arrayObject, skill.uris,
+        isExtension? ParseExtensionAbilitySkillUri: ParseAbilitySkillUri));
+
+    if (!isExtension) {
+        // domainVerify: boolean
+        RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DOMAINVERIFY, &boolValue));
+        skill.domainVerify = AniBooleanToBool(boolValue);
+    }
+
+    return true;
+}
+
+bool CommonFunAni::ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo& abilityInfo)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+    ani_object arrayObject = nullptr;
+    ani_object aniObject = nullptr;
+    ani_enum_item enumItem = nullptr;
+    ani_int intValue = 0;
+    ani_boolean boolValue = ANI_FALSE;
+    uint32_t uintValue = 0;
+
+    // bundleName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
+    abilityInfo.bundleName = AniStrToString(env, string);
+
+    // moduleName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MODULENAME, &string));
+    abilityInfo.moduleName = AniStrToString(env, string);
+
+    // name: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_NAME, &string));
+    abilityInfo.name = AniStrToString(env, string);
+
+    // label: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LABEL, &string));
+    abilityInfo.label = AniStrToString(env, string);
+
+    // labelId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LABELID, &uintValue));
+    abilityInfo.labelId = uintValue;
+
+    // description: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DESCRIPTION, &string));
+    abilityInfo.description = AniStrToString(env, string);
+
+    // descriptionId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DESCRIPTIONID, &uintValue));
+    abilityInfo.descriptionId = uintValue;
+
+    // icon: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ICON, &string));
+    abilityInfo.iconPath = AniStrToString(env, string);
+
+    // iconId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ICONID, &uintValue));
+    abilityInfo.iconId = uintValue;
+
+    // process: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PROCESS, &string));
+    abilityInfo.process = AniStrToString(env, string);
+
+    // exported: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_EXPORTED, &boolValue));
+    abilityInfo.visible = AniBooleanToBool(boolValue);
+
+    // orientation: bundleManager.DisplayOrientation
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ORIENTATION, &enumItem));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, abilityInfo.orientation));
+
+    // launchType: bundleManager.LaunchType
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LAUNCHTYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, abilityInfo.launchMode));
+
+    // permissions: Array<string>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PERMISSIONS, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, abilityInfo.permissions));
+
+    // deviceTypes: Array<string>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DEVICETYPES, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, abilityInfo.deviceTypes));
+
+    // applicationInfo: ApplicationInfo
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPLICATIONINFO, &aniObject));
+    RETURN_FALSE_IF_FALSE(ParseApplicationInfo(env, aniObject, abilityInfo.applicationInfo));
+
+    // metadata: Array<Metadata>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_METADATA, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseAniArray(env, arrayObject, abilityInfo.metadata, ParseMetadata));
+
+    // enabled: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ENABLED, &boolValue));
+    abilityInfo.enabled = AniBooleanToBool(boolValue);
+
+    // supportWindowModes: Array<bundleManager.SupportWindowMode>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SUPPORTWINDOWMODES, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseEnumArray(env, arrayObject, abilityInfo.windowModes));
+
+    // windowSize: WindowSize
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_WINDOWSIZE, &aniObject));
+    RETURN_FALSE_IF_FALSE(ParseWindowSize(env, aniObject, abilityInfo));
+
+    // excludeFromDock: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_EXCLUDEFROMDOCK, &boolValue));
+    abilityInfo.excludeFromDock = AniBooleanToBool(boolValue);
+
+    // skills: Array<Skill>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SKILLS, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseAniArray(env, arrayObject, abilityInfo.skills, ParseAbilitySkill));
+
+    // appIndex: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPINDEX, &intValue));
+    abilityInfo.appIndex = intValue;
+
+    // orientationId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ORIENTATIONID, &uintValue));
+    abilityInfo.orientationId = uintValue;
+
+    return true;
+}
 } // namespace AppExecFwk
 } // namespace OHOS
