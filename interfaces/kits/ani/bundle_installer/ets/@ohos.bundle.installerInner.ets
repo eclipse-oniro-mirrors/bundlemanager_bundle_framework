@@ -42,7 +42,7 @@ export class InstallParamInner implements installer.InstallParam {
   isKeepData?: boolean;
   hashParams?: Array<installer.HashParam>;
   crowdtestDeadline?: number;
-  sharedBundleDirPaths?: Array<String>;
+  sharedBundleDirPaths?: Array<string>;
   specifiedDistributionType?: string;
   additionalInfo?: string;
   pgoParams?: Array<installer.PGOParam>;

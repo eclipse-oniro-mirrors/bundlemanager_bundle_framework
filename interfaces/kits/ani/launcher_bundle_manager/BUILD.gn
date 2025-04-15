@@ -26,7 +26,11 @@ ohos_shared_library("ani_launcher_bundle_manager") {
     "${kits_path}/ani/launcher_bundle_manager",
     "${kits_path}/js/launcher_bundle_manager",
   ]
-  sources = [ "ani_launcher_bundle_manager.cpp" ]
+  if (bundle_framework_launcher) {
+    sources = [ "ani_launcher_bundle_manager.cpp" ]
+  } else {
+    sources = [ "ani_launcher_bundle_manager_unsupported.cpp" ]
+  }
 
   defines = [
     "APP_LOG_TAG = \"BMS\"",
@@ -70,4 +74,41 @@ ohos_prebuilt_etc("launcher_bundle_manager_etc") {
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
   deps = [ ":launcher_bundle_manager" ]
+}
+
+generate_static_abc("element_name") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/ElementName.ets",
+    "./ets/bundleManager/ElementNameInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/element_name.abc"
+}
+
+ohos_prebuilt_etc("element_name_etc") {
+  source = "$target_out_dir/element_name.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":element_name" ]
+}
+
+generate_static_abc("launcher_ability_info") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/LauncherAbilityInfo.ets",
+    "./ets/bundleManager/LauncherAbilityInfoInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/launcher_ability_info.abc"
+  external_dependencies = [ "bundle_framework:copy_bundleManager_ets" ]
+}
+
+ohos_prebuilt_etc("launcher_ability_info_etc") {
+  source = "$target_out_dir/launcher_ability_info.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":launcher_ability_info" ]
 }

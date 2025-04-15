@@ -27,6 +27,7 @@
 #include "bundle_mgr_interface.h"
 #include "bundle_resource_info.h"
 #include "install_param.h"
+#include "launcher_ability_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -147,6 +148,8 @@ public:
     static ani_object ConvertShortcutInfo(ani_env* env, const ShortcutInfo& shortcutInfo);
     static ani_object ConvertShortcutIntent(ani_env* env, const ShortcutIntent& shortcutIntent);
     static ani_object ConvertShortcutIntentParameter(ani_env* env, const std::pair<std::string, std::string>& item);
+
+    static ani_object ConvertLauncherAbilityInfo(ani_env* env, const LauncherAbilityInfo &launcherAbility);
 
     // Parse from ets to native
     static bool ParseShortcutInfo(ani_env* env, ani_object object, ShortcutInfo& shortcutInfo);

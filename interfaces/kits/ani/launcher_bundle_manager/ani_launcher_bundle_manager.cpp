@@ -40,6 +40,8 @@ const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = { { ERR_OK, ERR_OK },
     { ERR_NOT_SYSTEM_APP, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED } };
 
 constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
+constexpr const char* GET_LAUNCHER_ABILITY_INFO_SYNC = "GetLauncherAbilityInfoSync";
+constexpr const char* GET_ALL_LAUNCHER_ABILITY_INFO = "GetAllLauncherAbilityInfo";
 constexpr const char* START_SHORTCUT = "StartShortcut";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
@@ -76,7 +78,7 @@ static void StartShortcutSync([[maybe_unused]] ani_env *env, ani_object aniShort
         return;
     }
     StartOptions startOptions;
-    auto result = abilityManagerClient->StartShortcut(want, startOptions);
+    ErrCode result = abilityManagerClient->StartShortcut(want, startOptions);
     auto iter = START_SHORTCUT_RES_MAP.find(result);
     result = iter == START_SHORTCUT_RES_MAP.end() ? ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED : iter->second;
     if (result != ERR_OK) {
@@ -129,6 +131,89 @@ static ani_object GetShortcutInfoSync([[maybe_unused]] ani_env *env, ani_string 
     return arrayShortcutInfos;
 }
 
+static ani_ref GetLauncherAbilityInfoSync(ani_env *env, ani_string aniBundleName, ani_double aniUserId)
+{
+    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
+    if (bundleName.empty()) {
+        APP_LOGE("BundleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, ERROR_EMPTY_BUNDLE_NAME);
+        return nullptr;
+    }
+    int32_t userId = 0;
+    if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
+        APP_LOGE("try cast userId failed");
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_INT);
+        return nullptr;
+    }
+
+    auto launcherService = JSLauncherService::GetLauncherService();
+    if (launcherService == nullptr) {
+        APP_LOGE("launcherService is nullptr");
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            GET_LAUNCHER_ABILITY_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+
+    std::vector<LauncherAbilityInfo> launcherAbilityInfos;
+    ErrCode result = launcherService->GetLauncherAbilityByBundleName(bundleName, userId, launcherAbilityInfos);
+    ErrCode ret = CommonFunc::ConvertErrCode(result);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetLauncherAbilityByBundleName failed ret:%{public}d,bundleName:%{public}s,userId:%{public}d",
+            ret, bundleName.c_str(), userId);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ret, GET_LAUNCHER_ABILITY_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+
+    ani_ref launcherAbilityInfosRef = CommonFunAni::ConvertAniArray(
+        env, launcherAbilityInfos, CommonFunAni::ConvertLauncherAbilityInfo);
+    if (launcherAbilityInfosRef == nullptr) {
+        APP_LOGE("nullptr launcherAbilityInfosRef");
+    }
+
+    return launcherAbilityInfosRef;
+}
+
+static ani_ref GetAllLauncherAbilityInfo(ani_env *env, ani_double aniUserId)
+{
+    int32_t userId = 0;
+    if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
+        APP_LOGE("try cast userId failed");
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_INT);
+        return nullptr;
+    }
+
+    auto launcherService = JSLauncherService::GetLauncherService();
+    if (launcherService == nullptr) {
+        APP_LOGE("launcherService is nullptr");
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, CommonFunc::ConvertErrCode(ERROR_BUNDLE_SERVICE_EXCEPTION),
+            GET_ALL_LAUNCHER_ABILITY_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+
+    std::vector<LauncherAbilityInfo> launcherAbilityInfos;
+    ErrCode ret = launcherService->GetAllLauncherAbility(userId, launcherAbilityInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAllLauncherAbility failed ret:%{public}d,userId:%{public}d", ret, userId);
+        BusinessErrorAni::ThrowParameterTypeError(
+            env, CommonFunc::ConvertErrCode(ret),
+            GET_ALL_LAUNCHER_ABILITY_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+
+    ani_ref launcherAbilityInfosRef = CommonFunAni::ConvertAniArray(
+        env, launcherAbilityInfos, CommonFunAni::ConvertLauncherAbilityInfo);
+    if (launcherAbilityInfosRef == nullptr) {
+        APP_LOGE("nullptr launcherAbilityInfosRef");
+    }
+
+    return launcherAbilityInfosRef;
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
@@ -163,6 +248,16 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
             "GetShortcutInfoSync",
             "Lstd/core/String;D:Lescompat/Array;",
             reinterpret_cast<void*>(GetShortcutInfoSync)
+        },
+        ani_native_function {
+            "GetLauncherAbilityInfoSync",
+            "Lstd/core/String;D:Lescompat/Array;",
+            reinterpret_cast<void*>(GetLauncherAbilityInfoSync)
+        },
+        ani_native_function {
+            "GetAllLauncherAbilityInfo",
+            "D:Lescompat/Array;",
+            reinterpret_cast<void*>(GetAllLauncherAbilityInfo)
         },
     };
 
