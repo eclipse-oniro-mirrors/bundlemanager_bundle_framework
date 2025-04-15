@@ -7281,6 +7281,7 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     CHECK_RESULT(result, "rename real to +old- code path failed, error is %{public}d");
     InstallExceptionInfo exceptionInfo;
     exceptionInfo.status = InstallRenameExceptionStatus::RENAME_RELA_TO_OLD_PATH;
+    exceptionInfo.versionCode = oldInfo.GetVersionCode();
     result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
         exceptionInfo);
     if (result != ERR_OK) {

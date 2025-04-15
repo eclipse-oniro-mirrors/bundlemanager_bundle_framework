@@ -34,6 +34,7 @@ enum class InstallRenameExceptionStatus : uint8_t {
 
 struct InstallExceptionInfo {
     InstallRenameExceptionStatus status = InstallRenameExceptionStatus::UNKOWN_STATUS;
+    uint32_t versionCode = 0;
     bool FromString(const std::string &installExceptionInfoStr);
     std::string ToString() const;
 };
