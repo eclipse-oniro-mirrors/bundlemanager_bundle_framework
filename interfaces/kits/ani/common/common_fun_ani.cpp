@@ -172,8 +172,6 @@ constexpr const char* PROPERTYNAME_TARGETMODULE = "targetModule";
 constexpr const char* PROPERTYNAME_TARGETABILITY = "targetAbility";
 constexpr const char* PROPERTYNAME_PARAMETERS = "parameters";
 constexpr const char* PROPERTYNAME_HASHPARAMS = "hashParams";
-constexpr const char* PROPERTYNAME_SIGNATUREFILEPATH = "signatureFilePath";
-constexpr const char* PROPERTYNAME_VERIFYCODEPARAMS = "verifyCodeParams";
 constexpr const char* PROPERTYNAME_PGOFILEPATH = "pgoFilePath";
 constexpr const char* PROPERTYNAME_PGOPARAMS = "pgoParams";
 constexpr const char* PROPERTYNAME_USERID = "userId";
@@ -621,10 +619,6 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
     // exported: boolean
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_EXPORTED, BoolToAniBoolean(abilityInfo.visible)));
 
-    // type: bundleManager.AbilityType
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TYPE,
-        EnumUtils::EnumNativeToETS_BundleManager_AbilityType(env, static_cast<int32_t>(abilityInfo.type))));
-
     // orientation: bundleManager.DisplayOrientation
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ORIENTATION,
         EnumUtils::EnumNativeToETS_BundleManager_DisplayOrientation(
@@ -638,18 +632,6 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
     ani_ref aPermissions = ConvertAniArrayString(env, abilityInfo.permissions);
     RETURN_NULL_IF_NULL(aPermissions);
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PERMISSIONS, aPermissions));
-
-    // readPermission: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.readPermission, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_READPERMISSION, string));
-
-    // writePermission: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.writePermission, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_WRITEPERMISSION, string));
-
-    // uri: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.uri, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_URI, string));
 
     // deviceTypes: Array<string>
     ani_ref aDeviceTypes = ConvertAniArrayString(env, abilityInfo.deviceTypes);
@@ -1591,11 +1573,6 @@ bool CommonFunAni::ParseHashParams(ani_env* env, ani_object object, std::pair<st
     return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULENAME, PROPERTYNAME_HASHVALUE);
 }
 
-bool CommonFunAni::ParseVerifyCodeParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
-{
-    return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULENAME, PROPERTYNAME_SIGNATUREFILEPATH);
-}
-
 bool CommonFunAni::ParsePgoParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
 {
     return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULENAME, PROPERTYNAME_PGOFILEPATH);
@@ -1613,14 +1590,6 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
         RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, hashParams, ParseHashParams));
         for (const auto& parameter : hashParams) {
             installParam.hashParams[parameter.first] = parameter.second;
-        }
-    }
-    // verifyCodeParams?
-    if (CallGetterOptional(env, object, PROPERTYNAME_VERIFYCODEPARAMS, &array)) {
-        std::vector<std::pair<std::string, std::string>> verifyCodeParams;
-        RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, verifyCodeParams, ParseVerifyCodeParams));
-        for (const auto& parameter : verifyCodeParams) {
-            installParam.verifyCodeParams[parameter.first] = parameter.second;
         }
     }
     // pgoParams?

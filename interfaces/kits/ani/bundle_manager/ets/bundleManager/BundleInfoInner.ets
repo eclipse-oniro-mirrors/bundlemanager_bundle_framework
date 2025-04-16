@@ -35,6 +35,7 @@ export class BundleInfoInner implements BundleInfo {
   readonly installTime: number;
   readonly updateTime: number;
   readonly appIndex: number;
+  readonly firstInstallTime?: number;
 }
 
 export class ReqPermissionDetailInner implements ReqPermissionDetail {
