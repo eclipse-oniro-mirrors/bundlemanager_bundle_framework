@@ -31,21 +31,22 @@ ohos_unittest("BmsBundleDataGroupTest") {
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = bundle_mgr_source
+  sources += bundle_install_sources
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources -=
       [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
+  sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
-
-  sources += bundle_install_sources
 
   sources += [ "bms_bundle_data_group_test.cpp" ]
 
@@ -177,6 +178,8 @@ ohos_unittest("BmsBundleDataGroupTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
+  defines += [ "BUNDLE_FRAMEWORK_BUNDLE_UTIL_RETURN_FALSE" ]
+  defines += [ "BUNDLE_FRAMEWORK_PERMISSION_RETURN_TRUE" ]
 }
 
 group("unittest") {

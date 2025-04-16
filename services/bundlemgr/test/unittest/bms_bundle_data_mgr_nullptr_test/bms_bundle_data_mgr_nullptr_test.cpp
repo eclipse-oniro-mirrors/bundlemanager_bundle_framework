@@ -32,6 +32,7 @@
 #include "installd_client.h"
 #include "parameters.h"
 #include "plugin_installer.h"
+#include "rdb_data_manager.h"
 #include "scope_guard.h"
 
 using namespace testing::ext;
@@ -40,6 +41,9 @@ using OHOS::Parcel;
 
 namespace OHOS {
 namespace {
+const std::string DB_PATH = "/data/test/";
+const std::string DB_NAME = "rdbTestDb.db";
+const std::string TABLE_NAME = "rdbTestTable";
 }  // namespace
 
 class BmsBundleDataMgrNullptrTest : public testing::Test {
@@ -401,6 +405,9 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0011, Function | Mediu
     installer.tempInfo_.bundleInit_ = false;
 
     installer.CreateScreenLockProtectionDir();
+    InstallParam installParam;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    installer.ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     EXPECT_FALSE(installer.tempInfo_.bundleInit_);
 }
 
@@ -697,6 +704,309 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0030, Function | Mediu
 }
 
 /**
+ * @tc.number: BaseBundleInstaller_0031
+ * @tc.name: test SendStartInstallNotify
+ * @tc.desc: 1.Test SendStartInstallNotify the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0031, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.needSendEvent = true;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    installer.SendStartInstallNotify(installParam, infos);
+    EXPECT_EQ(infos.empty(), true);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0032
+ * @tc.name: test InstallBundle
+ * @tc.desc: 1.Test InstallBundle the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0032, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::vector<std::string> bundlePaths;
+    InstallParam installParam;
+    installParam.isDataPreloadHap = true;
+    installParam.userId = Constants::DEFAULT_USERID;
+    Constants::AppType appType = Constants::AppType::THIRD_SYSTEM_APP;
+
+    auto ret = installer.InstallBundle(bundlePaths, installParam, appType);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0033
+ * @tc.name: test IsAllowEnterPrise
+ * @tc.desc: 1.Test IsAllowEnterPrise the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0033, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, "false"));
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false"));
+
+    auto ret = installer.IsAllowEnterPrise();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0034
+ * @tc.name: test IsAllowEnterPrise
+ * @tc.desc: 1.Test IsAllowEnterPrise the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0034, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string uninstallDir;
+    int32_t versionCode = -1;
+    InnerBundleInfo info;
+    auto ret = installer.UninstallHspVersion(uninstallDir, versionCode, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0035
+ * @tc.name: test CheckEnableRemovable
+ * @tc.desc: 1.Test CheckEnableRemovable the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0035, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string uninstallDir;
+    int32_t versionCode = -1;
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    info.innerModuleInfos_["entry"] = innerModuleInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos["test"] = info;
+
+    InnerBundleInfo oldInfo;
+    int32_t userId = -1;
+    bool isFreeInstallFlag = true;
+    bool isAppExist = false;
+    installer.CheckEnableRemovable(newInfos, oldInfo, userId, isFreeInstallFlag, isAppExist);
+    EXPECT_EQ(oldInfo.GetBundleName(), "");
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0036
+ * @tc.name: test InnerProcessUpdateHapToken
+ * @tc.desc: 1.Test InnerProcessUpdateHapToken the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0036, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.tempInfo_.bundleInit_ = false;
+    auto ret = installer.InnerProcessUpdateHapToken(false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_GET_INSTALL_TEMP_BUNDLE_ERROR);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0037
+ * @tc.name: test InnerProcessUpdateHapToken
+ * @tc.desc: 1.Test InnerProcessUpdateHapToken the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0037, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "entry";
+    innerModuleInfo.upgradeFlag = 1;
+    oldInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+
+    installer.SetAtomicServiceModuleUpgrade(oldInfo);
+    EXPECT_EQ(installer.atomicServiceModuleUpgrade_, 1);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0038
+ * @tc.name: test IsArkWeb
+ * @tc.desc: 1.Test IsArkWeb the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0038, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName = "com.ohos.arkwebcore";
+    const char* ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
+    EXPECT_TRUE(system::SetParameter(ARK_WEB_BUNDLE_NAME_PARAM, ""));
+
+    auto ret = installer.IsArkWeb(bundleName);
+    EXPECT_TRUE(ret);
+
+    installer.bundleName_ = bundleName;
+    installer.isAppExist_ = true;
+    installer.KillRelatedProcessIfArkWeb(false);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0039
+ * @tc.name: test CheckAppService
+ * @tc.desc: 1.Test CheckAppService the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0039, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    newInfo.baseApplicationInfo_->bundleType = BundleType::APP;
+
+    InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+    bool isAppExist = true;
+    auto ret = installer.CheckAppService(newInfo, oldInfo, isAppExist);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0040
+ * @tc.name: test CheckAppService
+ * @tc.desc: 1.Test CheckAppService the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0040, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    newInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+    newInfo.baseBundleInfo_->versionCode = 100;
+
+    InnerBundleInfo oldInfo;
+    oldInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+    newInfo.baseBundleInfo_->versionCode = 50;
+
+    bool isAppExist = true;
+    auto ret = installer.CheckAppService(newInfo, oldInfo, isAppExist);
+    EXPECT_EQ(ret, ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0041
+ * @tc.name: test CheckSingleton
+ * @tc.desc: 1.Test CheckSingleton the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0041, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    int32_t userId = Constants::DEFAULT_USERID;
+
+    installer.isAppService_ = true;
+    auto ret = installer.CheckSingleton(info, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0042
+ * @tc.name: test UninstallDebugAppSandbox
+ * @tc.desc: 1.UninstallDebugAppSandbox
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0042, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true"));
+    BaseBundleInstaller installer;
+
+    installer.bundleName_ = "test";
+    std::string bundleName;
+    int32_t uid = -1;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->appProvisionType = Constants::APP_PROVISION_TYPE_DEBUG;
+    installer.UninstallDebugAppSandbox(bundleName, uid, innerBundleInfo);
+    EXPECT_EQ(installer.bundleName_, "test");
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0043
+ * @tc.name: test UninstallDebugAppSandbox
+ * @tc.desc: 1.UninstallDebugAppSandbox
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0043, Function | SmallTest | Level0)
+{
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true"));
+    BaseBundleInstaller installer;
+
+    installer.bundleName_ = "test";
+    std::string bundleName;
+    int32_t uid = -1;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->appProvisionType = Constants::APP_PROVISION_TYPE_DEBUG;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
+    installer.UninstallDebugAppSandbox(bundleName, uid, innerBundleInfo);
+
+    installer.MarkPreInstallState("test", false);
+    EXPECT_EQ(installer.bundleName_, "test");
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0044
+ * @tc.name: test UninstallDebugAppSandbox
+ * @tc.desc: 1.UninstallDebugAppSandbox
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0044, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "entry";
+    HnpPackage hnpPackage;
+    innerModuleInfo.hnpPackages.emplace_back(hnpPackage);
+
+    InnerBundleInfo info;
+    info.currentPackage_ = "entry";
+    info.innerModuleInfos_["entry"] = innerModuleInfo;
+
+    int32_t userId;
+    std::string bundleName;
+    ErrCode ret = installer.ProcessBundleUnInstallNative(info, userId, bundleName);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0045
+ * @tc.name: test UninstallDebugAppSandbox
+ * @tc.desc: 1.UninstallDebugAppSandbox
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0045, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string nativeLibraryPath;
+    std::string cpuAbi;
+    InnerBundleInfo newInfo;
+    AppQuickFix oldAppQuickFix;
+    ErrCode ret = installer.ProcessDeployedHqfInfo(nativeLibraryPath, cpuAbi, newInfo, oldAppQuickFix);
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+#else
+    EXPECT_EQ(ret, ERR_OK);
+#endif
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0046
+ * @tc.name: test UninstallDebugAppSandbox
+ * @tc.desc: 1.UninstallDebugAppSandbox
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0046, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = 100;
+    InnerBundleInfo info;
+    InnerBundleUserInfo userInfo;
+    EXPECT_FALSE(info.GetInnerBundleUserInfo(installer.userId_, userInfo));
+    installer.RemovePluginOnlyInCurrentUser(info);
+
+    info.baseApplicationInfo_->bundleName = "com.example.test";
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = 20022222;
+
+    info.innerBundleUserInfos_["com.example.test_100"] = innerBundleUserInfo;
+
+    EXPECT_TRUE(info.GetInnerBundleUserInfo(installer.userId_, userInfo));
+    installer.RemovePluginOnlyInCurrentUser(info);
+}
+
+/**
  * @tc.number: BundleSandboxInstaller_0010
  * @tc.name: test FetchInnerBundleInfo
  * @tc.desc: 1.Test FetchInnerBundleInfo the BundleSandboxInstaller
@@ -897,5 +1207,138 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, PluginInstaller_0090, Function | MediumTes
     std::string hostBundleName;
     installer.UninstallRollBack(hostBundleName);
     EXPECT_EQ(hostBundleName.empty(), true);
+}
+
+/**
+ * @tc.number: RdbDataManager_0001
+ * @tc.name: test GetRdbStore
+ * @tc.desc: 1.Test GetRdbStore the RdbDataManager
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, RdbDataManager_0001, Function | MediumTest | Level1)
+{
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbPath = DB_PATH;
+    bmsRdbConfig.dbName = DB_NAME;
+    bmsRdbConfig.tableName = TABLE_NAME;
+    auto rdbDataManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    ASSERT_NE(rdbDataManager, nullptr);
+    auto ptr = rdbDataManager->GetRdbStore();
+    EXPECT_EQ(ptr, nullptr);
+}
+
+/**
+ * @tc.number: RdbDataManager_0002
+ * @tc.name: test CheckSystemSizeAndHisysEvent
+ * @tc.desc: 1.Test CheckSystemSizeAndHisysEvent the RdbDataManager
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, RdbDataManager_0002, Function | MediumTest | Level1)
+{
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbPath = DB_PATH;
+    bmsRdbConfig.dbName = DB_NAME;
+    bmsRdbConfig.tableName = TABLE_NAME;
+    auto rdbDataManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    ASSERT_NE(rdbDataManager, nullptr);
+
+    std::string path;
+    std::string fileName;
+    rdbDataManager->CheckSystemSizeAndHisysEvent(path, fileName);
+    rdbDataManager->BackupRdb();
+    EXPECT_TRUE(path.empty());
+    EXPECT_TRUE(fileName.empty());
+}
+
+/**
+ * @tc.number: RdbDataManager_0003
+ * @tc.name: test InsertData
+ * @tc.desc: 1.Test InsertData the RdbDataManager
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, RdbDataManager_0003, Function | MediumTest | Level1)
+{
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbPath = DB_PATH;
+    bmsRdbConfig.dbName = DB_NAME;
+    bmsRdbConfig.tableName = TABLE_NAME;
+    auto rdbDataManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    ASSERT_NE(rdbDataManager, nullptr);
+
+    std::string key;
+    std::string value;
+    auto ret = rdbDataManager->InsertData(key, value);
+    EXPECT_FALSE(ret);
+
+    NativeRdb::ValuesBucket valuesBucket;
+    auto ret2 = rdbDataManager->InsertData(valuesBucket);
+    EXPECT_FALSE(ret2);
+
+    int64_t outInsertNum = 0;
+    std::vector<NativeRdb::ValuesBucket> valuesBuckets;
+    auto ret3 = rdbDataManager->BatchInsert(outInsertNum, valuesBuckets);
+    EXPECT_FALSE(ret3);
+
+    auto ret4 = rdbDataManager->UpdateData(key, value);
+    EXPECT_FALSE(ret4);
+
+    NativeRdb::AbsRdbPredicates absRdbPredicates(TABLE_NAME);
+    auto ret5 = rdbDataManager->UpdateData(valuesBucket, absRdbPredicates);
+    EXPECT_FALSE(ret5);
+
+    auto ret6 = rdbDataManager->UpdateOrInsertData(valuesBucket, absRdbPredicates);
+    EXPECT_FALSE(ret6);
+
+    auto ret7 = rdbDataManager->DeleteData(key);
+    EXPECT_FALSE(ret7);
+
+    auto ret8 = rdbDataManager->DeleteData(absRdbPredicates);
+    EXPECT_FALSE(ret8);
+
+    auto ret9 = rdbDataManager->QueryData(key, value);
+    EXPECT_FALSE(ret9);
+
+    std::map<std::string, std::string> datas;
+    auto ret10 = rdbDataManager->QueryAllData(datas);
+    EXPECT_FALSE(ret10);
+
+    auto ret11 = rdbDataManager->CreateTable();
+    EXPECT_FALSE(ret11);
+
+    auto ret12 = rdbDataManager->RdbIntegrityCheckNeedRestore();
+    EXPECT_FALSE(ret12);
+
+    auto ret13 = rdbDataManager->QueryByStep(absRdbPredicates);
+    EXPECT_EQ(ret13, nullptr);
+}
+
+/**
+ * @tc.number: RdbDataManager_0004
+ * @tc.name: test InsertData
+ * @tc.desc: 1.Test InsertData the RdbDataManager
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, RdbDataManager_0004, Function | MediumTest | Level1)
+{
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbPath = DB_PATH;
+    bmsRdbConfig.dbName = DB_NAME;
+    bmsRdbConfig.tableName = TABLE_NAME;
+    auto rdbDataManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    ASSERT_NE(rdbDataManager, nullptr);
+
+    auto ret = rdbDataManager->IsRetryErrCode(0);
+    EXPECT_FALSE(ret);
+
+    auto ret2 = rdbDataManager->IsRetryErrCode(NativeRdb::E_DATABASE_BUSY);
+    EXPECT_TRUE(ret2);
+
+    auto ret3 = rdbDataManager->IsRetryErrCode(NativeRdb::E_SQLITE_BUSY);
+    EXPECT_TRUE(ret3);
+
+    auto ret4 = rdbDataManager->IsRetryErrCode(NativeRdb::E_SQLITE_LOCKED);
+    EXPECT_TRUE(ret4);
+
+    auto ret5 = rdbDataManager->IsRetryErrCode(NativeRdb::E_SQLITE_NOMEM);
+    EXPECT_TRUE(ret5);
+
+    auto ret6 = rdbDataManager->IsRetryErrCode(NativeRdb::E_SQLITE_IOERR);
+    EXPECT_TRUE(ret6);
 }
 } // OHOS

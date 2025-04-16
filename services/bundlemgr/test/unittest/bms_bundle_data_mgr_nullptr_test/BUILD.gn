@@ -30,6 +30,7 @@ ohos_unittest("BmsBundleDataMgrNullptrTest") {
   use_exceptions = true
   module_out_path = module_output_path
   sources = bundle_mgr_source
+  sources += bundle_install_sources
   sources += sandbox_app
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -37,6 +38,7 @@ ohos_unittest("BmsBundleDataMgrNullptrTest") {
   sources -= [
     "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
     "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
+    "${services_path}/bundlemgr/src/bundle_util.cpp",
   ]
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
@@ -44,12 +46,12 @@ ohos_unittest("BmsBundleDataMgrNullptrTest") {
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_util.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_rdb.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
-
-  sources += bundle_install_sources
 
   sources += [ "bms_bundle_data_mgr_nullptr_test.cpp" ]
 
@@ -164,6 +166,12 @@ ohos_unittest("BmsBundleDataMgrNullptrTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
+  defines += [ "BUNDLE_FRAMEWORK_BUNDLE_UTIL_RETURN_TRUE" ]
+
+  public_external_deps = [
+    "googletest:gmock_main",
+    "googletest:gtest_main",
+  ]
 }
 
 group("unittest") {

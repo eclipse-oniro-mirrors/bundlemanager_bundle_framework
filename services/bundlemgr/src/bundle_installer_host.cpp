@@ -21,7 +21,6 @@
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_manager.h"
 #endif
-#include "account_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_clone_installer.h"
 #include "bundle_framework_core_ipc_interface_code.h"
