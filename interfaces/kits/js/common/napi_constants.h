@@ -40,6 +40,25 @@ constexpr const char* TYPE_OBJECT = "object";
 constexpr const char* TYPE_BOOLEAN = "boolean";
 constexpr const char* TYPE_FUNCTION = "function";
 constexpr const char* TYPE_ARRAY = "array";
+constexpr const char* BUNDLE_FLAGS = "bundleFlags";
+constexpr const char* ABILITY_FLAGS = "abilityFlags";
+constexpr const char* APPLICATION_FLAGS = "applicationFlags";
+constexpr const char* LINK_FEATURE = "linkFeature";
+constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
+const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+const std::string INVALID_WANT_ERROR =
+    "implicit query condition, at least one query param(action, entities, uri, type, or linkFeature) non-empty.";
+const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+const std::string IS_APPLICATION_ENABLED_SYNC = "IsApplicationEnabledSync";
+const std::string GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
+const std::string GET_BUNDLE_INFO_SYNC = "GetBundleInfoSync";
+const std::string GET_APPLICATION_INFO_SYNC = "GetApplicationInfoSync";
+const std::string GET_BUNDLE_INFO = "GetBundleInfo";
+const std::string GET_BUNDLE_INFOS = "GetBundleInfos";
+const std::string GET_APPLICATION_INFOS = "GetApplicationInfos";
+const std::string IS_APPLICATION_ENABLED = "IsApplicationEnabled";
+const std::string QUERY_ABILITY_INFOS_SYNC = "QueryAbilityInfosSync";
+const std::string GET_APPLICATION_INFO = "GetApplicationInfo";
 }
 }
 }

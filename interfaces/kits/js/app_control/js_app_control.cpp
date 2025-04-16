@@ -34,7 +34,6 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 namespace {
-const char* PARAM_TYPE_CHECK_ERROR = "param type check error";
 const char* TYPE_WANT = "want";
 const char* PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 const char* SET_DISPOSED_STATUS = "SetDisposedStatus";

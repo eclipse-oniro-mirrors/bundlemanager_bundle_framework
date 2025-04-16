@@ -105,7 +105,6 @@ const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
 const char* GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const char* GET_ABILITY_ICON = "GetAbilityIcon";
 constexpr const char* NAPI_GET_APPLICATION_INFO = "GetApplicationInfo";
-const char* GET_BUNDLE_INFO = "getBundleInfo";
 const char* GET_ALL_BUNDLE_INFO = "GetAllBundleInfo";
 const char* GET_PERMISSION_DEF = "GetPermissionDef";
 const char* QUERY_ABILITY_BY_WANT = "queryAbilityByWant";
