@@ -20,8 +20,8 @@ group("ani_common") {
 
 group("ani_bms_packages") {
   deps = [
-    "bundle_installer:ani_bundle_installer",
-    "bundle_installer:bundle_installer_etc",
+    # "bundle_installer:ani_bundle_installer",
+    # "bundle_installer:bundle_installer_etc",
     "bundle_manager:ability_info_etc",
     "bundle_manager:anibundlemanager",
     "bundle_manager:application_info_etc",
