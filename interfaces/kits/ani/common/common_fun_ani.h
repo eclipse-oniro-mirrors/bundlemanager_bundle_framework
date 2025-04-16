@@ -34,6 +34,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace CommonFunAniNS {
 constexpr const char* TYPE_INT = "int";
+constexpr const char* TYPE_NUMBER = "number";
 constexpr const char* TYPE_STRING = "string";
 } // namespace CommonFunAniNS
 
