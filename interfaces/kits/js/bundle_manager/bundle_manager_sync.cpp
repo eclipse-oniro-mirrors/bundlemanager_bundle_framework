@@ -33,31 +33,21 @@ namespace OHOS {
 namespace AppExecFwk {
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
-constexpr const char* ABILITY_INFO = "abilityInfo";
 constexpr const char* IS_ENABLE = "isEnable";
 constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* HAP_FILE_PATH = "hapFilePath";
 constexpr const char* UID = "uid";
 constexpr const char* EXTENSIONABILITY_TYPE = "extensionAbilityType";
-constexpr const char* FLAGS = "flags";
-constexpr const char* EXTENSION_TYPE_NAME = "extensionTypeName";
-const char* SET_APPLICATION_ENABLED_SYNC = "SetApplicationEnabledSync";
-const char* SET_ABILITY_ENABLED_SYNC = "SetAbilityEnabledSync";
-const char* IS_ABILITY_ENABLED_SYNC = "IsAbilityEnabledSync";
 const char* GET_ABILITY_LABEL_SYNC = "GetAbilityLabelSync";
-const char* GET_LAUNCH_WANT_FOR_BUNDLE_SYNC = "GetLaunchWantForBundleSync";
 const char* GET_BUNDLE_ARCHIVE_INFO_SYNC = "GetBundleArchiveInfoSync";
 const char* GET_BUNDLE_NAME_BY_UID_SYNC = "GetBundleNameByUidSync";
 const char* GET_PROFILE_BY_EXTENSION_ABILITY_SYNC = "GetProfileByExtensionAbilitySync";
 const char* GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";
-const char* QUERY_EXTENSION_INFOS_SYNC = "QueryExtensionInfosSync";
 const char* GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
 const char* GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
 const char* GET_SIGNATURE_INFO_SYNC = "GetSignatureInfoSync";
 const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
 const char* PERMISSION_NAME = "permissionName";
-const char* PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
-    "BusinessError 401: Parameter error.Parameter extensionAbilityType is empty.";
 bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
 {
     napi_valuetype valueType;

@@ -33,6 +33,7 @@ constexpr const char* CLASSNAME_BUNDLEINFO = "LbundleManager/BundleInfoInner/Bun
 constexpr const char* CLASSNAME_PERMISSION = "LbundleManager/BundleInfoInner/ReqPermissionDetailInner;";
 constexpr const char* CLASSNAME_USEDSCENE = "LbundleManager/BundleInfoInner/UsedSceneInner;";
 constexpr const char* CLASSNAME_SIGNATUREINFO = "LbundleManager/BundleInfoInner/SignatureInfoInner;";
+constexpr const char* CLASSNAME_APPCLONEIDENTITY = "LbundleManager/BundleInfoInner/AppCloneIdentityInner;";
 constexpr const char* CLASSNAME_METADATA = "LbundleManager/MetadataInner/MetadataInner;";
 constexpr const char* CLASSNAME_RESOURCE = "Lglobal/resourceInner/ResourceInner;";
 constexpr const char* CLASSNAME_ROUTERITEM = "LbundleManager/HapModuleInfoInner/RouterItemInner;";
@@ -1268,6 +1269,29 @@ ani_object CommonFunAni::ConvertAbilitySkillInner(ani_env* env, const Skill& ski
         RETURN_NULL_IF_FALSE(
             CallSetter(env, cls, object, PROPERTYNAME_DOMAINVERIFY, BoolToAniBoolean(skill.domainVerify)));
     }
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertAppCloneIdentity(
+    ani_env* env, const std::string& bundleName, const int32_t appIndex)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_APPCLONEIDENTITY);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // appIndex: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, appIndex));
 
     return object;
 }

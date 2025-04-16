@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { BundleInfo } from 'bundleManager.BundleInfo';
+import { BundleInfo, AppCloneIdentity } from 'bundleManager.BundleInfo';
 import { AsyncCallback, BusinessError } from '@ohos.base';
 import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { AbilityInfo } from 'bundleManager.AbilityInfo';
@@ -183,6 +183,19 @@ namespace bundleManager {
 
   export native function queryAbilityInfoSyncInner(want: Want, abilityFlags: number, userId: number): Array<AbilityInfo>;
 
+  export native function getAppCloneIdentitySync(uid: number): AppCloneIdentity;
+
+  export native function getAbilityLabelSync(bundleName: string, moduleName: string, abilityName: string): string;
+
+  export native function getLaunchWantForBundleSyncInner(bundleName: string, userId: number): Want;
+
+  export native function getAppCloneBundleInfoInner(bundleName: string, appIndex: number,
+    bundleFlags: number, userId: number): BundleInfo;
+
+  export native function getSpecifiedDistributionType(bundleName: string): string;
+
+  export native function getBundleNameByUidSync(uid: number): string;
+
   function isApplicationEnabledSync(bundleName: string): boolean {
     return bundleManager.isApplicationEnabledSyncInner(bundleName, 0);
   }
@@ -190,6 +203,11 @@ namespace bundleManager {
   function queryAbilityInfoSync(want: Want, abilityFlags: number, userId?: number): Array<AbilityInfo> {
     let userIdInfo: number = userId ?? -500;
     return bundleManager.queryAbilityInfoSyncInner(want, abilityFlags, userIdInfo);
+  }
+
+  function getLaunchWantForBundleSync(bundleName: string, userId?: number): Want {
+    let userIdInfo: number = userId ?? -500;
+    return bundleManager.getLaunchWantForBundleSyncInner(bundleName, userIdInfo);
   }
 
   function getBundleInfoForSelf(bundleFlags: number, callback: AsyncCallback<BundleInfo, void>):void {
@@ -525,6 +543,157 @@ namespace bundleManager {
       let resultApplicationInfo = new ApplicationInfoInner();
       callback(err, resultApplicationInfo);
     });
+  }
+
+  function getAppCloneIdentity(uid: number): Promise<AppCloneIdentity> {
+    let p = new Promise<AppCloneIdentity>((
+      resolve: (appCloneIdentity: AppCloneIdentity) => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): AppCloneIdentity => {
+        return bundleManager.getAppCloneIdentitySync(uid);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let resultAppCloneIdentity: AppCloneIdentity = e as AppCloneIdentity;
+        resolve(resultAppCloneIdentity);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAbilityLabel(bundleName: string, moduleName: string, abilityName: string): Promise<string> {
+    let p = new Promise<string>((
+      resolve: (label: string) => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): string => {
+        return bundleManager.getAbilityLabelSync(bundleName, moduleName, abilityName);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let label: string = e as string;
+        resolve(label);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAbilityLabel(
+    bundleName: string, moduleName: string, abilityName: string, callback: AsyncCallback<string>): void {
+    let execFun = (): string => {
+      return bundleManager.getAbilityLabelSync(bundleName, moduleName, abilityName);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let label: string = e as string;
+      let r = new BusinessError();
+      callback(r, label);
+    },(err: BusinessError): void => {
+      callback(err, "");
+    });
+  }
+
+  function getLaunchWantForBundle(bundleName: string, userId?: number): Promise<Want> {
+    let p = new Promise<Want>((
+      resolve: (want: Want) => void, reject: (error: BusinessError) => void) => {
+      let userIdInfo: number = userId ?? -500;
+      let execFun = (): Want => {
+        return bundleManager.getLaunchWantForBundleSyncInner(bundleName, userIdInfo);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let want: Want = e as Want;
+        resolve(want);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getLaunchWantForBundle(bundleName: string, userId: number, callback: AsyncCallback<Want>): void {
+    let execFun = (): Want => {
+      return bundleManager.getLaunchWantForBundleSyncInner(bundleName, userId);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let want: Want = e as Want;
+      let r = new BusinessError();
+      callback(r, want);
+    },(err: BusinessError): void => {
+      let want : Want = {};
+      callback(err, want);
+    });
+  }
+
+  function getLaunchWantForBundle(bundleName: string, callback: AsyncCallback<Want>): void {
+    let execFun = (): Want => {
+      return bundleManager.getLaunchWantForBundleSyncInner(bundleName, -500);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let want: Want = e as Want;
+      let r = new BusinessError();
+      callback(r, want);
+    },(err: BusinessError): void => {
+      let want : Want = {};
+      callback(err, want);
+    });
+  }
+
+  function getAppCloneBundleInfo(bundleName: string, appIndex: number,
+    bundleFlags: number, userId?: number): Promise<BundleInfo> {
+    let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void,
+      reject: (error: BusinessError) => void) => {
+      let userIdInfo: number = userId ?? -500;
+      let execFun = (): BundleInfo => {
+        return bundleManager.getAppCloneBundleInfoInner(bundleName, appIndex, bundleFlags, userIdInfo);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let resultBundleInfo: BundleInfo = e as BundleInfo;
+        resolve(resultBundleInfo);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getBundleNameByUid(uid: number, callback: AsyncCallback<string>): void {
+    let execFun = (): string => {
+      return bundleManager.getBundleNameByUidSync(uid);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let result: string = e as string;
+      let r = new BusinessError();
+      callback(r, result);
+    }).catch((err: BusinessError): void => {
+      callback(err, "");
+    });
+  }
+
+  function getBundleNameByUid(uid: number): Promise<string> {
+    let p = new Promise<string>((resolve: (result: string) => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): string => {
+        return bundleManager.getBundleNameByUidSync(uid);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let result: string = e as string;
+        resolve(result);
+      }).catch((err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
   }
 
 }

@@ -83,6 +83,7 @@ constexpr const char* MAX_ADDITIONAL_NUMBER = "maxCount";
 constexpr const char* MULTI_APP_MODE_TYPE = "multiAppModeType";
 constexpr const char* MULTI_APP_MODE = "multiAppMode";
 constexpr const char* ORIENTATION_ID = "orientationId";
+constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -2694,6 +2695,28 @@ bool CommonFunc::ParseParameterItem(napi_env env, napi_value param, std::string 
         return false;
     }
     return true;
+}
+
+void CommonFunc::GetBundleNameAndIndexByName(
+    const std::string &keyName, std::string &bundleName, int32_t &appIndex)
+{
+    bundleName = keyName;
+    appIndex = 0;
+    auto pos = keyName.find(CLONE_BUNDLE_PREFIX);
+    if ((pos == std::string::npos) || (pos == 0)) {
+        return;
+    }
+    std::string index = keyName.substr(0, pos);
+    if (!OHOS::StrToInt(index, appIndex)) {
+        appIndex = 0;
+        return;
+    }
+    bundleName = keyName.substr(pos + strlen(CLONE_BUNDLE_PREFIX));
+}
+
+std::string CommonFunc::GetCloneBundleIdKey(const std::string &bundleName, const int32_t appIndex)
+{
+    return std::to_string(appIndex) + CLONE_BUNDLE_PREFIX + bundleName;
 }
 } // AppExecFwk
 } // OHOS
