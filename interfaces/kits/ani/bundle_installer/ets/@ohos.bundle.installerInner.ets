@@ -364,30 +364,4 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       });
       return p;
   }
-
-  installPlugin(hostBundleName: string, pluginFilePaths: Array<string>, pluginParam?: installer.PluginParam): Promise<void> {
-      let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
-      let execFun = ():NullishType=>{}
-      let p1 = taskpool.execute(execFun);
-      p1.then(():void => {
-          resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
-        });
-      });
-      return p;
-  }
-
-  uninstallPlugin(hostBundleName: string, pluginBundleName: string, pluginParam?: installer.PluginParam): Promise<void> {
-      let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
-      let execFun = ():NullishType=>{}
-      let p1 = taskpool.execute(execFun);
-      p1.then(():void => {
-          resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
-        });
-      });
-      return p;
-  }
 }

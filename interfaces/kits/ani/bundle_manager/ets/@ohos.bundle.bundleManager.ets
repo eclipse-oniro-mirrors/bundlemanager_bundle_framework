@@ -89,6 +89,10 @@ namespace bundleManager {
     ADS_SERVICE = 20,
     EMBEDDED_UI = 21,
     INSIGHT_INTENT_UI = 22,
+    FENCE = 24,
+    ASSET_ACCELERATION = 26,
+    FORM_EDIT = 27,
+    DISTRIBUTED = 28,
     UNSPECIFIED = 255
   }
 
@@ -164,6 +168,9 @@ namespace bundleManager {
 
   export enum ApplicationInfoFlag {
     FLAG_INSTALLED = 0x00000001,
+    FLAG_OTHER_INSTALLED = 0x00000010,
+    FLAG_PREINSTALLED_APP = 0x00000020,
+    FLAG_PREINSTALLED_APP_UPDATE = 0x00000040,
   }
 
   export native function isApplicationEnabledSync(bundleName: string): boolean;
