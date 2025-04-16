@@ -6911,7 +6911,7 @@ bool BaseBundleInstaller::DeleteAppGalleryHapFromTempPath()
 void BaseBundleInstaller::ProcessAddResourceInfo(const InstallParam &installParam,
     const std::string &bundleName, int32_t userId)
 {
-    if (installParam.isOTA && userId != Constants::START_USERID &&
+    if ((installParam.isOTA || otaInstall_) && userId != Constants::START_USERID &&
         dataMgr_->HasUserInstallInBundle(bundleName, Constants::START_USERID)) {
         return;
     }
