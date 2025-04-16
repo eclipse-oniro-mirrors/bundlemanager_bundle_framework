@@ -4981,4 +4981,106 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13100, Function | Sma
     result = info.HasMultiUserPlugin(TEST_BUNDLE_NAME);
     EXPECT_EQ(result, false);
 }
+
+/**
+ * @tc.number: GetApplicationInfoV9_0001
+ * @tc.name: Test GetApplicationInfoV9
+ * @tc.desc: Test the GetApplicationInfoV9 of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationInfoV9_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerBundleUserInfo userInfo;
+    int32_t flags = static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION) |
+    static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA);
+
+    userInfo.bundleName = TEST_BUNDLE_NAME;
+    userInfo.uid = userId;
+    info.innerBundleUserInfos_.try_emplace(TEST_BUNDLE_NAME, userInfo);
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(applicationInfo);
+    InnerModuleInfo innerModuleInfo;
+    HnpPackage hnpPackage;
+    std::vector<HnpPackage> hnpPackages;
+    hnpPackage.package = HNPPACKAGE;
+    hnpPackage.type = HNPPACKAGETYPE;
+    hnpPackages.push_back(hnpPackage);
+    innerModuleInfo.hnpPackages = hnpPackages;
+    innerModuleInfo.isModuleJson = false;
+    innerModuleInfo.isEntry = true;
+    std::vector<RequestPermission> requestPermissions;
+    RequestPermission requestPermission;
+    requestPermission.name = TEST_NAME;
+    requestPermissions.push_back(requestPermission);
+    innerModuleInfo.requestPermissions = requestPermissions;
+    CustomizeData customizeData1;
+    customizeData1.name = NAME;
+    customizeData1.value = "test";
+    innerModuleInfo.metaData.customizeData.emplace_back(customizeData1);
+
+    info.innerModuleInfos_.try_emplace(TEST_BUNDLE_NAME, innerModuleInfo);
+    ApplicationInfo resultAppInfo;
+    auto ret = info.GetApplicationInfoV9(flags, Constants::ALL_USERID, applicationInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SetMoudleIsEncrpted_0001
+ * @tc.name: Test SetMoudleIsEncrpted
+ * @tc.desc: Test the SetMoudleIsEncrpted of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SetMoudleIsEncrpted_0001, Function | SmallTest | Level1)
+{
+    std::string packageName = "test";
+    InnerBundleInfo info;
+    info.SetMoudleIsEncrpted(packageName, true);
+    EXPECT_TRUE(info.innerModuleInfos_.find(packageName) == info.innerModuleInfos_.end());
+}
+
+/**
+ * @tc.number: SetOverlayModuleState_0001
+ * @tc.name: Test SetOverlayModuleState
+ * @tc.desc: Test the SetOverlayModuleState of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SetOverlayModuleState_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo userInfo;
+
+    info.overlayType_ = OverlayType::NON_OVERLAY_TYPE + 1;
+    userInfo.bundleUserInfo.userId = 1;
+    userInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_1);
+    innerBundleUserInfos[BUNDLE_NAME_WITH_USERID] = userInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+
+    std::string moduleName = "testModule";
+    int32_t state = 2;
+    int32_t userId = 1;
+    info.SetOverlayModuleState(moduleName, state, userId);
+    EXPECT_EQ(info.innerBundleUserInfos_.size(), 1);
+}
+
+/**
+ * @tc.number: SetOverlayModuleState_0002
+ * @tc.name: Test SetOverlayModuleState
+ * @tc.desc: Test the SetOverlayModuleState of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SetOverlayModuleState_0002, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo userInfo;
+
+    info.overlayType_ = OverlayType::NON_OVERLAY_TYPE + 1;
+    userInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_1);
+    innerBundleUserInfos[BUNDLE_NAME_WITH_USERID] = userInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+
+    std::string moduleName = "testModule";
+    int32_t state = 1;
+    info.SetOverlayModuleState(moduleName, state);
+    EXPECT_EQ(info.innerBundleUserInfos_.size(), 1);
+}
 } // OHOS
