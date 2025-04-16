@@ -55,7 +55,7 @@ void StatisticsUsageStats(
 BundleAgingMgr::BundleAgingMgr()
 {
     InitAgingHandlerChain();
-    APP_LOGI("BundleAgingMgr is created .");
+    APP_LOGI("BundleAgingMgr is created");
 }
 
 BundleAgingMgr::~BundleAgingMgr()
