@@ -26,6 +26,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_resource_info.h"
+#include "enum_util.h"
 #include "install_param.h"
 #include "launcher_ability_info.h"
 
@@ -43,35 +44,35 @@ constexpr const char* TYPE_STRING = "string";
             APP_LOGE("ptr is null"); \
             return nullptr;          \
         }                            \
-    } while (false)
+    } while (0)
 #define RETURN_FALSE_IF_NULL(ptr)    \
     do {                             \
         if ((ptr) == nullptr) {      \
             APP_LOGE("ptr is null"); \
             return false;            \
         }                            \
-    } while (false)
+    } while (0)
 #define RETURN_NULL_IF_FALSE(condition)     \
     do {                                    \
         if (!(condition)) {                 \
             APP_LOGE("condition is false"); \
             return nullptr;                 \
         }                                   \
-    } while (false)
+    } while (0)
 #define RETURN_FALSE_IF_FALSE(condition)    \
     do {                                    \
         if (!(condition)) {                 \
             APP_LOGE("condition is false"); \
             return false;                   \
         }                                   \
-    } while (false)
+    } while (0)
 #define RETURN_ANI_STATUS_IF_NOT_OK(res, err) \
-    do {                                            \
-        if ((res) != ANI_OK) {                  \
-            APP_LOGE(err);                          \
+    do {                                      \
+        if ((res) != ANI_OK) {                \
+            APP_LOGE(err);                    \
             return res;                       \
-        }                                           \
-    } while (false)
+        }                                     \
+    } while (0)
 class CommonFunAni {
 public:
     // Data conversion.
@@ -150,7 +151,7 @@ public:
     static ani_object ConvertShortcutIntent(ani_env* env, const ShortcutIntent& shortcutIntent);
     static ani_object ConvertShortcutIntentParameter(ani_env* env, const std::pair<std::string, std::string>& item);
 
-    static ani_object ConvertLauncherAbilityInfo(ani_env* env, const LauncherAbilityInfo &launcherAbility);
+    static ani_object ConvertLauncherAbilityInfo(ani_env* env, const LauncherAbilityInfo& launcherAbility);
 
     // Parse from ets to native
     static bool ParseShortcutInfo(ani_env* env, ani_object object, ShortcutInfo& shortcutInfo);
@@ -161,19 +162,61 @@ public:
 
     static ani_class CreateClassByName(ani_env* env, const std::string& className);
     static ani_object CreateNewObjectByClass(ani_env* env, ani_class cls);
-    static ani_ref ConvertAniArrayString(ani_env* env, const std::vector<std::string>& cArray);
-
-    static bool ParseStrArray(ani_env* env, ani_object arrayObj, std::vector<std::string>& strings);
+    static inline ani_object ConvertAniArrayString(ani_env* env, const std::vector<std::string>& strings)
+    {
+        return ConvertAniArray(env, strings, [](ani_env* env, const std::string& nativeStr) {
+            ani_string aniStr = nullptr;
+            return StringToAniStr(env, nativeStr, aniStr) ? aniStr : nullptr;
+        });
+    }
+    static inline bool ParseStrArray(ani_env* env, ani_object arrayObj, std::vector<std::string>& strings)
+    {
+        return ParseAniArray(env, arrayObj, strings, [](ani_env* env, ani_object aniStr, std::string& nativeStr) {
+            nativeStr = AniStrToString(env, static_cast<ani_string>(aniStr));
+            return true;
+        });
+    }
+    template<typename enumType>
+    static inline bool ParseEnumArray(ani_env* env, ani_object arrayObj, std::vector<enumType>& enums)
+    {
+        return ParseAniArray(env, arrayObj, enums, [](ani_env* env, ani_object aniItem, enumType& nativeItem) {
+            return EnumUtils::EnumETSToNative(env, reinterpret_cast<ani_enum_item>(aniItem), nativeItem);
+        });
+    }
     static bool ParseInstallParam(ani_env* env, ani_object object, InstallParam& installParam);
     static bool ParseHashParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
     static bool ParsePgoParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
     static bool ParseUninstallParam(ani_env* env, ani_object object, UninstallParam& uninstallParam);
+    static bool ParseMetadata(ani_env* env, ani_object object, Metadata& metadata);
+    static bool ParseResource(ani_env* env, ani_object object, Resource& resource);
+    static bool ParseMultiAppMode(ani_env* env, ani_object object, MultiAppModeData& multiAppMode);
+    static bool ParseApplicationInfo(ani_env* env, ani_object object, ApplicationInfo& appInfo);
+    static bool ParseWindowSize(ani_env* env, ani_object object, AbilityInfo& abilityInfo);
+    static bool ParseAbilitySkillUriInner(ani_env* env, ani_object object, SkillUri& skillUri, bool isExtension);
+    static inline bool ParseAbilitySkillUri(ani_env* env, ani_object object, SkillUri& skillUri)
+    {
+        return ParseAbilitySkillUriInner(env, object, skillUri, false);
+    }
+    static inline bool ParseExtensionAbilitySkillUri(ani_env* env, ani_object object, SkillUri& skillUri)
+    {
+        return ParseAbilitySkillUriInner(env, object, skillUri, true);
+    }
+    static bool ParseAbilitySkillInner(ani_env* env, ani_object object, Skill& skill, bool isExtension);
+    static inline bool ParseAbilitySkill(ani_env* env, ani_object object, Skill& skill)
+    {
+        return ParseAbilitySkillInner(env, object, skill, false);
+    }
+    static inline bool ParseExtensionAbilitySkill(ani_env* env, ani_object object, Skill& skill)
+    {
+        return ParseAbilitySkillInner(env, object, skill, true);
+    }
+    static bool ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo& abilityInfo);
 
     template<typename toType>
     static bool TryCastDoubleTo(const double fromValue, toType* toValue)
     {
         RETURN_FALSE_IF_NULL(toValue);
-        
+
         if (std::isnan(fromValue)) {
             APP_LOGE("value is NaN");
             return false;
@@ -243,7 +286,8 @@ public:
     }
 
     template<typename containerType, typename Converter, typename... Args>
-    static ani_object ConvertAniArray(ani_env* env, const containerType& cArray, Converter converter, Args&&... args)
+    static ani_object ConvertAniArray(ani_env* env,
+        const containerType& nativeArray, Converter converter, Args&&... args)
     {
         RETURN_NULL_IF_NULL(env);
         RETURN_NULL_IF_NULL(converter);
@@ -262,7 +306,7 @@ public:
             return nullptr;
         }
 
-        ani_size length = cArray.size();
+        ani_size length = nativeArray.size();
         ani_object arrayObj;
         status = env->Object_New(arrayCls, arrayCtor, &arrayObj, length);
         if (status != ANI_OK) {
@@ -271,7 +315,7 @@ public:
         }
 
         ani_size i = 0;
-        for (const auto& iter : cArray) {
+        for (const auto& iter : nativeArray) {
             ani_object item = converter(env, iter, std::forward<Args>(args)...);
             RETURN_NULL_IF_NULL(item);
             status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", i, item);
@@ -286,14 +330,12 @@ public:
         return arrayObj;
     }
 
-    template<typename T>
-    static bool ParseAniArray(
-        ani_env* env, ani_object aniArray, std::vector<T>& nativeArray, bool (*parser)(ani_env*, ani_object, T&))
+    template<typename callbackType, typename... Args>
+    static bool AniArrayForeach(ani_env* env, ani_object aniArray, callbackType callback, Args&&... args)
     {
         RETURN_FALSE_IF_NULL(env);
         RETURN_FALSE_IF_NULL(aniArray);
 
-        nativeArray.clear();
         ani_double length;
         ani_status status = env->Object_GetPropertyByName_Double(aniArray, "length", &length);
         if (status != ANI_OK) {
@@ -305,20 +347,35 @@ public:
             status = env->Object_CallMethodByName_Ref(aniArray, "$_get", "I:Lstd/core/Object;", &ref, i);
             if (status != ANI_OK) {
                 APP_LOGE("Object_CallMethodByName_Ref failed %{public}d", status);
-                nativeArray.clear();
                 return false;
             }
-            T obj;
-            bool result = parser(env, reinterpret_cast<ani_object>(ref), obj);
+            bool result = callback(reinterpret_cast<ani_object>(ref), std::forward<Args>(args)...);
             env->Reference_Delete(ref);
-            if (result) {
-                nativeArray.emplace_back(obj);
-            } else {
-                nativeArray.clear();
+            if (!result) {
                 return false;
             }
         }
         return true;
+    }
+
+    template<typename nativeType, typename Parser, typename... Args>
+    static bool ParseAniArray(ani_env* env,
+        ani_object aniArray, std::vector<nativeType>& nativeArray, Parser parser, Args&&... args)
+    {
+        return AniArrayForeach(
+            env, aniArray,
+            [env, &nativeArray, parser](ani_object aniObj, Args&&... args) {
+                nativeType nativeObj;
+                bool result = parser(env, aniObj, nativeObj, std::forward<Args>(args)...);
+                if (result) {
+                    nativeArray.emplace_back(nativeObj);
+                    return true;
+                } else {
+                    nativeArray.clear();
+                    return false;
+                }
+            },
+            std::forward<Args>(args)...);
     }
 
     template<typename valueType>
@@ -394,8 +451,7 @@ public:
                 status = env->Object_CallMethodByName_Boolean(
                     reinterpret_cast<ani_object>(ref), "unboxed", ":Z", value);
             } else if constexpr (std::is_same_v<valueType, ani_char>) {
-                status =
-                    env->Object_CallMethodByName_Char(reinterpret_cast<ani_object>(ref), "unboxed", ":C", value);
+                status = env->Object_CallMethodByName_Char(reinterpret_cast<ani_object>(ref), "unboxed", ":C", value);
             } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
                                  std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
                                  std::is_same_v<valueType, ani_long> ||
