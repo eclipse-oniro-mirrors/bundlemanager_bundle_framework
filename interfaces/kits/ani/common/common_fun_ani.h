@@ -144,6 +144,8 @@ public:
     }
     static ani_object ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo, int32_t flags);
 
+    static ani_object ConvertAppCloneIdentity(ani_env* env, const std::string& bundleName, const int32_t appIndex);
+
     static ani_object ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo);
 
     static ani_object ConvertShortcutInfo(ani_env* env, const ShortcutInfo& shortcutInfo);

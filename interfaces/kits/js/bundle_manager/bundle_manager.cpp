@@ -44,7 +44,6 @@ namespace {
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* BUNDLE_NAME = "bundleName";
-constexpr const char* ABILITY_INFO = "abilityInfo";
 constexpr const char* IS_ENABLE = "isEnable";
 constexpr const char* USER_ID = "userId";
 constexpr const char* APP_FLAGS = "appFlags";
@@ -67,25 +66,19 @@ constexpr const char* SOURCE_PATHS = "sourcePaths";
 constexpr const char* DESTINATION_PATHS = "destinationPath";
 constexpr const char* HOST_BUNDLE_NAME = "hostBundleName";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
-const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
-const std::string GET_APP_CLONE_IDENTITY = "getAppCloneIdentity";
 const std::string GET_ALL_BUNDLE_CACHE_SIZE = "getAllBundleCacheSize";
 const std::string CLEAN_ALL_BUNDLE_CACHE = "cleanAllBundleCache";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
-const std::string BATCH_QUERY_ABILITY_INFOS = "BatchQueryAbilityInfos";
 const std::string QUERY_EXTENSION_INFOS = "QueryExtensionInfos";
 const std::string GET_PERMISSION_DEF = "GetPermissionDef";
 const std::string PERMISSION_NAME = "permissionName";
-const std::string APP_CLONE_IDENTITY_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
 const std::string GET_ALL_SHARED_BUNDLE_INFO = "GetAllSharedBundleInfo";
 const std::string GET_SHARED_BUNDLE_INFO = "GetSharedBundleInfo";
 const std::string GET_EXT_RESOURCE = "GetExtResource";
 const std::string ENABLE_DYNAMIC_ICON = "EnableDynamicIcon";
 const std::string DISABLE_DYNAMIC_ICON = "DisableDynamicIcon";
-const std::string GET_DYNAMIC_ICON = "GetDynamicIcon";
 const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
-const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionType";
 const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
 const std::string GET_JSON_PROFILE = "GetJsonProfile";
 const std::string GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
@@ -95,11 +88,9 @@ const std::string GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicatio
 const std::string GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
 const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
 const std::string SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
-const std::string GET_APP_CLONE_BUNDLE_INFO = "GetAppCloneBundleInfo";
 const std::string GET_ALL_APP_CLONE_BUNDLE_INFO = "GetAllAppCloneBundleInfo";
 const std::string GET_ALL_PLUGIN_INFO = "GetAllPluginInfo";
 const std::string MIGRATE_DATA = "MigrateData";
-const std::string CLONE_BUNDLE_PREFIX = "clone_";
 constexpr int32_t ENUM_ONE = 1;
 constexpr int32_t ENUM_TWO = 2;
 constexpr int32_t ENUM_THREE = 3;
@@ -307,29 +298,6 @@ static void ProcessApplicationInfos(
     }
 }
 
-void GetBundleNameAndIndexByName(
-    const std::string &keyName, std::string &bundleName, int32_t &appIndex)
-{
-    bundleName = keyName;
-    appIndex = 0;
-    // for clone bundle name
-    auto pos = keyName.find(CLONE_BUNDLE_PREFIX);
-    if ((pos == std::string::npos) || (pos == 0)) {
-        return;
-    }
-    std::string index = keyName.substr(0, pos);
-    if (!OHOS::StrToInt(index, appIndex)) {
-        appIndex = 0;
-        return;
-    }
-    bundleName = keyName.substr(pos + CLONE_BUNDLE_PREFIX.size());
-}
-
-std::string GetCloneBundleIdKey(const std::string &bundleName, const int32_t appIndex)
-{
-    return std::to_string(appIndex) + CLONE_BUNDLE_PREFIX + bundleName;
-}
-
 void GetBundleNameByUidExec(napi_env env, void *data)
 {
     GetBundleNameByUidCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetBundleNameByUidCallbackInfo *>(data);
@@ -343,7 +311,7 @@ void GetBundleNameByUidExec(napi_env env, void *data)
         if (!g_ownBundleName.empty()) {
             APP_LOGD("query own bundleName, has cache, no need to query from host");
             int32_t appIndex = 0;
-            GetBundleNameAndIndexByName(g_ownBundleName, asyncCallbackInfo->bundleName, appIndex);
+            CommonFunc::GetBundleNameAndIndexByName(g_ownBundleName, asyncCallbackInfo->bundleName, appIndex);
             asyncCallbackInfo->err = NO_ERROR;
             return;
         }
@@ -351,14 +319,13 @@ void GetBundleNameByUidExec(napi_env env, void *data)
     int32_t appIndex = 0;
     asyncCallbackInfo->err =
         InnerGetAppCloneIdentity(asyncCallbackInfo->uid, asyncCallbackInfo->bundleName, appIndex);
+    std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
     if ((asyncCallbackInfo->err == NO_ERROR) && queryOwn && g_ownBundleName.empty()) {
-        std::string bundleNameCached = asyncCallbackInfo->bundleName;
+        g_ownBundleName = asyncCallbackInfo->bundleName;
         if (appIndex > 0) {
-            bundleNameCached = GetCloneBundleIdKey(asyncCallbackInfo->bundleName, appIndex);
+            g_ownBundleName = CommonFunc::GetCloneBundleIdKey(asyncCallbackInfo->bundleName, appIndex);
         }
-        APP_LOGD("put own bundleName = %{public}s to cache", bundleNameCached.c_str());
-        std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
-        g_ownBundleName = bundleNameCached;
+        APP_LOGD("put own bundleName = %{public}s to cache", g_ownBundleName.c_str());
     }
 }
 
@@ -394,21 +361,22 @@ void GetAppCloneIdentityExec(napi_env env, void *data)
         std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
         if (!g_ownBundleName.empty()) {
             APP_LOGD("query own bundleName and appIndex, has cache, no need to query from host");
-            GetBundleNameAndIndexByName(g_ownBundleName, asyncCallbackInfo->bundleName, asyncCallbackInfo->appIndex);
+            CommonFunc::GetBundleNameAndIndexByName(
+                g_ownBundleName, asyncCallbackInfo->bundleName, asyncCallbackInfo->appIndex);
             asyncCallbackInfo->err = NO_ERROR;
             return;
         }
     }
     asyncCallbackInfo->err = InnerGetAppCloneIdentity(
         asyncCallbackInfo->uid, asyncCallbackInfo->bundleName, asyncCallbackInfo->appIndex);
+    std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
     if ((asyncCallbackInfo->err == NO_ERROR) && queryOwn && g_ownBundleName.empty()) {
-        std::string bundleNameCached = asyncCallbackInfo->bundleName;
+        g_ownBundleName = asyncCallbackInfo->bundleName;
         if (asyncCallbackInfo->appIndex > 0) {
-            bundleNameCached = GetCloneBundleIdKey(asyncCallbackInfo->bundleName, asyncCallbackInfo->appIndex);
+            g_ownBundleName = CommonFunc::GetCloneBundleIdKey(
+                asyncCallbackInfo->bundleName, asyncCallbackInfo->appIndex);
         }
-        APP_LOGD("put own bundleName = %{public}s to cache", bundleNameCached.c_str());
-        std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
-        g_ownBundleName = bundleNameCached;
+        APP_LOGD("put own bundleName = %{public}s to cache", g_ownBundleName.c_str());
     }
 }
 
