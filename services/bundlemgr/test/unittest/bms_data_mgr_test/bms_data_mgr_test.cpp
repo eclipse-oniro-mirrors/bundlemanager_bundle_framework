@@ -3180,4 +3180,130 @@ HWTEST_F(BmsDataMgrTest, CreateAppInstallDir_0001, Function | MediumTest | Level
     std::string appClonePath = path + ServiceConstants::GALLERY_CLONE_PATH;
     EXPECT_EQ(BundleUtil::IsExistDir(appClonePath), true);
 }
+
+/**
+ * @tc.number: GetFirstInstallBundleInfo_0001
+ * @tc.name: GetFirstInstallBundleInfo
+ * @tc.desc: test GetFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
+    FirstInstallBundleInfo &firstInstallBundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, GetFirstInstallBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    int32_t userId = 100;
+    FirstInstallBundleInfo firstInstallBundleInfo;
+    auto ret = bundleDataMgr.GetFirstInstallBundleInfo(bundleName, userId, firstInstallBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: DeleteFirstInstallBundleInfo_0001
+ * @tc.name: DeleteFirstInstallBundleInfo
+ * @tc.desc: test DeleteFirstInstallBundleInfo(int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteFirstInstallBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = 100;
+    auto ret = bundleDataMgr.DeleteFirstInstallBundleInfo(userId);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: RemoveHspModuleByVersionCode_0001
+ * @tc.name: RemoveHspModuleByVersionCode
+ * @tc.desc: test RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundleInfo &info)
+ */
+HWTEST_F(BmsDataMgrTest, RemoveHspModuleByVersionCode_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t versionCode = 100;
+    InnerBundleInfo info;
+    auto ret = bundleDataMgr.RemoveHspModuleByVersionCode(versionCode, info);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetCloneAppIndexes_0001
+ * @tc.name: GetCloneAppIndexes
+ * @tc.desc: test GetCloneAppIndexes(const std::string &bundleName, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, GetCloneAppIndexes_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<int32_t> cloneAppIndexes;
+    std::string bundleName = "";
+    int32_t userId = Constants::ANY_USERID;
+    auto ret = bundleDataMgr.GetCloneAppIndexes(bundleName, userId);
+    EXPECT_EQ(ret, cloneAppIndexes);
+}
+
+/**
+ * @tc.number: QueryLauncherAbilityInfos_0001
+ * @tc.name: QueryLauncherAbilityInfos
+ * @tc.desc: test QueryLauncherAbilityInfos(
+    const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
+ */
+HWTEST_F(BmsDataMgrTest, QueryLauncherAbilityInfos_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    int32_t userId = 100;
+    std::vector<AbilityInfo> abilityInfos;
+    auto ret = bundleDataMgr.QueryLauncherAbilityInfos(want, userId, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.QueryLauncherAbilityInfos(want, userId, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityInfoSync_0001
+ * @tc.name: GetLauncherAbilityInfoSync
+ * @tc.desc: test GetLauncherAbilityInfoSync(const Want &want, const int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos)
+ */
+HWTEST_F(BmsDataMgrTest, GetLauncherAbilityInfoSync_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    int32_t userId = 100;
+    std::vector<AbilityInfo> abilityInfos;
+    auto ret = bundleDataMgr.GetLauncherAbilityInfoSync(want, userId, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.GetLauncherAbilityInfoSync(want, userId, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: UpdateRouterInfo_0001
+ * @tc.name: UpdateRouterInfo
+ * @tc.desc: test UpdateRouterInfo(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, UpdateRouterInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    bundleDataMgr.UpdateRouterInfo(bundleName);
+    EXPECT_EQ(bundleDataMgr.bundleInfos_.find(bundleName),  bundleDataMgr.bundleInfos_.end());
+}
+
+/**
+ * @tc.number: GetInnerBundleInfoWithSandboxByUid_0001
+ * @tc.name: GetInnerBundleInfoWithSandboxByUid
+ * @tc.desc: test GetInnerBundleInfoWithSandboxByUid(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithSandboxByUid_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int uid = 0;
+    InnerBundleInfo innerBundleInfo;
+    std::string bundleName = "bundleName";
+    ErrCode ret = bundleDataMgr.GetInnerBundleInfoWithSandboxByUid(uid, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
 } // OHOS
