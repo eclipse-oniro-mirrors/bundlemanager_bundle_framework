@@ -7303,6 +7303,9 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     result = MoveSoFileToRealInstallationDir(newInfos, false);
     CHECK_RESULT(result, "move so file to install path failed %{public}d");
     RemoveEmptyDirs(newInfos);
+    for (const auto &item : newInfos) {
+        RemoveTempPathOnlyUsedForSo(item.second);
+    }
     LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s processBundleCodePath end", bundleName.c_str());
     return ERR_OK;
 }
