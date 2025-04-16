@@ -60,10 +60,13 @@ const std::unordered_map<int32_t, std::pair<int32_t, std::string>> errCodeTable{
     {EFAULT, {ZLIB_SYS_CAP_TAG + E_PERM, "Bad address"}},
     {EINVAL, {ELEGACY_ARGUMENT + E_PERM, "The parameter check failed"}},
     {-1, {ZLIB_SYS_CAP_TAG + E_SRCH, "System error"}},
-    {-2, {ZLIB_SYS_CAP_TAG + E_INTR, "ZStream error"}},
-    {-3, {ZLIB_SYS_CAP_TAG + E_IO, "Data error"}},
+    {-2, {ZLIB_SYS_CAP_TAG + E_INTR, "Compression or decompression stream error, \
+        zlib stream structure initialization error or modification."}},
+    {-3, {ZLIB_SYS_CAP_TAG + E_IO, "The input data is incorrect, such as not conforming to the \
+        zlib compression format, corrupted compressed data, or uncompressed data."}},
     {-4, {ZLIB_SYS_CAP_TAG + E_NXIO, "Memory allocation failed"}},
-    {-5, {ZLIB_SYS_CAP_TAG + E_2BIG, "Buffer error"}},
+    {-5, {ZLIB_SYS_CAP_TAG + E_2BIG, "The input buffer is incorrect, and the output buffer is \
+        not large enough to hold the compressed or decompressed data."}},
     {-6, {ZLIB_SYS_CAP_TAG + E_BADF, "Version error"}},
     {ENOSTR, {ZLIB_SYS_CAP_TAG + E_MEMORY, "Internal structure error"}},
     {EARCH, {ZLIB_SYS_CAP_TAG + E_ARCH, "System architecture error, compiling with _WIN32"}},
