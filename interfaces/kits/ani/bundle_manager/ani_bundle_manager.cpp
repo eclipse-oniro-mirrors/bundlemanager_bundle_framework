@@ -303,7 +303,7 @@ void ANIClearCacheListener::DoClearCache()
 {
     std::unique_lock<std::shared_mutex> lock(g_aniCacheMutex);
     ani_env* env = nullptr;
-    ani_option interopEnabled { "--interop=enable", nullptr };
+    ani_option interopEnabled { "--interop=disable", nullptr };
     ani_options aniArgs { 1, &interopEnabled };
     g_vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
     for (auto& item : g_aniCache) {
