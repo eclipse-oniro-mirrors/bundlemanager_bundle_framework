@@ -3306,4 +3306,128 @@ HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithSandboxByUid_0001, Function | Med
     ErrCode ret = bundleDataMgr.GetInnerBundleInfoWithSandboxByUid(uid, innerBundleInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
+
+/**
+ * @tc.number: IsDisableState_0001
+ * @tc.name: IsDisableState
+ * @tc.desc: test IsDisableState(const InstallState state)
+ */
+HWTEST_F(BmsDataMgrTest, IsDisableState_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bool ret = bundleDataMgr.IsDisableState(InstallState::UPDATING_START);
+    EXPECT_EQ(ret, true);
+
+    ret = bundleDataMgr.IsDisableState(InstallState::UNINSTALL_START);
+    EXPECT_EQ(ret, true);
+
+    ret = bundleDataMgr.IsDisableState(InstallState::INSTALL_SUCCESS);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: UnregisterBundleEventCallback_0001
+ * @tc.name: UnregisterBundleEventCallback
+ * @tc.desc: test UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+ */
+HWTEST_F(BmsDataMgrTest, UnregisterBundleEventCallback_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    sptr<IBundleEventCallback> bundleEventCallback = nullptr;
+    bool ret = bundleDataMgr.UnregisterBundleEventCallback(bundleEventCallback);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: RemoveAppInstallDir_0001
+ * @tc.name: RemoveAppInstallDir
+ * @tc.desc: test RemoveAppInstallDir(int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, RemoveAppInstallDir_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = 0;
+    std::string path = std::string(ServiceConstants::HAP_COPY_PATH) +
+    ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId);
+    bundleDataMgr.RemoveAppInstallDir(userId);
+    EXPECT_NE(InstalldClient::GetInstance()->RemoveDir(path), ERR_OK);
+}
+
+/**
+ * @tc.number: GetAppPrivilegeLevel_0001
+ * @tc.name: GetAppPrivilegeLevel
+ * @tc.desc: test GetAppPrivilegeLevel(const std::string &bundleName, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, GetAppPrivilegeLevel_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    int32_t userId = 0;
+    std::string result = bundleDataMgr.GetAppPrivilegeLevel(bundleName, userId);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.number: ImplicitQueryExtensionInfos_0001
+ * @tc.name: ImplicitQueryExtensionInfos
+ * @tc.desc: test ImplicitQueryExtensionInfos(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryExtensionInfos_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    int32_t flags = 0;
+    int32_t userId = Constants::INVALID_USERID;
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t appIndex = 0;
+    bool result = bundleDataMgr.ImplicitQueryExtensionInfos(want, flags, userId, infos, appIndex);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_0002
+ * @tc.name: QueryExtensionAbilityInfos
+ * @tc.desc: test QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
+    std::vector<ExtensionAbilityInfo> &extensionInfos)
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfos_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = Constants::INVALID_USERID;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfos(ExtensionAbilityType::FORM, userId, extensionInfos);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_0003
+ * @tc.name: QueryExtensionAbilityInfos
+ * @tc.desc: test QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
+    std::vector<ExtensionAbilityInfo> &extensionInfos)
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfos_0003, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = Constants::ANY_USERID;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfos(ExtensionAbilityType::FORM, userId, extensionInfos);
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUri_0001
+ * @tc.name: QueryExtensionAbilityInfoByUri
+ * @tc.desc: test QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
+    ExtensionAbilityInfo &extensionAbilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUri_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string uri = "uri";
+    int32_t userId = Constants::INVALID_USERID;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfoByUri(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+}
 } // OHOS
