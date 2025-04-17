@@ -20,6 +20,7 @@
 #include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_errors.h"
+#include "bundle_manager_helper.h"
 #include "bundle_manager_sync.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
@@ -844,35 +845,6 @@ static ErrCode InnerQueryAbilityInfos(const Want &want,
     return CommonFunc::ConvertErrCode(ret);
 }
 
-static ErrCode InnerBatchQueryAbilityInfos(const std::vector<OHOS::AAFwk::Want> &wants,
-    int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = iBundleMgr->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos);
-    APP_LOGD("BatchQueryAbilityInfos ErrCode : %{public}d", ret);
-    return CommonFunc::ConvertErrCode(ret);
-}
-
-static ErrCode InnerSetApplicationEnabled(const std::string &bundleName, bool &isEnable, int32_t appIndex)
-{
-    auto bundleMgr = CommonFunc::GetBundleMgr();
-    if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = ERR_OK;
-    if (appIndex == 0) {
-        ret = bundleMgr->SetApplicationEnabled(bundleName, isEnable);
-    } else {
-        ret = bundleMgr->SetCloneApplicationEnabled(bundleName, appIndex, isEnable);
-    }
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 static ErrCode InnerIsApplicationEnabled(const std::string &bundleName, bool &isEnable, int32_t appIndex)
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
@@ -885,38 +857,6 @@ static ErrCode InnerIsApplicationEnabled(const std::string &bundleName, bool &is
         ret = bundleMgr->IsCloneApplicationEnabled(bundleName, appIndex, isEnable);
     } else {
         ret = bundleMgr->IsApplicationEnabled(bundleName, isEnable);
-    }
-    return CommonFunc::ConvertErrCode(ret);
-}
-
-static ErrCode InnerSetAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable, int32_t appIndex)
-{
-    auto bundleMgr = CommonFunc::GetBundleMgr();
-    if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = ERR_OK;
-    if (appIndex != 0) {
-        ret = bundleMgr->SetCloneAbilityEnabled(abilityInfo, appIndex, isEnable);
-    } else {
-        ret = bundleMgr->SetAbilityEnabled(abilityInfo, isEnable);
-    }
-    return CommonFunc::ConvertErrCode(ret);
-}
-
-static ErrCode InnerIsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable, int32_t appIndex)
-{
-    auto bundleMgr = CommonFunc::GetBundleMgr();
-    if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = ERR_OK;
-    if (appIndex != 0) {
-        ret = bundleMgr->IsCloneAbilityEnabled(abilityInfo, appIndex, isEnable);
-    } else {
-        ret = bundleMgr->IsAbilityEnabled(abilityInfo, isEnable);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -1288,7 +1228,8 @@ void BatchQueryAbilityInfosExec(napi_env env, void *data)
             return;
         }
     }
-    asyncCallbackInfo->err = InnerBatchQueryAbilityInfos(asyncCallbackInfo->wants, asyncCallbackInfo->flags,
+    asyncCallbackInfo->err = BundleManagerHelper::InnerBatchQueryAbilityInfos(
+        asyncCallbackInfo->wants, asyncCallbackInfo->flags,
         asyncCallbackInfo->userId, asyncCallbackInfo->abilityInfos);
 }
 
@@ -1871,7 +1812,7 @@ void SetApplicationEnabledExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is nullptr");
         return;
     }
-    asyncCallbackInfo->err = InnerSetApplicationEnabled(asyncCallbackInfo->bundleName,
+    asyncCallbackInfo->err = BundleManagerHelper::InnerSetApplicationEnabled(asyncCallbackInfo->bundleName,
         asyncCallbackInfo->isEnable, asyncCallbackInfo->appIndex);
 }
 
@@ -2010,7 +1951,7 @@ void SetAbilityEnabledExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is nullptr");
         return;
     }
-    asyncCallbackInfo->err = InnerSetAbilityEnabled(asyncCallbackInfo->abilityInfo,
+    asyncCallbackInfo->err = BundleManagerHelper::InnerSetAbilityEnabled(asyncCallbackInfo->abilityInfo,
         asyncCallbackInfo->isEnable, asyncCallbackInfo->appIndex);
 }
 
@@ -2206,7 +2147,7 @@ void IsAbilityEnabledExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is nullptr");
         return;
     }
-    asyncCallbackInfo->err = InnerIsAbilityEnabled(asyncCallbackInfo->abilityInfo,
+    asyncCallbackInfo->err = BundleManagerHelper::InnerIsAbilityEnabled(asyncCallbackInfo->abilityInfo,
         asyncCallbackInfo->isEnable, asyncCallbackInfo->appIndex);
 }
 
@@ -2767,22 +2708,6 @@ napi_value DisableDynamicIcon(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode InnerGetDynamicIcon(const std::string &bundleName, std::string &moduleName)
-{
-    auto extResourceManager = CommonFunc::GetExtendResourceManager();
-    if (extResourceManager == nullptr) {
-        APP_LOGE("extResourceManager is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-
-    ErrCode ret = extResourceManager->GetDynamicIcon(bundleName, moduleName);
-    if (ret != ERR_OK) {
-        APP_LOGE_NOFUNC("GetDynamicIcon failed");
-    }
-
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void GetDynamicIconExec(napi_env env, void *data)
 {
     DynamicIconCallbackInfo *asyncCallbackInfo = reinterpret_cast<DynamicIconCallbackInfo *>(data);
@@ -2790,7 +2715,7 @@ void GetDynamicIconExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerGetDynamicIcon(
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetDynamicIcon(
         asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleName);
 }
 
