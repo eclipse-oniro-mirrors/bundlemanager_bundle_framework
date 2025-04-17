@@ -19,5 +19,4 @@ export class MetadataInner implements Metadata {
   name: string = "";
   value: string = "";
   resource: string = "";
-  readonly valueId?: number;
 }
