@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 #include "router_map_helper.h"
-
+#include "regex.h"
 #include "app_log_wrapper.h"
 #include "router_item_compare.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::regex ALNUM_REGEX("^[a-zA-Z0-9]*$");
-const std::regex NUM_REGEX("^[0-9]+$");
+const char* ALNUM_PATTERN = "^[a-zA-Z0-9]*$";
+const char* NUM_PATTERN = "^[0-9]+$";
 }
 
 void RouterMapHelper::MergeRouter(BundleInfo &info)
@@ -82,30 +82,33 @@ void RouterMapHelper::MergeRouter(const std::vector<RouterItem>& routerArrayList
     }
 }
 
+bool RouterMapHelper::IsRegexMatch(const std::string& str, const char* pattern)
+{
+    regex_t regex;
+    if (regcomp(&regex, pattern, REG_EXTENDED | REG_NOSUB) != 0) {
+        APP_LOGE("regex compilation failed");
+        return false;
+    }
+    int32_t ret = regexec(&regex, str.c_str(), 0, NULL, 0);
+    if (ret == 0) {
+        regfree(&regex);
+        return true;
+    }
+    APP_LOGE("failed to perform a match");
+    regfree(&regex);
+    return false;
+}
+
 int32_t RouterMapHelper::CompareIdentifiers(const std::string& a, const std::string& b)
 {
-    try {
-        if (!std::regex_match(a, ALNUM_REGEX) || !std::regex_match(b, ALNUM_REGEX)) {
-            return 1;
-        }
-    } catch (const std::regex_error& e) {
-        APP_LOGE("regex error");
-        return 1;
-    }
-
-    bool anum = false;
-    bool bnum = false;
-    try {
-        anum = std::regex_match(a, NUM_REGEX);
-        bnum = std::regex_match(b, NUM_REGEX);
-    } catch (const std::regex_error& e) {
-        APP_LOGE("regex error");
-        return 1;
-    } catch (const std::exception& e) {
-        APP_LOGE("exception error");
+    bool aAlnum = IsRegexMatch(a, ALNUM_PATTERN);
+    bool bAlnum = IsRegexMatch(b, ALNUM_PATTERN);
+    if (!aAlnum || !bAlnum) {
         return 1;
     }
     
+    bool anum = IsRegexMatch(a, NUM_PATTERN);
+    bool bnum = IsRegexMatch(b, NUM_PATTERN);
     if (anum && bnum) {
         auto diff = atoi(a.c_str()) - atoi(b.c_str());
         if (diff) {

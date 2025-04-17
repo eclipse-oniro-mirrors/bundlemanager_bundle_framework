@@ -17,7 +17,7 @@
 #include <thread>
 
 #include "zip.h"
-
+#include "zip_utils.h"
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
@@ -470,6 +470,26 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0400, Function | MediumTest 
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_GT(originalSize, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+}
+
+/**
+ * @tc.number: APPEXECFWK_ZIP_UTILS_FilePathCheckValid_0100
+ * @tc.name: FilePathCheckValid_0100
+ * @tc.desc:
+ */
+HWTEST_F(ZipTest, APPEXECFWK_ZIP_UTILS_FilePathCheckValid_0100, Function | MediumTest | Level1)
+{
+    std::string = "";
+    bool ret = FilePathCheckValid(str);
+    EXPECT_FALSE(ret);
+
+    str = "abc";
+    ret = FilePathCheckValid(str);
+    EXPECT_TRUE(ret);
+
+    str = "file|name.txt";
+    ret = FilePathCheckValid(str);
+    EXPECT_FALSE(ret);
 }
 }  // namespace LIBZIP
 }  // namespace AppExecFwk

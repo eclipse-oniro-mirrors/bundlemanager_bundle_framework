@@ -125,7 +125,6 @@ ohos_shared_library("appexecfwk_base") {
     "-fstack-protector-strong",
   ]
 
-  use_exceptions = true
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }

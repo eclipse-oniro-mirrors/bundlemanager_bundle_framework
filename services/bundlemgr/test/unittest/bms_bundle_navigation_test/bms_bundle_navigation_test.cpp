@@ -1278,6 +1278,45 @@ HWTEST_F(BmsBundleNavigationTest, RouterMapMerge_0013, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: IsRegexMatch_0001
+ * @tc.name: test IsRegexMatch function for router map
+ * @tc.desc: 1.IsRegexMatch
+ */
+HWTEST_F(BmsBundleNavigationTest, IsRegexMatch_0001, Function | SmallTest | Level0)
+{
+
+    char *pattern = "";
+    std::string str = "";
+    bool result = RouterMapHelper::IsRegexMatch(str, pattern);
+    EXPECT_TRUR(result);
+
+    pattern = "[";
+    str = "test";
+    result = RouterMapHelper::IsRegexMatch(str, pattern);
+    EXPECT_FALSE(result);
+
+    pattern = "a.*b";
+    str = "abc";
+    result = RouterMapHelper::IsRegexMatch(str, pattern);
+    EXPECT_TRUR(result);
+
+    pattern = "a.*b";
+    str = "acd";
+    result = RouterMapHelper::IsRegexMatch(str, pattern);
+    EXPECT_FALSE(result);
+
+    pattern = ".";
+    str = "a";
+    result = RouterMapHelper::IsRegexMatch(str, pattern);
+    EXPECT_TRUR(result);
+
+    pattern = "^a";
+    str = "a\nb";
+    result = RouterMapHelper::IsRegexMatch(str, pattern);
+    EXPECT_FALSE(result);
+}
+
+/**
  * @tc.number: RouterDataStorageRdb_0001
  * @tc.name: test merge function for router map
  * @tc.desc: 1.UpdateRouterInfo
