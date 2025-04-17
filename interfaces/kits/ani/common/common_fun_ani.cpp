@@ -64,11 +64,13 @@ constexpr const char* PROPERTYNAME_PERMISSIONGRANTSTATES = "permissionGrantState
 constexpr const char* PROPERTYNAME_SIGNATUREINFO = "signatureInfo";
 constexpr const char* PROPERTYNAME_INSTALLTIME = "installTime";
 constexpr const char* PROPERTYNAME_UPDATETIME = "updateTime";
+constexpr const char* PROPERTYNAME_FIRSTINSTALLTIME = "firstInstallTime";
 constexpr const char* PROPERTYNAME_ROUTERMAP = "routerMap";
 constexpr const char* PROPERTYNAME_APPINDEX = "appIndex";
 constexpr const char* PROPERTYNAME_KEY = "key";
 constexpr const char* PROPERTYNAME_VALUE = "value";
 constexpr const char* PROPERTYNAME_RESOURCE = "resource";
+constexpr const char* PROPERTYNAME_VALUEID = "valueId";
 constexpr const char* PROPERTYNAME_MAXCOUNT = "maxCount";
 constexpr const char* PROPERTYNAME_MULTIAPPMODETYPE = "multiAppModeType";
 constexpr const char* PROPERTYNAME_MODULENAME = "moduleName";
@@ -357,6 +359,10 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     // appIndex: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, bundleInfo.appIndex));
 
+    // firstInstallTime?: number
+    RETURN_NULL_IF_FALSE(
+        CallSetterOptional(env, cls, object, PROPERTYNAME_FIRSTINSTALLTIME, bundleInfo.firstInstallTime));
+
     return object;
 }
 
@@ -383,6 +389,9 @@ ani_object CommonFunAni::ConvertMetadata(ani_env* env, const Metadata& metadata)
     // resource: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, metadata.resource, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_RESOURCE, string));
+
+    // valueId?: number
+    RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_VALUEID, metadata.valueId));
 
     return object;
 }
