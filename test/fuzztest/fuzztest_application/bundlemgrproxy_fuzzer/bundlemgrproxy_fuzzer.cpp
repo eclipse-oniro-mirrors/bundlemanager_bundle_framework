@@ -273,6 +273,7 @@ namespace OHOS {
         bundleMgrProxy.GetSpecifiedDistributionType(bundleName, specifiedDistributionType);
         std::string additionalInfo;
         bundleMgrProxy.GetAdditionalInfo(bundleName, additionalInfo);
+        bundleMgrProxy.GetAdditionalInfoForAllUser(bundleName, additionalInfo);
         bundleMgrProxy.SetExtNameOrMIMEToApp(bundleName, moduleName,
             std::string(reinterpret_cast<const char*>(data), size),
             std::string(reinterpret_cast<const char*>(data), size),

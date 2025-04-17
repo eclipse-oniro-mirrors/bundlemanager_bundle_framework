@@ -12293,6 +12293,123 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0005, Function | SmallTest |
 }
 
 /**
+ * @tc.number: GetAdditionalInfoForAllUser_0001
+ * @tc.name: test can get the bundleName's AdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string additionalInfo;
+        auto saveuid = getuid();
+        setuid(Constants::FOUNDATION_UID);
+        auto ret = bundleMgrProxy->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
+        setuid(saveuid);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
+}
+
+/**
+ * @tc.number: GetAdditionalInfoForAllUser_0002
+ * @tc.name: test can get the bundleName's AdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0002, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string additionalInfo;
+        auto saveuid = getuid();
+        setuid(Constants::FOUNDATION_UID);
+        auto ret = bundleMgrProxy->GetAdditionalInfoForAllUser("", additionalInfo);
+        setuid(saveuid);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    }
+}
+
+/**
+ * @tc.number: GetAdditionalInfoForAllUser_0003
+ * @tc.name: test can get the bundleName's AdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0003, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string additionalInfo;
+        auto saveuid = getuid();
+        setuid(Constants::FOUNDATION_UID);
+        auto ret = bundleMgrProxy->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
+        setuid(saveuid);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetAdditionalInfoForAllUser_0004
+ * @tc.name: test can get the bundleName's AdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo falied
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0004, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is nullptr.");
+        EXPECT_EQ(dataMgr, nullptr);
+    } else {
+        std::string additionalInfo;
+        auto ret = dataMgr->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
+}
+
+/**
+ * @tc.number: GetAdditionalInfoForAllUser_0005
+ * @tc.name: test can get the bundleName's AdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo succeed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfoForAllUser_0005, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AppProvisionInfo appProvisionInfo;
+    bool ans = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(BUNDLE_NAME_TEST,
+        appProvisionInfo);
+    EXPECT_TRUE(ans);
+
+    auto dataMgr = GetBundleDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is nullptr.");
+        EXPECT_EQ(dataMgr, nullptr);
+    } else {
+        std::string additionalInfo;
+        auto ret = dataMgr->GetAdditionalInfoForAllUser(BUNDLE_NAME_TEST, additionalInfo);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ans = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME_TEST);
+    EXPECT_TRUE(ans);
+}
+
+/**
  * @tc.number: GetAllLauncherAbility_0001
  * @tc.name: test get all launcherAbility
  * @tc.desc: 1.system run normally

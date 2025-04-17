@@ -5778,6 +5778,42 @@ HWTEST_F(BmsBundleManagerTest, GetAdditionalInfo_0200, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: GetAdditionalInfoForAllUser_0100
+ * @tc.name: test GetAdditionalInfoForAllUser
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetAdditionalInfoForAllUser_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string additionalInfo;
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode ret = hostImpl->GetAdditionalInfoForAllUser(BUNDLE_NAME, additionalInfo);
+    setuid(saveuid);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAdditionalInfoForAllUser_0200
+ * @tc.name: test GetAdditionalInfoForAllUser
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetAdditionalInfoForAllUser_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string additionalInfo;
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode ret = hostImpl->GetAdditionalInfoForAllUser(BUNDLE_NAME, additionalInfo);
+    setuid(saveuid);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
  * @tc.number: GetBundleArchiveInfoBySandBoxPath_0100
  * @tc.name: test GetBundleArchiveInfoBySandBoxPath
  * @tc.desc: 1.system run normally
