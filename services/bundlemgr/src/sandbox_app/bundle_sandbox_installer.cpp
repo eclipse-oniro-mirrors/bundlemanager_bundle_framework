@@ -36,6 +36,17 @@ using namespace OHOS::Security;
 BundleSandboxInstaller::BundleSandboxInstaller()
 {
     APP_LOGD("bundle sandbox installer instance is created");
+    dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("Failed to initialize dataMgr_ in constructor");
+    }
+
+    if (dataMgr_ != nullptr) {
+        sandboxDataMgr_ = dataMgr_->GetSandboxAppHelper()->GetSandboxDataMgr();
+        if (sandboxDataMgr_ == nullptr) {
+            APP_LOGE("Failed to initialize sandboxDataMgr_ in constructor");
+        }
+    }
 }
 
 BundleSandboxInstaller::~BundleSandboxInstaller()
@@ -87,7 +98,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     ScopeGuard sandboxAppGuard([&] { SandboxAppRollBack(info, userId_); });
 
     // 4. generate the accesstoken id and inherit original permissions
-    if (GetSandboxDataMgr() != ERR_OK) {
+    if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("get sandbox data mgr failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -165,9 +176,9 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
 
     // 1. check userId
-    if (GetDataMgr() != ERR_OK) {
-            APP_LOGE("Get dataMgr shared_ptr nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     if (userId < Constants::DEFAULT_USERID) {
         APP_LOGE("userId(%{public}d) is invalid", userId);
@@ -181,7 +192,7 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
 
     // 2. check whether sandbox appinfo can be found from data manager or not
     InnerBundleInfo info;
-    if (GetSandboxDataMgr() != ERR_OK) {
+    if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("get sandbox data mgr failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -288,7 +299,7 @@ void BundleSandboxInstaller::SandboxAppRollBack(InnerBundleInfo &info, const int
     BundlePermissionMgr::DeleteAccessTokenId(info.GetAccessTokenId(userId));
     auto bundleName = info.GetBundleName();
     auto appIndex = info.GetAppIndex();
-    if (GetSandboxDataMgr() != ERR_OK) {
+    if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("get sandbox data mgr failed");
         return;
     }
@@ -316,11 +327,11 @@ ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundl
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
 
-    if (GetDataMgr() != ERR_OK) {
-            APP_LOGE("UninstallAllSandboxApps get dataMgr shared_ptr nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("UninstallAllSandboxApps get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    if (GetSandboxDataMgr() != ERR_OK) {
+    if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("get sandbox data mgr failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
@@ -354,41 +365,12 @@ ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundl
 
 bool BundleSandboxInstaller::FetchInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist)
 {
-    if (GetDataMgr() != ERR_OK) {
+    if (dataMgr_ == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr failed");
         return false;
     }
     isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName_, info);
     return true;
-}
-
-ErrCode BundleSandboxInstaller::GetSandboxDataMgr()
-{
-    if (sandboxDataMgr_ == nullptr) {
-        if (GetDataMgr() != ERR_OK) {
-            APP_LOGE("Get dataMgr shared_ptr failed");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-
-        sandboxDataMgr_ = dataMgr_->GetSandboxAppHelper()->GetSandboxDataMgr();
-        if (sandboxDataMgr_ == nullptr) {
-            APP_LOGE("Get sandbox dataMgr shared_ptr nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleSandboxInstaller::GetDataMgr()
-{
-    if (dataMgr_ == nullptr) {
-        dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-        if (dataMgr_ == nullptr) {
-            APP_LOGE("Get dataMgr shared_ptr nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-    }
-    return ERR_OK;
 }
 } // AppExecFwk
 } // OHOS
