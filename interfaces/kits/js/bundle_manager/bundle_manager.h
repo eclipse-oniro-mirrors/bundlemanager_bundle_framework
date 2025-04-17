@@ -26,6 +26,7 @@
 #include "common_event_manager.h"
 #include "common_event_subscriber.h"
 #include "common_event_support.h"
+#include "dynamic_icon_info.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -168,6 +169,12 @@ struct DynamicIconCallbackInfo : public BaseCallbackInfo {
     std::string moduleName;
     std::vector<std::string> moduleNames;
     BundleOption option;
+};
+
+struct DynamicIconInfoCallbackInfo : public BaseCallbackInfo {
+    explicit DynamicIconInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<DynamicIconInfo> dynamicIconInfos;
 };
 
 enum AbilityProfileType : uint32_t {
@@ -379,6 +386,7 @@ napi_value GetAllBundleCacheSize(napi_env env, napi_callback_info info);
 napi_value CleanAllBundleCache(napi_env env, napi_callback_info info);
 napi_value GetLaunchWant(napi_env env, napi_callback_info info);
 napi_value MigrateData(napi_env env, napi_callback_info info);
+napi_value GetAllDynamicIconInfo(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);

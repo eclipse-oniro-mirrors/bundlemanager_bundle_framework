@@ -83,6 +83,7 @@ constexpr const char* MAX_ADDITIONAL_NUMBER = "maxCount";
 constexpr const char* MULTI_APP_MODE_TYPE = "multiAppModeType";
 constexpr const char* MULTI_APP_MODE = "multiAppMode";
 constexpr const char* ORIENTATION_ID = "orientationId";
+constexpr const char* USER_ID = "userId";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -2695,6 +2696,38 @@ bool CommonFunc::ParseParameterItem(napi_env env, napi_value param, std::string 
         return false;
     }
     return true;
+}
+
+void CommonFunc::ConvertDynamicIconInfo(napi_env env, const DynamicIconInfo &dynamicIconInfo, napi_value value)
+{
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, dynamicIconInfo.bundleName.c_str(),
+        NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, BUNDLE_NAME, nBundleName));
+
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, dynamicIconInfo.moduleName.c_str(),
+        NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, MODULE_NAME, nModuleName));
+
+    napi_value nUserId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, dynamicIconInfo.userId, &nUserId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, USER_ID, nUserId));
+
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, dynamicIconInfo.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, APP_INDEX, nAppIndex));
+}
+
+void CommonFunc::ConvertDynamicIconInfos(napi_env env, const std::vector<DynamicIconInfo> &dynamicIconInfos,
+    napi_value value)
+{
+    for (size_t index = 0; index < dynamicIconInfos.size(); ++index) {
+        napi_value objInfo = nullptr;
+        napi_create_object(env, &objInfo);
+        ConvertDynamicIconInfo(env, dynamicIconInfos[index], objInfo);
+        napi_set_element(env, value, index, objInfo);
+    }
 }
 } // AppExecFwk
 } // OHOS

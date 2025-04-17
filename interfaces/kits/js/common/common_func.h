@@ -21,6 +21,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
+#include "dynamic_icon_info.h"
 #include "iremote_object.h"
 #include "launcher_ability_info.h"
 #include "napi/native_api.h"
@@ -192,6 +193,11 @@ static void ConvertParameters(napi_env env,
     const std::map<std::string, std::string> &data, napi_value objInfos);
 
 static bool CheckShortcutInfo(const ShortcutInfo &shortcutInfo);
+
+static void ConvertDynamicIconInfo(napi_env env, const DynamicIconInfo &dynamicIconInfo, napi_value value);
+
+static void ConvertDynamicIconInfos(napi_env env, const std::vector<DynamicIconInfo> &dynamicIconInfos,
+    napi_value value);
 
 class BundleMgrCommonDeathRecipient : public IRemoteObject::DeathRecipient {
     void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;

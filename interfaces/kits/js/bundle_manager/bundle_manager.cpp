@@ -96,6 +96,7 @@ const std::string GET_EXT_RESOURCE = "GetExtResource";
 const std::string ENABLE_DYNAMIC_ICON = "EnableDynamicIcon";
 const std::string DISABLE_DYNAMIC_ICON = "DisableDynamicIcon";
 const std::string GET_DYNAMIC_ICON = "GetDynamicIcon";
+const std::string GET_ALL_DYNAMIC_ICON = "GetAllDynamicIconInfo";
 const std::string INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action, entities, uri, type, or linkFeature) non-empty.";
 const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
@@ -158,6 +159,9 @@ bool ParseBundleOption(napi_env env, napi_value value, BundleOption& option)
     napi_get_named_property(env, value, USER_ID, &prop);
     if (CommonFunc::ParseInt(env, prop, option.userId)) {
         option.isDefault = false;
+        if (option.userId < 0) {
+            option.userId = Constants::INVALID_USERID;
+        }
     }
     prop = nullptr;
     napi_get_named_property(env, value, APP_INDEX, &prop);
@@ -5868,6 +5872,88 @@ napi_value MigrateData(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo.get(), MIGRATE_DATA, MigrateDataExec, MigrateDataComplete);
     asyncCallbackInfo.release();
     APP_LOGI("call MigrateData done");
+    return promise;
+}
+
+ErrCode InnerGetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos)
+{
+    auto extResourceManager = CommonFunc::GetExtendResourceManager();
+    if (extResourceManager == nullptr) {
+        APP_LOGE("extResourceManager is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = extResourceManager->GetAllDynamicIconInfo(userId, dynamicIconInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("GetDynamicIcon failed %{public}d", ret);
+    }
+
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void GetAllDynamicIconInfoExec(napi_env env, void *data)
+{
+    DynamicIconInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<DynamicIconInfoCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetAllDynamicIconInfo(
+        asyncCallbackInfo->userId, asyncCallbackInfo->dynamicIconInfos);
+}
+
+void GetAllDynamicIconInfoComplete(napi_env env, napi_status status, void *data)
+{
+    DynamicIconInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<DynamicIconInfoCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+
+    std::unique_ptr<DynamicIconInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_POS_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        CommonFunc::ConvertDynamicIconInfos(env, asyncCallbackInfo->dynamicIconInfos, result[ARGS_POS_ONE]);
+    } else {
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_ALL_DYNAMIC_ICON, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+    }
+
+    CommonFunc::NapiReturnDeferred<DynamicIconInfoCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetAllDynamicIconInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("GetAllDynamicIconInfo called");
+    NapiArg args(env, info);
+    DynamicIconInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) DynamicIconInfoCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<DynamicIconInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    if (args.GetMaxArgc() > ARGS_SIZE_ZERO) {
+        if (CommonFunc::ParseInt(env, args[0], asyncCallbackInfo->userId)) {
+            if (asyncCallbackInfo->userId < 0) {
+                asyncCallbackInfo->userId = Constants::INVALID_USERID;
+            }
+        } else {
+            APP_LOGW("userId is invalid");
+        }
+    } else {
+        asyncCallbackInfo->userId = Constants::UNSPECIFIED_USERID;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<DynamicIconInfoCallbackInfo>(
+        env, asyncCallbackInfo, "GetDynamicIcon", GetAllDynamicIconInfoExec, GetAllDynamicIconInfoComplete);
+    callbackPtr.release();
+    APP_LOGI("call GetAllDynamicIconInfo done");
     return promise;
 }
 } // namespace AppExecFwk
