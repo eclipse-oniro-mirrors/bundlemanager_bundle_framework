@@ -156,11 +156,18 @@ struct VerifyCallbackInfo : public BaseCallbackInfo {
     std::vector<std::string> abcPaths;
 };
 
+struct BundleOption {
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t appIndex = Constants::DEFAULT_APP_INDEX;
+    bool isDefault = true;
+};
+
 struct DynamicIconCallbackInfo : public BaseCallbackInfo {
     explicit DynamicIconCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
     std::string bundleName;
     std::string moduleName;
     std::vector<std::string> moduleNames;
+    BundleOption option;
 };
 
 enum AbilityProfileType : uint32_t {

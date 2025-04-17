@@ -145,6 +145,30 @@ static std::map<int32_t, std::string> appDistributionTypeMap = {
 };
 namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
+
+bool ParseBundleOption(napi_env env, napi_value value, BundleOption& option)
+{
+    option.isDefault = true;
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, value, &valueType);
+    if (valueType != napi_object) {
+        return false;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, value, USER_ID, &prop);
+    if (CommonFunc::ParseInt(env, prop, option.userId)) {
+        option.isDefault = false;
+    }
+    prop = nullptr;
+    napi_get_named_property(env, value, APP_INDEX, &prop);
+    if (CommonFunc::ParseInt(env, prop, option.appIndex)) {
+        option.isDefault = false;
+    }
+    if (!option.isDefault && (option.userId == Constants::UNSPECIFIED_USERID)) {
+        option.userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    return !option.isDefault;
+}
 }
 
 void ClearCacheListener::HandleCleanEnv(void *data)
@@ -2649,15 +2673,19 @@ napi_value GetExtResource(napi_env env, napi_callback_info info)
 }
 
 ErrCode InnerEnableDynamicIcon(
-    const std::string &bundleName, const std::string &moduleName)
+    const std::string &bundleName, const std::string &moduleName, const BundleOption &option)
 {
     auto extResourceManager = CommonFunc::GetExtendResourceManager();
     if (extResourceManager == nullptr) {
         APP_LOGE("extResourceManager is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-
-    ErrCode ret = extResourceManager->EnableDynamicIcon(bundleName, moduleName);
+    ErrCode ret = ERR_OK;
+    if (option.isDefault) {
+        ret = extResourceManager->EnableDynamicIcon(bundleName, moduleName);
+    } else {
+        ret = extResourceManager->EnableDynamicIcon(bundleName, moduleName, option.userId, option.appIndex);
+    }
     if (ret != ERR_OK) {
         APP_LOGE("EnableDynamicIcon failed");
     }
@@ -2673,7 +2701,7 @@ void EnableDynamicIconExec(napi_env env, void *data)
         return;
     }
     asyncCallbackInfo->err = InnerEnableDynamicIcon(
-        asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleName);
+        asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleName, asyncCallbackInfo->option);
 }
 
 void EnableDynamicIconComplete(napi_env env, napi_status status, void *data)
@@ -2707,12 +2735,12 @@ napi_value EnableDynamicIcon(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::unique_ptr<DynamicIconCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    for (size_t i = 0; i < args.GetArgc(); ++i) {
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
@@ -2729,6 +2757,10 @@ napi_value EnableDynamicIcon(napi_env env, napi_callback_info info)
                     env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
                 return nullptr;
             }
+        } else if (i == ARGS_POS_TWO) {
+            if (!ParseBundleOption(env, args[i], asyncCallbackInfo->option)) {
+                APP_LOGW("param bundleOption invalid");
+            }
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<DynamicIconCallbackInfo>(
@@ -2738,7 +2770,7 @@ napi_value EnableDynamicIcon(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode InnerDisableDynamicIcon(const std::string &bundleName)
+ErrCode InnerDisableDynamicIcon(const std::string &bundleName, const BundleOption &option)
 {
     auto extResourceManager = CommonFunc::GetExtendResourceManager();
     if (extResourceManager == nullptr) {
@@ -2746,7 +2778,12 @@ ErrCode InnerDisableDynamicIcon(const std::string &bundleName)
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
 
-    ErrCode ret = extResourceManager->DisableDynamicIcon(bundleName);
+    ErrCode ret = ERR_OK;
+    if (option.isDefault) {
+        ret = extResourceManager->DisableDynamicIcon(bundleName);
+    } else {
+        ret = extResourceManager->DisableDynamicIcon(bundleName, option.userId, option.appIndex);
+    }
     if (ret != ERR_OK) {
         APP_LOGE("DisableDynamicIcon failed");
     }
@@ -2761,7 +2798,7 @@ void DisableDynamicIconExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerDisableDynamicIcon(asyncCallbackInfo->bundleName);
+    asyncCallbackInfo->err = InnerDisableDynamicIcon(asyncCallbackInfo->bundleName, asyncCallbackInfo->option);
 }
 
 void DisableDynamicIconComplete(napi_env env, napi_status status, void *data)
@@ -2795,7 +2832,7 @@ napi_value DisableDynamicIcon(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::unique_ptr<DynamicIconCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -2807,6 +2844,11 @@ napi_value DisableDynamicIcon(napi_env env, napi_callback_info info)
             env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
+    if (args.GetMaxArgc() > ARGS_SIZE_ONE) {
+        if (!ParseBundleOption(env, args[ARGS_SIZE_ONE], asyncCallbackInfo->option)) {
+            APP_LOGW("param bundleOption invalid");
+        }
+    }
     auto promise = CommonFunc::AsyncCallNativeMethod<DynamicIconCallbackInfo>(
         env, asyncCallbackInfo, "DisableDynamicIcon", DisableDynamicIconExec, DisableDynamicIconComplete);
     callbackPtr.release();
@@ -2814,15 +2856,19 @@ napi_value DisableDynamicIcon(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode InnerGetDynamicIcon(const std::string &bundleName, std::string &moduleName)
+ErrCode InnerGetDynamicIcon(const std::string &bundleName, const BundleOption &option, std::string &moduleName)
 {
     auto extResourceManager = CommonFunc::GetExtendResourceManager();
     if (extResourceManager == nullptr) {
         APP_LOGE("extResourceManager is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-
-    ErrCode ret = extResourceManager->GetDynamicIcon(bundleName, moduleName);
+    ErrCode ret = ERR_OK;
+    if (option.isDefault) {
+        ret = extResourceManager->GetDynamicIcon(bundleName, moduleName);
+    } else {
+        ret = extResourceManager->GetDynamicIcon(bundleName, option.userId, option.appIndex, moduleName);
+    }
     if (ret != ERR_OK) {
         APP_LOGE_NOFUNC("GetDynamicIcon failed");
     }
@@ -2838,7 +2884,7 @@ void GetDynamicIconExec(napi_env env, void *data)
         return;
     }
     asyncCallbackInfo->err = InnerGetDynamicIcon(
-        asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleName);
+        asyncCallbackInfo->bundleName, asyncCallbackInfo->option, asyncCallbackInfo->moduleName);
 }
 
 void GetDynamicIconComplete(napi_env env, napi_status status, void *data)
@@ -2874,7 +2920,7 @@ napi_value GetDynamicIcon(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::unique_ptr<DynamicIconCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -2885,6 +2931,12 @@ napi_value GetDynamicIcon(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(
             env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
+    }
+
+    if (args.GetMaxArgc() > ARGS_SIZE_ONE) {
+        if (!ParseBundleOption(env, args[ARGS_SIZE_ONE], asyncCallbackInfo->option)) {
+            APP_LOGW("param bundleOption invalid");
+        }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<DynamicIconCallbackInfo>(
         env, asyncCallbackInfo, "GetDynamicIcon", GetDynamicIconExec, GetDynamicIconComplete);
