@@ -115,6 +115,38 @@ void InstallExceptionMgr::HandleAllBundleExceptionInfo()
     for (const auto &exceptionInfo : bundleExceptionInfos) {
         HandleBundleExceptionInfo(exceptionInfo.first, exceptionInfo.second);
     }
+    // process +old- +new- path throw scan code path
+    std::vector<std::string> allCodePath;
+    ErrCode result = InstalldClient::GetInstance()->ScanDir(Constants::BUNDLE_CODE_DIR,
+        ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, allCodePath);
+    if (result != ERR_OK) {
+        APP_LOGW("ScanDir code path failed");
+        return;
+    }
+    for (const auto &codePath : allCodePath) {
+        if (codePath.find(ServiceConstants::BUNDLE_OLD_CODE_DIR) == 0) {
+            APP_LOGI("+old- code path %{public}s", codePath.c_str());
+            std::string bundleName = codePath.substr(std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR).size());
+            if (bundleName.empty()) {
+                continue;
+            }
+            std::string oldCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
+                ServiceConstants::PATH_SEPARATOR + codePath;
+            std::string realCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
+                ServiceConstants::PATH_SEPARATOR + bundleName;
+            ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldCodePath, realCodePath);
+            if (result != ERR_OK) {
+                APP_LOGW("rename +old- to real code path failed, error is %{public}d", result);
+            }
+            continue;
+        }
+        if (codePath.find(ServiceConstants::BUNDLE_NEW_CODE_DIR) == 0) {
+            APP_LOGI("+new- code path %{public}s", codePath.c_str());
+            std::string newCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
+                ServiceConstants::PATH_SEPARATOR + codePath;
+            (void)InstalldClient::GetInstance()->RemoveDir(newCodePath);
+        }
+    }
 }
 } // AppExecFwk
 } // OHOS
