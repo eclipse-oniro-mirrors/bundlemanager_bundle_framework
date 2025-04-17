@@ -7536,6 +7536,21 @@ std::vector<std::string> BundleDataMgr::GetAllBundleName() const
     return bundleNames;
 }
 
+std::vector<std::string> BundleDataMgr::GetAllSystemHspCodePaths() const
+{
+    std::vector<std::string> systemHspCodePaths;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        if (item.second.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
+            std::string installPath = item.second.GetAppCodePath();
+            APP_LOGD("get appcodepath:%{public}s for %{public}s",
+                installPath.c_str(), item.second.GetBundleName().c_str());
+            systemHspCodePaths.emplace_back(installPath);
+        }
+    }
+    return systemHspCodePaths;
+}
+
 std::vector<std::tuple<std::string, int32_t, int32_t>> BundleDataMgr::GetAllLiteBundleInfo(const int32_t userId) const
 {
     std::set<int32_t> userIds = GetAllUser();

@@ -15,6 +15,10 @@
 
 #include "bundle_user_mgr_host_impl.h"
 
+#include <cstring>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include "securec.h"
 #include "aot_handler.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
@@ -41,7 +45,24 @@ constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold"
 constexpr const char* ACCESSTOKEN_PROCESS_NAME = "accesstoken_service";
 constexpr const char* PRELOAD_APP = "/preload/app/";
 constexpr const char* MULTIUSER_INSTALL_THIRD_PRELOAD_APP = "const.bms.multiUserInstallThirdPreloadApp";
-constexpr const char* LOG_PATH = "/log/";
+
+struct BootFailProcParam {
+    char padForErrno[16];
+    int  bootFailErrno;
+    char padForStage[8];
+    int  stage; /* stage saved by bootdetector */
+    char padForSuggest[4];
+    int  suggestRecoveryMethod;
+    char padForDetailInfo[28]; /* reserved count */
+    char detailInfo[384]; /* max exception info count */
+    char reserved[572]; /* reserved count */
+} __attribute((packed));
+ 
+#define NATIVE_SUBSYS_FAULT  0x40000009
+#define NATIVE_STAGE 0x4FFFFFFE
+#define BOOT_DETECTOR_DEV_PATH "/dev/bbox"
+#define BOOT_DETECTOR_IOCTL_BASE 'B'
+#define PROCESS_BOOTFAIL _IOW(BOOT_DETECTOR_IOCTL_BASE, 102, struct BootFailProcParam)
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
@@ -146,9 +167,6 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
         EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
     }
     APP_LOGI("CreateNewUser end userId: (%{public}d)", userId);
-    if (userId == Constants::START_USERID) {
-        CheckBackUpFirstBootLog();
-    }
     return ERR_OK;
 }
 
@@ -220,12 +238,69 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBu
         bundlePromise->WaitForAllTasksExecute();
         APP_LOGI("OnCreateNewUser wait complete");
     }
+    CheckSystemHspInstallPath();
     // process keep alive bundle
     if (userId == Constants::START_USERID) {
         BMSEventHandler::ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
     }
     IPCSkeleton::SetCallingIdentity(identity);
 }
+
+void BundleUserMgrHostImpl::BootFailError(const char *exceptionInfo)
+{
+    APP_LOGI("BootFailError start, exceptionInfo is %{public}s", exceptionInfo);
+    struct BootFailProcParam parm;
+    parm.bootFailErrno = NATIVE_SUBSYS_FAULT;
+    parm.stage = NATIVE_STAGE;
+    parm.suggestRecoveryMethod = 0;
+    ErrCode ret = ERR_OK;
+    if (exceptionInfo != NULL) {
+        ret = strncpy_s(parm.detailInfo, sizeof(parm.detailInfo),
+            exceptionInfo, std::min(sizeof(parm.detailInfo) - 1,
+            strlen(exceptionInfo)));
+        if (ret != ERR_OK) {
+            APP_LOGE("strncpy_s failed: %{public}d", ret);
+            return;
+        }
+    }
+    APP_LOGD("parm.detailInfo is %{public}s,bootFailErrno is %{public}d",
+        parm.detailInfo, parm.bootFailErrno);
+    int fd = TEMP_FAILURE_RETRY(open(BOOT_DETECTOR_DEV_PATH, O_WRONLY));
+    if (fd < 0) {
+        APP_LOGE("open file %{public}s failed, errorNo: %{public}d:%{public}s",
+            BOOT_DETECTOR_DEV_PATH, errno, strerror(errno));
+        return;
+    }
+
+    ret = ioctl(fd, PROCESS_BOOTFAIL, &parm); // 1: the order of the cmd
+    if (ret < 0) {
+        APP_LOGE("BootFailError ioctl failed, errorNo: %{public}d, :%{public}s", errno, strerror(errno));
+    }
+    close(fd);
+    return;
+}
+ 
+void BundleUserMgrHostImpl::CheckSystemHspInstallPath()
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    
+    std::vector<std::string> systemHspCodePaths = dataMgr->GetAllSystemHspCodePaths();
+    for (auto &codePath : systemHspCodePaths) {
+        bool isExist = false;
+        ErrCode result = InstalldClient::GetInstance()->IsExistDir(codePath, isExist);
+        if (result != ERR_OK || !isExist) {
+            APP_LOGE("%{public}s not exist, set parameter BOOT_FAIL_ERR false", codePath.c_str());
+            BootFailError("bms boot fail");
+            return;
+        }
+    }
+}
+
 
 bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
     const std::vector<std::string> &disallowList,
@@ -604,13 +679,6 @@ void BundleUserMgrHostImpl::SavePreInstallException(const std::string &bundleNam
     }
 
     preInstallExceptionMgr->SavePreInstallExceptionBundleName(bundleName);
-}
-
-void BundleUserMgrHostImpl::CheckBackUpFirstBootLog()
-{
-    APP_LOGI("start");
-    InstalldClient::GetInstance()->BackUpFirstBootLog();
-    return;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

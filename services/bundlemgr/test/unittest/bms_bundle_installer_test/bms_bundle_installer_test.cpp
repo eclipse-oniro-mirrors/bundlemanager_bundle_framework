@@ -556,7 +556,7 @@ bool BmsBundleInstallerTest::CheckShaderCachePathExist(const std::string &bundle
     if (access(newShaderCachePath.c_str(), F_OK) == 0) {
         isExist = true;
     } else {
-        LOG_E(BMS_TAG_INSTALLD, "senlin %{public}s can not access, errno: %{public}d",
+        LOG_E(BMS_TAG_INSTALLD, "%{public}s can not access, errno: %{public}d",
             newShaderCachePath.c_str(), errno);
     }
     return isExist;
@@ -10845,92 +10845,6 @@ HWTEST_F(BmsBundleInstallerTest, DeleteEl5DataGroupDirs_2000, Function | MediumT
     EXPECT_EQ(access(groupDir.c_str(), F_OK), -1);
     ErrCode ret = installdHostImpl->DeleteEl5DataGroupDirs(uuidList, userId);
     EXPECT_EQ(ret, ERR_OK);
-}
-/**
- * @tc.number: BackUpFirstBootLog_3000
- * @tc.name: test BackUpFirstBootLog
- * @tc.desc: 1.create install temp dir failed
- */
-HWTEST_F(BmsBundleInstallerTest, BackUpFirstBootLog_3000, Function | MediumTest | Level1)
-{
-    auto installdHostImpl = std::make_shared<InstalldHostImpl>();
-    ASSERT_NE(installdHostImpl, nullptr);
-    uid_t foundationUid = Constants::FOUNDATION_UID;
-    setuid(foundationUid);
-    constexpr const char* logPath = "/log/";
-    std::filesystem::remove_all(logPath);
-    std::filesystem::create_directories(logPath);
-    ErrCode ret = installdHostImpl->BackUpFirstBootLog();
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
- * @tc.number: BackUpFirstBootLog_4000
- * @tc.name: test BackUpFirstBootLog
- * @tc.desc: 1.create install temp dir failed
- */
-HWTEST_F(BmsBundleInstallerTest, BackUpFirstBootLog_4000, Function | MediumTest | Level1)
-{
-    auto installdHostImpl = std::make_shared<InstalldHostImpl>();
-    ASSERT_NE(installdHostImpl, nullptr);
-    chmod("/tmp/log/first_boot_log_1.log", 000);
-
-    ErrCode ret = installdHostImpl->BackUpFirstBootLog();
-    EXPECT_EQ(ret, ERR_OK);
-    chmod("/tmp/log/first_boot_log_1.log", 0644);
-}
-
-/**
- * @tc.number: MigrateData_1000
- * @tc.name: test BackUpFirstBootLog
- * @tc.desc: 1.create install temp dir failed
- */
-HWTEST_F(BmsBundleInstallerTest, MigrateData_1000, Function | MediumTest | Level1)
-{
-    InstalldHostImpl impl;
-    std::vector<std::string> sourcePaths = {"/valid/path", ServiceConstants::RELATIVE_PATH};
-    ErrCode ret = impl.MigrateData(sourcePaths, "/destination/path");
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
-}
-
-/**
- * @tc.number: MigrateData_2000
- * @tc.name: test BackUpFirstBootLog
- * @tc.desc: 1.create install temp dir failed
- */
-HWTEST_F(BmsBundleInstallerTest, MigrateData_2000, Function | MediumTest | Level1)
-{
-    InstalldHostImpl impl;
-    constexpr uint64_t vectorSizeMax = 200; 
-    std::vector<std::string> sourcePaths(vectorSizeMax + 1, "/valid/path");
-    ErrCode ret = impl.MigrateData(sourcePaths, "/destination/path");
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
-}
-
-/**
- * @tc.number: MigrateData_3000
- * @tc.name: test BackUpFirstBootLog
- * @tc.desc: 1.create install temp dir failed
- */
-HWTEST_F(BmsBundleInstallerTest, MigrateData_3000, Function | MediumTest | Level1)
-{
-    InstalldHostImpl impl;
-    std::vector<std::string> sourcePaths = {"/valid/path1", "/valid/path2"};
-    ErrCode ret = impl.MigrateData(sourcePaths, "");
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
-}
-
-/**
- * @tc.number: MigrateData_4000
- * @tc.name: test BackUpFirstBootLog
- * @tc.desc: 1.create install temp dir failed
- */
-HWTEST_F(BmsBundleInstallerTest, MigrateData_4000, Function | MediumTest | Level1)
-{
-    InstalldHostImpl impl;
-    std::vector<std::string> sourcePaths = {"/valid/path1", "/valid/path2"};
-    ErrCode ret = impl.MigrateData(sourcePaths, ServiceConstants::RELATIVE_PATH);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
 }
 
 /**

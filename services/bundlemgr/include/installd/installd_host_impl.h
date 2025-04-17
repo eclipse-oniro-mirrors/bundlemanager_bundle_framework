@@ -254,8 +254,6 @@ public:
 
     virtual ErrCode DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId) override;
 
-    virtual ErrCode BackUpFirstBootLog() override;
-
 private:
     static std::string GetGroupDirPath(const std::string &el, int32_t userId, const std::string &uuid);
     std::string GetExtensionConfigPath() const;
