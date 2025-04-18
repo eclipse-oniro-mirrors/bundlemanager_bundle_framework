@@ -40,21 +40,21 @@ static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_strin
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
     int32_t resFlagInt = 0;
     if (!CommonFunAni::TryCastDoubleTo(resFlag, &resFlagInt)) {
         APP_LOGE("Cast resFlag failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, BUNDLE_RESOURCE_FLAG, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
     int32_t appIdxInt = 0;
     if (!CommonFunAni::TryCastDoubleTo(appIdx, &appIdxInt)) {
         APP_LOGE("Cast appIdx failed");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, CommonFunAniNS::TYPE_INT);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
     auto resourceMgr = ResourceHelper::GetBundleResourceMgr();
@@ -75,7 +75,7 @@ static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_strin
     int32_t ret = resourceMgr->GetBundleResourceInfo(bundleName, resFlagInt, bundleResInfo, appIdxInt);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleResourceInfo failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret), GET_BUNDLE_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
         return nullptr;
     }

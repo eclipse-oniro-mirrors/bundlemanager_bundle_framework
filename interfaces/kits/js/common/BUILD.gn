@@ -50,6 +50,7 @@ ohos_shared_library("bundle_napi_common") {
   sources = [
     "base_cb_info.cpp",
     "business_error.cpp",
+    "business_error_map.cpp",
     "common_func.cpp",
     "napi_arg.cpp",
   ]
