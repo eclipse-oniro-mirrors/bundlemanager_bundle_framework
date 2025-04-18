@@ -40,6 +40,7 @@
         "type": "shared",
         "virtualMachine": "ark",
         "compressNativeLibs": false,
+        "extractNativeLibs": false,
         "libIsolation": true
     }
 }

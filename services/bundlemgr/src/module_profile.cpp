@@ -25,21 +25,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr uint8_t MAX_MODULE_NAME = 128;
-const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
-const int32_t THRESHOLD_VAL_LEN = 40;
-bool IsSupportCompressNativeLibs()
-{
-    char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
-    if (ret <= 0) {
-        APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS.c_str());
-        return false;
-    }
-    if (std::strcmp(compressNativeLibs, "true") == 0) {
-        return true;
-    }
-    return false;
-}
 }
 
 namespace Profile {
@@ -295,6 +280,7 @@ struct Module {
     bool installationFree = false;
     bool isLibIsolated = false;
     bool compressNativeLibs = true;
+    bool extractNativeLibs = true;
     bool hasInsightIntent = false;
     uint32_t descriptionId = 0;
     int32_t targetPriority = 0;
@@ -1526,14 +1512,18 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.isolationMode,
         false,
         g_parseResult);
-    if (IsSupportCompressNativeLibs()) {
-        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
-            jsonObjectEnd,
-            MODULE_COMPRESS_NATIVE_LIBS,
-            module.compressNativeLibs,
-            false,
-            g_parseResult);
-    }
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_COMPRESS_NATIVE_LIBS,
+        module.compressNativeLibs,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_EXTRACT_NATIVE_LIBS,
+        module.extractNativeLibs,
+        false,
+        g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_FILE_CONTEXT_MENU,
@@ -2435,7 +2425,7 @@ bool ToInnerModuleInfo(
     }
     innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
-    innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;
+    innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs || moduleJson.module.extractNativeLibs;
     innerModuleInfo.fileContextMenu = moduleJson.module.fileContextMenu;
 
     if (moduleJson.module.querySchemes.size() > Profile::MAX_QUERYSCHEMES_LENGTH) {
@@ -2498,7 +2488,7 @@ bool ToInnerBundleInfo(
     ApplicationInfo applicationInfo;
     applicationInfo.isSystemApp = innerBundleInfo.GetAppType() == Constants::AppType::SYSTEM_APP;
     transformParam.isSystemApp = applicationInfo.isSystemApp;
-    applicationInfo.isCompressNativeLibs = moduleJson.module.compressNativeLibs;
+    applicationInfo.isCompressNativeLibs = moduleJson.module.compressNativeLibs || moduleJson.module.extractNativeLibs;
     if (!ToApplicationInfo(moduleJson, bundleExtractor, transformParam, applicationInfo)) {
         APP_LOGE("To applicationInfo failed");
         return false;
