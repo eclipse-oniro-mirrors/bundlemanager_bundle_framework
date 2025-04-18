@@ -17,4 +17,5 @@ export interface Metadata {
   name: string;
   value: string;
   resource: string;
+  readonly valueId?: number;
 }
