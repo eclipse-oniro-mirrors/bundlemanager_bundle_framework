@@ -3432,6 +3432,29 @@ HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUri_0001, Function | MediumT
 }
 
 /**
+ * @tc.number: QueryExtensionAbilityInfoByUri_0002
+ * @tc.name: QueryExtensionAbilityInfoByUri
+ * @tc.desc: test QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
+    ExtensionAbilityInfo &extensionAbilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUri_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string uri = "";
+    int32_t userId = Constants::ANY_USERID;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfoByUri(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+
+    uri = "uri";
+    result = bundleDataMgr.QueryExtensionAbilityInfoByUri(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+
+    uri = "uri:///";
+    result = bundleDataMgr.QueryExtensionAbilityInfoByUri(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+}
+/**
  * @tc.number: AddNewModuleInfo_0001
  * @tc.name: AddNewModuleInfo
  * @tc.desc: test AddNewModuleInfo(
@@ -3740,5 +3763,118 @@ HWTEST_F(BmsDataMgrTest, GetShortcutInfoV9_0001, Function | SmallTest | Level0)
     userId = Constants::ANY_USERID;
     ret = bundleDataMgr.GetShortcutInfoV9(bundleName, userId, shortcutInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: UpdatePrivilegeCapability_0001
+ * @tc.name: UpdatePrivilegeCapability
+ * @tc.desc: test UpdatePrivilegeCapability(
+    const std::string &bundleName, const ApplicationInfo &appInfo)
+ */
+HWTEST_F(BmsDataMgrTest, UpdatePrivilegeCapability_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    ApplicationInfo appInfo;
+    bundleDataMgr.UpdatePrivilegeCapability(bundleName, appInfo);
+    EXPECT_EQ(bundleName.empty(), true);
+
+    bundleName = "bundleName";
+    bundleDataMgr.UpdatePrivilegeCapability(bundleName, appInfo);
+    EXPECT_EQ(bundleName.empty(), false);
+    EXPECT_EQ(bundleDataMgr.bundleInfos_.find(bundleName), bundleDataMgr.bundleInfos_.end());
+}
+
+/**
+ * @tc.number: UpdateQuickFixInnerBundleInfo_0001
+ * @tc.name: UpdateQuickFixInnerBundleInfo
+ * @tc.desc: test UpdateQuickFixInnerBundleInfo(const std::string &bundleName,
+    const InnerBundleInfo &innerBundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, UpdateQuickFixInnerBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    InnerBundleInfo innerBundleInfo;
+    bool ret = bundleDataMgr.UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfo_0001
+ * @tc.name: GetSharedBundleInfo
+ * @tc.desc: test GetSharedBundleInfo(const std::string &bundleName,
+    const InnerBundleInfo &innerBundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, GetSharedBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    std::string moduleName = "moduleName";
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = bundleDataMgr.GetSharedBundleInfo(bundleName, moduleName, sharedBundles);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfo_0101
+ * @tc.name: GetSharedBundleInfo
+ * @tc.desc: test GetSharedBundleInfo(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, GetSharedBundleInfo_0101, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    int32_t flags = 0;
+    BundleInfo bundleInfo;
+    ErrCode ret = bundleDataMgr.GetSharedBundleInfo(bundleName, flags, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+
+    bundleName = "bundleName";
+    ret = bundleDataMgr.GetSharedBundleInfo(bundleName, flags, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+/**
+ * @tc.number: IsPreInstallApp_0001
+ * @tc.name: IsPreInstallApp
+ * @tc.desc: test IsPreInstallApp(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, IsPreInstallApp_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    bool ret = bundleDataMgr.IsPreInstallApp(bundleName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetProxyDataInfos_0101
+ * @tc.name: GetProxyDataInfos
+ * @tc.desc: test GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
+    int32_t userId, std::vector<ProxyData> &proxyDatas)
+ */
+HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0101, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    std::string moduleName = "moduleName";
+    int32_t userId = Constants::ANY_USERID;
+    std::vector<ProxyData> proxyDatas;
+    ErrCode ret = bundleDataMgr.GetProxyDataInfos(bundleName, moduleName, userId, proxyDatas);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetAllProxyDataInfos_0001
+ * @tc.name: GetAllProxyDataInfos
+ * @tc.desc: test GetAllProxyDataInfos(int32_t userId, std::vector<ProxyData> &proxyDatas)
+ */
+HWTEST_F(BmsDataMgrTest, GetAllProxyDataInfos_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = Constants::INVALID_USERID;
+    std::vector<ProxyData> proxyDatas;
+    ErrCode ret = bundleDataMgr.GetAllProxyDataInfos(userId, proxyDatas);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
 } // OHOS
