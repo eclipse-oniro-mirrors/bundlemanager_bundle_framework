@@ -142,6 +142,7 @@ public:
     std::string appDistributionType;
     bool isRestore = false;
     AccessTokenID tokenID = INVALID_TOKENID;
+    bool isAtomicService;
 };
 
 /**
@@ -156,6 +157,7 @@ public:
     bool isSystemApp;
     /* app type */
     std::string appDistributionType;
+    bool isAtomicService;
 };
 
 class PreAuthorizationInfo final {
