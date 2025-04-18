@@ -8580,6 +8580,149 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0004, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: GetAdditionalInfoForAllUser_0001
+ * @tc.name: test GetAdditionalInfoForAllUser proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfoForAllUser_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::string additionalInfo;
+        auto saveuid = getuid();
+        setuid(Constants::FOUNDATION_UID);
+        ErrCode ret = bundleMgrProxy->GetAdditionalInfoForAllUser(BASE_BUNDLE_NAME, additionalInfo);
+        setuid(saveuid);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
+}
+
+/**
+ * @tc.number: GetAdditionalInfoForAllUser_0002
+ * @tc.name: test GetAdditionalInfoForAllUser proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfoForAllUser_0002, Function | SmallTest | Level1)
+{
+    std::cout << "START GetAdditionalInfoForAllUser_0002" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string additionalInfo;
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    auto ret = bundleMgrProxy->GetAdditionalInfoForAllUser(appName, additionalInfo);
+    setuid(saveuid);
+    EXPECT_EQ(ret, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetAdditionalInfoForAllUser_0002" << std::endl;
+}
+
+/**
+ * @tc.number: GetAdditionalInfoForAllUser_0003
+ * @tc.name: test GetAdditionalInfoForAllUser proxy
+ * @tc.desc: 1.system run normally
+ *           2.SetAdditionalInfo and SetSpecifiedDistributionType
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfoForAllUser_0003, Function | SmallTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.specifiedDistributionType = "specifiedDistributionType";
+    installParam.additionalInfo = "additionalInfo";
+    Install(bundleFilePath, installParam, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string additionalInfo;
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode ret = bundleMgrProxy->GetAdditionalInfoForAllUser(appName, additionalInfo);
+    setuid(saveuid);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+    std::string specifiedDistributionType;
+    ret = bundleMgrProxy->GetSpecifiedDistributionType(appName, specifiedDistributionType);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(installParam.specifiedDistributionType, specifiedDistributionType);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: GetAdditionalInfoForAllUser_0004
+ * @tc.name: test  GetAdditionalInfoForAllUser proxy
+ * @tc.desc: 1.system run normally
+ *           2.2.SetAdditionalInfo and SetSpecifiedDistributionType
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfoForAllUser_0004, Function | SmallTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.specifiedDistributionType = "specifiedDistributionType";
+    installParam.additionalInfo = "additionalInfo";
+    Install(bundleFilePath, installParam, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    // update hap
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.additionalInfo = "modify additionalInfo";
+    resvec.clear();
+    Install(bundleFilePath, installParam, resvec);
+    installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string additionalInfo;
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    ErrCode ret = bundleMgrProxy->GetAdditionalInfoForAllUser(appName, additionalInfo);
+    setuid(saveuid);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+    std::string specifiedDistributionType;
+    ret = bundleMgrProxy->GetSpecifiedDistributionType(appName, specifiedDistributionType);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(installParam.specifiedDistributionType, specifiedDistributionType);
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
  * @tc.number: DumpInfos_0001
  * @tc.name: test  DumpInfos proxy
  * @tc.desc: 1.system run normally

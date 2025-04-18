@@ -3810,12 +3810,9 @@ ErrCode BundleMgrHostImpl::GetAdditionalInfoForAllUser(const std::string &bundle
     std::string &additionalInfo)
 {
     APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("verify permission failed");
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        LOG_E(BMS_TAG_DEFAULT, "uid: %{public}d not foundation", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 

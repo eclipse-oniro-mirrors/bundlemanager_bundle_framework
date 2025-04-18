@@ -1348,6 +1348,33 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9100, Functi
 }
 
 /**
+ * @tc.number: BmsBundlePermissionFalseTest_9150
+ * @tc.name: test GetAdditionalInfoForAllUser
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9150, Function | SmallTest | Level1)
+{
+    std::string additionalInfo;
+    ErrCode ret = bundleMgrHostImpl_->GetAdditionalInfoForAllUser("", additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_9160
+ * @tc.name: test GetAdditionalInfoForAllUser
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9160, Function | SmallTest | Level1)
+{
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    std::string additionalInfo;
+    ErrCode ret = bundleMgrHostImpl_->GetAdditionalInfoForAllUser("", additionalInfo);
+    setuid(saveuid);
+    EXPECT_NE(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: BmsBundlePermissionFalseTest_9200
  * @tc.name: test Install of BundleInstallerHost
  * @tc.desc: 1. system running normally

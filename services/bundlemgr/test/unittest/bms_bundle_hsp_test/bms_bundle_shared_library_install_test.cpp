@@ -585,6 +585,10 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, GetSpecifiedDistributionType_0010, F
         ret = dataMgr->GetAdditionalInfo(SHARED_BUNDLE_NAME_A, additionalInfo);
         EXPECT_EQ(ret, ERR_OK);
         EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+
+        ret = dataMgr->GetAdditionalInfoForAllUser(SHARED_BUNDLE_NAME_A, additionalInfo);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(installParam.additionalInfo, additionalInfo);
     }
 
     ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
@@ -878,6 +882,9 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAdditionalInfo_0100, Function | S
 
     std::string additionalInfo = "";
     ErrCode res = GetBundleDataMgr()->GetAdditionalInfo(SHARED_BUNDLE_NAME_A, additionalInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = GetBundleDataMgr()->GetAdditionalInfoForAllUser(SHARED_BUNDLE_NAME_A, additionalInfo);
     EXPECT_EQ(res, ERR_OK);
 
     ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);

@@ -3283,6 +3283,10 @@ HWTEST_F(BmsBundleDataMgrTest, GetAdditionalInfo_0100, Function | SmallTest | Le
     ErrCode res = GetBundleDataMgr()->GetAdditionalInfo(
         BUNDLE_TEST1, additionalInfo);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    res = GetBundleDataMgr()->GetAdditionalInfoForAllUser(
+        BUNDLE_TEST1, additionalInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**

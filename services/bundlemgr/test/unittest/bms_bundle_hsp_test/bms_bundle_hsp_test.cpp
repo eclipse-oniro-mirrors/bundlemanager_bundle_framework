@@ -349,6 +349,11 @@ HWTEST_F(BmsBundleHspTest, BmsBundleHspTest_0800, Function | SmallTest | Level0)
         ret = dataMgr->GetAdditionalInfo(BUNDLE_NAME, additionalInfo);
         EXPECT_EQ(ret, ERR_OK);
         EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+
+        std::string additionalInfoForAllUser;
+        ret = dataMgr->GetAdditionalInfoForAllUser(BUNDLE_NAME, additionalInfoForAllUser);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(installParam.additionalInfo, additionalInfo);
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
