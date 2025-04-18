@@ -317,12 +317,6 @@ public:
      */
     static void RmvDeleteDfx(const std::string &path);
 
-    static std::vector<std::string> GetLogPath(const std::string& logDir, const std::vector<std::string>& fileHeads);
-    static void GetDirFiles(const std::string& path, std::vector<std::string>& files, bool isRecursive = true);
-    static std::string GetFileName(const std::string &sourcePath);
-    static std::string IncludeTrailingPathDelimiter(const std::string& path);
-    static std::vector<std::string> GetFirstBootLogFile();
-
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
