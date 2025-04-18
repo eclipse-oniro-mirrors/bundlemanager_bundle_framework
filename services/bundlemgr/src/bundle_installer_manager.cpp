@@ -199,6 +199,7 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
     int64_t installerId = GetMicroTickCount();
     auto installer = std::make_shared<BundleInstaller>(installerId, statusReceiver);
     installer->SetCallingUid(IPCSkeleton::GetCallingUid());
+    installer->SetCallingTokenId(IPCSkeleton::GetCallingTokenID());
     return installer;
 }
 

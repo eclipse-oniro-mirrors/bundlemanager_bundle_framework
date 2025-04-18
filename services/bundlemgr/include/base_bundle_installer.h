@@ -45,6 +45,7 @@ public:
     BaseBundleInstaller();
     virtual ~BaseBundleInstaller();
     void SetCallingUid(int32_t callingUid);
+    void SetCallingTokenId(const Security::AccessToken::AccessTokenID callerToken);
 
 protected:
     bool otaInstall_ = false;
@@ -857,6 +858,7 @@ private:
     int32_t atomicServiceModuleUpgrade_ = 0;
     SingletonState singletonState_ = SingletonState::DEFAULT;
     BundleType bundleType_ = BundleType::APP;
+    Security::AccessToken::AccessTokenID callerToken_;
     std::string bundleName_;
     std::string modulePath_;
     std::string baseDataPath_;

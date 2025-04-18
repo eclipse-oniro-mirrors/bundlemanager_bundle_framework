@@ -4231,7 +4231,7 @@ ErrCode BaseBundleInstaller::CheckInstallCondition(
         LOG_E(BMS_TAG_INSTALLER, "CheckIsolationMode failed due to errorCode : %{public}d", ret);
         return ret;
     }
-    ret = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyRes, sysEventInfo_.callingUid);
+    ret = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyRes, callerToken_);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "CheckInstallCondition failed due to errorCode : %{public}d", ret);
         return ret;
@@ -5091,6 +5091,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     needSetDisposeRule_ = false;
     needDeleteAppTempPath_ = false;
     isPreBundleRecovered_ = false;
+    callerToken_ = 0;
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool killProcess)
@@ -5230,6 +5231,11 @@ void BaseBundleInstaller::GetInstallEventInfo(const InnerBundleInfo &bundleInfo,
 void BaseBundleInstaller::SetCallingUid(int32_t callingUid)
 {
     sysEventInfo_.callingUid = callingUid;
+}
+
+void BaseBundleInstaller::SetCallingTokenId(const Security::AccessToken::AccessTokenID callerToken)
+{
+    callerToken_ = callerToken;
 }
 
 ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &installRes)

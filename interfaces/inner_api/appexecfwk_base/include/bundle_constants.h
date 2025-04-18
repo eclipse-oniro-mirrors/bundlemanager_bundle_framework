@@ -89,6 +89,7 @@ constexpr const char* PERMISSION_GET_SIGNATURE_INFO = "ohos.permission.GET_SIGNA
 constexpr const char* PERMISSION_MIGRATE_DATA = "ohos.permission.MIGRATE_DATA";
 constexpr const char* PERMISSION_INSTALL_PLUGIN = "ohos.permission.INSTALL_PLUGIN_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_PLUGIN = "ohos.permission.UNINSTALL_PLUGIN_BUNDLE";
+constexpr const char* PERMISSION_PERFORM_LOCAL_DEBUG = "ohos.permission.PERFORM_LOCAL_DEBUG";
 
 enum class AppType {
     SYSTEM_APP = 0,

@@ -93,6 +93,9 @@ public:
 
     static bool VerifyPreload(const AAFwk::Want &want);
 
+    static bool VerifyPermissionByCallingTokenId(const std::string &permissionName,
+        const Security::AccessToken::AccessTokenID callerToken);
+
     static bool VerifyCallingPermissionForAll(const std::string &permissionName);
 
     static bool VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames);
