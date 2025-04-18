@@ -17,6 +17,7 @@ import { BundleInfo, AppCloneIdentity } from 'bundleManager.BundleInfo';
 import { AsyncCallback, BusinessError } from '@ohos.base';
 import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { AbilityInfo } from 'bundleManager.AbilityInfo';
+import { ExtensionAbilityInfo } from 'bundleManager.ExtensionAbilityInfo';
 import Want from '@ohos.app.ability.Want';
 import { BundleInfoInner } from './bundleManager/BundleInfoInner';
 import { ApplicationInfoInner } from './bundleManager/ApplicationInfoInner';
@@ -196,6 +197,24 @@ namespace bundleManager {
 
   export native function getBundleNameByUidSync(uid: number): string;
 
+  export native function isAbilityEnabledSyncInner(info: AbilityInfo, appIndex: number): boolean;
+
+  export native function setAbilityEnabledSyncInner(info: AbilityInfo, isEnabled: boolean, appIndex: number): void;
+
+  export native function setApplicationEnabledSyncInner(bundleName: string, isEnabled: boolean, appIndex: number): void;
+
+  export native function getDynamicIconInner(bundleName: string): string;
+
+  export native function queryAbilityInfoWithWants(wants: Array<Want>, abilityFlags: number,
+    userId: number): Array<AbilityInfo>;
+
+  export native function queryExtensionAbilityInfoInner(want: Want, extensionAbilityType: ExtensionAbilityType,
+    extensionAbilityTypeName: string, extensionAbilityFlags: number,
+    userId: number, isExtensionTypeName: boolean): Array<ExtensionAbilityInfo>;
+
+  export native function queryExAbilityInfoSyncWithoutWant(extensionAbilityType: string, extensionAbilityFlags: number,
+    userId: number): Array<ExtensionAbilityInfo>;
+
   function isApplicationEnabledSync(bundleName: string): boolean {
     return bundleManager.isApplicationEnabledSyncInner(bundleName, 0);
   }
@@ -208,6 +227,38 @@ namespace bundleManager {
   function getLaunchWantForBundleSync(bundleName: string, userId?: number): Want {
     let userIdInfo: number = userId ?? -500;
     return bundleManager.getLaunchWantForBundleSyncInner(bundleName, userIdInfo);
+  }
+
+  function isAbilityEnabledSync(info: AbilityInfo): boolean {
+    return bundleManager.isAbilityEnabledSyncInner(info, 0);
+  }
+
+  function setAbilityEnabledSync(info: AbilityInfo, isEnabled: boolean): void {
+    return bundleManager.setAbilityEnabledSyncInner(info, isEnabled, 0);
+  }
+
+  function setApplicationEnabledSync(bundleName: string, isEnabled: boolean): void {
+    return bundleManager.setApplicationEnabledSyncInner(bundleName, isEnabled, 0);
+  }
+
+  function queryExtensionAbilityInfoSync(want: Want, extensionAbilityType: ExtensionAbilityType,
+    extensionAbilityFlags: number, userId?: number): Array<ExtensionAbilityInfo> {
+    let userIdInfo: number = userId ?? -500;
+    return bundleManager.queryExtensionAbilityInfoInner(
+      want, extensionAbilityType, "", extensionAbilityFlags, userIdInfo, false);
+  }
+
+  function queryExtensionAbilityInfoSync(want: Want, extensionAbilityType: string, extensionAbilityFlags: number,
+    userId?: number): Array<ExtensionAbilityInfo> {
+    let userIdInfo: number = userId ?? -500;
+    return bundleManager.queryExtensionAbilityInfoInner(
+      want, ExtensionAbilityType.UNSPECIFIED, extensionAbilityType, extensionAbilityFlags, userIdInfo, true);
+  }
+
+  function queryExtensionAbilityInfoSync(extensionAbilityType: string, extensionAbilityFlags: number,
+    userId?: number): Array<ExtensionAbilityInfo> {
+    let userIdInfo: number = userId ?? -500;
+    return bundleManager.queryExAbilityInfoSyncWithoutWant(extensionAbilityType, extensionAbilityFlags, userIdInfo);
   }
 
   function getBundleInfoForSelf(bundleFlags: number, callback: AsyncCallback<BundleInfo, void>):void {
@@ -689,6 +740,237 @@ namespace bundleManager {
         let result: string = e as string;
         resolve(result);
       }).catch((err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function queryExtensionAbilityInfo(want: Want, extensionAbilityType: ExtensionAbilityType,
+    extensionAbilityFlags: number, callback: AsyncCallback<Array<ExtensionAbilityInfo>>): void {
+    let execFun = (): Array<ExtensionAbilityInfo> => {
+      return bundleManager.queryExtensionAbilityInfoInner(
+        want, extensionAbilityType, "", extensionAbilityFlags, -500, false);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let extensionAbilityInfos: Array<ExtensionAbilityInfo> = e as Array<ExtensionAbilityInfo>;
+      let r = new BusinessError();
+      callback(r, extensionAbilityInfos);
+    },(err: BusinessError): void => {
+      let extensionAbilityInfos = new Array<ExtensionAbilityInfo>;
+      callback(err, extensionAbilityInfos);
+    });
+  }
+
+  function queryExtensionAbilityInfo(want: Want, extensionAbilityType: ExtensionAbilityType,
+    extensionAbilityFlags: number, userId: number, callback: AsyncCallback<Array<ExtensionAbilityInfo>>): void {
+    let execFun = (): Array<ExtensionAbilityInfo> => {
+      return bundleManager.queryExtensionAbilityInfoInner(
+        want, extensionAbilityType, "", extensionAbilityFlags, userId, false);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let extensionAbilityInfos: Array<ExtensionAbilityInfo> = e as Array<ExtensionAbilityInfo>;
+      let r = new BusinessError();
+      callback(r, extensionAbilityInfos);
+    },(err: BusinessError): void => {
+      let extensionAbilityInfos = new Array<ExtensionAbilityInfo>;
+      callback(err, extensionAbilityInfos);
+    });
+  }
+
+  function queryExtensionAbilityInfo(want: Want, extensionAbilityType: ExtensionAbilityType,
+    extensionAbilityFlags: number, userId?: number): Promise<Array<ExtensionAbilityInfo>> {
+    let p = new Promise<Array<ExtensionAbilityInfo>>((
+      resolve: (extensionAbilityInfos: Array<ExtensionAbilityInfo>) => void,
+      reject: (error: BusinessError) => void) => {
+      let userIdInfo: number = userId ?? -500;
+      let execFun = (): Array<ExtensionAbilityInfo> => {
+        return bundleManager.queryExtensionAbilityInfoInner(
+          want, extensionAbilityType, "", extensionAbilityFlags, userIdInfo, false);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let extensionAbilityInfos: Array<ExtensionAbilityInfo> = e as Array<ExtensionAbilityInfo>;
+        resolve(extensionAbilityInfos);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function isAbilityEnabled(info: AbilityInfo, appIndex: number): Promise<boolean> {
+    let p = new Promise<boolean>((resolve: (isEnabled: boolean) => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): boolean => {
+        return bundleManager.isAbilityEnabledSyncInner(info, appIndex);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let isEnabled: boolean = e as boolean;
+        resolve(isEnabled);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function isAbilityEnabled(info: AbilityInfo): Promise<boolean> {
+    let p = new Promise<boolean>((resolve: (isEnabled: boolean) => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): boolean => {
+        return bundleManager.isAbilityEnabledSyncInner(info, 0);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let isEnabled: boolean = e as boolean;
+        resolve(isEnabled);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function isAbilityEnabled(info: AbilityInfo, callback: AsyncCallback<boolean>): void {
+    let execFun = (): boolean => {
+      return bundleManager.isAbilityEnabledSyncInner(info, 0);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let isEnabled: boolean = e as boolean;
+      let r = new BusinessError();
+      callback(r, isEnabled);
+    }, (err: BusinessError): void => {
+      callback(err, false);
+    });
+  }
+
+  function setAbilityEnabled(info: AbilityInfo, appIndex: number, isEnabled: boolean): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return bundleManager.setAbilityEnabledSyncInner(info, isEnabled, appIndex);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function setAbilityEnabled(info: AbilityInfo, isEnabled: boolean): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return bundleManager.setAbilityEnabledSyncInner(info, isEnabled, 0);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function setAbilityEnabled(info: AbilityInfo, isEnabled: boolean, callback: AsyncCallback<void>): void {
+    let execFun = (): void => {
+      return bundleManager.setAbilityEnabledSyncInner(info, isEnabled, 0);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then(() => {
+      let r = new BusinessError();
+      callback(r, undefined);
+    }, (err: BusinessError): void => {
+      callback(err, undefined);
+    });
+  }
+
+  function setApplicationEnabled(bundleName: string, appIndex: number, isEnabled: boolean): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return bundleManager.setApplicationEnabledSyncInner(bundleName, isEnabled, appIndex);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function setApplicationEnabled(bundleName: string, isEnabled: boolean): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return bundleManager.setApplicationEnabledSyncInner(bundleName, isEnabled, 0);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function setApplicationEnabled(bundleName: string, isEnabled: boolean, callback: AsyncCallback<void>): void {
+    let execFun = (): void => {
+      return bundleManager.setApplicationEnabledSyncInner(bundleName, isEnabled, 0);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then(() => {
+      let r = new BusinessError();
+      callback(r, undefined);
+    }, (err: BusinessError): void => {
+      callback(err, undefined);
+    });
+  }
+
+  function getDynamicIcon(bundleName: string): Promise<string> {
+    let p = new Promise<string>((
+      resolve: (icon: string) => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): string => {
+        return bundleManager.getDynamicIconInner(bundleName);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let icon: string = e as string;
+        resolve(icon);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
+
+  function queryAbilityInfo(wants: Array<Want>, abilityFlags: number, userId?: number): Promise<Array<AbilityInfo>> {
+    let p = new Promise<Array<AbilityInfo>>((resolve: (abilityInfos: Array<AbilityInfo>)
+      => void, reject: (error: BusinessError) => void) => {
+        let userIdInfo: number = userId ?? -500;
+      let execFun = (): Array<AbilityInfo> => {
+        return bundleManager.queryAbilityInfoWithWants(wants, abilityFlags, userIdInfo);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let resultAbilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
+        resolve(resultAbilityInfos);
+      }, (err: BusinessError): void => {
         reject(err);
       });
     }
