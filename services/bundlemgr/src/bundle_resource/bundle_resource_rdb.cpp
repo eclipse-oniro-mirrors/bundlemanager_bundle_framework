@@ -18,6 +18,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_resource_constants.h"
 #include "bundle_util.h"
+#include "hitrace_meter.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -58,6 +59,7 @@ BundleResourceRdb::~BundleResourceRdb()
 
 bool BundleResourceRdb::AddResourceInfo(const ResourceInfo &resourceInfo)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (resourceInfo.bundleName_.empty()) {
         APP_LOGE("failed, bundleName is empty");
         return false;
@@ -81,6 +83,7 @@ bool BundleResourceRdb::AddResourceInfo(const ResourceInfo &resourceInfo)
 
 bool BundleResourceRdb::AddResourceInfos(const std::vector<ResourceInfo> &resourceInfos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (resourceInfos.empty()) {
         APP_LOGE("failed, resourceInfos is empty");
         return false;
@@ -136,6 +139,7 @@ bool BundleResourceRdb::AddResourceInfos(const std::vector<ResourceInfo> &resour
 
 bool BundleResourceRdb::DeleteResourceInfo(const std::string &key)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (key.empty()) {
         APP_LOGE("failed, key is empty");
         return false;
@@ -161,6 +165,7 @@ bool BundleResourceRdb::DeleteResourceInfo(const std::string &key)
 
 bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     std::string systemState = BundleSystemState::GetInstance().ToString();
     APP_LOGI("start get all resource name:%{public}s", systemState.c_str());
@@ -210,6 +215,7 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
         }
         keyNames.push_back(name);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    APP_LOGI_NOFUNC("end");
     return true;
 }
 
@@ -218,6 +224,7 @@ bool BundleResourceRdb::GetResourceNameByBundleName(
     const int32_t appIndex,
     std::vector<std::string> &keyName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI_NOFUNC("GetResourceName -n %{public}s -i %{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
@@ -251,11 +258,13 @@ bool BundleResourceRdb::GetResourceNameByBundleName(
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString name failed, ret: %{public}d");
         keyName.emplace_back(key);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    APP_LOGI_NOFUNC("end");
     return true;
 }
 
 bool BundleResourceRdb::DeleteAllResourceInfo()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     // delete all resource info
     return rdbDataManager_->DeleteData(absRdbPredicates);
@@ -267,6 +276,7 @@ bool BundleResourceRdb::GetBundleResourceInfo(
     BundleResourceInfo &bundleResourceInfo,
     int32_t appIndex)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI_NOFUNC("rdb -n %{public}s -i %{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
@@ -303,6 +313,7 @@ bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos,
     const int32_t appIndex)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI_NOFUNC("rdb GetLauncherAbilityResourceInfo -n %{public}s -i %{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
@@ -345,12 +356,14 @@ bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
                 return resourceA.label < resourceB.label;
             });
     }
+    APP_LOGI_NOFUNC("end");
     return !launcherAbilityResourceInfos.empty();
 }
 
 bool BundleResourceRdb::GetAllBundleResourceInfo(const uint32_t flags,
     std::vector<BundleResourceInfo> &bundleResourceInfos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("start get all bundle resource");
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     std::string systemState = BundleSystemState::GetInstance().ToString();
@@ -382,12 +395,14 @@ bool BundleResourceRdb::GetAllBundleResourceInfo(const uint32_t flags,
                 return resourceA.label < resourceB.label;
             });
     }
+    APP_LOGI_NOFUNC("end");
     return !bundleResourceInfos.empty();
 }
 
 bool BundleResourceRdb::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("start get all launcher resource");
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     absRdbPredicates.Contains(BundleResourceConstants::NAME, BundleResourceConstants::SEPARATOR);
@@ -420,6 +435,7 @@ bool BundleResourceRdb::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
                 return resourceA.label < resourceB.label;
             });
     }
+    APP_LOGI_NOFUNC("end");
     return !launcherAbilityResourceInfos.empty();
 }
 
@@ -428,6 +444,7 @@ bool BundleResourceRdb::ConvertToBundleResourceInfo(
     const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet is nullptr");
         return false;
@@ -474,6 +491,7 @@ bool BundleResourceRdb::ConvertToLauncherAbilityResourceInfo(
     const uint32_t flags,
     LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet is nullptr");
         return false;
@@ -518,6 +536,7 @@ bool BundleResourceRdb::ConvertToLauncherAbilityResourceInfo(
 
 bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<ResourceInfo> &resourceInfos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (resourceInfos.empty()) {
         APP_LOGE("resourceInfos is empty");
         return false;
@@ -562,6 +581,7 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
 
 bool BundleResourceRdb::GetCurrentSystemState(std::string &systemState)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BundleResourceConstants::NAME, SYSTEM_RESOURCES_APP);
     auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
@@ -584,6 +604,7 @@ bool BundleResourceRdb::GetCurrentSystemState(std::string &systemState)
 
 bool BundleResourceRdb::DeleteNotExistResourceInfo()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     // need delete not current systemState resource
     std::string systemState = BundleSystemState::GetInstance().ToString();
     APP_LOGI_NOFUNC("current systemState:%{public}s", systemState.c_str());
