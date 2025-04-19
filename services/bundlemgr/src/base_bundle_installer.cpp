@@ -112,6 +112,7 @@ const char* INSTALL_SOURCE_UNKNOWN = "unknown";
 const char* ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
 const char* OLD_ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
 const char* NEW_ARK_WEB_BUNDLE_NAME = "com.ohos.arkwebcore";
+const size_t NUMBER_TWO = 2;
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -6907,11 +6908,31 @@ bool BaseBundleInstaller::DeleteAppGalleryHapFromTempPath()
 void BaseBundleInstaller::ProcessAddResourceInfo(const InstallParam &installParam,
     const std::string &bundleName, int32_t userId)
 {
-    if ((installParam.isOTA || otaInstall_) && userId != Constants::START_USERID &&
-        dataMgr_->HasUserInstallInBundle(bundleName, Constants::START_USERID)) {
+    // if bundle not exist, need to add resource
+    if (!isAppExist_) {
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
         return;
     }
-    BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+    // if user id 0 or only contains 0 and 100, need to add resource
+    if ((userId == Constants::DEFAULT_USERID) || (dataMgr_->GetAllUser().size() <= NUMBER_TWO)) {
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+        return;
+    }
+    // For multiple users, it is necessary to check whether the userId is equal to the current active userId.
+    // When OTA, the default user is obtained.
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserIdWithRetry(installParam.isOTA || otaInstall_);
+    if (currentUserId == Constants::INVALID_USERID) {
+        LOG_W(BMS_TAG_INSTALLER, "current user %{public}d is invalid", currentUserId);
+        if ((installParam.isOTA || otaInstall_) && userId != Constants::START_USERID &&
+            dataMgr_->HasUserInstallInBundle(bundleName, Constants::START_USERID)) {
+            return;
+        }
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+        return;
+    }
+    if (userId == currentUserId) {
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+    }
 }
 
 void BaseBundleInstaller::CheckPreBundle(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
