@@ -18,6 +18,7 @@
 #include <mutex>
 #include "iremote_proxy.h"
 #include "bms_ecological_rule_mgr_service_interface.h"
+#include "singleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -49,21 +50,18 @@ private:
     static inline BrokerDelegator<BmsEcologicalRuleMgrServiceProxy> delegator_;
 };
 
-class BmsEcologicalRuleMgrServiceClient : public RefBase {
+class BmsEcologicalRuleMgrServiceClient : public DelayedSingleton<BmsEcologicalRuleMgrServiceClient> {
 public:
-    DISALLOW_COPY_AND_MOVE(BmsEcologicalRuleMgrServiceClient);
-    static sptr<BmsEcologicalRuleMgrServiceClient> GetInstance();
+    BmsEcologicalRuleMgrServiceClient();
+    ~BmsEcologicalRuleMgrServiceClient();
+
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
     int32_t QueryFreeInstallExperience(const Want &want, const BmsCallerInfo &callerInfo, BmsExperienceRule &rule);
 
 private:
-    BmsEcologicalRuleMgrServiceClient() {};
-    ~BmsEcologicalRuleMgrServiceClient();
     static sptr<IBmsEcologicalRuleMgrService> ConnectService();
     static bool CheckConnectService();
 
-    static mutex instanceLock_;
-    static sptr<BmsEcologicalRuleMgrServiceClient> instance_;
     static sptr<IBmsEcologicalRuleMgrService> bmsEcologicalRuleMgrServiceProxy_;
     static sptr<BmsEcologicalRuleMgrServiceDeathRecipient> deathRecipient_;
 

@@ -25,12 +25,13 @@ using namespace std::chrono;
 static inline const std::u16string ERMS_INTERFACE_TOKEN =
     u"ohos.cloud.ecologicalrulemgrservice.IEcologicalRuleMgrService";
 
-std::mutex BmsEcologicalRuleMgrServiceClient::instanceLock_;
-sptr<BmsEcologicalRuleMgrServiceClient> BmsEcologicalRuleMgrServiceClient::instance_;
 sptr<IBmsEcologicalRuleMgrService> BmsEcologicalRuleMgrServiceClient::bmsEcologicalRuleMgrServiceProxy_;
 sptr<BmsEcologicalRuleMgrServiceDeathRecipient> BmsEcologicalRuleMgrServiceClient::deathRecipient_;
 
 std::string BmsEcologicalRuleMgrServiceClient::ERMS_ORIGINAL_TARGET = "ecological_experience_original_target";
+
+BmsEcologicalRuleMgrServiceClient::BmsEcologicalRuleMgrServiceClient()
+{}
 
 BmsEcologicalRuleMgrServiceClient::~BmsEcologicalRuleMgrServiceClient()
 {
@@ -40,17 +41,6 @@ BmsEcologicalRuleMgrServiceClient::~BmsEcologicalRuleMgrServiceClient()
             remoteObj->RemoveDeathRecipient(deathRecipient_);
         }
     }
-}
-
-sptr<BmsEcologicalRuleMgrServiceClient> BmsEcologicalRuleMgrServiceClient::GetInstance()
-{
-    if (instance_ == nullptr) {
-        std::lock_guard<std::mutex> autoLock(instanceLock_);
-        if (instance_ == nullptr) {
-            instance_ = (new (std::nothrow)  BmsEcologicalRuleMgrServiceClient);
-        }
-    }
-    return instance_;
 }
 
 sptr<IBmsEcologicalRuleMgrService> BmsEcologicalRuleMgrServiceClient::ConnectService()
@@ -117,7 +107,13 @@ int32_t BmsEcologicalRuleMgrServiceClient::QueryFreeInstallExperience(const OHOS
 
 void BmsEcologicalRuleMgrServiceDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
-    BmsEcologicalRuleMgrServiceClient::GetInstance()->OnRemoteSaDied(object);
+    std::shared_ptr<BmsEcologicalRuleMgrServiceClient> instance =
+        DelayedSingleton<BmsEcologicalRuleMgrServiceClient>::GetInstance();
+    if (instance != nullptr) {
+        instance->OnRemoteSaDied(object);
+    } else {
+        LOG_E(BMS_TAG_DEFAULT, "get instance failed");
+    }
 }
 
 BmsEcologicalRuleMgrServiceProxy::BmsEcologicalRuleMgrServiceProxy(const sptr<IRemoteObject> &object)
