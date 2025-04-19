@@ -19,6 +19,10 @@
 #include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
+#include "bundle_mgr_interface.h"
+#include "bundle_mgr_proxy.h"
+#include "business_error.h"
+#include "common_func.h"
 #include "status_receiver_interface.h"
 
 
@@ -232,5 +236,39 @@ void InstallerHelper::CreateProxyErrCode(std::unordered_map<int32_t, int32_t> &e
     };
 }
 
+ErrCode InstallerHelper::InnerCreateAppClone(std::string &bundleName, int32_t userId, int32_t &appIndex)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode result = iBundleInstaller->InstallCloneApp(bundleName, userId, appIndex);
+    APP_LOGD("InstallCloneApp result is %{public}d", result);
+    return result;
+}
+
+ErrCode InstallerHelper::InnerDestroyAppClone(std::string &bundleName, int32_t userId, int32_t appIndex,
+    DestroyAppCloneParam &destroyAppCloneParam)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode result = iBundleInstaller->UninstallCloneApp(bundleName, userId, appIndex, destroyAppCloneParam);
+    APP_LOGD("UninstallCloneApp result is %{public}d", result);
+    return result;
+}
 } // AppExecFwk
 } // OHOS

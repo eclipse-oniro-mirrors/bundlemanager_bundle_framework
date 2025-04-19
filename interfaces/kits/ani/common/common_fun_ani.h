@@ -26,6 +26,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_resource_info.h"
+#include "clone_param.h"
 #include "enum_util.h"
 #include "install_param.h"
 #include "launcher_ability_info.h"
@@ -189,6 +190,9 @@ public:
     static bool ParseHashParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
     static bool ParsePgoParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
     static bool ParseUninstallParam(ani_env* env, ani_object object, UninstallParam& uninstallParam);
+    static bool ParseCreateAppCloneParam(ani_env* env, ani_object object, int32_t& userId, int32_t& appIdx);
+    static bool ParseDestroyAppCloneParam(ani_env* env, ani_object object, DestroyAppCloneParam& destroyAppCloneParam);
+    
     static bool ParseMetadata(ani_env* env, ani_object object, Metadata& metadata);
     static bool ParseResource(ani_env* env, ani_object object, Resource& resource);
     static bool ParseMultiAppMode(ani_env* env, ani_object object, MultiAppModeData& multiAppMode);

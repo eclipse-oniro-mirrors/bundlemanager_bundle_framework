@@ -1439,23 +1439,6 @@ napi_value RemoveExtResource(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerCreateAppClone(std::string &bundleName, int32_t userId, int32_t &appIndex)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode result = iBundleInstaller->InstallCloneApp(bundleName, userId, appIndex);
-    APP_LOGD("InstallCloneApp result is %{public}d", result);
-    return result;
-}
-
 void CreateAppCloneExec(napi_env env, void *data)
 {
     CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
@@ -1467,8 +1450,8 @@ void CreateAppCloneExec(napi_env env, void *data)
         asyncCallbackInfo->bundleName.c_str(),
         asyncCallbackInfo->userId,
         asyncCallbackInfo->appIndex);
-    asyncCallbackInfo->err =
-        InnerCreateAppClone(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
+    asyncCallbackInfo->err = InstallerHelper::InnerCreateAppClone(asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
 }
 
 void CreateAppCloneComplete(napi_env env, napi_status status, void *data)
@@ -1549,24 +1532,6 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerDestroyAppClone(std::string &bundleName, int32_t userId, int32_t appIndex,
-                                    DestroyAppCloneParam &destroyAppCloneParam)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode result = iBundleInstaller->UninstallCloneApp(bundleName, userId, appIndex, destroyAppCloneParam);
-    APP_LOGD("UninstallCloneApp result is %{public}d", result);
-    return result;
-}
-
 void DestroyAppCloneExec(napi_env env, void *data)
 {
     CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
@@ -1578,9 +1543,8 @@ void DestroyAppCloneExec(napi_env env, void *data)
         asyncCallbackInfo->bundleName.c_str(),
         asyncCallbackInfo->userId,
         asyncCallbackInfo->appIndex);
-    asyncCallbackInfo->err =
-        InnerDestroyAppClone(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId,
-                             asyncCallbackInfo->appIndex, asyncCallbackInfo->destroyAppCloneParam);
+    asyncCallbackInfo->err = InstallerHelper::InnerDestroyAppClone(asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->userId, asyncCallbackInfo->appIndex, asyncCallbackInfo->destroyAppCloneParam);
 }
 
 void DestroyAppCloneComplete(napi_env env, napi_status status, void *data)

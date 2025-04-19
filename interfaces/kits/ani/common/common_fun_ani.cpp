@@ -1608,6 +1608,16 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
             installParam.hashParams[parameter.first] = parameter.second;
         }
     }
+    
+    // parameters?
+    if (CallGetterOptional(env, object, PROPERTYNAME_PARAMETERS, &array)) {
+        std::vector<std::pair<std::string, std::string>> parameters;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, parameters, ParseKeyValuePair));
+        for (const auto& parameter : parameters) {
+            installParam.parameters[parameter.first] = parameter.second;
+        }
+    }
+
     // pgoParams?
     if (CallGetterOptional(env, object, PROPERTYNAME_PGOPARAMS, &array)) {
         std::vector<std::pair<std::string, std::string>> pgoParams;
@@ -1689,6 +1699,54 @@ bool CommonFunAni::ParseUninstallParam(ani_env* env, ani_object object, Uninstal
         uninstallParam.versionCode = intValue;
     } else {
         APP_LOGW("Parse crowdtestDeadline failed,using default value");
+    }
+    return true;
+}
+
+bool CommonFunAni::ParseDestroyAppCloneParam(ani_env* env, ani_object object,
+    DestroyAppCloneParam& destroyAppCloneParam)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+    ani_int intValue = 0;
+    // userId?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+        destroyAppCloneParam.userId = intValue;
+    } else {
+        destroyAppCloneParam.userId = Constants::UNSPECIFIED_USERID;
+        APP_LOGW("Parse userId failed,using default value");
+    }
+    ani_array array = nullptr;
+    // parameters?
+    if (CallGetterOptional(env, object, PROPERTYNAME_PARAMETERS, &array)) {
+        std::vector<std::pair<std::string, std::string>> parameters;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, parameters, ParseKeyValuePair));
+        for (const auto& parameter : parameters) {
+            destroyAppCloneParam.parameters[parameter.first] = parameter.second;
+        }
+    }
+    return true;
+}
+
+bool CommonFunAni::ParseCreateAppCloneParam(ani_env* env, ani_object object, int32_t& userId, int32_t& appIdx)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+    ani_int intValue = 0;
+    // userId?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+        userId = intValue;
+    } else {
+        userId = Constants::UNSPECIFIED_USERID;
+        APP_LOGW("Parse userId failed,using default value");
+    }
+
+    // appIdx?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_APPINDEX, &intValue)) {
+        appIdx = intValue;
+    } else {
+        appIdx = Constants::INITIAL_APP_INDEX;
+        APP_LOGW("Parse appIdx failed,using default value");
     }
     return true;
 }

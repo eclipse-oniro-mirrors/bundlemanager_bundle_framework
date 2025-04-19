@@ -17,6 +17,8 @@
 #define FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_HELPER_H
 
 #include "base_cb_info.h"
+#include "bundle_errors.h"
+#include "clone_param.h"
 #include "installer.h"
 #include "install_param.h"
 #include "napi/native_api.h"
@@ -30,6 +32,9 @@ public:
     static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap);
     static void ConvertInstallResult(InstallResult &installResult);
     static void CreateProxyErrCode(std::unordered_map<int32_t, int32_t> &errCodeMap);
+    static ErrCode InnerCreateAppClone(std::string &bundleName, int32_t userId, int32_t &appIndex);
+    static ErrCode InnerDestroyAppClone(std::string &bundleName, int32_t userId, int32_t appIndex,
+        DestroyAppCloneParam &destroyAppCloneParam);
 };
 } // AppExecFwk
 } // OHOS

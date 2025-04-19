@@ -14,6 +14,7 @@
  */
 
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <limits>
@@ -36,6 +37,7 @@
 #include "installer_callback.h"
 #include "installer_helper.h"
 #include "ipc_skeleton.h"
+#include "napi_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -60,6 +62,10 @@ constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or 
 constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
 constexpr const char* INSTALL_SELF_PERMISSION = "ohos.permission.INSTALL_SELF_BUNDLE";
 constexpr const char* PARAMETERS = "parameters";
+constexpr const char* BUNDLE_NAME = "bundleName";
+constexpr const char* APP_INDEX = "appIndex";
+constexpr const char* CREATE_APP_CLONE = "CreateAppClone";
+constexpr const char* DESTROY_APP_CLONE = "destroyAppClone";
 constexpr const char* CORRESPONDING_TYPE = "corresponding type";
 constexpr const char* HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
@@ -233,7 +239,7 @@ static bool ParseBundleNameAndInstallParam(ani_env* env, ani_string& aniBundleNa
     bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("Bundle name is empty.");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
         return false;
     }
     return ParseInstallParamWithLog(env, aniInstParam, installParam);
@@ -325,16 +331,60 @@ static void AniRemoveExtResource(ani_env* env, [[maybe_unused]] ani_object insta
 }
 
 static ani_double AniCreateAppClone(ani_env* env, [[maybe_unused]] ani_object installerObj,
-    ani_string bundleName, ani_object aniCrtAppCloneParam)
+    ani_string aniBundleName, ani_object aniCrtAppCloneParam)
 {
     APP_LOGI("CreateAppClone");
-    return (ani_double)0;
+    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
+    if (bundleName.empty()) {
+        APP_LOGE("Bundle name is empty.");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
+        return (ani_double)Constants::INITIAL_APP_INDEX;
+    }
+    int32_t userId;
+    int32_t appIdx;
+    CommonFunAni::ParseCreateAppCloneParam(env, aniCrtAppCloneParam, userId, appIdx);
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    ErrCode res = CommonFunc::ConvertErrCode(InstallerHelper::InnerCreateAppClone(bundleName, userId, appIdx));
+    if (res != SUCCESS) {
+        BusinessErrorAni::ThrowParameterTypeError(env, res, CREATE_APP_CLONE,
+            Constants::PERMISSION_INSTALL_CLONE_BUNDLE);
+    }
+    return (ani_double)appIdx;
 }
 
 static void AniDestroyAppClone(ani_env* env, [[maybe_unused]] ani_object installerObj,
-    ani_string bundleName, ani_double appIndex, ani_double userId)
+    ani_string aniBundleName, ani_double aniAppIndex, ani_object aniDestroyAppCloneParam)
 {
     APP_LOGI("DestroyAppClone");
+    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
+    if (bundleName.empty()) {
+        APP_LOGE("Bundle name is empty.");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
+        return;
+    }
+    int32_t appIdx = 0;
+    if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIdx)) {
+        APP_LOGE("Cast appIdx failed");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+        return;
+    }
+    DestroyAppCloneParam destroyCloneParam;
+    if (!CommonFunAni::ParseDestroyAppCloneParam(env, aniDestroyAppCloneParam, destroyCloneParam)) {
+        APP_LOGE("DestroyAppCloneParam parse invalid");
+        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        return;
+    }
+    if (destroyCloneParam.userId == Constants::UNSPECIFIED_USERID) {
+        destroyCloneParam.userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    ErrCode result = CommonFunc::ConvertErrCode(InstallerHelper::InnerDestroyAppClone(bundleName,
+        destroyCloneParam.userId, appIdx, destroyCloneParam));
+    if (result != SUCCESS) {
+        BusinessErrorAni::ThrowParameterTypeError(env, result,
+            DESTROY_APP_CLONE, Constants::PERMISSION_UNINSTALL_CLONE_BUNDLE);
+    }
 }
 
 static void AniInstallPreexistingApp(ani_env* env, [[maybe_unused]] ani_object installerObj,
@@ -393,8 +443,7 @@ static void GetInstallerMethods(std::array<ani_native_function, INSTALLER_METHOD
         ani_native_function { "createAppCloneNative",
             "Lstd/core/String;L@ohos/bundle/installer/installer/CreateAppCloneParam;:D",
             reinterpret_cast<void*>(AniCreateAppClone) },
-        ani_native_function { "destroyAppCloneNative",
-            "Lstd/core/String;DD:V",
+        ani_native_function { "destroyAppCloneNative", nullptr,
             reinterpret_cast<void*>(AniDestroyAppClone) },
         ani_native_function { "installPreexistingAppNative",
             "Lstd/core/String;D:V",

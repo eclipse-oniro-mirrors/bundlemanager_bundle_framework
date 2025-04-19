@@ -62,6 +62,14 @@ export class CreateAppCloneParamInner implements installer.CreateAppCloneParam {
 export class DestroyAppCloneParamInner implements installer.DestroyAppCloneParam {
   userId?: number;
   parameters?: Array<installer.Parameters>;
+  constructor() {
+    super();
+  }
+  constructor(param: installer.DestroyAppCloneParam) {
+    super();
+    this.userId = param.userId;
+    this.parameters = param.parameters;
+  }
 }
 
 export class PluginParamInner implements installer.PluginParam {
@@ -79,7 +87,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   native addExtResourceNative(bundleName: string, filePaths: Array<string>): void;
   native removeExtResourceNative(bundleName: string, moduleNames: Array<string>): void;
   native createAppCloneNative(bundleName: string, createAppCloneParam: installer.CreateAppCloneParam): number;
-  native destroyAppCloneNative(bundleName: string, appIndex: number, userId: number): void;
+  native destroyAppCloneNative(bundleName: string, appIndex: number, options: installer.DestroyAppCloneParam): void;
   native installPreexistingAppNative(bundleName: string, userId: number): void;
   
   install(hapFilePaths: Array<string>, installParam?: installer.InstallParam): Promise<void> {
@@ -329,8 +337,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p = new Promise<number>((resolve: (v:number) => void, reject: (error: BusinessError) => void):void => {
       let execFun = ():number=>{ return this.createAppCloneNative(bundleName, emptyParam); }
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
-          resolve(e as number);
+      p1.then((appIdx: NullishType) => {
+          resolve(appIdx as number);
         }, (err: BusinessError): void => {
           reject(err);
         });
@@ -339,8 +347,15 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   }
 
   destroyAppClone(bundleName: string, appIndex: number, options?: number | installer.DestroyAppCloneParam): Promise<void> {
+      let defaultParam = new DestroyAppCloneParamInner();
+      let option = options ?? defaultParam;
+      if (option instanceof installer.DestroyAppCloneParam) {
+        defaultParam = new DestroyAppCloneParamInner(option);
+      }
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
-      let execFun = ():NullishType=>{}
+      let execFun = ():NullishType=>{
+          this.destroyAppCloneNative(bundleName, appIndex, defaultParam);
+      }
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
