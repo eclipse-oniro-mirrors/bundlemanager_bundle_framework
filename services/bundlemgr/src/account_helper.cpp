@@ -91,12 +91,16 @@ int32_t AccountHelper::GetOsAccountLocalIdFromUid(const int32_t callingUid)
 #endif
 }
 
-int32_t AccountHelper::GetCurrentActiveUserIdWithRetry()
+int32_t AccountHelper::GetCurrentActiveUserIdWithRetry(bool isOtaInstall)
 {
 #ifdef ACCOUNT_ENABLE
-    int32_t localId = GetCurrentActiveUserId();
-    if (localId != Constants::INVALID_USERID) {
-        return localId;
+    // Failed to obtain foreground Os Account when OTA. BMS SA is not registered.
+    int32_t localId = Constants::INVALID_USERID;
+    if (!isOtaInstall) {
+        localId = GetCurrentActiveUserId();
+        if (localId != Constants::INVALID_USERID) {
+            return localId;
+        }
     }
     int32_t retryCnt = 0;
     do {

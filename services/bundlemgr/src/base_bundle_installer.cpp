@@ -6920,7 +6920,7 @@ void BaseBundleInstaller::ProcessAddResourceInfo(const InstallParam &installPara
     }
     // For multiple users, it is necessary to check whether the userId is equal to the current active userId.
     // When OTA, the default user is obtained.
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserIdWithRetry();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserIdWithRetry(installParam.isOTA || otaInstall_);
     if (currentUserId == Constants::INVALID_USERID) {
         LOG_W(BMS_TAG_INSTALLER, "current user %{public}d is invalid", currentUserId);
         if ((installParam.isOTA || otaInstall_) && userId != Constants::START_USERID &&

@@ -30,7 +30,7 @@ public:
 
     static int32_t GetOsAccountLocalIdFromUid(const int32_t callingUid);
 
-    static int32_t GetCurrentActiveUserIdWithRetry();
+    static int32_t GetCurrentActiveUserIdWithRetry(bool isOtaInstall = false);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
