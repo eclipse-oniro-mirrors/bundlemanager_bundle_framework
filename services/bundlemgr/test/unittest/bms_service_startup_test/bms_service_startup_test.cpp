@@ -1010,7 +1010,7 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3600, Function | SmallTest |
 {
     int32_t ret = BundlePermissionMgr::Init();
     EXPECT_EQ(ret, true);
-    
+
     DefaultPermission permission;
     permission.appSignature.push_back("appSignature1");
     permission.appSignature.push_back("appSignature2");
@@ -1028,7 +1028,7 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3700, Function | SmallTest |
 {
     int32_t ret = BundlePermissionMgr::Init();
     EXPECT_EQ(ret, true);
-    
+
     bool result = BundlePermissionMgr::IsShellTokenType();
     EXPECT_FALSE(result);
 }
@@ -1377,7 +1377,9 @@ HWTEST_F(BmsServiceStartupTest, Marshalling_0400, Function | SmallTest | Level1)
  */
 HWTEST_F(BmsServiceStartupTest, CheckConnectService_0100, Function | SmallTest | Level1)
 {
-    auto client = BmsEcologicalRuleMgrServiceClient::GetInstance();
+    std::shared_ptr<BmsEcologicalRuleMgrServiceClient> client =
+        DelayedSingleton<BmsEcologicalRuleMgrServiceClient>::GetInstance();
+    ASSERT_NE(client, nullptr);
     bool ret = client->CheckConnectService();
     EXPECT_EQ(ret, true);
 }
@@ -1389,7 +1391,9 @@ HWTEST_F(BmsServiceStartupTest, CheckConnectService_0100, Function | SmallTest |
  */
 HWTEST_F(BmsServiceStartupTest, QueryFreeInstallExperience_0100, Function | SmallTest | Level1)
 {
-    auto client = BmsEcologicalRuleMgrServiceClient::GetInstance();
+    std::shared_ptr<BmsEcologicalRuleMgrServiceClient> client =
+        DelayedSingleton<BmsEcologicalRuleMgrServiceClient>::GetInstance();
+    ASSERT_NE(client, nullptr);
     Want want;
     BmsCallerInfo callerInfo;
     BmsExperienceRule rule;
@@ -1690,7 +1694,8 @@ HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0006, Function | SmallTes
  */
 HWTEST_F(BmsServiceStartupTest, OnRemoteSaDied_0100, Function | SmallTest | Level0)
 {
-    auto client = BmsEcologicalRuleMgrServiceClient::GetInstance();
+    std::shared_ptr<BmsEcologicalRuleMgrServiceClient> client =
+        DelayedSingleton<BmsEcologicalRuleMgrServiceClient>::GetInstance();
     ASSERT_NE(client, nullptr);
     client->bmsEcologicalRuleMgrServiceProxy_ = nullptr;
     client->OnRemoteSaDied(nullptr);
@@ -1705,7 +1710,8 @@ HWTEST_F(BmsServiceStartupTest, OnRemoteSaDied_0100, Function | SmallTest | Leve
 HWTEST_F(BmsServiceStartupTest, OnRemoteDied_0100, Function | SmallTest | Level0)
 {
     BmsEcologicalRuleMgrServiceDeathRecipient recipient;
-    auto client = BmsEcologicalRuleMgrServiceClient::GetInstance();
+    std::shared_ptr<BmsEcologicalRuleMgrServiceClient> client =
+        DelayedSingleton<BmsEcologicalRuleMgrServiceClient>::GetInstance();
     ASSERT_NE(client, nullptr);
     client->bmsEcologicalRuleMgrServiceProxy_ = nullptr;
     recipient.OnRemoteDied(nullptr);
