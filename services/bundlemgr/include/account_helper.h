@@ -29,6 +29,8 @@ public:
     static bool IsOsAccountVerified(const int32_t userId);
 
     static int32_t GetOsAccountLocalIdFromUid(const int32_t callingUid);
+
+    static int32_t GetCurrentActiveUserIdWithRetry();
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
