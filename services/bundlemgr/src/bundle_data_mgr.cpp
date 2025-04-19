@@ -2377,10 +2377,6 @@ ErrCode BundleDataMgr::GetLauncherAbilityInfoSync(const Want &want, const int32_
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
-    if (info.IsDisabled()) {
-        LOG_W(BMS_TAG_QUERY, "app %{public}s is disabled", info.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
-    }
     if (info.GetBaseApplicationInfo().hideDesktopIcon) {
         LOG_D(BMS_TAG_QUERY, "Bundle(%{public}s) hide desktop icon", bundleName.c_str());
         return ERR_OK;
