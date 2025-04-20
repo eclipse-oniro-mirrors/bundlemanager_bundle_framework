@@ -19,7 +19,6 @@
 #include "app_log_tag_wrapper.h"
 #include "bms_extension_client.h"
 #include "bundle_util.h"
-#include "event_report.h"
 #include "hitrace_meter.h"
 #include "scope_guard.h"
 
@@ -101,14 +100,6 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
         LOG_E(BMS_TAG_DEFAULT, "BatchInsert failed");
         return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
     }
-    EventInfo info;
-    info.callingName = callingName;
-    info.userId = userId;
-    info.appIds = appIds;
-    info.rule = controlRuleType;
-    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_ADD_RULE);
-    info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_OF_INSTALL);
-    EventReport::SendAppControlRuleEvent(info);
     if (valuesBuckets.size() != static_cast<uint64_t>(insertNum)) {
         LOG_E(BMS_TAG_DEFAULT, "BatchInsert size not expected");
         return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
@@ -131,14 +122,6 @@ ErrCode AppControlManagerRdb::DeleteAppInstallControlRule(const std::string &cal
                 callingName.c_str(), appId.c_str(), userId);
             return ERR_APPEXECFWK_DB_DELETE_ERROR;
         }
-        EventInfo info;
-        info.callingName = callingName;
-        info.userId = userId;
-        info.appIds.push_back(appId);
-        info.rule = controlRuleType;
-        info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_REMOVE_RULE);
-        info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_OF_INSTALL);
-        EventReport::SendAppControlRuleEvent(info);
     }
     return ERR_OK;
 }
@@ -156,13 +139,6 @@ ErrCode AppControlManagerRdb::DeleteAppInstallControlRule(const std::string &cal
             callingName.c_str(), controlRuleType.c_str());
         return ERR_APPEXECFWK_DB_DELETE_ERROR;
     }
-    EventInfo info;
-    info.callingName = callingName;
-    info.userId = userId;
-    info.rule = controlRuleType;
-    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_REMOVE_RULE);
-    info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_OF_INSTALL);
-    EventReport::SendAppControlRuleEvent(info);
     return ERR_OK;
 }
 
@@ -234,16 +210,6 @@ ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callin
         LOG_E(BMS_TAG_DEFAULT, "BatchInsert AddAppRunningControlRule failed");
         return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
     }
-    for (auto &controlRule : controlRules) {
-        EventInfo info;
-        info.callingName = callingName;
-        info.userId = userId;
-        info.rule = controlRule.controlMessage;
-        info.appIds.push_back(controlRule.appId);
-        info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_ADD_RULE);
-        info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_OF_RUNUING);
-        EventReport::SendAppControlRuleEvent(info);
-    }
     if (valuesBuckets.size() != static_cast<uint64_t>(insertNum)) {
         LOG_E(BMS_TAG_DEFAULT, "BatchInsert size not expected");
         return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
@@ -266,13 +232,6 @@ ErrCode AppControlManagerRdb::DeleteAppRunningControlRule(const std::string &cal
                 callingName.c_str(), rule.appId.c_str(), userId);
             return ERR_APPEXECFWK_DB_DELETE_ERROR;
         }
-        EventInfo info;
-        info.callingName = callingName;
-        info.userId = userId;
-        info.appIds.push_back(rule.appId);
-        info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_REMOVE_RULE);
-        info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_OF_RUNUING);
-        EventReport::SendAppControlRuleEvent(info);
     }
     return ERR_OK;
 }
@@ -288,12 +247,6 @@ ErrCode AppControlManagerRdb::DeleteAppRunningControlRule(const std::string &cal
             callingName.c_str(), userId);
         return ERR_APPEXECFWK_DB_DELETE_ERROR;
     }
-    EventInfo info;
-    info.callingName = callingName;
-    info.userId = userId;
-    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_REMOVE_RULE);
-    info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_OF_RUNUING);
-    EventReport::SendAppControlRuleEvent(info);
     return ERR_OK;
 }
 
@@ -424,14 +377,6 @@ ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName,
             callingName.c_str(), appId.c_str());
         return ERR_APPEXECFWK_DB_INSERT_ERROR;
     }
-    EventInfo info;
-    info.callingName = callingName;
-    info.userId = userId;
-    info.appIds.push_back(appId);
-    info.rule = want.ToString();
-    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_ADD_RULE);
-    info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_DISPOSE_STATUS);
-    EventReport::SendAppControlRuleEvent(info);
     return ERR_OK;
 }
 
@@ -450,13 +395,6 @@ ErrCode AppControlManagerRdb::DeleteDisposedStatus(const std::string &callingNam
             callingName.c_str(), appId.c_str());
         return ERR_APPEXECFWK_DB_DELETE_ERROR;
     }
-    EventInfo info;
-    info.callingName = callingName;
-    info.userId = userId;
-    info.appIds.push_back(appId);
-    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_REMOVE_RULE);
-    info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_DISPOSE_STATUS);
-    EventReport::SendAppControlRuleEvent(info);
     return ERR_OK;
 }
 
@@ -519,24 +457,12 @@ ErrCode AppControlManagerRdb::DeleteOldControlRule(const std::string &callingNam
             callingName.c_str(), appId.c_str(), controlRuleType.c_str(), userId);
         return ERR_APPEXECFWK_DB_DELETE_ERROR;
     }
-    EventInfo info;
-    info.callingName = callingName;
-    info.userId = userId;
-    info.appIds.push_back(appId);
-    info.rule = controlRuleType;
-    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_REMOVE_RULE);
-    EventReport::SendAppControlRuleEvent(info);
     return ERR_OK;
 }
 
 ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
     const std::string &appId, const DisposedRule &rule, int32_t appIndex, int32_t userId)
 {
-    ErrCode code = DeleteDisposedRule(callingName, appId, appIndex, userId);
-    if (code != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus failed.");
-        return ERR_APPEXECFWK_DB_DELETE_ERROR;
-    }
     int64_t timeStamp = BundleUtil::GetCurrentTime();
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(CALLING_NAME, callingName);
@@ -553,15 +479,6 @@ ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
             callingName.c_str(), appId.c_str());
         return ERR_APPEXECFWK_DB_INSERT_ERROR;
     }
-    EventInfo info;
-    info.callingName = callingName;
-    info.userId = userId;
-    info.appIds.push_back(appId);
-    info.rule = rule.ToString();
-    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_ADD_RULE);
-    info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_DISPOSE_RULE);
-    info.appIndex = appIndex;
-    EventReport::SendAppControlRuleEvent(info);
     return ERR_OK;
 }
 
@@ -580,23 +497,16 @@ ErrCode AppControlManagerRdb::DeleteDisposedRule(const std::string &callingName,
             callingName.c_str(), appId.c_str());
         return ERR_APPEXECFWK_DB_DELETE_ERROR;
     }
-    EventInfo info;
-    info.callingName = callingName;
-    info.userId = userId;
-    info.appIds.push_back(appId);
-    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_REMOVE_RULE);
-    info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_DISPOSE_RULE);
-    info.appIndex = appIndex;
-    EventReport::SendAppControlRuleEvent(info);
     return ERR_OK;
 }
 
-ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t appIndex, int32_t userId)
+ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::vector<std::string> &appIdList,
+    int32_t appIndex, int32_t userId)
 {
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     std::vector<std::string> controlList = {DISPOSED_RULE, RUNNING_CONTROL, UNINSTALL_DISPOSED_RULE};
     absRdbPredicates.In(APP_CONTROL_LIST, controlList);
-    absRdbPredicates.EqualTo(APP_ID, appId);
+    absRdbPredicates.In(APP_ID, appIdList);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     // if appIndex is main app also clear all clone app
     if (appIndex != Constants::MAIN_APP_INDEX) {
@@ -604,16 +514,8 @@ ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::string &a
     }
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteAllDisposedRuleByBundle appId:%{private}s failed", appId.c_str());
         return ERR_APPEXECFWK_DB_DELETE_ERROR;
     }
-    EventInfo info;
-    info.userId = userId;
-    info.appIds.push_back(appId);
-    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_REMOVE_RULE);
-    info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_DISPOSE_RULE);
-    info.appIndex = appIndex;
-    EventReport::SendAppControlRuleEvent(info);
     return ERR_OK;
 }
 

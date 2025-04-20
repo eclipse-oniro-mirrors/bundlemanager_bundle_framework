@@ -19,10 +19,10 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "app_control_constants.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_service_constants.h"
-#include "event_report.h"
 #include "ipc_skeleton.h"
 
 namespace OHOS {
@@ -30,6 +30,7 @@ namespace AppExecFwk {
 namespace {
     constexpr const char* PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
     constexpr const char* PERMISSION_GET_DISPOSED_STATUS = "ohos.permission.GET_DISPOSED_APP_STATUS";
+    constexpr const char* APP_MARKET_CALLING = "app market";
 }
 AppControlManagerHostImpl::AppControlManagerHostImpl()
 {
@@ -75,6 +76,8 @@ ErrCode AppControlManagerHostImpl::AddAppInstallControlRule(const std::vector<st
     if (ruleType == AppControlConstants::APP_DISALLOWED_UNINSTALL) {
         UpdateAppControlledInfo(userId, appIds);
     }
+    SendAppControlEvent(ControlActionType::INSTALL, ControlOperationType::ADD_RULE,
+        callingName, userId, Constants::MAIN_APP_INDEX, appIds, ruleType);
     return ERR_OK;
 }
 
@@ -104,6 +107,8 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
     if (ruleType == AppControlConstants::APP_DISALLOWED_UNINSTALL) {
         UpdateAppControlledInfo(userId, appIds);
     }
+    SendAppControlEvent(ControlActionType::INSTALL, ControlOperationType::REMOVE_RULE,
+        callingName, userId, Constants::MAIN_APP_INDEX, appIds, ruleType);
     return ERR_OK;
 }
 
@@ -141,6 +146,8 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
     if (ruleType == AppControlConstants::APP_DISALLOWED_UNINSTALL) {
         UpdateAppControlledInfo(userId, modifyAppIds);
     }
+    SendAppControlEvent(ControlActionType::INSTALL, ControlOperationType::REMOVE_RULE,
+        callingName, userId, Constants::MAIN_APP_INDEX, {}, ruleType);
     return ERR_OK;
 }
 
@@ -177,7 +184,16 @@ ErrCode AppControlManagerHostImpl::AddAppRunningControlRule(
         LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    return appControlManager_->AddAppRunningControlRule(callingName, controlRules, userId);
+    ErrCode result = appControlManager_->AddAppRunningControlRule(callingName, controlRules, userId);
+    std::vector<std::string> appIds;
+    std::string rules;
+    for (const auto &rule : controlRules) {
+        appIds.emplace_back(rule.appId);
+        rules += (rule.controlMessage + " ");
+    }
+    SendAppControlEvent(ControlActionType::RUNUING, ControlOperationType::ADD_RULE,
+        callingName, userId, Constants::MAIN_APP_INDEX, appIds, rules);
+    return result;
 }
 
 ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(
@@ -188,7 +204,14 @@ ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(
         LOG_E(BMS_TAG_DEFAULT, "callingName is invalid");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    return appControlManager_->DeleteAppRunningControlRule(callingName, controlRules, userId);
+    ErrCode result = appControlManager_->DeleteAppRunningControlRule(callingName, controlRules, userId);
+    std::vector<std::string> appIds;
+    for (const auto &rule : controlRules) {
+        appIds.emplace_back(rule.appId);
+    }
+    SendAppControlEvent(ControlActionType::RUNUING, ControlOperationType::REMOVE_RULE,
+        callingName, userId, Constants::MAIN_APP_INDEX, appIds, Constants::EMPTY_STRING);
+    return result;
 }
 
 ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(int32_t userId)
@@ -202,7 +225,10 @@ ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(int32_t userId)
         LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    return appControlManager_->DeleteAppRunningControlRule(callingName, userId);
+    ErrCode result = appControlManager_->DeleteAppRunningControlRule(callingName, userId);
+    SendAppControlEvent(ControlActionType::RUNUING, ControlOperationType::REMOVE_RULE,
+        callingName, userId, Constants::MAIN_APP_INDEX, {}, Constants::EMPTY_STRING);
+    return result;
 }
 
 ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds)
@@ -363,6 +389,8 @@ ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, c
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "host SetDisposedStatus error:%{public}d", ret);
     }
+    SendAppControlEvent(ControlActionType::DISPOSE_STATUS, ControlOperationType::ADD_RULE,
+        APP_MARKET_CALLING, userId, Constants::MAIN_APP_INDEX, { appId }, Constants::EMPTY_STRING);
     return ret;
 }
 
@@ -395,7 +423,8 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
         userId = GetCallingUserId();
     }
     ret = appControlManager_->DeleteDisposedRule(callerName, appId, Constants::MAIN_APP_INDEX, userId);
-
+    SendAppControlEvent(ControlActionType::DISPOSE_STATUS, ControlOperationType::REMOVE_RULE,
+        callerName, userId, Constants::MAIN_APP_INDEX, { appId }, Constants::EMPTY_STRING);
     return ret;
 }
 
@@ -551,6 +580,8 @@ ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, Dis
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "host GetDisposedStatus error:%{public}d", ret);
     }
+    SendAppControlEvent(ControlActionType::DISPOSE_RULE, ControlOperationType::ADD_RULE,
+        callerName, userId, Constants::MAIN_APP_INDEX, { appId }, rule.ToString());
     return ret;
 }
 
@@ -637,6 +668,8 @@ ErrCode AppControlManagerHostImpl::SetDisposedRuleForCloneApp(const std::string 
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "SetDisposedRuleForCloneApp error:%{public}d, appIndex:%{public}d", ret, appIndex);
     }
+    SendAppControlEvent(ControlActionType::DISPOSE_RULE, ControlOperationType::ADD_RULE,
+        callerName, userId, appIndex, { appId }, rule.ToString());
     return ret;
 }
 ErrCode AppControlManagerHostImpl::DeleteDisposedRuleForCloneApp(const std::string &appId, int32_t appIndex,
@@ -679,6 +712,8 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedRuleForCloneApp(const std::stri
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "DeleteDisposedRule error:%{public}d, appIndex:%{public}d", ret, appIndex);
     }
+    SendAppControlEvent(ControlActionType::DISPOSE_RULE, ControlOperationType::REMOVE_RULE,
+        callerName, userId, appIndex, { appId }, Constants::EMPTY_STRING);
     return ret;
 }
 
@@ -753,15 +788,8 @@ ErrCode AppControlManagerHostImpl::SetUninstallDisposedRule(const std::string &a
         LOG_W(BMS_TAG_DEFAULT, "error:%{public}d, appIndex:%{public}d",
             ret, appIndex);
     }
-    EventInfo info;
-    info.callingName = callerName;
-    info.userId = userId;
-    info.appIds.push_back(appIdentifier);
-    info.rule = rule.ToString();
-    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_ADD_RULE);
-    info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_UNINSTALL_DISPOSE_RULE);
-    info.appIndex = appIndex;
-    EventReport::SendAppControlRuleEvent(info);
+    SendAppControlEvent(ControlActionType::UNINSTALL_DISPOSE_RULE, ControlOperationType::ADD_RULE,
+        callerName, userId, appIndex, { appIdentifier }, rule.ToString());
     return ret;
 }
 
@@ -798,16 +826,24 @@ ErrCode AppControlManagerHostImpl::DeleteUninstallDisposedRule(const std::string
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "error:%{public}d, appIndex:%{public}d", ret, appIndex);
     }
-    EventInfo info;
-    info.callingName = callerName;
-    info.userId = userId;
-    info.appIds.push_back(appIdentifier);
-    info.operationType = static_cast<int32_t>(OPERATION_TYPE_ENUM::OPERATION_TYPE_REMOVE_RULE);
-    info.actionType = static_cast<int32_t>(ACTION_TYPE_ENUM::ACTION_TYPE_UNINSTALL_DISPOSE_RULE);
-    info.appIndex = appIndex;
-    EventReport::SendAppControlRuleEvent(info);
+    SendAppControlEvent(ControlActionType::UNINSTALL_DISPOSE_RULE, ControlOperationType::REMOVE_RULE,
+        callerName, userId, appIndex, { appIdentifier }, Constants::EMPTY_STRING);
     return ret;
 }
 
+void AppControlManagerHostImpl::SendAppControlEvent(ControlActionType actiopType, ControlOperationType operationType,
+    const std::string &callingName, int32_t userId, int32_t appIndex, const std::vector<std::string> &appIds,
+    const std::string &rule)
+{
+    EventInfo info;
+    info.actionType = static_cast<int32_t>(actiopType);
+    info.operationType = static_cast<int32_t>(operationType);
+    info.callingName = callingName;
+    info.userId = userId;
+    info.appIndex = appIndex;
+    info.appIds = appIds;
+    info.rule = rule;
+    EventReport::SendAppControlRuleEvent(info);
+}
 } // AppExecFwk
 } // OHOS

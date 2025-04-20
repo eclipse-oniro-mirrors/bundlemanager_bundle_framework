@@ -310,7 +310,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0150, Function | Smal
     int32_t appIndex = 0;
     int32_t userId = 100;
     ErrCode res = rdb.SetDisposedRule(callingName, appId, rule, appIndex, userId);
-    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_INSERT_ERROR);
 }
 
 /**
@@ -339,7 +339,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0170, Function | Smal
     ASSERT_NE(rdb.rdbDataManager_, nullptr);
     rdb.rdbDataManager_->bmsRdbConfig_.tableName = TARGET_BUNDLE_NAME;
     std::vector<DisposedRule> disposedRules;
-    auto res = rdb.DeleteAllDisposedRuleByBundle(APPID, APP_INDEX, USERID);
+    auto res = rdb.DeleteAllDisposedRuleByBundle({ APPID }, APP_INDEX, USERID);
     EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 
