@@ -28,9 +28,13 @@ ohos_shared_library("ani_bundle_manager") {
     "${inner_api_path}/appexecfwk_core/include",
     "${kits_path}/ani/bundle_manager",
     "${kits_path}/ani/common",
+    "${kits_path}/js/bundle_manager",
     "${kits_path}/js/common",
   ]
-  sources = [ "ani_bundle_manager.cpp" ]
+  sources = [
+    "${kits_path}/js/bundle_manager/bundle_manager_helper.cpp",
+    "ani_bundle_manager.cpp",
+  ]
 
   defines = [
     "APP_LOG_TAG = \"BMS\"",
@@ -58,6 +62,10 @@ ohos_shared_library("ani_bundle_manager") {
     "runtime_core:ani",
     "samgr:samgr_proxy",
   ]
+
+  if (global_resmgr_enable) {
+    defines += [ "GLOBAL_RESMGR_ENABLE" ]
+  }
 
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

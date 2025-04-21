@@ -33,6 +33,7 @@ ohos_shared_library("bundlemanager") {
   ]
   sources = [
     "bundle_manager.cpp",
+    "bundle_manager_helper.cpp",
     "bundle_manager_sync.cpp",
     "clean_cache_callback.cpp",
     "native_module.cpp",
