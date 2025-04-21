@@ -1577,26 +1577,6 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_4000, Function | SmallTe
 }
 
 /**
- * @tc.number: OnRemoteRequestTest_4100
- * @tc.name: test OnRemoteRequest of InstalldHost
- * @tc.desc: 1. Calling function with InstalldInterfaceCode BACK_UP_FIRST_BOOT_LOG
- */
-HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_4100, Function | SmallTest | Level0)
-{
-    uint32_t code = static_cast<uint32_t>(InstalldInterfaceCode::BACK_UP_FIRST_BOOT_LOG);
-    MessageParcel datas;
-    std::u16string descriptor = InstalldHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(DATA, DATA_SIZE);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    InstalldHost installdHost;
-    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
-    EXPECT_EQ(res, 0);
-}
-
-/**
  * @tc.number: OnRemoteRequestTest_4200
  * @tc.name: test OnRemoteRequest of InstalldHost
  * @tc.desc: 1. Calling function with InstalldInterfaceCode MIGRATE_DATA
