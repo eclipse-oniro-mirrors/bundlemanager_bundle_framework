@@ -31,14 +31,14 @@ static void DecompressFile([[maybe_unused]] ani_env* env,
     std::string inFile = CommonFunAni::AniStrToString(env, aniInFile);
     if (inFile.empty()) {
         APP_LOGE("inFile is empty.");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, TYPE_STRING);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, TYPE_STRING);
         return;
     }
 
     std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
     if (inFile.empty()) {
         APP_LOGE("inFile is empty.");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, TYPE_STRING);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, TYPE_STRING);
         return;
     }
 
@@ -52,7 +52,7 @@ static void DecompressFile([[maybe_unused]] ani_env* env,
     int32_t errCode = CommonFunc::ConvertErrCode(LIBZIP::DecompressFileImpl(inFile, outFile, options));
     if (errCode != ERR_OK) {
         APP_LOGE("DecompressFile failed, ret %{public}d", errCode);
-        BusinessErrorAni::ThrowParameterTypeError(env, errCode, "", "");
+        BusinessErrorAni::ThrowCommonError(env, errCode, "", "");
     }
 }
 

@@ -96,7 +96,7 @@ static bool ParseInstallParamWithLog(ani_env* env, ani_object& aniInstParam, Ins
 {
     if (!CommonFunAni::ParseInstallParam(env, aniInstParam, installParam)) {
         APP_LOGE("InstallParam parse invalid");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
         return false;
     }
     return true;
@@ -155,23 +155,23 @@ static void ProcessResult(ani_env* env, InstallResult& result, const InstallOpti
     if (result.resultCode != SUCCESS) {
         switch (option) {
             case InstallOption::INSTALL:
-                BusinessErrorAni::ThrowParameterTypeError(env, result.resultCode,
+                BusinessErrorAni::ThrowCommonError(env, result.resultCode,
                     RESOURCE_NAME_OF_INSTALL, INSTALL_PERMISSION);
                 break;
             case InstallOption::RECOVER:
-                BusinessErrorAni::ThrowParameterTypeError(env, result.resultCode,
+                BusinessErrorAni::ThrowCommonError(env, result.resultCode,
                     RESOURCE_NAME_OF_RECOVER, RECOVER_PERMISSION);
                 break;
             case InstallOption::UNINSTALL:
-                BusinessErrorAni::ThrowParameterTypeError(env, result.resultCode,
+                BusinessErrorAni::ThrowCommonError(env, result.resultCode,
                     RESOURCE_NAME_OF_UNINSTALL, UNINSTALL_PERMISSION);
                 break;
             case InstallOption::UPDATE_BUNDLE_FOR_SELF:
-                BusinessErrorAni::ThrowParameterTypeError(env, result.resultCode,
+                BusinessErrorAni::ThrowCommonError(env, result.resultCode,
                     RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF, INSTALL_SELF_PERMISSION);
                 break;
             case InstallOption::UNINSTALL_AND_RECOVER:
-                BusinessErrorAni::ThrowParameterTypeError(env, result.resultCode,
+                BusinessErrorAni::ThrowCommonError(env, result.resultCode,
                     RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER, UNINSTALL_PERMISSION);
                 break;
             default:
@@ -214,7 +214,7 @@ static void AniInstall(ani_env* env, [[maybe_unused]] ani_object installerObj,
     std::vector<std::string> hapFiles;
     if (!CommonFunAni::ParseStrArray(env, arrayObj, hapFiles)) {
         APP_LOGE("hapFiles parse invalid");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
         return;
     }
     InstallParam installParam;
@@ -239,7 +239,7 @@ static bool ParseBundleNameAndInstallParam(ani_env* env, ani_string& aniBundleNa
     bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("Bundle name is empty.");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
         return false;
     }
     return ParseInstallParamWithLog(env, aniInstParam, installParam);
@@ -298,7 +298,7 @@ static void AniUninstallByUninstallParam(ani_env* env, [[maybe_unused]] ani_obje
     UninstallParam uninstallParam;
     if (!CommonFunAni::ParseUninstallParam(env, aniUnInstParam, uninstallParam)) {
         APP_LOGE("InstallParam parse invalid");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
         return;
     }
     InstallResult result;
@@ -337,7 +337,7 @@ static ani_double AniCreateAppClone(ani_env* env, [[maybe_unused]] ani_object in
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("Bundle name is empty.");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
         return (ani_double)Constants::INITIAL_APP_INDEX;
     }
     int32_t userId;
@@ -348,7 +348,7 @@ static ani_double AniCreateAppClone(ani_env* env, [[maybe_unused]] ani_object in
     }
     ErrCode res = CommonFunc::ConvertErrCode(InstallerHelper::InnerCreateAppClone(bundleName, userId, appIdx));
     if (res != SUCCESS) {
-        BusinessErrorAni::ThrowParameterTypeError(env, res, CREATE_APP_CLONE,
+        BusinessErrorAni::ThrowCommonError(env, res, CREATE_APP_CLONE,
             Constants::PERMISSION_INSTALL_CLONE_BUNDLE);
     }
     return (ani_double)appIdx;
@@ -361,19 +361,19 @@ static void AniDestroyAppClone(ani_env* env, [[maybe_unused]] ani_object install
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("Bundle name is empty.");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
         return;
     }
     int32_t appIdx = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIdx)) {
         APP_LOGE("Cast appIdx failed");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
         return;
     }
     DestroyAppCloneParam destroyCloneParam;
     if (!CommonFunAni::ParseDestroyAppCloneParam(env, aniDestroyAppCloneParam, destroyCloneParam)) {
         APP_LOGE("DestroyAppCloneParam parse invalid");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
         return;
     }
     if (destroyCloneParam.userId == Constants::UNSPECIFIED_USERID) {
@@ -382,7 +382,7 @@ static void AniDestroyAppClone(ani_env* env, [[maybe_unused]] ani_object install
     ErrCode result = CommonFunc::ConvertErrCode(InstallerHelper::InnerDestroyAppClone(bundleName,
         destroyCloneParam.userId, appIdx, destroyCloneParam));
     if (result != SUCCESS) {
-        BusinessErrorAni::ThrowParameterTypeError(env, result,
+        BusinessErrorAni::ThrowCommonError(env, result,
             DESTROY_APP_CLONE, Constants::PERMISSION_UNINSTALL_CLONE_BUNDLE);
     }
 }
@@ -403,7 +403,7 @@ static ani_object AniGetBundleInstallerSync(ani_env* env)
     }
     if (!g_isSystemApp && !iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
         APP_LOGE("non-system app calling system api");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_NOT_SYSTEM_APP,
+        BusinessErrorAni::ThrowCommonError(env, ERROR_NOT_SYSTEM_APP,
             RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC, INSTALL_PERMISSION);
         return nullptr;
     }

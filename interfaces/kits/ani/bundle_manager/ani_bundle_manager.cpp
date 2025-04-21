@@ -173,7 +173,7 @@ static ani_object GetBundleInfoForSelfSync(ani_env* env, ani_double aniBundleFla
     int32_t bundleFlags = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniBundleFlags, &bundleFlags)) {
         APP_LOGE("Cast aniBundleFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
@@ -199,7 +199,7 @@ static ani_object GetBundleInfoForSelfSync(ani_env* env, ani_double aniBundleFla
     ErrCode ret = iBundleMgr->GetBundleInfoForSelf(bundleFlags, bundleInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleInfoForSelf failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret), GET_BUNDLE_INFO_FOR_SELF_SYNC, BUNDLE_PERMISSIONS);
         return nullptr;
     }
@@ -218,14 +218,14 @@ static ani_object GetBundleInfoSync(ani_env* env,
     int32_t bundleFlags = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniBundleFlags, &bundleFlags)) {
         APP_LOGE("Cast aniBundleFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
     int32_t userId = EMPTY_USER_ID;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast userId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
@@ -236,7 +236,7 @@ static ani_object GetBundleInfoSync(ani_env* env,
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("Bundle name is empty.");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
@@ -261,7 +261,7 @@ static ani_object GetBundleInfoSync(ani_env* env,
     ErrCode ret = iBundleMgr->GetBundleInfoV9(bundleName, bundleFlags, bundleInfo, userId);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleInfoV9 failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret), GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
         return nullptr;
     }
@@ -280,21 +280,21 @@ static ani_object GetApplicationInfoSync(ani_env* env,
     int32_t applicationFlags = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniApplicationFlags, &applicationFlags)) {
         APP_LOGE("Cast aniApplicationFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, APPLICATION_FLAGS, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
     int32_t userId = EMPTY_USER_ID;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
@@ -322,7 +322,7 @@ static ani_object GetApplicationInfoSync(ani_env* env,
     ErrCode ret = iBundleMgr->GetApplicationInfoV9(bundleName, applicationFlags, userId, appInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GetApplicationInfoV9 failed ret: %{public}d,userId: %{public}d", ret, userId);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret), GET_APPLICATION_INFO_SYNC, BUNDLE_PERMISSIONS);
         return nullptr;
     }
@@ -338,14 +338,14 @@ static ani_object GetAllBundleInfoSync(ani_env* env, ani_double aniBundleFlags, 
     int32_t bundleFlags = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniBundleFlags, &bundleFlags)) {
         APP_LOGE("Cast aniBundleFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
     int32_t userId = EMPTY_USER_ID;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
@@ -364,7 +364,7 @@ static ani_object GetAllBundleInfoSync(ani_env* env, ani_double aniBundleFlags, 
     ErrCode ret = iBundleMgr->GetBundleInfosV9(bundleFlags, bundleInfos, userId);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleInfosV9 failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(env, CommonFunc::ConvertErrCode(ret), GET_BUNDLE_INFOS,
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), GET_BUNDLE_INFOS,
             Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
         return nullptr;
     }
@@ -378,14 +378,14 @@ static ani_object GetAllApplicationInfoSync(ani_env* env, ani_double aniApplicat
     int32_t applicationFlags = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniApplicationFlags, &applicationFlags)) {
         APP_LOGE("Cast aniApplicationFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, APPLICATION_FLAGS, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
     int32_t userId = EMPTY_USER_ID;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
@@ -405,7 +405,7 @@ static ani_object GetAllApplicationInfoSync(ani_env* env, ani_double aniApplicat
     ErrCode ret = iBundleMgr->GetApplicationInfosV9(applicationFlags, userId, appInfos);
     if (ret != ERR_OK) {
         APP_LOGE("GetApplicationInfosV9 failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(env, CommonFunc::ConvertErrCode(ret), GET_APPLICATION_INFOS,
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), GET_APPLICATION_INFOS,
             Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
         return nullptr;
     }
@@ -421,14 +421,14 @@ static ani_boolean IsApplicationEnabledSyncInner(ani_env* env,
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return isEnable;
     }
     int32_t appIndex = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
         APP_LOGE("Cast aniAppIndex failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::APP_INDEX, CommonFunAniNS::TYPE_NUMBER);
         return false;
     }
@@ -446,7 +446,7 @@ static ani_boolean IsApplicationEnabledSyncInner(ani_env* env,
     }
     if (ret != ERR_OK) {
         APP_LOGE("IsCloneApplicationEnabled failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret), IS_APPLICATION_ENABLED, "");
     }
     return isEnable;
@@ -465,13 +465,13 @@ static ani_object QueryAbilityInfoSyncInner(ani_env* env,
     }
     if (!CommonFunAni::TryCastDoubleTo(aniAbilityFlags, &abilityFlags)) {
         APP_LOGE("Cast aniAbilityFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, ABILITY_FLAGS, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
@@ -499,7 +499,7 @@ static ani_object QueryAbilityInfoSyncInner(ani_env* env,
     ErrCode ret = iBundleMgr->QueryAbilityInfosV9(want, abilityFlags, userId, abilityInfos);
     if (ret != ERR_OK) {
         APP_LOGE("QueryAbilityInfosV9 failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret), QUERY_ABILITY_INFOS_SYNC, BUNDLE_PERMISSIONS);
         return nullptr;
     }
@@ -514,7 +514,7 @@ static ani_object GetAppCloneIdentitySync(ani_env* env, ani_double aniUid)
     int32_t uid = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniUid, &uid)) {
         APP_LOGE("Cast aniUid failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::UID, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
@@ -539,7 +539,7 @@ static ani_object GetAppCloneIdentitySync(ani_env* env, ani_double aniUid)
     ErrCode ret = iBundleMgr->GetNameAndIndexForUid(uid, bundleName, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE("GetNameAndIndexForUid failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret), GET_APP_CLONE_IDENTITY, APP_CLONE_IDENTITY_PERMISSIONS);
         return nullptr;
     }
@@ -562,21 +562,21 @@ static ani_string GetAbilityLabelSync(ani_env* env,
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
     std::string moduleName = CommonFunAni::AniStrToString(env, aniModuleName);
     if (moduleName.empty()) {
         APP_LOGE("ModuleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::MODULE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
     std::string abilityName = CommonFunAni::AniStrToString(env, aniAbilityName);
     if (abilityName.empty()) {
         APP_LOGE("AbilityName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::ABILITY_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
@@ -591,7 +591,7 @@ static ani_string GetAbilityLabelSync(ani_env* env,
     ErrCode ret = iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, abilityLabel);
     if (ret != ERR_OK) {
         APP_LOGE("GetAbilityLabel failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(env, CommonFunc::ConvertErrCode(ret),
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             GET_ABILITY_LABEL, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -603,7 +603,7 @@ static ani_string GetAbilityLabelSync(ani_env* env,
     return aniAbilityLabel;
 #else
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
-    BusinessErrorAni::ThrowParameterTypeError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ABILITY_LABEL, "");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ABILITY_LABEL, "");
     return nullptr;
 #endif
 }
@@ -613,14 +613,14 @@ static ani_object GetLaunchWantForBundleSyncInner(ani_env* env, ani_string aniBu
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
     int32_t userId = EMPTY_USER_ID;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
@@ -639,7 +639,7 @@ static ani_object GetLaunchWantForBundleSyncInner(ani_env* env, ani_string aniBu
     ErrCode ret = iBundleMgr->GetLaunchWantForBundle(bundleName, want, userId);
     if (ret != ERR_OK) {
         APP_LOGE("GetLaunchWantForBundle failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret),
             GET_LAUNCH_WANT_FOR_BUNDLE_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
             return nullptr;
@@ -653,28 +653,28 @@ static ani_object GetAppCloneBundleInfoInner(ani_env* env, ani_string aniBundleN
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("Bundle name is empty.");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
     int32_t appIndex = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
         APP_LOGE("Cast aniAppIndex failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::APP_INDEX, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
     int32_t bundleFlags = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniBundleFlags, &bundleFlags)) {
         APP_LOGE("Cast aniBundleFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
     int32_t userId = EMPTY_USER_ID;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast userId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
@@ -693,7 +693,7 @@ static ani_object GetAppCloneBundleInfoInner(ani_env* env, ani_string aniBundleN
     ErrCode ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, appIndex, bundleInfo, userId);
     if (ret != ERR_OK) {
         APP_LOGE("GetCloneBundleInfo failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret), GET_APP_CLONE_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO);
         return nullptr;
     }
@@ -706,14 +706,14 @@ static ani_string GetSpecifiedDistributionType(ani_env* env, ani_string aniBundl
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("Get bundle mgr failed");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
             RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -721,7 +721,7 @@ static ani_string GetSpecifiedDistributionType(ani_env* env, ani_string aniBundl
     ErrCode ret = iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType);
     if (ret != ERR_OK) {
         APP_LOGE("GetSpecifiedDistributionType failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(env, CommonFunc::ConvertErrCode(ret),
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -750,7 +750,7 @@ static ani_string GetBundleNameByUidSync(ani_env* env, ani_double aniUserId)
     int32_t userId = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast userId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
@@ -775,7 +775,7 @@ static ani_string GetBundleNameByUidSync(ani_env* env, ani_double aniUserId)
     int32_t appIndex = 0;
     ErrCode ret = InnerGetAppCloneIdentity(userId, bundleName, appIndex);
     if (ret != ERR_OK) {
-        BusinessErrorAni::ThrowParameterTypeError(env, ret, GET_BUNDLE_NAME_BY_UID, BUNDLE_PERMISSIONS);
+        BusinessErrorAni::ThrowCommonError(env, ret, GET_BUNDLE_NAME_BY_UID, BUNDLE_PERMISSIONS);
         return nullptr;
     }
     std::lock_guard<std::mutex> lock(g_aniOwnBundleNameMutex);
@@ -808,13 +808,13 @@ static ani_object QueryAbilityInfoWithWants(ani_env* env,
     }
     if (!CommonFunAni::TryCastDoubleTo(aniAbilityFlags, &abilityFlags)) {
         APP_LOGE("Cast aniAbilityFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, ABILITY_FLAGS, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
@@ -843,7 +843,7 @@ static ani_object QueryAbilityInfoWithWants(ani_env* env,
     ErrCode ret = BundleManagerHelper::InnerBatchQueryAbilityInfos(wants, abilityFlags, userId, abilityInfos);
     if (ret != ERR_OK) {
         APP_LOGE("BatchQueryAbilityInfos failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(env, ret, BATCH_QUERY_ABILITY_INFOS, BUNDLE_PERMISSIONS);
+        BusinessErrorAni::ThrowCommonError(env, ret, BATCH_QUERY_ABILITY_INFOS, BUNDLE_PERMISSIONS);
         return nullptr;
     }
     ani_object aniAbilityInfos =
@@ -857,7 +857,7 @@ static ani_string GetDynamicIconInner(ani_env* env, ani_string aniBundleName)
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return nullptr;
     }
@@ -865,7 +865,7 @@ static ani_string GetDynamicIconInner(ani_env* env, ani_string aniBundleName)
     ErrCode ret = BundleManagerHelper::InnerGetDynamicIcon(bundleName, moduleName);
     if (ret != ERR_OK) {
         APP_LOGE("GetDynamicIcon failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(env, ret,
+        BusinessErrorAni::ThrowCommonError(env, ret,
             GET_DYNAMIC_ICON, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -884,20 +884,20 @@ static ani_boolean IsAbilityEnabledSyncInner(ani_env* env,
     AbilityInfo abilityInfo;
     if (!CommonFunAni::ParseAbilityInfo(env, aniAbilityInfo, abilityInfo)) {
         APP_LOGE("ParseAbilityInfo failed");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_INFO, TYPE_OBJECT);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_INFO, TYPE_OBJECT);
         return isEnable;
     }
     int32_t appIndex = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
         APP_LOGE("Cast aniAppIndex failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::APP_INDEX, CommonFunAniNS::TYPE_NUMBER);
         return isEnable;
     }
     ErrCode ret = BundleManagerHelper::InnerIsAbilityEnabled(abilityInfo, isEnable, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE("IsAbilityEnabled failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(env, ret, IS_ABILITY_ENABLED_SYNC, "");
+        BusinessErrorAni::ThrowCommonError(env, ret, IS_ABILITY_ENABLED_SYNC, "");
     }
     return isEnable;
 }
@@ -909,20 +909,20 @@ static void SetAbilityEnabledSyncInner(ani_env* env,
     bool isEnable = CommonFunAni::AniBooleanToBool(aniIsEnable);
     if (!CommonFunAni::ParseAbilityInfo(env, aniAbilityInfo, abilityInfo)) {
         APP_LOGE("ParseAbilityInfo failed");
-        BusinessErrorAni::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_INFO, TYPE_OBJECT);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_INFO, TYPE_OBJECT);
         return;
     }
     int32_t appIndex = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
         APP_LOGE("Cast aniAppIndex failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::APP_INDEX, CommonFunAniNS::TYPE_NUMBER);
         return;
     }
     ErrCode ret = BundleManagerHelper::InnerSetAbilityEnabled(abilityInfo, isEnable, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE("SetAbilityEnabled failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(env, ret,
+        BusinessErrorAni::ThrowCommonError(env, ret,
             SET_ABILITY_ENABLED_SYNC, Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE);
     }
 }
@@ -934,21 +934,21 @@ static void SetApplicationEnabledSyncInner(ani_env* env,
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
         APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
         return;
     }
     int32_t appIndex = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
         APP_LOGE("Cast aniAppIndex failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::APP_INDEX, CommonFunAniNS::TYPE_NUMBER);
         return;
     }
     ErrCode ret = BundleManagerHelper::InnerSetApplicationEnabled(bundleName, isEnable, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE("SetApplicationEnabled failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(env, ret,
+        BusinessErrorAni::ThrowCommonError(env, ret,
             SET_APPLICATION_ENABLED_SYNC, Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE);
     }
 }
@@ -973,27 +973,27 @@ static ani_object QueryExtensionAbilityInfoInner(ani_env* env, ani_object aniWan
         extensionTypeName = CommonFunAni::AniStrToString(env, aniExtensionAbilityTypeName);
         if (extensionTypeName.empty()) {
             APP_LOGE("extensionTypeName is empty");
-            BusinessErrorAni::ThrowParameterTypeError(
+            BusinessErrorAni::ThrowCommonError(
                 env, ERROR_PARAM_CHECK_ERROR, EXTENSION_TYPE_NAME, CommonFunAniNS::TYPE_STRING);
             return nullptr;
         }
     } else {
         if (!EnumUtils::EnumETSToNative(env, aniExtensionAbilityType, extensionAbilityType)) {
             APP_LOGE("Parse extensionAbilityType failed");
-            BusinessErrorAni::ThrowParameterTypeError(
+            BusinessErrorAni::ThrowCommonError(
                 env, ERROR_PARAM_CHECK_ERROR, EXTENSION_ABILITY_TYPE, CommonFunAniNS::TYPE_NUMBER);
             return nullptr;
         }
     }
     if (!CommonFunAni::TryCastDoubleTo(aniExtensionAbilityFlags, &flags)) {
         APP_LOGE("Cast aniExtensionAbilityFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, FLAGS, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
@@ -1038,7 +1038,7 @@ static ani_object QueryExtensionAbilityInfoInner(ani_env* env, ani_object aniWan
 
     if (ret != ERR_OK) {
         APP_LOGE("QueryExtensionAbilityInfo failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret), QUERY_EXTENSION_INFOS_SYNC, BUNDLE_PERMISSIONS);
             return nullptr;
     }
@@ -1057,19 +1057,19 @@ static ani_object QueryExAbilityInfoSyncWithoutWant(ani_env* env, ani_string ani
     std::string extensionTypeName = CommonFunAni::AniStrToString(env, aniExtensionAbilityTypeName);
     if (extensionTypeName.empty()) {
         APP_LOGE("extensionTypeName is empty");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR, "");
         return nullptr;
     }
     if (!CommonFunAni::TryCastDoubleTo(aniExtensionAbilityFlags, &flags)) {
         APP_LOGE("Cast aniExtensionAbilityFlags failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, FLAGS, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
         return nullptr;
     }
@@ -1089,7 +1089,7 @@ static ani_object QueryExAbilityInfoSyncWithoutWant(ani_env* env, ani_string ani
         (flags < 0 ? 0 : static_cast<uint32_t>(flags)), userId, extensionInfos);
     if (ret != ERR_OK) {
         APP_LOGE("QueryExAbilityInfoSync without want failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret), QUERY_EXTENSION_INFOS_SYNC, BUNDLE_PERMISSIONS);
             return nullptr;
     }

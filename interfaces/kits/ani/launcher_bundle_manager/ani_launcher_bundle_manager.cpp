@@ -83,7 +83,7 @@ static void StartShortcutSync([[maybe_unused]] ani_env *env, ani_object aniShort
     result = iter == START_SHORTCUT_RES_MAP.end() ? ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED : iter->second;
     if (result != ERR_OK) {
         APP_LOGE("StartShortcut failed, result: %{public}d", result);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(result), START_SHORTCUT, Constants::PERMISSION_START_SHORTCUT);
     }
 }
@@ -99,7 +99,7 @@ static ani_object GetShortcutInfoSync([[maybe_unused]] ani_env *env, ani_string 
     int32_t userId = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("try cast userId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
@@ -109,7 +109,7 @@ static ani_object GetShortcutInfoSync([[maybe_unused]] ani_env *env, ani_string 
     auto launcherService = JSLauncherService::GetLauncherService();
     if (launcherService == nullptr) {
         APP_LOGE("launcherService is nullptr");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_SHORTCUT_INFO_SYNC, PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -118,7 +118,7 @@ static ani_object GetShortcutInfoSync([[maybe_unused]] ani_env *env, ani_string 
     ErrCode ret = CommonFunc::ConvertErrCode(result);
     if (ret != ERR_OK) {
         APP_LOGE("GetShortcutInfoV9 failed, ret %{public}d", ret);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ret, GET_SHORTCUT_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -142,7 +142,7 @@ static ani_ref GetLauncherAbilityInfoSync(ani_env *env, ani_string aniBundleName
     int32_t userId = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("try cast userId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
@@ -150,7 +150,7 @@ static ani_ref GetLauncherAbilityInfoSync(ani_env *env, ani_string aniBundleName
     auto launcherService = JSLauncherService::GetLauncherService();
     if (launcherService == nullptr) {
         APP_LOGE("launcherService is nullptr");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_BUNDLE_SERVICE_EXCEPTION,
             GET_LAUNCHER_ABILITY_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
@@ -162,7 +162,7 @@ static ani_ref GetLauncherAbilityInfoSync(ani_env *env, ani_string aniBundleName
     if (ret != ERR_OK) {
         APP_LOGE("GetLauncherAbilityByBundleName failed ret:%{public}d,bundleName:%{public}s,userId:%{public}d",
             ret, bundleName.c_str(), userId);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ret, GET_LAUNCHER_ABILITY_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -181,7 +181,7 @@ static ani_ref GetAllLauncherAbilityInfo(ani_env *env, ani_double aniUserId)
     int32_t userId = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("try cast userId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
@@ -189,7 +189,7 @@ static ani_ref GetAllLauncherAbilityInfo(ani_env *env, ani_double aniUserId)
     auto launcherService = JSLauncherService::GetLauncherService();
     if (launcherService == nullptr) {
         APP_LOGE("launcherService is nullptr");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ERROR_BUNDLE_SERVICE_EXCEPTION),
             GET_ALL_LAUNCHER_ABILITY_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
@@ -199,7 +199,7 @@ static ani_ref GetAllLauncherAbilityInfo(ani_env *env, ani_double aniUserId)
     ErrCode ret = launcherService->GetAllLauncherAbility(userId, launcherAbilityInfos);
     if (ret != ERR_OK) {
         APP_LOGE("GetAllLauncherAbility failed ret:%{public}d,userId:%{public}d", ret, userId);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret),
             GET_ALL_LAUNCHER_ABILITY_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;

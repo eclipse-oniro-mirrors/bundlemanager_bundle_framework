@@ -30,7 +30,7 @@ public:
         ani_env *env, int32_t err, const std::string &functionName = "", const std::string &permissionName = "");
     static ani_object CreateEnumError(ani_env *env, const std::string &parameter, const std::string &enumClass);
     static void ThrowTooFewParametersError(ani_env *env, int32_t err);
-    static void ThrowParameterTypeError(ani_env *env, int32_t err,
+    static void ThrowCommonError(ani_env *env, int32_t err,
         const std::string &parameter, const std::string &type);
     static void ThrowEnumError(ani_env *env, const std::string &parameter, const std::string &type);
     static void ThrowError(ani_env *env, int32_t err, const std::string &msg = "");

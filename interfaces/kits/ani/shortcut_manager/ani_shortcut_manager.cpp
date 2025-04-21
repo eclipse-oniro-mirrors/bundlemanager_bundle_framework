@@ -36,7 +36,7 @@ static void AddDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_object inf
     int32_t userIdInt = 0;
     if (!CommonFunAni::TryCastDoubleTo(userId, &userIdInt)) {
         APP_LOGE("Cast userId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_INT);
         return;
     }
@@ -58,7 +58,7 @@ static void AddDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_object inf
     ErrCode ret = iBundleMgr->AddDesktopShortcutInfo(shortcutInfo, userIdInt);
     if (ret != ERR_OK) {
         APP_LOGE("AddDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, userIdInt);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret), ADD_DESKTOP_SHORTCUT_INFO, Constants::PERMISSION_MANAGER_SHORTCUT);
     }
 }
@@ -68,7 +68,7 @@ static void DeleteDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_object 
     int32_t userIdInt = 0;
     if (!CommonFunAni::TryCastDoubleTo(userId, &userIdInt)) {
         APP_LOGE("Cast userId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_INT);
         return;
     }
@@ -90,7 +90,7 @@ static void DeleteDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_object 
     ErrCode ret = iBundleMgr->DeleteDesktopShortcutInfo(shortcutInfo, userIdInt);
     if (ret != ERR_OK) {
         APP_LOGE("DeleteDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, userIdInt);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret),
             DELETE_DESKTOP_SHORTCUT_INFO, Constants::PERMISSION_MANAGER_SHORTCUT);
     }
@@ -101,7 +101,7 @@ static ani_ref GetAllDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_doub
     int32_t userIdInt = 0;
     if (!CommonFunAni::TryCastDoubleTo(userId, &userIdInt)) {
         APP_LOGE("Cast userId failed");
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_INT);
         return nullptr;
     }
@@ -116,7 +116,7 @@ static ani_ref GetAllDesktopShortcutInfo([[maybe_unused]] ani_env* env, ani_doub
     ErrCode ret = iBundleMgr->GetAllDesktopShortcutInfo(userIdInt, shortcutInfos);
     if (ret != ERR_OK) {
         APP_LOGE("GetAllDesktopShortcutInfo failed ret:%{public}d,userId:%{public}d", ret, userIdInt);
-        BusinessErrorAni::ThrowParameterTypeError(
+        BusinessErrorAni::ThrowCommonError(
             env, CommonFunc::ConvertErrCode(ret),
             GET_ALL_DESKTOP_SHORTCUT_INFO, Constants::PERMISSION_MANAGER_SHORTCUT);
         return nullptr;

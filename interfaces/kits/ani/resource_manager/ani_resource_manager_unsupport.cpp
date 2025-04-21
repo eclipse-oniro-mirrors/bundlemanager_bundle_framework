@@ -26,7 +26,7 @@ static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_strin
     ani_double resFlag, ani_double appIdx)
 {
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
-    BusinessErrorAni::ThrowParameterTypeError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_BUNDLE_RESOURCE_INFO, "");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_BUNDLE_RESOURCE_INFO, "");
     return nullptr;
 }
 
