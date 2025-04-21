@@ -36,10 +36,10 @@ constexpr int32_t USER_ID = 100;
 constexpr uint8_t WAIT_TIME_SECONDS = 5;
 }  // namespace
 
-class BmsAOTHandlerTest : public testing::Test {
+class BmsAOTHandlerTest2 : public testing::Test {
 public:
-    BmsAOTHandlerTest();
-    ~BmsAOTHandlerTest();
+    BmsAOTHandlerTest2();
+    ~BmsAOTHandlerTest2();
     static void SetUpTestCase();
     static void TearDownTestCase();
     void SetUp();
@@ -51,19 +51,19 @@ private:
     static std::shared_ptr<InstalldService> installdService_;
 };
 
-std::shared_ptr<BundleMgrService> BmsAOTHandlerTest::bundleMgrService_ =
+std::shared_ptr<BundleMgrService> BmsAOTHandlerTest2::bundleMgrService_ =
     DelayedSingleton<BundleMgrService>::GetInstance();
 
-std::shared_ptr<InstalldService> BmsAOTHandlerTest::installdService_ =
+std::shared_ptr<InstalldService> BmsAOTHandlerTest2::installdService_ =
     std::make_shared<InstalldService>();
 
-BmsAOTHandlerTest::BmsAOTHandlerTest()
+BmsAOTHandlerTest2::BmsAOTHandlerTest2()
 {}
 
-BmsAOTHandlerTest::~BmsAOTHandlerTest()
+BmsAOTHandlerTest2::~BmsAOTHandlerTest2()
 {}
 
-void BmsAOTHandlerTest::SetUpTestCase()
+void BmsAOTHandlerTest2::SetUpTestCase()
 {
     bundleMgrService_->OnStart();
     bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
@@ -71,23 +71,23 @@ void BmsAOTHandlerTest::SetUpTestCase()
     installdService_->Start();
 }
 
-void BmsAOTHandlerTest::TearDownTestCase()
+void BmsAOTHandlerTest2::TearDownTestCase()
 {
     AOTHandler::GetInstance().serialQueue_ = nullptr;
     bundleMgrService_->OnStop();
 }
 
-void BmsAOTHandlerTest::SetUp()
+void BmsAOTHandlerTest2::SetUp()
 {
     InstallBundle(BUNDLE_PATH);
 }
 
-void BmsAOTHandlerTest::TearDown()
+void BmsAOTHandlerTest2::TearDown()
 {
     UninstallBundle(BUNDLE_NAME);
 }
 
-void BmsAOTHandlerTest::InstallBundle(const std::string &bundlePath) const
+void BmsAOTHandlerTest2::InstallBundle(const std::string &bundlePath) const
 {
     auto installer = bundleMgrService_->GetBundleInstaller();
     ASSERT_NE(installer, nullptr);
@@ -102,7 +102,7 @@ void BmsAOTHandlerTest::InstallBundle(const std::string &bundlePath) const
     (void)receiver->GetResultCode();
 }
 
-void BmsAOTHandlerTest::UninstallBundle(const std::string &bundleName) const
+void BmsAOTHandlerTest2::UninstallBundle(const std::string &bundleName) const
 {
     auto installer = bundleMgrService_->GetBundleInstaller();
     ASSERT_NE(installer, nullptr);
@@ -123,7 +123,7 @@ void BmsAOTHandlerTest::UninstallBundle(const std::string &bundleName) const
  *           2.param is userId and bundleName, expect return bundlePath
  *           3.param is userId, bundleName and moduleName, expect return modulePath
  */
-HWTEST_F(BmsAOTHandlerTest, BuildArkProfilePath_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTHandlerTest2, BuildArkProfilePath_0100, Function | SmallTest | Level1)
 {
     std::string bundleName = "bundleName";
     std::string moduleName = "moduleName";
@@ -146,7 +146,7 @@ HWTEST_F(BmsAOTHandlerTest, BuildArkProfilePath_0100, Function | SmallTest | Lev
  * @tc.name: test HandleArkPathsChange
  * @tc.desc: 1.call HandleArkPathsChange, call CheckOtaFlag, expect isHandled is true
  */
-HWTEST_F(BmsAOTHandlerTest, HandleArkPathsChange_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsAOTHandlerTest2, HandleArkPathsChange_0100, Function | SmallTest | Level1)
 {
     AOTHandler::GetInstance().HandleArkPathsChange();
     bool isHandled = false;
