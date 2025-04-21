@@ -373,7 +373,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .bundleName = bundleName,
             .appId = uninstallBundleAppId_,
             .developerId = developerId,
-            .assetAccessGroups = assetAccessGroups
+            .assetAccessGroups = assetAccessGroups,
+            .keepData = installParam.isKeepData
         };
 
         if (installParam.concentrateSendEvent) {
@@ -574,7 +575,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .modulePackage = modulePackage,
             .appId = uninstallBundleAppId_,
             .developerId = developerId,
-            .assetAccessGroups = assetAccessGroups
+            .assetAccessGroups = assetAccessGroups,
+            .keepData = installParam.isKeepData
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
