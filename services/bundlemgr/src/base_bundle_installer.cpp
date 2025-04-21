@@ -173,6 +173,10 @@ void BaseBundleInstaller::SendStartInstallNotify(const InstallParam &installPara
         LOG_NOFUNC_W(BMS_TAG_INSTALLER, "SendStartInstallNotify bundleName is empty");
         return;
     }
+    bool isAppExist;
+    if (InitDataMgr()) {
+        isAppExist = dataMgr_->HasUserInstallInBundle(bundleName_, userId_);
+    }
     for (const auto &item : infos) {
         LOG_D(BMS_TAG_INSTALLER, "SendStartInstallNotify %{public}s  %{public}s %{public}s %{public}s",
             bundleName_.c_str(), item.second.GetCurModuleName().c_str(),
@@ -182,7 +186,8 @@ void BaseBundleInstaller::SendStartInstallNotify(const InstallParam &installPara
             .bundleName = bundleName_,
             .modulePackage = item.second.GetCurModuleName(),
             .appId = item.second.GetAppId(),
-            .appIdentifier = item.second.GetAppIdentifier()
+            .appIdentifier = item.second.GetAppIdentifier(),
+            .isAppUpdate = isAppExist
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for start install");
