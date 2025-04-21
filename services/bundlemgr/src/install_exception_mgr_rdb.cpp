@@ -25,6 +25,7 @@ namespace AppExecFwk {
 namespace {
 const char* const INSTALL_EXCEPTION_MGR_TABLE_NAME = "install_exception_mgr";
 const char* const INSTALL_RENAME_EXCEPTION_STATUS = "installRenameExceptionStatus";
+const char* const VERSION_CODE = "versionCode";
 }
 
 bool InstallExceptionInfo::FromString(const std::string &installExceptionInfoStr)
@@ -38,6 +39,8 @@ bool InstallExceptionInfo::FromString(const std::string &installExceptionInfoStr
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<InstallRenameExceptionStatus>(jsonObject, jsonObjectEnd, INSTALL_RENAME_EXCEPTION_STATUS,
         status, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, VERSION_CODE,
+        versionCode, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InstallExceptionInfo from json error, error code : %{public}d", parseResult);
         return false;
@@ -48,7 +51,8 @@ bool InstallExceptionInfo::FromString(const std::string &installExceptionInfoStr
 std::string InstallExceptionInfo::ToString() const
 {
     nlohmann::json jsonObject = nlohmann::json {
-        {INSTALL_RENAME_EXCEPTION_STATUS, status}
+        {INSTALL_RENAME_EXCEPTION_STATUS, status},
+        {VERSION_CODE, versionCode},
     };
     return jsonObject.dump();
 }

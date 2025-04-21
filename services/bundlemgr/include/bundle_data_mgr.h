@@ -930,6 +930,7 @@ public:
     ErrCode GetSharedBundleInfo(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo);
     ErrCode GetSpecifiedDistributionType(const std::string &bundleName, std::string &specifiedDistributionType);
     ErrCode GetAdditionalInfo(const std::string &bundleName, std::string &additionalInfo);
+    ErrCode GetAdditionalInfoForAllUser(const std::string &bundleName, std::string &additionalInfo);
 
     ErrCode GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName, int32_t userId,
         std::vector<ProxyData> &proxyDatas) const;
@@ -945,6 +946,7 @@ public:
     ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         int32_t triggerMode);
     std::vector<std::string> GetAllBundleName() const;
+    std::vector<std::string> GetAllSystemHspCodePaths() const;
     /**
      * @brief Get lite bundleInfo of all bundles under the specified user
      * @param userId Indicates the user ID

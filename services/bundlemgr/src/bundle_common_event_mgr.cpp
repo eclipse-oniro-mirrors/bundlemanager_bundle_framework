@@ -43,6 +43,7 @@ constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* TYPE = "type";
 constexpr const char* RESULT_CODE = "resultCode";
 constexpr const char* IS_APP_UPDATE = "isAppUpdate";
+constexpr const char* KEEP_DATA = "keepData";
 constexpr const char* PERMISSION_GET_DISPOSED_STATUS = "ohos.permission.GET_DISPOSED_APP_STATUS";
 constexpr const char* ASSET_ACCESS_GROUPS = "assetAccessGroups";
 constexpr const char* DEVELOPERID = "developerId";
@@ -159,6 +160,7 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(TYPE, static_cast<int32_t>(installResult.type));
     want.SetParam(RESULT_CODE, installResult.resultCode);
     want.SetParam(IS_APP_UPDATE, installResult.isAppUpdate);
+    want.SetParam(KEEP_DATA, installResult.keepData);
     if (want.GetAction() == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED
         && !installResult.assetAccessGroups.empty()) {
         want.SetParam(ASSET_ACCESS_GROUPS, installResult.assetAccessGroups);

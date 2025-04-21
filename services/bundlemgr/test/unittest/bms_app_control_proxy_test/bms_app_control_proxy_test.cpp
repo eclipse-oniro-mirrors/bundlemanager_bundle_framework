@@ -26,6 +26,33 @@ using namespace testing::ext;
 using OHOS::AAFwk::Want;
 
 namespace OHOS {
+
+class MockRemoteObject : public IRemoteObject {
+public:
+    explicit MockRemoteObject(const std::u16string& descriptor = u"MockDescriptor")
+        : IRemoteObject(descriptor) {}
+    int32_t GetObjectRefCount()
+    {
+        return ERR_OK;
+    }
+    int32_t SendRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
+    {
+        return ERR_OK;
+    }
+    bool AddDeathRecipient(const sptr<DeathRecipient>& recipient)
+    {
+        return ERR_OK;
+    }
+    bool RemoveDeathRecipient(const sptr<DeathRecipient>& recipient)
+    {
+        return ERR_OK;
+    }
+    int Dump(int fd, const std::vector<std::u16string>& args)
+    {
+        return ERR_OK;
+    }
+};
+
 namespace AppExecFwk {
 
 class BmsAppControlProxyTest : public testing::Test {
@@ -593,6 +620,126 @@ HWTEST_F(BmsAppControlProxyTest, DeleteUninstallDisposedRule_0100, Function | Me
     int32_t userId = 1234;
     auto res = appControlProxy.DeleteUninstallDisposedRule(appId, appIndex, userId);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: SetDisposedStatus_0200
+ * @tc.name: test the SetDisposedStatus
+ * @tc.desc: 1. system running normally
+ *           2. test SetDisposedStatus
+ */
+HWTEST_F(BmsAppControlProxyTest, SetDisposedStatus_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string appId = "appId";
+    Want want;
+    int32_t userId = 100;
+    auto res = appControlProxy.SetDisposedStatus(appId, want, userId);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteDisposedStatus_0200
+ * @tc.name: test the DeleteDisposedStatus
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteDisposedStatus
+ */
+HWTEST_F(BmsAppControlProxyTest, DeleteDisposedStatus_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string appId = "appId";
+    Want want;
+    int32_t userId = 100;
+    auto res = appControlProxy.DeleteDisposedStatus(appId, userId);
+    EXPECT_EQ(res, ERR_OK);
+}
+/**
+ * @tc.number: SetDisposedRule_0200
+ * @tc.name: test the SetDisposedRule
+ * @tc.desc: 1. system running normally
+ *           2. test SetDisposedRule
+ */
+HWTEST_F(BmsAppControlProxyTest, SetDisposedRule_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string appId = "appId";
+    DisposedRule disposedRule;
+    int32_t userId = 100;
+    auto res = appControlProxy.SetDisposedRule(appId, disposedRule, userId);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: SetDisposedRuleForCloneApp_0200
+ * @tc.name: test the SetDisposedRuleForCloneApp
+ * @tc.desc: 1. system running normally
+ *           2. test SetDisposedRuleForCloneApp
+ */
+HWTEST_F(BmsAppControlProxyTest, SetDisposedRuleForCloneApp_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string appId = "appId";
+    DisposedRule disposedRule;
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    auto result = appControlProxy.SetDisposedRuleForCloneApp(appId, disposedRule, appIndex, userId);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteDisposedRuleForCloneApp_0200
+ * @tc.name: test the DeleteDisposedRuleForCloneApp
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteDisposedRuleForCloneApp
+ */
+HWTEST_F(BmsAppControlProxyTest, DeleteDisposedRuleForCloneApp_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string appId = "appId";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    auto result = appControlProxy.DeleteDisposedRuleForCloneApp(appId, appIndex, userId);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: SetUninstallDisposedRule_0200
+ * @tc.name: test the SetUninstallDisposedRule
+ * @tc.desc: 1. system running normally
+ *           2. test SetUninstallDisposedRule
+ */
+HWTEST_F(BmsAppControlProxyTest, SetUninstallDisposedRule_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string appId = "appId";
+    UninstallDisposedRule rule;
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    auto result = appControlProxy.SetUninstallDisposedRule(appId, rule, appIndex, userId);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteUninstallDisposedRule_0200
+ * @tc.name: test the DeleteUninstallDisposedRule
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteUninstallDisposedRule
+ */
+HWTEST_F(BmsAppControlProxyTest, DeleteUninstallDisposedRule_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::string appId = "appId";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    auto result = appControlProxy.DeleteUninstallDisposedRule(appId, appIndex, userId);
+    EXPECT_EQ(result, ERR_OK);
 }
 } // AppExecFwk
 } // OHOS

@@ -3180,4 +3180,701 @@ HWTEST_F(BmsDataMgrTest, CreateAppInstallDir_0001, Function | MediumTest | Level
     std::string appClonePath = path + ServiceConstants::GALLERY_CLONE_PATH;
     EXPECT_EQ(BundleUtil::IsExistDir(appClonePath), true);
 }
+
+/**
+ * @tc.number: GetFirstInstallBundleInfo_0001
+ * @tc.name: GetFirstInstallBundleInfo
+ * @tc.desc: test GetFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
+    FirstInstallBundleInfo &firstInstallBundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, GetFirstInstallBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    int32_t userId = 100;
+    FirstInstallBundleInfo firstInstallBundleInfo;
+    auto ret = bundleDataMgr.GetFirstInstallBundleInfo(bundleName, userId, firstInstallBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: DeleteFirstInstallBundleInfo_0001
+ * @tc.name: DeleteFirstInstallBundleInfo
+ * @tc.desc: test DeleteFirstInstallBundleInfo(int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteFirstInstallBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = 100;
+    auto ret = bundleDataMgr.DeleteFirstInstallBundleInfo(userId);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: RemoveHspModuleByVersionCode_0001
+ * @tc.name: RemoveHspModuleByVersionCode
+ * @tc.desc: test RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundleInfo &info)
+ */
+HWTEST_F(BmsDataMgrTest, RemoveHspModuleByVersionCode_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t versionCode = 100;
+    InnerBundleInfo info;
+    auto ret = bundleDataMgr.RemoveHspModuleByVersionCode(versionCode, info);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetCloneAppIndexes_0001
+ * @tc.name: GetCloneAppIndexes
+ * @tc.desc: test GetCloneAppIndexes(const std::string &bundleName, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, GetCloneAppIndexes_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<int32_t> cloneAppIndexes;
+    std::string bundleName = "";
+    int32_t userId = Constants::ANY_USERID;
+    auto ret = bundleDataMgr.GetCloneAppIndexes(bundleName, userId);
+    EXPECT_EQ(ret, cloneAppIndexes);
+}
+
+/**
+ * @tc.number: QueryLauncherAbilityInfos_0001
+ * @tc.name: QueryLauncherAbilityInfos
+ * @tc.desc: test QueryLauncherAbilityInfos(
+    const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
+ */
+HWTEST_F(BmsDataMgrTest, QueryLauncherAbilityInfos_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    int32_t userId = 100;
+    std::vector<AbilityInfo> abilityInfos;
+    auto ret = bundleDataMgr.QueryLauncherAbilityInfos(want, userId, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.QueryLauncherAbilityInfos(want, userId, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityInfoSync_0001
+ * @tc.name: GetLauncherAbilityInfoSync
+ * @tc.desc: test GetLauncherAbilityInfoSync(const Want &want, const int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos)
+ */
+HWTEST_F(BmsDataMgrTest, GetLauncherAbilityInfoSync_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    int32_t userId = 100;
+    std::vector<AbilityInfo> abilityInfos;
+    auto ret = bundleDataMgr.GetLauncherAbilityInfoSync(want, userId, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.GetLauncherAbilityInfoSync(want, userId, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: UpdateRouterInfo_0001
+ * @tc.name: UpdateRouterInfo
+ * @tc.desc: test UpdateRouterInfo(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, UpdateRouterInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    bundleDataMgr.UpdateRouterInfo(bundleName);
+    EXPECT_EQ(bundleDataMgr.bundleInfos_.find(bundleName),  bundleDataMgr.bundleInfos_.end());
+}
+
+/**
+ * @tc.number: GetInnerBundleInfoWithSandboxByUid_0001
+ * @tc.name: GetInnerBundleInfoWithSandboxByUid
+ * @tc.desc: test GetInnerBundleInfoWithSandboxByUid(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithSandboxByUid_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int uid = 0;
+    InnerBundleInfo innerBundleInfo;
+    std::string bundleName = "bundleName";
+    ErrCode ret = bundleDataMgr.GetInnerBundleInfoWithSandboxByUid(uid, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: IsDisableState_0001
+ * @tc.name: IsDisableState
+ * @tc.desc: test IsDisableState(const InstallState state)
+ */
+HWTEST_F(BmsDataMgrTest, IsDisableState_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bool ret = bundleDataMgr.IsDisableState(InstallState::UPDATING_START);
+    EXPECT_EQ(ret, true);
+
+    ret = bundleDataMgr.IsDisableState(InstallState::UNINSTALL_START);
+    EXPECT_EQ(ret, true);
+
+    ret = bundleDataMgr.IsDisableState(InstallState::INSTALL_SUCCESS);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: UnregisterBundleEventCallback_0001
+ * @tc.name: UnregisterBundleEventCallback
+ * @tc.desc: test UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
+ */
+HWTEST_F(BmsDataMgrTest, UnregisterBundleEventCallback_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    sptr<IBundleEventCallback> bundleEventCallback = nullptr;
+    bool ret = bundleDataMgr.UnregisterBundleEventCallback(bundleEventCallback);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: RemoveAppInstallDir_0001
+ * @tc.name: RemoveAppInstallDir
+ * @tc.desc: test RemoveAppInstallDir(int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, RemoveAppInstallDir_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = 0;
+    std::string path = std::string(ServiceConstants::HAP_COPY_PATH) +
+    ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId);
+    bundleDataMgr.RemoveAppInstallDir(userId);
+    EXPECT_NE(InstalldClient::GetInstance()->RemoveDir(path), ERR_OK);
+}
+
+/**
+ * @tc.number: GetAppPrivilegeLevel_0001
+ * @tc.name: GetAppPrivilegeLevel
+ * @tc.desc: test GetAppPrivilegeLevel(const std::string &bundleName, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, GetAppPrivilegeLevel_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    int32_t userId = 0;
+    std::string result = bundleDataMgr.GetAppPrivilegeLevel(bundleName, userId);
+    EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.number: ImplicitQueryExtensionInfos_0001
+ * @tc.name: ImplicitQueryExtensionInfos
+ * @tc.desc: test ImplicitQueryExtensionInfos(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryExtensionInfos_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    int32_t flags = 0;
+    int32_t userId = Constants::INVALID_USERID;
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t appIndex = 0;
+    bool result = bundleDataMgr.ImplicitQueryExtensionInfos(want, flags, userId, infos, appIndex);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_0002
+ * @tc.name: QueryExtensionAbilityInfos
+ * @tc.desc: test QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
+    std::vector<ExtensionAbilityInfo> &extensionInfos)
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfos_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = Constants::INVALID_USERID;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfos(ExtensionAbilityType::FORM, userId, extensionInfos);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_0003
+ * @tc.name: QueryExtensionAbilityInfos
+ * @tc.desc: test QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
+    std::vector<ExtensionAbilityInfo> &extensionInfos)
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfos_0003, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = Constants::ANY_USERID;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfos(ExtensionAbilityType::FORM, userId, extensionInfos);
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUri_0001
+ * @tc.name: QueryExtensionAbilityInfoByUri
+ * @tc.desc: test QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
+    ExtensionAbilityInfo &extensionAbilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUri_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string uri = "uri";
+    int32_t userId = Constants::INVALID_USERID;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfoByUri(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUri_0002
+ * @tc.name: QueryExtensionAbilityInfoByUri
+ * @tc.desc: test QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
+    ExtensionAbilityInfo &extensionAbilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfoByUri_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string uri = "";
+    int32_t userId = Constants::ANY_USERID;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool result = bundleDataMgr.QueryExtensionAbilityInfoByUri(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+
+    uri = "uri";
+    result = bundleDataMgr.QueryExtensionAbilityInfoByUri(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+
+    uri = "uri:///";
+    result = bundleDataMgr.QueryExtensionAbilityInfoByUri(uri, userId, extensionAbilityInfo);
+    EXPECT_EQ(result, false);
+}
+/**
+ * @tc.number: AddNewModuleInfo_0001
+ * @tc.name: AddNewModuleInfo
+ * @tc.desc: test AddNewModuleInfo(
+    const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+ */
+HWTEST_F(BmsDataMgrTest, AddNewModuleInfo_0001, Function | SmallTest | Level0)
+{
+    std::string bundleName = "test";
+    InnerBundleInfo newInfo;
+    InnerBundleInfo oldInfo;
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    auto ret = dataMgr->AddNewModuleInfo(bundleName, newInfo, oldInfo);
+    EXPECT_FALSE(ret);
+
+    InnerBundleInfo info;
+    int32_t versionCode = 10;
+    BundleInfo bundleInfo;
+    ApplicationInfo applicationInfo;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(bundleName, info);
+    dataMgr->installStates_.erase(bundleName);
+    ret = dataMgr->AddNewModuleInfo(bundleName, newInfo, oldInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RemoveModuleInfo_0001
+ * @tc.name: RemoveModuleInfo
+ * @tc.desc: test RemoveModuleInfo(
+    const std::string &bundleName, const std::string &modulePackage, InnerBundleInfo &oldInfo,
+    bool needSaveStorage)
+ */
+HWTEST_F(BmsDataMgrTest, RemoveModuleInfo_0001, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "test";
+    std::string modulePackage = "";
+    InnerBundleInfo oldInfo;
+    auto ret = bundleDataMgr.RemoveModuleInfo(bundleName, modulePackage, oldInfo, false);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RemoveModuleInfo_0002
+ * @tc.name: AddNewModuleInfo
+ * @tc.desc: test AddNewModuleInfo(
+    const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+ */
+HWTEST_F(BmsDataMgrTest, RemoveModuleInfo_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    std::string modulePackage = "";
+    std::string bundleName = "test";
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    ApplicationInfo applicationInfo;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(bundleName, info);
+    auto ret = dataMgr->RemoveModuleInfo(bundleName, modulePackage, oldInfo, false);
+    EXPECT_TRUE(ret);
+
+    dataMgr->installStates_.erase(bundleName);
+    ret = dataMgr->RemoveModuleInfo(bundleName, modulePackage, oldInfo, false);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RemoveHspModuleByVersionCode_0002
+ * @tc.name: RemoveHspModuleByVersionCode
+ * @tc.desc: test RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundleInfo &info)
+ */
+HWTEST_F(BmsDataMgrTest, RemoveHspModuleByVersionCode_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    int32_t versionCode = 10;
+    std::string bundleName = "test";
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    BundleInfo bundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.deviceId = DEVICE_ID;
+    applicationInfo.bundleName = bundleName;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(bundleName, info);
+    auto ret = dataMgr->RemoveHspModuleByVersionCode(versionCode, info);
+    EXPECT_TRUE(ret);
+
+    dataMgr->installStates_.erase(bundleName);
+    ret = dataMgr->RemoveHspModuleByVersionCode(versionCode, info);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ImplicitQueryCurAbilityInfos_0001
+ * @tc.name: ImplicitQueryCurAbilityInfos
+ * @tc.desc: test ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos, int32_t appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryCurAbilityInfos_0001, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    int32_t flags = 10;
+    int32_t userId = 100;
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t appIndex = 10;
+    auto ret = bundleDataMgr.ImplicitQueryCurAbilityInfos(want, flags, userId, abilityInfos, appIndex);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ImplicitQueryCurAbilityInfosV9_0001
+ * @tc.name: ImplicitQueryCurAbilityInfosV9
+ * @tc.desc: test ImplicitQueryCurAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos, int32_t appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryCurAbilityInfosV9_0001, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    int32_t flags = 10;
+    int32_t userId = 100;
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t appIndex = 10;
+    auto ret = bundleDataMgr.ImplicitQueryCurAbilityInfosV9(want, flags, userId, abilityInfos, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: PreProcessAnyUserFlag_0001
+ * @tc.name: PreProcessAnyUserFlag
+ * @tc.desc: test PreProcessAnyUserFlag(const std::string &bundleName,
+    int32_t& flags, int32_t &userId) const
+ */
+HWTEST_F(BmsDataMgrTest, PreProcessAnyUserFlag_0001, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "test";
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
+    int32_t userId = 101;
+    bundleDataMgr.PreProcessAnyUserFlag(bundleName, flags, userId);
+}
+
+/**
+ * @tc.number: PostProcessAnyUserFlags_0001
+ * @tc.name: PostProcessAnyUserFlags
+ * @tc.desc: test PostProcessAnyUserFlags(
+    int32_t flags, int32_t userId, int32_t originalUserId, BundleInfo &bundleInfo,
+    const InnerBundleInfo &innerBundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, PostProcessAnyUserFlags_0001, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    int32_t userId = 1000;
+    int32_t originalUserId = 100;
+    BundleInfo bundleInfo;
+    bundleInfo.applicationInfo.applicationFlags = static_cast<int32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+    InnerBundleInfo innerBundleInfo;
+    bundleDataMgr.PostProcessAnyUserFlags(flags, userId, originalUserId, bundleInfo, innerBundleInfo);
+
+    flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION) |
+                    static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
+    bundleDataMgr.PostProcessAnyUserFlags(flags, userId, originalUserId, bundleInfo, innerBundleInfo);
+    EXPECT_FALSE(innerBundleInfo.HasInnerBundleUserInfo(originalUserId));
+}
+
+/**
+ * @tc.number: DeleteSharedBundleInfo_0001
+ * @tc.name: DeleteSharedBundleInfo
+ * @tc.desc: test DeleteSharedBundleInfo(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteSharedBundleInfo_0001, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    std::string bundleName = "test";
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.deviceId = DEVICE_ID;
+    applicationInfo.bundleName = bundleName;
+
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(bundleName, info);
+    auto ret = dataMgr->DeleteSharedBundleInfo(bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetModuleUpgradeFlag_0001
+ * @tc.name: GetModuleUpgradeFlag
+ * @tc.desc: test GetModuleUpgradeFlag(const std::string &bundleName,
+    const std::string &moduleName)
+ */
+HWTEST_F(BmsDataMgrTest, GetModuleUpgradeFlag_0001, Function | SmallTest | Level0)
+{
+    std::string bundleName = "";
+    std::string moduleName = "";
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    auto ret = dataMgr->GetModuleUpgradeFlag(bundleName, moduleName);
+    EXPECT_FALSE(ret);
+
+    InnerBundleInfo info;
+    bundleName = "test";
+    moduleName = "test";
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(bundleName, info);
+    bool ret1 = dataMgr->GetModuleUpgradeFlag(bundleName, moduleName);
+    EXPECT_FALSE(ret1);
+
+    dataMgr->bundleInfos_.erase(bundleName);
+    bool ret2 = dataMgr->GetModuleUpgradeFlag(bundleName, moduleName);
+    EXPECT_FALSE(ret2);
+}
+
+/**
+ * @tc.number: GetBundleStats_0001
+ * @tc.name: GetBundleStats
+ * @tc.desc: test GetBundleStats(const std::string &bundleName,
+    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex,
+    const uint32_t statFlag) const
+ */
+HWTEST_F(BmsDataMgrTest, GetBundleStats_0001, Function | SmallTest | Level0)
+{
+    std::string bundleName = "test";
+    int32_t userId = 100;
+    std::vector<int64_t> bundleStats;
+    int32_t appIndex = 10;
+    uint32_t statFlag = 20;
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo info;
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(bundleName, info);
+    auto ret = dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex, statFlag);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: SetAbilityEnabled_0001
+ * @tc.name: SetAbilityEnabled
+ * @tc.desc: test SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex,
+    bool isEnabled, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, SetAbilityEnabled_0001, Function | SmallTest | Level0)
+{
+    ApplicationInfo applicationInfo;
+    BundleInfo bundleInfo;
+    InnerBundleInfo info;
+    std::string bundleName = "test";
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.bundleName = bundleName;
+    int32_t appIndex = 100;
+    int32_t userId = 10;
+    auto ret = dataMgr->SetAbilityEnabled(abilityInfo, appIndex, false, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    userId = Constants::ANY_USERID;
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(bundleName, info);
+    ret = dataMgr->SetAbilityEnabled(abilityInfo, appIndex, false, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetShortcutInfoV9_0001
+ * @tc.name: GetShortcutInfoV9
+ * @tc.desc: test GetShortcutInfoV9(
+    const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) const
+ */
+HWTEST_F(BmsDataMgrTest, GetShortcutInfoV9_0001, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    int32_t userId = 10;
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto ret = bundleDataMgr.GetShortcutInfoV9(bundleName, userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.GetShortcutInfoV9(bundleName, userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: UpdatePrivilegeCapability_0001
+ * @tc.name: UpdatePrivilegeCapability
+ * @tc.desc: test UpdatePrivilegeCapability(
+    const std::string &bundleName, const ApplicationInfo &appInfo)
+ */
+HWTEST_F(BmsDataMgrTest, UpdatePrivilegeCapability_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    ApplicationInfo appInfo;
+    bundleDataMgr.UpdatePrivilegeCapability(bundleName, appInfo);
+    EXPECT_EQ(bundleName.empty(), true);
+
+    bundleName = "bundleName";
+    bundleDataMgr.UpdatePrivilegeCapability(bundleName, appInfo);
+    EXPECT_EQ(bundleName.empty(), false);
+    EXPECT_EQ(bundleDataMgr.bundleInfos_.find(bundleName), bundleDataMgr.bundleInfos_.end());
+}
+
+/**
+ * @tc.number: UpdateQuickFixInnerBundleInfo_0001
+ * @tc.name: UpdateQuickFixInnerBundleInfo
+ * @tc.desc: test UpdateQuickFixInnerBundleInfo(const std::string &bundleName,
+    const InnerBundleInfo &innerBundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, UpdateQuickFixInnerBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    InnerBundleInfo innerBundleInfo;
+    bool ret = bundleDataMgr.UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfo_0001
+ * @tc.name: GetSharedBundleInfo
+ * @tc.desc: test GetSharedBundleInfo(const std::string &bundleName,
+    const InnerBundleInfo &innerBundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, GetSharedBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    std::string moduleName = "moduleName";
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = bundleDataMgr.GetSharedBundleInfo(bundleName, moduleName, sharedBundles);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfo_0101
+ * @tc.name: GetSharedBundleInfo
+ * @tc.desc: test GetSharedBundleInfo(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, GetSharedBundleInfo_0101, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    int32_t flags = 0;
+    BundleInfo bundleInfo;
+    ErrCode ret = bundleDataMgr.GetSharedBundleInfo(bundleName, flags, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+
+    bundleName = "bundleName";
+    ret = bundleDataMgr.GetSharedBundleInfo(bundleName, flags, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+/**
+ * @tc.number: IsPreInstallApp_0001
+ * @tc.name: IsPreInstallApp
+ * @tc.desc: test IsPreInstallApp(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, IsPreInstallApp_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    bool ret = bundleDataMgr.IsPreInstallApp(bundleName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetProxyDataInfos_0101
+ * @tc.name: GetProxyDataInfos
+ * @tc.desc: test GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
+    int32_t userId, std::vector<ProxyData> &proxyDatas)
+ */
+HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0101, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName";
+    std::string moduleName = "moduleName";
+    int32_t userId = Constants::ANY_USERID;
+    std::vector<ProxyData> proxyDatas;
+    ErrCode ret = bundleDataMgr.GetProxyDataInfos(bundleName, moduleName, userId, proxyDatas);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetAllProxyDataInfos_0001
+ * @tc.name: GetAllProxyDataInfos
+ * @tc.desc: test GetAllProxyDataInfos(int32_t userId, std::vector<ProxyData> &proxyDatas)
+ */
+HWTEST_F(BmsDataMgrTest, GetAllProxyDataInfos_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = Constants::INVALID_USERID;
+    std::vector<ProxyData> proxyDatas;
+    ErrCode ret = bundleDataMgr.GetAllProxyDataInfos(userId, proxyDatas);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
 } // OHOS

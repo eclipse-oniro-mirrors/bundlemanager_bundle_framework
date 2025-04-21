@@ -255,8 +255,6 @@ public:
 
     ErrCode DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId);
 
-    ErrCode BackUpFirstBootLog();
-
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

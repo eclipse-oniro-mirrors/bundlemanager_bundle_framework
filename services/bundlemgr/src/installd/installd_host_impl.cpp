@@ -84,8 +84,6 @@ constexpr const char* EXTENSION_SERVICE_NEED_CREATE_SANDBOX = "need_create_sandb
 constexpr const char* SHELL_ENTRY_TXT = "g:2000:rwx";
 constexpr uint64_t VECTOR_SIZE_MAX = 200;
 constexpr int32_t INSTALLS_UID = 3060;
-constexpr const char* LOG_PATH = "/log/";
-constexpr const char* FIRST_BOOT_LOG_BACK_UP_PATH = "/log/bms/firstboot/";
 enum class DirType : uint8_t {
     DIR_EL1,
     DIR_EL2,
@@ -2450,49 +2448,6 @@ ErrCode InstalldHostImpl::DeleteEl5DataGroupDirs(const std::vector<std::string> 
         }
     }
     return result;
-}
- 
-ErrCode InstalldHostImpl::BackUpFirstBootLog()
-{
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "permission denied");
-        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
-    std::string realLogPath;
-    if (!PathToRealPath(LOG_PATH, realLogPath)) {
-        LOG_E(BMS_TAG_INSTALLER, "not real path: %{public}s", LOG_PATH);
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
-    }
-    if (!InstalldOperator::IsExistDir(realLogPath)) {
-        APP_LOGE("No /log path");
-        return ERR_APPEXECFWK_INSTALLD_LOG_PATH_NOT_EXIST;
-    }
-    std::vector<std::string> logFiles = InstalldOperator::GetFirstBootLogFile();
-    if (logFiles.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "no log found");
-        return ERR_APPEXECFWK_INSTALLD_NO_LOG_FILE_FOUND;
-    }
-    InstalldOperator::DeleteDir(FIRST_BOOT_LOG_BACK_UP_PATH);
-    if (!InstalldOperator::MkOwnerDir(FIRST_BOOT_LOG_BACK_UP_PATH,
-        S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH, INSTALLS_UID, INSTALLS_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "make %{public}s failed", FIRST_BOOT_LOG_BACK_UP_PATH);
-        return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
-    }
-    for (const auto& file : logFiles) {
-        std::string realFilePath;
-        if (!PathToRealPath(file, realFilePath)) {
-            LOG_E(BMS_TAG_INSTALLER, "not real path: %{public}s", file.c_str());
-            continue;
-        }
-        std::string filename = InstalldOperator::GetFileName(file);
-        LOG_D(BMS_TAG_INSTALLD, "FilePath:%{public}s, filename:%{public}s", file.c_str(), filename.c_str());
-        std::string desFile = std::string(FIRST_BOOT_LOG_BACK_UP_PATH) + "/" + filename;
-        if (!InstalldOperator::CopyFileFast(file, desFile)) {
-            LOG_E(BMS_TAG_INSTALLD, "copy file error No: %{public}d:%{public}s", errno, strerror(errno));
-        }
-    }
-
-    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

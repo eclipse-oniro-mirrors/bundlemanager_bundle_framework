@@ -3806,6 +3806,24 @@ ErrCode BundleMgrHostImpl::GetAdditionalInfo(const std::string &bundleName,
     return dataMgr->GetAdditionalInfo(bundleName, additionalInfo);
 }
 
+ErrCode BundleMgrHostImpl::GetAdditionalInfoForAllUser(const std::string &bundleName,
+    std::string &additionalInfo)
+{
+    APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        LOG_E(BMS_TAG_DEFAULT, "uid: %{public}d not foundation", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAdditionalInfoForAllUser(bundleName, additionalInfo);
+}
+
 ErrCode BundleMgrHostImpl::SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, const std::string &extName, const std::string &mimeType)
 {

@@ -36,13 +36,18 @@ class BmsBundleMultiuserInstallPermissionTest : public testing::Test {
 public:
     BmsBundleMultiuserInstallPermissionTest();
     ~BmsBundleMultiuserInstallPermissionTest();
+    const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     static void SetUpTestCase();
     static void TearDownTestCase();
 
     void SetUp();
     void TearDown();
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
 
+std::shared_ptr<BundleMgrService> BmsBundleMultiuserInstallPermissionTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleMultiuserInstallPermissionTest::BmsBundleMultiuserInstallPermissionTest()
 {}
@@ -59,10 +64,19 @@ void BmsBundleMultiuserInstallPermissionTest::TearDownTestCase()
 }
 void BmsBundleMultiuserInstallPermissionTest::SetUp()
 {
+    if (!bundleMgrService_->IsServiceReady()) {
+        bundleMgrService_->OnStart();
+        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    }
 }
 
 void BmsBundleMultiuserInstallPermissionTest::TearDown()
 {}
+
+const std::shared_ptr<BundleDataMgr> BmsBundleMultiuserInstallPermissionTest::GetBundleDataMgr() const
+{
+    return bundleMgrService_->GetDataMgr();
+}
 
 /**
  * @tc.number: ProcessBundleInstall_0100
@@ -260,19 +274,6 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0009, Function
 }
 
 /**
- * @tc.number: PluginInstaller_0010
- * @tc.name: test ProcessPluginUninstall
- * @tc.desc: 1.Test ProcessPluginUninstall the PluginInstaller
-*/
-HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0010, Function | MediumTest | Level1)
-{
-    PluginInstaller installer;
-    InnerBundleInfo hostBundleInfo;
-    auto ret = installer.ProcessPluginUninstall(hostBundleInfo);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
-}
-
-/**
  * @tc.number: PluginInstaller_0011
  * @tc.name: test RemoveOldInstallDir
  * @tc.desc: 1.Test RemoveOldInstallDir the PluginInstaller
@@ -296,5 +297,59 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0012, Function
     installer.isPluginExist_ = true;
     installer.RemoveOldInstallDir();
     EXPECT_EQ(installer.isPluginExist_, true);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0010
+ * @tc.name: test UninstallHspVersion
+ * @tc.desc: 1.UninstallHspVersion
+ */
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, BaseBundleInstaller_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName = "test.bundleName";
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    installer.dataMgr_ = dataMgr;
+    dataMgr->installStates_[bundleName] = InstallState::INSTALL_SUCCESS;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = bundleName;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
+    innerBundleInfo.innerBundleUserInfos_["test.bundleName_100"] = InnerBundleUserInfo();
+    innerBundleInfo.uninstallState_ = false;
+    innerBundleInfo.baseApplicationInfo_->removable = false;
+
+    std::string uninstallDir = "test";
+    int32_t versionCode = -1;
+    auto ret = installer.UninstallHspVersion(uninstallDir, versionCode, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_RMV_HSP_BY_VERSION_ERROR);
+
+    dataMgr->installStates_.erase(bundleName);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0011
+ * @tc.name: test UninstallDebugAppSandbox
+ * @tc.desc: 1.UninstallDebugAppSandbox
+ */
+HWTEST_F(BmsBundleMultiuserInstallPermissionTest, BaseBundleInstaller_0011, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "entry";
+    HnpPackage hnpPackage;
+    innerModuleInfo.hnpPackages.emplace_back(hnpPackage);
+
+    InnerBundleInfo info;
+    info.currentPackage_ = "entry";
+    info.innerModuleInfos_["entry"] = innerModuleInfo;
+
+    int32_t userId;
+    std::string bundleName;
+    ErrCode ret = installer.ProcessBundleUnInstallNative(info, userId, bundleName);
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS

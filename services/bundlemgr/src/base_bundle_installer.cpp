@@ -112,6 +112,7 @@ const char* INSTALL_SOURCE_UNKNOWN = "unknown";
 const char* ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
 const char* OLD_ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
 const char* NEW_ARK_WEB_BUNDLE_NAME = "com.ohos.arkwebcore";
+const size_t NUMBER_TWO = 2;
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -377,7 +378,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .bundleName = bundleName,
             .appId = uninstallBundleAppId_,
             .developerId = developerId,
-            .assetAccessGroups = assetAccessGroups
+            .assetAccessGroups = assetAccessGroups,
+            .keepData = installParam.isKeepData
         };
 
         if (installParam.concentrateSendEvent) {
@@ -578,7 +580,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .modulePackage = modulePackage,
             .appId = uninstallBundleAppId_,
             .developerId = developerId,
-            .assetAccessGroups = assetAccessGroups
+            .assetAccessGroups = assetAccessGroups,
+            .keepData = installParam.isKeepData
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
@@ -1305,6 +1308,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     (void)SetDisposedRuleWhenBundleUpdateStart(newInfos, oldInfo, installParam.isPreInstallApp);
     // when bundle update end, bms need delete disposed rule.
     ScopeGuard deleteDisposedRuleGuard([&] { (void)DeleteDisposedRuleWhenBundleUpdateEnd(oldInfo); });
+    ScopeGuard codePathGuard([&] { RollbackCodePath(bundleName_, isFeatureNeedUninstall_); });
     result = InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
@@ -1337,7 +1341,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
             VerifyCodeSignatureForHap(newInfos, preinstalledAppPath, preinstalledAppPath);
         }
     }
-    ScopeGuard codePathGuard([&] { RollbackCodePath(bundleName_, isFeatureNeedUninstall_); });
     result = ProcessBundleCodePath(newInfos, oldInfo, bundleName_,
         isFeatureNeedUninstall_, installParam.copyHapToInstallPath);
     CHECK_RESULT_WITH_ROLLBACK(result, "final process code path failed %{public}d", newInfos, oldInfo);
@@ -5753,7 +5756,7 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
     if (isFeatureNeedUninstall_) {
         return std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
             std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + info.GetBundleName() +
-            ServiceConstants::PATH_SEPARATOR + hapPath.substr(posOfPathSep);
+            hapPath.substr(posOfPathSep);
     }
     std::string tempDir = hapPath.substr(0, posOfPathSep + 1) + info.GetCurrentModulePackage();
     if (installedModules_[info.GetCurrentModulePackage()]) {
@@ -6912,11 +6915,31 @@ bool BaseBundleInstaller::DeleteAppGalleryHapFromTempPath()
 void BaseBundleInstaller::ProcessAddResourceInfo(const InstallParam &installParam,
     const std::string &bundleName, int32_t userId)
 {
-    if (installParam.isOTA && userId != Constants::START_USERID &&
-        dataMgr_->HasUserInstallInBundle(bundleName, Constants::START_USERID)) {
+    // if bundle not exist, need to add resource
+    if (!isAppExist_) {
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
         return;
     }
-    BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+    // if user id 0 or only contains 0 and 100, need to add resource
+    if ((userId == Constants::DEFAULT_USERID) || (dataMgr_->GetAllUser().size() <= NUMBER_TWO)) {
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+        return;
+    }
+    // For multiple users, it is necessary to check whether the userId is equal to the current active userId.
+    // When OTA, the default user is obtained.
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserIdWithRetry(installParam.isOTA || otaInstall_);
+    if (currentUserId == Constants::INVALID_USERID) {
+        LOG_W(BMS_TAG_INSTALLER, "current user %{public}d is invalid", currentUserId);
+        if ((installParam.isOTA || otaInstall_) && userId != Constants::START_USERID &&
+            dataMgr_->HasUserInstallInBundle(bundleName, Constants::START_USERID)) {
+            return;
+        }
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+        return;
+    }
+    if (userId == currentUserId) {
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+    }
 }
 
 void BaseBundleInstaller::CheckPreBundle(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
@@ -7283,9 +7306,10 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     std::string oldAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
     auto result = InstalldClient::GetInstance()->RenameModuleDir(realAppCodePath, oldAppCodePath);
-    CHECK_RESULT(result, "rename module dir failed, error is %{public}d");
+    CHECK_RESULT(result, "rename real to +old- code path failed, error is %{public}d");
     InstallExceptionInfo exceptionInfo;
     exceptionInfo.status = InstallRenameExceptionStatus::RENAME_RELA_TO_OLD_PATH;
+    exceptionInfo.versionCode = oldInfo.GetVersionCode();
     result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
         exceptionInfo);
     if (result != ERR_OK) {
@@ -7295,12 +7319,7 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     std::string newAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
     result = InstalldClient::GetInstance()->RenameModuleDir(newAppCodePath, realAppCodePath);
-    if (result != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "rename module dir failed, error is %{public}d, errno %{public}d", result, errno);
-        (void)InstalldClient::GetInstance()->RenameModuleDir(oldAppCodePath, realAppCodePath);
-        DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
-        return result;
-    }
+    CHECK_RESULT(result, "rename +new- to real code path failed, error is %{public}d");
 
     exceptionInfo.status = InstallRenameExceptionStatus::RENAME_NEW_TO_RELA_PATH;
     result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
@@ -7308,7 +7327,13 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "save bundle exception failed, error is %{public}d", result);
     }
+    // rename so path
+    result = MoveSoFileToRealInstallationDir(newInfos, false);
+    CHECK_RESULT(result, "move so file to install path failed %{public}d");
     RemoveEmptyDirs(newInfos);
+    for (const auto &item : newInfos) {
+        RemoveTempPathOnlyUsedForSo(item.second);
+    }
     LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s processBundleCodePath end", bundleName.c_str());
     return ERR_OK;
 }
@@ -7348,13 +7373,22 @@ void BaseBundleInstaller::RollbackCodePath(const std::string &bundleName, bool i
     if (!isBundleUpdate) {
         return;
     }
+    // rename +old- to real code path
     std::string realAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         bundleName;
     std::string oldAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
     auto result = InstalldClient::GetInstance()->RenameModuleDir(oldAppCodePath, realAppCodePath);
     if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "bundle %{public}s rename module dir failed, error is %{public}d",
+        LOG_W(BMS_TAG_INSTALLER, "bundle %{public}s rename +old- to real code path failed, error is %{public}d",
+            bundleName.c_str(), result);
+    }
+    // delete +new- code path
+    std::string newAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_NEW_CODE_DIR) + bundleName;
+    result = InstalldClient::GetInstance()->RemoveDir(newAppCodePath);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "bundle %{public}s remove +new- code path failed, error is %{public}d",
             bundleName.c_str(), result);
     }
     (void)DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
@@ -7370,9 +7404,8 @@ void BaseBundleInstaller::InnerProcessTargetSoPath(const InnerBundleInfo &info, 
             nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
         }
     } else {
-        nativeLibraryPath = isBundleUpdate ? nativeLibraryPath :
-            (info.GetCurrentModulePackage() + ServiceConstants::TMP_SUFFIX +
-            ServiceConstants::PATH_SEPARATOR + nativeLibraryPath);
+        nativeLibraryPath = info.GetCurrentModulePackage() + ServiceConstants::TMP_SUFFIX +
+            ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     }
     if (isBundleUpdate) {
         targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)

@@ -2377,10 +2377,6 @@ ErrCode BundleDataMgr::GetLauncherAbilityInfoSync(const Want &want, const int32_
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
-    if (info.IsDisabled()) {
-        LOG_W(BMS_TAG_QUERY, "app %{public}s is disabled", info.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_DISABLED;
-    }
     if (info.GetBaseApplicationInfo().hideDesktopIcon) {
         LOG_D(BMS_TAG_QUERY, "Bundle(%{public}s) hide desktop icon", bundleName.c_str());
         return ERR_OK;
@@ -7536,6 +7532,21 @@ std::vector<std::string> BundleDataMgr::GetAllBundleName() const
     return bundleNames;
 }
 
+std::vector<std::string> BundleDataMgr::GetAllSystemHspCodePaths() const
+{
+    std::vector<std::string> systemHspCodePaths;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        if (item.second.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
+            std::string installPath = item.second.GetAppCodePath();
+            APP_LOGD("get appcodepath:%{public}s for %{public}s",
+                installPath.c_str(), item.second.GetBundleName().c_str());
+            systemHspCodePaths.emplace_back(installPath);
+        }
+    }
+    return systemHspCodePaths;
+}
+
 std::vector<std::tuple<std::string, int32_t, int32_t>> BundleDataMgr::GetAllLiteBundleInfo(const int32_t userId) const
 {
     std::set<int32_t> userIds = GetAllUser();
@@ -7787,6 +7798,24 @@ ErrCode BundleDataMgr::GetAdditionalInfo(
             APP_LOGW("bundleName: %{public}s does not exist in current userId", bundleName.c_str());
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
+    }
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName,
+        additionalInfo)) {
+        APP_LOGW("bundleName:%{public}s GetAdditionalInfo failed", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAdditionalInfoForAllUser(
+    const std::string &bundleName, std::string &additionalInfo)
+{
+    APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW_NOFUNC("%{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName,
         additionalInfo)) {

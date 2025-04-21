@@ -346,10 +346,5 @@ ErrCode InstalldClient::DeleteDataGroupDirs(const std::vector<std::string> &uuid
 {
     return ERR_OK;
 }
-
-ErrCode InstalldClient::BackUpFirstBootLog()
-{
-    return ERR_OK;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

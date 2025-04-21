@@ -556,7 +556,7 @@ bool BmsBundleInstallerTest::CheckShaderCachePathExist(const std::string &bundle
     if (access(newShaderCachePath.c_str(), F_OK) == 0) {
         isExist = true;
     } else {
-        LOG_E(BMS_TAG_INSTALLD, "senlin %{public}s can not access, errno: %{public}d",
+        LOG_E(BMS_TAG_INSTALLD, "%{public}s can not access, errno: %{public}d",
             newShaderCachePath.c_str(), errno);
     }
     return isExist;
@@ -9716,7 +9716,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9600, Function | MediumTest
    nativeLibraryPath = "";
    targetSoPath = "";
    installer.InnerProcessTargetSoPath(info, true, modulePath, nativeLibraryPath, targetSoPath);
-   EXPECT_EQ(nativeLibraryPath, "");
+   EXPECT_NE(nativeLibraryPath, "");
    EXPECT_TRUE(targetSoPath.find(BUNDLE_CODE_PATH_DIR_NEW) == 0);
 }
 
@@ -10716,5 +10716,163 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0059, Function | MediumTest | L
     installer.parsedBundles_["test_bundleName"] = innerBundleInfo;
     auto ret = installer.GetModuleNames();
     EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithVector_0100
+ * @tc.name: test CreateBundleDataDir
+ * @tc.desc: test CreateBundleDataDir of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<CreateDirParam> createDirParams;
+    CreateDirParam param;
+    param.dataDirEl = DataDirEl::EL1;
+    createDirParams.push_back(param);
+    auto ret = hostImpl.CreateBundleDataDirWithVector(createDirParams);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0200
+ * @tc.name: test CreateBundleDataDir
+ * @tc.desc: test CreateBundleDataDir of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    std::string bundleDataDir;
+    int mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IRWXO) : S_IRWXU;
+    createDirParam.gid = -1;
+    ErrCode ret = impl.CreateExtensionDir(createDirParam, bundleDataDir, mode, createDirParam.gid);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithEl_0100
+ * @tc.name: test CreateBundleDataDirWithEl
+ * @tc.desc: test CreateBundleDataDirWithEl of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDirWithEl_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    constexpr int32_t foundationUid = 55238;
+    ErrCode ret = impl.CreateBundleDataDirWithEl(createDirParam);
+    EXPECT_NE(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithEl_0200
+ * @tc.name: test CreateBundleDataDirWithEl
+ * @tc.desc: 1.Test the CreateBundleDataDirWithEl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDirWithEl_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam2;
+    createDirParam2.bundleName = TEST_SHARE_FILES;
+    createDirParam2.userId = 100;
+    createDirParam2.uid = INVAILD_CODE;
+    createDirParam2.gid = ZERO_CODE;
+    createDirParam2.apl = TEST_APL_INVALID;
+    createDirParam2.isPreInstallApp = false;
+    ErrCode res = hostImpl.CreateBundleDataDirWithEl(createDirParam2);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithEl_0300
+ * @tc.name: test CreateBundleDataDirWithEl
+ * @tc.desc: 1.Test the CreateBundleDataDirWithEl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDirWithEl_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.dataDirEl = DataDirEl::EL5;
+    createDirParam.bundleName = "";
+    ErrCode res = impl.CreateBundleDataDirWithEl(createDirParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithEl_0400
+ * @tc.name: test CreateBundleDataDirWithEl
+ * @tc.desc: 1.Test the CreateBundleDataDirWithEl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDirWithEl_0400, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.dataDirEl = DataDirEl::NONE;
+    uint32_t index = static_cast<uint32_t>(createDirParam.dataDirEl) - 1;
+    ErrCode res = impl.CreateBundleDataDirWithEl(createDirParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeleteEl5DataGroupDirs_1000
+ * @tc.name: test DeleteEl5DataGroupDirs
+ * @tc.desc: 1.create install temp dir failed
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteEl5DataGroupDirs_1000, Function | MediumTest | Level1)
+{
+    InstalldHostImpl impl;
+    auto installdHostImpl = std::make_shared<InstalldHostImpl>();
+    ASSERT_NE(installdHostImpl, nullptr);
+    std::vector<std::string> uuidList = {"uuid1", "uuid2"};
+    int32_t userId = 1000;
+    ErrCode ret = installdHostImpl->DeleteEl5DataGroupDirs(uuidList, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteEl5DataGroupDirs_2000
+ * @tc.name: test DeleteEl5DataGroupDirs
+ * @tc.desc: 1.create install temp dir failed
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteEl5DataGroupDirs_2000, Function | MediumTest | Level1)
+{
+    InstalldHostImpl impl;
+    auto installdHostImpl = std::make_shared<InstalldHostImpl>();
+    ASSERT_NE(installdHostImpl, nullptr);
+    std::vector<std::string> uuidList = {"uuid1", "uuid2"};
+    int32_t userId = 1000;
+    std::string groupDir = AppExecFwk::InstalldHostImpl::GetGroupDirPath(ServiceConstants::DIR_EL5, userId, uuidList[0]);
+    EXPECT_EQ(access(groupDir.c_str(), F_OK), -1);
+    ErrCode ret = installdHostImpl->DeleteEl5DataGroupDirs(uuidList, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerRemoveBundleDataDir_2000
+ * @tc.name: test InnerRemoveBundleDataDir
+ * @tc.desc: 1.create install temp dir failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerRemoveBundleDataDir_2000, Function | MediumTest | Level1)
+{
+    InstalldHostImpl impl;
+    const int32_t userId = 100;
+    const std::string bundleName = "com.example.l3jsdemo";
+    const std::string bundleDataDir = "/data/app/el2/100/base/com.example.l3jsdemo";
+    ErrCode ret = impl.InnerRemoveBundleDataDir("com.example.l3jsdemo", 100, false);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: RemoveExtensionDir_1000
+ * @tc.name: test RemoveExtensionDir
+ * @tc.desc: 1.create install temp dir failed
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveExtensionDir_1000, Function | MediumTest | Level1)
+{
+    InstalldHostImpl impl;
+    int32_t userId = 1000;
+    std::string extensionBundleDir = "/test/extension";
+    ErrCode result = impl.RemoveExtensionDir(userId, extensionBundleDir);
+    EXPECT_EQ(result, ERR_OK);
 }
 } // OHOS

@@ -536,10 +536,5 @@ ErrCode InstalldClient::DeleteDataGroupDirs(const std::vector<std::string> &uuid
     }
     return CallService(&IInstalld::DeleteDataGroupDirs, uuidList, userId);
 }
-
-ErrCode InstalldClient::BackUpFirstBootLog()
-{
-    return CallService(&IInstalld::BackUpFirstBootLog);
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

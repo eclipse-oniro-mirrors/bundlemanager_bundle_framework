@@ -69,6 +69,7 @@ struct NotifyBundleEvents {
     std::string appDistributionType;
     std::string developerId;
     std::string assetAccessGroups;
+    bool keepData = false;
 };
 
 class BundleCommonEventMgr {
