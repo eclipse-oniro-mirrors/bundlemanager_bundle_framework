@@ -291,6 +291,19 @@ bool BundlePermissionMgr::GetRequestPermissionStates(
     return true;
 }
 
+bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &permissionName,
+    const Security::AccessToken::AccessTokenID callerToken)
+{
+    LOG_D(BMS_TAG_DEFAULT, "VerifyPermissionByCallingTokenId permission %{public}s, callerToken : %{public}u",
+        permissionName.c_str(), callerToken);
+    if (AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName) ==
+        AccessToken::PermissionState::PERMISSION_GRANTED) {
+        return true;
+    }
+    LOG_NOFUNC_E(BMS_TAG_DEFAULT, "permission denied caller:%{public}u", callerToken);
+    return false;
+}
+
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();

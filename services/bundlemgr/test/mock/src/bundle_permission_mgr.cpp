@@ -36,6 +36,12 @@ bool BundlePermissionMgr::IsCallingUidValid(int32_t uid)
     return false;
 }
 
+bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &permissionName,
+    const Security::AccessToken::AccessTokenID callerToken)
+{
+    return false;
+}
+
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
 {
     return false;
@@ -91,6 +97,12 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
 }
 
 bool BundlePermissionMgr::IsCallingUidValid(int32_t uid)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &permissionName,
+    const Security::AccessToken::AccessTokenID callerToken)
 {
     return true;
 }

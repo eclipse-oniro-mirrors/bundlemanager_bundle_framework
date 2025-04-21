@@ -483,10 +483,11 @@ ErrCode BundleInstallChecker::CheckEnterpriseForAllUser(std::unordered_map<std::
 }
 
 ErrCode BundleInstallChecker::CheckHspInstallCondition(
-    std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, int32_t callingUid)
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+    const Security::AccessToken::AccessTokenID callerToken)
 {
     ErrCode result = ERR_OK;
-    if ((result = CheckDeveloperMode(hapVerifyRes, callingUid)) != ERR_OK) {
+    if ((result = CheckDeveloperMode(hapVerifyRes, callerToken)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "install failed due to debug mode");
         return result;
     }
@@ -1606,23 +1607,30 @@ ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signature
 }
 
 ErrCode BundleInstallChecker::CheckDeveloperMode(
-    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, int32_t callingUid) const
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+    const Security::AccessToken::AccessTokenID callerToken) const
 {
-    if (system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, true)) {
-        return ERR_OK;
-    }
-    if (Constants::ROOT_UID == callingUid) {
-        LOG_I(BMS_TAG_INSTALLER, "dev assistant is allowed to install debug bundle");
-        return ERR_OK;
-    }
+    bool hasDebugBundle = false;
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         if (provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
-            LOG_E(BMS_TAG_INSTALLER, "debug bundle can only be installed in developer mode");
-            return ERR_APPEXECFWK_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED;
+            hasDebugBundle = true;
+            break;
         }
     }
-    return ERR_OK;
+    if (!hasDebugBundle) {
+        return ERR_OK;
+    }
+    if (system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, true)) {
+        return ERR_OK;
+    }
+    if (BundlePermissionMgr::VerifyPermissionByCallingTokenId(
+        Constants::PERMISSION_PERFORM_LOCAL_DEBUG, callerToken)) {
+        LOG_I(BMS_TAG_INSTALLER, "dev assistant is allowed to install debug bundle");
+        return ERR_OK;
+    }
+    LOG_E(BMS_TAG_INSTALLER, "debug bundle can only be installed in developer mode");
+    return ERR_APPEXECFWK_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED;
 }
 
 ErrCode BundleInstallChecker::CheckAllowEnterpriseBundle(

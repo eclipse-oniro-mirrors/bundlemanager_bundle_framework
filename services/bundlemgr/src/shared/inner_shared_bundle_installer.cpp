@@ -86,7 +86,7 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     CHECK_RESULT(result, "check install permission failed %{public}d");
 
     // check hsp install condition
-    result = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyResults, IPCSkeleton::GetCallingUid());
+    result = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyResults);
     CHECK_RESULT(result, "check hsp install condition failed %{public}d");
 
     // to send notify of start install shared application

@@ -139,7 +139,7 @@ public:
         const InstallCheckParam &checkParam, const std::string &distributionType);
 
     ErrCode CheckHspInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-        int32_t callingUid = -1);
+        const Security::AccessToken::AccessTokenID callerToken = 0);
 
     ErrCode CheckInstallPermission(const InstallCheckParam &checkParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
@@ -173,7 +173,7 @@ public:
     ErrCode CheckSignatureFileDir(const std::string &signatureFileDir) const;
 
     ErrCode CheckDeveloperMode(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-        int32_t callingUid) const;
+        const Security::AccessToken::AccessTokenID callerToken) const;
 
     ErrCode CheckAllowEnterpriseBundle(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
 
