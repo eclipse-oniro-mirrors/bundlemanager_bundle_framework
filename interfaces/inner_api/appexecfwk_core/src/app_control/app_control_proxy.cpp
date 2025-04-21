@@ -465,28 +465,28 @@ ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want,
 ErrCode AppControlProxy::SetDisposedRule(
     const std::string &appId, DisposedRule &disposedRule, int32_t userId)
 {
-    LOG_D(BMS_TAG_DEFAULT, "proxy begin to SetDisposedRule.");
+    LOG_D(BMS_TAG_DEFAULT, "proxy begin to SetDisposedRule");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(appId)) {
-        LOG_E(BMS_TAG_DEFAULT, "write appId failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write appId failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&disposedRule)) {
-        LOG_E(BMS_TAG_DEFAULT, "write disposedRule failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write disposedRule failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMS_TAG_DEFAULT, "write userId failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     ErrCode ret = SendRequest(AppControlManagerInterfaceCode::SET_DISPOSED_RULE, data, reply);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed.");
+        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed");
         return ret;
     }
     ret = reply.ReadInt32();

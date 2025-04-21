@@ -48,9 +48,12 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     BmsExperienceRule rule;
     bmsEcologicalRuleMgrServiceProxy.QueryFreeInstallExperience(want, callerInfo, rule);
     int32_t userId = reinterpret_cast<uintptr_t>(data);
-    BmsEcologicalRuleMgrServiceClient bmsEcologicalRuleMgrServiceClient;
-    bmsEcologicalRuleMgrServiceClient.GetInstance();
-    bmsEcologicalRuleMgrServiceClient.CheckConnectService();
+    std::shared_ptr<BmsEcologicalRuleMgrServiceClient> bmsEcologicalRuleMgrServiceClient =
+        DelayedSingleton<BmsEcologicalRuleMgrServiceClient>::GetInstance();
+    if (bmsEcologicalRuleMgrServiceClient == nullptr) {
+        return false;
+    }
+    bmsEcologicalRuleMgrServiceClient->CheckConnectService();
     return true;
 }
 } // namespace OHOS
