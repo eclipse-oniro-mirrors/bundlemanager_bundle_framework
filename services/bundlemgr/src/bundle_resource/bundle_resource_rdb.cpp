@@ -104,7 +104,6 @@ bool BundleResourceRdb::AddResourceInfos(const std::vector<ResourceInfo> &resour
         } else {
             valuesBucket.PutString(BundleResourceConstants::LABEL, resourceInfos[0].label_);
         }
-
         if (!info.icon_.empty()) {
             valuesBucket.PutString(BundleResourceConstants::ICON, info.icon_);
             // used for layered icons
@@ -249,6 +248,10 @@ bool BundleResourceRdb::GetResourceNameByBundleName(
         std::string key;
         auto ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_NAME, key);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString name failed, ret: %{public}d");
+        if (key.find(BundleResourceConstants::EXTENSION_ABILITY_SEPARATOR) != std::string::npos) {
+            APP_LOGD("key:%{public}s contains extension ability, skip it", key.c_str());
+            continue;
+        }
         keyName.emplace_back(key);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     return true;
@@ -482,6 +485,56 @@ bool BundleResourceRdb::ConvertToLauncherAbilityResourceInfo(
     auto ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_NAME, key);
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString name failed, ret: %{public}d");
     ParseKey(key, launcherAbilityResourceInfo);
+    if (launcherAbilityResourceInfo.extensionAbilityType != -1) {
+        return false;
+    }
+    if (launcherAbilityResourceInfo.moduleName.empty() || launcherAbilityResourceInfo.abilityName.empty()) {
+        APP_LOGW("key:%{public}s not launcher ability resource info", key.c_str());
+        return false;
+    }
+    bool getAll = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    bool getLabel = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
+    if (getAll || getLabel) {
+        ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_LABEL, launcherAbilityResourceInfo.label);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString label failed, ret: %{public}d");
+    }
+
+    bool getIcon = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON);
+    if (getAll || getIcon) {
+        ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_ICON, launcherAbilityResourceInfo.icon);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString label icon, ret: %{public}d");
+    }
+
+    bool getDrawable = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    if (getDrawable) {
+        ret = absSharedResultSet->GetBlob(BundleResourceConstants::INDEX_FOREGROUND,
+            launcherAbilityResourceInfo.foreground);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob foreground, ret: %{public}d");
+
+        ret = absSharedResultSet->GetBlob(BundleResourceConstants::INDEX_BACKGROUND,
+            launcherAbilityResourceInfo.background);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob background, ret: %{public}d");
+    }
+    return true;
+}
+
+bool BundleResourceRdb::ConvertToExtensionAbilityResourceInfo(
+    const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
+    const uint32_t flags,
+    LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
+{
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("absSharedResultSet is nullptr");
+        return false;
+    }
+    std::string key;
+    auto ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_NAME, key);
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString name failed, ret: %{public}d");
+    ParseKey(key, launcherAbilityResourceInfo);
     if (launcherAbilityResourceInfo.moduleName.empty() || launcherAbilityResourceInfo.abilityName.empty()) {
         APP_LOGW("key:%{public}s not launcher ability resource info", key.c_str());
         return false;
@@ -592,6 +645,95 @@ bool BundleResourceRdb::DeleteNotExistResourceInfo()
     return rdbDataManager_->DeleteData(absRdbPredicates);
 }
 
+bool BundleResourceRdb::GetExtensionAbilityResourceInfo(const std::string &bundleName,
+    const ExtensionAbilityType extensionAbilityType, const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.appIndex_ = appIndex;
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
+    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, resourceInfo.GetKey() +
+        BundleResourceConstants::SEPARATOR);
+    std::string systemState = BundleSystemState::GetInstance().ToString();
+
+    auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("QueryByStep failed bundleName %{public}s failed, systemState %{public}s",
+            bundleName.c_str(), systemState.c_str());
+        return false;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("bundleName %{public}s GoToFirstRow failed, ret %{public}d, systemState:%{public}s",
+            bundleName.c_str(), ret, systemState.c_str());
+        return false;
+    }
+
+    do {
+        LauncherAbilityResourceInfo resourceInfo;
+        if (ConvertToExtensionAbilityResourceInfo(absSharedResultSet, flags, resourceInfo)) {
+            if (resourceInfo.extensionAbilityType == static_cast<int32_t>(extensionAbilityType)) {
+                extensionAbilityResourceInfo.push_back(resourceInfo);
+            }
+        }
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+
+    if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
+        std::sort(extensionAbilityResourceInfo.begin(), extensionAbilityResourceInfo.end(),
+            [](LauncherAbilityResourceInfo &resourceA, LauncherAbilityResourceInfo &resourceB) {
+                return resourceA.label < resourceB.label;
+            });
+    }
+    return !extensionAbilityResourceInfo.empty();
+}
+
+bool BundleResourceRdb::GetAllExtensionAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.appIndex_ = appIndex;
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
+    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, resourceInfo.GetKey() +
+        BundleResourceConstants::SEPARATOR);
+    std::string systemState = BundleSystemState::GetInstance().ToString();
+
+    auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("QueryByStep failed bundleName %{public}s failed, systemState %{public}s",
+            bundleName.c_str(), systemState.c_str());
+        return false;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("bundleName %{public}s GoToFirstRow failed, ret %{public}d, systemState:%{public}s",
+            bundleName.c_str(), ret, systemState.c_str());
+        return false;
+    }
+
+    do {
+        LauncherAbilityResourceInfo resourceInfo;
+        if (ConvertToExtensionAbilityResourceInfo(absSharedResultSet, flags, resourceInfo)) {
+            if (resourceInfo.extensionAbilityType >= 0) {
+                extensionAbilityResourceInfo.push_back(resourceInfo);
+            }
+        }
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+
+    if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
+        std::sort(extensionAbilityResourceInfo.begin(), extensionAbilityResourceInfo.end(),
+            [](LauncherAbilityResourceInfo &resourceA, LauncherAbilityResourceInfo &resourceB) {
+                return resourceA.label < resourceB.label;
+            });
+    }
+    return !extensionAbilityResourceInfo.empty();
+}
+
 void BundleResourceRdb::ParseKey(const std::string &key,
     LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
 {
@@ -601,6 +743,7 @@ void BundleResourceRdb::ParseKey(const std::string &key,
     launcherAbilityResourceInfo.moduleName = info.moduleName_;
     launcherAbilityResourceInfo.abilityName = info.abilityName_;
     launcherAbilityResourceInfo.appIndex = info.appIndex_;
+    launcherAbilityResourceInfo.extensionAbilityType = info.extensionAbilityType_;
 }
 
 void BundleResourceRdb::ParseKey(const std::string &key,

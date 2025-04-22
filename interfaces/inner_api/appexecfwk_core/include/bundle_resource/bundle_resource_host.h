@@ -53,6 +53,8 @@ private:
 
     ErrCode HandleDeleteResourceInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetExtensionAbilityResourceInfo(MessageParcel &data, MessageParcel &reply);
+
     template<typename T>
     ErrCode WriteParcelInfo(const T &parcelInfo, MessageParcel &reply);
 

@@ -291,5 +291,27 @@ HWTEST_F(BundleResourceProxyTest, SendRequest_0100, Function | SmallTest | Level
     GTEST_LOG_(INFO) << "SendRequest_0100 end, " << ret;
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.number: GetExtensionAbilityResourceInfo_0100
+ * @tc.name: test the GetExtensionAbilityResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test GetExtensionAbilityResourceInfo
+ */
+HWTEST_F(BundleResourceProxyTest, GetExtensionAbilityResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "GetExtensionAbilityResourceInfo_0100 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    std::string bundleName = "bundleName";
+    ExtensionAbilityType extensionAbilityType = ExtensionAbilityType::INPUTMETHOD;
+    uint32_t flags = 1;
+    std::vector<LauncherAbilityResourceInfo> extensionAbilityResourceInfo;
+    int32_t appIndex = 0;
+    auto ret = proxy->GetExtensionAbilityResourceInfo(bundleName, extensionAbilityType, flags,
+        extensionAbilityResourceInfo, appIndex);
+    GTEST_LOG_(INFO) << "GetExtensionAbilityResourceInfo_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
 }
 }

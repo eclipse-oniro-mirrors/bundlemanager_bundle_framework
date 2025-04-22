@@ -46,6 +46,10 @@ public:
 
     virtual ErrCode DeleteResourceInfo(const std::string &key) override;
 
+    virtual ErrCode GetExtensionAbilityResourceInfo(const std::string &bundleName,
+        const ExtensionAbilityType extensionAbilityType, const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex = 0) override;
+
 private:
     template<typename T>
     ErrCode GetParcelInfo(BundleResourceInterfaceCode code, MessageParcel &data, T &parcelInfo);

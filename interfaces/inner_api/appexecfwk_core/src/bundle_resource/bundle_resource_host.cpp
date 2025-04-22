@@ -23,6 +23,7 @@
 #include "ipc_types.h"
 #include "json_util.h"
 #include "string_ex.h"
+#include "extension_ability_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -70,6 +71,9 @@ int32_t BundleResourceHost::OnRemoteRequest(uint32_t code, MessageParcel &data,
             break;
         case static_cast<uint32_t>(BundleResourceInterfaceCode::DELETE_RESOURCE_INFO):
             errCode = this->HandleDeleteResourceInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleResourceInterfaceCode::GET_EXTENSION_ABILITY_RESOURCE_INFO):
+            errCode = this->HandleGetExtensionAbilityResourceInfo(data, reply);
             break;
         default:
             APP_LOGW("bundle resource host receives unknown %{public}u", code);
@@ -183,6 +187,26 @@ ErrCode BundleResourceHost::HandleDeleteResourceInfo(MessageParcel &data, Messag
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleResourceHost::HandleGetExtensionAbilityResourceInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    ExtensionAbilityType extensionAbilityType = static_cast<ExtensionAbilityType>(data.ReadInt32());
+    uint32_t flags = data.ReadUint32();
+    int32_t appIndex = data.ReadInt32();
+    std::vector<LauncherAbilityResourceInfo> extensionAbilityResourceInfos;
+    ErrCode ret = GetExtensionAbilityResourceInfo(bundleName, extensionAbilityType, flags,
+        extensionAbilityResourceInfos, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        return WriteVectorToParcel<LauncherAbilityResourceInfo>(extensionAbilityResourceInfos, reply);
     }
     return ERR_OK;
 }

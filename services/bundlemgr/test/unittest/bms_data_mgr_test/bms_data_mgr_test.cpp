@@ -3138,4 +3138,45 @@ HWTEST_F(BmsDataMgrTest, CreateAppInstallDir_0001, Function | MediumTest | Level
     std::string appClonePath = path + ServiceConstants::GALLERY_CLONE_PATH;
     EXPECT_EQ(BundleUtil::IsExistDir(appClonePath), true);
 }
+
+/**
+ * @tc.number: GetAllExtensionBundleNames_0001
+ * @tc.name: GetAllExtensionBundleNames
+ * @tc.desc: test GetAllExtensionBundleNames
+ */
+HWTEST_F(BmsDataMgrTest, GetAllExtensionBundleNames_0001, Function | MediumTest | Level1)
+{
+    std::vector<ExtensionAbilityType> types = {
+        ExtensionAbilityType::INPUTMETHOD,
+        ExtensionAbilityType::SHARE,
+        ExtensionAbilityType::ACTION
+    };
+    BundleDataMgr bundleDataMgr;
+    auto bundleNames = bundleDataMgr.GetAllExtensionBundleNames(types);
+    EXPECT_EQ(bundleNames.size(), 0);
+}
+
+/**
+ * @tc.number: GetAllExtensionBundleNames_0002
+ * @tc.name: GetAllExtensionBundleNames
+ * @tc.desc: test GetAllExtensionBundleNames
+ */
+HWTEST_F(BmsDataMgrTest, GetAllExtensionBundleNames_0002, Function | MediumTest | Level1)
+{
+    // Create test data
+    InnerBundleInfo info;
+    ExtensionAbilityInfo extensionInfo;
+    extensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
+    info.InsertExtensionInfo("test.extension", extensionInfo);
+    std::shared_lock<std::shared_mutex> lock(dataMgr_->bundleInfoMutex_);
+    dataMgr_->bundleInfos_.emplace("test.bundle", info);
+    std::vector<ExtensionAbilityType> types = {
+        ExtensionAbilityType::INPUTMETHOD,
+        ExtensionAbilityType::SHARE,
+        ExtensionAbilityType::ACTION
+    };
+    auto bundleNames = dataMgr_->GetAllExtensionBundleNames(types);
+    EXPECT_EQ(bundleNames.size(), 1);
+    EXPECT_EQ(bundleNames[0], "test.bundle");
+}
 } // OHOS
