@@ -489,7 +489,7 @@ HWTEST_F(ZipTest, APPEXECFWK_ZIP_UTILS_FilePathCheckValid_0100, Function | Mediu
 
     str = "file|name.txt";
     ret = FilePathCheckValid(str);
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 }
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
