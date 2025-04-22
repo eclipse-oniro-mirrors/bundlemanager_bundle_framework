@@ -3991,4 +3991,297 @@ HWTEST_F(BmsDataMgrTest, GetExtensionAbilityInfoByTypeName_0001, TestSize.Level1
     bundleDataMgr.GetExtensionAbilityInfoByTypeName(flags, userId, infos, typeName);
     EXPECT_FALSE(bundleDataMgr.bundleInfos_.empty());
 }
+
+/**
+ * @tc.number: GetBundleNamesForNewUser_0001
+ * @tc.name: GetBundleNamesForNewUser
+ * @tc.desc: test GetBundleNamesForNewUser()
+ */
+HWTEST_F(BmsDataMgrTest, GetBundleNamesForNewUser_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<std::string> result = bundleDataMgr.GetBundleNamesForNewUser();
+    EXPECT_EQ(result.empty(), true);
+}
+
+/**
+ * @tc.number: CreateAppEl5GroupDir_0001
+ * @tc.name: CreateAppEl5GroupDir
+ * @tc.desc: test CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, CreateAppEl5GroupDir_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = Constants::INVALID_USERID;
+    bundleDataMgr.CreateAppEl5GroupDir(BUNDLE_NAME, userId);
+    EXPECT_EQ(bundleDataMgr.bundleInfos_.find(BUNDLE_NAME), bundleDataMgr.bundleInfos_.end());
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.needAppDetail = false;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    bundleDataMgr.UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    bundleDataMgr.CreateAppEl5GroupDir(BUNDLE_NAME, userId);
+    EXPECT_NE(bundleDataMgr.bundleInfos_.find(BUNDLE_NAME),  bundleDataMgr.bundleInfos_.end());
+    bundleDataMgr.UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0001
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: test SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const std::string &extName, const std::string &mimeType)
+ */
+HWTEST_F(BmsDataMgrTest, SetExtNameOrMIMEToApp_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string moduleName = "moduleName";
+    std::string abilityName = "abilityName";
+    std::string extName = "";
+    std::string mimeType = "";
+    ErrCode ret = bundleDataMgr.SetExtNameOrMIMEToApp(BUNDLE_NAME, moduleName, abilityName, extName, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.needAppDetail = false;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    bundleDataMgr.UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    ret = bundleDataMgr.SetExtNameOrMIMEToApp(BUNDLE_NAME, moduleName, abilityName, extName, mimeType);
+    EXPECT_EQ(ret, ERR_OK);
+
+    extName = "extName";
+    ret = bundleDataMgr.SetExtNameOrMIMEToApp(BUNDLE_NAME, moduleName, abilityName, extName, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    extName = "";
+    mimeType = "mimeType";
+    ret = bundleDataMgr.SetExtNameOrMIMEToApp(BUNDLE_NAME, moduleName, abilityName, extName, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    bundleDataMgr.UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: DelExtNameOrMIMEToApp_0001
+ * @tc.name: DelExtNameOrMIMEToApp
+ * @tc.desc: test DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const std::string &extName, const std::string &mimeType)
+ */
+HWTEST_F(BmsDataMgrTest, DelExtNameOrMIMEToApp_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string moduleName = "moduleName";
+    std::string abilityName = "abilityName";
+    std::string extName = "";
+    std::string mimeType = "";
+    ErrCode ret = bundleDataMgr.DelExtNameOrMIMEToApp(BUNDLE_NAME, moduleName, abilityName, extName, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.needAppDetail = false;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    bundleDataMgr.UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    ret = bundleDataMgr.DelExtNameOrMIMEToApp(BUNDLE_NAME, moduleName, abilityName, extName, mimeType);
+    EXPECT_EQ(ret, ERR_OK);
+
+    extName = "extName";
+    ret = bundleDataMgr.DelExtNameOrMIMEToApp(BUNDLE_NAME, moduleName, abilityName, extName, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    extName = "";
+    mimeType = "mimeType";
+    ret = bundleDataMgr.DelExtNameOrMIMEToApp(BUNDLE_NAME, moduleName, abilityName, extName, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    bundleDataMgr.UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+
+/**
+ * @tc.number: GetJsonProfile_0001
+ * @tc.name: GetJsonProfile
+ * @tc.desc: test GetJsonProfile(ProfileType profileType, const std::string &bundleName,
+    const std::string &moduleName, std::string &profile, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, GetJsonProfile_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string moduleName = "moduleName";
+    std::string profile = "profile";
+    int32_t userId = Constants::INVALID_USERID;
+    ErrCode ret = bundleDataMgr.GetJsonProfile(ProfileType::INTENT_PROFILE, BUNDLE_NAME,
+        moduleName, profile, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.needAppDetail = false;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    bundleDataMgr.UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.GetJsonProfile(ProfileType::INTENT_PROFILE, BUNDLE_NAME,
+        moduleName, profile, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    bundleDataMgr.UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: GenerateNewUserDataGroupInfos_0001
+ * @tc.name: GenerateNewUserDataGroupInfos
+ * @tc.desc: test GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, GenerateNewUserDataGroupInfos_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "bundleName_test";
+    int32_t userId = Constants::INVALID_USERID;
+    bundleDataMgr.GenerateNewUserDataGroupInfos(bundleName, userId);
+    EXPECT_EQ(bundleDataMgr.bundleInfos_.find(bundleName), bundleDataMgr.bundleInfos_.end());
+}
+
+/**
+ * @tc.number: GenerateNewUserDataGroupInfos_0002
+ * @tc.name: GenerateNewUserDataGroupInfos
+ * @tc.desc: test GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, GenerateNewUserDataGroupInfos_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    std::string bundleName = "bundleName_test";
+    std::string appName = "appName_test";
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = appName;
+    ApplicationInfo applicationInfo;
+    std::string dataGroupId = "dataGroupId_test";
+    DataGroupInfo dataGroupInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+    applicationInfo.needAppDetail = false;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.AddDataGroupInfo(dataGroupId, dataGroupInfo);
+    int32_t userId = Constants::ANY_USERID;
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, innerBundleInfo);
+    bundleDataMgr.GenerateNewUserDataGroupInfos(bundleName, userId);
+
+    auto dataGroupInfos = bundleDataMgr.bundleInfos_.find(bundleName)->second.GetDataGroupInfos();
+    EXPECT_EQ(dataGroupInfos.empty(), false);
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: DeleteGroupDirsForException_0001
+ * @tc.name: DeleteGroupDirsForException
+ * @tc.desc: test DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteGroupDirsForException_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo oldInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "bundleInfoName";
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = "bundleInfoName";
+    applicationInfo.bundleName = "bundleInfoName";
+    applicationInfo.needAppDetail = false;
+    int32_t userId = Constants::ANY_USERID;
+    oldInfo.SetBaseBundleInfo(bundleInfo);
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    bundleDataMgr.UpdateBundleInstallState("bundleInfoName", InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo("bundleInfoName", oldInfo);
+    bundleDataMgr.DeleteGroupDirsForException(oldInfo, userId);
+    EXPECT_NE(bundleDataMgr.bundleInfos_.find(oldInfo.GetBundleName()), bundleDataMgr.bundleInfos_.end());
+    bundleDataMgr.UpdateBundleInstallState("bundleInfoName", InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: DeleteGroupDirsForException_0002
+ * @tc.name: DeleteGroupDirsForException
+ * @tc.desc: test DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteGroupDirsForException_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo oldInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.name = "bundleInfoName";
+    bundleInfo.applicationInfo.name = APP_NAME;
+    std::string dataGroupId = "dataGroupId";
+    DataGroupInfo dataGroupInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = "bundleInfoName";
+    applicationInfo.bundleName = "bundleInfoName";
+    applicationInfo.needAppDetail = false;
+    int32_t userId = Constants::ANY_USERID;
+    oldInfo.SetBaseBundleInfo(bundleInfo);
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    oldInfo.AddDataGroupInfo(dataGroupId, dataGroupInfo);
+    bundleDataMgr.UpdateBundleInstallState("bundleInfoName", InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo("bundleInfoName", oldInfo);
+
+    bundleDataMgr.DeleteGroupDirsForException(oldInfo, userId);
+    auto ret = bundleDataMgr.bundleInfos_.find(oldInfo.GetBundleName())->second.GetDataGroupInfos();
+    EXPECT_EQ(ret.empty(), false);
+    bundleDataMgr.UpdateBundleInstallState("bundleInfoName", InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: HandleGroupIdAndIndex_0001
+ * @tc.name: HandleGroupIdAndIndex
+ * @tc.desc: test HandleGroupIdAndIndex(const std::string &bundleName, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, HandleGroupIdAndIndex_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    constexpr int8_t DATA_GROUP_INDEX_START = 1;
+    constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
+    std::set<std::string> errorGroupIds = {"group1", "group2"};
+    std::map<int32_t, std::string> indexMap = {{100, "existing_group"}};
+    std::map<std::string, int32_t> groupIdMap = {{"existing_group", 100}};
+    bundleDataMgr.HandleGroupIdAndIndex(errorGroupIds, indexMap, groupIdMap);
+    EXPECT_EQ(groupIdMap["existing_group"], 100);
+
+    bundleDataMgr.HandleGroupIdAndIndex(errorGroupIds, indexMap, groupIdMap);
+    EXPECT_NE(groupIdMap.find("group1"), groupIdMap.end());
+    EXPECT_NE(groupIdMap.find("group2"), groupIdMap.end());
+
+    for (int i = DATA_GROUP_INDEX_START; i < DATA_GROUP_UID_OFFSET; ++i) {
+        indexMap[i] = "dummy_group";
+    }
+    bundleDataMgr.HandleGroupIdAndIndex(errorGroupIds, indexMap, groupIdMap);
+    EXPECT_EQ(groupIdMap["group1"], DATA_GROUP_INDEX_START);
+}
 } // OHOS
