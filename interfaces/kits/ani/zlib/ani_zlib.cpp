@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include "ani_signature_builder.h"
 #include "ani_zip.h"
 #include "common_func.h"
 
@@ -19,14 +21,14 @@ namespace OHOS {
 namespace AppExecFwk {
 
 namespace {
+constexpr const char* NS_NAME_ZLIB = "@ohos.zlib.zlib";
 constexpr const char* PARAM_NAME_IN_FILE = "inFile";
 constexpr const char* PARAM_NAME_OUT_FILE = "outFile";
 constexpr const char* PARAM_NAME_OPTIONS = "options";
 constexpr const char* TYPE_STRING = "string";
 } // namespace
 
-static void DecompressFile([[maybe_unused]] ani_env* env,
-    ani_string aniInFile, ani_string aniOutFile, ani_object aniOptions)
+static void CompressFile(ani_env* env, ani_string aniInFile, ani_string aniOutFile, ani_object aniOptions)
 {
     std::string inFile = CommonFunAni::AniStrToString(env, aniInFile);
     if (inFile.empty()) {
@@ -43,13 +45,44 @@ static void DecompressFile([[maybe_unused]] ani_env* env,
     }
 
     LIBZIP::OPTIONS options;
-    if (!LIBZIP::ParseOptions(env, aniOptions, options)) {
+    if (!LIBZIP::ANIParseOptions(env, aniOptions, options)) {
         APP_LOGE("options parse failed.");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OPTIONS);
         return;
     }
 
-    int32_t errCode = CommonFunc::ConvertErrCode(LIBZIP::DecompressFileImpl(inFile, outFile, options));
+    int32_t errCode = CommonFunc::ConvertErrCode(LIBZIP::ANICompressFileImpl(inFile, outFile, options));
+    if (errCode != ERR_OK) {
+        APP_LOGE("DecompressFile failed, ret %{public}d", errCode);
+        BusinessErrorAni::ThrowCommonError(env, errCode, "", "");
+    }
+}
+
+static void DecompressFile(ani_env* env, ani_string aniInFile, ani_string aniOutFile, ani_object aniOptions)
+{
+    APP_LOGE("DecompressFile entry");
+    std::string inFile = CommonFunAni::AniStrToString(env, aniInFile);
+    if (inFile.empty()) {
+        APP_LOGE("inFile is empty.");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, TYPE_STRING);
+        return;
+    }
+
+    std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
+    if (inFile.empty()) {
+        APP_LOGE("inFile is empty.");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, TYPE_STRING);
+        return;
+    }
+
+    LIBZIP::OPTIONS options;
+    if (!LIBZIP::ANIParseOptions(env, aniOptions, options)) {
+        APP_LOGE("options parse failed.");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OPTIONS);
+        return;
+    }
+
+    int32_t errCode = CommonFunc::ConvertErrCode(LIBZIP::ANIDecompressFileImpl(inFile, outFile, options));
     if (errCode != ERR_OK) {
         APP_LOGE("DecompressFile failed, ret %{public}d", errCode);
         BusinessErrorAni::ThrowCommonError(env, errCode, "", "");
@@ -67,25 +100,22 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         return status;
     }
 
-    static const char* nsName = "L@ohos/zlib/zlib;";
-    ani_namespace kitNs;
-    status = env->FindNamespace(nsName, &kitNs);
+    arkts::ani_signature::Namespace zlibNS = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_ZLIB);
+    ani_namespace kitNs = nullptr;
+    status = env->FindNamespace(zlibNS.Descriptor().c_str(), &kitNs);
     if (status != ANI_OK) {
-        APP_LOGE("FindNamespace: %{public}s fail with %{public}d", nsName, status);
+        APP_LOGE("FindNamespace: %{public}s fail with %{public}d", NS_NAME_ZLIB, status);
         return status;
     }
 
     std::array methods = {
-        ani_native_function {
-            "DecompressFile",
-            "Lstd/core/String;Lstd/core/String;L@ohos/zlib/zlib/Options;:V",
-            reinterpret_cast<void*>(DecompressFile)
-        }
+        ani_native_function { "CompressFile", nullptr, reinterpret_cast<void*>(CompressFile) },
+        ani_native_function { "DecompressFile", nullptr, reinterpret_cast<void*>(DecompressFile) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
     if (status != ANI_OK) {
-        APP_LOGE("Namespace_BindNativeFunctions: %{public}s fail with %{public}d", nsName, status);
+        APP_LOGE("Namespace_BindNativeFunctions: %{public}s fail with %{public}d", NS_NAME_ZLIB, status);
         return status;
     }
 

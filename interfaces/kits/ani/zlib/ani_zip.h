@@ -28,12 +28,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
-bool ParseOptions(ani_env* env, ani_object object, LIBZIP::OPTIONS& options);
-ErrCode DecompressFileImpl(const std::string& inFile, const std::string& outFile, const LIBZIP::OPTIONS& options);
-inline bool ExcludeNoFilesFilter(const LIBZIP::FilePath& filePath)
-{
-    return true;
-}
+bool ANIParseOptions(ani_env* env, ani_object object, LIBZIP::OPTIONS& options);
+ErrCode ANICompressFileImpl(const std::string& inFile, const std::string& outFile, const LIBZIP::OPTIONS& options);
+ErrCode ANIDecompressFileImpl(const std::string& inFile, const std::string& outFile, const LIBZIP::OPTIONS& options);
 } // namespace LIBZIP
 } // namespace AppExecFwk
 } // namespace OHOS
