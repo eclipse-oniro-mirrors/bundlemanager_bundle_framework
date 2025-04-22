@@ -177,6 +177,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("ApplicationInfoFlag", nApplicationInfoFlag),
         DECLARE_NAPI_FUNCTION("getSignatureInfo", GetSignatureInfoSync),
         DECLARE_NAPI_FUNCTION("migrateData", MigrateData),
+        DECLARE_NAPI_FUNCTION("getAllDynamicIconInfo", GetAllDynamicIconInfo),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
