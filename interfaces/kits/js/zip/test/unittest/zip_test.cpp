@@ -479,7 +479,7 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0400, Function | MediumTest 
  */
 HWTEST_F(ZipTest, APPEXECFWK_ZIP_UTILS_FilePathCheckValid_0100, Function | MediumTest | Level1)
 {
-    std::string = "";
+    std::string str = "";
     bool ret = FilePathCheckValid(str);
     EXPECT_FALSE(ret);
 

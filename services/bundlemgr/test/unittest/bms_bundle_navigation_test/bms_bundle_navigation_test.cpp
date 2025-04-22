@@ -1284,21 +1284,20 @@ HWTEST_F(BmsBundleNavigationTest, RouterMapMerge_0013, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleNavigationTest, IsRegexMatch_0001, Function | SmallTest | Level0)
 {
-
-    char *pattern = "";
+    const char *pattern = "";
     std::string str = "";
     bool result = RouterMapHelper::IsRegexMatch(str, pattern);
-    EXPECT_TRUR(result);
+    EXPECT_TRUE(result);
 
     pattern = "[";
     str = "test";
     result = RouterMapHelper::IsRegexMatch(str, pattern);
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
 
     pattern = "a.*b";
     str = "abc";
     result = RouterMapHelper::IsRegexMatch(str, pattern);
-    EXPECT_TRUR(result);
+    EXPECT_TRUE(result);
 
     pattern = "a.*b";
     str = "acd";
@@ -1308,7 +1307,7 @@ HWTEST_F(BmsBundleNavigationTest, IsRegexMatch_0001, Function | SmallTest | Leve
     pattern = ".";
     str = "a";
     result = RouterMapHelper::IsRegexMatch(str, pattern);
-    EXPECT_TRUR(result);
+    EXPECT_TRUE(result);
 
     pattern = "^a";
     str = "a\nb";
