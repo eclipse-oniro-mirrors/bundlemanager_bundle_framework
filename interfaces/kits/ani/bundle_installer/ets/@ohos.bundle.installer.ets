@@ -37,7 +37,7 @@ namespace installer {
   }
 
   function getBundleInstaller(): Promise<BundleInstaller> {
-    let p = new Promise<BundleInstaller>((resolve: (bundleInstaller: BundleInstaller) => void, reject: (error: Object) => void) => {
+    let p = new Promise<BundleInstaller>((resolve: (bundleInstaller: BundleInstaller) => void, reject: (error: Error) => void) => {
       let execFun = (): BundleInstaller => {
         return installer.getBundleInstallerSync();
       };
@@ -45,7 +45,7 @@ namespace installer {
         p1.then((e: NullishType) => {
           let installer: BundleInstaller = e as BundleInstaller;
           resolve(installer);
-        }, (err: Object): void => {
+        }, (err: Error): void => {
             let br = err as BusinessError<void>;
             reject(br);
         });
