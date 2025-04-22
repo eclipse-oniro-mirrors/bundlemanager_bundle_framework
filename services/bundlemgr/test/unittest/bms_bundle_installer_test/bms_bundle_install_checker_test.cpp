@@ -2634,4 +2634,72 @@ HWTEST_F(BmsBundleInstallCheckerTest, BaseBundleInstaller_0200, Function | Small
     auto ret = baseBundleInstaller.IsEnterpriseForAllUser(installParam, "");
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: CheckDeveloperMode_0100
+ * @tc.name: Test CheckDeveloperMode
+ * @tc.desc: 1.Test CheckDeveloperMode
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDeveloperMode_0100, Function | SmallTest | Level1)
+{
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true"));
+
+    BundleInstallChecker checker;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    result.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.emplace_back(result);
+    auto ret = checker.CheckDeveloperMode(hapVerifyRes, 0);
+    EXPECT_EQ(ret, ERR_OK);
+
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    result.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.clear();
+    hapVerifyRes.emplace_back(result);
+    ret = checker.CheckDeveloperMode(hapVerifyRes, 0);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAllowEnterpriseBundle_0200
+ * @tc.name: Test CheckAllowEnterpriseBundle
+ * @tc.desc: 1.Test CheckAllowEnterpriseBundle
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAllowEnterpriseBundle_0200, Function | SmallTest | Level1)
+{
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "true"));
+
+    BundleInstallChecker checker;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    auto ret = checker.CheckAllowEnterpriseBundle(hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::DEVELOPERMODE_STATE, "false"));
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, "false"));
+    EXPECT_TRUE(system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false"));
+
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_MDM;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    result.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.emplace_back(result);
+    ret = checker.CheckAllowEnterpriseBundle(hapVerifyRes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED);
+
+    ret = checker.CheckHspInstallCondition(hapVerifyRes, 0);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED);
+
+    provisionInfo.distributionType = Security::Verify::AppDistType::OS_INTEGRATION;
+    result.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.clear();
+    hapVerifyRes.emplace_back(result);
+    ret = checker.CheckAllowEnterpriseBundle(hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = checker.CheckHspInstallCondition(hapVerifyRes, 0);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
