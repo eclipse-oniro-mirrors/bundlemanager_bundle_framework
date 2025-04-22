@@ -35,6 +35,9 @@ public:
     static ErrCode InnerCreateAppClone(std::string &bundleName, int32_t userId, int32_t &appIndex);
     static ErrCode InnerDestroyAppClone(std::string &bundleName, int32_t userId, int32_t appIndex,
         DestroyAppCloneParam &destroyAppCloneParam);
+    static ErrCode InnerAddExtResource(const std::string &bundleName, const std::vector<std::string> &filePaths);
+    static ErrCode InnerRemoveExtResource(const std::string &bundleName, const std::vector<std::string> &moduleNames);
+    static ErrCode InnerInstallPreexistingApp(std::string &bundleName, int32_t userId);
 };
 } // AppExecFwk
 } // OHOS

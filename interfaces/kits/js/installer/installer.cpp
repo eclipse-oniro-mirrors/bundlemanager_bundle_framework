@@ -1252,30 +1252,6 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode InnerAddExtResource(
-    const std::string &bundleName, const std::vector<std::string> &filePaths)
-{
-    auto extResourceManager = CommonFunc::GetExtendResourceManager();
-    if (extResourceManager == nullptr) {
-        APP_LOGE("extResourceManager is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-
-    std::vector<std::string> destFiles;
-    ErrCode ret = extResourceManager->CopyFiles(filePaths, destFiles);
-    if (ret != ERR_OK) {
-        APP_LOGE("CopyFiles failed");
-        return CommonFunc::ConvertErrCode(ret);
-    }
-
-    ret = extResourceManager->AddExtResource(bundleName, destFiles);
-    if (ret != ERR_OK) {
-        APP_LOGE("AddExtResource failed");
-    }
-
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void AddExtResourceExec(napi_env env, void *data)
 {
     ExtResourceCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtResourceCallbackInfo *>(data);
@@ -1283,7 +1259,7 @@ void AddExtResourceExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerAddExtResource(
+    asyncCallbackInfo->err = InstallerHelper::InnerAddExtResource(
         asyncCallbackInfo->bundleName, asyncCallbackInfo->filePaths);
 }
 
@@ -1349,23 +1325,6 @@ napi_value AddExtResource(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode InnerRemoveExtResource(
-    const std::string &bundleName, const std::vector<std::string> &moduleNames)
-{
-    auto extResourceManager = CommonFunc::GetExtendResourceManager();
-    if (extResourceManager == nullptr) {
-        APP_LOGE("extResourceManager is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-
-    ErrCode ret = extResourceManager->RemoveExtResource(bundleName, moduleNames);
-    if (ret != ERR_OK) {
-        APP_LOGE("RemoveExtResource failed");
-    }
-
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void RemoveExtResourceExec(napi_env env, void *data)
 {
     ExtResourceCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtResourceCallbackInfo *>(data);
@@ -1373,7 +1332,7 @@ void RemoveExtResourceExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerRemoveExtResource(
+    asyncCallbackInfo->err = InstallerHelper::InnerRemoveExtResource(
         asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleNames);
 }
 
@@ -1638,23 +1597,6 @@ napi_value DestroyAppClone(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerInstallPreexistingApp(std::string &bundleName, int32_t userId)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode result = iBundleInstaller->InstallExisted(bundleName, userId);
-    APP_LOGD("result is %{public}d", result);
-    return result;
-}
-
 void InstallPreexistingAppExec(napi_env env, void *data)
 {
     InstallPreexistingAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallPreexistingAppCallbackInfo *>(data);
@@ -1666,7 +1608,7 @@ void InstallPreexistingAppExec(napi_env env, void *data)
         asyncCallbackInfo->bundleName.c_str(),
         asyncCallbackInfo->userId);
     asyncCallbackInfo->err =
-        InnerInstallPreexistingApp(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId);
+        InstallerHelper::InnerInstallPreexistingApp(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId);
 }
 
 void InstallPreexistingAppComplete(napi_env env, napi_status status, void *data)

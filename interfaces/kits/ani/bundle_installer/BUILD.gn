@@ -69,6 +69,7 @@ ohos_shared_library("ani_bundle_installer") {
     "ipc:ipc_single",
     "napi:ace_napi",
     "runtime_core:ani",
+    "runtime_core:ani_helpers",
   ]
 
   subsystem_name = "bundlemanager"

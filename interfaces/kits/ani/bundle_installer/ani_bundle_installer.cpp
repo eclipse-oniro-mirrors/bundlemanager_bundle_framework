@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <ani_signature_builder.h>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -51,7 +52,7 @@ constexpr const char* RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
 constexpr const char* RESOURCE_NAME_OF_RECOVER = "Recover";
 constexpr const char* RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
 constexpr const char* RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER = "UninstallAndRecover";
-constexpr const char* INNERINSTALLER_CLASSNAME = "L@ohos/bundle/installerInner/BundleInstallerInner;";
+constexpr const char* INNERINSTALLER_CLASSNAME = "@ohos.bundle.installerInner.BundleInstallerInner";
 constexpr const char* INSTALL_PERMISSION =
     "ohos.permission.INSTALL_BUNDLE or "
     "ohos.permission.INSTALL_ENTERPRISE_BUNDLE or "
@@ -69,9 +70,13 @@ constexpr const char* DESTROY_APP_CLONE = "destroyAppClone";
 constexpr const char* CORRESPONDING_TYPE = "corresponding type";
 constexpr const char* HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
+constexpr const char* FILE_PATH = "filePath";
+constexpr const char* ADD_EXT_RESOURCE = "AddExtResource";
+constexpr const char* REMOVE_EXT_RESOURCE = "RemoveExtResource";
+constexpr const char* INSTALL_PREEXISTING_APP = "installPreexistingApp";
 } // namespace
 static bool g_isSystemApp = false;
-
+using namespace arkts::ani_signature;
 static bool GetNativeInstallerWithDeathRecpt(InstallResult& installResult,
     sptr<IBundleInstaller>& iBundleInstaller, sptr<InstallerCallback>& callback)
 {
@@ -196,6 +201,8 @@ static void UninstallOrRecoverExecuter(std::string& bundleName, InstallParam& in
         iBundleInstaller->Recover(bundleName, installParam, callback);
     } else if (option == InstallOption::UNINSTALL) {
         iBundleInstaller->Uninstall(bundleName, installParam, callback);
+    } else if (option == InstallOption::UNINSTALL_AND_RECOVER) {
+        iBundleInstaller->UninstallAndRecover(bundleName, installParam, callback);
     } else {
         APP_LOGE("error install option %{public}d", option);
         installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
@@ -207,25 +214,35 @@ static void UninstallOrRecoverExecuter(std::string& bundleName, InstallParam& in
     APP_LOGD("%{public}d resultCode %{public}d", option, installResult.resultCode);
 }
 
+static bool GetInstallParamForInstall(ani_env* env, ani_array arrayObj, ani_object aniInstParam,
+    std::vector<std::string>& hapFiles, InstallParam& installParam)
+{
+    APP_LOGI("Install");
+    if (!CommonFunAni::ParseStrArray(env, arrayObj, hapFiles)) {
+        APP_LOGE("hapFiles parse invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        return false;
+    }
+    if (!ParseInstallParamWithLog(env, aniInstParam, installParam)) {
+        return false;
+    }
+    if (!CheckInstallParam(env, installParam)) {
+        return false;
+    }
+    if (hapFiles.empty() && !installParam.verifyCodeParams.empty()) {
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, HAPS_FILE_NEEDED);
+        return false;
+    }
+    return true;
+}
+
 static void AniInstall(ani_env* env, [[maybe_unused]] ani_object installerObj,
     ani_array arrayObj, ani_object aniInstParam)
 {
     APP_LOGI("Install");
     std::vector<std::string> hapFiles;
-    if (!CommonFunAni::ParseStrArray(env, arrayObj, hapFiles)) {
-        APP_LOGE("hapFiles parse invalid");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
-        return;
-    }
     InstallParam installParam;
-    if (!ParseInstallParamWithLog(env, aniInstParam, installParam)) {
-        return;
-    }
-    if (!CheckInstallParam(env, installParam)) {
-        return;
-    }
-    if (hapFiles.empty() && !installParam.verifyCodeParams.empty()) {
-        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, HAPS_FILE_NEEDED);
+    if (!GetInstallParamForInstall(env, arrayObj, aniInstParam, hapFiles, installParam)) {
         return;
     }
     InstallResult result;
@@ -310,24 +327,78 @@ static void AniUpdateBundleForSelf(ani_env* env, [[maybe_unused]] ani_object ins
     ani_array arrayObj, ani_object aniInstParam)
 {
     APP_LOGI("UpdateBundleForSelf");
+    std::vector<std::string> hapFiles;
+    InstallParam installParam;
+    if (!GetInstallParamForInstall(env, arrayObj, aniInstParam, hapFiles, installParam)) {
+        return;
+    }
+    installParam.isSelfUpdate = true;
+    InstallResult result;
+    ExecuteInstall(hapFiles, installParam, result);
+    ProcessResult(env, result, InstallOption::UPDATE_BUNDLE_FOR_SELF);
 }
 
 static void AniUninstallUpdates(ani_env* env, [[maybe_unused]] ani_object installerObj,
-    ani_string bundleName, ani_object aniInstParam)
+    ani_string aniBundleName, ani_object aniInstParam)
 {
     APP_LOGI("UninstallUpdates");
+    std::string bundleName;
+    InstallParam installParam;
+    if (!ParseBundleNameAndInstallParam(env, aniBundleName, aniInstParam, bundleName, installParam)) {
+        return;
+    }
+    InstallResult result;
+    UninstallOrRecoverExecuter(bundleName, installParam, result, InstallOption::UNINSTALL_AND_RECOVER);
+    ProcessResult(env, result, InstallOption::UNINSTALL_AND_RECOVER);
+}
+
+static bool ParseBundleNameAndFilePath(ani_env* env, ani_string aniBundleName, ani_object aniFilePaths,
+    std::string& bundleName, std::vector<std::string>& filePaths)
+{
+    bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
+    if (bundleName.empty()) {
+        APP_LOGE("Bundle name is empty.");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
+        return false;
+    }
+    if (!CommonFunAni::ParseStrArray(env, aniFilePaths, filePaths)) {
+        APP_LOGE("ani_string parse invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, FILE_PATH, CORRESPONDING_TYPE);
+        return false;
+    }
+    return true;
 }
 
 static void AniAddExtResource(ani_env* env, [[maybe_unused]] ani_object installerObj,
-    ani_string bundleName, ani_object filePaths)
+    ani_string aniBundleName, ani_object aniFilePaths)
 {
     APP_LOGI("AddExtResource");
+    std::string bundleName;
+    std::vector<std::string> filePaths;
+    if (!ParseBundleNameAndFilePath(env, aniBundleName, aniFilePaths, bundleName, filePaths)) {
+        return;
+    }
+    ErrCode err = InstallerHelper::InnerAddExtResource(bundleName, filePaths);
+    if (err != NO_ERROR) {
+        BusinessErrorAni::ThrowCommonError(
+            env, err, ADD_EXT_RESOURCE, Constants::PERMISSION_INSTALL_BUNDLE);
+    }
 }
 
 static void AniRemoveExtResource(ani_env* env, [[maybe_unused]] ani_object installerObj,
-    ani_string bundleName, ani_object moduleNames)
+    ani_string aniBundleName, ani_object aniModuleNames)
 {
     APP_LOGI("RemoveExtResource");
+    std::string bundleName;
+    std::vector<std::string> moduleNames;
+    if (!ParseBundleNameAndFilePath(env, aniBundleName, aniModuleNames, bundleName, moduleNames)) {
+        return;
+    }
+    ErrCode err = InstallerHelper::InnerRemoveExtResource(bundleName, moduleNames);
+    if (err != NO_ERROR) {
+        BusinessErrorAni::ThrowCommonError(
+            env, err, REMOVE_EXT_RESOURCE, Constants::PERMISSION_INSTALL_BUNDLE);
+    }
 }
 
 static ani_double AniCreateAppClone(ani_env* env, [[maybe_unused]] ani_object installerObj,
@@ -348,8 +419,7 @@ static ani_double AniCreateAppClone(ani_env* env, [[maybe_unused]] ani_object in
     }
     ErrCode res = CommonFunc::ConvertErrCode(InstallerHelper::InnerCreateAppClone(bundleName, userId, appIdx));
     if (res != SUCCESS) {
-        BusinessErrorAni::ThrowCommonError(env, res, CREATE_APP_CLONE,
-            Constants::PERMISSION_INSTALL_CLONE_BUNDLE);
+        BusinessErrorAni::ThrowCommonError(env, res, CREATE_APP_CLONE, Constants::PERMISSION_INSTALL_CLONE_BUNDLE);
     }
     return (ani_double)appIdx;
 }
@@ -388,9 +458,26 @@ static void AniDestroyAppClone(ani_env* env, [[maybe_unused]] ani_object install
 }
 
 static void AniInstallPreexistingApp(ani_env* env, [[maybe_unused]] ani_object installerObj,
-    ani_string bundleName, ani_double userId)
+    ani_string aniBundleName, ani_double aniUserId)
 {
     APP_LOGI("InstallPreexistingApp");
+    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
+    if (bundleName.empty()) {
+        APP_LOGE("Bundle name is empty.");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
+        return;
+    }
+    int32_t userId = 0;
+    if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
+        APP_LOGE("Cast appIdx failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+        return;
+    }
+    ErrCode result = CommonFunc::ConvertErrCode(InstallerHelper::InnerInstallPreexistingApp(bundleName, userId));
+    if (result != SUCCESS) {
+        BusinessErrorAni::ThrowCommonError(env, result,
+            INSTALL_PREEXISTING_APP, Constants::PERMISSION_UNINSTALL_CLONE_BUNDLE);
+    }
 }
 
 static ani_object AniGetBundleInstallerSync(ani_env* env)
@@ -408,7 +495,8 @@ static ani_object AniGetBundleInstallerSync(ani_env* env)
         return nullptr;
     }
     g_isSystemApp = true;
-    ani_class installerClz = CommonFunAni::CreateClassByName(env, INNERINSTALLER_CLASSNAME);
+    ani_class installerClz = CommonFunAni::CreateClassByName(env,
+        Builder::BuildClass(INNERINSTALLER_CLASSNAME).Descriptor());
     RETURN_NULL_IF_NULL(installerClz);
     return CommonFunAni::CreateNewObjectByClass(env, installerClz);
 }
@@ -416,37 +504,17 @@ static ani_object AniGetBundleInstallerSync(ani_env* env)
 static void GetInstallerMethods(std::array<ani_native_function, INSTALLER_METHOD_COUNTS> &installerMethods)
 {
     installerMethods = {
-        ani_native_function { "installNative",
-            "Lescompat/Array;L@ohos/bundle/installer/installer/InstallParam;:V",
-            reinterpret_cast<void*>(AniInstall) },
-        ani_native_function { "uninstallNative",
-            "Lstd/core/String;L@ohos/bundle/installer/installer/InstallParam;:V",
-            reinterpret_cast<void*>(AniUninstall) },
-        ani_native_function { "recoverNative",
-            "Lstd/core/String;L@ohos/bundle/installer/installer/InstallParam;:V",
-            reinterpret_cast<void*>(AniRecover) },
-        ani_native_function { "uninstallByOwnParam",
-            "L@ohos/bundle/installer/installer/UninstallParam;:V",
-            reinterpret_cast<void*>(AniUninstallByUninstallParam) },
-        ani_native_function { "updateBundleForSelfNative",
-            "Lescompat/Array;L@ohos/bundle/installer/installer/InstallParam;:V",
-            reinterpret_cast<void*>(AniUpdateBundleForSelf) },
-        ani_native_function { "uninstallUpdatesNative",
-            "Lstd/core/String;L@ohos/bundle/installer/installer/InstallParam;:V",
-            reinterpret_cast<void*>(AniUninstallUpdates) },
-        ani_native_function { "addExtResourceNative",
-            "Lstd/core/String;Lescompat/Array;:V",
-            reinterpret_cast<void*>(AniAddExtResource) },
-        ani_native_function { "removeExtResourceNative",
-            "Lstd/core/String;Lescompat/Array;:V",
-            reinterpret_cast<void*>(AniRemoveExtResource) },
-        ani_native_function { "createAppCloneNative",
-            "Lstd/core/String;L@ohos/bundle/installer/installer/CreateAppCloneParam;:D",
-            reinterpret_cast<void*>(AniCreateAppClone) },
-        ani_native_function { "destroyAppCloneNative", nullptr,
-            reinterpret_cast<void*>(AniDestroyAppClone) },
-        ani_native_function { "installPreexistingAppNative",
-            "Lstd/core/String;D:V",
+        ani_native_function { "installNative", nullptr, reinterpret_cast<void*>(AniInstall) },
+        ani_native_function { "uninstallNative", nullptr, reinterpret_cast<void*>(AniUninstall) },
+        ani_native_function { "recoverNative", nullptr, reinterpret_cast<void*>(AniRecover) },
+        ani_native_function { "uninstallByOwnParam", nullptr, reinterpret_cast<void*>(AniUninstallByUninstallParam) },
+        ani_native_function { "updateBundleForSelfNative", nullptr, reinterpret_cast<void*>(AniUpdateBundleForSelf) },
+        ani_native_function { "uninstallUpdatesNative", nullptr, reinterpret_cast<void*>(AniUninstallUpdates) },
+        ani_native_function { "addExtResourceNative", nullptr, reinterpret_cast<void*>(AniAddExtResource) },
+        ani_native_function { "removeExtResourceNative", nullptr, reinterpret_cast<void*>(AniRemoveExtResource) },
+        ani_native_function { "createAppCloneNative", nullptr, reinterpret_cast<void*>(AniCreateAppClone) },
+        ani_native_function { "destroyAppCloneNative", nullptr, reinterpret_cast<void*>(AniDestroyAppClone) },
+        ani_native_function { "installPreexistingAppNative", nullptr,
             reinterpret_cast<void*>(AniInstallPreexistingApp) },
     };
 }
@@ -458,19 +526,19 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     ani_env* env;
     ani_status res = vm->GetEnv(ANI_VERSION_1, &env);
     RETURN_ANI_STATUS_IF_NOT_OK(res, "Unsupported ANI_VERSION_1");
-    static const char* nsName = "L@ohos/bundle/installer/installer;";
+    Namespace installerNs = Builder::BuildNamespace("@ohos.bundle.installer.installer");
     ani_namespace kitNs;
-    res = env->FindNamespace(nsName, &kitNs);
-    RETURN_ANI_STATUS_IF_NOT_OK(res, "Not found nameSpace L@ohos/bundle/installer/installer;");
+    res = env->FindNamespace(installerNs.Descriptor().c_str(), &kitNs);
+    RETURN_ANI_STATUS_IF_NOT_OK(res, "Not found nameSpace of @ohos.bundle.installer.installer");
+
     std::array methods = {
-        ani_native_function { "getBundleInstallerSync", ":L@ohos/bundle/installer/installer/BundleInstaller;",
-            reinterpret_cast<void*>(AniGetBundleInstallerSync) },
+        ani_native_function { "getBundleInstallerSync", nullptr, reinterpret_cast<void*>(AniGetBundleInstallerSync) }
     };
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
     RETURN_ANI_STATUS_IF_NOT_OK(res, "Cannot bind native methods");
     APP_LOGI("BundleInstaller class binding..");
     ani_class installerClz;
-    res = env->FindClass(INNERINSTALLER_CLASSNAME, &installerClz);
+    res = env->FindClass(Builder::BuildClass(INNERINSTALLER_CLASSNAME).Descriptor().c_str(), &installerClz);
     RETURN_ANI_STATUS_IF_NOT_OK(res, "Not found clsName");
     std::array<ani_native_function, INSTALLER_METHOD_COUNTS> installerMethods;
     GetInstallerMethods(installerMethods);

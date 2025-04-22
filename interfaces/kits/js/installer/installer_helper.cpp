@@ -270,5 +270,63 @@ ErrCode InstallerHelper::InnerDestroyAppClone(std::string &bundleName, int32_t u
     APP_LOGD("UninstallCloneApp result is %{public}d", result);
     return result;
 }
+
+ErrCode InstallerHelper::InnerAddExtResource(
+    const std::string &bundleName, const std::vector<std::string> &filePaths)
+{
+    auto extResourceManager = CommonFunc::GetExtendResourceManager();
+    if (extResourceManager == nullptr) {
+        APP_LOGE("extResourceManager is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    std::vector<std::string> destFiles;
+    ErrCode ret = extResourceManager->CopyFiles(filePaths, destFiles);
+    if (ret != ERR_OK) {
+        APP_LOGE("CopyFiles failed");
+        return CommonFunc::ConvertErrCode(ret);
+    }
+
+    ret = extResourceManager->AddExtResource(bundleName, destFiles);
+    if (ret != ERR_OK) {
+        APP_LOGE("AddExtResource failed");
+    }
+
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode InstallerHelper::InnerRemoveExtResource(
+    const std::string &bundleName, const std::vector<std::string> &moduleNames)
+{
+    auto extResourceManager = CommonFunc::GetExtendResourceManager();
+    if (extResourceManager == nullptr) {
+        APP_LOGE("extResourceManager is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    ErrCode ret = extResourceManager->RemoveExtResource(bundleName, moduleNames);
+    if (ret != ERR_OK) {
+        APP_LOGE("RemoveExtResource failed");
+    }
+
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode InstallerHelper::InnerInstallPreexistingApp(std::string &bundleName, int32_t userId)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode result = iBundleInstaller->InstallExisted(bundleName, userId);
+    APP_LOGD("result is %{public}d", result);
+    return result;
+}
 } // AppExecFwk
 } // OHOS
