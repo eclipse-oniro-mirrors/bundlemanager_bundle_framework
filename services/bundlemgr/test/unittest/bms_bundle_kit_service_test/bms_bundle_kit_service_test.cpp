@@ -14485,4 +14485,172 @@ HWTEST_F(BmsBundleKitServiceTest, ProcessBundle_0002, Function | SmallTest | Lev
     EXPECT_FALSE(ret);
     request.totalDataBytesThreshold_ = 0;
 }
+
+/**
+ * @tc.number: GetAbilityInfoByName
+ * @tc.name: PluginBundleInfo Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAbilityInfoByName_1000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    AbilityInfo info;
+    const std::string moduleName = "moduleName1";
+    const std::string abilityName = "abilityName1";
+    bool result = pluginBundleInfo.GetAbilityInfoByName(abilityName, moduleName, info);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: GetHapModuleInfo
+ * @tc.name: PluginBundleInfo Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfo_1000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    HapModuleInfo hapInfo;
+    const std::string moduleName = "moduleName";
+    bool result = pluginBundleInfo.GetHapModuleInfo(moduleName, hapInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: Marshalling_1000
+ * @tc.name: PluginBundleInfo Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_1000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    pluginBundleInfo.pluginModuleInfos.clear();
+    pluginBundleInfo.abilityInfos.clear();
+
+    Parcel parcel;
+    bool result = pluginBundleInfo.Marshalling(parcel);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: Marshalling_2000
+ * @tc.name: PluginBundleInfo Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_2000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    Parcel parcel;
+    bool result = pluginBundleInfo.Marshalling(parcel);
+
+    EXPECT_TRUE(result);
+    EXPECT_GT(parcel.GetDataSize(), 0);
+    int32_t moduleCount;
+    parcel.ReadInt32(moduleCount);
+    EXPECT_EQ(moduleCount, 0);
+
+    int32_t abilityCount;
+    parcel.ReadInt32(abilityCount);
+    EXPECT_EQ(abilityCount, 0);
+    std::string abilityName1;
+    AbilityInfo abilityInfo1;
+    parcel.ReadString(abilityName1);
+    EXPECT_EQ(abilityName1, "");
+
+    std::string abilityName2;
+    AbilityInfo abilityInfo2;
+    parcel.ReadString(abilityName2);
+    EXPECT_EQ(abilityName2, "");
+}
+
+/**
+ * @tc.number: Marshalling_3000
+ * @tc.name: PluginBundleInfo Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, Marshalling_3000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;   
+    Parcel parcel;
+    bool result = pluginBundleInfo.Marshalling(parcel);
+    EXPECT_TRUE(result);
+    EXPECT_GT(parcel.GetDataSize(), 0);
+    int32_t moduleCount;
+    parcel.ReadInt32(moduleCount);
+    EXPECT_EQ(moduleCount, 0);
+
+    int32_t abilityCount;
+    parcel.ReadInt32(abilityCount);
+    EXPECT_EQ(abilityCount,0);
+
+    std::string abilityName1;
+    AbilityInfo abilityInfo1;
+    parcel.ReadString(abilityName1);
+    EXPECT_EQ(abilityName1, "");
+
+    std::string abilityName2;
+    AbilityInfo abilityInfo2;
+    parcel.ReadString(abilityName2);
+    EXPECT_EQ(abilityName2, "");
+}
+
+/**
+ * @tc.number: IsRenameInstall_1000
+ * @tc.name: PluginBundleInfo Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsRenameInstall_1000, Function | SmallTest | Level0)
+{
+    InstallPluginParam installPluginParam;
+    installPluginParam.parameters[AppExecFwk::InstallParam::RENAME_INSTALL_KEY] = AppExecFwk::InstallParam::PARAMETERS_VALUE_TRUE;
+    bool result = installPluginParam.IsRenameInstall();
+    EXPECT_TRUE(result);    
+}
+
+/**
+ * @tc.number: IsRenameInstall_2000
+ * @tc.name: PluginBundleInfo Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsRenameInstall_2000, Function | SmallTest | Level0)
+{
+    InstallPluginParam installPluginParam;
+    installPluginParam.parameters[AppExecFwk::InstallParam::RENAME_INSTALL_KEY] = "false";
+    bool result = installPluginParam.IsRenameInstall();
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: IsRenameInstall_3000
+ * @tc.name: PluginBundleInfo Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsRenameInstall_3000, Function | SmallTest | Level0)
+{
+    InstallPluginParam installPluginParam;
+    bool result = installPluginParam.IsRenameInstall();
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: IsRenameInstall_4000
+ * @tc.name: PluginBundleInfo Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsRenameInstall_4000, Function | SmallTest | Level0)
+{
+    InstallPluginParam installPluginParam;
+    installPluginParam.parameters.clear();
+
+    Parcel parcel;
+    bool result = installPluginParam.Marshalling(parcel);
+    EXPECT_TRUE(result);
+    EXPECT_GT(parcel.GetDataSize(), 0);
+
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    parcel.ReadInt32(userId);
+    EXPECT_EQ(userId, -2);
+    uint32_t size;
+    parcel.ReadUint32(size);
+    EXPECT_EQ(size, 0);
+}
 }
