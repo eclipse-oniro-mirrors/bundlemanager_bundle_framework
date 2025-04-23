@@ -15,7 +15,7 @@
 
 #include "app_log_wrapper.h"
 #include "skill.h"
-#include <regex>
+#include <regex.h>
 #include <unistd.h>
 #include "mime_type_mgr.h"
 #include "parcel_macro.h"
@@ -438,14 +438,20 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // pathRegex match
         std::string pathRegexUri(skillUriString);
         pathRegexUri.append(skillUri.pathRegex);
-        try {
-            std::regex regex(pathRegexUri);
-            if (regex_match(optParamUri, regex)) {
-                return true;
-            }
-        } catch (const std::regex_error& e) {
-            APP_LOGE("regex error");
+        const char* pattern = pathRegexUri.c_str();
+        regex_t regex;
+        if (regcomp(&regex, pattern, REG_EXTENDED | REG_NOSUB) != 0) {
+            APP_LOGE("regex compilation failed");
+            return false;
         }
+        int32_t ret = regexec(&regex, optParamUri.c_str(), 0, NULL, 0);
+        if (ret == 0) {
+            regfree(&regex);
+            return true;
+        }
+        APP_LOGE("failed to perform a match");
+        regfree(&regex);
+        return false;
     }
     return false;
 }

@@ -14,7 +14,7 @@
  */
 #include "zip_utils.h"
 
-#include <regex>
+#include <regex.h>
 
 #include "event_handler.h"
 
@@ -23,7 +23,7 @@ namespace AppExecFwk {
 namespace LIBZIP {
 namespace {
 const std::string SEPARATOR = "/";
-const std::regex FILE_PATH_REGEX(".*");
+const char* FILE_PATH_PATTERN = ".*";
 const std::string ZIP_THREAD = "ZipThread";
 }  // namespace
 using namespace OHOS::AppExecFwk;
@@ -68,14 +68,20 @@ bool EndsWith(const std::string &str, const std::string &searchFor)
 
 bool FilePathCheckValid(const std::string &str)
 {
-    try {
-        if (std::regex_match(str, FILE_PATH_REGEX)) {
-            return true;
-        }
-        return false;
-    } catch (const std::regex_error& e) {
+    if (str.empty()) {
         return false;
     }
+    regex_t regex;
+    if (regcomp(&regex, FILE_PATH_PATTERN, REG_EXTENDED | REG_NOSUB) != 0) {
+        return false;
+    }
+    int32_t ret = regexec(&regex, str.c_str(), 0, NULL, 0);
+    if (ret != 0) {
+        regfree(&regex);
+        return false;
+    }
+    regfree(&regex);
+    return true;
 }
 
 }  // namespace LIBZIP
