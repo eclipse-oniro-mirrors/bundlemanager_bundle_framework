@@ -26,6 +26,7 @@ ohos_shared_library("bundle_res_common") {
     ubsan = true
   }
 
+  include_dirs = [ "${kits_path}/js/common" ]
   sources = [ "resource_helper.cpp" ]
 
   cflags = [
@@ -42,6 +43,7 @@ ohos_shared_library("bundle_res_common") {
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
+    "../common:bundle_napi_common",
   ]
 
   defines = [
@@ -53,6 +55,7 @@ ohos_shared_library("bundle_res_common") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "napi:ace_napi",
     "runtime_core:ani",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

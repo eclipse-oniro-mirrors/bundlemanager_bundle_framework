@@ -79,6 +79,15 @@ constexpr const char* GET_DYNAMIC_ICON = "GetDynamicIcon";
 constexpr const char* RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionType";
 constexpr const char* BATCH_QUERY_ABILITY_INFOS = "BatchQueryAbilityInfos";
 constexpr const char* GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
+constexpr const char* APP_INDEX = "appIndex";
+constexpr const char* RESOURCE_FLAGS = "resourceFlags";
+constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
+constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
+    "ohos.permission.GET_INSTALLED_BUNDLE_LIST and ohos.permission.GET_BUNDLE_RESOURCES";
+constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
+constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityResourceInfo";
+constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
+constexpr const char* GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = "GetAllLauncherAbilityResourceInfo";
 }
 }
 }

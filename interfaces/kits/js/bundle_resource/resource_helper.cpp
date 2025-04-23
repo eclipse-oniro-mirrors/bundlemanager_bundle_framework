@@ -16,8 +16,10 @@
 #include "app_log_wrapper.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
+#include "bundle_errors.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
+#include "common_func.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -58,5 +60,68 @@ sptr<IBundleResource> ResourceHelper::GetBundleResourceMgr()
     return bundleResourceMgr_;
 }
 
+ErrCode ResourceHelper::InnerGetBundleResourceInfo(
+    const std::string &bundleName, uint32_t flags, int32_t appIndex, BundleResourceInfo &resourceInfo)
+{
+    APP_LOGD("start");
+    auto bundleResourceProxy = ResourceHelper::GetBundleResourceMgr();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleResourceProxy->GetBundleResourceInfo(bundleName, flags, resourceInfo, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, bundleName is %{public}s, errCode: %{public}d", bundleName.c_str(), ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode ResourceHelper::InnerGetLauncherAbilityResourceInfo(
+    const std::string &bundleName, uint32_t flags, int32_t appIndex,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo)
+{
+    APP_LOGD("start");
+    auto bundleResourceProxy = ResourceHelper::GetBundleResourceMgr();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleResourceProxy->GetLauncherAbilityResourceInfo(bundleName,
+        flags, launcherAbilityResourceInfo, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, bundleName is %{public}s, errCode: %{public}d", bundleName.c_str(), ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode ResourceHelper::InnerGetAllBundleResourceInfo(uint32_t flags,
+    std::vector<BundleResourceInfo> &bundleResourceInfos)
+{
+    auto bundleResourceProxy = ResourceHelper::GetBundleResourceMgr();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleResourceProxy->GetAllBundleResourceInfo(flags, bundleResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, errCode: %{public}d", ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode ResourceHelper::InnerGetAllLauncherAbilityResourceInfo(uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+{
+    auto bundleResourceProxy = ResourceHelper::GetBundleResourceMgr();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleResourceProxy->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, errCode: %{public}d", ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
+}
 } // AppExecFwk
 } // OHOS

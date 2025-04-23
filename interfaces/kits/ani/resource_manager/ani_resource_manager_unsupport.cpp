@@ -15,18 +15,38 @@
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
 #include "business_error_ani.h"
+#include "napi_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace  {
-    constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
-}
 
-static ani_object GetBundleResourceInfo([[maybe_unused]] ani_env* env, ani_string aniBundleName,
-    ani_double resFlag, ani_double appIdx)
+static ani_object GetBundleResourceInfo(ani_env* env, ani_string aniBundleName,
+    ani_double aniResFlag, ani_double aniAppIndex)
 {
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_BUNDLE_RESOURCE_INFO, "");
+    return nullptr;
+}
+
+static ani_ref GetLauncherAbilityResourceInfo(ani_env* env, ani_string aniBundleName,
+    ani_double aniResFlag, ani_double aniAppIndex)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_LAUNCHER_ABILITY_RESOURCE_INFO, "");
+    return nullptr;
+}
+
+static ani_ref GetAllBundleResourceInfo(ani_env* env, ani_double aniResFlag)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ALL_BUNDLE_RESOURCE_INFO, "");
+    return nullptr;
+}
+
+static ani_ref GetAllLauncherAbilityResourceInfo(ani_env* env, ani_double aniResFlag)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO, "");
     return nullptr;
 }
 
@@ -47,8 +67,23 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     std::array methods = {
         ani_native_function {
             "getBundleResourceInfoNative",
-            "Lstd/core/String;DD:LbundleManager/BundleResourceInfo/BundleResourceInfo;",
+            nullptr,
             reinterpret_cast<void*>(GetBundleResourceInfo)
+        },
+        ani_native_function {
+            "getLauncherAbilityResourceInfoNative",
+            nullptr,
+            reinterpret_cast<void*>(GetLauncherAbilityResourceInfo)
+        },
+        ani_native_function {
+            "getAllBundleResourceInfoNative",
+            nullptr,
+            reinterpret_cast<void*>(GetAllBundleResourceInfo)
+        },
+        ani_native_function {
+            "getAllLauncherAbilityResourceInfoNative",
+            nullptr,
+            reinterpret_cast<void*>(GetAllLauncherAbilityResourceInfo)
         }
     };
 

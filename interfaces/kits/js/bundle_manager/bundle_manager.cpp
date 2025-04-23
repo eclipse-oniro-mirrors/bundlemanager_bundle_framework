@@ -62,7 +62,6 @@ constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
 constexpr const char* ICON_ID = "iconId";
 constexpr const char* LABEL_ID = "labelId";
 constexpr const char* STATE = "state";
-constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* SOURCE_PATHS = "sourcePaths";
 constexpr const char* DESTINATION_PATHS = "destinationPath";
 constexpr const char* HOST_BUNDLE_NAME = "hostBundleName";

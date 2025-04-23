@@ -18,10 +18,12 @@
  * @kit AbilityKit
  */
 
-import { BundleResourceInfo } from 'bundleManager.BundleResourceInfo';
+import { LauncherAbilityResourceInfo } from 'bundleManager.LauncherAbilityResourceInfo';
 
-export class BundleResourceInfoInner implements BundleResourceInfo {
+export class LauncherAbilityResourceInfoInner implements LauncherAbilityResourceInfo {
     readonly bundleName: string = '';
+    readonly moduleName: string = '';
+    readonly abilityName: string = '';
     readonly icon: string = '';
     readonly label: string = '';
     readonly appIndex: number;
