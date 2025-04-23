@@ -698,6 +698,7 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
     hapInfo.apiVersion = innerBundleInfo.GetBaseApplicationInfo().apiTargetVersion;
     hapInfo.isSystemApp = innerBundleInfo.IsSystemApp();
     hapInfo.appDistributionType = innerBundleInfo.GetAppDistributionType();
+    hapInfo.isAtomicService = innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE;
     return hapInfo;
 }
 
@@ -742,6 +743,7 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
     updateHapInfoParams.apiVersion = innerBundleInfo.GetBaseApplicationInfo().apiTargetVersion;
     updateHapInfoParams.isSystemApp = innerBundleInfo.IsSystemApp();
     updateHapInfoParams.appDistributionType = innerBundleInfo.GetAppDistributionType();
+    updateHapInfoParams.isAtomicService = innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE;
 
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo, appServiceCapabilities);
 #ifdef X86_EMULATOR_MODE
