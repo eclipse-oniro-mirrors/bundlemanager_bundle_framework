@@ -29,7 +29,8 @@ enum ProfileType : int8_t {
     NETWORK_PROFILE = 3,
     UTD_SDT_PROFILE = 4,
     PKG_CONTEXT_PROFILE = 5,
-    FILE_ICON_PROFILE = 6
+    FILE_ICON_PROFILE = 6,
+    INSIGHT_INTENT_PROFILE = 7
 };
 
 enum AppDistributionTypeEnum : int8_t {

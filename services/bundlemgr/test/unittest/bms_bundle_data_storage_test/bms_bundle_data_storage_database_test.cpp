@@ -5083,4 +5083,30 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SetOverlayModuleState_0002, Function 
     info.SetOverlayModuleState(moduleName, state);
     EXPECT_EQ(info.innerBundleUserInfos_.size(), 1);
 }
+
+/**
+ * @tc.number: InnerBundleInfo_13200
+ * @tc.name: Test FindHapModuleInfo
+ * @tc.desc: Test the FindHapModuleInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo moduleInfo1;
+    moduleInfo1.moduleName = TEST_PACK_AGE;
+
+    InnerModuleInfo moduleInfo2;
+    moduleInfo2.moduleName = TEST_NAME;
+    moduleInfo2.boolSet = 1;
+
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo1;
+    innerModuleInfos[TEST_NAME] = moduleInfo2;
+    info.AddInnerModuleInfo(innerModuleInfos);
+    auto iter1 = info.FindHapModuleInfo(TEST_PACK_AGE, 100);
+    EXPECT_EQ(iter1->hasIntent, false);
+
+    auto iter2 = info.FindHapModuleInfo(TEST_NAME, 100);
+    EXPECT_EQ(iter2->hasIntent, true);
+}
 } // OHOS
