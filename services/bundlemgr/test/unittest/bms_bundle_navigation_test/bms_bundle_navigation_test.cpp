@@ -1312,7 +1312,7 @@ HWTEST_F(BmsBundleNavigationTest, IsRegexMatch_0001, Function | SmallTest | Leve
     pattern = "^a";
     str = "a\nb";
     result = RouterMapHelper::IsRegexMatch(str, pattern);
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
 }
 
 /**
