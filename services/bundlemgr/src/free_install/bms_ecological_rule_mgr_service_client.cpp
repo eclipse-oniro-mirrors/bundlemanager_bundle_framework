@@ -25,9 +25,6 @@ using namespace std::chrono;
 static inline const std::u16string ERMS_INTERFACE_TOKEN =
     u"ohos.cloud.ecologicalrulemgrservice.IEcologicalRuleMgrService";
 
-sptr<IBmsEcologicalRuleMgrService> BmsEcologicalRuleMgrServiceClient::bmsEcologicalRuleMgrServiceProxy_;
-sptr<BmsEcologicalRuleMgrServiceDeathRecipient> BmsEcologicalRuleMgrServiceClient::deathRecipient_;
-
 std::string BmsEcologicalRuleMgrServiceClient::ERMS_ORIGINAL_TARGET = "ecological_experience_original_target";
 
 BmsEcologicalRuleMgrServiceClient::BmsEcologicalRuleMgrServiceClient()
