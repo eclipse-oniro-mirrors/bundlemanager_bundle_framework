@@ -1011,7 +1011,7 @@ bool InstalldOperator::IsPathNeedChown(const std::string &path, int32_t mode, bo
         LOG_D(BMS_TAG_INSTALLD, "path :%{public}s is not exist, not need, errno:%{public}d", path.c_str(), errno);
         return false;
     }
-    if (((mode & S_ISGID) == S_ISGID) && (static_cast<int32_t>(s.st_gid) != INSTALLS_UID)) {
+    if (((static_cast<uint32_t>(mode) & S_ISGID) == S_ISGID) && (static_cast<int32_t>(s.st_gid) != INSTALLS_UID)) {
         LOG_W(BMS_TAG_INSTALLD, "path :%{public}s need chown when first create", path.c_str());
         return true;
     }
