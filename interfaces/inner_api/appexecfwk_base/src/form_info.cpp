@@ -74,6 +74,7 @@ const char* JSON_KEY_VERSION_CODE = "versionCode";
 const char* JSON_KEY_BUNDLE_TYPE = "bundleType";
 const char* JSON_KEY_PREVIEW_IMAGES = "previewImages";
 const char* JSON_KEY_ENABLE_BLUR_BACKGROUND = "enableBlurBackground";
+const char* JSON_KEY_APP_FORM_VISIBLE_NOTIFY = "appFormVisibleNotify";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -144,6 +145,7 @@ void FormInfo::SetInfoByFormExt(const ExtensionFormInfo &formInfo)
         supportShapes.push_back(shape);
     }
     enableBlurBackground = formInfo.enableBlurBackground;
+    appFormVisibleNotify = formInfo.appFormVisibleNotify;
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -261,6 +263,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
         formPreviewImages.emplace_back(parcel.ReadUint32());
     }
     enableBlurBackground = parcel.ReadBool();
+    appFormVisibleNotify = parcel.ReadBool();
     return true;
 }
 
@@ -356,6 +359,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, formPreviewImages[i]);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enableBlurBackground);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, appFormVisibleNotify);
     return true;
 }
 
@@ -427,7 +431,8 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_VERSION_CODE, formInfo.versionCode},
         {JSON_KEY_BUNDLE_TYPE, formInfo.bundleType},
         {JSON_KEY_PREVIEW_IMAGES, formInfo.formPreviewImages},
-        {JSON_KEY_ENABLE_BLUR_BACKGROUND, formInfo.enableBlurBackground}
+        {JSON_KEY_ENABLE_BLUR_BACKGROUND, formInfo.enableBlurBackground},
+        {JSON_KEY_APP_FORM_VISIBLE_NOTIFY, formInfo.appFormVisibleNotify}
     };
 }
 
@@ -773,6 +778,12 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         jsonObjectEnd,
         JSON_KEY_ENABLE_BLUR_BACKGROUND,
         formInfo.enableBlurBackground,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_APP_FORM_VISIBLE_NOTIFY,
+        formInfo.appFormVisibleNotify,
         false,
         parseResult);
     if (parseResult != ERR_OK) {
