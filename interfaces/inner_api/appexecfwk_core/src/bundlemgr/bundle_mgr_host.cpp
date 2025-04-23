@@ -37,6 +37,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const int16_t LIMIT_PARCEL_SIZE = 1024;
+const int32_t MAX_LIMIT_SIZE = 100;
 const int8_t ASHMEM_LEN = 16;
 constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
 constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
@@ -4415,7 +4416,7 @@ ErrCode BundleMgrHost::HandleSetAppDistributionTypes(MessageParcel &data, Messag
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t typesCount = data.ReadInt32();
-    if (typesCount <= 0) {
+    if (typesCount <= 0 || typesCount > MAX_LIMIT_SIZE) {
         APP_LOGE("typesCount is error");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
