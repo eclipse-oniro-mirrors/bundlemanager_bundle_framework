@@ -29,6 +29,8 @@
 #include "default_permission_profile.h"
 #include "json_constants.h"
 #include "module_profile.h"
+#include "form_info.h"
+#include "extension_form_info.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -3307,5 +3309,37 @@ HWTEST_F(BmsBundleParserTest, BundleParser_2600, Function | MediumTest | Level1)
             EXPECT_EQ(it->second, "18");
         }
     }
+}
+
+/**
+ * @tc.number: FormInfo_0100
+ * @tc.name: Test from_json
+ * @tc.desc: test the interface of FormInfo
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_0100, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = "testName";
+    jsonObject["appFormVisibleNotify"] = true;
+    FormInfo formInfo;
+    from_json(jsonObject, formInfo);
+    EXPECT_EQ(formInfo.name, "testName");
+    EXPECT_TRUE(formInfo.appFormVisibleNotify);
+}
+
+/**
+ * @tc.number: FormInfo_0200
+ * @tc.name: Test to_json
+ * @tc.desc: test the interface of FormInfo
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_0200, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    FormInfo formInfo;
+    formInfo.name = "testName";
+    formInfo.appFormVisibleNotify = true;
+    to_json(jsonObject, formInfo);
+    EXPECT_TRUE(jsonObject["appFormVisibleNotify"]);
+    EXPECT_EQ(jsonObject["name"], "testName");
 }
 } // OHOS
