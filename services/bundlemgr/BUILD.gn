@@ -241,6 +241,7 @@ ohos_shared_library("libbms") {
     ubsan = true
   }
 
+  use_exceptions = true
   visibility = [
     "//base/*",
     "//foundation/*",
