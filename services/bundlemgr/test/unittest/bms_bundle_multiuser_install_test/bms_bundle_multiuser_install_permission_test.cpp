@@ -57,18 +57,17 @@ BmsBundleMultiuserInstallPermissionTest::~BmsBundleMultiuserInstallPermissionTes
 
 void BmsBundleMultiuserInstallPermissionTest::SetUpTestCase()
 {
+    if (!bundleMgrService_->IsServiceReady()) {
+        bundleMgrService_->OnStart();
+        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    }
 }
 
 void BmsBundleMultiuserInstallPermissionTest::TearDownTestCase()
 {
 }
 void BmsBundleMultiuserInstallPermissionTest::SetUp()
-{
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
-}
+{}
 
 void BmsBundleMultiuserInstallPermissionTest::TearDown()
 {}

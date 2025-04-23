@@ -59,11 +59,11 @@ public:
     int32_t QueryFreeInstallExperience(const Want &want, const BmsCallerInfo &callerInfo, BmsExperienceRule &rule);
 
 private:
-    static sptr<IBmsEcologicalRuleMgrService> ConnectService();
-    static bool CheckConnectService();
+    sptr<IBmsEcologicalRuleMgrService> ConnectService();
+    bool CheckConnectService();
 
-    static sptr<IBmsEcologicalRuleMgrService> bmsEcologicalRuleMgrServiceProxy_;
-    static sptr<BmsEcologicalRuleMgrServiceDeathRecipient> deathRecipient_;
+    sptr<IBmsEcologicalRuleMgrService> bmsEcologicalRuleMgrServiceProxy_;
+    sptr<BmsEcologicalRuleMgrServiceDeathRecipient> deathRecipient_;
 
     static string ERMS_ORIGINAL_TARGET;
 };

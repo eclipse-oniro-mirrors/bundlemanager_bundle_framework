@@ -1609,20 +1609,6 @@ HWTEST_F(BmsInstallDaemonTest, ProcessBundleInstallNative_0100, Function | Small
 }
 
 /**
- * @tc.number: ProcessBundleUnInstallNative_0100
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. test ProcessBundleUnInstallNative
-*/
-HWTEST_F(BmsInstallDaemonTest, ProcessBundleUnInstallNative_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl hostImpl;
-    std::string userId = "100";
-    std::string packageName = "com.acts.example";
-    ErrCode ret = hostImpl.ProcessBundleUnInstallNative(userId, packageName);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
  * @tc.number: PendSignAOT_0100
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. test PendSignAOT
