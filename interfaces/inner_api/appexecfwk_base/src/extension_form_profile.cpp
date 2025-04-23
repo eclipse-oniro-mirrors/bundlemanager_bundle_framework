@@ -150,7 +150,6 @@ struct ExtensionFormProfileInfo {
     bool transparencyEnabled = false;
     bool fontScaleFollowSystem = true;
     bool enableBlurBackground = false;
-    bool appFormVisibleNotify = false;
     std::vector<std::string> supportShapes {};
     std::vector<std::string> supportDimensions {};
     std::vector<std::string> conditionUpdate {};
@@ -376,12 +375,6 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         jsonObjectEnd,
         ExtensionFormProfileReader::ENABLE_BLUR_BACKGROUND,
         extensionFormProfileInfo.enableBlurBackground,
-        false,
-        g_parseResult);
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        ExtensionFormProfileReader::APP_FORM_VISIBLE_NOTIFY,
-        extensionFormProfileInfo.appFormVisibleNotify,
         false,
         g_parseResult);
 }
@@ -630,7 +623,6 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     if (info.enableBlurBackground) {
         info.transparencyEnabled = true;
     }
-    info.appFormVisibleNotify = form.appFormVisibleNotify;
     return true;
 }
 
