@@ -51,6 +51,8 @@ constexpr const char* CLASSNAME_SHORTCUTWANT = "LbundleManager/ShortcutInfo/Shor
 constexpr const char* CLASSNAME_SHORTCUT_PARAMETERITEM = "LbundleManager/ShortcutInfo/ParameterItemInner;";
 constexpr const char* CLASSNAME_LAUNCHER_ABILITY_INFO_INNER =
     "LbundleManager/LauncherAbilityInfoInner/LauncherAbilityInfoInner;";
+constexpr const char* CLASSNAME_BUNDLE_CHANGED_INFO_INNER =
+    "L@ohos/bundle/bundleMonitor/bundleMonitor/BundleChangedInfoInner;";
 
 constexpr const char* PROPERTYNAME_NAME = "name";
 constexpr const char* PROPERTYNAME_VENDOR = "vendor";
@@ -1468,6 +1470,32 @@ ani_object CommonFunAni::ConvertLauncherAbilityInfo(ani_env* env, const Launcher
 
     // installTime: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_INSTALLTIME, launcherAbility.installTime));
+
+    return object;
+}
+
+ani_object CommonFunAni::CreateBundleChangedInfo(
+    ani_env* env, const std::string& bundleName, int32_t userId, int32_t appIndex)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLE_CHANGED_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // userId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_USERID, userId));
+
+    // appIndex: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, appIndex));
 
     return object;
 }
