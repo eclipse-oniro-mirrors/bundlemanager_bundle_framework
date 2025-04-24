@@ -4431,4 +4431,406 @@ HWTEST_F(BmsDataMgrTest, GetOldAppIds_0002, TestSize.Level1)
     dataMgr->bundleInfos_.erase(bundleName);
     dataMgr->installStates_.erase(bundleName);
 }
+
+/**
+ * @tc.number: GetBundleNameByAppId_0001
+ * @tc.name: GetBundleNameByAppId
+ * @tc.desc: test BundleDataMgr::GetBundleNameByAppId(const std::string &appId) const
+ */
+HWTEST_F(BmsDataMgrTest, GetBundleNameByAppId_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string appId = "";
+    std::string bundleName = "";
+    auto ret = bundleDataMgr.GetBundleNameByAppId(appId, bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+
+    appId = "test";
+    bundleName = "test";
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    ret = bundleDataMgr.GetBundleNameByAppId(appId, bundleName);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetDirForAtomicService_0001
+ * @tc.name: GetDirForAtomicService
+ * @tc.desc: test BundleDataMgr::GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const
+ */
+HWTEST_F(BmsDataMgrTest, GetDirForAtomicService_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    std::string dataDir = "";
+    auto ret = bundleDataMgr.GetDirForAtomicService(bundleName, dataDir);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDirForAtomicServiceByUserId_0001
+ * @tc.name: GetDirForAtomicServiceByUserId
+ * @tc.desc: test BundleDataMgr::GetDirForAtomicServiceByUserId(const std::string &bundleName, int32_t userId,
+    AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const
+ */
+HWTEST_F(BmsDataMgrTest, GetDirForAtomicServiceByUserId_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    int32_t userId = 10;
+    AccountSA::OhosAccountInfo accountInfo;
+    std::string dataDir = "";
+    auto ret = bundleDataMgr.GetDirForAtomicServiceByUserId(bundleName, userId, accountInfo, dataDir);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED);
+}
+
+/**
+ * @tc.number: GetDirForApp_0001
+ * @tc.name: GetDirForApp
+ * @tc.desc: test BundleDataMgr::GetDirForApp(const std::string &bundleName, const int32_t appIndex) const
+ */
+HWTEST_F(BmsDataMgrTest, GetDirForApp_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    int32_t appIndex = 0;
+    auto ret = bundleDataMgr.GetDirForApp(bundleName, appIndex);
+    EXPECT_EQ(ret, bundleName);
+
+    appIndex = 1;
+    ret = bundleDataMgr.GetDirForApp(bundleName, appIndex);
+    EXPECT_EQ(ret, "+clone-1+");
+}
+
+/**
+ * @tc.number: GetDirByBundleNameAndAppIndex_0001
+ * @tc.name: GetDirByBundleNameAndAppIndex
+ * @tc.desc: test BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleName,
+    const int32_t appIndex, std::string &dataDir) const
+ */
+HWTEST_F(BmsDataMgrTest, GetDirByBundleNameAndAppIndex_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "";
+    int32_t appIndex = -1;
+    std::string dataDir = "";
+    auto ret = bundleDataMgr.GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+
+    appIndex = 1;
+    ret = bundleDataMgr.GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleDir_0001
+ * @tc.name: GetBundleDir
+ * @tc.desc: test BundleDataMgr::GetBundleDir(int32_t userId, BundleType type,
+    AccountSA::OhosAccountInfo &accountInfo, BundleDir &bundleDir) const
+ */
+HWTEST_F(BmsDataMgrTest, GetBundleDir_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = 10;
+    BundleType type = BundleType::ATOMIC_SERVICE;
+    AccountSA::OhosAccountInfo accountInfo;
+    BundleDir bundleDir;
+    auto ret = bundleDataMgr.GetBundleDir(userId, type, accountInfo, bundleDir);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED);
+
+    type = BundleType::APP;
+    ret = bundleDataMgr.GetBundleDir(userId, type, accountInfo, bundleDir);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllBundleDirs_0001
+ * @tc.name: GetAllBundleDirs
+ * @tc.desc: test BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)
+ */
+HWTEST_F(BmsDataMgrTest, GetAllBundleDirs_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = 10;
+    std::vector<BundleDir> bundleDirs;
+    auto ret = bundleDataMgr.GetAllBundleDirs(userId, bundleDirs);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    std::string bundleName = "test";
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    ret = bundleDataMgr.GetAllBundleDirs(userId, bundleDirs);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IsObtainAbilityInfo_0001
+ * @tc.name: IsObtainAbilityInfo
+ * @tc.desc: test BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, AbilityInfo &abilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, IsObtainAbilityInfo_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    int32_t userId = 10;
+    AbilityInfo abilityInfo;
+    auto ret = bundleDataMgr.IsObtainAbilityInfo(want, userId, abilityInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetAllPluginInfo_0001
+ * @tc.name: GetAllPluginInfo
+ * @tc.desc: test BundleDataMgr::GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
+    std::vector<PluginBundleInfo> &pluginBundleInfos)
+ */
+HWTEST_F(BmsDataMgrTest, GetAllPluginInfo_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hostBundleName = "test1";
+    int32_t userId = 10;
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = bundleDataMgr.GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(hostBundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(hostBundleName, info);
+    ret = bundleDataMgr.GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: AddPluginInfo_0001
+ * @tc.name: AddPluginInfo
+ * @tc.desc: test BundleDataMgr::AddPluginInfo(const std::string &bundleName,
+    const PluginBundleInfo &pluginBundleInfo, const int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, AddPluginInfo_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "test1";
+    PluginBundleInfo pluginBundleInfo;
+    int32_t userId = 10;
+    auto ret = bundleDataMgr.AddPluginInfo(bundleName, pluginBundleInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    ret = bundleDataMgr.AddPluginInfo(bundleName, pluginBundleInfo, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ADD_PLUGIN_INFO_ERROR);
+}
+
+/**
+ * @tc.number: RemovePluginInfo_0001
+ * @tc.name: RemovePluginInfo
+ * @tc.desc: test RemovePluginInfo(const std::string &bundleName,
+    const std::string &pluginBundleName, const int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, RemovePluginInfo_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "test1";
+    std::string pluginBundleName = "test2";
+    int32_t userId = 10;
+    auto ret = bundleDataMgr.RemovePluginInfo(bundleName, pluginBundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    ret = bundleDataMgr.RemovePluginInfo(bundleName, pluginBundleName, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR);
+}
+
+/**
+ * @tc.number: GetPluginBundleInfo_0001
+ * @tc.name: GetPluginBundleInfo
+ * @tc.desc: test BundleDataMgr::GetPluginBundleInfo(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const int32_t userId, PluginBundleInfo &pluginBundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, GetPluginBundleInfo_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hostBundleName = "";
+    std::string pluginBundleName = "test2";
+    int32_t userId = 10;
+    PluginBundleInfo pluginBundleInfo;
+    auto ret = bundleDataMgr.GetPluginBundleInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
+    EXPECT_EQ(ret, false);
+
+    hostBundleName = "test1";
+    ret = bundleDataMgr.GetPluginBundleInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
+    EXPECT_EQ(ret, false);
+
+    std::string bundleName = "test1";
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    ret = bundleDataMgr.GetPluginBundleInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
+    EXPECT_EQ(ret, false);
+
+    userId = ServiceConstants::NOT_EXIST_USERID;
+    ret = bundleDataMgr.GetPluginBundleInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: FetchPluginBundleInfo_0001
+ * @tc.name: FetchPluginBundleInfo
+ * @tc.desc: test BundleDataMgr::FetchPluginBundleInfo(const std::string &hostBundleName,
+    const std::string &pluginBundleName, PluginBundleInfo &pluginBundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, FetchPluginBundleInfo_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hostBundleName = "";
+    std::string pluginBundleName = "test2";
+    PluginBundleInfo pluginBundleInfo;
+    auto ret = bundleDataMgr.FetchPluginBundleInfo(hostBundleName, pluginBundleName, pluginBundleInfo);
+    EXPECT_EQ(ret, false);
+
+    hostBundleName = "test1";
+    ret = bundleDataMgr.FetchPluginBundleInfo(hostBundleName, pluginBundleName, pluginBundleInfo);
+    EXPECT_EQ(ret, false);
+
+    std::string bundleName = "test1";
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    ret = bundleDataMgr.FetchPluginBundleInfo(hostBundleName, pluginBundleName, pluginBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: UpdatePluginBundleInfo_0001
+ * @tc.name: UpdatePluginBundleInfo
+ * @tc.desc: test BundleDataMgr::UpdatePluginBundleInfo(const std::string &hostBundleName,
+    const PluginBundleInfo &pluginBundleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, UpdatePluginBundleInfo_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hostBundleName = "test1";
+    PluginBundleInfo pluginBundleInfo;
+    auto ret = bundleDataMgr.UpdatePluginBundleInfo(hostBundleName, pluginBundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    std::string bundleName = "test1";
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    ret = bundleDataMgr.UpdatePluginBundleInfo(hostBundleName, pluginBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ADD_PLUGIN_INFO_ERROR);
+}
+
+/**
+ * @tc.number: RemovePluginFromUserInfo_0001
+ * @tc.name: RemovePluginFromUserInfo
+ * @tc.desc: test BundleDataMgr::RemovePluginFromUserInfo(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, RemovePluginFromUserInfo_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hostBundleName = "test1";
+    std::string pluginBundleName = "test2";
+    int32_t userId = 10;
+    auto ret = bundleDataMgr.RemovePluginFromUserInfo(hostBundleName, pluginBundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    std::string bundleName = "test1";
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    ret = bundleDataMgr.RemovePluginFromUserInfo(hostBundleName, pluginBundleName, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR);
+}
+
+/**
+ * @tc.number: GetPluginAbilityInfo_0001
+ * @tc.name: GetPluginAbilityInfo
+ * @tc.desc: test BundleDataMgr::GetPluginAbilityInfo(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const std::string &pluginModuleName,
+    const std::string &pluginAbilityName, const int32_t userId, AbilityInfo &abilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, GetPluginAbilityInfo_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hostBundleName = "test1";
+    std::string pluginBundleName = "test2";
+    std::string pluginModuleName = "test3";
+    std::string pluginAbilityName = "test4";
+    int32_t userId = 10;
+    AbilityInfo abilityInfo;
+    auto ret = bundleDataMgr.GetPluginAbilityInfo(hostBundleName, pluginBundleName,
+        pluginModuleName, pluginAbilityName, userId, abilityInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    std::string bundleName = "test1";
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    ret = bundleDataMgr.GetPluginAbilityInfo(hostBundleName, pluginBundleName,
+        pluginModuleName, pluginAbilityName, userId, abilityInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_GET_PLUGIN_INFO_ERROR);
+
+    userId = ServiceConstants::NOT_EXIST_USERID;
+    ret = bundleDataMgr.GetPluginAbilityInfo(hostBundleName, pluginBundleName,
+        pluginModuleName, pluginAbilityName, userId, abilityInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
+}
+
+/**
+ * @tc.number: GetPluginHapModuleInfo_0001
+ * @tc.name: GetPluginHapModuleInfo
+ * @tc.desc: test BundleDataMgr::GetPluginHapModuleInfo(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const std::string &pluginModuleName, const int32_t userId,
+     HapModuleInfo &hapModuleInfo)
+ */
+HWTEST_F(BmsDataMgrTest, GetPluginHapModuleInfo_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hostBundleName = "test1";
+    std::string pluginBundleName = "test2";
+    std::string pluginModuleName = "test3";
+    int32_t userId = 10;
+    HapModuleInfo hapModuleInfo;
+    auto ret = bundleDataMgr.GetPluginHapModuleInfo(hostBundleName, pluginBundleName,
+        pluginModuleName, userId, hapModuleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.GetPluginHapModuleInfo(hostBundleName, pluginBundleName,
+        pluginModuleName, userId, hapModuleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    std::string bundleName = "test1";
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    ret = bundleDataMgr.GetPluginHapModuleInfo(hostBundleName, pluginBundleName,
+        pluginModuleName, userId, hapModuleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_GET_PLUGIN_INFO_ERROR);
+}
+
+/**
+ * @tc.number: UnregisterPluginEventCallback_0001
+ * @tc.name: UnregisterPluginEventCallback
+ * @tc.desc: test BundleDataMgr::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+ */
+HWTEST_F(BmsDataMgrTest, UnregisterPluginEventCallback_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    auto ret = bundleDataMgr.UnregisterPluginEventCallback(nullptr);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
 } // OHOS

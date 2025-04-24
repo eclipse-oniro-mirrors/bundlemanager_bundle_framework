@@ -5492,4 +5492,209 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixStatusCallbackHost_0300, Function | Smal
     int ret = quickFixStatusCallbackHost.OnRemoteRequest(invalidCode, data, reply, option);
     EXPECT_NE(ret, -1);
 }
+
+/**
+ * @tc.number: QuickFixMgr_0200
+ * @tc.name: Test QuickFixMgr
+ * @tc.desc: 1.Test QuickFixMgr
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixMgr_0200, TestSize.Level1)
+{
+    sptr<IQuickFixStatusCallback> statusCallback = 0;
+    QuickFixMgr quickFixMgr;
+    const std::vector<std::string> bundleFilePaths;
+    auto ret = quickFixMgr.DeployQuickFix(bundleFilePaths, statusCallback);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QuickFixMgr_0300
+ * @tc.name: Test QuickFixMgr
+ * @tc.desc: 1.Test QuickFixMgr
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixMgr_0300, TestSize.Level1)
+{
+    sptr<IQuickFixStatusCallback> statusCallback = 0;
+    QuickFixMgr quickFixMgr;
+    const std::vector<std::string> bundleFilePaths;
+    auto ret = quickFixMgr.SwitchQuickFix("", false, statusCallback);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QuickFixMgr_0400
+ * @tc.name: Test QuickFixMgr
+ * @tc.desc: 1.Test QuickFixMgr
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixMgr_0400, TestSize.Level1)
+{
+    sptr<IQuickFixStatusCallback> statusCallback = 0;
+    QuickFixMgr quickFixMgr;
+    const std::vector<std::string> bundleFilePaths;
+    auto ret = quickFixMgr.DeleteQuickFix("", statusCallback);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+
+/**
+ * @tc.number: QuickFixStatusCallbackHost_0210
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest by QuickFixStatusCallbackHost
+ * @tc.desc: OnRemoteRequest.
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixStatusCallbackHost_0210, TestSize.Level1)
+{
+    MockQuickFixCallback quickFixStatusCallbackHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    std::u16string token = QuickFixStatusCallbackHost::GetDescriptor();
+    data.WriteInterfaceToken(token);
+
+    uint32_t code = static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DEPLOYED);
+    int ret = quickFixStatusCallbackHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(ret, 0);
+
+    code = static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_SWITCHED);
+    ret = quickFixStatusCallbackHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DELETED);
+    ret = quickFixStatusCallbackHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = -1;
+    ret = quickFixStatusCallbackHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: QuickFixStatusCallbackHost_0220
+ * Function: OnRemoteRequest
+ * @tc.name: test OnRemoteRequest by QuickFixStatusCallbackHost
+ * @tc.desc: OnRemoteRequest.
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixStatusCallbackHost_0220, TestSize.Level1)
+{
+    MockQuickFixCallback quickFixStatusCallbackHost;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(QuickFixStatusCallbackHost::GetDescriptor());
+
+    uint32_t invalidCode = 999;
+    int ret = quickFixStatusCallbackHost.OnRemoteRequest(invalidCode, data, reply, option);
+    EXPECT_NE(ret, -1);
+}
+
+/**
+ * @tc.number: DeployQuickFix_0004
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.desc: DeployQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0004, TestSize.Level1)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    std::string path = VALID_FILE_PATH_3;
+    deployer->patchPaths_.push_back(path);
+    ErrCode ret = deployer->DeployQuickFix();
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ToDeployStartStatus_0001
+ * Function: ToDeployStartStatus
+ * @tc.name: test ToDeployStartStatus
+ * @tc.desc: ToDeployStartStatus
+ */
+HWTEST_F(BmsBundleQuickFixTest, ToDeployStartStatus_0001, TestSize.Level1)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        appQuickFix.deployingAppqfInfo.type = QuickFixType::HOT_RELOAD;
+        appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::HOT_RELOAD;
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = "";
+        InnerAppQuickFix newInnerAppQuickFix;
+        InnerAppQuickFix oldInnerAppQuickFix;
+        newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
+        std::vector<std::string> bundleFilePaths;
+        bundleFilePaths.push_back(HAP_FILE_PATH1);
+        ErrCode ret = deployer->ToDeployStartStatus(bundleFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
+    }
+}
+
+/**
+ * @tc.number: ToDeployStartStatus_0002
+ * Function: ToDeployStartStatus
+ * @tc.name: test ToDeployStartStatus
+ * @tc.desc: ToDeployStartStatus
+ */
+HWTEST_F(BmsBundleQuickFixTest, ToDeployStartStatus_0002, TestSize.Level1)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        appQuickFix.deployingAppqfInfo.type = QuickFixType::HOT_RELOAD;
+        appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::HOT_RELOAD;
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_ABI;
+        InnerAppQuickFix newInnerAppQuickFix;
+        InnerAppQuickFix oldInnerAppQuickFix;
+        newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
+        std::vector<std::string> bundleFilePaths;
+        bundleFilePaths.push_back(HAP_FILE_PATH1);
+        ErrCode ret = deployer->ToDeployStartStatus(bundleFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
+    }
+}
+
+/**
+ * @tc.number: ToDeployStartStatus_0003
+ * Function: ToDeployStartStatus
+ * @tc.name: test ToDeployStartStatus
+ * @tc.desc: ToDeployStartStatus
+ */
+HWTEST_F(BmsBundleQuickFixTest, ToDeployStartStatus_0003, TestSize.Level1)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        appQuickFix.deployingAppqfInfo.type = QuickFixType::HOT_RELOAD;
+        appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::HOT_RELOAD;
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+        InnerAppQuickFix newInnerAppQuickFix;
+        InnerAppQuickFix oldInnerAppQuickFix;
+        newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
+        std::vector<std::string> bundleFilePaths;
+        bundleFilePaths.push_back(HAP_FILE_PATH1);
+        ErrCode ret = deployer->ToDeployStartStatus(bundleFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
+    }
+}
+
+/**
+ * @tc.number: ToDeployStartStatus_0004
+ * Function: ToDeployStartStatus
+ * @tc.name: test ToDeployStartStatus
+ * @tc.desc: ToDeployStartStatus
+ */
+HWTEST_F(BmsBundleQuickFixTest, ToDeployStartStatus_0004, TestSize.Level1)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+    std::vector<std::string> bundleFilePaths = {"invalid_patch.hqf"};
+    InnerAppQuickFix newInnerAppQuickFix;
+    InnerAppQuickFix oldInnerAppQuickFix;
+    ErrCode ret = deployer_->ToDeployStartStatus(bundleFilePaths,
+        newInnerAppQuickFix, oldInnerAppQuickFix);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
+    }
+}
 } // OHOS
