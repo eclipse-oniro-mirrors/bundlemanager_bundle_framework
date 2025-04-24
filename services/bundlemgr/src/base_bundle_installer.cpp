@@ -4549,7 +4549,9 @@ int32_t BaseBundleInstaller::GetConfirmUserId(
     if (userId != Constants::UNSPECIFIED_USERID || newInfos.size() <= 0) {
         return userId;
     }
-    return AccountHelper::GetCurrentActiveUserId();
+    int32_t currUserId = sysEventInfo_.callingUid / Constants::BASE_USER_RANGE;
+    currUserId = currUserId < Constants::START_USERID ? AccountHelper::GetCurrentActiveUserId() : currUserId;
+    return currUserId;
 }
 
 ErrCode BaseBundleInstaller::CheckUserId(const int32_t &userId) const
@@ -5659,8 +5661,10 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
         return ERR_OK;
     }
     LOG_I(BMS_TAG_INSTALLER, "rename install");
+    int32_t userId = userId_ < Constants::START_USERID ?
+        sysEventInfo_.callingUid / Constants::BASE_USER_RANGE : userId_;
     const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
-        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR;
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR;
 
     for (const auto &bundlePath : inBundlePaths) {
         if (bundlePath.find("..") != std::string::npos) {
