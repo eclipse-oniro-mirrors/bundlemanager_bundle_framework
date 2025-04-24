@@ -25,10 +25,6 @@ void BundleSandboxAppHelper::SaveSandboxAppInfo(const InnerBundleInfo &info, con
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGD("enter SaveSandboxAppInfo");
-    if (sandboxDataMgr_ == nullptr) {
-        APP_LOGE("sandboxDataMgr_ is nullptr");
-        return;
-    }
     sandboxDataMgr_->SaveSandboxAppInfo(info, appIndex);
 #else
     APP_LOGD("sandbox app not supported");
@@ -39,10 +35,6 @@ void BundleSandboxAppHelper::DeleteSandboxAppInfo(const std::string &bundleName,
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGD("enter DeleteSandboxAppInfo");
-    if (sandboxDataMgr_ == nullptr) {
-        APP_LOGE("sandboxDataMgr_ is nullptr");
-        return;
-    }
     sandboxDataMgr_->DeleteSandboxAppInfo(bundleName, appIndex);
 #else
     APP_LOGD("sandbox app not supported");
@@ -54,10 +46,6 @@ ErrCode BundleSandboxAppHelper::GetSandboxAppBundleInfo(
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGD("enter GetSandboxAppBundleInfo");
-    if (sandboxDataMgr_ == nullptr) {
-        APP_LOGE("sandboxDataMgr_ is nullptr");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
-    }
     return sandboxDataMgr_->GetSandboxAppBundleInfo(bundleName, appIndex, userId, info);
 #else
     APP_LOGD("sandbox app not supported");
@@ -69,10 +57,6 @@ int32_t BundleSandboxAppHelper::GenerateSandboxAppIndex(const std::string &bundl
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGD("enter GenerateSandboxAppIndex");
-    if (sandboxDataMgr_ == nullptr) {
-        APP_LOGE("sandboxDataMgr_ is nullptr");
-        return Constants::INITIAL_SANDBOX_APP_INDEX;
-    }
     return sandboxDataMgr_->GenerateSandboxAppIndex(bundleName);
 #else
     APP_LOGD("sandbox app not supported");
@@ -84,10 +68,6 @@ bool BundleSandboxAppHelper::DeleteSandboxAppIndex(const std::string &bundleName
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGD("enter DeleteSandboxAppIndex");
-    if (sandboxDataMgr_ == nullptr) {
-        APP_LOGE("sandboxDataMgr_ is nullptr");
-        return false;
-    }
     return sandboxDataMgr_->DeleteSandboxAppIndex(bundleName, appIndex);
 #else
     APP_LOGD("sandbox app not supported");
@@ -99,11 +79,6 @@ std::unordered_map<std::string, InnerBundleInfo> BundleSandboxAppHelper::GetSand
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGD("enter GetSandboxAppInfoMap");
-    if (sandboxDataMgr_ == nullptr) {
-        APP_LOGE("sandboxDataMgr_ is nullptr");
-        std::unordered_map<std::string, InnerBundleInfo> innerBundleInfoMap;
-        return innerBundleInfoMap;
-    }
     return sandboxDataMgr_->GetSandboxAppInfoMap();
 #else
     APP_LOGD("sandbox app not supported");
@@ -117,10 +92,6 @@ ErrCode BundleSandboxAppHelper::GetSandboxAppInfo(
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGD("enter GetSandboxAppInfo");
-    if (sandboxDataMgr_ == nullptr) {
-        APP_LOGE("sandboxDataMgr_ is nullptr");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
-    }
     return sandboxDataMgr_->GetSandboxAppInfo(bundleName, appIndex, userId, info);
 #else
     APP_LOGD("sandbox app not supported");
@@ -133,10 +104,6 @@ ErrCode BundleSandboxAppHelper::GetSandboxHapModuleInfo(
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGD("enter GetSandboxHapModuleInfo");
-    if (sandboxDataMgr_ == nullptr) {
-        APP_LOGE("sandboxDataMgr_ is nullptr");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
-    }
     return sandboxDataMgr_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
 #else
     APP_LOGD("sandbox app not supported");
@@ -148,10 +115,6 @@ ErrCode BundleSandboxAppHelper::GetInnerBundleInfoByUid(const int32_t &uid, Inne
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGD("enter GetInnerBundleInfoByUid");
-    if (sandboxDataMgr_ == nullptr) {
-        APP_LOGE("sandboxDataMgr_ is nullptr");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
-    }
     return sandboxDataMgr_->GetInnerBundleInfoByUid(uid, innerBundleInfo);
 #else
     APP_LOGD("sandbox app not supported");
@@ -201,10 +164,6 @@ void BundleSandboxAppHelper::RestoreSandboxUidAndGid(std::map<int32_t, std::stri
 {
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     APP_LOGD("enter RestoreSandboxUidAndGid");
-    if (sandboxDataMgr_ == nullptr) {
-        APP_LOGE("sandboxDataMgr_ is nullptr");
-        return;
-    }
     sandboxDataMgr_->RestoreSandboxUidAndGid(bundleIdMap);
 #else
     APP_LOGD("sandbox app not supported");

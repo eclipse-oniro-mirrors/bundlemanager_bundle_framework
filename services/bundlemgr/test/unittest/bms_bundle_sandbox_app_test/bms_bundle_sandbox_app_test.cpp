@@ -1342,7 +1342,6 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1700, Function | SmallTes
 
     InnerBundleInfo info;
     installer->SandboxAppRollBack(info, USERID);
-    EXPECT_EQ(installer->GetSandboxDataMgr(), ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
     SetDataMgr();
 
     installer->SandboxAppRollBack(info, Constants::INVALID_USERID);
@@ -1369,7 +1368,7 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1700, Function | SmallTes
 HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1800, Function | SmallTest | Level1)
 {
     auto installer = std::make_shared<BundleSandboxInstaller>();
-    ClearDataMgr();
+    installer->dataMgr_ = nullptr;
 
     InnerBundleInfo info;
     ErrCode res = installer->UninstallAllSandboxApps("", USERID);
@@ -1380,7 +1379,7 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1800, Function | SmallTes
 
     res = installer->UninstallSandboxApp(BUNDLE_NAME, USERID, USERID);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
-    SetDataMgr();
+    installer->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
 
     res = installer->UninstallAllSandboxApps(BUNDLE_NAME, USERID);
     EXPECT_EQ(res, ERR_OK);
@@ -1943,61 +1942,6 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0300, Function | SmallTest |
 
     auto uninstallRes = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(uninstallRes, ERR_OK);
-}
-
-/**
- * @tc.number: GetInnerBundleInfoByUid_0400
- * @tc.name: get sandbox app bundleInfo information
- * @tc.desc: 1. system run normally
- * @tc.require: issueI5Y75O
- */
-HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0400, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    auto testRet = GetBundleSandboxAppHelper();
-
-#ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    testRet->sandboxDataMgr_ = nullptr;
-    testRet->SaveSandboxAppInfo(info, APP_INDEX_1);
-    testRet->DeleteSandboxAppInfo(BUNDLE_NAME, APP_INDEX_1);
-
-    BundleInfo bundleInfo;
-    auto res = testRet->GetSandboxAppBundleInfo(BUNDLE_NAME, APP_INDEX_1, USERID, bundleInfo);
-    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR);
-
-    res = testRet->GenerateSandboxAppIndex(BUNDLE_NAME);
-    EXPECT_EQ(res, Constants::INITIAL_SANDBOX_APP_INDEX);
-
-    res = testRet->DeleteSandboxAppIndex(BUNDLE_NAME, APP_INDEX_1);
-    EXPECT_EQ(res, false);
-
-    int32_t userId = 100;
-    testRet->GetSandboxAppInfoMap();
-    res = testRet->GetSandboxAppInfo(BUNDLE_NAME, APP_INDEX_1, userId, info);
-    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR);
-
-    AbilityInfo abilityInfo;
-    HapModuleInfo hapModuleInfo;
-    res = testRet->GetSandboxHapModuleInfo(abilityInfo, APP_INDEX_1, USERID, hapModuleInfo);
-    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR);
-
-    res = testRet->GetInnerBundleInfoByUid(0, info);
-    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR);
-
-    res = testRet->InstallSandboxApp(BUNDLE_NAME, 0, USERID, APP_INDEX_1);
-    EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_APP_NOT_EXISTED);
-
-    res = testRet->UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, USERID);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
-
-    res = testRet->UninstallAllSandboxApps(BUNDLE_NAME, USERID);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
-
-    EXPECT_EQ(testRet->sandboxDataMgr_, nullptr);
-
-    testRet->sandboxDataMgr_ = std::make_shared<BundleSandboxDataMgr>();
-    EXPECT_NE(testRet->sandboxDataMgr_, nullptr);
-#endif
 }
 
 /**

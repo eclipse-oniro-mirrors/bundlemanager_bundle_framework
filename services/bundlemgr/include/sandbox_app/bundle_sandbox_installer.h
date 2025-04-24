@@ -57,8 +57,6 @@ private:
     ErrCode CreateSandboxDataDir(InnerBundleInfo &info, const int32_t &uid, const int32_t &appIndex) const;
     void SandboxAppRollBack(InnerBundleInfo &info, const int32_t &userId);
     bool FetchInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist);
-    ErrCode GetDataMgr();
-    ErrCode GetSandboxDataMgr();
 
     int32_t userId_ = Constants::INVALID_USERID;
     std::string bundleName_;
