@@ -5421,11 +5421,7 @@ bool BundleDataMgr::InnerProcessShortcutId(const int64_t updateTime,
         if (info.id.find(RESOURCE_STRING_PREFIX) != 0) {
             continue;
         }
-        int32_t id = static_cast<uint32_t>(atoi(info.id.substr(std::string(RESOURCE_STRING_PREFIX).size()).c_str()));
-        if (id <= 0) {
-            APP_LOGE("shortcut id is less than 0");
-            continue;
-        }
+        uint32_t id = static_cast<uint32_t>(atoi(info.id.substr(std::string(RESOURCE_STRING_PREFIX).size()).c_str()));
         std::string shortcutId;
         OHOS::Global::Resource::RState errValue = resourceManager->GetStringById(id, shortcutId);
         if (errValue != OHOS::Global::Resource::RState::SUCCESS) {
