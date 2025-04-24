@@ -295,6 +295,7 @@ struct Module {
     bool installationFree = false;
     bool isLibIsolated = false;
     bool compressNativeLibs = true;
+    bool hasInsightIntent = false;
     uint32_t descriptionId = 0;
     int32_t targetPriority = 0;
     std::string name;
@@ -1566,6 +1567,12 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.appStartup,
         false,
         g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_HAS_INTENT,
+        module.hasInsightIntent,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -2439,6 +2446,9 @@ bool ToInnerModuleInfo(
     innerModuleInfo.debug = moduleJson.app.debug;
     innerModuleInfo.abilitySrcEntryDelegator = moduleJson.module.abilitySrcEntryDelegator;
     innerModuleInfo.abilityStageSrcEntryDelegator = moduleJson.module.abilityStageSrcEntryDelegator;
+    if (moduleJson.module.hasInsightIntent) {
+        BundleUtil::SetBit(InnerModuleInfoBoolFlag::HAS_INTENT, innerModuleInfo.boolSet);
+    }
     return true;
 }
 
