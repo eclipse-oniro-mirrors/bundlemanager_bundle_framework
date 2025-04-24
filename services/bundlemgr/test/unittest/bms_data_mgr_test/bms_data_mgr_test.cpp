@@ -4284,4 +4284,151 @@ HWTEST_F(BmsDataMgrTest, HandleGroupIdAndIndex_0001, Function | MediumTest | Lev
     bundleDataMgr.HandleGroupIdAndIndex(errorGroupIds, indexMap, groupIdMap);
     EXPECT_EQ(groupIdMap["group1"], DATA_GROUP_INDEX_START);
 }
+
+/**
+ * @tc.number: HandleErrorDataGroupInfos_0001
+ * @tc.name: HandleErrorDataGroupInfos
+ * @tc.desc: test HandleErrorDataGroupInfos(
+    const std::map<std::string, int32_t> &groupIdMap,
+    const std::map<std::string, std::set<std::string>> &needProcessGroupInfoBundleNames)
+ */
+HWTEST_F(BmsDataMgrTest, HandleErrorDataGroupInfos_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::map<std::string, int32_t> groupIdMap = {{"group1", 100}};
+    std::map<std::string, std::set<std::string>> needBundleNames = {{"invalid_bundle", {"group1"}}};
+    bool ret = dataMgr->HandleErrorDataGroupInfos(groupIdMap, needBundleNames);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: HandleErrorDataGroupInfos_0002
+ * @tc.name: HandleErrorDataGroupInfos
+ * @tc.desc: test HandleErrorDataGroupInfos(
+    const std::map<std::string, int32_t> &groupIdMap,
+    const std::map<std::string, std::set<std::string>> &needProcessGroupInfoBundleNames)
+ */
+HWTEST_F(BmsDataMgrTest, HandleErrorDataGroupInfos_0002, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "empty_bundle";
+    InnerBundleInfo emptyInfo;
+    bool ret1 = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    EXPECT_EQ(ret1, true);
+    bool ret2 = dataMgr->AddInnerBundleInfo(bundleName, emptyInfo);
+    EXPECT_EQ(ret2, true);
+
+    std::map<std::string, int32_t> groupIdMap = {{"group1", 100}};
+    std::map<std::string, std::set<std::string>> needBundleNames = {{bundleName, {"group1"}}};
+    bool ret3 = dataMgr->HandleErrorDataGroupInfos(groupIdMap, needBundleNames);
+    EXPECT_EQ(ret3, true);
+    dataMgr->bundleInfos_.erase(bundleName);
+    dataMgr->installStates_.erase(bundleName);
+}
+
+/**
+ * @tc.number: HandleErrorDataGroupInfos_0003
+ * @tc.name: HandleErrorDataGroupInfos
+ * @tc.desc: test HandleErrorDataGroupInfos(
+    const std::map<std::string, int32_t> &groupIdMap,
+    const std::map<std::string, std::set<std::string>> &needProcessGroupInfoBundleNames)
+ */
+HWTEST_F(BmsDataMgrTest, HandleErrorDataGroupInfos_0003, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "empty_bundle";
+    InnerBundleInfo innerBundleInfo;
+    std::string dataGroupId = "dataGroupId";
+    DataGroupInfo dataGroupInfo;
+    innerBundleInfo.AddDataGroupInfo(dataGroupId, dataGroupInfo);
+    bool ret1 = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    EXPECT_EQ(ret1, true);
+    bool ret2 = dataMgr->AddInnerBundleInfo(bundleName, innerBundleInfo);
+    EXPECT_EQ(ret2, true);
+
+    std::map<std::string, int32_t> groupIdMap = {{"group1", 100}};
+    std::map<std::string, std::set<std::string>> needBundleNames = {{bundleName, {"group1"}}};
+    bool ret3 = dataMgr->HandleErrorDataGroupInfos(groupIdMap, needBundleNames);
+    EXPECT_EQ(ret3, true);
+
+    needBundleNames[bundleName].erase("group1");
+    needBundleNames[bundleName].insert("group2");
+    bool ret4 = dataMgr->HandleErrorDataGroupInfos(groupIdMap, needBundleNames);
+    EXPECT_EQ(ret4, false);
+    dataMgr->bundleInfos_.erase(bundleName);
+    dataMgr->installStates_.erase(bundleName);
+}
+
+/**
+ * @tc.number: HandleErrorDataGroupInfos_0004
+ * @tc.name: HandleErrorDataGroupInfos
+ * @tc.desc: test HandleErrorDataGroupInfos(
+    const std::map<std::string, int32_t> &groupIdMap,
+    const std::map<std::string, std::set<std::string>> &needProcessGroupInfoBundleNames)
+ */
+HWTEST_F(BmsDataMgrTest, HandleErrorDataGroupInfos_0004, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "empty_bundle";
+    InnerBundleInfo innerBundleInfo;
+    std::string dataGroupId = "dataGroupId";
+    DataGroupInfo dataGroupInfo;
+    innerBundleInfo.AddDataGroupInfo(dataGroupId, dataGroupInfo);
+    bool ret1 = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    EXPECT_EQ(ret1, true);
+    bool ret2 = dataMgr->AddInnerBundleInfo(bundleName, innerBundleInfo);
+    EXPECT_EQ(ret2, true);
+
+    std::map<std::string, int32_t> groupIdMap = {{"dataGroupId", 100}};
+    std::map<std::string, std::set<std::string>> needBundleNames = {{bundleName, {"dataGroupId"}}};
+    bool ret3 = dataMgr->HandleErrorDataGroupInfos(groupIdMap, needBundleNames);
+    EXPECT_EQ(ret3, true);
+    dataMgr->bundleInfos_.erase(bundleName);
+    dataMgr->installStates_.erase(bundleName);
+}
+
+/**
+ * @tc.number: GetOldAppIds_0001
+ * @tc.name: GetOldAppIds
+ * @tc.desc: test GetOldAppIds(const std::string &bundleName, std::vector<std::string> &appIds)
+ */
+HWTEST_F(BmsDataMgrTest, GetOldAppIds_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "bundleName";
+    std::vector<std::string> appIds;
+    bool ret1 = dataMgr->GetOldAppIds(bundleName, appIds);
+    EXPECT_EQ(ret1, false);
+}
+
+/**
+ * @tc.number: GetOldAppIds_0002
+ * @tc.name: GetOldAppIds
+ * @tc.desc: test GetOldAppIds(const std::string &bundleName, std::vector<std::string> &appIds)
+ */
+HWTEST_F(BmsDataMgrTest, GetOldAppIds_0002, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "bundleName";
+    InnerBundleInfo innerBundleInfo;
+    std::string dataGroupId = "dataGroupId";
+    DataGroupInfo dataGroupInfo;
+    innerBundleInfo.AddDataGroupInfo(dataGroupId, dataGroupInfo);
+    bool ret1 = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    EXPECT_EQ(ret1, true);
+    bool ret2 = dataMgr->AddInnerBundleInfo(bundleName, innerBundleInfo);
+    EXPECT_EQ(ret2, true);
+
+    std::vector<std::string> appIds;
+    bool ret3 = dataMgr->GetOldAppIds(bundleName, appIds);
+    EXPECT_EQ(ret3, true);
+    dataMgr->bundleInfos_.erase(bundleName);
+    dataMgr->installStates_.erase(bundleName);
+}
 } // OHOS
