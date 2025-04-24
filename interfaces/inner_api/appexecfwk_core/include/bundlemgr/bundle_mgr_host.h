@@ -760,6 +760,8 @@ private:
 
     ErrCode HandleGetAdditionalInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAdditionalInfoForAllUser(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleSetExtNameOrMIMEToApp(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleDelExtNameOrMIMEToApp(MessageParcel &data, MessageParcel &reply);

@@ -933,7 +933,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2200, Function | SmallTes
     std::string firstBundleFile = RESOURCE_TEST2_PATH;
     filePaths.emplace_back(firstBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
     CheckFileNonExist();
 }
 
