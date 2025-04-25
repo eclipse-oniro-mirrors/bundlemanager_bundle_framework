@@ -32,8 +32,8 @@ export class AbilityInfoInner implements AbilityInfo {
   readonly iconId: number;
   readonly process: string = "";
   readonly exported: boolean;
-  readonly orientation: bundleManager.DisplayOrientation;
-  readonly launchType: bundleManager.LaunchType;
+  readonly orientation: bundleManager.DisplayOrientation = bundleManager.DisplayOrientation.UNSPECIFIED;
+  readonly launchType: bundleManager.LaunchType = bundleManager.LaunchType.SINGLETON;
   readonly permissions: Array<string> = new Array<string>;
   readonly deviceTypes: Array<string> = new Array<string>;
   readonly applicationInfo: ApplicationInfo = new ApplicationInfoInner;

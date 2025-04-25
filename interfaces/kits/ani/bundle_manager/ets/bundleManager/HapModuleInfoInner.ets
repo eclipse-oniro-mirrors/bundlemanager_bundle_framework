@@ -34,7 +34,7 @@ export class HapModuleInfoInner implements HapModuleInfo {
   readonly deviceTypes: Array<string> = new Array<string>;
   readonly installationFree: boolean;
   readonly hashValue: string = "";
-  readonly type: bundleManager.ModuleType;
+  readonly type: bundleManager.ModuleType = bundleManager.ModuleType.ENTRY;
   readonly dependencies: Array<Dependency> = new Array<Dependency>;
   readonly preloads: Array<PreloadItem> = new Array<PreloadItem>;
   readonly fileContextMenuConfig: string = "";
