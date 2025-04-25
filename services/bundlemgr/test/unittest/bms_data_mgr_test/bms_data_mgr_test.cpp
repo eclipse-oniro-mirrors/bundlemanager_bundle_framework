@@ -4833,4 +4833,134 @@ HWTEST_F(BmsDataMgrTest, UnregisterPluginEventCallback_0001, TestSize.Level1)
     auto ret = bundleDataMgr.UnregisterPluginEventCallback(nullptr);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
+
+/**
+ * @tc.number: GetModuleNameByBundleAndAbility_0001
+ * @tc.name: GetModuleNameByBundleAndAbility
+ * @tc.desc: test GetModuleNameByBundleAndAbility(
+    const std::string& bundleName, const std::string& abilityName)
+ */
+HWTEST_F(BmsDataMgrTest, GetModuleNameByBundleAndAbility_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "";
+    std::string abilityName = "";
+    auto ret = dataMgr->GetModuleNameByBundleAndAbility(bundleName, abilityName);
+    EXPECT_EQ(ret, "");
+
+    bundleName = "bundleName";
+    abilityName = "abilityName";
+    auto ret1 = dataMgr->GetModuleNameByBundleAndAbility(bundleName, abilityName);
+    EXPECT_EQ(ret1, "");
+
+    InnerBundleInfo innerBundleInfo;
+    std::string dataGroupId = "dataGroupId";
+    DataGroupInfo dataGroupInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = abilityName;
+    abilityInfo.moduleName = "moduleName";
+    std::map<std::string, AbilityInfo> abilityInfos = {{abilityName, abilityInfo}};
+    innerBundleInfo.AddModuleAbilityInfo(abilityInfos);
+    innerBundleInfo.AddDataGroupInfo(dataGroupId, dataGroupInfo);
+    bool ret2 = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    EXPECT_EQ(ret2, true);
+    bool ret3 = dataMgr->AddInnerBundleInfo(bundleName, innerBundleInfo);
+    EXPECT_EQ(ret3, true);
+    auto ret4 = dataMgr->GetModuleNameByBundleAndAbility(bundleName, "noAbilityName");
+    EXPECT_EQ(ret4, "");
+
+    auto ret5 = dataMgr->GetModuleNameByBundleAndAbility(bundleName, abilityName);
+    EXPECT_EQ(ret5, "moduleName");
+    dataMgr->bundleInfos_.erase(bundleName);
+    dataMgr->installStates_.erase(bundleName);
+}
+
+/**
+ * @tc.number: SetAdditionalInfo_0001
+ * @tc.name: SetAdditionalInfo
+ * @tc.desc: test SetAdditionalInfo(
+    const std::string& bundleName, const std::string& additionalInfo)
+ */
+HWTEST_F(BmsDataMgrTest, SetAdditionalInfo_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "bundleName";
+    std::string abilityName = "abilityName";
+    std::string additionalInfo;
+    auto ret = dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo innerBundleInfo;
+    std::string dataGroupId = "dataGroupId";
+    DataGroupInfo dataGroupInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = abilityName;
+    abilityInfo.moduleName = "moduleName";
+    std::map<std::string, AbilityInfo> abilityInfos = {{abilityName, abilityInfo}};
+    innerBundleInfo.AddModuleAbilityInfo(abilityInfos);
+    innerBundleInfo.AddDataGroupInfo(dataGroupId, dataGroupInfo);
+    bool ret2 = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    EXPECT_EQ(ret2, true);
+    bool ret3 = dataMgr->AddInnerBundleInfo(bundleName, innerBundleInfo);
+    EXPECT_EQ(ret3, true);
+    auto ret4 = dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+    EXPECT_EQ(ret4, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    innerBundleInfo.SetApplicationBundleType(BundleType::SHARED);
+    auto ret6 = dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+    EXPECT_EQ(ret6, ERR_OK);
+    dataMgr->bundleInfos_.erase(bundleName);
+    dataMgr->installStates_.erase(bundleName);
+}
+
+/**
+ * @tc.number: ConvertServiceHspToSharedBundleInfo_0001
+ * @tc.name: ConvertServiceHspToSharedBundleInfo
+ * @tc.desc: test ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &innerBundleInfo,
+    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos)
+ */
+HWTEST_F(BmsDataMgrTest, ConvertServiceHspToSharedBundleInfo_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo innerBundleInfo;
+    std::vector<BaseSharedBundleInfo> baseSharedBundleInfos;
+    BundleInfo bundleInfo;
+    dataMgr->ConvertServiceHspToSharedBundleInfo(innerBundleInfo, baseSharedBundleInfos);
+    auto ret1 = innerBundleInfo.GetAppServiceHspInfo(bundleInfo);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0002
+ * @tc.name: CreateBundleDataDir
+ * @tc.desc: test CreateBundleDataDir(const InnerBundleInfo &innerBundleInfo,
+    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos)
+ */
+HWTEST_F(BmsDataMgrTest, CreateBundleDataDir_0002, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    int32_t userId = Constants::INVALID_USERID;
+    std::string bundleName = "bundleName";
+    InnerBundleInfo innerBundleInfo;
+    std::string dataGroupId = "dataGroupId";
+    DataGroupInfo dataGroupInfo;
+    innerBundleInfo.AddDataGroupInfo(dataGroupId, dataGroupInfo);
+    bool ret1 = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    EXPECT_EQ(ret1, true);
+    bool ret2 = dataMgr->AddInnerBundleInfo(bundleName, innerBundleInfo);
+    EXPECT_EQ(ret2, true);
+    ErrCode ret3 = dataMgr->CreateBundleDataDir(userId);
+
+    EXPECT_EQ(ret3, ERR_OK);
+    dataMgr->bundleInfos_.erase(bundleName);
+    dataMgr->installStates_.erase(bundleName);
+}
 } // OHOS
