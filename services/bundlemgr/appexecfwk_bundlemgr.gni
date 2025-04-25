@@ -220,6 +220,8 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/inner_patch_info.cpp",
   "${services_path}/bundlemgr/src/patch_data_mgr.cpp",
   "${services_path}/bundlemgr/src/bundlemgr_ext/bundle_mgr_ext_host_impl.cpp",
+  "${services_path}/bundlemgr/src/install_exception_mgr.cpp",
+  "${services_path}/bundlemgr/src/install_exception_mgr_rdb.cpp",
 ]
 
 bundle_resource = [
