@@ -34,7 +34,7 @@ bool QuickFixManagerRdb::QueryAllInnerAppQuickFix(std::map<std::string, InnerApp
     APP_LOGI("begin to QueryAllInnerAppQuickFix");
     bool ret = GetAllDataFromDb(innerAppQuickFixes);
     if (!ret) {
-        APP_LOGE("GetDataFromDb failed.");
+        APP_LOGE("GetDataFromDb failed");
         return false;
     }
     return true;

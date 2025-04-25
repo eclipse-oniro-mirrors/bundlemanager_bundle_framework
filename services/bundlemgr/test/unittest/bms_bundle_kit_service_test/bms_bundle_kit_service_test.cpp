@@ -387,7 +387,7 @@ private:
     std::shared_ptr<std::promise<int32_t>> cleanResult_;
     DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackImpl);
 };
- 
+
 void ProcessCacheCallbackImpl::OnGetAllBundleCacheFinished(uint64_t cacheStat)
 {
     if (cacheStat_ != nullptr) {
@@ -401,7 +401,7 @@ void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(int32_t result)
         cleanResult_->set_value(result);
     }
 }
- 
+
 uint64_t ProcessCacheCallbackImpl::GetCacheStat()
 {
     if (cacheStat_ != nullptr) {
@@ -626,17 +626,17 @@ sptr<BundleMgrProxy> BmsBundleKitServiceTest::GetBundleMgrProxy()
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (!systemAbilityManager) {
-        APP_LOGE("fail to get system ability mgr.");
+        APP_LOGE("fail to get system ability mgr");
         return nullptr;
     }
 
     sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     if (!remoteObject) {
-        APP_LOGE("fail to get bundle manager proxy.");
+        APP_LOGE("fail to get bundle manager proxy");
         return nullptr;
     }
 
-    APP_LOGI("get bundle manager proxy success.");
+    APP_LOGI("get bundle manager proxy success");
     return iface_cast<BundleMgrProxy>(remoteObject);
 }
 
