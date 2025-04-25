@@ -259,6 +259,63 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest003_AppIndexNotFound, F
     EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP);
 }
 
+HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoExtTest001_AppNotFound, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string bundleName = "ohos.samples.appnotfound";
+    const int32_t userId = 100;
+    int32_t appIndex = 1;
+    BundleInfo bundleInfo;
+    auto uid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    auto result = bundleMgrProxy->GetCloneBundleInfoExt(bundleName, 0, appIndex, userId, bundleInfo);
+    setuid(uid);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoExtTest002_UserNotFound, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string bundleName = "ohos.samples.etsclock";
+    const int32_t userId = 200;
+    int32_t appIndex = 1;
+    BundleInfo bundleInfo;
+    auto uid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    auto result = bundleMgrProxy->GetCloneBundleInfoExt(bundleName, 0, appIndex, userId, bundleInfo);
+    setuid(uid);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoExtTest003_AppIndexNotFound, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string bundleName = "ohos.samples.etsclock";
+    const int32_t userId = 100;
+    int32_t appIndex = 10;
+    BundleInfo bundleInfo;
+    auto uid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    auto result = bundleMgrProxy->GetCloneBundleInfoExt(bundleName, 0, appIndex, userId, bundleInfo);
+    setuid(uid);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP);
+}
+
 HWTEST_F(BmsBundleCloneAppIPCTest, UninstallCloneAppTest001_AppNotExist, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
