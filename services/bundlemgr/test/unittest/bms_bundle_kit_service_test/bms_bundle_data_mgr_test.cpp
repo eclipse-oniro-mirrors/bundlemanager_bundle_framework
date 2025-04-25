@@ -6377,7 +6377,6 @@ HWTEST_F(BmsBundleDataMgrTest, SendRequestToServiceCenter_0100, Function | Mediu
     freeInstallParams->want = want;
     freeInstallParams->userId = USERID;
     TargetAbilityInfo abilityInfo;
-    bundleConnectAbility->LoadDownloadService();
     bool ret = bundleConnectAbility->SendRequestToServiceCenter(flag, abilityInfo, want, USERID, *freeInstallParams);
     EXPECT_EQ(ret, false);
 }
