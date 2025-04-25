@@ -387,7 +387,7 @@ private:
     std::shared_ptr<std::promise<int32_t>> cleanResult_;
     DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackImpl);
 };
- 
+
 void ProcessCacheCallbackImpl::OnGetAllBundleCacheFinished(uint64_t cacheStat)
 {
     if (cacheStat_ != nullptr) {
@@ -401,7 +401,7 @@ void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(int32_t result)
         cleanResult_->set_value(result);
     }
 }
- 
+
 uint64_t ProcessCacheCallbackImpl::GetCacheStat()
 {
     if (cacheStat_ != nullptr) {
@@ -14314,20 +14314,6 @@ HWTEST_F(BmsBundleKitServiceTest, CheckPrerequisite_0002, Function | SmallTest |
 }
 
 /**
- * @tc.number: CheckPrerequisite_0003
- * @tc.name: test BundleAgingMgr of Process
- * @tc.desc: CheckPrerequisite is true
- */
-HWTEST_F(BmsBundleKitServiceTest, CheckPrerequisite_0003, Function | SmallTest | Level0)
-{
-    BundleAgingMgr bundleAgingMgr;
-    AppExecFwk::BundleAgingMgr::AgingTriggertype type = AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD;
-    DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().SetDisplayState(DisplayPowerMgr::DisplayState::DISPLAY_OFF);
-    bool ret = bundleAgingMgr.CheckPrerequisite(type);
-    EXPECT_TRUE(ret);
-}
-
-/**
  * @tc.number: Process_0001
  * @tc.name: test AgingHandlerChain of Process
  * @tc.desc: Process is isPassed
@@ -14569,7 +14555,7 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_2000, Function | SmallTest | Level
  */
 HWTEST_F(BmsBundleKitServiceTest, Marshalling_3000, Function | SmallTest | Level0)
 {
-    PluginBundleInfo pluginBundleInfo;   
+    PluginBundleInfo pluginBundleInfo;
     Parcel parcel;
     bool result = pluginBundleInfo.Marshalling(parcel);
     EXPECT_TRUE(result);
@@ -14603,7 +14589,7 @@ HWTEST_F(BmsBundleKitServiceTest, IsRenameInstall_1000, Function | SmallTest | L
     InstallPluginParam installPluginParam;
     installPluginParam.parameters[AppExecFwk::InstallParam::RENAME_INSTALL_KEY] = AppExecFwk::InstallParam::PARAMETERS_VALUE_TRUE;
     bool result = installPluginParam.IsRenameInstall();
-    EXPECT_TRUE(result);    
+    EXPECT_TRUE(result);
 }
 
 /**

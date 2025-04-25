@@ -189,9 +189,7 @@ void BaseBundleInstaller::SendStartInstallNotify(const InstallParam &installPara
             .appIdentifier = item.second.GetAppIdentifier(),
             .isAppUpdate = isAppExist
         };
-        if (NotifyBundleStatus(installRes) != ERR_OK) {
-            LOG_W(BMS_TAG_INSTALLER, "notify status failed for start install");
-        }
+        NotifyBundleStatus(installRes);
     }
 }
 
@@ -226,8 +224,8 @@ ErrCode BaseBundleInstaller::InstallBundle(
         if (installParam.allUser || HasDriverExtensionAbility(bundleName_) ||
             IsEnterpriseForAllUser(installParam, bundleName_)) {
             AddBundleStatus(installRes);
-        } else if (NotifyBundleStatus(installRes) != ERR_OK) {
-            LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
+        } else {
+            NotifyBundleStatus(installRes);
         }
     }
     if (result == ERR_OK) {
@@ -270,8 +268,8 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             AddNotifyBundleEvents(installRes);
         } else if (HasDriverExtensionAbility(bundleName) || IsEnterpriseForAllUser(installParam, bundleName)) {
             AddBundleStatus(installRes);
-        } else if (NotifyBundleStatus(installRes) != ERR_OK) {
-            LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
+        } else {
+            NotifyBundleStatus(installRes);
         }
     }
 
@@ -307,9 +305,7 @@ ErrCode BaseBundleInstaller::Recover(
             .bundleName = bundleName,
             .appDistributionType = appDistributionType_
         };
-        if (NotifyBundleStatus(installRes) != ERR_OK) {
-            LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
-        }
+        NotifyBundleStatus(installRes);
     }
 
     auto recoverInstallParam = installParam;
@@ -384,8 +380,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
-        } else if (NotifyBundleStatus(installRes) != ERR_OK) {
-            LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
+        } else {
+            NotifyBundleStatus(installRes);
         }
     }
 
@@ -583,9 +579,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData
         };
-        if (NotifyBundleStatus(installRes) != ERR_OK) {
-            LOG_W(BMS_TAG_INSTALLER, "notify status failed for installation");
-        }
+        NotifyBundleStatus(installRes);
     }
 
     SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, installParam, sysEventInfo_.preBundleScene, result);
@@ -1771,7 +1765,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             MarkIsForceUninstall(bundleName, isForcedUninstall);
         }
     }
-    
+
     DeleteEncryptedStatus(bundleName, uid);
     BundleResourceHelper::DeleteResourceInfo(bundleName, userId_);
     DeleteRouterInfo(bundleName);
@@ -5246,11 +5240,10 @@ void BaseBundleInstaller::SetCallingTokenId(const Security::AccessToken::AccessT
     callerToken_ = callerToken;
 }
 
-ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &installRes)
+void BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &installRes)
 {
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
-    return ERR_OK;
 }
 
 void BaseBundleInstaller::AddBundleStatus(const NotifyBundleEvents &installRes)
@@ -7197,7 +7190,7 @@ void BaseBundleInstaller::MarkIsForceUninstall(const std::string &bundleName, bo
         LOG_E(BMS_TAG_INSTALLER, "dataMgr is nullptr");
         return;
     }
- 
+
     PreInstallBundleInfo preInstallBundleInfo;
     preInstallBundleInfo.SetBundleName(bundleName);
     if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {

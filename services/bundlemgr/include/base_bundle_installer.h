@@ -595,7 +595,7 @@ private:
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode CheckNativeSoWithOldInfo(
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
-    ErrCode NotifyBundleStatus(const NotifyBundleEvents &installRes);
+    void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     void AddNotifyBundleEvents(const NotifyBundleEvents &notifyBundleEvents);
     void ProcessHqfInfo(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
     ErrCode ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath,

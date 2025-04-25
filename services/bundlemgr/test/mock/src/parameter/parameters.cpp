@@ -70,6 +70,12 @@ std::string GetParameter(const std::string& key, const std::string& def)
     return item->second;
 }
 
+void RemoveParameter(const std::string& key)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    paramMap.erase(key);
+}
+
 bool SetParameter(const std::string& key, const std::string& val)
 {
     std::lock_guard<std::mutex> lock(mutex);

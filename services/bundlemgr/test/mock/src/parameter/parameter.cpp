@@ -26,6 +26,9 @@ const char *DEVICE_TYPE_OF_DEFAULT = "default";
 const char *EMPTY_STRING = "";
 const int DEFAULT_SDK_API = 9;
 const int32_t MAX_LEN = 40;
+
+char g_mockParam[MAX_LEN];
+int g_mockRet = 0;
 } // namespace
 
 char *g_testDeviceType = const_cast<char *>(EMPTY_STRING);
@@ -56,7 +59,10 @@ int GetParameter(const char *key, const char *def, char *value, int len)
             return 1;
         }
     }
-    return 0;
+    if ((key != nullptr) && (value != nullptr) && strcpy_s(value, len, g_mockParam) == 0) {
+        return g_mockRet;
+    }
+    return g_mockRet;
 }
 
 int GetIntParameter(const char *key, int def)
@@ -77,5 +83,13 @@ int SetParameter(const char *key, const char *value)
 int GetDevUdid(char *udid, int size)
 {
     return 0;
+}
+
+void SetBMSMockParameter(const char *param, int ret)
+{
+    g_mockRet = ret;
+    if (strcpy_s(g_mockParam, sizeof(g_mockParam), param) == 0) {
+        return;
+    }
 }
 } // OHOS

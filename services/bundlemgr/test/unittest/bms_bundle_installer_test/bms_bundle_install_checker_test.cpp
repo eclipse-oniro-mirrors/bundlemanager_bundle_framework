@@ -563,6 +563,29 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckDeviceType_0600, Function | SmallTest
 }
 
 /**
+ * @tc.number: BundleInstallCheckerTest_0035
+ * @tc.name: test the CheckAppDistributionType.
+ * @tc.desc: test the CheckAppDistributionType.
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, BundleInstallCheckerTest_0035, TestSize.Level2)
+{
+    BmsParam param;
+    bool saveRes = param.SaveBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, "te");
+    EXPECT_TRUE(saveRes);
+
+    BundleInstallChecker bundleInstallChecker;
+    std::string distributionType = Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE;
+    auto enumRes = bundleInstallChecker.GetAppDistributionTypeEnum(distributionType);
+    EXPECT_EQ(enumRes, AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_ENTERPRISE);
+
+    auto ret = bundleInstallChecker.CheckAppDistributionType(distributionType);
+    EXPECT_EQ(ret, ERR_OK);
+
+    bool clearRes = param.SaveBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, "");
+    EXPECT_TRUE(clearRes);
+}
+
+/**
  * @tc.number: CheckAppLabel_0001
  * @tc.name: test the start function of CheckAppLabel
  * @tc.desc: 1. BundleInstallChecker
