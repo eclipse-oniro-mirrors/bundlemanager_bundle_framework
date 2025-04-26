@@ -14042,6 +14042,51 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAutomatic_0200, Function 
 }
 
 /**
+ * @tc.number: CleanAllBundleCache_0200
+ * @tc.name: test CleanAllBundleCache
+ * @tc.desc: 1. return ERR_BUNDLE_MANAGER_INVALID_PARAMETER
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanAllBundleCache_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    sptr<ProcessCacheCallbackImpl> delCache = new (std::nothrow) ProcessCacheCallbackImpl();
+    ErrCode ret;
+    if (delCache == nullptr) {
+        ret = bundleMgrProxy->CleanAllBundleCache(delCache);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    }
+    ret = bundleMgrProxy->CleanAllBundleCache(delCache);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetPluginAbilityInfo_0100
+ * @tc.name: test GetPluginAbilityInfo
+ * @tc.desc: 1. return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetPluginAbilityInfo_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::string hostBundleName = "test1";
+    std::string pluginBundleName = "test2";
+    std::string pluginModuleName = "test3";
+    std::string pluginAbilityName = "test4";
+    int32_t userId = 10;
+    AbilityInfo abilityInfo;
+    auto ret = bundleMgrProxy->GetPluginAbilityInfo(hostBundleName, pluginBundleName,
+        pluginModuleName, pluginAbilityName, userId, abilityInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
  * @tc.number: CleanCache_0800
  * @tc.name: test can clean the cache files with failed userId
  * @tc.desc: 1.system run normally

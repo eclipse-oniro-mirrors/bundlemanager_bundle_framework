@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 #define private public
 #define protected public
+#include "bundle_mgr_proxy.h"
 #include "bundle_installer_proxy.h"
 #include "peer_holder.h"
 #undef private
@@ -39,6 +40,8 @@ class BmsBundleInstallerProxyTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
+    static sptr<IBundleMgr> GetBundleMgrProxy();
+    static sptr<IBundleInstaller> GetInstallerProxy();
     void SetUp();
     void TearDown();
 };
@@ -54,6 +57,43 @@ void BmsBundleInstallerProxyTest::SetUp()
 
 void BmsBundleInstallerProxyTest::TearDown()
 {}
+
+sptr<IBundleMgr> BmsBundleInstallerProxyTest::GetBundleMgrProxy()
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        APP_LOGE("fail to get system ability mgr.");
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (!remoteObject) {
+        APP_LOGE("fail to get bundle manager proxy.");
+        return nullptr;
+    }
+
+    APP_LOGI("get bundle manager proxy success.");
+    return iface_cast<IBundleMgr>(remoteObject);
+}
+
+sptr<IBundleInstaller> BmsBundleInstallerProxyTest::GetInstallerProxy()
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        return nullptr;
+    }
+
+    sptr<IBundleInstaller> installerProxy = bundleMgrProxy->GetBundleInstaller();
+    if (!installerProxy) {
+        APP_LOGE("fail to get bundle installer proxy");
+        return nullptr;
+    }
+
+    APP_LOGI("get bundle installer proxy success.");
+    return installerProxy;
+}
 
 /**
  * @tc.number: Install_0100
@@ -903,6 +943,65 @@ HWTEST_F(BmsBundleInstallerProxyTest, UninstallPlugin_0100, Function | MediumTes
     std::string pluginBundleName = "pluginName";
     auto res = bundleInstallerProxy.UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: UninstallPlugin_0200
+ * @tc.name: UninstallPlugin
+ * @tc.desc: 1.Test the UninstallPlugin of IBundleInstaller
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, UninstallPlugin_0200, Function | SmallTest | Level1)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(installerProxy, nullptr);
+    }
+    std::string pluginBundleName = "pluginName";
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = 100;
+    ErrCode ret = installerProxy->UninstallPlugin("", pluginBundleName, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+}
+
+/**
+ * @tc.number: InstallPlugin_0200
+ * @tc.name: InstallPlugin
+ * @tc.desc: 1.Test the InstallPlugin of IBundleInstaller
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, InstallPlugin_0200, Function | SmallTest | Level1)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(installerProxy, nullptr);
+    }
+    std::string hostBundleName = "bundleNameTest";
+    std::vector<std::string> pluginFilePaths;
+    pluginFilePaths.emplace_back("pluginPath1");
+    pluginFilePaths.emplace_back("pluginPath2");
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = 100;
+    int32_t ret = installerProxy->InstallPlugin(hostBundleName, pluginFilePaths,
+        installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: InstallByBundleName_0200
+ * @tc.name: InstallByBundleName
+ * @tc.desc: 1.Test the InstallByBundleName of IBundleInstaller
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, InstallByBundleName_0200, Function | SmallTest | Level1)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(installerProxy, nullptr);
+    }
+    InstallParam installParam;
+    bool ret = installerProxy->InstallByBundleName("", installParam, nullptr);
+    EXPECT_EQ(ret, false);
 }
 }
 }
