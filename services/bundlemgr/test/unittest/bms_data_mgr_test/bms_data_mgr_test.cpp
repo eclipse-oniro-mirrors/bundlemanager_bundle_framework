@@ -4963,4 +4963,195 @@ HWTEST_F(BmsDataMgrTest, CreateBundleDataDir_0002, TestSize.Level1)
     dataMgr->bundleInfos_.erase(bundleName);
     dataMgr->installStates_.erase(bundleName);
 }
+
+/**
+ * @tc.number: DeleteDesktopShortcutInfo_0007
+ * @tc.name: DeleteDesktopShortcutInfo
+ * @tc.desc: test ErrCode BundleDataMgr::DeleteDesktopShortcutInfo
+    (const ShortcutInfo &shortcutInfo, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfo_0007, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    ShortcutInfo shortcutInfo;
+    int32_t userId = 10;
+    auto ret = bundleDataMgr.DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllDesktopShortcutInfo_0003
+ * @tc.name: GetAllDesktopShortcutInfo
+ * @tc.desc: test ErrCode BundleDataMgr::GetAllDesktopShortcutInfo
+    (int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
+ */
+HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0003, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = 10;
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto ret = bundleDataMgr.GetAllDesktopShortcutInfo(userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.GetAllDesktopShortcutInfo(userId, shortcutInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleInfosForContinuation_0001
+ * @tc.name: GetBundleInfosForContinuation
+ * @tc.desc: test oid BundleDataMgr::GetBundleInfosForContinuation
+    (std::vector<BundleInfo> &bundleInfos) const
+ */
+HWTEST_F(BmsDataMgrTest, GetBundleInfosForContinuation_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<BundleInfo> bundleInfos;
+    bundleDataMgr.GetBundleInfosForContinuation(bundleInfos);
+    EXPECT_TRUE(bundleInfos.empty());
+
+    BundleInfo bundleInfo;
+    bundleInfos.push_back(bundleInfo);
+    bundleDataMgr.GetBundleInfosForContinuation(bundleInfos);
+    EXPECT_TRUE(bundleInfos.empty());
+}
+
+/**
+ * @tc.number: GetContinueBundleNames_0001
+ * @tc.name: GetContinueBundleNames
+ * @tc.desc: test ErrCode BundleDataMgr::GetContinueBundleNames(
+    const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, GetContinueBundleNames_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string continueBundleName = "";
+    std::vector<std::string> bundleNames;
+    int32_t userId = 10;
+    auto ret = bundleDataMgr.GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+
+    continueBundleName = "test";
+    ret = bundleDataMgr.GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(continueBundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(continueBundleName, info);
+    ret = bundleDataMgr.GetContinueBundleNames(continueBundleName, bundleNames, userId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    bundleDataMgr.bundleInfos_.erase(continueBundleName);
+    bundleDataMgr.installStates_.erase(continueBundleName);
+}
+
+/**
+ * @tc.number: IsBundleInstalled_0001
+ * @tc.name: IsBundleInstalled
+ * @tc.desc: test ErrCode BundleDataMgr::IsBundleInstalled
+    (const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled)
+ */
+HWTEST_F(BmsDataMgrTest, IsBundleInstalled_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "test";
+    int32_t userId = 10;
+    int32_t appIndex = 1000;
+    bool isInstalled = false;
+    auto ret = bundleDataMgr.IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+
+    appIndex = 1;
+    ret = bundleDataMgr.IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
+    EXPECT_EQ(ret, ERR_OK);
+
+    InnerBundleInfo info;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.deviceId = DEVICE_ID;
+    applicationInfo.bundleName = bundleName;
+    info.SetBaseApplicationInfo(applicationInfo);
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    ret = bundleDataMgr.IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
+    EXPECT_EQ(ret, ERR_OK);
+
+    applicationInfo.bundleType = BundleType::SHARED;;
+    info.SetBaseApplicationInfo(applicationInfo);
+    appIndex = 0;
+    info.CleanInnerBundleUserInfos();
+    auto ret1 = bundleDataMgr.IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
+    EXPECT_EQ(ret1, ERR_OK);
+
+    bundleDataMgr.bundleInfos_.erase(bundleName);
+    bundleDataMgr.installStates_.erase(bundleName);
+}
+
+/**
+ * @tc.number: IsBundleInstalled_0002
+ * @tc.name: IsBundleInstalled
+ * @tc.desc: test ErrCode BundleDataMgr::IsBundleInstalled
+    (const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled)
+ */
+HWTEST_F(BmsDataMgrTest, IsBundleInstalled_0002, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "test";
+    int32_t userId = Constants::ANY_USERID;
+    int32_t appIndex = 0;
+    bool isInstalled = false;
+
+    InnerBundleInfo info;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = 10;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    auto ret = bundleDataMgr.IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
+    EXPECT_EQ(ret, ERR_OK);
+
+    info.CleanInnerBundleUserInfos();
+    appIndex = 1;
+    ret = bundleDataMgr.IsBundleInstalled(bundleName, userId, appIndex, isInstalled);
+    EXPECT_EQ(ret, ERR_OK);
+
+    bundleDataMgr.bundleInfos_.erase(bundleName);
+    bundleDataMgr.installStates_.erase(bundleName);
+}
+
+/**
+ * @tc.number: UpdateIsPreInstallApp_0001
+ * @tc.name: UpdateIsPreInstallApp
+ * @tc.desc: test void BundleDataMgr::UpdateIsPreInstallApp
+    (const std::string &bundleName, bool isPreInstallApp)
+ */
+HWTEST_F(BmsDataMgrTest, UpdateIsPreInstallApp_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "test";
+    bundleDataMgr.UpdateIsPreInstallApp(bundleName, false);
+    EXPECT_TRUE(bundleDataMgr.bundleInfos_.empty());
+
+    InnerBundleInfo info;
+    bundleDataMgr.UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    bundleDataMgr.AddInnerBundleInfo(bundleName, info);
+    bundleDataMgr.UpdateIsPreInstallApp(bundleName, true);
+    EXPECT_FALSE(bundleDataMgr.bundleInfos_.empty());
+
+    bundleDataMgr.bundleInfos_.erase(bundleName);
+    bundleDataMgr.installStates_.erase(bundleName);
+}
 } // OHOS
