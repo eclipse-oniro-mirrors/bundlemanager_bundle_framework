@@ -1250,6 +1250,20 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0035, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: BundleMgrExt_0036
+ * @tc.name: GetBundleNamesForUidExt
+ * @tc.desc: GetBundleNamesForUidExt
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0036, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    int32_t uid = 1;
+    std::vector<std::string> bundleNames;
+    bundleMgrExtTest.GetBundleNamesForUidExt(uid, bundleNames);
+    EXPECT_TRUE(bundleNames.empty());
+}
+
+/**
  * @tc.number: BmsExtensionDataMgr_Init_001
  * @tc.name: Init
  * @tc.desc: Init
