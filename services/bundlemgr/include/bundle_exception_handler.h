@@ -53,8 +53,6 @@ public:
      */
     void DeleteBundleInfoFromStorage(const InnerBundleInfo &info);
 
-    bool IsBundleHapPathExist(const InnerBundleInfo &info);
-
 private:
     void InnerHandleInvalidBundle(InnerBundleInfo &info, bool &isBundleValid);
 
