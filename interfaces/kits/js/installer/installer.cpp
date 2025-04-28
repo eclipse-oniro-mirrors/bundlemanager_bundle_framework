@@ -68,7 +68,6 @@ const char* MODULE_NAME = "moduleName";
 const char* HASH_VALUE = "hashValue";
 const char* HASH_PARAMS = "hashParams";
 const char* BUNDLE_NAME = "bundleName";
-const char* APP_INDEX = "appIndex";
 const char* FILE_PATH = "filePath";
 const char* ADD_EXT_RESOURCE = "AddExtResource";
 const char* REMOVE_EXT_RESOURCE = "RemoveExtResource";
