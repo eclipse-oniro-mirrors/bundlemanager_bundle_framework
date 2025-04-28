@@ -77,6 +77,7 @@ enum class ExtensionAbilityType {
     ASSET_ACCELERATION = 26,
     FORM_EDIT = 27,
     DISTRIBUTED = 28,
+    LIVE_FORM = 30,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
