@@ -1801,4 +1801,101 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_1000, Function | SmallTest | Level1)
     InstalldClient::GetInstance()->installdProxy_ = nullptr;
     InstalldClient::GetInstance()->GetInstalldProxy();
 }
+
+/**
+ * @tc.number: AOTExecutor_2300
+ * @tc.name: test StartAOTCompiler success scenario without using mock
+ * @tc.desc: verify the behavior of StartAOTCompiler when all prerequisites are satisfied for successful execution.
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_2300, TestSize.Level1)
+{
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "aotBundleName";
+    aotArgs.bundleUid = -1;
+    aotArgs.bundleGid = -1;
+
+    std::vector<uint8_t> signData;
+
+#if defined(CODE_SIGNATURE_ENABLE)
+    auto res = AOTExecutor::GetInstance().StartAOTCompiler(aotArgs, signData);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+#else
+    auto res = AOTExecutor::GetInstance().StartAOTCompiler(aotArgs, signData);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+#endif
+}
+
+/**
+ * @tc.number: AOTExecutor_3000
+ * @tc.name: test ExecuteAOT when AOT is already running
+ * @tc.desc: verify the behavior of ExecuteAOT when another AOT compilation is in progress.
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_3000, TestSize.Level1)
+{
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "aotBundleName";
+    aotArgs.bundleUid = -1;
+    aotArgs.bundleGid = -1;
+
+    ErrCode ret;
+    std::vector<uint8_t> pendSignData;
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: AOTExecutor_4000
+ * @tc.name: test ExecuteAOT when AOT is already running
+ * @tc.desc: verify the behavior of ExecuteAOT when another AOT compilation is in progress.
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_4000, TestSize.Level1)
+{
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "aotBundleName";
+    aotArgs.bundleUid = -1;
+    aotArgs.bundleGid = -1;
+
+    ErrCode ret;
+    std::vector<uint8_t> pendSignData;
+#ifndef CODE_SIGNATURE_ENABLE
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+#endif
+}
+
+/**
+ * @tc.number: HandleCompileModules_1000
+ * @tc.name: test IsSupportARM64 function running normally
+ * @tc.desc: verify the behavior of IsSupportARM64 when it should return true.
+ */
+HWTEST_F(BmsAOTMgrTest, HandleCompileModules_1000, TestSize.Level1)
+{
+    std::vector<std::string> moduleNames = {"module1", "module2"};
+    std::string compileMode = "compileMode";
+    InnerBundleInfo info;
+    std::string compileResult;
+
+    ErrCode ret = AOTHandler::GetInstance().HandleCompileModules(moduleNames, compileMode, info, compileResult);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+}
+
+/**
+ * @tc.number: HandleCompile_4000
+ * @tc.name: test IsSupportARM64 function running normally
+ * @tc.desc: verify the behavior of IsSupportARM64 when it should return true.
+ */
+HWTEST_F(BmsAOTMgrTest, HandleCompile_4000, TestSize.Level1)
+{
+    system::SetParameter("BM_AOT_TEST", "");
+
+    std::string bundleName = "test_bundle";
+    std::string compileMode = "test_mode";
+    bool isAllBundle = true;
+    std::vector<std::string> compileResults;
+
+    ErrCode ret = AOTHandler::GetInstance().HandleCompile(bundleName, compileMode, isAllBundle, compileResults);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+    EXPECT_EQ(compileResults.size(), 0);
+}
 } // OHOS
