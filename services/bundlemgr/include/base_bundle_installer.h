@@ -731,6 +731,9 @@ private:
         const std::string &bundleName, int32_t userId) const;
     void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteCloudShader(const std::string &bundleName) const;
+    ErrCode DeleteEl1ShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
+    ErrCode DeleteBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
+        const std::string &bundleName, int32_t userId) const;
     bool VerifyActivationLock() const;
     bool VerifyActivationLockToken() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
