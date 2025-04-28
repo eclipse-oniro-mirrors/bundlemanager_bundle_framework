@@ -24,5 +24,6 @@ int GetIntParameter(const char *key, int def);
 int SetParameter(const char *key, const char *value);
 const char *GetAbiList(void);
 int GetDevUdid(char *udid, int size);
+void SetBMSMockParameter(const char *param, int ret);
 } // OHOS
 #endif // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_PARAMETER_H

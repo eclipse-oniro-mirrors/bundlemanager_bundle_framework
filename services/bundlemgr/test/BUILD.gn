@@ -111,6 +111,7 @@ group("unittest") {
       "unittest/bms_service_bundle_scan_test:unittest",
       "unittest/bms_service_startup_test:unittest",
       "unittest/bms_syscap_tool_test:unittest",
+      "unittest/bundle_install_checker_test:unittest",
     ]
     if (is_emulator) {
       deps += [ "unittest/bms_service_startup_emulator_test:unittest" ]

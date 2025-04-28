@@ -30,6 +30,8 @@ T GetIntParameter(const std::string& key, T def);
 std::string GetParameter(const std::string& key, const std::string& def);
 
 bool SetParameter(const std::string& key, const std::string& val);
+
+void RemoveParameter(const std::string& key);
 } // namespace system
 } // namespace OHOS
 #endif // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_PARAMETERS_H
