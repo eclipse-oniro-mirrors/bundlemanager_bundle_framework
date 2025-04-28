@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_SHORTCUT_DATA_STORAGE_INTERFACE_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_SHORTCUT_DATA_STORAGE_INTERFACE_H
 
+#include "json_serializer.h"
 #include "shortcut_info.h"
 
 namespace OHOS {
@@ -29,6 +30,8 @@ public:
     virtual void GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) = 0;
     virtual bool DeleteDesktopShortcutInfo(const std::string &bundleName) = 0;
     virtual bool DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex) = 0;
+    virtual bool GetAllTableDataToJson(nlohmann::json &jsonResult) = 0;
+    virtual bool UpdateAllShortcuts(nlohmann::json &jsonResult) = 0;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

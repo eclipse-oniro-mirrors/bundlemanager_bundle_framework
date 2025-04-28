@@ -3138,4 +3138,34 @@ HWTEST_F(BmsDataMgrTest, CreateAppInstallDir_0001, Function | MediumTest | Level
     std::string appClonePath = path + ServiceConstants::GALLERY_CLONE_PATH;
     EXPECT_EQ(BundleUtil::IsExistDir(appClonePath), true);
 }
+
+/**
+ * @tc.number: OnExtension_0010
+ * @tc.name: OnExtension
+ * @tc.desc: test OnExtension can backup and restore
+ */
+HWTEST_F(BmsDataMgrTest, OnExtension_0010, Function | SmallTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    int32_t USERID = 100;
+    bool isIdIllegal = false;
+    bool ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    EXPECT_TRUE(ret);
+
+    nlohmann::json backupJson = nlohmann::json::array();
+    ret = shortcutDataStorageRdb->GetAllTableDataToJson(backupJson);
+    EXPECT_TRUE(ret);
+
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_TRUE(ret);
+    
+    ret = shortcutDataStorageRdb->UpdateAllShortcuts(backupJson);
+    EXPECT_TRUE(ret);
+
+    std::vector<ShortcutInfo> vecShortcutInfo;
+    shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_GE(vecShortcutInfo.size(), 0);
+}
 } // OHOS

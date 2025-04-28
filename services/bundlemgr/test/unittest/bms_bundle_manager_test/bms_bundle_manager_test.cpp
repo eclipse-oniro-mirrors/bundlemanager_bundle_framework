@@ -6875,4 +6875,21 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5100, Function | MediumTest | L
     ErrCode retCode = hostImpl->GetSandboxDataDir(TEST_BUNDLE_NAME, 0, sandboxDataDir);
     EXPECT_EQ(retCode, ERR_OK);
 }
+
+/**
+ * @tc.number: BundleMgrService_0100
+ * @tc.name: test BundleMgrService
+ * @tc.desc: 1.test OnExtension
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrService_0100, Function | MediumTest | Level1)
+{
+    std::string extension = "backup";
+    MessageParcel data;
+    MessageParcel reply;
+    int32_t ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, data, reply);
+    EXPECT_EQ(ret, -1);
+    extension = "restore";
+    ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, data, reply);
+    EXPECT_EQ(ret, -1);
+}
 } // OHOS

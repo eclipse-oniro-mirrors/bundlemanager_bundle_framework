@@ -23,6 +23,7 @@ config("bundlemgr_common_config") {
     "include/app_service_fwk",
     "include/bundlemgr",
     "include/bms_extension",
+    "include/bundle_backup",
     "include/bundle_resource",
     "include/clone",
     "include/common",
