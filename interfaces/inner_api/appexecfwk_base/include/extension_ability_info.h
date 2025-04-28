@@ -115,7 +115,8 @@ enum class ExtensionAbilityType {
     SYS_VISUAL = 505,
     RECENT_PHOTO = 506,
     AWC_WEBPAGE = 507,
-    AWC_NEWSFEED = 508
+    AWC_NEWSFEED = 508,
+    SCREEN_TIME_GUARD = 509
 };
 
 enum class CompileMode {
