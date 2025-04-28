@@ -35,12 +35,6 @@ void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &is
 {
     std::string appCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
         ServiceConstants::PATH_SEPARATOR + info.GetBundleName();
-    if (!IsBundleHapPathExist(info)) {
-        RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId());
-        DeleteBundleInfoFromStorage(info);
-        isBundleValid = false;
-        return;
-    }
     InnerHandleInvalidBundle(info, isBundleValid);
     if (isBundleValid && (info.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK)) {
         InnerCheckSystemHspPath(info);
@@ -94,31 +88,6 @@ void BundleExceptionHandler::DeleteBundleInfoFromStorage(const InnerBundleInfo &
     } else {
         APP_LOGE(" fail to remove bundle info of %{public}s from the storage", info.GetBundleName().c_str());
     }
-}
-
-bool BundleExceptionHandler::IsBundleHapPathExist(const InnerBundleInfo &info)
-{
-    if (info.IsPreInstallApp() || (info.GetApplicationBundleType() != BundleType::APP)) {
-        APP_LOGD("bundleName:%{public}s no need to check", info.GetBundleName().c_str());
-        return true;
-    }
-    APP_LOGD("start, need to check bundleName:%{public}s hap file", info.GetBundleName().c_str());
-    const auto innerModuleInfos = info.GetInnerModuleInfos();
-    for (const auto &item : innerModuleInfos) {
-        if (!item.second.hapPath.empty()) {
-            bool isExist = false;
-            if (InstalldClient::GetInstance()->IsExistFile(item.second.hapPath, isExist) != ERR_OK) {
-                APP_LOGW("bundleName:%{public}s check hap %{public}s path failed", info.GetBundleName().c_str(),
-                    item.second.hapPath.c_str());
-                continue;
-            }
-            if (!isExist) {
-                APP_LOGE("bundleName:%{public}s hap Path is not exist", info.GetBundleName().c_str());
-                return false;
-            }
-        }
-    }
-    return true;
 }
 
 void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, bool &isBundleValid)
