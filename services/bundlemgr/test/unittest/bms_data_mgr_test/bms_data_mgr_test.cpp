@@ -5154,4 +5154,90 @@ HWTEST_F(BmsDataMgrTest, UpdateIsPreInstallApp_0001, TestSize.Level1)
     bundleDataMgr.bundleInfos_.erase(bundleName);
     bundleDataMgr.installStates_.erase(bundleName);
 }
+
+/**
+ * @tc.number: CreateBundleDataDir_0003
+ * @tc.name: CreateBundleDataDir
+ * @tc.desc: test CreateBundleDataDir(const InnerBundleInfo &innerBundleInfo,
+    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos)
+ */
+HWTEST_F(BmsDataMgrTest, CreateBundleDataDir_0003, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    int32_t userId = Constants::ANY_USERID;
+    std::string bundleName = "bundleName";
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::ANY_USERID;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    bool ret1 = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    EXPECT_EQ(ret1, true);
+    bool ret2 = dataMgr->AddInnerBundleInfo(bundleName, innerBundleInfo);
+    EXPECT_EQ(ret2, true);
+    ErrCode ret3 = dataMgr->CreateBundleDataDir(userId);
+
+    EXPECT_EQ(ret3, ERR_OK);
+    dataMgr->bundleInfos_.erase(bundleName);
+    dataMgr->installStates_.erase(bundleName);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithEl_0001
+ * @tc.name: CreateBundleDataDirWithEl
+ * @tc.desc: test CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl)
+ */
+HWTEST_F(BmsDataMgrTest, CreateBundleDataDirWithEl_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    int32_t userId = Constants::ANY_USERID;;
+    DataDirEl dirEl = DataDirEl::NONE;
+    std::string bundleName = "bundleName";
+    InnerBundleInfo innerBundleInfo;
+    bool ret1 = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    EXPECT_EQ(ret1, true);
+    bool ret2 = dataMgr->AddInnerBundleInfo(bundleName, innerBundleInfo);
+    EXPECT_EQ(ret2, true);
+    ErrCode ret3 = dataMgr->CreateBundleDataDirWithEl(userId, dirEl);
+    EXPECT_EQ(ret3, ERR_OK);
+
+    dirEl = DataDirEl::EL5;
+    ErrCode ret4 = dataMgr->CreateBundleDataDirWithEl(userId, dirEl);
+    EXPECT_EQ(ret4, ERR_OK);
+    dataMgr -> bundleInfos_.erase(bundleName);
+    dataMgr -> installStates_.erase(bundleName);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithEl_0002
+ * @tc.name: CreateBundleDataDirWithEl
+ * @tc.desc: test CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl)
+ */
+HWTEST_F(BmsDataMgrTest, CreateBundleDataDirWithEl_0002, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    int32_t userId = Constants::ALL_USERID;;
+    DataDirEl dirEl = DataDirEl::NONE;
+    std::string bundleName = "bundleName";
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    bool ret1 = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    EXPECT_EQ(ret1, true);
+    bool ret2 = dataMgr->AddInnerBundleInfo(bundleName, innerBundleInfo);
+    EXPECT_EQ(ret2, true);
+    ErrCode ret3 = dataMgr->CreateBundleDataDirWithEl(userId, dirEl);
+    EXPECT_EQ(ret3, ERR_OK);
+
+    dirEl = DataDirEl::EL5;
+    ErrCode ret4 = dataMgr->CreateBundleDataDirWithEl(userId, dirEl);
+    EXPECT_EQ(ret4, ERR_OK);
+    dataMgr -> bundleInfos_.erase(bundleName);
+    dataMgr -> installStates_.erase(bundleName);
+}
 } // OHOS
