@@ -31,6 +31,7 @@ public:
     static ErrCode InnerIsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable, int32_t appIndex);
     static ErrCode InnerSetAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable, int32_t appIndex);
     static ErrCode InnerSetApplicationEnabled(const std::string &bundleName, bool &isEnable, int32_t appIndex);
+    static ErrCode InnerEnableDynamicIcon(const std::string &bundleName, const std::string &moduleName);
 };
 } // AppExecFwk
 } // OHOS

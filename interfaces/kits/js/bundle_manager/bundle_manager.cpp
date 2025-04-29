@@ -76,7 +76,6 @@ const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, err
 const std::string GET_ALL_SHARED_BUNDLE_INFO = "GetAllSharedBundleInfo";
 const std::string GET_SHARED_BUNDLE_INFO = "GetSharedBundleInfo";
 const std::string GET_EXT_RESOURCE = "GetExtResource";
-const std::string ENABLE_DYNAMIC_ICON = "EnableDynamicIcon";
 const std::string DISABLE_DYNAMIC_ICON = "DisableDynamicIcon";
 const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
 const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
@@ -2541,23 +2540,6 @@ napi_value GetExtResource(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode InnerEnableDynamicIcon(
-    const std::string &bundleName, const std::string &moduleName)
-{
-    auto extResourceManager = CommonFunc::GetExtendResourceManager();
-    if (extResourceManager == nullptr) {
-        APP_LOGE("extResourceManager is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-
-    ErrCode ret = extResourceManager->EnableDynamicIcon(bundleName, moduleName);
-    if (ret != ERR_OK) {
-        APP_LOGE("EnableDynamicIcon failed");
-    }
-
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void EnableDynamicIconExec(napi_env env, void *data)
 {
     DynamicIconCallbackInfo *asyncCallbackInfo = reinterpret_cast<DynamicIconCallbackInfo *>(data);
@@ -2565,7 +2547,7 @@ void EnableDynamicIconExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerEnableDynamicIcon(
+    asyncCallbackInfo->err = BundleManagerHelper::InnerEnableDynamicIcon(
         asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleName);
 }
 

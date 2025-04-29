@@ -1096,6 +1096,31 @@ static ani_object QueryExAbilityInfoSyncWithoutWant(ani_env* env, ani_string ani
     return CommonFunAni::ConvertAniArray(env, extensionInfos, CommonFunAni::ConvertExtensionInfo);
 }
 
+static void EnableDynamicIconSync(ani_env* env, ani_string aniBundleName, ani_string aniModuleName)
+{
+    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
+    if (bundleName.empty()) {
+        APP_LOGE("BundleName is empty");
+        BusinessErrorAni::ThrowCommonError(
+            env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
+        return;
+    }
+    std::string moduleName = CommonFunAni::AniStrToString(env, aniModuleName);
+    if (moduleName.empty()) {
+        APP_LOGE("ModuleName is empty");
+        BusinessErrorAni::ThrowCommonError(
+            env, ERROR_PARAM_CHECK_ERROR, Constants::MODULE_NAME, CommonFunAniNS::TYPE_STRING);
+        return;
+    }
+    
+    ErrCode ret = BundleManagerHelper::InnerEnableDynamicIcon(bundleName, moduleName);
+    if (ret != ERR_OK) {
+        APP_LOGE("EnableDynamicIcon failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret,
+            ENABLE_DYNAMIC_ICON, Constants::PERMISSION_ACCESS_DYNAMIC_ICON);
+    }
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -1148,6 +1173,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getDynamicIconInner", nullptr, reinterpret_cast<void*>(GetDynamicIconInner) },
         ani_native_function { "queryAbilityInfoWithWants", nullptr,
             reinterpret_cast<void*>(QueryAbilityInfoWithWants) },
+        ani_native_function { "enableDynamicIconSync", nullptr, reinterpret_cast<void*>(EnableDynamicIconSync) },
     };
 
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

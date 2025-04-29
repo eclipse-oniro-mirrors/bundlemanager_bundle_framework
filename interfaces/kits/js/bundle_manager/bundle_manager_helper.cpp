@@ -102,5 +102,22 @@ ErrCode BundleManagerHelper::InnerSetApplicationEnabled(
     }
     return CommonFunc::ConvertErrCode(ret);
 }
+
+ErrCode BundleManagerHelper::InnerEnableDynamicIcon(
+    const std::string &bundleName, const std::string &moduleName)
+{
+    auto extResourceManager = CommonFunc::GetExtendResourceManager();
+    if (extResourceManager == nullptr) {
+        APP_LOGE("extResourceManager is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    ErrCode ret = extResourceManager->EnableDynamicIcon(bundleName, moduleName);
+    if (ret != ERR_OK) {
+        APP_LOGE("EnableDynamicIcon failed");
+    }
+
+    return CommonFunc::ConvertErrCode(ret);
+}
 } // AppExecFwk
 } // OHOS
