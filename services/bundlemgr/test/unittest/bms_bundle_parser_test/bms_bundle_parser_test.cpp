@@ -771,6 +771,21 @@ const nlohmann::json MODULE_JSON_5 = R"(
                 "srcEntry": "./ets/entrybackupability/EntryBackupAbility.ets",
                 "name": "EntryBackupAbility",
                 "type": "backup"
+            },
+            {
+                "name": "EntryAppServiceAbility",
+                "srcEntry": "./ets/entryappserviceability/EntryAppServiceAbility.ets",
+                "type": "appService",
+                "exported": false,
+                "appIdentifierAllowList": [
+                    "5765880207853134833"
+                ],
+                "metadata": [
+                    {
+                        "name": "ohos.extension.backup",
+                        "resource": "$profile:backup_config"
+                    }
+                ]
             }
         ],
         "compileMode": "esmodule",
@@ -3220,6 +3235,16 @@ HWTEST_F(BmsBundleParserTest, TestParse_6900, Function | SmallTest | Level1)
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+
+    auto extensionInfoMap = innerBundleInfo.GetInnerExtensionInfos();
+    for (auto iter = extensionInfoMap.begin(); iter != extensionInfoMap.end(); iter++) {
+        if (iter->second.type == ExtensionAbilityType::APP_SERVICE) {
+            std::for_each(iter->second.appIdentifierAllowList.begin(), iter->second.appIdentifierAllowList.end(),
+                [](const auto &appId) {
+                    EXPECT_EQ(appId, "5765880207853134833");
+                });
+        }
+    }
 }
 
 /**
