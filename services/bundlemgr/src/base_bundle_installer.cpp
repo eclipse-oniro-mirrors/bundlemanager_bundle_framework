@@ -50,6 +50,7 @@
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "install_exception_mgr.h"
+#include "on_demand_install_data_mgr.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "perf_profile.h"
@@ -1196,9 +1197,17 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
-    if (userId_ == Constants::DEFAULT_USERID && installParam.isDataPreloadHap &&
-        installParam.appIdentifier != appIdentifier_) {
-        result = ERR_APPEXECFWK_INSTALL_VERIFICATION_FAILED;
+    bool onDemandInstall = OnDemandInstallDataMgr::GetInstance().IsOnDemandInstall(installParam);
+    if (!onDemandInstall) {
+        if (userId_ == Constants::DEFAULT_USERID && installParam.isDataPreloadHap &&
+            installParam.appIdentifier != appIdentifier_) {
+            result = ERR_APPEXECFWK_INSTALL_VERIFICATION_FAILED;
+        }
+    } else {
+        if (installParam.isDataPreloadHap &&
+            OnDemandInstallDataMgr::GetInstance().GetAppidentifier(inBundlePaths[0]) != appIdentifier_) {
+            result = ERR_APPEXECFWK_INSTALL_VERIFICATION_FAILED;
+        }
     }
     CHECK_RESULT(result, "check DataPreloadHap appIdentifier failed %{public}d");
     // washing machine judge
@@ -2164,15 +2173,17 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             return ERR_OK;
         }
     }
-
+    bool onDemandInstall = OnDemandInstallDataMgr::GetInstance().IsOnDemandInstall(installParam);
     PreInstallBundleInfo preInstallBundleInfo;
     preInstallBundleInfo.SetBundleName(bundleName);
+    if (onDemandInstall) {
+        return RecoverOnDemandInstallBundle(bundleName, installParam, uid);
+    }
     if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)
         || preInstallBundleInfo.GetBundlePaths().empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "Get PreInstallBundleInfo faile, bundleName: %{public}s", bundleName.c_str());
+        LOG_E(BMS_TAG_INSTALLER, "Get PreInstallBundleInfo failed, bundleName: %{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME;
     }
-
     LOG_D(BMS_TAG_INSTALLER, "Get preInstall bundlePath success");
     std::vector<std::string> pathVec;
     auto innerInstallParam = installParam;
@@ -7395,6 +7406,35 @@ void BaseBundleInstaller::InnerProcessTargetSoPath(const InnerBundleInfo &info, 
             .append(info.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath)
             .append(ServiceConstants::PATH_SEPARATOR);
     }
+}
+
+ErrCode BaseBundleInstaller::RecoverOnDemandInstallBundle(const std::string &bundleName,
+    const InstallParam &installParam, int32_t &uid)
+{
+    LOG_I(BMS_TAG_INSTALLER, "recover on demand install bundle -n: %{public}s", bundleName.c_str());
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(bundleName);
+    if (!OnDemandInstallDataMgr::GetInstance().GetOnDemandInstallBundleInfo(bundleName, preInstallBundleInfo)
+        || preInstallBundleInfo.GetBundlePaths().empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "Get onDemandBundle failed, -n: %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME;
+    }
+    LOG_D(BMS_TAG_INSTALLER, "Get on demand bundle success");
+    std::vector<std::string> pathVec = preInstallBundleInfo.GetBundlePaths();
+    auto innerInstallParam = installParam;
+    innerInstallParam.needSavePreInstallInfo = true;
+    innerInstallParam.isPreInstallApp = true;
+    innerInstallParam.removable = true;
+    innerInstallParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_PREINSTALLED_APP;
+    innerInstallParam.isDataPreloadHap = IsDataPreloadHap(pathVec.empty() ? "" : pathVec.front());
+    if (!innerInstallParam.isDataPreloadHap) {
+        innerInstallParam.copyHapToInstallPath = false;
+    }
+    ErrCode result = ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid, true);
+    if (result == ERR_OK) {
+        OnDemandInstallDataMgr::GetInstance().DeleteOnDemandInstallBundleInfo(bundleName);
+    }
+    return result;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
