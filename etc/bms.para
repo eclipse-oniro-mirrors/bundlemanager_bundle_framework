@@ -13,3 +13,4 @@
 
 bootevent.bms.main.bundles.ready = false
 persist.bms.data.preload = true
+persist.bms.is_pre_install_with_card_finish = false

@@ -314,6 +314,10 @@ void BMSEventHandler::AfterBmsStart()
     if (needNotifyBundleScanStatus_) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::PRE_INSTALL_WITH_CARD_STATUS, false)) {
+        BmsExtensionDataMgr bmsExtensionDataMgr;
+        bmsExtensionDataMgr.RegisterPreInstallWithCard();
+    }
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
     BundleResourceHelper::RegisterCommonEventSubscriber();

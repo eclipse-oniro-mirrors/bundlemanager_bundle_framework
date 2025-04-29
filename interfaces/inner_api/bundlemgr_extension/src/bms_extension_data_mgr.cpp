@@ -640,5 +640,21 @@ ErrCode BmsExtensionDataMgr::GetBundleNamesForUidExt(const int32_t uid, std::vec
     }
     return bundleMgrExtPtr->GetBundleNamesForUidExt(uid, bundleNames);
 }
+
+void BmsExtensionDataMgr::RegisterPreInstallWithCard()
+{
+    if ((Init() != ERR_OK) || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return;
+    }
+    bundleMgrExtPtr->RegisterPreInstallWithCard();
+    return;
+}
 } // AppExecFwk
 } // OHOS
