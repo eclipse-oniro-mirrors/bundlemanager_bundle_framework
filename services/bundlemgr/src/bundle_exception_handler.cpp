@@ -33,8 +33,6 @@ BundleExceptionHandler::~BundleExceptionHandler()
 
 void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &isBundleValid)
 {
-    std::string appCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
-        ServiceConstants::PATH_SEPARATOR + info.GetBundleName();
     InnerHandleInvalidBundle(info, isBundleValid);
     if (isBundleValid && (info.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK)) {
         InnerCheckSystemHspPath(info);
