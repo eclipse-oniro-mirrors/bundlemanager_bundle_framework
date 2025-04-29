@@ -185,7 +185,7 @@ ErrCode BundleParser::ParseSysCap(const std::string &pathName, std::vector<std::
     }
 
     if (!bundleExtractor.HasEntry(SYSCAP_NAME)) {
-        APP_LOGI("Rpcid.sc is not exist, and do not need verification sysCaps");
+        APP_LOGD("Rpcid.sc is not exist, and do not need verification sysCaps");
         return ERR_APPEXECFWK_PARSE_RPCID_FAILED;
     }
 

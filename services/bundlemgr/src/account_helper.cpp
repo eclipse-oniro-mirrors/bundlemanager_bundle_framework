@@ -41,7 +41,7 @@ int32_t AccountHelper::GetCurrentActiveUserId()
     int32_t localId;
     int32_t ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
     if (ret != 0) {
-        APP_LOGE("GetForegroundOsAccountLocalId failed ret:%{public}d", ret);
+        APP_LOGE_NOFUNC("GetForegroundOsAccountLocalId failed ret:%{public}d", ret);
         return Constants::INVALID_USERID;
     }
     return localId;
