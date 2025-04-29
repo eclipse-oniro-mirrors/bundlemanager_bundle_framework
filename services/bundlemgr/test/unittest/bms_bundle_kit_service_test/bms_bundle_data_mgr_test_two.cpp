@@ -162,7 +162,13 @@ const nlohmann::json APP_LIST0 = R"(
     "app_list": [
         {
             "app_dir":"/data/preload/app/app_dir",
-            "appIdentifier":"5765880207853134833"
+            "appIdentifier":"5765880207853134833",
+            "on_demand_install":true
+        },
+        {
+            "app_dir":"/data/preload/app/app_dir",
+            "appIdentifier":"5765880207853134833",
+            "on_demand_install":false
         }
     ]
 }
@@ -1460,7 +1466,8 @@ HWTEST_F(BmsBundleDataMgrTest2, PreBundleProfile_1700, Function | SmallTest | Le
 {
     PreBundleProfile preBundleProfile;
     std::set<PreScanInfo> scanInfos;
-    ErrCode res = preBundleProfile.TransformToAppList(APP_LIST0, scanInfos);
+    std::set<PreScanInfo> scanDemandInfos;
+    ErrCode res = preBundleProfile.TransformToAppList(APP_LIST0, scanInfos, scanDemandInfos);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -1473,7 +1480,8 @@ HWTEST_F(BmsBundleDataMgrTest2, PreBundleProfile_1900, Function | SmallTest | Le
 {
     PreBundleProfile preBundleProfile;
     std::set<PreScanInfo> scanInfos;
-    ErrCode res = preBundleProfile.TransformToAppList(INSTALL_LIST, scanInfos);
+    std::set<PreScanInfo> scanDemandInfos;
+    ErrCode res = preBundleProfile.TransformToAppList(INSTALL_LIST, scanInfos, scanDemandInfos);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
 }
 
@@ -1486,7 +1494,8 @@ HWTEST_F(BmsBundleDataMgrTest2, PreBundleProfile_2000, Function | SmallTest | Le
 {
     PreBundleProfile preBundleProfile;
     std::set<PreScanInfo> scanInfos;
-    ErrCode res = preBundleProfile.TransformToAppList(APP_LIST3, scanInfos);
+    std::set<PreScanInfo> scanDemandInfos;
+    ErrCode res = preBundleProfile.TransformToAppList(APP_LIST3, scanInfos, scanDemandInfos);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
 }
 
@@ -1499,7 +1508,8 @@ HWTEST_F(BmsBundleDataMgrTest2, PreBundleProfile_2100, Function | SmallTest | Le
 {
     PreBundleProfile preBundleProfile;
     std::set<PreScanInfo> scanInfos;
-    ErrCode res = preBundleProfile.TransformToAppList(APP_LIST1, scanInfos);
+    std::set<PreScanInfo> scanDemandInfos;
+    ErrCode res = preBundleProfile.TransformToAppList(APP_LIST1, scanInfos, scanDemandInfos);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
 }
 
@@ -1512,7 +1522,8 @@ HWTEST_F(BmsBundleDataMgrTest2, PreBundleProfile_2200, Function | SmallTest | Le
 {
     PreBundleProfile preBundleProfile;
     std::set<PreScanInfo> scanInfos;
-    ErrCode res = preBundleProfile.TransformToAppList(APP_LIST2, scanInfos);
+    std::set<PreScanInfo> scanDemandInfos;
+    ErrCode res = preBundleProfile.TransformToAppList(APP_LIST2, scanInfos, scanDemandInfos);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP);
 }
 

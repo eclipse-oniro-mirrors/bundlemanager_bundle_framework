@@ -833,6 +833,8 @@ private:
     void RollbackCodePath(const std::string &bundleName, bool isBundleUpdate);
     void InnerProcessTargetSoPath(const InnerBundleInfo &info, const bool isBundleUpdate,
         const std::string &modulePath, std::string &nativeLibraryPath, std::string &targetSoPath);
+    ErrCode RecoverOnDemandInstallBundle(const std::string &bundleName,
+        const InstallParam &installParam, int32_t &uid);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

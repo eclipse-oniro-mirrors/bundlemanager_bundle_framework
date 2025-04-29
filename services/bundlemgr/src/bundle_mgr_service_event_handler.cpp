@@ -29,6 +29,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_scanner.h"
+#include "on_demand_install_data_mgr.h"
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
 #endif
@@ -93,8 +94,6 @@ constexpr const char* HSP_VERSION_PREFIX = "v";
 constexpr const char* OTA_FLAG = "otaFlag";
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
-constexpr const char* DEFAULT_DATA_PRE_BUNDLE_DIR = "/app_list.json";
-constexpr const char* PRODUCT_SUFFIX = "/etc/app";
 constexpr const char* MODULE_UPDATE_PRODUCT_SUFFIX = "/etc/app/module_update";
 constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
 constexpr const char* APP_SERVICE_FWK_INSTALL_LIST_CONFIG = "/app_service_fwk_install_list.json";
@@ -122,6 +121,7 @@ constexpr const char* CODE_PROTECT_FLAG_CHECKED = "checked";
 constexpr int64_t TEN_MB = 1024 * 1024 * 10; //10MB
 
 std::set<PreScanInfo> installList_;
+std::set<PreScanInfo> onDemandInstallList_;
 std::set<PreScanInfo> systemHspList_;
 std::set<std::string> uninstallList_;
 std::set<PreBundleConfigInfo> installListCapabilities_;
@@ -686,7 +686,7 @@ bool BMSEventHandler::LoadPreInstallProFile()
     }
 
     for (const auto &rootDir : rootDirList) {
-        ParsePreBundleProFile(rootDir + PRODUCT_SUFFIX);
+        ParsePreBundleProFile(rootDir + ServiceConstants::PRODUCT_SUFFIX);
         ParsePreBundleProFile(rootDir + MODULE_UPDATE_PRODUCT_SUFFIX);
     }
 
@@ -718,13 +718,23 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
         dir + EXTENSION_TYPE_LIST_CONFIG, extensiontype_);
     bundleParser.ParsePreInstallConfig(
         dir + SHARED_BUNDLES_INSTALL_LIST_CONFIG, installList_);
+    bundleParser.ParseDemandInstallConfig(dir + INSTALL_LIST_CONFIG, onDemandInstallList_);
 
     std::string oldSystemFingerprint = GetOldSystemFingerprint();
     if (oldSystemFingerprint.empty()) {
         LOG_W(BMS_TAG_DEFAULT, "only scan app_list.json on first startup");
-        bundleParser.ParsePreAppListConfig(dir + DEFAULT_DATA_PRE_BUNDLE_DIR, installList_);
+        bundleParser.ParsePreAppListConfig(dir + ServiceConstants::DEFAULT_DATA_PRE_BUNDLE_DIR, installList_,
+            onDemandInstallList_);
     } else {
         LOG_W(BMS_TAG_DEFAULT, "data preload app is not support OTA");
+    }
+    if (!installList_.empty() && !onDemandInstallList_.empty()) {
+        for (const auto &preScanInfo : installList_) {
+            auto iter = std::find(onDemandInstallList_.begin(), onDemandInstallList_.end(), preScanInfo);
+            if (iter != onDemandInstallList_.end()) {
+                onDemandInstallList_.erase(iter);
+            }
+        }
     }
 }
 
@@ -932,6 +942,7 @@ void BMSEventHandler::OnBundleBootStart(int32_t userId)
         InnerProcessBootPreBundleProFileInstall(userId);
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
         ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
+        InnerProcessBootCheckOnDemandBundle();
         return;
     }
 #else
@@ -1213,6 +1224,7 @@ void BMSEventHandler::ProcessRebootBundle()
     LoadAllPreInstallBundleInfos();
     BundleResourceHelper::DeleteNotExistResourceInfo();
     InnerProcessRebootUninstallWrongBundle();
+    ProcessRebootCheckOnDemandBundle();
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootAppServiceUninstall();
@@ -4239,6 +4251,7 @@ void BMSEventHandler::UpdatePreinstallDBForNotUpdatedBundle(const std::string &b
             preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
             preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
             preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+            preInstallBundleInfo.SetVersionCode(applicationInfo.versionCode);
         }
         auto innerModuleInfos = item.second.GetInnerModuleInfos();
         if (!innerModuleInfos.empty() &&
@@ -4606,6 +4619,132 @@ bool BMSEventHandler::SaveBmsSystemTimeForShortcut()
     }
     LOG_I(BMS_TAG_DEFAULT, "save BMS_SYSTEM_TIME_FOR_SHORTCUT succeed");
     return true;
+}
+
+void BMSEventHandler::InnerProcessBootCheckOnDemandBundle()
+{
+    for (const auto &preScanInfo : onDemandInstallList_) {
+        std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+        std::unordered_map<std::string, InnerBundleInfo> infos;
+        if (!ParseOnDemandHapFiles(preScanInfo.bundleDir, hapVerifyResults, infos)) {
+            continue;
+        }
+        if (preScanInfo.isDataPreloadHap) {
+            if (preScanInfo.appIdentifier != hapVerifyResults[0].GetProvisionInfo().bundleInfo.appIdentifier) {
+                LOG_W(BMS_TAG_DEFAULT, "appIdentifier is different");
+                continue;
+            }
+        }
+        PreInstallBundleInfo preInstallBundleInfo;
+        ConvertToOnDemandInstallBundleInfo(infos, preInstallBundleInfo);
+        bool result = OnDemandInstallDataMgr::GetInstance().SaveOnDemandInstallBundleInfo(
+            infos.begin()->second.GetBundleName(), preInstallBundleInfo);
+        if (!result) {
+            LOG_W(BMS_TAG_DEFAULT, "save onDemand bundle fail -n %{public}s",
+                infos.begin()->second.GetBundleName().c_str());
+        }
+    }
+}
+
+void BMSEventHandler::ProcessRebootCheckOnDemandBundle()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    OnDemandInstallDataMgr::GetInstance().DeleteNoDataPreloadBundleInfos();
+    for (const auto &preScanInfo : onDemandInstallList_) {
+        std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+        std::unordered_map<std::string, InnerBundleInfo> infos;
+        if (!ParseOnDemandHapFiles(preScanInfo.bundleDir, hapVerifyResults, infos)) {
+            continue;
+        }
+        if (preScanInfo.isDataPreloadHap) {
+            LOG_W(BMS_TAG_DEFAULT, "data preload app is not support OTA");
+            continue;
+        }
+        PreInstallBundleInfo preInstallBundleInfo;
+        auto hasPreInstalled = dataMgr->GetPreInstallBundleInfo(infos.begin()->second.GetBundleName(),
+            preInstallBundleInfo);
+        if (hasPreInstalled) {
+            installList_.insert(preScanInfo);
+            continue;
+        }
+        ConvertToOnDemandInstallBundleInfo(infos, preInstallBundleInfo);
+        bool result = OnDemandInstallDataMgr::GetInstance().SaveOnDemandInstallBundleInfo(
+            infos.begin()->second.GetBundleName(), preInstallBundleInfo);
+        if (!result) {
+            LOG_W(BMS_TAG_DEFAULT, "save onDemand bundle:%{public}s fail",
+                infos.begin()->second.GetBundleName().c_str());
+        }
+    }
+}
+
+bool BMSEventHandler::ParseOnDemandHapFiles(const std::string &hapFilePath,
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults,
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
+        std::make_unique<BundleInstallChecker>();
+
+    std::vector<std::string> hapFilePathVec { hapFilePath };
+    std::vector<std::string> realPaths;
+    auto ret = BundleUtil::CheckFilePath(hapFilePathVec, realPaths);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "File path %{public}s invalid", hapFilePath.c_str());
+        return false;
+    }
+    ret = bundleInstallChecker->CheckMultipleHapsSignInfo(realPaths, hapVerifyResults);
+    if (ret != ERR_OK || hapVerifyResults.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "check signInfo failed");
+        return false;
+    }
+    InstallCheckParam checkParam;
+    checkParam.isPreInstallApp = true;
+    checkParam.appType = Constants::AppType::THIRD_PARTY_APP;
+    ret = bundleInstallChecker->ParseHapFiles(
+        realPaths, checkParam, hapVerifyResults, infos);
+    if (ret != ERR_OK || infos.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "parse haps file failed");
+        return false;
+    }
+    if (bundleInstallChecker->CheckAppLabelInfo(infos) != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "check app label info failed");
+        return false;
+    }
+    return true;
+}
+
+void BMSEventHandler::ConvertToOnDemandInstallBundleInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    PreInstallBundleInfo &preInstallBundleInfo)
+{
+    const InnerBundleInfo &innerBundleInfo = infos.begin()->second;
+    preInstallBundleInfo.SetBundleName(innerBundleInfo.GetBundleName());
+    preInstallBundleInfo.SetAppType(innerBundleInfo.GetAppType());
+    preInstallBundleInfo.SetVersionCode(innerBundleInfo.GetVersionCode());
+    for (const auto &item : infos) {
+        preInstallBundleInfo.AddBundlePath(item.first);
+    }
+    preInstallBundleInfo.SetRemovable(true);
+    preInstallBundleInfo.SetIsUninstalled(false);
+    for (const auto &innerBundleInfo : infos) {
+        auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
+        innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo);
+        preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
+        preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+        preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+        preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
+        auto moduleMap = innerBundleInfo.second.GetInnerModuleInfos();
+        if (innerBundleInfo.second.GetIsNewVersion()) {
+            preInstallBundleInfo.SetBundleType(innerBundleInfo.second.GetApplicationBundleType());
+        } else if (!moduleMap.empty() && moduleMap.begin()->second.distro.installationFree) {
+            preInstallBundleInfo.SetBundleType(BundleType::ATOMIC_SERVICE);
+        }
+        if (!moduleMap.empty() && moduleMap.begin()->second.distro.moduleType == Profile::MODULE_TYPE_ENTRY) {
+            break;
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
