@@ -88,6 +88,7 @@ constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
 constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityResourceInfo";
 constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
 constexpr const char* GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = "GetAllLauncherAbilityResourceInfo";
+constexpr const char* ENABLE_DYNAMIC_ICON = "EnableDynamicIcon";
 }
 }
 }

@@ -222,6 +222,8 @@ namespace bundleManager {
   export native function queryExAbilityInfoSyncWithoutWant(extensionAbilityType: string, extensionAbilityFlags: number,
     userId: number): Array<ExtensionAbilityInfo>;
 
+  export native function enableDynamicIconSync(bundleName: string, moduleName: string): void;
+
   function isApplicationEnabledSync(bundleName: string): boolean {
     return bundleManager.isApplicationEnabledSyncInner(bundleName, 0);
   }
@@ -985,6 +987,21 @@ namespace bundleManager {
     return p;
   }
 
+  function enableDynamicIcon(bundleName: string, moduleName: string): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return bundleManager.enableDynamicIconSync(bundleName, moduleName);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    }
+    );
+    return p;
+  }
 }
 
 export default bundleManager;
