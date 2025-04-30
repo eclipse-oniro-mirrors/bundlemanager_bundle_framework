@@ -151,20 +151,23 @@ public:
     virtual ErrCode BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
         std::vector<BundleInfo> &bundleInfos, int32_t userId) override;
     /**
-     * @brief Obtains the BundleInfo based on calling uid.
-     * @param bundleName Indicates the application bundle name to be queried.
+     * @brief Obtains the BundleInfo based on calling app.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param bundleInfo Indicates the obtained BundleInfo object.
-     * @param userId Indicates the user ID.
      * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
      */
     virtual ErrCode GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo) override;
     /**
-     * @brief Obtains the BundleInfo based on calling uid.
-     * @param bundleName Indicates the application bundle name to be queried.
+     * @brief Obtains the BundleInfo based on calling app.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param bundleInfo Indicates the obtained BundleInfo object.
-     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoForSelfWithCache(int32_t flags, BundleInfo &bundleInfo) override;
+    /**
+     * @brief Obtains the BundleInfo based on calling app.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
      * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
      */
     virtual ErrCode GetBundleInfoForSelfWithOutCache(int32_t flags, BundleInfo &bundleInfo) override;
@@ -1285,6 +1288,11 @@ private:
 
     template <typename T>
     ErrCode GetParcelableInfoWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo);
+
+    template <typename T>
+    ErrCode GetParcelableInfoWithErrCodeReply(
+        BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply, T &parcelableInfo);
+
     /**
      * @brief Send a command message and then get a vector of parcelable information objects from the reply.
      * @param code Indicates the message code to be sent.
@@ -1330,6 +1338,8 @@ private:
     ErrCode WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const;
 
     ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, void *&data);
+
+    static void StopCache();
 };
 
 }  // namespace AppExecFwk

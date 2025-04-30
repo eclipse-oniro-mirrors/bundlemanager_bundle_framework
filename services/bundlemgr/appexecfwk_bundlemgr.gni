@@ -167,6 +167,7 @@ bundle_install_external_deps = [
   "hitrace:libhitracechain",
   "memmgr:memmgrclient",
   "os_account:libaccountkits",
+  "safwk:api_cache_manager",
   "storage_service:storage_manager_acl",
   "zlib:shared_libz",
 ]

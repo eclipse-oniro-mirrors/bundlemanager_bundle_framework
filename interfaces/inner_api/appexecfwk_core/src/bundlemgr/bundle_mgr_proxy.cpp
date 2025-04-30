@@ -15,8 +15,10 @@
 
 #include "bundle_mgr_proxy.h"
 
+#include <chrono>
 #include <cinttypes>
 #include <numeric>
+#include <mutex>
 #include <set>
 #include <unistd.h>
 
@@ -25,6 +27,7 @@
 #include "string_ex.h"
 #include "parcel_macro.h"
 
+#include "api_cache_manager.h"
 #include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
 #include "appexecfwk_core_constants.h"
@@ -35,6 +38,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_proxy.h"
 #endif
+#include "ffrt.h"
 #include "hitrace_meter.h"
 #include "json_util.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
@@ -48,6 +52,9 @@ namespace AppExecFwk {
 namespace {
 constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
+constexpr int64_t GET_BUNDLE_FOR_SELF_CACHE_TIME = 800; // 800ms
+static std::atomic<bool> g_cacheAble = true;
+static std::once_flag g_cacheStopFlag;
 
 enum class AllBundleCacheSizeState : uint8_t {
     GET_START = 0,
@@ -82,9 +89,16 @@ bool GetData(void *&buffer, size_t size, const void *data)
 }
 } // namespace
 
-BundleMgrProxy::BundleMgrProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IBundleMgr>(impl)
+BundleMgrProxy::BundleMgrProxy(const sptr<IRemoteObject> &remote) : IRemoteProxy<IBundleMgr>(remote)
 {
     APP_LOGD("create bundle mgr proxy instance");
+    if (remote) {
+        if (!remote->IsProxyObject()) {
+            return;
+        }
+        ApiCacheManager::GetInstance().AddCacheApi(GetDescriptor(),
+            static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF), GET_BUNDLE_FOR_SELF_CACHE_TIME);
+    }
 }
 
 BundleMgrProxy::~BundleMgrProxy()
@@ -444,6 +458,29 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelfWithOutCache due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelfWithOutCache due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto res = GetParcelableInfoWithErrCode<BundleInfo>(
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
+    if (res != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForSelfWithOutCache failed err:%{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::GetBundleInfoForSelfWithCache(int32_t flags, BundleInfo &bundleInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY, "begin to get bundle info for self");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -451,14 +488,45 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
-    auto res = GetParcelableInfoWithErrCode<BundleInfo>(
-        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
+    MessageParcel reply;
+    bool hitCache = ApiCacheManager::GetInstance().PreSendRequest(GetDescriptor(),
+        static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF), data, reply);
+    if (hitCache && g_cacheAble) {
+        LOG_D(BMS_TAG_QUERY, "hitCache, flag %{public}d", flags);
+        ErrCode errCode = reply.ReadInt32();
+        if (errCode != ERR_OK) {
+            return errCode;
+        }
+        std::unique_ptr<BundleInfo> info(reply.ReadParcelable<BundleInfo>());
+        if (info != nullptr) {
+            bundleInfo = *info;
+            return errCode;
+        }
+    }
+    LOG_D(BMS_TAG_QUERY, "not hitCache, flag %{public}d", flags);
+    MessageParcel replyForReal;
+    auto res = GetParcelableInfoWithErrCodeReply<BundleInfo>(
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, replyForReal, bundleInfo);
     if (res != ERR_OK) {
         LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForSelf failed err:%{public}d", res);
         return res;
     }
+    if (g_cacheAble) {
+        ApiCacheManager::GetInstance().PostSendRequest(GetDescriptor(),
+            static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF), data, replyForReal);
+        std::call_once(g_cacheStopFlag, StopCache);
+    }
     return ERR_OK;
+}
+
+void BundleMgrProxy::StopCache()
+{
+    auto task = []() {
+        g_cacheAble = false;
+        ApiCacheManager::GetInstance().ClearCache();
+    };
+    ffrt::submit(task, ffrt::task_attr().delay(std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::milliseconds(GET_BUNDLE_FOR_SELF_CACHE_TIME)).count()));
 }
 
 ErrCode BundleMgrProxy::GetBundleInfoForSelfWithOutCache(int32_t flags, BundleInfo &bundleInfo)
@@ -4783,6 +4851,13 @@ ErrCode BundleMgrProxy::GetParcelableInfoWithErrCode(
     BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
     MessageParcel reply;
+    return GetParcelableInfoWithErrCodeReply(code, data, reply, parcelableInfo);
+}
+
+template <typename T>
+ErrCode BundleMgrProxy::GetParcelableInfoWithErrCodeReply(
+    BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply, T &parcelableInfo)
+{
     if (!SendTransactCmd(code, data, reply)) {
         APP_LOGE("SendTransactCmd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -4798,7 +4873,7 @@ ErrCode BundleMgrProxy::GetParcelableInfoWithErrCode(
         parcelableInfo = *info;
     }
 
-    APP_LOGD("GetParcelableInfoWithErrCode ErrCode : %{public}d", res);
+    APP_LOGD("GetParcelableInfoWithErrCodeReply ErrCode : %{public}d", res);
     return res;
 }
 
