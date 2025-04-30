@@ -3121,4 +3121,21 @@ HWTEST_F(BmsDataMgrTest, InnerProcessShortcutId_0005, Function | MediumTest | Le
         EXPECT_NE(shortcutInfos[0].id, shortcutInfo.id);
     }
 }
+
+/**
+ * @tc.number: CreateAppInstallDir_0001
+ * @tc.name: CreateAppInstallDir
+ * @tc.desc: test CreateAppInstallDir(int32_t userId)
+ */
+HWTEST_F(BmsDataMgrTest, CreateAppInstallDir_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = USERID;
+    bundleDataMgr.CreateAppInstallDir(userId);
+    std::string path = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(userId);
+    EXPECT_EQ(BundleUtil::IsExistDir(path), true);
+    std::string appClonePath = path + ServiceConstants::GALLERY_CLONE_PATH;
+    EXPECT_EQ(BundleUtil::IsExistDir(appClonePath), true);
+}
 } // OHOS
