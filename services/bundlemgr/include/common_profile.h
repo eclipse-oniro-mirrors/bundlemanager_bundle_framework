@@ -394,6 +394,7 @@ constexpr const char* MODULE_PROXY_DATA = "proxyData";
 constexpr const char* MODULE_BUILD_HASH = "buildHash";
 constexpr const char* MODULE_ISOLATION_MODE = "isolationMode";
 constexpr const char* MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
+constexpr const char* MODULE_EXTRACT_NATIVE_LIBS = "extractNativeLibs";
 constexpr const char* MODULE_QUERY_SCHEMES = "querySchemes";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
 constexpr const char* MODULE_HAS_INTENT = "hasInsightIntent";

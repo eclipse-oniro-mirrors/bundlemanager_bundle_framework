@@ -129,6 +129,7 @@
         "type": "entry",
         "virtualMachine": "ark",
         "compressNativeLibs": false,
+        "extractNativeLibs": false,
         "libIsolation": true
     }
 }
