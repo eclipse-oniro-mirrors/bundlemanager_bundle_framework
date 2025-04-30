@@ -314,6 +314,7 @@ constexpr const char* SKILLS = "skills";
 constexpr const char* SRC_ENTRANCE = "srcEntrance";
 constexpr const char* SRC_ENTRY = "srcEntry";
 constexpr const char* PERMISSIONS = "permissions";
+constexpr const char* APPIDENTIFIER_ALLOW_LIST = "appIdentifierAllowList";
 constexpr const char* VISIBLE = "visible";
 constexpr const char* EXPORTED = "exported";
 constexpr const char* SRC_LANGUAGE = "srcLanguage";

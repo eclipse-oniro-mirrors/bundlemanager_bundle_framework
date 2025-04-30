@@ -236,6 +236,7 @@ struct Extension {
     std::string writePermission;
     std::string uri;
     std::vector<std::string> permissions;
+    std::vector<std::string> appIdentifierAllowList;
     std::vector<Skill> skills;
     std::vector<Metadata> metadata;
     std::string extensionProcessMode;
@@ -800,6 +801,14 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         jsonObjectEnd,
         PERMISSIONS,
         extension.permissions,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        APPIDENTIFIER_ALLOW_LIST,
+        extension.appIdentifierAllowList,
         JsonType::ARRAY,
         false,
         g_parseResult,
@@ -2312,6 +2321,7 @@ void ToExtensionInfo(
     extensionInfo.priority = extension.priority;
     extensionInfo.uri = extension.uri;
     extensionInfo.permissions = extension.permissions;
+    extensionInfo.appIdentifierAllowList = extension.appIdentifierAllowList;
     extensionInfo.visible = extension.visible;
     GetMetadata(extensionInfo.metadata, extension.metadata);
     extensionInfo.bundleName = moduleJson.app.bundleName;
