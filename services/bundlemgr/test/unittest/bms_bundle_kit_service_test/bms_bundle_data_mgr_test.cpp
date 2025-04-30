@@ -134,6 +134,10 @@ const std::string FORM_LANDSCAPE_LAYOUTS1 = "land1";
 const std::string FORM_LANDSCAPE_LAYOUTS2 = "land2";
 const std::string FORM_SRC = "page/card/index";
 constexpr int32_t FORM_JS_WINDOW_DESIGNWIDTH = 720;
+const std::string FORM_ABILITY_NAME = "GameLoaderExtensionAbility";
+const std::string FORM_TARGET_BUNDLE_NAME = "Game";
+const std::string FORM_DISABLED_DESKTOP_BEHAVIORS = "PULL_DOWN_SEARCH|LONG_CLICK";
+constexpr int32_t FORM_KEEP_STATE_DURATION = 10000;
 const std::string SHORTCUT_TEST_ID = "shortcutTestId";
 const std::string SHORTCUT_DEMO_ID = "shortcutDemoId";
 const std::string SHORTCUT_HOST_ABILITY = "hostAbility";
@@ -732,6 +736,12 @@ FormInfo BmsBundleDataMgrTest::MockFormInfo(
         info.name = FORM_CUSTOMIZE_DATAS_NAME;
         info.value = FORM_CUSTOMIZE_DATAS_VALUE;
     }
+    formInfo.funInteractionParams.abilityName = FORM_ABILITY_NAME;
+    formInfo.funInteractionParams.targetBundleName = FORM_TARGET_BUNDLE_NAME;
+    formInfo.funInteractionParams.keepStateDuration = FORM_KEEP_STATE_DURATION;
+    formInfo.sceneAnimationParams.abilityName = FORM_ABILITY_NAME;
+    formInfo.sceneAnimationParams.isAlwaysActive = false;
+    formInfo.sceneAnimationParams.disabledDesktopBehaviors = FORM_DISABLED_DESKTOP_BEHAVIORS;
     return formInfo;
 }
 

@@ -42,6 +42,18 @@ struct FormWindow {
     int32_t designWidth = 720;
 };
 
+struct FormFunInteractionParams {
+    std::string abilityName;
+    std::string targetBundleName;
+    int32_t keepStateDuration = 10000;
+};
+
+struct FormSceneAnimationParams {
+    std::string abilityName;
+    bool isAlwaysActive = false;
+    std::string disabledDesktopBehaviors;
+};
+
 enum class FormType {
     JAVA = 0,
     JS = 1,

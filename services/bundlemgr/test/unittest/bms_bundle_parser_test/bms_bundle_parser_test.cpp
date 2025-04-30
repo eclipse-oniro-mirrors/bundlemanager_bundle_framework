@@ -157,7 +157,17 @@ const nlohmann::json CONFIG_JSON = R"(
                                         "value": "com.weather.testWidget"
                                     }
                                 ]
-                            }
+                            },
+                        "funInteractionParams": {
+                            "abilityName": "GameLoaderExtensionAbility",
+                            "targetBundleName": "Game",
+                            "keepStateDuration": 10000
+                        },
+                        "sceneAnimationParams": {
+                            "abilityName": "GameLoaderExtensionAbility",
+                            "isAlwaysActive": false,
+                            "disabledDesktopBehaviors": "PULL_DOWN_SEARCH|LONG_CLICK"
+                        }
                         }
                     ],
                     "skills": [
