@@ -21,6 +21,7 @@
 #include "resource_info.h"
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -43,6 +44,8 @@ public:
         const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
 
     static void GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName);
+
+    static std::set<int32_t> GetAppIndexByBundleName(const std::string &bundleName);
 
 private:
     // used for show in settings

@@ -1043,6 +1043,7 @@ public:
     ErrCode GetCloneBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
         BundleInfo &bundleInfo, int32_t userId) const;
     std::vector<int32_t> GetCloneAppIndexes(const std::string &bundleName, int32_t userId) const;
+    std::set<int32_t> GetCloneAppIndexes(const std::string &bundleName) const;
 
     ErrCode ExplicitQueryExtensionInfoV9(const Want &want, int32_t flags, int32_t userId,
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;

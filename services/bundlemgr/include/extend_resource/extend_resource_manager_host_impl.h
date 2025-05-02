@@ -92,6 +92,7 @@ private:
         const int32_t userId = Constants::UNSPECIFIED_USERID, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);
     ErrCode CheckParamInvalid(const InnerBundleInfo &bundleInfo,
         const int32_t userId, const int32_t appIndex);
+    bool IsNeedUpdateBundleResourceInfo(const std::string &bundleName, const int32_t userId);
 
     std::atomic<uint32_t> id_ = 0;
 };

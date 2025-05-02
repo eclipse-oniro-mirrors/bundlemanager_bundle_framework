@@ -514,5 +514,16 @@ void BundleResourceProcess::GetTargetBundleName(const std::string &bundleName,
         targetBundleName = bundleInfo.GetTargetBundleName();
     }
 }
+
+std::set<int32_t> BundleResourceProcess::GetAppIndexByBundleName(const std::string &bundleName)
+{
+    std::set<int32_t> appIndexes;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return appIndexes;
+    }
+    return dataMgr->GetCloneAppIndexes(bundleName);
+}
 } // AppExecFwk
 } // OHOS

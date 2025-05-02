@@ -2173,6 +2173,18 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundle
     return cloneAppIndexes;
 }
 
+std::set<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundleName) const
+{
+    std::set<int32_t> cloneAppIndexes;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        LOG_W(BMS_TAG_QUERY, "no bundleName %{public}s found", bundleName.c_str());
+        return cloneAppIndexes;
+    }
+    return infoItem->second.GetCloneBundleAppIndexes();
+}
+
 std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesNoLock(const std::string &bundleName, int32_t userId) const
 {
     std::vector<int32_t> cloneAppIndexes;
