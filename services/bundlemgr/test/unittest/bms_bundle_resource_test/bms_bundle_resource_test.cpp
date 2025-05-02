@@ -73,6 +73,7 @@ namespace OHOS {
 namespace {
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t APP_INDEX = 1;
 const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string BUNDLE_NAME_NOT_EXIST = "com.example.not_exist";
 const std::string MODULE_NAME = "entry";
@@ -3139,6 +3140,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0141, Function | SmallTest
         EXPECT_EQ(oldBundleResourceInfo.bundleName, BUNDLE_NAME);
 
         ResourceInfo resourceInfo;
+        resourceInfo.appIndex_ = Constants::UNSPECIFIED_USERID;
         resourceInfo.icon_ = "icon";
         resourceInfo.foreground_.push_back(1);
         resourceInfo.background_.push_back(1);
@@ -3282,6 +3284,8 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0144, Function | SmallTest
         EXPECT_EQ(cloneBundleResourceInfo.label, bundleResourceInfo.label + std::to_string(appIndex));
         EXPECT_FALSE(cloneBundleResourceInfo.icon.empty());
         EXPECT_FALSE(cloneBundleResourceInfo.foreground.empty());
+        ret = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
+        EXPECT_TRUE(ret);
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -3331,6 +3335,8 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0145, Function | SmallTest
             EXPECT_FALSE(cloneLauncherAbilityResourceInfos[0].icon.empty());
             EXPECT_FALSE(cloneLauncherAbilityResourceInfos[0].foreground.empty());
         }
+        ret = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
+        EXPECT_TRUE(ret);
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -3426,10 +3432,12 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0175, Function | SmallTest
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0148, Function | SmallTest | Level0)
 {
     std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     bundleMgrService_->RegisterDataMgr(nullptr);
     bool ans = BundleResourceProcess::GetAllResourceInfo(USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
+    bundleMgrService_->RegisterDataMgr(savedDataMgr);
 }
 
 /**
@@ -3442,11 +3450,13 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0148, Function | SmallTest
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0149, Function | SmallTest | Level0)
 {
     ResourceInfo resourceInfo;
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     bundleMgrService_->RegisterDataMgr(nullptr);
     bool ans = BundleResourceProcess::GetLauncherResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME,
         USERID, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
+    bundleMgrService_->RegisterDataMgr(savedDataMgr);
 }
 
 /**
@@ -3460,10 +3470,12 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0150, Function | SmallTest
 {
     std::vector<std::string> resourceNames;
     std::vector<ResourceInfo> resourceInfos;
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     bundleMgrService_->RegisterDataMgr(nullptr);
     bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfos.size(), 0);
+    bundleMgrService_->RegisterDataMgr(savedDataMgr);
 }
 
 /**
@@ -3476,9 +3488,11 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0150, Function | SmallTest
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0151, Function | SmallTest | Level0)
 {
     std::string targetBundleName;
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     bundleMgrService_->RegisterDataMgr(nullptr);
     BundleResourceProcess::GetTargetBundleName(BUNDLE_NAME, targetBundleName);
     EXPECT_TRUE(BUNDLE_NAME == targetBundleName);
+    bundleMgrService_->RegisterDataMgr(savedDataMgr);
 }
 
 /**
@@ -3491,10 +3505,12 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0151, Function | SmallTest
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0152, Function | SmallTest | Level0)
 {
     std::vector<ResourceInfo> resourceInfos;
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     bundleMgrService_->RegisterDataMgr(nullptr);
     bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
+    bundleMgrService_->RegisterDataMgr(savedDataMgr);
 }
 
 /**
@@ -4050,6 +4066,159 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0188, Function | SmallTest
     resourceInfos.push_back(resourceInfo);
     BundleResourceProcess::ChangeDynamicIcon(resourceInfos, resourceInfo);
     EXPECT_FALSE(resourceInfos[0].iconNeedParse_);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0189
+ * Function: GetAppIndexByBundleName
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetAppIndexByBundleName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0189, Function | SmallTest | Level0)
+{
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    auto index = BundleResourceProcess::GetAppIndexByBundleName(BUNDLE_NAME);
+    EXPECT_TRUE(index.empty());
+    bundleMgrService_->RegisterDataMgr(savedDataMgr);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0190
+ * Function: GetAppIndexByBundleName
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetAppIndexByBundleName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0190, Function | SmallTest | Level0)
+{
+    auto index = BundleResourceProcess::GetAppIndexByBundleName(BUNDLE_NAME);
+    EXPECT_TRUE(index.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0191
+ * Function: GetAppIndexByBundleName
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetAppIndexByBundleName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0191, Function | SmallTest | Level0)
+{
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    InnerBundleUserInfo userInfo;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.innerBundleUserInfos_["100"] = userInfo;
+    savedDataMgr->bundleInfos_[BUNDLE_NAME_NOT_EXIST] = bundleInfo;
+    auto index = BundleResourceProcess::GetAppIndexByBundleName(BUNDLE_NAME_NOT_EXIST);
+    EXPECT_FALSE(index.empty());
+
+    auto iter = savedDataMgr->bundleInfos_.find(BUNDLE_NAME_NOT_EXIST);
+    if (iter != savedDataMgr->bundleInfos_.end()) {
+        savedDataMgr->bundleInfos_.erase(iter);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0192
+ * Function: ProcessUpdateCloneBundleResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessUpdateCloneBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0192, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->ProcessUpdateCloneBundleResourceInfo(BUNDLE_NAME_NOT_EXIST);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0193
+ * Function: ProcessUpdateCloneBundleResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessUpdateCloneBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0193, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        InnerBundleCloneInfo cloneInfo;
+        cloneInfo.appIndex = 1;
+        InnerBundleUserInfo userInfo;
+        userInfo.cloneInfos["1"] = cloneInfo;
+        InnerBundleInfo bundleInfo;
+        bundleInfo.innerBundleUserInfos_["100"] = userInfo;
+        savedDataMgr->bundleInfos_[BUNDLE_NAME_NOT_EXIST] = bundleInfo;
+
+        bool ret = manager->ProcessUpdateCloneBundleResourceInfo(BUNDLE_NAME_NOT_EXIST);
+        EXPECT_FALSE(ret);
+
+        auto iter = savedDataMgr->bundleInfos_.find(BUNDLE_NAME_NOT_EXIST);
+        if (iter != savedDataMgr->bundleInfos_.end()) {
+            savedDataMgr->bundleInfos_.erase(iter);
+        }
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0194
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByBundleName, bundle not exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0194, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ans = manager->AddResourceInfoByBundleName(BUNDLE_NAME, USERID, APP_INDEX);
+        EXPECT_FALSE(ans);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0195
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByBundleName, bundle exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0195, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        // bundle exist, userId exist, appIndex = 0
+        bool ans = manager->AddResourceInfoByBundleName(BUNDLE_NAME, USERID, 0);
+        EXPECT_TRUE(ans);
+
+        // bundle exist, userId exist, appIndex = 1
+        ans = manager->AddResourceInfoByBundleName(BUNDLE_NAME, USERID, APP_INDEX);
+        EXPECT_TRUE(ans);
+
+        // delete key
+        ans = manager->DeleteResourceInfo(BUNDLE_NAME);
+        EXPECT_TRUE(ans);
+
+        ans = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, APP_INDEX);
+        EXPECT_TRUE(ans);
+    }
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 #endif
 

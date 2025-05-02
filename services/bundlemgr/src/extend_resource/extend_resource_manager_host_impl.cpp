@@ -784,9 +784,15 @@ ErrCode ExtendResourceManagerHostImpl::GetAllDynamicIconInfo(
 bool ExtendResourceManagerHostImpl::IsNeedUpdateBundleResourceInfo(
     const std::string &bundleName, const int32_t userId)
 {
+    if (userId == Constants::DEFAULT_USERID) {
+        return true;
+    }
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if ((currentUserId <= 0)) {
         currentUserId = Constants::START_USERID;
+    }
+    if (currentUserId == userId) {
+        return true;
     }
 
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -795,12 +801,10 @@ bool ExtendResourceManagerHostImpl::IsNeedUpdateBundleResourceInfo(
         return false;
     }
     std::vector<int32_t> userIds = dataMgr->GetUserIds(bundleName);
-    // bundleName exist in current userId , need check userId
+    // bundleName exist in current userId, need check userId
     if (std::find(userIds.begin(), userIds.end(), currentUserId) != userIds.end()) {
-        if (currentUserId != userId) {
-            APP_LOGW("currentUserId %{public}d userId %{public}d not same", currentUserId, userId);
-            return false;
-        }
+        APP_LOGW("currentUserId %{public}d userId %{public}d not same", currentUserId, userId);
+        return false;
     }
     APP_LOGI("bundle %{public}s userId %{public}d need update bundle resource", bundleName.c_str(), userId);
     return true;
