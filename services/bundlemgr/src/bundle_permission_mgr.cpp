@@ -751,7 +751,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
     const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
-    const std::string &appServiceCapabilities)
+    const std::string &appServiceCapabilities, bool dataRefresh)
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "start UpdateHapToken -n %{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::UpdateHapInfoParams updateHapInfoParams;
@@ -760,6 +760,8 @@ int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenID
     updateHapInfoParams.isSystemApp = innerBundleInfo.IsSystemApp();
     updateHapInfoParams.appDistributionType = innerBundleInfo.GetAppDistributionType();
     updateHapInfoParams.isAtomicService = innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE;
+    //refresh new permissions for application
+    updateHapInfoParams.dataRefresh = dataRefresh;
 
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo, appServiceCapabilities);
 #ifdef X86_EMULATOR_MODE
