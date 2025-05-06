@@ -42,6 +42,21 @@ int32_t AccountHelper::IsOsAccountExists(const int32_t id, bool &isOsAccountExis
 #endif
 }
 
+void AccountHelper::QueryAllCreatedOsAccounts(std::set<int32_t> &userIds)
+{
+#ifdef ACCOUNT_ENABLE
+    std::vector<AccountSA::OsAccountInfo> osAccountInfos;
+    if (AccountSA::OsAccountManager::QueryAllCreatedOsAccounts(osAccountInfos) == 0) {
+        for (AccountSA::OsAccountInfo acct : osAccountInfos) {
+            userIds.insert(acct.GetLocalId());
+        }
+    }
+#else
+    APP_LOGI("ACCOUNT_ENABLE is false");
+    // ACCOUNT_ENABLE is false, do nothing .
+#endif
+}
+
 int32_t AccountHelper::GetCurrentActiveUserId()
 {
 #ifdef ACCOUNT_ENABLE
