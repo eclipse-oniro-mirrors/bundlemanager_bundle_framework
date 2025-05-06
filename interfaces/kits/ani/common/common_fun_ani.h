@@ -37,8 +37,16 @@ namespace CommonFunAniNS {
 constexpr const char* TYPE_INT = "int";
 constexpr const char* TYPE_NUMBER = "number";
 constexpr const char* TYPE_STRING = "string";
+constexpr const char* TYPE_FUNCTION = "function";
 } // namespace CommonFunAniNS
 
+#define RETURN_IF_NULL(ptr)          \
+    do {                             \
+        if ((ptr) == nullptr) {      \
+            APP_LOGE("ptr is null"); \
+            return;                  \
+        }                            \
+    } while (0)
 #define RETURN_NULL_IF_NULL(ptr)     \
     do {                             \
         if ((ptr) == nullptr) {      \
@@ -157,6 +165,9 @@ public:
     static ani_object ConvertShortcutIntentParameter(ani_env* env, const std::pair<std::string, std::string>& item);
 
     static ani_object ConvertLauncherAbilityInfo(ani_env* env, const LauncherAbilityInfo& launcherAbility);
+
+    static ani_object CreateBundleChangedInfo(
+        ani_env* env, const std::string& bundleName, int32_t userId, int32_t appIndex);
 
     // Parse from ets to native
     static bool ParseShortcutInfo(ani_env* env, ani_object object, ShortcutInfo& shortcutInfo);

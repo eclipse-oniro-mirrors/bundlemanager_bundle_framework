@@ -31,6 +31,8 @@ group("ani_bms_packages") {
     "bundle_manager:hap_module_info_etc",
     "bundle_manager:metadata_etc",
     "bundle_manager:skill_etc",
+    "bundle_monitor:ani_bundle_monitor",
+    "bundle_monitor:bundle_monitor_etc",
     "launcher_bundle_manager:ani_launcher_bundle_manager",
     "launcher_bundle_manager:element_name_etc",
     "launcher_bundle_manager:launcher_ability_info_etc",
