@@ -39,9 +39,18 @@ public:
      * @brief Transform the jsonBuf to scanAppListInfos.
      * @param jsonBuf Indicates the jsonBuf.
      * @param scanAppInfos Indicates the scanAppInfos.
+     * @param scanDemandInfos Indicates the scanDemandInfos.
      * @return Returns ERR_OK if the information transformed successfully; returns error code otherwise.
      */
-    ErrCode TransformToAppList(const nlohmann::json &jsonBuf, std::set<PreScanInfo> &scanAppInfos) const;
+    ErrCode TransformToAppList(const nlohmann::json &jsonBuf, std::set<PreScanInfo> &scanAppInfos,
+        std::set<PreScanInfo> &scanDemandInfos) const;
+    /**
+     * @brief Transform the jsonBuf to scanDemandInfos.
+     * @param jsonBuf Indicates the jsonBuf.
+     * @param scanDemandInfos Indicates the scanDemandInfos.
+     * @return Returns ERR_OK if the information transformed successfully; returns error code otherwise.
+     */
+    ErrCode TransformToDemandList(const nlohmann::json &jsonBuf, std::set<PreScanInfo> &scanDemandInfos) const;
     /**
      * @brief Transform the jsonBuf to bundleNames.
      * @param jsonBuf Indicates the jsonBuf.
@@ -68,6 +77,8 @@ public:
      */
     ErrCode TransformJsonToExtensionTypeList(
         const nlohmann::json &jsonBuf, std::set<std::string> &extensionTypeList) const;
+    void ProcessOnDemandList(std::set<PreScanInfo> &scanAppInfos,
+        std::set<PreScanInfo> &scanDemandInfos) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
