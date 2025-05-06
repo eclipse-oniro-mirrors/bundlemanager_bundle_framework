@@ -24,6 +24,12 @@ ohos_shared_library("ani_zlib") {
     integer_overflow = true
     ubsan = true
   }
+
+  defines = [
+    "APP_LOG_TAG = \"BMS\"",
+    "LOG_DOMAIN = 0xD001120",
+  ]
+
   include_dirs = [
     "${inner_api_path}/appexecfwk_core/include",
     "${kits_path}/ani/zlib",

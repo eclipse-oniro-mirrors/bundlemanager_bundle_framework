@@ -129,4 +129,138 @@ export default namespace zlib {
   }
 
   export native function DecompressFile(inFile: string, outFile: string, options?: Options): void;
+
+  export interface Checksum {
+    adler32(adler: number, buf: ArrayBuffer): Promise<number>;
+    adler32Combine(adler1: number, adler2: number, len2: number): Promise<number>;
+    crc32(crc: number, buf: ArrayBuffer): Promise<number>;
+    crc32Combine(crc1: number, crc2: number, len2: number): Promise<number>;
+    crc64(crc: number, buf: ArrayBuffer): Promise<number>;
+    getCrcTable(): Promise<Array<number>>;
+    getCrc64Table(): Promise<Array<number>>;
+  }
+
+  export class ChecksumInternal implements Checksum {
+    public native Adler32(adler: number, buf: ArrayBuffer): number;
+    public native Adler32Combine(adler1: number, adler2: number, len2: number): number;
+    public native Crc32(crc: number, buf: ArrayBuffer): number;
+    public native Crc32Combine(crc1: number, crc2: number, len2: number): number;
+    public native Crc64(crc: number, buf: ArrayBuffer): number;
+    public native GetCrcTable(): Array<number>;
+    public native GetCrc64Table(): Array<number>;
+
+    public adler32(adler: number, buf: ArrayBuffer): Promise<number> {
+      let p: Promise<number> = new Promise<number>((resolve: (v:number) => void, reject: (error: BusinessError) => void) : void => {
+        let execFun = (): number => {
+          return this.Adler32(adler, buf);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: number = e as number;
+          resolve(result);
+        }, (err: BusinessError): void => {
+          reject(err);
+        });
+      });
+      return p;
+    }
+
+    public adler32Combine(adler1: number, adler2: number, len2: number): Promise<number> {
+      let p: Promise<number> = new Promise<number>((resolve: (v:number) => void, reject: (error: BusinessError) => void) : void => {
+        let execFun = (): number => {
+          return this.Adler32Combine(adler1, adler2, len2);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: number = e as number;
+          resolve(result);
+        }, (err: BusinessError): void => {
+          reject(err);
+        });
+      });
+      return p;
+    }
+
+    public crc32(crc: number, buf: ArrayBuffer): Promise<number> {
+      let p: Promise<number> = new Promise<number>((resolve: (v:number) => void, reject: (error: BusinessError) => void) : void => {
+        let execFun = (): number => {
+          return this.Crc32(crc, buf);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: number = e as number;
+          resolve(result);
+        }, (err: BusinessError): void => {
+          reject(err);
+        });
+      });
+      return p;
+    }
+
+    public crc32Combine(crc1: number, crc2: number, len2: number): Promise<number> {
+      let p: Promise<number> = new Promise<number>((resolve: (v:number) => void, reject: (error: BusinessError) => void) : void => {
+        let execFun = (): number => {
+          return this.Crc32Combine(crc1, crc2, len2);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: number = e as number;
+          resolve(result);
+        }, (err: BusinessError): void => {
+          reject(err);
+        });
+      });
+      return p;
+    }
+
+    public crc64(crc: number, buf: ArrayBuffer): Promise<number> {
+      let p: Promise<number> = new Promise<number>((resolve: (v:number) => void, reject: (error: BusinessError) => void) : void => {
+        let execFun = (): number => {
+          return this.Crc64(crc, buf);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: number = e as number;
+          resolve(result);
+        }, (err: BusinessError): void => {
+          reject(err);
+        });
+      });
+      return p;
+    }
+
+    public getCrcTable(): Promise<Array<number>> {
+      let p: Promise<Array<number>> = new Promise<Array<number>>((resolve: (v:Array<number>) => void, reject: (error: BusinessError) => void) : void => {
+        let execFun = (): Array<number> => {
+          return this.GetCrcTable();
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let resultArray: Array<number> = e as Array<number>;
+          resolve(resultArray);
+        }, (err: BusinessError): void => {
+          reject(err);
+        });
+      });
+      return p;
+    }
+
+    public getCrc64Table(): Promise<Array<number>> {
+      let p: Promise<Array<number>> = new Promise<Array<number>>((resolve: (v:Array<number>) => void, reject: (error: BusinessError) => void) : void => {
+        let execFun = (): Array<number> => {
+          return this.GetCrc64Table();
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let resultArray: Array<number> = e as Array<number>;
+          resolve(resultArray);
+        }, (err: BusinessError): void => {
+          reject(err);
+        });
+      });
+      return p;
+    }
+  }
+
+  export native function createChecksumSync(): Checksum;
 }

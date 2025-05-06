@@ -139,7 +139,7 @@ void ANIBundleMonitorEventHandler::ProcessMessages()
         ANIBundleMonitorEventHandlerMessage message;
         {
             std::lock_guard lock(messageQueueMutex_);
-            APP_LOGD("messageQueue_ size: %{public}d", messageQueue_.size());
+            APP_LOGD("messageQueue_ size: %{public}zu", messageQueue_.size());
             if (stopFlag_) {
                 processingFlag_ = false;
                 APP_LOGD("stop flag, leave");

@@ -69,7 +69,7 @@ void ANIBundleMonitorCallbackHandler::RemoveCallback(ani_env* env, ani_object an
                 env->GlobalReference_Delete(*iter);
             } else {
                 removedCallbackList_.emplace_back(*iter);
-                APP_LOGD("delayed clear, size: %{public}d", removedCallbackList_.size());
+                APP_LOGD("delayed clear, size: %{public}zu", removedCallbackList_.size());
             }
             iter = callbackList_.erase(iter);
             break;
@@ -90,7 +90,7 @@ void ANIBundleMonitorCallbackHandler::RemoveAllCallback(ani_env* env)
         ClearCallbackList(env, callbackList_);
     } else {
         removedCallbackList_.splice(removedCallbackList_.end(), callbackList_);
-        APP_LOGD("delayed clear, size: %{public}d", removedCallbackList_.size());
+        APP_LOGD("delayed clear, size: %{public}zu", removedCallbackList_.size());
     }
     APP_LOGI("RemoveAllCallback exit");
 }
