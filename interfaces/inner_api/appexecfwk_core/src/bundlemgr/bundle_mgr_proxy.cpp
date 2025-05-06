@@ -1209,6 +1209,27 @@ ErrCode BundleMgrProxy::QueryAbilityInfosV9(
         BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_V9, data, abilityInfos);
 }
 
+ErrCode BundleMgrProxy::GetAbilityInfos(
+    const std::string &uri, uint32_t flags, std::vector<AbilityInfo> &abilityInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(uri)) {
+        LOG_E(BMS_TAG_QUERY, "write uri failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(flags)) {
+        LOG_E(BMS_TAG_QUERY, "write flags failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
+        BundleMgrInterfaceCode::GET_ABILITY_INFOS, data, abilityInfos);
+}
+
 ErrCode BundleMgrProxy::BatchQueryAbilityInfos(
     const std::vector<Want> &wants, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {

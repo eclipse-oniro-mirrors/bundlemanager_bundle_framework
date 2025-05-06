@@ -365,6 +365,15 @@ public:
     virtual ErrCode QueryAbilityInfosV9(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
     /**
+     * @brief Get the AbilityInfo of list by the given Uri.
+     * @param uri Indicates the information of the ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
+     */
+    virtual ErrCode GetAbilityInfos(
+        const std::string &uri, uint32_t flags, std::vector<AbilityInfo> &abilityInfos) override;
+    /**
      * @brief Batch query the AbilityInfo of list by the given Wants.
      * @param wants Indicates the information of the abilities.
      * @param flags Indicates the information contained in the AbilityInfo object to be returned.
@@ -1141,7 +1150,11 @@ private:
         std::unordered_map<std::string, PluginBundleInfo> &pluginBundleInfos);
     void AddPreinstalledApplicationInfo(PreInstallBundleInfo &preInstallBundleInfo,
         std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos);
-
+    void GetAbilityLabelInfo(std::vector<AbilityInfo> &abilityInfos);
+    void GetApplicationLabelInfo(std::vector<AbilityInfo> &abilityInfos);
+    bool GetLabelFromCache(const std::string &cacheKey, const std::string &abilityName,
+        const std::unordered_map<std::string, std::vector<LauncherAbilityResourceInfo>> &resourceCache,
+        std::string &label);
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };
 }  // namespace AppExecFwk

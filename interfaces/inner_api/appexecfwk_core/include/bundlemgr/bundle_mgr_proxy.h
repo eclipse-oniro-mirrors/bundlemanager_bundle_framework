@@ -383,6 +383,15 @@ public:
     virtual ErrCode QueryAbilityInfosV9(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
     /**
+     * @brief Get the AbilityInfo of list by the given uri.
+     * @param uri Indicates the uri used for matching ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
+     */
+    virtual ErrCode GetAbilityInfos(
+        const std::string &uri, uint32_t flags, std::vector<AbilityInfo> &abilityInfos) override;
+    /**
      * @brief Query the AbilityInfo of list by the given Wants.
      * @param wants Indicates the information of the abilities.
      * @param flags Indicates the information contained in the AbilityInfo object to be returned.

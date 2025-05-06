@@ -534,6 +534,18 @@ public:
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     /**
+     * @brief Get AbilityInfo by the given uri.
+     * @param uri Indicates the uri used for matching ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
+     */
+    virtual ErrCode GetAbilityInfos(
+        const std::string &uri, uint32_t flags, std::vector<AbilityInfo> &abilityInfos)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    /**
      * @brief Query the AbilityInfo of list by the given Wants.
      * @param want Indicates the information of the ability.
      * @param flags Indicates the information contained in the AbilityInfo object to be returned.
