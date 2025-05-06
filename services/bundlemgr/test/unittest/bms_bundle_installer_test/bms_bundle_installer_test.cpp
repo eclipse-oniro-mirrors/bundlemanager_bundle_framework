@@ -9982,7 +9982,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0013, Function | MediumTest | L
     std::vector<std::string> bundlePaths {"data/test_bundle/"};
     InstallPluginParam installPluginParam;
     auto ret = installer.CopyHspToSecurityDir(bundlePaths, installPluginParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT);
 }
 
 /**

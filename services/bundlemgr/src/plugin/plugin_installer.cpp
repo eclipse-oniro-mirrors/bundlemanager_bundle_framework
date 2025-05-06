@@ -41,6 +41,7 @@ constexpr const char* PLUGIN_ID = "pluginDistributionIDs";
 constexpr const char* PLUGIN_ID_SEPARATOR = "|";
 constexpr const char* REMOVE_TMP_SUFFIX = "_removed";
 constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install/";
+constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
 }
 
 PluginInstaller::PluginInstaller()
@@ -307,6 +308,10 @@ ErrCode PluginInstaller::CopyHspToSecurityDir(std::vector<std::string> &bundlePa
     const InstallPluginParam &installPluginParam)
 {
     for (size_t index = 0; index < bundlePaths.size(); ++index) {
+        if (!BundleUtil::CheckSystemSize(bundlePaths[index], APP_INSTALL_PATH)) {
+            APP_LOGE("install %{public}s failed insufficient disk memory", bundlePaths[index].c_str());
+            return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+        }
         auto destination = BundleUtil::CopyFileToSecurityDir(bundlePaths[index], DirType::STREAM_INSTALL_DIR,
             toDeleteTempHspPath_, installPluginParam.IsRenameInstall());
         if (destination.empty()) {
