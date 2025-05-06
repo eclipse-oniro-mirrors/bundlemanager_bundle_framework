@@ -69,7 +69,7 @@ bool BundleFileUtil::CheckFilePath(const std::string &bundlePath, std::string &r
         return false;
     }
     if (!CheckFileSize(realPath, MAX_HAP_SIZE)) {
-        APP_LOGE("file size larger than max hap size: %{public}" PRId64, MAX_HAP_SIZE);
+        APP_LOGE("path is not a regular file or file size is too large");
         return false;
     }
     return true;
@@ -149,7 +149,11 @@ bool BundleFileUtil::CheckFileSize(const std::string &bundlePath, const int64_t 
 {
     struct stat fileInfo = { 0 };
     if (stat(bundlePath.c_str(), &fileInfo) != 0) {
-        APP_LOGE("call stat error:%{public}d", errno);
+        APP_LOGE("call stat error:%{public}d %{public}s", errno, bundlePath.c_str());
+        return false;
+    }
+    if (!S_ISREG(fileInfo.st_mode)) {
+        APP_LOGE("path is not a regular file: %{public}s", bundlePath.c_str());
         return false;
     }
     if (fileInfo.st_size > fileSize) {
