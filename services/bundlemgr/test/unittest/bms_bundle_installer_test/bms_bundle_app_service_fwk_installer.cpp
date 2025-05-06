@@ -2076,4 +2076,22 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, AppServiceFwkInstallerTest_0005, F
     auto res = installer.Install(hspPaths, installParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
 }
+
+/**
+ * @tc.number: CheckAndParseFiles_0020
+ * @tc.name: test CheckAndParseFiles
+ * @tc.desc: 1.test CheckAndParseFiles
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckAndParseFiles_0020, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.removable = false;
+    std::vector<std::string> hspPaths{ VERSION_ONE_LIBRARY_ONE_PATH };
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    auto res = appServiceFwkInstaller.CheckAndParseFiles(hspPaths, installParam, newInfos);
+    EXPECT_EQ(res, ERR_OK);
+}
 }

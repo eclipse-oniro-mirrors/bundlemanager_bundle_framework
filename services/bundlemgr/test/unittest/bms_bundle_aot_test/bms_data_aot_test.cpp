@@ -66,6 +66,8 @@ constexpr uint32_t OFFSET = 1001;
 constexpr uint32_t LENGTH = 2002;
 constexpr uint32_t SLEEP_INTERVAL_MILLI_SECONDS = 100;
 constexpr uint32_t VIRTUAL_CHILD_PID = 12345678;
+const int32_t TEST_U0 = 0;
+const int32_t TEST_U1 = 1;
 
 constexpr const char* OTA_COMPILE_TIME = "persist.bms.optimizing_apps.timing";
 constexpr const char* OTA_COMPILE_SWITCH = "const.bms.optimizing_apps.switch";
@@ -1897,5 +1899,16 @@ HWTEST_F(BmsAOTMgrTest, HandleCompile_4000, TestSize.Level1)
     ErrCode ret = AOTHandler::GetInstance().HandleCompile(bundleName, compileMode, isAllBundle, compileResults);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
     EXPECT_EQ(compileResults.size(), 0);
+}
+
+/**
+* @tc.number: CheckAllUser_0010
+* @tc.name: test CheckAllUser
+* @tc.desc: 1.test CheckAllUser
+*/
+HWTEST_F(BmsAOTMgrTest, CheckAllUser_0010, Function | SmallTest | Level1)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->AddUserId(TEST_U1);
+    DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
 }
 } // OHOS

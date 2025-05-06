@@ -80,7 +80,11 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundle(
         MarkPreBundleSyeEventBootTag(false);
         otaInstall_ = true;
         ErrCode errCode = InstallBundle(filePaths, installParam, appType);
-        if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
+        if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) &&
+            (errCode != ERR_APPEXECFWK_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON) &&
+            (errCode != ERR_APPEXECFWK_INSTALL_U1_ENABLE_NOT_SUPPORT_APP_SERVICE_AND_SHARED_BUNDLE) &&
+            (errCode != ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS) &&
+            (errCode != ERR_APPEXECFWK_INSTALL_U1_ENABLE_NOT_SAME_IN_ALL_BUNDLE_INFOS)) {
             APP_LOGE("install system bundle fail, error: %{public}d", errCode);
             result = errCode;
             if (!filePaths.empty()) {

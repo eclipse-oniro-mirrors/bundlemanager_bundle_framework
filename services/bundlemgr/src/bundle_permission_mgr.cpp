@@ -815,7 +815,8 @@ bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
         LOG_E(BMS_TAG_DEFAULT, "get current user fail");
         return false;
     }
-    if (userId != curUser && userId != Constants::DEFAULT_USERID && userId != Constants::UNSPECIFIED_USERID) {
+    if (userId != curUser && userId != Constants::DEFAULT_USERID && userId != Constants::U1 &&
+        userId != Constants::UNSPECIFIED_USERID) {
         LOG_E(BMS_TAG_DEFAULT, "specified user %{public}d is not same with current user %{public}d",
             userId, curUser);
         return false;

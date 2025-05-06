@@ -491,7 +491,7 @@ void BundleMgrService::CheckAllUser()
     APP_LOGI("Check all user start");
     std::set<int32_t> userIds = dataMgr_->GetAllUser();
     for (auto userId : userIds) {
-        if (userId == Constants::DEFAULT_USERID) {
+        if (userId == Constants::DEFAULT_USERID || userId == Constants::U1) {
             continue;
         }
 

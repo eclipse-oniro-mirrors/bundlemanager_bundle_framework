@@ -324,12 +324,23 @@ public:
             != forceUninstalledUsers_.end();
     }
 
+    bool GetU1Enable() const
+    {
+        return u1Enable_;
+    }
+
+    void SetU1Enable(bool u1Enable)
+    {
+        u1Enable_ = u1Enable;
+    }
+
 private:
     bool removable_ = true;
     bool isUninstalled_ = false;
     bool systemApp_ = false;
     // non pre-installed driver app also need to be pre-installed for new user
     bool isAdditionalApp_ = false;
+    bool u1Enable_ = false;
     uint32_t versionCode_;
     uint32_t labelId_ = 0;
     uint32_t iconId_ = 0;
