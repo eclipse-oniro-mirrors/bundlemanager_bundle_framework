@@ -863,7 +863,7 @@ private:
     int32_t atomicServiceModuleUpgrade_ = 0;
     SingletonState singletonState_ = SingletonState::DEFAULT;
     BundleType bundleType_ = BundleType::APP;
-    Security::AccessToken::AccessTokenID callerToken_;
+    Security::AccessToken::AccessTokenID callerToken_ = 0;
     std::string bundleName_;
     std::string modulePath_;
     std::string baseDataPath_;
