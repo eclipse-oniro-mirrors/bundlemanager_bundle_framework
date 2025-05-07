@@ -30,6 +30,7 @@ constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
 constexpr const char* CACHE_DIR = "cache";
 constexpr int8_t START_USERID = 100;
 constexpr int8_t DEFAULT_USERID = 0;
+constexpr int8_t U1 = 1;
 constexpr int8_t INVALID_USERID = -1;
 constexpr int8_t UNSPECIFIED_USERID = -2;
 constexpr int8_t ALL_USERID = -3;
@@ -90,6 +91,7 @@ constexpr const char* PERMISSION_GET_SIGNATURE_INFO = "ohos.permission.GET_SIGNA
 constexpr const char* PERMISSION_MIGRATE_DATA = "ohos.permission.MIGRATE_DATA";
 constexpr const char* PERMISSION_INSTALL_PLUGIN = "ohos.permission.INSTALL_PLUGIN_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_PLUGIN = "ohos.permission.UNINSTALL_PLUGIN_BUNDLE";
+constexpr const char* PERMISSION_U1_ENABLED = "U1Enabled";
 
 enum class AppType {
     SYSTEM_APP = 0,

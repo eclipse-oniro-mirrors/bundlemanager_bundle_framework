@@ -97,7 +97,7 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
     }
 
     auto userId = AccountHelper::GetCurrentActiveUserId();
-    if (userId <= Constants::DEFAULT_USERID) {
+    if (userId <= Constants::U1) {
         APP_LOGE("Invalid userid: %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
@@ -159,7 +159,7 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto userId = AccountHelper::GetCurrentActiveUserId();
-    if (userId <= Constants::DEFAULT_USERID) {
+    if (userId <= Constants::U1) {
         APP_LOGE("Invalid userid: %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }

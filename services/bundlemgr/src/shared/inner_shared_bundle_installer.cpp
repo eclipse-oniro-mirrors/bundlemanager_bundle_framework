@@ -81,6 +81,10 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     result = bundleInstallChecker_->ParseHapFiles(bundlePaths, checkParam, hapVerifyResults, parsedBundles_);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
 
+    // check u1Enable
+    result = bundleInstallChecker_->CheckNoU1Enable(parsedBundles_);
+    CHECK_RESULT(result, "check u1Enable failed %{public}d");
+
     // check install permission
     result = bundleInstallChecker_->CheckInstallPermission(checkParam, hapVerifyResults);
     CHECK_RESULT(result, "check install permission failed %{public}d");

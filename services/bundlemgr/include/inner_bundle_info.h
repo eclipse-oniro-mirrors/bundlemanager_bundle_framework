@@ -1482,6 +1482,16 @@ public:
         return allowedAcls_;
     }
 
+    bool IsU1Enable() const
+    {
+        auto iter = std::find(allowedAcls_.begin(), allowedAcls_.end(),
+            std::string(Constants::PERMISSION_U1_ENABLED));
+        if (iter != allowedAcls_.end()) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * @brief ability is enabled.
      * @param abilityInfo Indicates the abilityInfo.
