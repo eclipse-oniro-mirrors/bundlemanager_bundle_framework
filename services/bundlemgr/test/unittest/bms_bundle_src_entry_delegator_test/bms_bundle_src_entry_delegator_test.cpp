@@ -84,6 +84,60 @@ const nlohmann::json MODULE_JSON = R"(
         "virtualMachine": "ark0.0.0.3"
     }
 })"_json;
+
+const nlohmann::json MODULE_JSON2 = R"(
+{
+    "app": {
+        "bundleName": "com.example.backuptest",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0"
+    },
+    "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "abilitySrcEntryDelegator": "abilitySrcEntryDelegator",
+        "abilityStageSrcEntryDelegator": "abilityStageSrcEntryDelegator",
+        "deviceTypes": [
+            "default"
+        ],
+        "deviceFeatures": [
+            "multi_process",
+            "free_multi_window",
+            "directory_permission"
+        ],
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "name": "entry",
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark0.0.0.3"
+    }
+})"_json;
 }  // namespace
 
 class BmsBundleSrcEntryDelegatorTest : public testing::Test {
@@ -132,6 +186,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoMarshallingTest_0100, Func
     HapModuleInfo info;
     info.abilitySrcEntryDelegator = "abilitySrcEntryDelegator";
     info.abilityStageSrcEntryDelegator = "abilityStageSrcEntryDelegator";
+    info.deviceFeatures = { "multi_process", "free_multi_window" };
     Parcel parcel{};
     auto ret = info.Marshalling(parcel);
     EXPECT_TRUE(ret);
@@ -141,6 +196,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoMarshallingTest_0100, Func
     EXPECT_TRUE(ret);
     EXPECT_EQ(info2.abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(info2.abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
+    EXPECT_EQ(info2.deviceFeatures.size(), 2);
 }
 
 /**
@@ -153,13 +209,19 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoFromJsonTest_0100, Functio
     nlohmann::json json = R"(
         {
             "abilitySrcEntryDelegator": "abilitySrcEntryDelegator",
-            "abilityStageSrcEntryDelegator": "abilityStageSrcEntryDelegator"
+            "abilityStageSrcEntryDelegator": "abilityStageSrcEntryDelegator",
+            "deviceFeatures": [
+                "multi_process",
+                "free_multi_window",
+                "directory_permission"
+            ]
         }
     )"_json;
     HapModuleInfo info;
     from_json(json, info);
     EXPECT_EQ(info.abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(info.abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
+    EXPECT_EQ(info.deviceFeatures.size(), 3);
 }
 
 /**
@@ -172,6 +234,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoToJsonTest_0100, Function 
     HapModuleInfo info;
     info.abilitySrcEntryDelegator = "abilitySrcEntryDelegator";
     info.abilityStageSrcEntryDelegator = "abilityStageSrcEntryDelegator";
+    info.deviceFeatures = { "multi_process", "free_multi_window" };
     nlohmann::json json;
     to_json(json, info);
 
@@ -179,6 +242,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoToJsonTest_0100, Function 
     from_json(json, info2);
     EXPECT_EQ(info.abilitySrcEntryDelegator, info2.abilitySrcEntryDelegator);
     EXPECT_EQ(info.abilityStageSrcEntryDelegator, info2.abilityStageSrcEntryDelegator);
+    EXPECT_EQ(info.deviceFeatures.size(), info2.deviceFeatures.size());
 }
 
 /**
@@ -204,6 +268,33 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, ModuleProfileToInnerModuleInfoTest_0100
     EXPECT_NE(innerModuleInfo, std::nullopt);
     EXPECT_EQ(innerModuleInfo->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(innerModuleInfo->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
+    EXPECT_EQ(innerModuleInfo->deviceFeatures.size(), 0);
+}
+
+/**
+ * @tc.number: ModuleProfileToInnerModuleInfoTest_0200
+ * @tc.name: test ModuleProfileToInnerModuleInfoTest_0200
+ * @tc.desc: ModuleProfileToInnerModuleInfoTest_0200
+ */
+HWTEST_F(BmsBundleSrcEntryDelegatorTest, ModuleProfileToInnerModuleInfoTest_0200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON2;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    auto innerModuleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName("entry");
+    EXPECT_NE(innerModuleInfo, std::nullopt);
+    EXPECT_EQ(innerModuleInfo->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
+    EXPECT_EQ(innerModuleInfo->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
+    EXPECT_EQ(innerModuleInfo->deviceFeatures.size(), 3);
 }
 
 /**
@@ -229,5 +320,32 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, FindHapModuleInfoTest_0100, Function | 
     EXPECT_NE(hapModule, std::nullopt);
     EXPECT_EQ(hapModule->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(hapModule->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
+    EXPECT_EQ(hapModule->deviceFeatures.size(), 0);
+}
+
+/**
+ * @tc.number: FindHapModuleInfoTest_0200
+ * @tc.name: test FindHapModuleInfoTest_0200
+ * @tc.desc: FindHapModuleInfoTest_0200
+ */
+HWTEST_F(BmsBundleSrcEntryDelegatorTest, FindHapModuleInfoTest_0200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON2;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    EXPECT_NE(hapModule, std::nullopt);
+    EXPECT_EQ(hapModule->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
+    EXPECT_EQ(hapModule->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
+    EXPECT_EQ(hapModule->deviceFeatures.size(), 3);
 }
 } // OHOS

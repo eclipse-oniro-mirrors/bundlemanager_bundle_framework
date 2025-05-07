@@ -293,6 +293,7 @@ struct Module {
     std::string process;
     std::string mainElement;
     std::vector<std::string> deviceTypes;
+    std::vector<std::string> deviceFeatures;
     std::string virtualMachine = MODULE_VIRTUAL_MACHINE_DEFAULT_VALUE;
     std::string pages;
     std::string systemTheme;
@@ -1316,6 +1317,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.deviceTypes,
         JsonType::ARRAY,
         true,
+        g_parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_DEVICE_FEATURES,
+        module.deviceFeatures,
+        JsonType::ARRAY,
+        false,
         g_parseResult,
         ArrayType::STRING);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
@@ -2394,6 +2403,9 @@ bool ToInnerModuleInfo(
 
     for (const std::string &deviceType : moduleJson.module.deviceTypes) {
         innerModuleInfo.deviceTypes.emplace_back(deviceType);
+    }
+    for (const std::string &deviceFeature : moduleJson.module.deviceFeatures) {
+        innerModuleInfo.deviceFeatures.emplace_back(deviceFeature);
     }
 
     if (Profile::VIRTUAL_MACHINE_SET.find(moduleJson.module.virtualMachine) != Profile::VIRTUAL_MACHINE_SET.end()) {
