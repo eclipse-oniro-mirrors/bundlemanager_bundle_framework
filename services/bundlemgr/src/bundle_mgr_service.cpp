@@ -490,6 +490,7 @@ void BundleMgrService::CheckAllUser()
 
     APP_LOGI("Check all user start");
     std::set<int32_t> userIds = dataMgr_->GetAllUser();
+    AccountHelper::QueryAllCreatedOsAccounts(userIds);
     for (auto userId : userIds) {
         if (userId == Constants::DEFAULT_USERID) {
             continue;
@@ -510,6 +511,10 @@ void BundleMgrService::CheckAllUser()
                 connectAbilityMgr_.erase(userId);
             }
 #endif
+            continue;
+        }
+        if (!dataMgr_->HasUserId(userId)) {
+            dataMgr_->AddUserId(userId);
         }
     }
     APP_LOGI("Check all user end");

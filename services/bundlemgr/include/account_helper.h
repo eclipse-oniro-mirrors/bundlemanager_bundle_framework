@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_ACCOUNT_HELPER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_ACCOUNT_HELPER_H
 
+#include <set>
 #include <string>
 
 namespace OHOS {
@@ -31,6 +32,8 @@ public:
     static int32_t GetOsAccountLocalIdFromUid(const int32_t callingUid);
 
     static int32_t GetCurrentActiveUserIdWithRetry(bool isOtaInstall = false);
+
+    static void QueryAllCreatedOsAccounts(std::set<int32_t> &userIds);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
