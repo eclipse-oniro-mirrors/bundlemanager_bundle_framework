@@ -45,6 +45,7 @@ ohos_unittest("BmsBundleMgrProxyTest") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "safwk:api_cache_manager",
     "samgr:samgr_proxy",
   ]
 }

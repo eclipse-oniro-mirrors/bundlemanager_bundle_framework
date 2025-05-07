@@ -95,6 +95,7 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     "init:libbegetutil",
     "jsoncpp:jsoncpp",
     "power_manager:powermgr_client",
+    "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
