@@ -2277,9 +2277,10 @@ void BundleDataMgr::GetAllLauncherAbility(const Want &want, std::vector<AbilityI
         int64_t installTime = 0;
         std::string userIdKey = info.GetBundleName() + "_" + std::to_string(userId);
         std::string userZeroKey = info.GetBundleName() + "_" + std::to_string(0);
+        std::string userOneKey = info.GetBundleName() + "_" + std::to_string(1);
         auto iter = std::find_if(info.GetInnerBundleUserInfos().begin(), info.GetInnerBundleUserInfos().end(),
-            [&userIdKey, &userZeroKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
-            return (infoMap.first == userIdKey || infoMap.first == userZeroKey);
+            [&userIdKey, &userZeroKey, &userOneKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
+            return (infoMap.first == userIdKey || infoMap.first == userZeroKey || infoMap.first == userOneKey);
         });
         if (iter != info.GetInnerBundleUserInfos().end()) {
             installTime = iter->second.installTime;
@@ -2315,9 +2316,10 @@ ErrCode BundleDataMgr::GetLauncherAbilityByBundleName(const Want &want, std::vec
     int64_t installTime = 0;
     std::string userIdKey = info.GetBundleName() + "_" + std::to_string(userId);
     std::string userZeroKey = info.GetBundleName() + "_" + std::to_string(0);
+    std::string userOneKey = info.GetBundleName() + "_" + std::to_string(1);
     auto iter = std::find_if(info.GetInnerBundleUserInfos().begin(), info.GetInnerBundleUserInfos().end(),
-        [&userIdKey, &userZeroKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
-        return (infoMap.first == userIdKey || infoMap.first == userZeroKey);
+        [&userIdKey, &userZeroKey, &userOneKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
+        return (infoMap.first == userIdKey || infoMap.first == userZeroKey || infoMap.first == userOneKey);
     });
     if (iter != info.GetInnerBundleUserInfos().end()) {
         installTime = iter->second.installTime;
@@ -2395,9 +2397,10 @@ ErrCode BundleDataMgr::GetLauncherAbilityInfoSync(const Want &want, const int32_
     int64_t installTime = 0;
     std::string userIdKey = info.GetBundleName() + "_" + std::to_string(userId);
     std::string userZeroKey = info.GetBundleName() + "_" + std::to_string(0);
+    std::string userOneKey = info.GetBundleName() + "_" + std::to_string(1);
     auto iter = std::find_if(info.GetInnerBundleUserInfos().begin(), info.GetInnerBundleUserInfos().end(),
-        [&userIdKey, &userZeroKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
-        return (infoMap.first == userIdKey || infoMap.first == userZeroKey);
+        [&userIdKey, &userZeroKey, &userOneKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
+        return (infoMap.first == userIdKey || infoMap.first == userZeroKey || infoMap.first == userOneKey);
     });
     if (iter != info.GetInnerBundleUserInfos().end()) {
         installTime = iter->second.installTime;
