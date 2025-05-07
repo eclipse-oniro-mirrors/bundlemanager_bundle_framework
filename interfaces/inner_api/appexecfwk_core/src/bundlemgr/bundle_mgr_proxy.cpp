@@ -5766,5 +5766,37 @@ ErrCode BundleMgrProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&dat
     }
     return ERR_OK;
 }
+
+ErrCode BundleMgrProxy::GetSandboxDataDir(const std::string &bundleName, int32_t appIndex, std::string &sandboxDataDir)
+{
+    APP_LOGD("begin to GetSandboxDataDir");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    ErrCode ret = SendTransactCmdWithLogErrCode(BundleMgrInterfaceCode::GET_SANDBOX_DATA_DIR, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE("fail to GetSandboxDataDir from server, %{public}d", ret);
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host return error:%{public}d", ret);
+        return ret;
+    }
+    sandboxDataDir = reply.ReadString();
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

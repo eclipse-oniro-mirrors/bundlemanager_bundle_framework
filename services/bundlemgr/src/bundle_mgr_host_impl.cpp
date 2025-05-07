@@ -5148,6 +5148,29 @@ bool BundleMgrHostImpl::GetPluginBundleInfo(const std::string &bundleName, const
     return info.GetPluginBundleInfos(userId, pluginBundleInfos);
 }
 
+ErrCode BundleMgrHostImpl::GetSandboxDataDir(
+    const std::string &bundleName, int32_t appIndex, std::string &sandboxDataDir)
+{
+    APP_LOGD("start GetSandboxDataDir");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    return dataMgr->GetDirByBundleNameAndAppIndex(bundleName, appIndex, sandboxDataDir);
+}
+
 void BundleMgrHostImpl::AddPreinstalledApplicationInfo(PreInstallBundleInfo &preInstallBundleInfo,
     std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
 {
