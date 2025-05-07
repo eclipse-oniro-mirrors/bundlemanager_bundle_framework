@@ -333,6 +333,7 @@ private:
     static bool ExtractResourceFiles(const ExtractParam &extractParam, const BundleExtractor &extractor);
     static bool CheckPathIsSame(const std::string &path, int32_t mode, const int32_t uid, const int32_t gid,
         bool &isPathExist);
+    static bool IsPathNeedChown(const std::string &path, int32_t mode, bool isPathExist);
     static bool SetKeyIdPolicy(const EncryptionParam &encryptionParam, const std::string &keyId);
     static bool GenerateKeyId(const EncryptionParam &encryptionParam, std::string &keyId);
 #if defined(CODE_ENCRYPTION_ENABLE)

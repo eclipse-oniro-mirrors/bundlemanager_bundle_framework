@@ -87,6 +87,7 @@ constexpr const char* SECURITY_QUICK_FIX_PATH = "security_quick_fix";
 constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
 constexpr const char* SCREEN_LOCK_FILE_DATA_PATH = "/data/app/el5";
 constexpr const char* GALLERY_DOWNLOAD_PATH = "/app_install/";
+constexpr const char* GALLERY_CLONE_PATH = "/app_clone/";
 constexpr int NOT_EXIST_USERID = -5;
 constexpr int PATH_MAX_SIZE = 256;
 constexpr int32_t API_VERSION_NINE = 9;
