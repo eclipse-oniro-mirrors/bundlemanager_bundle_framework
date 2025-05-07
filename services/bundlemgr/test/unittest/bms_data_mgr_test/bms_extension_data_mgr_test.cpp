@@ -111,6 +111,9 @@ public:
     void CheckBundleNameAndStratAbility(const std::string& bundleName, const std::string& appIdentifier) override;
     bool CheckBundleNameAndStratAbilityTest(const std::string& bundleName, const std::string& appIdentifier);
     bool BmsCheckBundleNameAndStratAbilityTest(const std::string& bundleName, const std::string& appIdentifier);
+    void RegisterPreInstallWithCard() override;
+    bool RegisterPreInstallWithCardTest();
+    bool BmsRegisterPreInstallWithCardTest();
     std::string GetCompatibleDeviceType(const std::string& bundleName) override;
 };
 
@@ -179,6 +182,25 @@ bool BundleMgrExtTest::BmsCheckBundleNameAndStratAbilityTest(
     }
     return false;
 }
+
+void BundleMgrExtTest::RegisterPreInstallWithCard()
+{
+    return;
+}
+
+bool BundleMgrExtTest::RegisterPreInstallWithCardTest()
+{
+    RegisterPreInstallWithCard();
+    return true;
+}
+
+bool BundleMgrExtTest::BmsRegisterPreInstallWithCardTest()
+{
+    BmsExtensionDataMgr bmsExtensionDataMgrTest;
+    bmsExtensionDataMgrTest.RegisterPreInstallWithCard();
+    return true;
+}
+
 
 std::string BundleMgrExtTest::GetCompatibleDeviceType(const std::string& bundleName)
 {
@@ -1261,6 +1283,30 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0036, Function | SmallTest | Leve
     std::vector<std::string> bundleNames;
     bundleMgrExtTest.GetBundleNamesForUidExt(uid, bundleNames);
     EXPECT_TRUE(bundleNames.empty());
+}
+
+/**
+ * @tc.number: BundleMgrExt_0037
+ * @tc.name: RegisterPreInstallWithCard
+ * @tc.desc: RegisterPreInstallWithCard
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0037, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    bool res = bundleMgrExtTest.RegisterPreInstallWithCardTest();
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgrTest_0038
+ * @tc.name: RegisterPreInstallWithCard
+ * @tc.desc: RegisterPreInstallWithCard
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0038, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bmsExtensionDataMgrTest;
+    bool res = bmsExtensionDataMgrTest.BmsRegisterPreInstallWithCardTest();
+    EXPECT_TRUE(res);
 }
 
 /**
