@@ -360,7 +360,7 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
         return true;
     }
 
-    BundleExtractor extractor(sourcePath);
+    BundleParallelExtractor extractor(sourcePath);
     if (!extractor.Init()) {
         return false;
     }
@@ -376,8 +376,12 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
         param.targetPath = targetSoPath;
         param.cpuAbi = cpuAbi;
         param.extractFileType = ExtractFileType::SO;
-        ExtractTargetFile(extractor, entry, param);
+        ffrt::submit([&extractor, entry, param] () {
+            LOG_D(BMS_TAG_INSTALLD, "Extracting file %{private}s", entry.c_str());
+            ExtractTargetFile(extractor, entry, param);
+            }, {}, {});
     });
+    ffrt::wait();
 
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles end");
     return true;
