@@ -15,6 +15,8 @@
 
 #include "account_helper.h"
 
+#include <thread>
+
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 
@@ -24,6 +26,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+    constexpr int32_t RETRY_TIMES = 20;
+    constexpr int32_t RETRY_INTERVAL = 50; // 50ms
+}
+
 int32_t AccountHelper::IsOsAccountExists(const int32_t id, bool &isOsAccountExists)
 {
 #ifdef ACCOUNT_ENABLE
@@ -81,6 +88,35 @@ int32_t AccountHelper::GetOsAccountLocalIdFromUid(const int32_t callingUid)
     APP_LOGI("ACCOUNT_ENABLE is false");
     // ACCOUNT_ENABLE is false, do nothing and return -1.
     return localId;
+#endif
+}
+
+int32_t AccountHelper::GetCurrentActiveUserIdWithRetry(bool isOtaInstall)
+{
+#ifdef ACCOUNT_ENABLE
+    // Failed to obtain foreground Os Account when OTA. BMS SA is not registered.
+    int32_t localId = Constants::INVALID_USERID;
+    if (!isOtaInstall) {
+        localId = GetCurrentActiveUserId();
+        if (localId != Constants::INVALID_USERID) {
+            return localId;
+        }
+    }
+    int32_t retryCnt = 0;
+    do {
+        int32_t ret = AccountSA::OsAccountManager::GetDefaultActivatedOsAccount(localId);
+        if (ret == 0) {
+            break;
+        }
+        ++retryCnt;
+        std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_INTERVAL));
+        APP_LOGW("get foregroud osAccount failed, retry count: %{public}d, ret: %{public}d", retryCnt, ret);
+    } while (retryCnt < RETRY_TIMES);
+
+    return localId;
+#else
+    APP_LOGI("ACCOUNT_ENABLE is false");
+    return Constants::INVALID_USERID;
 #endif
 }
 }  // namespace AppExecFwk
