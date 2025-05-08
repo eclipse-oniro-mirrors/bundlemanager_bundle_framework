@@ -13,34 +13,30 @@
  * limitations under the License.
  */
 
+#include <cstddef>
+#include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
 
-#include "message_parcel.h"
-#include "message_option.h"
 #include "bundle_info.h"
-
-#include "bmsbundleinfo_fuzzer.h"
+#include "json_serializer.h"
+#include "nlohmann/json.hpp"
 #include "../../bms_fuzztest_util.h"
+
+#include "bmsbundleinfofromjson_fuzzer.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    bool fuzzabundleinfounmarshalling(const uint8_t* data, size_t size)
+namespace {
+const char NAME[] = "name";
+}
+    bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
-        Parcel dataMessageParcel;
-        BundleInfo oldBundleInfo;
+        nlohmann::json infoJson;
         FuzzedDataProvider fdp(data, size);
-        AppExecFwk::BMSFuzzTestUtil::GenerateBundleInfo(fdp, oldBundleInfo);
-        if (!oldBundleInfo.Marshalling(dataMessageParcel)) {
-            return false;
-        }
-        BundleInfo *info = new (std::nothrow) BundleInfo();
-        if (info == nullptr) {
-            return false;
-        }
-        bool ret = info->ReadFromParcel(dataMessageParcel);
-        delete info;
-        info = nullptr;
-        return ret;
+        std::string name = fdp.ConsumeRandomLengthString(BMSFuzzTestUtil::STRING_MAX_LENGTH);;
+        infoJson[NAME] = name;
+        BundleInfo bundleInfo = infoJson;
+        return true;
     }
 }
 
@@ -48,6 +44,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     // Run your code on data.
-    OHOS::fuzzabundleinfounmarshalling(data, size);
+    OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }

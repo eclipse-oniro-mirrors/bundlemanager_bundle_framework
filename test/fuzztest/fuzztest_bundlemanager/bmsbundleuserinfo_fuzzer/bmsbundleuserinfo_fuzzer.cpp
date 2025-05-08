@@ -13,33 +13,37 @@
  * limitations under the License.
  */
 
-#include <fuzzer/FuzzedDataProvider.h>
+#include <cstddef>
+#include <cstdint>
+ #include <fuzzer/FuzzedDataProvider.h>
 
-#include "message_parcel.h"
-#include "message_option.h"
-#include "bundle_info.h"
+#include "bundle_user_info.h"
+#include "parcel.h"
 
-#include "bmsbundleinfo_fuzzer.h"
+#include "bmsbundleuserinfo_fuzzer.h"
 #include "../../bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
-    bool fuzzabundleinfounmarshalling(const uint8_t* data, size_t size)
+    bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
-        BundleInfo oldBundleInfo;
+        BundleUserInfo bundleUserInfo;
         FuzzedDataProvider fdp(data, size);
-        AppExecFwk::BMSFuzzTestUtil::GenerateBundleInfo(fdp, oldBundleInfo);
-        if (!oldBundleInfo.Marshalling(dataMessageParcel)) {
+        GenerateBundleUserInfo(fdp, bundleUserInfo);
+        if (!bundleUserInfo.Marshalling(dataMessageParcel)) {
             return false;
         }
-        BundleInfo *info = new (std::nothrow) BundleInfo();
-        if (info == nullptr) {
+        auto rulePtr = BundleUserInfo::Unmarshalling(dataMessageParcel);
+        if (rulePtr == nullptr) {
             return false;
         }
-        bool ret = info->ReadFromParcel(dataMessageParcel);
-        delete info;
-        info = nullptr;
+        delete rulePtr;
+        rulePtr = nullptr;
+        BundleUserInfo newBundleUserInfo;
+        GenerateBundleUserInfo(fdp, newBundleUserInfo);
+        bool ret = newBundleUserInfo.ReadFromParcel(dataMessageParcel);
         return ret;
     }
 }
@@ -48,6 +52,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     // Run your code on data.
-    OHOS::fuzzabundleinfounmarshalling(data, size);
+    OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }
