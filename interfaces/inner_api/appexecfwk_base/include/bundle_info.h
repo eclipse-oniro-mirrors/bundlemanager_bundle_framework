@@ -128,6 +128,8 @@ struct BundleInfo : public Parcelable {
 
     uint32_t compatibleVersion = 0;
     uint32_t targetVersion = 0;
+    int32_t targetMinorApiVersion = 0;
+    int32_t targetPatchApiVersion = 0;
     int32_t appIndex = 0; // index for sandbox app
     int32_t minSdkVersion = -1;
     int32_t maxSdkVersion = -1;

@@ -47,6 +47,8 @@ const nlohmann::json MODULE_JSON = R"(
         "labelId": 16777216,
         "minAPIVersion": 9,
         "targetAPIVersion": 9,
+        "targetMinorApiVersion": 1,
+        "targetPatchApiVersion": 2,
         "vendor": "example",
         "versionCode": 1000000,
         "versionName": "1.0.0"
@@ -269,6 +271,14 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, ModuleProfileToInnerModuleInfoTest_0100
     EXPECT_EQ(innerModuleInfo->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(innerModuleInfo->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
     EXPECT_EQ(innerModuleInfo->deviceFeatures.size(), 0);
+
+    auto bundleInfo = innerBundleInfo.GetBaseBundleInfo();
+    EXPECT_EQ(bundleInfo.targetMinorApiVersion, 1);
+    EXPECT_EQ(bundleInfo.targetPatchApiVersion, 2);
+
+    auto appInfo = innerBundleInfo.GetBaseApplicationInfo();
+    EXPECT_EQ(appInfo.targetMinorApiVersion, 1);
+    EXPECT_EQ(appInfo.targetPatchApiVersion, 2);
 }
 
 /**
@@ -295,6 +305,14 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, ModuleProfileToInnerModuleInfoTest_0200
     EXPECT_EQ(innerModuleInfo->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(innerModuleInfo->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
     EXPECT_EQ(innerModuleInfo->deviceFeatures.size(), 3);
+
+    auto bundleInfo = innerBundleInfo.GetBaseBundleInfo();
+    EXPECT_EQ(bundleInfo.targetMinorApiVersion, 0);
+    EXPECT_EQ(bundleInfo.targetPatchApiVersion, 0);
+
+    auto appInfo = innerBundleInfo.GetBaseApplicationInfo();
+    EXPECT_EQ(appInfo.targetMinorApiVersion, 0);
+    EXPECT_EQ(appInfo.targetPatchApiVersion, 0);
 }
 
 /**
@@ -347,5 +365,85 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, FindHapModuleInfoTest_0200, Function | 
     EXPECT_EQ(hapModule->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(hapModule->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
     EXPECT_EQ(hapModule->deviceFeatures.size(), 3);
+}
+
+/**
+ * @tc.number: ApplicationInfoMarshallingTest_0100
+ * @tc.name: test ApplicationInfoMarshallingTest_0100
+ * @tc.desc: ApplicationInfoMarshallingTest_0100
+ */
+HWTEST_F(BmsBundleSrcEntryDelegatorTest, ApplicationInfoMarshallingTest_0100, Function | SmallTest | Level1)
+{
+    ApplicationInfo info;
+    info.targetMinorApiVersion = 1;
+    info.targetPatchApiVersion = 2;
+    Parcel parcel{};
+    auto ret = info.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    ApplicationInfo info2;
+    ret = info2.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(info2.targetMinorApiVersion, 1);
+    EXPECT_EQ(info2.targetPatchApiVersion, 2);
+}
+
+/**
+ * @tc.number: ApplicationInfoToJsonTest_0100
+ * @tc.name: test ApplicationInfoToJsonTest_0100
+ * @tc.desc: ApplicationInfoToJsonTest_0100
+ */
+HWTEST_F(BmsBundleSrcEntryDelegatorTest, ApplicationInfoToJsonTest_0100, Function | SmallTest | Level1)
+{
+    ApplicationInfo info;
+    info.targetMinorApiVersion = 1;
+    info.targetPatchApiVersion = 2;
+    nlohmann::json json;
+    to_json(json, info);
+
+    ApplicationInfo info2;
+    from_json(json, info2);
+    EXPECT_EQ(info.targetMinorApiVersion, info2.targetMinorApiVersion);
+    EXPECT_EQ(info.targetPatchApiVersion, info2.targetPatchApiVersion);
+}
+
+/**
+ * @tc.number: BundleInfoMarshallingTest_0100
+ * @tc.name: test BundleInfoMarshallingTest_0100
+ * @tc.desc: BundleInfoMarshallingTest_0100
+ */
+HWTEST_F(BmsBundleSrcEntryDelegatorTest, BundleInfoMarshallingTest_0100, Function | SmallTest | Level1)
+{
+    BundleInfo info;
+    info.targetMinorApiVersion = 1;
+    info.targetPatchApiVersion = 2;
+    Parcel parcel{};
+    auto ret = info.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    BundleInfo info2;
+    ret = info2.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(info2.targetMinorApiVersion, 1);
+    EXPECT_EQ(info2.targetPatchApiVersion, 2);
+}
+
+/**
+ * @tc.number: BundleInfoToJsonTest_0100
+ * @tc.name: test BundleInfoToJsonTest_0100
+ * @tc.desc: BundleInfoToJsonTest_0100
+ */
+HWTEST_F(BmsBundleSrcEntryDelegatorTest, BundleInfoToJsonTest_0100, Function | SmallTest | Level1)
+{
+    BundleInfo info;
+    info.targetMinorApiVersion = 1;
+    info.targetPatchApiVersion = 2;
+    nlohmann::json json;
+    to_json(json, info);
+
+    BundleInfo info2;
+    from_json(json, info2);
+    EXPECT_EQ(info.targetMinorApiVersion, info2.targetMinorApiVersion);
+    EXPECT_EQ(info.targetPatchApiVersion, info2.targetPatchApiVersion);
 }
 } // OHOS
