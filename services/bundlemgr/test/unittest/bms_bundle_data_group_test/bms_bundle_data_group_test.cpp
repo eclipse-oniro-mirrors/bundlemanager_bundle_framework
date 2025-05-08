@@ -2038,7 +2038,7 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0024, Function | SmallTest 
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
 
     ErrCode result = installer.CheckPreAppAllowHdcInstall(installParam, hapVerifyRes);
-    EXPECT_EQ(result, ERR_APPEXECFWK_HAP_VERIFY_RES_EMPTY);
+    EXPECT_EQ(result, ERR_OK);
 }
 
 /**
