@@ -121,6 +121,12 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         return ERR_OK;
     }
 
+    // 4. check whether the account constraint is enabled
+    if (AccountHelper::CheckOsAccountConstraintEnabled(userId, ServiceConstants::CONSTRAINT_APPS_INSTALL)) {
+        APP_LOGE("user %{public}d is not allowed to install app", userId);
+        return ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT;
+    }
+
     std::string appDistributionType = info.GetAppDistributionType();
     if (appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE
         || appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL
