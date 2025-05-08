@@ -25,6 +25,7 @@
 #include "bundle_status_callback_interface.h"
 #include "clean_cache_callback_interface.h"
 #include "element_name.h"
+#include "iremote_object.h"
 #include "iremote_proxy.h"
 #include "preinstalled_application_info.h"
 #include "process_cache_callback_interface.h"
@@ -1192,6 +1193,11 @@ private:
 
     template <typename T>
     ErrCode GetParcelableInfoWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo);
+
+    template <typename T>
+    ErrCode GetParcelableInfoWithErrCodeReply(
+        BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply, T &parcelableInfo);
+
     /**
      * @brief Send a command message and then get a vector of parcelable information objects from the reply.
      * @param code Indicates the message code to be sent.
@@ -1237,6 +1243,10 @@ private:
     ErrCode WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const;
 
     ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, void *&data);
+
+    void OnRemoteDie(const wptr<IRemoteObject> &remoteObject);
+    sptr<IRemoteObject> remote_ = nullptr;
+    sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
 };
 
 }  // namespace AppExecFwk
