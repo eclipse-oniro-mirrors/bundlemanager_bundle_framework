@@ -3823,6 +3823,11 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
             recoverablePreInstallBundleInfos.emplace_back(preInstallBundleInfo);
             continue;
         }
+        if (infoItem->second.IsU1Enable() &&
+            !infoItem->second.HasInnerBundleUserInfo(Constants::U1)) {
+            recoverablePreInstallBundleInfos.emplace_back(preInstallBundleInfo);
+            continue;
+        }
         if (!infoItem->second.HasInnerBundleUserInfo(Constants::DEFAULT_USERID) &&
             !infoItem->second.HasInnerBundleUserInfo(userId)) {
             recoverablePreInstallBundleInfos.emplace_back(preInstallBundleInfo);
@@ -5072,6 +5077,7 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
 
 bool BundleDataMgr::RestoreUidAndGid()
 {
+    AddUserId(Constants::U1);
     for (const auto &info : bundleInfos_) {
         bool onlyInsertOne = false;
         for (auto infoItem : info.second.GetInnerBundleUserInfos()) {

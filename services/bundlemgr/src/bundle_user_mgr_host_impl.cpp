@@ -247,11 +247,17 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
         std::unordered_set<std::string>(allowLst.begin(), allowLst.end());
     std::unordered_set<std::string> disallowSet= disallowList.empty() ? std::unordered_set<std::string>() :
         std::unordered_set<std::string>(disallowList.begin(), disallowList.end());
+    bool isU1 = (userId == Constants::U1);
     for (auto &preInfo : allPreInstallBundleInfos) {
         InnerBundleInfo innerBundleInfo;
         if (dataMgr->FetchInnerBundleInfo(preInfo.GetBundleName(), innerBundleInfo)
             && innerBundleInfo.IsSingleton()) {
             APP_LOGI("BundleName is IsSingleton %{public}s", preInfo.GetBundleName().c_str());
+            continue;
+        }
+        
+        if ((isU1 && !preInfo.GetU1Enable()) || (!isU1 && preInfo.GetU1Enable())) {
+            APP_LOGI(" %{public}s u1enable and u1 not matched", preInfo.GetBundleName().c_str());
             continue;
         }
         if (disallowSet.find(preInfo.GetBundleName()) != disallowSet.end()) {

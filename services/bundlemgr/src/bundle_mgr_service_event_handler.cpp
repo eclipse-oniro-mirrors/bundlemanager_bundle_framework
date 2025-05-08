@@ -1193,7 +1193,7 @@ void BMSEventHandler::CreateAppInstallDir() const
 
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     for (const auto &userId : userIds) {
-        if (userId == Constants::DEFAULT_USERID) {
+        if (userId == Constants::DEFAULT_USERID || userId == Constants::U1) {
             continue;
         }
         dataMgr->CreateAppInstallDir(userId);
@@ -1409,10 +1409,18 @@ void BMSEventHandler::InnerProcessCheckAppLogDir()
     std::vector<BundleInfo> bundleInfos;
     if (!dataMgr->GetBundleInfos(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
         bundleInfos, Constants::DEFAULT_USERID)) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAllBundleInfos failed");
+        LOG_E(BMS_TAG_DEFAULT, "GetAllBundleInfos for u0 failed");
         return;
     }
     UpdateAppDataMgr::ProcessUpdateAppLogDir(bundleInfos, Constants::DEFAULT_USERID);
+
+    bundleInfos.clear();
+    if (!dataMgr->GetBundleInfos(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+        bundleInfos, Constants::U1)) {
+        LOG_E(BMS_TAG_DEFAULT, "GetAllBundleInfos for user 1 failed");
+        return;
+    }
+    UpdateAppDataMgr::ProcessUpdateAppLogDir(bundleInfos, Constants::U1);
 }
 
 void BMSEventHandler::ProcessCheckAppFileManagerDir()
@@ -1438,10 +1446,18 @@ void BMSEventHandler::InnerProcessCheckAppFileManagerDir()
     std::vector<BundleInfo> bundleInfos;
     if (!dataMgr->GetBundleInfos(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
         bundleInfos, Constants::DEFAULT_USERID)) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAllBundleInfos failed");
+        LOG_E(BMS_TAG_DEFAULT, "GetAllBundleInfos for u0 failed");
         return;
     }
     UpdateAppDataMgr::ProcessFileManagerDir(bundleInfos, Constants::DEFAULT_USERID);
+
+    bundleInfos.clear();
+    if (!dataMgr->GetBundleInfos(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
+        bundleInfos, Constants::U1)) {
+        LOG_E(BMS_TAG_DEFAULT, "GetAllBundleInfos  for u1 failed");
+        return;
+    }
+    UpdateAppDataMgr::ProcessFileManagerDir(bundleInfos, Constants::U1);
 }
 
 void BMSEventHandler::ProcessCheckShaderCacheDir()
@@ -1631,7 +1647,7 @@ void BMSEventHandler::ProcessNewBackupDir()
     }
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     for (const auto &userId : userIds) {
-        if (userId == Constants::DEFAULT_USERID) {
+        if (userId == Constants::DEFAULT_USERID || userId == Constants::U1) {
             continue;
         }
         std::vector<BundleInfo> bundleInfos;
@@ -4632,6 +4648,7 @@ void BMSEventHandler::CleanTempDir() const
     }
 
     UpdateAppDataMgr::DeleteUninstallTmpDirs(Constants::DEFAULT_USERID);
+    UpdateAppDataMgr::DeleteUninstallTmpDirs(Constants::U1);
 }
 
 void BMSEventHandler::CheckBundleProvisionInfo()
