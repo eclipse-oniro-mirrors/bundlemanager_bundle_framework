@@ -242,6 +242,8 @@ struct ApplicationInfo : public Parcelable {
     uint32_t accessTokenId = 0;
     uint32_t applicationReservedFlag = 0;
     int32_t apiTargetVersion = 0;
+    int32_t targetMinorApiVersion = 0;
+    int32_t targetPatchApiVersion = 0;
     int32_t minCompatibleVersionCode = 0;
     int32_t supportedModes = 0;  // returns 0 if the application does not support the driving mode
     int32_t appIndex = 0;
