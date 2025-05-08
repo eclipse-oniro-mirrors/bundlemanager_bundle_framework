@@ -19,6 +19,7 @@
 #include "app_control_host.h"
 #include "app_control_manager.h"
 #include "bundle_data_mgr.h"
+#include "event_report.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -102,6 +103,9 @@ private:
     std::string GetControlRuleType(const AppInstallControlRuleType controlRuleType);
     void UpdateAppControlledInfo(int32_t userId, const std::vector<std::string> &modifyAppIds) const;
     void GetCallerByUid(const int32_t uid, std::string &callerName);
+    void SendAppControlEvent(ControlActionType actiopType, ControlOperationType operationType,
+        const std::string &callingName, int32_t userId, int32_t appIndex, const std::vector<std::string> &appIds,
+        const std::string &rule);
 
     std::shared_ptr<AppControlManager> appControlManager_ = nullptr;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;

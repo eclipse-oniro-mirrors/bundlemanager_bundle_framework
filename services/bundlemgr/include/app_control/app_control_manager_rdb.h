@@ -58,8 +58,9 @@ public:
         const std::string &appId, DisposedRule& rule, int32_t appIndex, int32_t userId) override;
     virtual ErrCode DeleteDisposedRule(const std::string &callingName,
         const std::string &appId, int32_t appIndex, int32_t userId) override;
-    virtual ErrCode DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t appIndex, int32_t userId) override;
-    virtual ErrCode GetAbilityRunningControlRule(const std::string &bundleName, int32_t appIndex, int32_t userId,
+    virtual ErrCode DeleteAllDisposedRuleByBundle(const std::vector<std::string> &appIdList,
+        int32_t appIndex, int32_t userId) override;
+    virtual ErrCode GetAbilityRunningControlRule(const std::string &appId, int32_t appIndex, int32_t userId,
         std::vector<DisposedRule>& disposedRules) override;
     
     virtual ErrCode SetUninstallDisposedRule(const std::string &callingName, const std::string &appIdentifier,

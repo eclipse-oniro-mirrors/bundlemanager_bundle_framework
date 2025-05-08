@@ -104,10 +104,14 @@ public:
 private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
     void DeleteAppRunningRuleCache(std::string &key);
-    void DeleteAbilityRunningRuleCache(std::string &key);
+    bool GetAbilityRunningRuleCache(const std::string &key, std::vector<DisposedRule> &disposedRules);
+    void SetAbilityRunningRuleCache(const std::string &key, const std::vector<DisposedRule> &disposedRules);
+    void DeleteAbilityRunningRuleCache(const std::string &key);
+    bool GetDisposedRuleOnlyForBms(const std::string &appId, std::vector<DisposedRule> &disposedRules);
     void DeleteAbilityRunningRuleBmsCache(const std::string &appId);
     bool CheckCanDispose(const std::string &appId, int32_t userId);
     void PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules);
+    std::string GenerateAppRunningRuleCacheKey(const std::string &appId, int32_t userId, int32_t appIndex);
 
     bool isAppInstallControlEnabled_ = false;
     std::mutex appRunningControlMutex_;
