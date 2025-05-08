@@ -160,8 +160,8 @@ HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest001_UserNotFound, Fun
     AbilityInfo abilityInfo;
     auto result = bundleMgrProxy->QueryCloneAbilityInfo(element,
         GET_ABILITY_INFO_DEFAULT, appIndex, abilityInfo, userId);
-        EXPECT_TRUE(result == ERR_BUNDLE_MANAGER_INVALID_USER_ID
-            || result == ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED);
+    EXPECT_TRUE(result == ERR_BUNDLE_MANAGER_INVALID_USER_ID
+        || result == ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED);
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest002_AppNotFound, Function | SmallTest | Level0)
