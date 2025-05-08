@@ -1070,6 +1070,7 @@ protected:
                 "accessible": false,
                 "allowEnableNotification": false,
                 "allowAppRunWhenDeviceFirstLocked": false,
+                "allowArkTsLargeHeap": false,
                 "allowMultiProcess":false,
                 "apiCompatibleVersion": 8,
                 "apiReleaseType": "Beta1",
