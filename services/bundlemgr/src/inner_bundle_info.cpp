@@ -1957,6 +1957,9 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     if (applicationInfo.formVisibleNotify) {
         baseApplicationInfo_->formVisibleNotify = true;
     }
+    if (applicationInfo.allowArkTsLargeHeap) {
+        baseApplicationInfo_->allowArkTsLargeHeap = true;
+    }
 }
 
 void InnerBundleInfo::UpdateRemovable(bool isPreInstall, bool removable)

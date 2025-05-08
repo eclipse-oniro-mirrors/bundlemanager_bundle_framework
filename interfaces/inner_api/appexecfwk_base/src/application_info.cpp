@@ -121,6 +121,7 @@ const char* APPLICATION_COMPILE_SDK_VERSION = "compileSdkVersion";
 const char* APPLICATION_COMPILE_SDK_TYPE = "compileSdkType";
 const char* APPLICATION_RESOURCES_APPLY = "resourcesApply";
 const char* APPLICATION_ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
+const char* APPLICATION_ALLOW_ARK_TS_LARGE_HEAP = "allowArkTsLargeHeap";
 const char* APPLICATION_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 const char* APPLICATION_RESERVED_FLAG = "applicationReservedFlag";
 const char* APPLICATION_TSAN_ENABLED = "tsanEnabled";
@@ -433,6 +434,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     distributedNotificationEnabled = parcel.ReadBool();
     installedForAllUser = parcel.ReadBool();
     allowEnableNotification = parcel.ReadBool();
+    allowArkTsLargeHeap = parcel.ReadBool();
     entityType = Str16ToStr8(parcel.ReadString16());
     process = Str16ToStr8(parcel.ReadString16());
     supportedModes = parcel.ReadInt32();
@@ -667,6 +669,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, distributedNotificationEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, installedForAllUser);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowEnableNotification);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowArkTsLargeHeap);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(entityType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportedModes);
@@ -965,6 +968,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED, applicationInfo.distributedNotificationEnabled},
         {APPLICATION_INSTALLED_FOR_ALL_USER, applicationInfo.installedForAllUser},
         {APPLICATION_ALLOW_ENABLE_NOTIFICATION, applicationInfo.allowEnableNotification},
+        {APPLICATION_ALLOW_ARK_TS_LARGE_HEAP, applicationInfo.allowArkTsLargeHeap},
         {APPLICATION_ENTITY_TYPE, applicationInfo.entityType},
         {APPLICATION_PROCESS, applicationInfo.process},
         {APPLICATION_SUPPORTED_MODES, applicationInfo.supportedModes},
@@ -1110,6 +1114,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.installedForAllUser, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ENABLE_NOTIFICATION,
         applicationInfo.allowEnableNotification, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ARK_TS_LARGE_HEAP,
+        applicationInfo.allowArkTsLargeHeap, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ENTITY_TYPE,
         applicationInfo.entityType, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_PROCESS,

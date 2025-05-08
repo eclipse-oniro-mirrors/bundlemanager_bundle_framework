@@ -51,6 +51,7 @@ constexpr const char* ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeE
 constexpr const char* ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 constexpr const char* ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 constexpr const char* ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
+constexpr const char* ALLOW_ARK_TS_LARGE_HEAP = "allowArkTsLargeHeap";
 constexpr const char* ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED = "allowAppRunWhenDeviceFirstLocked";
 constexpr const char* RESOURCES_APPLY = "resourcesApply";
 }
@@ -416,6 +417,12 @@ ErrCode PreBundleProfile::TransformTo(
             jsonObjectEnd,
             ALLOW_ENABLE_NOTIFICATION,
             preBundleConfigInfo.allowEnableNotification,
+            false,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(array,
+            jsonObjectEnd,
+            ALLOW_ARK_TS_LARGE_HEAP,
+            preBundleConfigInfo.allowArkTsLargeHeap,
             false,
             parseResult);
         BMSJsonUtil::GetBoolValueIfFindKey(array,

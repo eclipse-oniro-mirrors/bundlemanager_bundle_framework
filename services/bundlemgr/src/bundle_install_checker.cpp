@@ -39,6 +39,7 @@ constexpr const char* PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION = "AllowAppUse
 constexpr const char* PRIVILEGE_ALLOW_FORM_VISIBLE_NOTIFY = "AllowFormVisibleNotify";
 constexpr const char* PRIVILEGE_ALLOW_APP_SHARE_LIBRARY = "AllowAppShareLibrary";
 constexpr const char* PRIVILEGE_ALLOW_ENABLE_NOTIFICATION = "AllowEnableNotification";
+constexpr const char* PRIVILEGE_ALLOW_ARK_TS_LARGE_HEAP = "AllowArkTsLargeHeap";
 constexpr const char* ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
 constexpr const char* ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
 constexpr const char* ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
@@ -49,6 +50,7 @@ constexpr const char* ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeE
 constexpr const char* ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 constexpr const char* ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 constexpr const char* ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
+constexpr const char* ALLOW_ARK_TS_LARGE_HEAP = "allowArkTsLargeHeap";
 constexpr const char* APL_NORMAL = "normal";
 constexpr const char* SLASH = "/";
 constexpr const char* DOUBLE_SLASH = "//";
@@ -108,6 +110,10 @@ const std::unordered_map<std::string, void (*)(AppPrivilegeCapability &appPrivil
             { PRIVILEGE_ALLOW_ENABLE_NOTIFICATION,
                 [] (AppPrivilegeCapability &appPrivilegeCapability) {
                     appPrivilegeCapability.allowEnableNotification = true;
+                } },
+            { PRIVILEGE_ALLOW_ARK_TS_LARGE_HEAP,
+                [] (AppPrivilegeCapability &appPrivilegeCapability) {
+                    appPrivilegeCapability.allowArkTsLargeHeap = true;
                 } },
         };
 
@@ -798,6 +804,7 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetResourcesApply(preBundleConfigInfo.resourcesApply);
     newInfo.SetAllowAppRunWhenDeviceFirstLocked(preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked);
     newInfo.SetAllowEnableNotification(preBundleConfigInfo.allowEnableNotification);
+    newInfo.SetAllowArkTsLargeHeap(preBundleConfigInfo.allowArkTsLargeHeap);
 }
 
 void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInfo,
@@ -1283,6 +1290,9 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
 
     appPrivilegeCapability.allowEnableNotification = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_ENABLE_NOTIFICATION, configInfo.allowEnableNotification, appPrivilegeCapability.allowEnableNotification);
+
+    appPrivilegeCapability.allowArkTsLargeHeap = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+        ALLOW_ARK_TS_LARGE_HEAP, configInfo.allowArkTsLargeHeap, appPrivilegeCapability.allowArkTsLargeHeap);
     LOG_D(BMS_TAG_INSTALLER, "AppPrivilegeCapability %{public}s", appPrivilegeCapability.ToString().c_str());
 #endif
 }
@@ -1327,6 +1337,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
         applicationInfo.process = applicationInfo.bundleName;
     }
     applicationInfo.allowEnableNotification = appPrivilegeCapability.allowEnableNotification;
+    applicationInfo.allowArkTsLargeHeap = appPrivilegeCapability.allowArkTsLargeHeap;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     BundleInfo bundleInfo = innerBundleInfo.GetBaseBundleInfo();
     // process allow app share library
