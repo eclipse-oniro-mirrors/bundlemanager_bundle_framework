@@ -7195,8 +7195,7 @@ ErrCode BaseBundleInstaller::CheckPreAppAllowHdcInstall(const InstallParam &inst
     }
 
     if (hapVerifyRes.empty()) {
-        LOG_W(BMS_TAG_INSTALLER, "hapVerifyRes empty");
-        return ERR_APPEXECFWK_HAP_VERIFY_RES_EMPTY;
+        return ERR_OK;
     }
 
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
