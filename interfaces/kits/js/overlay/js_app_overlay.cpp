@@ -30,39 +30,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
-namespace {
-const std::string MODULE_NAME = "moduleName";
-const std::string BUNDLE_NAME = "bundleName";
-const std::string TARGET_MODULE_NAME = "targetModuleName";
-const std::string TARGET_BUNDLE_NAME = "targetBundleName";
-const std::string IS_ENABLED = "isEnabled";
-const std::string SET_OVERLAY_ENABLED = "SetOverlayEnabled";
-const std::string SET_OVERLAY_ENABLED_BY_BUNDLE_NAME = "SetOverlayEnabledByBundleName";
-const std::string GET_OVERLAY_MODULE_INFO = "GetOverlayModuleInfo";
-const std::string GET_TARGET_OVERLAY_MODULE_INFOS = "GetTargetOverlayModuleInfos";
-const std::string GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME = "GetOverlayModuleInfoByBundleName";
-const std::string GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME = "GetTargetOverlayModuleInfosByBundleName";
-} // namespace
-
-static OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> GetOverlayMgrProxy()
-{
-    auto bundleMgr = CommonFunc::GetBundleMgr();
-    if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed");
-        return nullptr;
-    }
-    auto overlayMgrProxy = bundleMgr->GetOverlayManagerProxy();
-    if (overlayMgrProxy == nullptr) {
-        APP_LOGE("GetOverlayManagerProxy failed");
-        return nullptr;
-    }
-    return overlayMgrProxy;
-}
-
 
 static ErrCode InnerSetOverlayEnabledExec(napi_env, OverlayCallbackInfo *callback)
 {
-    auto overlayMgrProxy = GetOverlayMgrProxy();
+    auto overlayMgrProxy = CommonFunc::GetOverlayMgrProxy();
     if (overlayMgrProxy == nullptr) {
         APP_LOGE("overlayMgrProxy is null");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
@@ -226,7 +197,7 @@ static ErrCode InnerGetOverlayModuleInfoExec(napi_env, OverlayCallbackInfo *over
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
 
-    auto overlayMgrProxy = GetOverlayMgrProxy();
+    auto overlayMgrProxy = CommonFunc::GetOverlayMgrProxy();
     if (overlayMgrProxy == nullptr) {
         APP_LOGE("overlayMgrProxy is null");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;

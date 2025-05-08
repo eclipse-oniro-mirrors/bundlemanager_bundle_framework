@@ -2718,5 +2718,20 @@ std::string CommonFunc::GetCloneBundleIdKey(const std::string &bundleName, const
 {
     return std::to_string(appIndex) + CLONE_BUNDLE_PREFIX + bundleName;
 }
+
+OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> CommonFunc::GetOverlayMgrProxy()
+{
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        return nullptr;
+    }
+    auto overlayMgrProxy = bundleMgr->GetOverlayManagerProxy();
+    if (overlayMgrProxy == nullptr) {
+        APP_LOGE("GetOverlayManagerProxy failed");
+        return nullptr;
+    }
+    return overlayMgrProxy;
+}
 } // AppExecFwk
 } // OHOS

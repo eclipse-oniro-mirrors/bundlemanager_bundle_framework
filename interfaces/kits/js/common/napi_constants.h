@@ -97,6 +97,17 @@ constexpr const char* DISPATCH_INFO_VERSION = "1";
 constexpr const char* DISPATCH_INFO_DISPATCH_API = "1.0";
 constexpr const char* UPGRADE_FLAG = "upgradeFlag";
 constexpr const char* BUNDLE_PACK_FLAG = "bundlePackFlag";
+constexpr const char* MODULE_NAME = "moduleName";
+constexpr const char* BUNDLE_NAME = "bundleName";
+constexpr const char* TARGET_MODULE_NAME = "targetModuleName";
+constexpr const char* TARGET_BUNDLE_NAME = "targetBundleName";
+constexpr const char* IS_ENABLED = "isEnabled";
+constexpr const char* SET_OVERLAY_ENABLED = "SetOverlayEnabled";
+constexpr const char* SET_OVERLAY_ENABLED_BY_BUNDLE_NAME = "SetOverlayEnabledByBundleName";
+constexpr const char* GET_OVERLAY_MODULE_INFO = "GetOverlayModuleInfo";
+constexpr const char* GET_TARGET_OVERLAY_MODULE_INFOS = "GetTargetOverlayModuleInfos";
+constexpr const char* GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME = "GetOverlayModuleInfoByBundleName";
+constexpr const char* GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME = "GetTargetOverlayModuleInfosByBundleName";
 }
 }
 }

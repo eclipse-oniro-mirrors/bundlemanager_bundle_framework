@@ -196,6 +196,7 @@ static bool CheckShortcutInfo(const ShortcutInfo &shortcutInfo);
 static void GetBundleNameAndIndexByName(
     const std::string &keyName, std::string &bundleName, int32_t &appIndex);
 static std::string GetCloneBundleIdKey(const std::string &bundleName, const int32_t appIndex);
+static OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> GetOverlayMgrProxy();
 class BundleMgrCommonDeathRecipient : public IRemoteObject::DeathRecipient {
     void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
 };

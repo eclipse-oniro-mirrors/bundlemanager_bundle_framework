@@ -39,8 +39,6 @@ const std::vector<int32_t> BUNDLE_PACK_FLAGS = {
     BundlePackFlag::GET_BUNDLE_SUMMARY,
     BundlePackFlag::GET_MODULE_SUMMARY,
 };
-const char* BUNDLE_NAME = "bundleName";
-const char* MODULE_NAME = "moduleName";
 }
 
 static ErrCode InnerIsHapModuleRemovable(const std::string &bundleName,
