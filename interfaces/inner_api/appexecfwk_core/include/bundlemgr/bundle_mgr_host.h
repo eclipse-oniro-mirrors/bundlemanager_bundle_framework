@@ -687,6 +687,8 @@ private:
 
     ErrCode HandleGetSandboxBundleInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetSandboxDataDir(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleObtainCallingBundleName(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);

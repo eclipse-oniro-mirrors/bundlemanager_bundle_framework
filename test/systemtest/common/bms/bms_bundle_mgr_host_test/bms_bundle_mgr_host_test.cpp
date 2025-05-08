@@ -2112,5 +2112,20 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleMgrExtProxy_0001, Function | Mediu
     auto ret = bundleMgrHost.HandleGetBundleMgrExtProxy(data, reply);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
 }
+
+/**
+ * @tc.number: HandleGetSandboxDataDir_0001
+ * @tc.name: test the HandleGetSandboxDataDir
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetSandboxDataDir
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetSandboxDataDir_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetSandboxDataDir(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // AppExecFwk
 } // OHOS
