@@ -160,7 +160,8 @@ HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest001_UserNotFound, Fun
     AbilityInfo abilityInfo;
     auto result = bundleMgrProxy->QueryCloneAbilityInfo(element,
         GET_ABILITY_INFO_DEFAULT, appIndex, abilityInfo, userId);
-        EXPECT_TRUE(result == ERR_BUNDLE_MANAGER_INVALID_USER_ID || result == ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED);
+        EXPECT_TRUE(result == ERR_BUNDLE_MANAGER_INVALID_USER_ID
+            || result == ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED);
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest002_AppNotFound, Function | SmallTest | Level0)
@@ -256,7 +257,8 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest003_AppIndexNotFound, F
     int32_t appIndex = 10;
     BundleInfo bundleInfo;
     auto result = bundleMgrProxy->GetCloneBundleInfo(bundleName, 0, appIndex, bundleInfo, userId);
-    EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP || result == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP
+        || result == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoExtTest001_AppNotFound, Function | SmallTest | Level0)
@@ -313,7 +315,8 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoExtTest003_AppIndexNotFound
     setuid(Constants::FOUNDATION_UID);
     auto result = bundleMgrProxy->GetCloneBundleInfoExt(bundleName, 0, appIndex, userId, bundleInfo);
     setuid(uid);
-    EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP || result == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP
+        || result == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, UninstallCloneAppTest001_AppNotExist, Function | SmallTest | Level0)
