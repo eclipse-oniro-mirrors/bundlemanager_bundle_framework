@@ -876,6 +876,7 @@ private:
     ErrCode HandleGetDirByBundleNameAndAppIndex(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllBundleDirs(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetAppDistributionTypes(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleSetShortcutVisibleForSelf(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

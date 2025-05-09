@@ -5186,5 +5186,17 @@ void BundleMgrHostImpl::AddPreinstalledApplicationInfo(PreInstallBundleInfo &pre
     preinstalledApplicationInfo.iconId = preInstallBundleInfo.GetIconId();
     preinstalledApplicationInfos.emplace_back(preinstalledApplicationInfo);
 }
+
+ErrCode BundleMgrHostImpl::SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+{
+    // The application itself is the caller, so there is no need for permission control.
+    APP_LOGD("SetShortcutVisibleForSelf begin");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->SetShortcutVisibleForSelf(shortcutId, visible);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
