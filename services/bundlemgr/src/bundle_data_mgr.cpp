@@ -3826,6 +3826,8 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
         if (infoItem->second.IsU1Enable() &&
             !infoItem->second.HasInnerBundleUserInfo(Constants::U1)) {
             recoverablePreInstallBundleInfos.emplace_back(preInstallBundleInfo);
+            APP_LOGW("-n %{public}s is u1enabled, but not has InnerBundleUserInfo in -u %{public}d",
+                preInstallBundleInfo.GetBundleName().c_str(), userId);
             continue;
         }
         if (!infoItem->second.HasInnerBundleUserInfo(Constants::DEFAULT_USERID) &&

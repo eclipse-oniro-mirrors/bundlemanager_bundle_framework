@@ -72,6 +72,7 @@ using namespace OHOS::Security;
 namespace OHOS {
 namespace {
 const int32_t USERID = 100;
+const int32_t U1 = 1;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string BUNDLE_NAME_NOT_EXIST = "com.example.not_exist";
@@ -264,6 +265,23 @@ sptr<BundleMgrProxy> BmsBundleResourceTest::GetBundleMgrProxy()
 }
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+/**
+ * @tc.number: OnReceiveEvent_0010
+ * Function: OnReceiveEvent
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test OnReceiveEvent
+ */
+HWTEST_F(BmsBundleResourceTest, OnReceiveEvent_0010, Function | SmallTest | Level0)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+    OHOS::EventFwk::CommonEventData commonData2 { want };
+    commonData2.SetCode(U1); // userId not exist
+    bool ans = OnReceiveEvent(commonData2);
+    EXPECT_TRUE(ans);
+}
+
 /**
  * @tc.number: BmsBundleResourceTest_0001
  * Function: GetKey

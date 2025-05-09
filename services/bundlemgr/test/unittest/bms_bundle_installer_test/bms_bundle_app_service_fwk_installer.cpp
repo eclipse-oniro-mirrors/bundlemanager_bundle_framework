@@ -1985,4 +1985,22 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckAndParseFiles_0010, Function 
     auto res = installer.CheckAndParseFiles(hspPaths, installParam, newInfos);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
 }
+
+/**
+ * @tc.number: CheckAndParseFiles_0020
+ * @tc.name: test CheckAndParseFiles
+ * @tc.desc: 1.test CheckAndParseFiles
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckAndParseFiles_0020, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.removable = false;
+    std::vector<std::string> hspPaths{ VERSION_ONE_LIBRARY_ONE_PATH };
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    auto res = appServiceFwkInstaller.CheckAndParseFiles(hspPaths, installParam, newInfos);
+    EXPECT_EQ(res, ERR_OK);
+}
 }
