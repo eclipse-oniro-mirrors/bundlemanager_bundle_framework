@@ -253,6 +253,8 @@ struct App {
     int32_t minCompatibleVersionCode = -1;
     uint32_t minAPIVersion = 0;
     int32_t targetAPIVersion = 0;
+    int32_t targetMinorApiVersion = 0;
+    int32_t targetPatchApiVersion = 0;
     int32_t targetPriority = 0;
     int32_t maxChildProcess = OHOS::system::GetIntParameter(MAX_CHILD_PROCESS, 1);
     std::string bundleName;
@@ -974,6 +976,22 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.targetAPIVersion,
         JsonType::NUMBER,
         true,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_TARGET_MINOR_API_VERSION,
+        app.targetMinorApiVersion,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_TARGET_PATCH_API_VERSION,
+        app.targetPatchApiVersion,
+        JsonType::NUMBER,
+        false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
@@ -2014,6 +2032,8 @@ bool ToApplicationInfo(
 
     applicationInfo.apiCompatibleVersion = app.minAPIVersion;
     applicationInfo.apiTargetVersion = app.targetAPIVersion;
+    applicationInfo.targetMinorApiVersion = app.targetMinorApiVersion;
+    applicationInfo.targetPatchApiVersion = app.targetPatchApiVersion;
 
     applicationInfo.iconPath = app.icon;
     applicationInfo.iconId = app.iconId;
@@ -2136,6 +2156,8 @@ bool ToBundleInfo(
 
     bundleInfo.compatibleVersion = static_cast<uint32_t>(applicationInfo.apiCompatibleVersion);
     bundleInfo.targetVersion = static_cast<uint32_t>(applicationInfo.apiTargetVersion);
+    bundleInfo.targetMinorApiVersion = applicationInfo.targetMinorApiVersion;
+    bundleInfo.targetPatchApiVersion = applicationInfo.targetPatchApiVersion;
 
     bundleInfo.isKeepAlive = applicationInfo.keepAlive;
     bundleInfo.singleton = applicationInfo.singleton;

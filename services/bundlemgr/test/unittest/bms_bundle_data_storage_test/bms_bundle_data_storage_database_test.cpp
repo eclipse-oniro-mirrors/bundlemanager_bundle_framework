@@ -1075,6 +1075,8 @@ protected:
                 "apiCompatibleVersion": 8,
                 "apiReleaseType": "Beta1",
                 "apiTargetVersion": 8,
+                "targetMinorApiVersion": 1,
+                "targetPatchApiVersion": 1,
                 "appPrivilegeLevel": "normal",
                 "hnpPackages": {},
                 "appQuickFix": {
@@ -1287,6 +1289,8 @@ protected:
                 "seInfo": "",
                 "singleton": false,
                 "targetVersion": 8,
+                "targetMinorApiVersion": 1,
+                "targetPatchApiVersion": 1,
                 "uid": -1,
                 "updateTime": 0,
                 "appIndex": 0,
