@@ -80,7 +80,7 @@ public:
     ErrCode VerifyActivationLockToken(bool &res);
     bool IsNeedToSkipPreBundleInstall();
     ErrCode GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames);
-    void RegisterPreInstallWithCard();
+    ErrCode RegisterPreInstallWithCard();
 private:
     bool OpenHandler();
     static void *handler_;

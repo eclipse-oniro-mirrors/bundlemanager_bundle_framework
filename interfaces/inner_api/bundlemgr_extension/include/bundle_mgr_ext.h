@@ -170,9 +170,9 @@ public:
     {
         return false;
     }
-    virtual void RegisterPreInstallWithCard()
+    virtual ErrCode RegisterPreInstallWithCard()
     {
-        return;
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
     virtual ErrCode GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames)
     {

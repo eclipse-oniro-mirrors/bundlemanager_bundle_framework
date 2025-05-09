@@ -111,9 +111,6 @@ public:
     void CheckBundleNameAndStratAbility(const std::string& bundleName, const std::string& appIdentifier) override;
     bool CheckBundleNameAndStratAbilityTest(const std::string& bundleName, const std::string& appIdentifier);
     bool BmsCheckBundleNameAndStratAbilityTest(const std::string& bundleName, const std::string& appIdentifier);
-    void RegisterPreInstallWithCard() override;
-    bool RegisterPreInstallWithCardTest();
-    bool BmsRegisterPreInstallWithCardTest();
     std::string GetCompatibleDeviceType(const std::string& bundleName) override;
 };
 
@@ -182,25 +179,6 @@ bool BundleMgrExtTest::BmsCheckBundleNameAndStratAbilityTest(
     }
     return false;
 }
-
-void BundleMgrExtTest::RegisterPreInstallWithCard()
-{
-    return;
-}
-
-bool BundleMgrExtTest::RegisterPreInstallWithCardTest()
-{
-    RegisterPreInstallWithCard();
-    return true;
-}
-
-bool BundleMgrExtTest::BmsRegisterPreInstallWithCardTest()
-{
-    BmsExtensionDataMgr bmsExtensionDataMgrTest;
-    bmsExtensionDataMgrTest.RegisterPreInstallWithCard();
-    return true;
-}
-
 
 std::string BundleMgrExtTest::GetCompatibleDeviceType(const std::string& bundleName)
 {
@@ -1293,20 +1271,8 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0036, Function | SmallTest | Leve
 HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0037, Function | SmallTest | Level0)
 {
     BundleMgrExtTest bundleMgrExtTest;
-    bool res = bundleMgrExtTest.RegisterPreInstallWithCardTest();
-    EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: BmsExtensionDataMgrTest_0038
- * @tc.name: RegisterPreInstallWithCard
- * @tc.desc: RegisterPreInstallWithCard
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0038, Function | SmallTest | Level0)
-{
-    BundleMgrExtTest bmsExtensionDataMgrTest;
-    bool res = bmsExtensionDataMgrTest.BmsRegisterPreInstallWithCardTest();
-    EXPECT_TRUE(res);
+    ErrCode res = bundleMgrExtTest.RegisterPreInstallWithCard();
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
 }
 
 /**
@@ -2036,5 +2002,23 @@ HWTEST_F(BmsExtensionDataMgrTest, IsNeedToSkipPreBundleInstall_001, Function | S
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.IsNeedToSkipPreBundleInstall();
     EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: RegisterPreInstallWithCard_001
+ * @tc.name: RegisterPreInstallWithCard
+ * @tc.desc: RegisterPreInstallWithCard
+ */
+HWTEST_F(BmsExtensionDataMgrTest, RegisterPreInstallWithCard_001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgrTest;
+    bmsExtensionDataMgrTest.handler_ = nullptr;
+    ErrCode res = bmsExtensionDataMgrTest.RegisterPreInstallWithCard();
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+
+    int16_t handleTest = 1;
+    bmsExtensionDataMgrTest.handler_ = &handleTest;
+    res = bmsExtensionDataMgrTest.RegisterPreInstallWithCard();
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 }
 } // OHOS
