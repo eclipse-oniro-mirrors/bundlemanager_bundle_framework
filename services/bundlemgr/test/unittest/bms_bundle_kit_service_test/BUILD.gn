@@ -420,6 +420,9 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
+  sources -= [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp" ]
+
   sources += [ "bms_bundle_get_window_properties_test.cpp" ]
 
   configs = [

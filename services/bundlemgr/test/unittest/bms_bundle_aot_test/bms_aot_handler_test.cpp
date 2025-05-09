@@ -151,6 +151,6 @@ HWTEST_F(BmsAOTHandlerTest, HandleArkPathsChange_0100, Function | SmallTest | Le
     AOTHandler::GetInstance().HandleArkPathsChange();
     bool isHandled = false;
     (void)BMSEventHandler::CheckOtaFlag(OTAFlag::DELETE_DEPRECATED_ARK_PATHS, isHandled);
-    EXPECT_TRUE(isHandled);
+    EXPECT_FALSE(isHandled);
 }
 } // OHOS

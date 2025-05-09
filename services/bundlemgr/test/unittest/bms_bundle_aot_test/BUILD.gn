@@ -223,6 +223,9 @@ ohos_unittest("BmsAOTHandlerTest") {
 
   sources += [ "bms_aot_handler_test.cpp" ]
 
+  sources -= [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp" ]
+
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
@@ -395,6 +398,9 @@ ohos_unittest("BmsAOTHandlerTest2") {
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_aot_handler_test_two.cpp" ]
+
+  sources -= [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp" ]
 
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []

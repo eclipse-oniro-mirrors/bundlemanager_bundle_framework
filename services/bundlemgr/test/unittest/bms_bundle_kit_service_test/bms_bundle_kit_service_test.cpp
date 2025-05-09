@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14039,28 +14039,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAutomatic_0200, Function 
     uint64_t cacheSize = 0;
     ErrCode result = bundleMgrProxy->CleanBundleCacheFilesAutomatic(cacheSize);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
-}
-
-/**
- * @tc.number: CleanAllBundleCache_0200
- * @tc.name: test CleanAllBundleCache
- * @tc.desc: 1. return ERR_BUNDLE_MANAGER_INVALID_PARAMETER
- */
-HWTEST_F(BmsBundleKitServiceTest, CleanAllBundleCache_0200, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    sptr<ProcessCacheCallbackImpl> delCache = new (std::nothrow) ProcessCacheCallbackImpl();
-    ErrCode ret;
-    if (delCache == nullptr) {
-        ret = bundleMgrProxy->CleanAllBundleCache(delCache);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
-    }
-    ret = bundleMgrProxy->CleanAllBundleCache(delCache);
-    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

@@ -1371,6 +1371,8 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessRebootQuickFixUnInstallAndRecover
         EXPECT_TRUE(result);
         EXPECT_EQ(oldVersionCode, newInfo.versionCode);
     }
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 
 /**

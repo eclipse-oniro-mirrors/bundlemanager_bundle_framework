@@ -38,7 +38,7 @@ ErrCode BmsExtensionProfile::ParseBmsExtension(
     APP_LOGD("Parse BmsExtension from %{private}s", jsonPath.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(jsonPath, jsonBuf)) {
-        APP_LOGE("Parse bms-extension.json file failed, jsonPath: %{public}s", jsonPath.c_str());
+        APP_LOGE("Parse failed, jsonPath: %{public}s", jsonPath.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
     return TransformTo(jsonBuf, bmsExtension);
