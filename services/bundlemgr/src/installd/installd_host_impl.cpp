@@ -65,14 +65,14 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/haps"
 };
 constexpr const char* CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
-constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2 = "/data/service/el2/%/backup/bundles/";
-constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 constexpr const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
-constexpr const char* SHAREFILES_DATA_PATH_EL2 = "/data/app/el2/%/sharefiles/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1 = "/data/service/el1/%/backup/bundles/";
-constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
-constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
+constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2 = "/data/service/el2/%/backup/bundles/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
+constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
+constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
+constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
+constexpr const char* SHAREFILES_DATA_PATH_EL2 = "/data/app/el2/%/sharefiles/";
 constexpr const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
 constexpr const char* EXTENSION_CONFIG_DEFAULT_PATH = "/system/etc/ams_extension_config.json";
 #ifdef CONFIG_POLOCY_ENABLE
@@ -1194,15 +1194,15 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     std::string suffixName = bundleName;
+    if (appIndex > 0) {
+        suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
     std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
     elPath.push_back(ServiceConstants::DIR_EL5);
     for (const auto &el : elPath) {
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             CleanBundleDataForEl2(bundleName, userid, appIndex);
             continue;
-        }
-        if (appIndex > 0) {
-            suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
         }
         std::string bundleDataDir = GetBundleDataDir(el, userid) + ServiceConstants::BASE + suffixName;
         if (!InstalldOperator::DeleteFiles(bundleDataDir)) {
@@ -1213,13 +1213,13 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
             LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
         }
     }
-    CleanShareDir(bundleName, userid);
-    CleanCloudDir(bundleName, userid);
-    CleanBackupExtHomeDir(bundleName, userid, DirType::DIR_EL2);
-    CleanBackupExtHomeDir(bundleName, userid, DirType::DIR_EL1);
-    CleanNewBackupExtHomeDir(bundleName, userid, DirType::DIR_EL2);
-    CleanNewBackupExtHomeDir(bundleName, userid, DirType::DIR_EL1);
-    CleanDistributedDir(bundleName, userid);
+    CleanShareDir(suffixName, userid);
+    CleanCloudDir(suffixName, userid);
+    CleanBackupExtHomeDir(suffixName, userid, DirType::DIR_EL2);
+    CleanBackupExtHomeDir(suffixName, userid, DirType::DIR_EL1);
+    CleanNewBackupExtHomeDir(suffixName, userid, DirType::DIR_EL2);
+    CleanNewBackupExtHomeDir(suffixName, userid, DirType::DIR_EL1);
+    CleanDistributedDir(suffixName, userid);
     return ERR_OK;
 }
 
