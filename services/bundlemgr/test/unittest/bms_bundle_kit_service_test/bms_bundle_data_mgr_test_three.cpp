@@ -1052,7 +1052,11 @@ HWTEST_F(BmsBundleDataMgrTest3, ImplicitQueryAbilityInfos_0300, Function | Mediu
     int32_t userId = 100;
     std::vector<AbilityInfo> abilityInfos;
     ErrCode res = bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, true);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**
