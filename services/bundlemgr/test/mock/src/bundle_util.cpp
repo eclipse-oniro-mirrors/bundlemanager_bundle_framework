@@ -212,7 +212,7 @@ bool BundleUtil::CopyFile(
     return true;
 }
 
-bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &destPath)
+bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &destPath, const bool needFsync)
 {
     return true;
 }

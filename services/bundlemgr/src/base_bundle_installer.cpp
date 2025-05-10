@@ -6939,7 +6939,7 @@ bool BaseBundleInstaller::AddAppGalleryHapToTempPath(const bool isPreInstall,
             LOG_E(BMS_TAG_INSTALLER, "path %{public}s may error", item.first.c_str());
             continue;
         }
-        if (!BundleUtil::CopyFileFast(item.first, targetPath + item.first.substr(pos))) {
+        if (!BundleUtil::CopyFileFast(item.first, targetPath + item.first.substr(pos), true)) {
             LOG_E(BMS_TAG_INSTALLER, "copy hap %{public}s failed err %{public}d", item.first.c_str(), errno);
         }
     }
