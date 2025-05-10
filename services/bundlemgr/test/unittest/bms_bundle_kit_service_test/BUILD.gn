@@ -641,6 +641,9 @@ ohos_unittest("BmsBundleDataMgrTest2") {
   external_deps += bundle_install_external_deps
 
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_EXTENSION_DATA" ]
+  }
   include_dirs = []
   if (code_signature_enable) {
     sources += [
@@ -828,6 +831,9 @@ ohos_unittest("BmsBundleDataMgrTest3") {
   external_deps += bundle_install_external_deps
 
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_EXTENSION_DATA" ]
+  }
   include_dirs = []
   if (code_signature_enable) {
     sources += [

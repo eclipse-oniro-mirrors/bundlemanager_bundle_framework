@@ -4465,7 +4465,11 @@ HWTEST_F(BmsDataMgrTest, GetDirForAtomicService_0001, TestSize.Level1)
     std::string bundleName = "";
     std::string dataDir = "";
     auto ret = bundleDataMgr.GetDirForAtomicService(bundleName, dataDir);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_GET_ACCOUNT_INFO_FAILED);
+    #else
     EXPECT_EQ(ret, ERR_OK);
+    #endif
 }
 
 /**
