@@ -831,12 +831,12 @@ ErrCode AppControlManagerHostImpl::DeleteUninstallDisposedRule(const std::string
     return ret;
 }
 
-void AppControlManagerHostImpl::SendAppControlEvent(ControlActionType actiopType, ControlOperationType operationType,
+void AppControlManagerHostImpl::SendAppControlEvent(ControlActionType actionType, ControlOperationType operationType,
     const std::string &callingName, int32_t userId, int32_t appIndex, const std::vector<std::string> &appIds,
     const std::string &rule)
 {
     EventInfo info;
-    info.actionType = static_cast<int32_t>(actiopType);
+    info.actionType = static_cast<int32_t>(actionType);
     info.operationType = static_cast<int32_t>(operationType);
     info.callingName = callingName;
     info.userId = userId;

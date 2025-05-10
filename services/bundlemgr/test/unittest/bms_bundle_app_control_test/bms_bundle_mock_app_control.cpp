@@ -324,7 +324,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0160, Function | Smal
     ASSERT_NE(rdb.rdbDataManager_, nullptr);
     rdb.rdbDataManager_->bmsRdbConfig_.tableName = TARGET_BUNDLE_NAME;
     std::vector<DisposedRule> disposedRules;
-    auto res = rdb.GetAbilityRunningControlRule(APPID, APP_INDEX, USERID, disposedRules);
+    auto res = rdb.GetAbilityRunningControlRule({ APPID }, APP_INDEX, USERID, disposedRules);
     EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 

@@ -1635,7 +1635,7 @@ HWTEST_F(BmsBundleAppControlTest, GetAbilityRunningControlRule_0100, Function | 
     int32_t userId = 100;
     std::vector<DisposedRule> disposedRules;
     ASSERT_NE(appControlManagerDb_, nullptr);
-    ErrCode result = appControlManagerDb_->GetAbilityRunningControlRule(appId, appIndex, userId, disposedRules);
+    ErrCode result = appControlManagerDb_->GetAbilityRunningControlRule({ appId }, appIndex, userId, disposedRules);
     EXPECT_EQ(result, ERR_OK);
 }
 
@@ -2112,7 +2112,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7500, Function | Sma
     std::string key = "key";
     std::vector<DisposedRule> disposedRule;
     appControlManager->abilityRunningControlRuleCache_.emplace(key, disposedRule);
-    appControlManager->DeleteAbilityRunningRuleCache(key);
+    appControlManager->DeleteAbilityRunningRuleCache({ key });
     EXPECT_EQ(appControlManager->abilityRunningControlRuleCache_.find(key),
               appControlManager->abilityRunningControlRuleCache_.end());
 }
@@ -3093,7 +3093,7 @@ HWTEST_F(BmsBundleAppControlTest, AbilityRunningRuleCache_0100, Function | Small
     EXPECT_TRUE(ret);
     EXPECT_FALSE(resultRules.empty());
 
-    EXPECT_NO_THROW(appControlManager->DeleteAbilityRunningRuleCache(ABILITY_RUNNING_KEY));
+    EXPECT_NO_THROW(appControlManager->DeleteAbilityRunningRuleCache({ ABILITY_RUNNING_KEY }));
 
     std::vector<DisposedRule> resultRules2;
     ret = appControlManager->GetAbilityRunningRuleCache(ABILITY_RUNNING_KEY, resultRules2);

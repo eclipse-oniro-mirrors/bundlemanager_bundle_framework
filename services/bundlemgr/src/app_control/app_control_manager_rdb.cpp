@@ -483,18 +483,16 @@ ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
 }
 
 ErrCode AppControlManagerRdb::DeleteDisposedRule(const std::string &callingName,
-    const std::string &appId, int32_t appIndex, int32_t userId)
+    const std::vector<std::string> &appIdList, int32_t appIndex, int32_t userId)
 {
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(CALLING_NAME, callingName);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
-    absRdbPredicates.EqualTo(APP_ID, appId);
+    absRdbPredicates.In(APP_ID, appIdList);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus callingName:%{public}s appId:%{private}s failed",
-            callingName.c_str(), appId.c_str());
         return ERR_APPEXECFWK_DB_DELETE_ERROR;
     }
     return ERR_OK;
@@ -568,14 +566,14 @@ ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
     return ERR_OK;
 }
 
-ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
-    const std::string &appId, int32_t appIndex, int32_t userId, std::vector<DisposedRule>& disposedRules)
+ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(const std::vector<std::string> &appIdList, int32_t appIndex,
+    int32_t userId, std::vector<DisposedRule>& disposedRules)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_DEFAULT, "rdb begin to GetAbilityRunningControlRule");
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
-    absRdbPredicates.EqualTo(APP_ID, appId);
+    absRdbPredicates.In(APP_ID, appIdList);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
     absRdbPredicates.OrderByAsc(PRIORITY); // ascending
