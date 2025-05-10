@@ -588,16 +588,16 @@ bool BundleMgrService::IsBrokerServiceStarted() const
 int32_t BundleMgrService::OnExtension(const std::string& extension, MessageParcel& data, MessageParcel& reply)
 {
     APP_LOGI("extension is %{public}s.", extension.c_str());
-    auto BundleBackupMgr = BundleBackupMgr::GetInstance();
+    auto bundleBackupMgr = BundleBackupMgr::GetInstance();
     ErrCode ret = ERR_OK;
     if (extension == EXTENSION_BACKUP) {
-        ret = BundleBackupMgr.OnBackup(data, reply);
+        ret = bundleBackupMgr.OnBackup(data, reply);
         if (ret != ERR_OK) {
             APP_LOGE("OnBackup failed, err is %{public}d.", ret);
             return -1;
         }
     } else if (extension == EXTENSION_RESTORE) {
-        ret = BundleBackupMgr.OnRestore(data, reply);
+        ret = bundleBackupMgr.OnRestore(data, reply);
         if (ret != ERR_OK) {
             APP_LOGE("OnRestore failed, err is %{public}d.", ret);
             return -1;
