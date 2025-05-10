@@ -83,7 +83,8 @@ public:
 
     bool UpdateBundleIcon(const std::string &bundleName, ResourceInfo &resourceInfo);
 
-    bool AddCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
+    bool AddCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId = Constants::UNSPECIFIED_USERID);
 
     bool DeleteCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
 
@@ -133,6 +134,9 @@ private:
         const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos);
 
     bool UpdateCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex, const uint32_t type);
+
+    bool UpdateCloneBundleResourceInfo(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, const uint32_t type);
 
     void DeleteNotExistResourceInfo(const std::string &bundleName,
         const int32_t appIndex, const std::vector<ResourceInfo> &resourceInfos);

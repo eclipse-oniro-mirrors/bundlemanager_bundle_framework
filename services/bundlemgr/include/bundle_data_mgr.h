@@ -1123,6 +1123,7 @@ public:
     ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
     void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData);
     ErrCode GetAllDynamicInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos);
+    std::string GetCurDynamicIconModule(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
 
 private:
     /**
