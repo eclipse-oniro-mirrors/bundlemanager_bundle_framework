@@ -41,6 +41,8 @@ const char* APPLICATION_VERSION_NAME = "versionName";
 const char* APPLICATION_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
 const char* APPLICATION_API_COMPATIBLE_VERSION = "apiCompatibleVersion";
 const char* APPLICATION_API_TARGET_VERSION = "apiTargetVersion";
+const char* APPLICATION_TARGET_MINOR_API_VERSION = "targetMinorApiVersion";
+const char* APPLICATION_TARGET_PATCH_API_VERSION = "targetPatchApiVersion";
 const char* APPLICATION_ICON_PATH = "iconPath";
 const char* APPLICATION_ICON_ID = "iconId";
 const char* APPLICATION_LABEL = "label";
@@ -371,6 +373,8 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     minCompatibleVersionCode = parcel.ReadInt32();
     apiCompatibleVersion = parcel.ReadUint32();
     apiTargetVersion = parcel.ReadInt32();
+    targetMinorApiVersion = parcel.ReadInt32();
+    targetPatchApiVersion = parcel.ReadInt32();
     crowdtestDeadline = parcel.ReadInt64();
 
     iconPath = Str16ToStr8(parcel.ReadString16());
@@ -621,6 +625,8 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, apiCompatibleVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, apiTargetVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetMinorApiVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetPatchApiVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, crowdtestDeadline);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(iconPath));
@@ -931,6 +937,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_MIN_COMPATIBLE_VERSION_CODE, applicationInfo.minCompatibleVersionCode},
         {APPLICATION_API_COMPATIBLE_VERSION, applicationInfo.apiCompatibleVersion},
         {APPLICATION_API_TARGET_VERSION, applicationInfo.apiTargetVersion},
+        {APPLICATION_TARGET_MINOR_API_VERSION, applicationInfo.targetMinorApiVersion},
+        {APPLICATION_TARGET_PATCH_API_VERSION, applicationInfo.targetPatchApiVersion},
         {APPLICATION_ICON_PATH, applicationInfo.iconPath},
         {APPLICATION_ICON_ID, applicationInfo.iconId},
         {APPLICATION_LABEL, applicationInfo.label},
@@ -1044,6 +1052,10 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.apiCompatibleVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_API_TARGET_VERSION,
         applicationInfo.apiTargetVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_TARGET_MINOR_API_VERSION,
+        applicationInfo.targetMinorApiVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_TARGET_PATCH_API_VERSION,
+        applicationInfo.targetPatchApiVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ICON_PATH,
         applicationInfo.iconPath, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_ICON_ID,
