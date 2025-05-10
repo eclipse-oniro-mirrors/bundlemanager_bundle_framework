@@ -804,7 +804,6 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetResourcesApply(preBundleConfigInfo.resourcesApply);
     newInfo.SetAllowAppRunWhenDeviceFirstLocked(preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked);
     newInfo.SetAllowEnableNotification(preBundleConfigInfo.allowEnableNotification);
-    newInfo.SetAllowArkTsLargeHeap(preBundleConfigInfo.allowArkTsLargeHeap);
 }
 
 void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInfo,
