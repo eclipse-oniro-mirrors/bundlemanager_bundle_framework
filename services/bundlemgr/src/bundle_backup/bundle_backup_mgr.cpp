@@ -107,6 +107,7 @@ ErrCode BundleBackupMgr::SaveToFile(const std::string& config)
     int32_t ret = static_cast<int>(fwrite(config.c_str(), 1, config.length(), fp));
     if (ret != (int)config.length()) {
         APP_LOGE("Save config file: %{public}s, fwrite %{public}d failed", BACKUP_FILE_PATH, ret);
+        return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
     (void)fflush(fp);
     (void)fsync(fileno(fp));
