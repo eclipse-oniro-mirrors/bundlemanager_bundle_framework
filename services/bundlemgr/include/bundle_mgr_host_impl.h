@@ -890,6 +890,7 @@ public:
 
     virtual ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback) override;
 
+    virtual ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible) override;
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif

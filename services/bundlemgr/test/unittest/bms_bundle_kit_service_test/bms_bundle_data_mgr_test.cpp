@@ -8326,4 +8326,25 @@ HWTEST_F(BmsBundleDataMgrTest, SetBit_0001, Function | MediumTest | Level1)
     BundleUtil::ResetBit(pos, num);
     EXPECT_EQ(num, 0);
 }
+
+/**
+ * @tc.number: BundleMgrHostImplSetShortcutVisibleForSelf_0001
+ * @tc.name: BundleMgrHostImplSetShortcutVisibleForSelf
+ * @tc.desc: test SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplSetShortcutVisibleForSelf_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> lcalBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(lcalBundleMgrHostImpl, nullptr);
+    std::string shortcutId = "shortcutId";
+    bool visible = true;
+
+    auto ret = lcalBundleMgrHostImpl->SetShortcutVisibleForSelf(shortcutId, true);
+    EXPECT_NE(ret, ERR_OK);
+
+    ClearDataMgr();
+    ret = lcalBundleMgrHostImpl->SetShortcutVisibleForSelf(shortcutId, true);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    EXPECT_NE(ret, ERR_OK);
+}
 } // OHOS

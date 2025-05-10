@@ -55,6 +55,7 @@
 #include "preinstall_data_storage_interface.h"
 #include "router_data_storage_interface.h"
 #include "shortcut_data_storage_interface.h"
+#include "shortcut_visible_data_storage_rdb.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
 #endif
@@ -1109,6 +1110,8 @@ public:
     ErrCode UpdatePluginBundleInfo(const std::string &hostBundleName, const PluginBundleInfo &pluginBundleInfo);
     ErrCode RemovePluginFromUserInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId);
+    ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible);
+    ErrCode DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
 
 private:
     /**
@@ -1341,6 +1344,7 @@ private:
     std::shared_ptr<IRouterDataStorage> routerStorage_;
     std::shared_ptr<UninstallDataMgrStorageRdb> uninstallDataMgr_;
     std::shared_ptr<FirstInstallDataMgrStorageRdb> firstInstallDataMgr_;
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleStorage_;
     // use vector because these functions using for IPC, the bundleName may duplicate
     std::vector<sptr<IBundleStatusCallback>> callbackList_;
     // common event callback

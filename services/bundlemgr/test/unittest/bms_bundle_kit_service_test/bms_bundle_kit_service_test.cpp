@@ -14275,4 +14275,18 @@ HWTEST_F(BmsBundleKitServiceTest, InitAgingRequest_0003, Function | SmallTest | 
     dataMgr->RemoveUserId(1001);
     dataMgr->RemoveUserId(1002);
 }
+
+/**
+ * @tc.number: Mgr_Proxy_SetShortcutVisibleForSelf_0100
+ * @tc.name: test BundleMgrProxy interface SetShortcutVisibleForSelf
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_SetShortcutVisibleForSelf_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string shortcutId = "shortcutId";
+    bool visible = true;
+    auto ret = bundleMgrProxy->SetShortcutVisibleForSelf(shortcutId, visible);
+    EXPECT_NE(ret, ERR_OK);
+}
 }

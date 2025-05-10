@@ -85,6 +85,8 @@ public:
     void NotifyDynamicIconEvent(
         const std::string &bundleName, bool isEnableDynamicIcon);
     void NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type);
+    void NotifyShortcutVisibleChanged(
+        const std::string &bundlename, const std::string &id, int32_t userId, int32_t appIndex, bool visible);
 
 private:
     std::string GetCommonEventData(const NotifyType &type);

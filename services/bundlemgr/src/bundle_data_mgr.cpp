@@ -27,6 +27,7 @@
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_client.h"
+#include "bundle_common_event_mgr.h"
 #include "bundle_data_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
 #include "bundle_event_callback_death_recipient.h"
@@ -140,6 +141,7 @@ BundleDataMgr::BundleDataMgr()
     sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     bundleStateStorage_ = std::make_shared<BundleStateStorage>();
     shortcutStorage_ = std::make_shared<ShortcutDataStorageRdb>();
+    shortcutVisibleStorage_ = std::make_shared<ShortcutVisibleDataStorageRdb>();
     routerStorage_ = std::make_shared<RouterDataStorageRdb>();
     uninstallDataMgr_ = std::make_shared<UninstallDataMgrStorageRdb>();
     firstInstallDataMgr_ = std::make_shared<FirstInstallDataMgrStorageRdb>();
@@ -9324,6 +9326,10 @@ ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const in
     }
     innerBundleInfo.SetBundleStatus(nowBundleStatus);
     DeleteDesktopShortcutInfo(bundleName, userId, appIndex);
+    if (DeleteShortcutVisibleInfo(bundleName, userId, appIndex) != ERR_OK) {
+        APP_LOGE("DeleteShortcutVisibleInfo failed, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+            bundleName.c_str(), userId, appIndex);
+    }
     return ERR_OK;
 }
 
@@ -10399,6 +10405,62 @@ ErrCode BundleDataMgr::RemovePluginFromUserInfo(const std::string &hostBundleNam
         return ERR_APPEXECFWK_REMOVE_PLUGIN_INFO_ERROR;
     }
     bundleInfos_.at(hostBundleName) = newInfo;
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+{
+    APP_LOGD("SetShortcutVisibleForSelf begin");
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    int32_t appIndex = 0;
+    std::string bundleName;
+    auto ret = GetBundleNameAndIndex(uid, bundleName, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("get inner bundle info failed");
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    int32_t userId = GetUserIdByCallingUid();
+    std::vector<ShortcutInfo> shortcutInfos;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto iter = bundleInfos_.find(bundleName);
+        if (iter != bundleInfos_.end()) {
+            GetShortcutInfosByInnerBundleInfo(iter->second, shortcutInfos);
+        } else {
+            APP_LOGE("%{public}s not exist", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
+    bool isShortcutIdExist = false;
+    for (const auto& shortcut : shortcutInfos) {
+        if (shortcut.id == shortcutId) {
+            isShortcutIdExist = true;
+        }
+    }
+    if (!isShortcutIdExist) {
+        APP_LOGE("shortcut id %{public}s not exist", shortcutId.c_str());
+        return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+    }
+    if (shortcutVisibleStorage_->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible)) {
+        return ERR_OK;
+    } 
+    if (!shortcutVisibleStorage_->SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible)) {
+        APP_LOGE("SaveStorageShortcutVisibleInfo failed");
+        return ERR_APPEXECFWK_DB_INSERT_ERROR;
+    }
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyShortcutVisibleChanged(bundleName, shortcutId, userId, appIndex, visible);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    APP_LOGD(
+        "DeleteShortcutVisibleInfo by remove cloneApp, bundleName:%{public}s, userId:%{public}d, appIndex:%{public}d",
+        bundleName.c_str(), userId, appIndex);
+    if (!shortcutVisibleStorage_->DeleteShortcutVisibleInfo(bundleName, userId, appIndex)) {
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk
