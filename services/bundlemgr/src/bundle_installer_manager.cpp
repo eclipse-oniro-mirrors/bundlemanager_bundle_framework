@@ -20,6 +20,7 @@
 #include "bundle_mgr_service.h"
 #include "datetime_ex.h"
 #include "ipc_skeleton.h"
+#include "parameters.h"
 #include "xcollie_helper.h"
 
 namespace OHOS {
@@ -29,6 +30,7 @@ constexpr const char* INSTALL_TASK = "Install_Task";
 constexpr const char* UNINSTALL_TASK = "Uninstall_Task";
 constexpr const char* RECOVER_TASK = "Recover_Task";
 constexpr const char* THREAD_POOL_NAME = "InstallerThreadPool";
+constexpr const char* RETAIL_MODE_KEY = "const.dfx.enable_retail";
 constexpr unsigned int TIME_OUT_SECONDS = 60 * 25;
 constexpr int8_t MAX_TASK_NUMBER = 10;
 constexpr int8_t DELAY_INTERVAL_SECONDS = 60;
@@ -37,6 +39,10 @@ static std::atomic<int32_t> g_taskCounter = 0;
 
 BundleInstallerManager::BundleInstallerManager()
 {
+    maxTaskNum_ = MAX_TASK_NUMBER;
+    if (system::GetBoolParameter(RETAIL_MODE_KEY, false)) {
+        maxTaskNum_ = MAX_TASK_NUMBER / 2;
+    }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "create bundle installer manager instance");
 }
 
@@ -211,7 +217,7 @@ void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::stri
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to start InstallerThreadPool");
         threadPool_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME);
         threadPool_->Start(THREAD_NUMBER);
-        threadPool_->SetMaxTaskNum(MAX_TASK_NUMBER);
+        threadPool_->SetMaxTaskNum(maxTaskNum_);
         auto delayCloseTask = std::bind(&BundleInstallerManager::DelayStopThreadPool, shared_from_this());
         std::thread t(delayCloseTask);
         t.detach();
