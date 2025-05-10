@@ -28,6 +28,7 @@
 #include "ipc_skeleton.h"
 #include "securec.h"
 namespace {
+const size_t CHAR_MIN_LENGTH = 1;
 const size_t CHAR_MAX_LENGTH = 10240;
 const size_t MAX_ALLOWED_SIZE = 1024 * 1024;
 }
@@ -288,10 +289,10 @@ bool OH_NativeBundle_IsDebugMode(bool* isDebugMode)
     OHOS::AppExecFwk::BundleMgrProxyNative bundleMgrProxyNative;
     OHOS::AppExecFwk::BundleInfo bundleInfo;
 
-    auto bundlInfoFlag =
+    auto bundleInfoFlag =
         static_cast<int32_t>(OHOS::AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
 
-    if (!bundleMgrProxyNative.GetBundleInfoForSelf(bundlInfoFlag, bundleInfo)) {
+    if (!bundleMgrProxyNative.GetBundleInfoForSelf(bundleInfoFlag, bundleInfo)) {
         APP_LOGE("can not get bundleInfo for self");
         return false;
     }
@@ -301,58 +302,83 @@ bool OH_NativeBundle_IsDebugMode(bool* isDebugMode)
     return true;
 }
 
-void FreeMetadataArray(OH_NativeBundle_Metadata* metadata, size_t metadataSize)
+void FreeMetadataArray(OH_NativeBundle_Metadata *&metadata, size_t metadataSize)
 {
     if (metadata == nullptr || metadataSize == 0) {
+        APP_LOGE("invalid param");
         return;
     }
     for (size_t i = 0; i < metadataSize; ++i) {
-        if (metadata[i].resource != nullptr) {
-            free(metadata[i].resource);
-            metadata[i].resource = nullptr;
-        }
-        if (metadata[i].value != nullptr) {
-            free(metadata[i].value);
-            metadata[i].value = nullptr;
-        }
-        if (metadata[i].name != nullptr) {
-            free(metadata[i].name);
-            metadata[i].name = nullptr;
-        }
+        free(metadata[i].name);
+        free(metadata[i].value);
+        free(metadata[i].resource);
     }
     free(metadata);
-    metadata = nullptr;
 }
 
-void FreeModuleMetadata(OH_NativeBundle_ModuleMetadata* moduleMetadata, size_t moduleMetadataSize)
+void FreeModuleMetadataArray(OH_NativeBundle_ModuleMetadata *&moduleMetadata, size_t moduleMetadataSize)
 {
     if (moduleMetadata == nullptr || moduleMetadataSize == 0) {
+        APP_LOGE("invalid param");
         return;
     }
 
     for (size_t i = 0; i < moduleMetadataSize; ++i) {
-        if (moduleMetadata[i].moduleName != nullptr) {
-            free(moduleMetadata[i].moduleName);
-            moduleMetadata[i].moduleName = nullptr;
-        }
+        free(moduleMetadata[i].moduleName);
         FreeMetadataArray(moduleMetadata[i].metadataArray, moduleMetadata[i].metadataArraySize);
     }
     free(moduleMetadata);
-    moduleMetadata = nullptr;
 }
 
-bool CopyMetadataStringToChar(char* &name, const std::string &value)
+void ResetMetadataArray(OH_NativeBundle_Metadata *&metadata, size_t metadataSize)
+{
+    if (metadata == nullptr || metadataSize == 0) {
+        APP_LOGE("invalid param");
+        return;
+    }
+    for (size_t i = 0; i < metadataSize; ++i) {
+        metadata[i].name = nullptr;
+        metadata[i].value = nullptr;
+        metadata[i].resource = nullptr;
+    }
+}
+
+void ResetModuleMetadataArray(OH_NativeBundle_ModuleMetadata *&moduleMetadata, size_t moduleMetadataSize)
+{
+    if (moduleMetadata == nullptr || moduleMetadataSize == 0) {
+        APP_LOGE("invalid param");
+        return;
+    }
+
+    for (size_t i = 0; i < moduleMetadataSize; ++i) {
+        moduleMetadata[i].moduleName = nullptr;
+        moduleMetadata[i].metadataArray = nullptr;
+        moduleMetadata[i].metadataArraySize = 0;
+    }
+}
+
+bool CopyMetadataStringToChar(char *&name, const std::string &value)
 {
     size_t length = value.size();
-    if ((length == 0) || (length + 1) > CHAR_MAX_LENGTH || (length + 1) == 0) {
-        APP_LOGE("failed due to the length of value is empty or too long");
-        return false;
+    if ((length == 0) || (length + 1) > CHAR_MAX_LENGTH) {
+        APP_LOGW("failed due to the length of value is empty or too long");
+        name = static_cast<char *>(malloc(CHAR_MIN_LENGTH));
+        if (name == nullptr) {
+            APP_LOGE("failed due to malloc error");
+            return false;
+        }
+        name[0] = '\0';
+        return true;
     }
-    name = static_cast<char*>(malloc(length + 1));
+    name = static_cast<char *>(malloc(length + 1));
     if (name == nullptr) {
         APP_LOGE("failed due to malloc error");
         return false;
     }
+    for (size_t i = 0; i < length; i++) {
+        name[i] = 0; 
+    }
+    name[length] = '\0';
     if (strcpy_s(name, length + 1, value.c_str()) != EOK) {
         APP_LOGE("failed due to strcpy_s error");
         return false;
@@ -362,14 +388,40 @@ bool CopyMetadataStringToChar(char* &name, const std::string &value)
 
 OH_NativeBundle_ModuleMetadata* AllocateModuleMetadata(size_t moduleMetadataSize)
 {
-    if (moduleMetadataSize == 0 || sizeof(OH_NativeBundle_ModuleMetadata) * moduleMetadataSize > MAX_ALLOWED_SIZE) {
+    if (moduleMetadataSize == 0 || moduleMetadataSize > MAX_ALLOWED_SIZE) {
         APP_LOGE("failed due to the length of value is empty or too long");
         return nullptr;
     }
     OH_NativeBundle_ModuleMetadata *moduleMetadata = static_cast<OH_NativeBundle_ModuleMetadata *>(
-        malloc(sizeof(OH_NativeBundle_ModuleMetadata) * moduleMetadataSize));
+        malloc(moduleMetadataSize * sizeof(OH_NativeBundle_ModuleMetadata)));
     if (moduleMetadata == nullptr) {
-        APP_LOGE("Failed to allocate memory for OH_NativeBundle_ModuleMetadata");
+        APP_LOGE("failed to allocate memory for OH_NativeBundle_ModuleMetadata");
+    }
+    ResetModuleMetadataArray(moduleMetadata, moduleMetadataSize);
+    return moduleMetadata;
+}
+
+OH_NativeBundle_ModuleMetadata* FillBundleModuleNames(const std::vector<std::string> &moduleNames)
+{
+    if (moduleNames.empty() || moduleNames.size() > MAX_ALLOWED_SIZE) {
+        APP_LOGE("moduleNames is empty or too long");
+        return nullptr;
+    }
+    OH_NativeBundle_ModuleMetadata *moduleMetadata = static_cast<OH_NativeBundle_ModuleMetadata *>(
+        malloc(moduleNames.size() * sizeof(OH_NativeBundle_ModuleMetadata)));
+    if (moduleMetadata == nullptr) {
+        APP_LOGE("failed to allocate memory for OH_NativeBundle_ModuleMetadata");
+        return nullptr;
+    }
+    ResetModuleMetadataArray(moduleMetadata, moduleNames.size());
+    for (size_t i = 0; i < moduleNames.size(); ++i) {
+        if (!CopyMetadataStringToChar(moduleMetadata[i].moduleName, moduleNames[i])) {
+            APP_LOGE("failed to allocate memory for OH_NativeBundle_ModuleMetadata moduleName");
+            FreeModuleMetadataArray(moduleMetadata, i + 1);
+            return nullptr;
+        }
+        moduleMetadata[i].metadataArray = nullptr;
+        moduleMetadata[i].metadataArraySize = 0;
     }
     return moduleMetadata;
 }
@@ -378,7 +430,7 @@ bool FillModuleMetadata(OH_NativeBundle_ModuleMetadata &moduleMetadata, const st
     const std::vector<OHOS::AppExecFwk::Metadata> &metadataArray)
 {
     if (!CopyMetadataStringToChar(moduleMetadata.moduleName, moduleName.c_str())) {
-        APP_LOGE("Failed to allocate memory for OH_NativeBundle_ModuleMetadata moduleName");
+        APP_LOGE("failed to allocate memory for OH_NativeBundle_ModuleMetadata moduleName");
         return false;
     }
 
@@ -386,36 +438,38 @@ bool FillModuleMetadata(OH_NativeBundle_ModuleMetadata &moduleMetadata, const st
     if (metadataArraySize == 0) {
         moduleMetadata.metadataArray = nullptr;
         moduleMetadata.metadataArraySize = metadataArraySize;
+        APP_LOGI("metadataArray is empty");
         return true;
     }
 
-    if (sizeof(OH_NativeBundle_Metadata) * metadataArraySize > MAX_ALLOWED_SIZE) {
-        APP_LOGE("failed due to the length of value is too long");
+    if (metadataArraySize > MAX_ALLOWED_SIZE) {
+        APP_LOGE("metadataArraySize is too long");
         return false;
     }
 
     moduleMetadata.metadataArray =
-        static_cast<OH_NativeBundle_Metadata *>(malloc(sizeof(OH_NativeBundle_Metadata) * metadataArraySize));
+        static_cast<OH_NativeBundle_Metadata *>(malloc(metadataArraySize * sizeof(OH_NativeBundle_Metadata)));
     if (moduleMetadata.metadataArray == nullptr) {
-        APP_LOGE("Failed to allocate memory for metadataArray");
+        APP_LOGE("failed to allocate memory for metadataArray");
         return false;
     }
+    ResetMetadataArray(moduleMetadata.metadataArray, metadataArraySize);
+    moduleMetadata.metadataArraySize = metadataArraySize;
 
     for (size_t j = 0; j < metadataArraySize; ++j) {
         if (!CopyMetadataStringToChar(moduleMetadata.metadataArray[j].name, metadataArray[j].name.c_str())) {
-            APP_LOGE("Failed to allocate memory for OH_NativeBundle_ModuleMetadata name");
+            APP_LOGE("failed to allocate memory for OH_NativeBundle_ModuleMetadata name");
             return false;
         }
         if (!CopyMetadataStringToChar(moduleMetadata.metadataArray[j].value, metadataArray[j].value.c_str())) {
-            APP_LOGE("Failed to allocate memory for OH_NativeBundle_ModuleMetadata value");
+            APP_LOGE("failed to allocate memory for OH_NativeBundle_ModuleMetadata value");
             return false;
         }
         if (!CopyMetadataStringToChar(moduleMetadata.metadataArray[j].resource, metadataArray[j].resource.c_str())) {
-            APP_LOGE("Failed to allocate memory for OH_NativeBundle_ModuleMetadata resource");
+            APP_LOGE("failed to allocate memory for OH_NativeBundle_ModuleMetadata resource");
             return false;
         }
     }
-    moduleMetadata.metadataArraySize = metadataArraySize;
     return true;
 }
 
@@ -425,13 +479,15 @@ OH_NativeBundle_ModuleMetadata* CreateModuleMetadata(const std::map<std::string,
     auto moduleMetadataSize = metadata.size();
     OH_NativeBundle_ModuleMetadata *moduleMetadata = AllocateModuleMetadata(moduleMetadataSize);
     if (moduleMetadata == nullptr) {
+        APP_LOGE("allocate module metadata failed");
         return nullptr;
     }
 
     size_t i = 0;
     for (const auto &[moduleName, metadataArray] : metadata) {
         if (!FillModuleMetadata(moduleMetadata[i], moduleName, metadataArray)) {
-            FreeModuleMetadata(moduleMetadata, i + 1);
+            FreeModuleMetadataArray(moduleMetadata, i + 1);
+            APP_LOGE("fill module metadata failed");
             return nullptr;
         }
         ++i;
@@ -449,40 +505,36 @@ OH_NativeBundle_ModuleMetadata* OH_NativeBundle_GetModuleMetadata(size_t* size)
     *size = 0;
     OHOS::AppExecFwk::BundleMgrProxyNative bundleMgrProxyNative;
     OHOS::AppExecFwk::BundleInfo bundleInfo;
-    auto bundlInfoFlag =
+    auto bundleInfoFlag =
         static_cast<uint32_t>(OHOS::AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) |
         static_cast<uint32_t>(OHOS::AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
 
-    if (!bundleMgrProxyNative.GetBundleInfoForSelf(bundlInfoFlag, bundleInfo)) {
-        APP_LOGE("Failed to get bundleInfo for self, flags: %{public}d", bundlInfoFlag);
+    if (!bundleMgrProxyNative.GetBundleInfoForSelf(bundleInfoFlag, bundleInfo)) {
+        APP_LOGE("failed to get bundleInfo for self, flags: %{public}d", bundleInfoFlag);
         return nullptr;
     }
 
-    OH_NativeBundle_ModuleMetadata* moduleMetadata = nullptr;
+    OH_NativeBundle_ModuleMetadata *moduleMetadata = nullptr;
 
     if (bundleInfo.applicationInfo.metadata.empty()) {
-        APP_LOGW("bundleInfo applicationInfo metadata is empty");
-        moduleMetadata = (OH_NativeBundle_ModuleMetadata*)malloc(
-            sizeof(OH_NativeBundle_ModuleMetadata));
-        if (moduleMetadata == nullptr) {
-            APP_LOGE("Failed to malloc moduleMetadata");
+        if (bundleInfo.moduleNames.empty()) {
+            APP_LOGE("bundleInfo applicationInfo metadata and bundleInfo moduleNames is empty");
             return nullptr;
         }
 
-        if (!CopyMetadataStringToChar(moduleMetadata->moduleName, bundleInfo.applicationInfo.entryModuleName.c_str())) {
-            free(moduleMetadata);
-            moduleMetadata = nullptr;
-            APP_LOGE("Failed to allocate memory for OH_NativeBundle_ModuleMetadata entryModuleName");
+        moduleMetadata = FillBundleModuleNames(bundleInfo.moduleNames);
+        if (moduleMetadata == nullptr) {
+            APP_LOGE("failed to fill bundle module names");
             return nullptr;
         }
-        moduleMetadata->metadataArray = nullptr;
-        moduleMetadata->metadataArraySize = 0;
-        *size = 1;
+
+        *size = bundleInfo.moduleNames.size();
+        APP_LOGI("bundleInfo applicationInfo metadata is empty");
         return moduleMetadata;
     }
     moduleMetadata = CreateModuleMetadata(bundleInfo.applicationInfo.metadata);
     if (moduleMetadata == nullptr) {
-        APP_LOGE("Failed to create moduleMetadata");
+        APP_LOGE("failed to create moduleMetadata");
         return nullptr;
     }
     *size = bundleInfo.applicationInfo.metadata.size();
