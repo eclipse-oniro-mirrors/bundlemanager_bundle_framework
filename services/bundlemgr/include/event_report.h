@@ -131,6 +131,9 @@ struct EventInfo {
 
     // AOT
     bool compileResult = false;
+
+    bool isPatch = false;
+
     InstallScene preBundleScene = InstallScene::NORMAL;
 
     // only used in user event

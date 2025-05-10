@@ -6869,6 +6869,26 @@ HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0010, Function | SmallTes
 }
 
 /**
+ * @tc.number: SendBundleSystemEvent_0020
+ * @tc.name: test SendBundleSystemEvent
+ * @tc.desc: 1.SendBundleSystemEvent
+ */
+HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0020, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.isPatch = true;
+    BaseBundleInstaller installer;
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::INSTALL, installParam, InstallScene::NORMAL, ERR_OK);
+    ASSERT_TRUE(installer.sysEventInfo_.isPatch);
+
+    installParam.isPatch = false;
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::INSTALL, installParam, InstallScene::NORMAL, ERR_OK);
+    ASSERT_FALSE(installer.sysEventInfo_.isPatch);
+}
+
+/**
  * @tc.number: CreateSharedBundleTempDir_0100
  * @tc.name: test CreateSharedBundleTempDir
  * @tc.desc: 1.test CreateSharedBundleTempDir of BundleUtil
