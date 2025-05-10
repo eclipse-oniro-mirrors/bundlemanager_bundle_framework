@@ -89,6 +89,10 @@ public:
 
     bool DeleteNotExistResourceInfo();
 
+    bool GetExtensionAbilityResourceInfo(const std::string &bundleName,
+        const ExtensionAbilityType extensionAbilityType, const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex = 0);
+
 private:
     bool AddResourceInfo(const int32_t userId, ResourceInfo &resourceInfo);
 

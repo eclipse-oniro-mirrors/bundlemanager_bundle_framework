@@ -346,6 +346,7 @@ enum class BundleResourceInterfaceCode : uint8_t {
     ADD_RESOURCE_INFO_BY_BUNDLE_NAME = 4,
     ADD_RESOURCE_INFO_BY_ABILITY = 5,
     DELETE_RESOURCE_INFO = 6,
+    GET_EXTENSION_ABILITY_RESOURCE_INFO = 7,
 };
 
 /* SAID: 401-126 Interface No.126 subservice also provides the following interfaces */
