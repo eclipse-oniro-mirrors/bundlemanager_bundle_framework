@@ -24,6 +24,7 @@
 #include "rdb_data_manager.h"
 #include "resource_info.h"
 #include "single_delayed_task_mgr.h"
+#include "extension_ability_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -63,6 +64,13 @@ public:
 
     bool DeleteNotExistResourceInfo();
 
+    bool GetExtensionAbilityResourceInfo(const std::string &bundleName,
+        const ExtensionAbilityType extensionAbilityType, const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex = 0);
+
+    bool GetAllExtensionAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex = 0);
+
 private:
     bool ConvertToBundleResourceInfo(
         const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
@@ -70,6 +78,11 @@ private:
         BundleResourceInfo &bundleResourceInfo);
 
     bool ConvertToLauncherAbilityResourceInfo(
+        const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
+        const uint32_t flags,
+        LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
+
+    bool ConvertToExtensionAbilityResourceInfo(
         const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
         const uint32_t flags,
         LauncherAbilityResourceInfo &launcherAbilityResourceInfo);

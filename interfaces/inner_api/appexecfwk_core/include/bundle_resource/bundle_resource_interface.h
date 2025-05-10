@@ -19,6 +19,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_resource/bundle_resource_info.h"
 #include "bundle_resource/launcher_ability_resource_info.h"
+#include "extension_ability_info.h"
 #include "iremote_broker.h"
 
 namespace OHOS {
@@ -63,6 +64,13 @@ public:
     }
 
     virtual ErrCode DeleteResourceInfo(const std::string &key)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetExtensionAbilityResourceInfo(const std::string &bundleName,
+        const ExtensionAbilityType extensionAbilityType, const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex = 0)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
