@@ -116,6 +116,11 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         return ERR_OK;
     }
 
+    if (info.IsSingleton()) {
+        APP_LOGE("singleton app cannot be installed in other user");
+        return ERR_OK;
+    }
+
     std::string appDistributionType = info.GetAppDistributionType();
     if (appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE
         || appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL
