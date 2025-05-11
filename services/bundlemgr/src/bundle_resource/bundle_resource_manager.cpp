@@ -570,8 +570,7 @@ bool BundleResourceManager::UpdateBundleIcon(const std::string &bundleName, Reso
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), bundleResourceInfo)) {
         APP_LOGW("bundle %{public}s index %{public}d get resource failed", bundleName.c_str(), resourceInfo.appIndex_);
     } else {
-        bundleResourceInfo.appIndex = resourceInfo.appIndex_;
-        resourceInfo.ConvertFromBundleResourceInfo(bundleResourceInfo);
+        BundleResourceConvertToResourceInfo(bundleResourceInfo, resourceInfo);
         resourceInfos.emplace_back(resourceInfo);
     }
 
@@ -581,8 +580,7 @@ bool BundleResourceManager::UpdateBundleIcon(const std::string &bundleName, Reso
         APP_LOGW("bundle %{public}s index %{public}d get resource failed", bundleName.c_str(), resourceInfo.appIndex_);
     } else {
         for (auto &launcherAbilityResourceInfo : launcherAbilityResourceInfos) {
-            launcherAbilityResourceInfo.appIndex = resourceInfo.appIndex_;
-            resourceInfo.ConvertFromLauncherAbilityResourceInfo(launcherAbilityResourceInfo);
+            LauncherAbilityResourceConvertToResourceInfo(launcherAbilityResourceInfo, resourceInfo);
             resourceInfos.emplace_back(resourceInfo);
         }
     }
@@ -824,19 +822,29 @@ bool BundleResourceManager::ProcessUpdateCloneBundleResourceInfo(const std::stri
 void BundleResourceManager::BundleResourceConvertToResourceInfo(
     const BundleResourceInfo &bundleResourceInfo, ResourceInfo &resourceInfo)
 {
+    // no need to process icon, use dynamic icon
     resourceInfo.bundleName_ = bundleResourceInfo.bundleName;
     resourceInfo.moduleName_ = Constants::EMPTY_STRING;
     resourceInfo.abilityName_ = Constants::EMPTY_STRING;
-    resourceInfo.label_ = bundleResourceInfo.label;
+    if (bundleResourceInfo.appIndex == resourceInfo.appIndex_) {
+        resourceInfo.label_ = bundleResourceInfo.label;
+    } else {
+        resourceInfo.label_ = bundleResourceInfo.label + std::to_string(resourceInfo.appIndex_);
+    }
 }
 
 void BundleResourceManager::LauncherAbilityResourceConvertToResourceInfo(
     const LauncherAbilityResourceInfo &launcherAbilityResourceInfo, ResourceInfo &resourceInfo)
 {
+    // no need to process icon, use dynamic icon
     resourceInfo.bundleName_ = launcherAbilityResourceInfo.bundleName;
     resourceInfo.abilityName_ = launcherAbilityResourceInfo.abilityName;
     resourceInfo.moduleName_ = launcherAbilityResourceInfo.moduleName;
-    resourceInfo.label_ = launcherAbilityResourceInfo.label;
+    if (launcherAbilityResourceInfo.appIndex == resourceInfo.appIndex_) {
+        resourceInfo.label_ = launcherAbilityResourceInfo.label;
+    } else {
+        resourceInfo.label_ = launcherAbilityResourceInfo.label + std::to_string(resourceInfo.appIndex_);
+    }
 }
 } // AppExecFwk
 } // OHOS
