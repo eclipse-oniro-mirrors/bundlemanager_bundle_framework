@@ -474,6 +474,7 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     bool hitCache = ApiCacheManager::GetInstance().PreSendRequest(GetDescriptor(),
         static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF), data, reply);
     if (hitCache) {
@@ -491,15 +492,15 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
         return errCode;
     }
     LOG_D(BMS_TAG_QUERY, "not hitCache, flag %{public}d", flags);
-
+    MessageParcel replyForReal;
     auto res = GetParcelableInfoWithErrCodeReply<BundleInfo>(
-        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, reply, bundleInfo);
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, replyForReal, bundleInfo);
     if (res != ERR_OK) {
         LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForSelf failed err:%{public}d", res);
         return res;
     }
     ApiCacheManager::GetInstance().PostSendRequest(GetDescriptor(),
-        static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF), data, reply);
+        static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF), data, replyForReal);
     return ERR_OK;
 }
 
