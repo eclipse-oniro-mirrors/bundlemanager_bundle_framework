@@ -275,6 +275,7 @@ struct App {
     MultiAppMode multiAppMode;
     std::string configuration;
     std::vector<std::string> assetAccessGroups;
+    std::string startMode = Profile::START_MODE_MAIN_TASK;
 };
 
 struct Module {
@@ -1311,6 +1312,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        START_MODE,
+        app.startMode,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -2071,6 +2078,9 @@ bool ToApplicationInfo(
     if (app.bundleType == Profile::BUNDLE_TYPE_ATOMIC_SERVICE) {
         applicationInfo.bundleType = BundleType::ATOMIC_SERVICE;
     }
+    if (app.startMode == Profile::START_MODE_RECENT_TASK) {
+        applicationInfo.startMode = StartMode::RECENT_TASK;
+    }
 
     // device adapt
     std::string deviceType = GetDeviceType();
@@ -2285,7 +2295,7 @@ bool ToAbilityInfo(
     if (!ability.continueBundleNames.empty()) {
         abilityInfo.continueBundleNames.insert(ability.continueBundleNames.begin(), ability.continueBundleNames.end());
     }
-    
+
     abilityInfo.maxWindowRatio = ability.maxWindowRatio;
     abilityInfo.minWindowRatio = ability.minWindowRatio;
     abilityInfo.maxWindowWidth = ability.maxWindowWidth;

@@ -1851,6 +1851,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
     baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
     baseApplicationInfo_->configuration = applicationInfo.configuration;
+    baseApplicationInfo_->startMode = applicationInfo.startMode;
     if (newInfo.HasEntry()) {
         baseApplicationInfo_->assetAccessGroups = applicationInfo.assetAccessGroups;
     }
@@ -5108,7 +5109,7 @@ const std::string InnerBundleInfo::GetCurDynamicIconModule(const int32_t userId,
     if (appIndex == 0) {
         return infoItem->second.curDynamicIconModule;
     }
-    
+
     std::string cloneInfoKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
     auto cloneInfoItem = infoItem->second.cloneInfos.find(cloneInfoKey);
     if (cloneInfoItem == infoItem->second.cloneInfos.end()) {
