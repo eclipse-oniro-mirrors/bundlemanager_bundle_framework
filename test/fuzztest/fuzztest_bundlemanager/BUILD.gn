@@ -1,0 +1,66 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
+
+group("bundlemanagerfuzztest") {
+  testonly = true
+  deps = []
+
+  deps += [
+    # deps file
+    "bmsappcontrolhost_fuzzer:BMSAppControlHostFuzzTest",
+    "bmsapplicationinfo_fuzzer:BMSApplicationInfoFuzzTest",
+    "bmsapplicationinfofromjson_fuzzer:BMSApplicationInfoFromJsonFuzzTest",
+    "bmsbundlefileutil_fuzzer:BMSBundleFileUtilFuzzTest",
+    "bmsbundleinfo_fuzzer:BMSBundleInfoFuzzTest",
+    "bmsbundleinstallerhost_fuzzer:BMSBundleInstallerHostFuzzTest",
+    "bmsbundleinstallerproxy_fuzzer:BMSBundleInstallerProxyFuzzTest",
+    "bmsbundlemgrhost_fuzzer:BMSBundleMgrHostFuzzTest",
+    "bmsbundlemgrproxypartfour_fuzzer:BMSBundleMgrProxyFuzzPartFourTest",
+    "bmsbundlemgrproxypartone_fuzzer:BMSBundleMgrProxyFuzzPartOneTest",
+    "bmsbundlemgrproxypartthree_fuzzer:BMSBundleMgrProxyFuzzPartThreeTest",
+    "bmsbundlemgrproxyparttwo_fuzzer:BMSBundleMgrProxyFuzzPartTwoTest",
+    "bmsbundleresourcehost_fuzzer:BMSBundleResourceHostFuzzTest",
+    "bmsbundlestatuscallbackproxy_fuzzer:BMSBundleStatusCallbackProxyFuzzTest",
+    "bmsbundlestreaminstallerhost_fuzzer:BMSBundleStreamInstallerHostFuzzTest",
+    "bmsbundlestreaminstallerproxy_fuzzer:BMSBundleStreamInstallerProxyFuzzTest",
+    "bmsbundlesyscap_fuzzer:BMSBundleSysCapFuzzTest",
+    "bmsbundleuserinfo_fuzzer:BMSBundleUserInfoFuzzTest",
+    "bmsbundleusermgrhost_fuzzer:BMSBundleUserMgrHostFuzzTest",
+    "bmsbundleusermgrproxy_fuzzer:BMSBundleUserMgrProxyFuzzTest",
+    "bmscheckissystemappbyuid_fuzzer:BMSCheckIsSystemAppByUidFuzzTest",
+    "bmscleanbundlecachefiles_fuzzer:BMSCleanBundleCacheFilesFuzzTest",
+    "bmscleanbundledatafiles_fuzzer:BMSCleanBundleDataFilesFuzzTest",
+    "bmscleancachecallbackproxy_fuzzer:BMSCleanCacheCallbackProxyFuzzTest",
+    "bmsverifymanagerhost_fuzzer:BMSVerifyManagerHostFuzzTest"
+  ]
+
+  if (bundle_framework_default_app) {
+    deps += [
+      "bmsdefaultapphost_fuzzer:BMSDefaultAppHostFuzzTest"
+    ]
+  }
+
+  if (bundle_framework_app_control) {
+    deps += [
+      "bmsaddappInstallcontrolrule_fuzzer:BMSAddAppInstallControlRuleFuzzTest",
+      "bmsaddappjumpcontrolrule_fuzzer:BMSAddAppJumpControlRuleFuzzTest",
+      "bmsaddapprunningcontrolrule_fuzzer:BMSAddAppRunningControlRuleFuzzTest",
+      "bmsapprunningcontrolrule_fuzzer:BMSAppRunningControlRuleFuzzTest",
+      "bmsapprunningcontrolruleresult_fuzzer:BMSAppRunningControlRuleResultFuzzTest",
+      "bmsdeleteappinstallcontrolrule_fuzzer:BMSDeleteAppInstallControlRuleFuzzTest",
+      "bmsdeleteapprunningcontrolrule_fuzzer:BMSDeleteAppRunningControlRuleFuzzTest"
+    ]
+  }
+}

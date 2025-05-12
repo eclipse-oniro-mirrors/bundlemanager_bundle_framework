@@ -13,34 +13,31 @@
  * limitations under the License.
  */
 
+#include <cstddef>
+#include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
 
-#include "message_parcel.h"
-#include "message_option.h"
-#include "bundle_info.h"
+#include "bundle_stream_installer_proxy.h"
 
-#include "bmsbundleinfo_fuzzer.h"
+#include "bmsbundlestreaminstallerproxy_fuzzer.h"
 #include "../../bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
-    bool fuzzabundleinfounmarshalling(const uint8_t* data, size_t size)
+    bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
-        Parcel dataMessageParcel;
-        BundleInfo oldBundleInfo;
+        sptr<IRemoteObject> object;
+        BundleStreamInstallerProxy callbackProxy(object);
         FuzzedDataProvider fdp(data, size);
-        AppExecFwk::BMSFuzzTestUtil::GenerateBundleInfo(fdp, oldBundleInfo);
-        if (!oldBundleInfo.Marshalling(dataMessageParcel)) {
-            return false;
-        }
-        BundleInfo *info = new (std::nothrow) BundleInfo();
-        if (info == nullptr) {
-            return false;
-        }
-        bool ret = info->ReadFromParcel(dataMessageParcel);
-        delete info;
-        info = nullptr;
-        return ret;
+        std::string hapName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        callbackProxy.CreateStream(hapName);
+        callbackProxy.Install();
+        callbackProxy.GetInstallerId();
+        uint32_t installerId = fdp.ConsumeIntegral<uint32_t>();
+        callbackProxy.SetInstallerId(installerId);
+        callbackProxy.UnInit();
+        return true;
     }
 }
 
@@ -48,6 +45,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     // Run your code on data.
-    OHOS::fuzzabundleinfounmarshalling(data, size);
+    OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }
