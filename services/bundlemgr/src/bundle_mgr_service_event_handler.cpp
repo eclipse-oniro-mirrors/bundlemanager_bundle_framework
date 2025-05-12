@@ -3712,7 +3712,6 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     appInfo.resourcesApply = preBundleConfigInfo.resourcesApply;
     appInfo.allowAppRunWhenDeviceFirstLocked = preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked;
     appInfo.allowEnableNotification = preBundleConfigInfo.allowEnableNotification;
-    appInfo.allowArkTsLargeHeap = preBundleConfigInfo.allowArkTsLargeHeap;
     appInfo.hideDesktopIcon = preBundleConfigInfo.hideDesktopIcon;
     appInfo.allowMultiProcess = preBundleConfigInfo.allowMultiProcess;
     appInfo.userDataClearable = preBundleConfigInfo.userDataClearable;

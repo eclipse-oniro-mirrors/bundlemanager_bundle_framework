@@ -1839,6 +1839,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
     baseApplicationInfo_->bundleType = applicationInfo.bundleType;
     baseApplicationInfo_->allowMultiProcess = applicationInfo.allowMultiProcess;
+    baseApplicationInfo_->allowArkTsLargeHeap = applicationInfo.allowArkTsLargeHeap;
     UpdatePrivilegeCapability(applicationInfo);
     SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
@@ -1960,9 +1961,6 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     }
     if (applicationInfo.formVisibleNotify) {
         baseApplicationInfo_->formVisibleNotify = true;
-    }
-    if (applicationInfo.allowArkTsLargeHeap) {
-        baseApplicationInfo_->allowArkTsLargeHeap = true;
     }
 }
 
