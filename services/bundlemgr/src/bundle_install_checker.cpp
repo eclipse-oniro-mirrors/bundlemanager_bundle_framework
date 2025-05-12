@@ -1289,9 +1289,6 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
 
     appPrivilegeCapability.allowEnableNotification = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_ENABLE_NOTIFICATION, configInfo.allowEnableNotification, appPrivilegeCapability.allowEnableNotification);
-
-    appPrivilegeCapability.allowArkTsLargeHeap = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
-        ALLOW_ARK_TS_LARGE_HEAP, configInfo.allowArkTsLargeHeap, appPrivilegeCapability.allowArkTsLargeHeap);
     LOG_D(BMS_TAG_INSTALLER, "AppPrivilegeCapability %{public}s", appPrivilegeCapability.ToString().c_str());
 #endif
 }

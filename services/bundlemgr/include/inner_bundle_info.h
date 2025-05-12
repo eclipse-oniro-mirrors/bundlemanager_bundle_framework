@@ -1663,11 +1663,6 @@ public:
         baseApplicationInfo_->allowEnableNotification = allowEnableNotification;
     }
 
-    void SetAllowArkTsLargeHeap(bool allowArkTsLargeHeap)
-    {
-        baseApplicationInfo_->allowArkTsLargeHeap = allowArkTsLargeHeap;
-    }
-
     const std::string &GetCpuAbi() const
     {
         return baseApplicationInfo_->cpuAbi;
