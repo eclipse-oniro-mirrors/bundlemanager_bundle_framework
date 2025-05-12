@@ -212,6 +212,9 @@ ohos_unittest("BmsBundleMultiuserInstallPermissionTest") {
   sources +=
       [ "${services_path}/bundlemgr/test/mock/src/mock_install_client.cpp" ]
 
+  sources -= [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp" ]
+
   sources += [ "bms_bundle_multiuser_install_permission_test.cpp" ]
 
   configs = [

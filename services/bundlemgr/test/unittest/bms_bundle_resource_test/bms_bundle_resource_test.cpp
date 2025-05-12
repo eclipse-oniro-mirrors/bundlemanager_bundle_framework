@@ -155,7 +155,7 @@ ErrCode BmsBundleResourceTest::InstallBundle(const std::string &bundlePath) cons
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     InstallParam installParam;
-    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
     installParam.withCopyHaps = true;
     bool result = installer->Install(bundlePath, installParam, receiver);
