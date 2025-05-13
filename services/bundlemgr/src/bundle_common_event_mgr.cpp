@@ -153,7 +153,7 @@ bool BundleCommonEventMgr::ProcessBundleChangedEventForOtherUsers(
     auto userIds = dataMgr->GetUserIds(bundleName);
     if (userIds.size() <= 1) {
         APP_LOGD("-n %{public}s only has one user", bundleName.c_str());
-        return true;
+        return false;
     }
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
