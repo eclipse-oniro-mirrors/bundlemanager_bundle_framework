@@ -835,6 +835,7 @@ private:
         const std::string &modulePath, std::string &nativeLibraryPath, std::string &targetSoPath);
     ErrCode RecoverOnDemandInstallBundle(const std::string &bundleName,
         const InstallParam &installParam, int32_t &uid);
+    void PrintStartWindowIconId(const InnerBundleInfo &info);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;
