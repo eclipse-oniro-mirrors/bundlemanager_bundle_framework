@@ -21,6 +21,7 @@
 #include "bundle_mgr_service.h"
 #include "ffrt_inner.h"
 #include "hitrace_meter.h"
+#include "installd_client.h"
 #include "service_center_connection.h"
 #include "service_center_status_callback.h"
 #include "system_ability_load_callback_stub.h"
@@ -66,7 +67,6 @@ constexpr uint8_t DEFAULT_EMBEDDED_VALUE = 0;
 constexpr int16_t DMS_UID = 5522;
 // sa id
 constexpr int16_t DOWNLOAD_SERVICE_SA_ID = 3706;
-constexpr int16_t INSTALLD_SA_ID = 511;
 // replace want int ecological rule
 constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
 
@@ -123,13 +123,13 @@ void BundleConnectAbilityMgr::ProcessPreloadRequestToServiceCenter(int32_t flag,
         LOG_E(BMS_TAG_DEFAULT, "Fail to query ServiceCenter ability and bundle name");
         return;
     }
+    InstalldClient::GetInstance()->LoadInstalls();
     auto task = [ owner = weak_from_this() ] {
         auto mgr = owner.lock();
         if (mgr == nullptr) {
             LOG_E(BMS_TAG_DEFAULT, "BundleConnectAbilityMgr is nullptr");
             return;
         }
-        mgr->LoadService(INSTALLD_SA_ID);
         mgr->LoadService(DOWNLOAD_SERVICE_SA_ID);
     };
     std::thread loadServiceThread(task);
@@ -392,13 +392,13 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
     }
     Want serviceCenterWant;
     serviceCenterWant.SetElementName(bundleName, abilityName);
+    InstalldClient::GetInstance()->LoadInstalls();
     auto task = [ owner = weak_from_this() ] {
         auto mgr = owner.lock();
         if (mgr == nullptr) {
             LOG_E(BMS_TAG_DEFAULT, "BundleConnectAbilityMgr is nullptr");
             return;
         }
-        mgr->LoadService(INSTALLD_SA_ID);
         mgr->LoadService(DOWNLOAD_SERVICE_SA_ID);
     };
     std::thread loadServiceThread(task);

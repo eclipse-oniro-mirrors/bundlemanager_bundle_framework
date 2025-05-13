@@ -142,6 +142,11 @@ ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,
     return 0;
 }
 
+ErrCode InstalldClient::LoadInstalls()
+{
+    return 0;
+}
+
 ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
     bool isPreInstallApp, bool debug)
 {

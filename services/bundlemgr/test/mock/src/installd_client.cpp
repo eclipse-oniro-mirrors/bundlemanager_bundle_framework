@@ -536,5 +536,10 @@ ErrCode InstalldClient::DeleteDataGroupDirs(const std::vector<std::string> &uuid
     }
     return CallService(&IInstalld::DeleteDataGroupDirs, uuidList, userId);
 }
+
+ErrCode InstalldClient::LoadInstalls()
+{
+    return CallService(&IInstalld::LoadInstalls);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
