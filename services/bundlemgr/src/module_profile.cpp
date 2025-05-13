@@ -2299,6 +2299,8 @@ bool ToAbilityInfo(
     }
     abilityInfo.orientationId = ability.orientationId;
     abilityInfo.process = ability.process;
+    APP_LOGI("startWindowIconId %{public}s_%{public}s_%{public}s_%{public}d", abilityInfo.bundleName.c_str(),
+        abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(), abilityInfo.startWindowIconId);
     return true;
 }
 
