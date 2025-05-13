@@ -693,7 +693,7 @@ bool BundleUtil::CopyFile(
     return true;
 }
 
-bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &destPath)
+bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &destPath, const bool needFsync)
 {
     APP_LOGI("sourcePath : %{private}s, destPath : %{private}s", sourcePath.c_str(), destPath.c_str());
     if (sourcePath.empty() || destPath.empty()) {
@@ -743,6 +743,9 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
     }
 
     close(sourceFd);
+    if (needFsync) {
+        (void)fsync(destFd);
+    }
     close(destFd);
     APP_LOGD("sendfile success");
     return true;
