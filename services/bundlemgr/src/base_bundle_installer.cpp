@@ -183,12 +183,12 @@ void BaseBundleInstaller::SendStartInstallNotify(const InstallParam &installPara
             bundleName_.c_str(), item.second.GetCurModuleName().c_str(),
             item.second.GetAppId().c_str(), item.second.GetAppIdentifier().c_str());
         NotifyBundleEvents installRes = {
+            .isAppUpdate = isAppExist,
             .type = NotifyType::START_INSTALL,
             .bundleName = bundleName_,
             .modulePackage = item.second.GetCurModuleName(),
             .appId = item.second.GetAppId(),
-            .appIdentifier = item.second.GetAppIdentifier(),
-            .isAppUpdate = isAppExist
+            .appIdentifier = item.second.GetAppIdentifier()
         };
         NotifyBundleStatus(installRes);
     }
