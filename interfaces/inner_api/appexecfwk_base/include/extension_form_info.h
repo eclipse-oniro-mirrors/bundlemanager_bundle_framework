@@ -54,6 +54,8 @@ struct ExtensionFormInfo {
     std::vector<FormCustomizeData> metadata {};
     std::vector<int32_t> supportShapes {};
     std::vector<uint32_t> previewImages {};
+    FormFunInteractionParams funInteractionParams;
+    FormSceneAnimationParams sceneAnimationParams;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

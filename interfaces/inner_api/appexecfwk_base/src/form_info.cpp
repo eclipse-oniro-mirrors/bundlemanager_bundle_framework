@@ -75,6 +75,13 @@ const char* JSON_KEY_BUNDLE_TYPE = "bundleType";
 const char* JSON_KEY_PREVIEW_IMAGES = "previewImages";
 const char* JSON_KEY_ENABLE_BLUR_BACKGROUND = "enableBlurBackground";
 const char* JSON_KEY_APP_FORM_VISIBLE_NOTIFY = "appFormVisibleNotify";
+const char* JSON_KEY_FUN_INTERACTION_PARAMS = "funInteractionParams";
+const char* JSON_KEY_SCENE_ANIMATION_PARAMS = "sceneAnimationParams";
+const char* JSON_KEY_ABILITY_NAME = "abilityName";
+const char* JSON_KEY_IS_ALWAYS_ACTIVE = "isAlwaysActive";
+const char* JSON_KEY_DISABLED_DESKTOP_BEHAVIORS = "disabledDesktopBehaviors";
+const char* JSON_KEY_TARGET_BUNDLE_NAME = "targetBundleName";
+const char* JSON_KEY_KEEP_STATE_DURATION = "keepStateDuration";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -116,6 +123,12 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     for (const auto &metadata : formInfo.metadata) {
         customizeDatas.push_back(metadata);
     }
+    funInteractionParams.abilityName = formInfo.funInteractionParams.abilityName;
+    funInteractionParams.targetBundleName = formInfo.funInteractionParams.targetBundleName;
+    funInteractionParams.keepStateDuration = formInfo.funInteractionParams.keepStateDuration;
+    sceneAnimationParams.abilityName = formInfo.sceneAnimationParams.abilityName;
+    sceneAnimationParams.isAlwaysActive = formInfo.sceneAnimationParams.isAlwaysActive;
+    sceneAnimationParams.disabledDesktopBehaviors = formInfo.sceneAnimationParams.disabledDesktopBehaviors;
     SetInfoByFormExt(formInfo);
 }
 
@@ -264,6 +277,12 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     }
     enableBlurBackground = parcel.ReadBool();
     appFormVisibleNotify = parcel.ReadBool();
+    funInteractionParams.abilityName = Str16ToStr8(parcel.ReadString16());
+    funInteractionParams.targetBundleName = Str16ToStr8(parcel.ReadString16());
+    funInteractionParams.keepStateDuration = parcel.ReadInt32();
+    sceneAnimationParams.abilityName = Str16ToStr8(parcel.ReadString16());
+    sceneAnimationParams.isAlwaysActive = parcel.ReadBool();
+    sceneAnimationParams.disabledDesktopBehaviors = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -360,6 +379,12 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enableBlurBackground);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, appFormVisibleNotify);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(funInteractionParams.abilityName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(funInteractionParams.targetBundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, funInteractionParams.keepStateDuration);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.abilityName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, sceneAnimationParams.isAlwaysActive);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.disabledDesktopBehaviors));
     return true;
 }
 
@@ -384,6 +409,20 @@ void to_json(nlohmann::json &jsonObject, const FormWindow &formWindow)
 {
     jsonObject[JSON_KEY_DESIGN_WIDTH] = formWindow.designWidth;
     jsonObject[JSON_KEY_AUTO_DESIGN_WIDTH] = formWindow.autoDesignWidth;
+}
+
+void to_json(nlohmann::json &jsonObject, const FormFunInteractionParams &funInteractionParams)
+{
+    jsonObject[JSON_KEY_ABILITY_NAME] = funInteractionParams.abilityName,
+    jsonObject[JSON_KEY_TARGET_BUNDLE_NAME] = funInteractionParams.targetBundleName,
+    jsonObject[JSON_KEY_KEEP_STATE_DURATION] = funInteractionParams.keepStateDuration;
+}
+
+void to_json(nlohmann::json &jsonObject, const FormSceneAnimationParams &sceneAnimationParams)
+{
+    jsonObject[JSON_KEY_ABILITY_NAME] = sceneAnimationParams.abilityName,
+    jsonObject[JSON_KEY_IS_ALWAYS_ACTIVE] = sceneAnimationParams.isAlwaysActive,
+    jsonObject[JSON_KEY_DISABLED_DESKTOP_BEHAVIORS] = sceneAnimationParams.disabledDesktopBehaviors;
 }
 
 void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
@@ -432,7 +471,9 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_BUNDLE_TYPE, formInfo.bundleType},
         {JSON_KEY_PREVIEW_IMAGES, formInfo.formPreviewImages},
         {JSON_KEY_ENABLE_BLUR_BACKGROUND, formInfo.enableBlurBackground},
-        {JSON_KEY_APP_FORM_VISIBLE_NOTIFY, formInfo.appFormVisibleNotify}
+        {JSON_KEY_APP_FORM_VISIBLE_NOTIFY, formInfo.appFormVisibleNotify},
+        {JSON_KEY_FUN_INTERACTION_PARAMS, formInfo.funInteractionParams},
+        {JSON_KEY_SCENE_ANIMATION_PARAMS, formInfo.sceneAnimationParams}
     };
 }
 
@@ -477,6 +518,62 @@ void from_json(const nlohmann::json &jsonObject, FormWindow &formWindow)
         parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formWindow jsonObject error : %{public}d", parseResult);
+    }
+}
+
+void from_json(const nlohmann::json &jsonObject, FormFunInteractionParams &funInteractionParams)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_ABILITY_NAME,
+        funInteractionParams.abilityName,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_TARGET_BUNDLE_NAME,
+        funInteractionParams.targetBundleName,
+        false,
+        parseResult);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_KEEP_STATE_DURATION,
+        funInteractionParams.keepStateDuration,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read funInteractionParams jsonObject error: %{public}d", parseResult);
+    }
+}
+
+void from_json(const nlohmann::json &jsonObject, FormSceneAnimationParams &sceneAnimationParams)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_ABILITY_NAME,
+        sceneAnimationParams.abilityName,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_IS_ALWAYS_ACTIVE,
+        sceneAnimationParams.isAlwaysActive,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DISABLED_DESKTOP_BEHAVIORS,
+        sceneAnimationParams.disabledDesktopBehaviors,
+        false,
+        parseResult);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read sceneAnimationParams jsonObject error: %{public}d", parseResult);
     }
 }
 
@@ -786,6 +883,22 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         formInfo.appFormVisibleNotify,
         false,
         parseResult);
+    GetValueIfFindKey<FormFunInteractionParams>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_FUN_INTERACTION_PARAMS,
+        formInfo.funInteractionParams,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<FormSceneAnimationParams>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SCENE_ANIMATION_PARAMS,
+        formInfo.sceneAnimationParams,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formInfo jsonObject error : %{public}d", parseResult);
     }

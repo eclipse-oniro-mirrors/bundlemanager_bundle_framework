@@ -127,6 +127,18 @@ struct Metadata {
     std::string value;
 };
 
+struct FormFunInteractionParams {
+    std::string abilityName;
+    std::string targetBundleName;
+    int32_t keepStateDuration = 10000;
+};
+
+struct FormSceneAnimationParams {
+    std::string abilityName;
+    bool isAlwaysActive = false;
+    std::string disabledDesktopBehaviors;
+};
+
 struct ExtensionFormProfileInfo {
     std::string name;
     std::string displayName;
@@ -155,12 +167,62 @@ struct ExtensionFormProfileInfo {
     std::vector<std::string> conditionUpdate {};
     std::vector<Metadata> metadata {};
     std::vector<std::string> previewImages {};
+    FormFunInteractionParams funInteractionParams;
+    FormSceneAnimationParams sceneAnimationParams;
 };
 
 struct ExtensionFormProfileInfoStruct {
     int32_t privacyLevel = 0;
     std::vector<ExtensionFormProfileInfo> forms {};
 };
+
+void from_json(const nlohmann::json &jsonObject, FormFunInteractionParams &funInteractionParams)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::ABILITY_NAME,
+        funInteractionParams.abilityName,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::TARGET_BUNDLE_NAME,
+        funInteractionParams.targetBundleName,
+        false,
+        g_parseResult);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::KEEP_STATE_DURATION,
+        funInteractionParams.keepStateDuration,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+}
+
+void from_json(const nlohmann::json &jsonObject, FormSceneAnimationParams &sceneAnimationParams)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::ABILITY_NAME,
+        sceneAnimationParams.abilityName,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::IS_ALWAYS_ACTIVE,
+        sceneAnimationParams.isAlwaysActive,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::DISABLED_DESKTOP_BEHAVIORS,
+        sceneAnimationParams.disabledDesktopBehaviors,
+        false,
+        g_parseResult);
+}
 
 void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
 {
@@ -377,6 +439,22 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.enableBlurBackground,
         false,
         g_parseResult);
+    GetValueIfFindKey<FormFunInteractionParams>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::FUN_INTERACTION_PARAMS,
+        extensionFormProfileInfo.funInteractionParams,
+        JsonType::OBJECT,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<FormSceneAnimationParams>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::SCENE_ANIMATION_PARAMS,
+        extensionFormProfileInfo.sceneAnimationParams,
+        JsonType::OBJECT,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
@@ -563,6 +641,12 @@ void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormI
     info.scheduledUpdateTime = form.scheduledUpdateTime;
     info.multiScheduledUpdateTime = form.multiScheduledUpdateTime;
     info.updateDuration = form.updateDuration;
+    info.funInteractionParams.abilityName = form.funInteractionParams.abilityName;
+    info.funInteractionParams.targetBundleName = form.funInteractionParams.targetBundleName;
+    info.funInteractionParams.keepStateDuration = form.funInteractionParams.keepStateDuration;
+    info.sceneAnimationParams.abilityName = form.sceneAnimationParams.abilityName;
+    info.sceneAnimationParams.isAlwaysActive = form.sceneAnimationParams.isAlwaysActive;
+    info.sceneAnimationParams.disabledDesktopBehaviors = form.sceneAnimationParams.disabledDesktopBehaviors;
 }
 
 bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
