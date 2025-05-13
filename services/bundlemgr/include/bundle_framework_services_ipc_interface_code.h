@@ -84,6 +84,7 @@ enum class InstalldInterfaceCode : uint32_t {
     DELETE_DATA_GROUP_DIRS = 56,
     BACK_UP_FIRST_BOOT_LOG = 57,
     MIGRATE_DATA = 58,
+    CLEAR_DIR = 59,
 };
 
 } // namespace AppExecFwk

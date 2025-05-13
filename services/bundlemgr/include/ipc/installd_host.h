@@ -233,6 +233,8 @@ private:
 
     bool HandleBackUpFirstBootLog(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleClearDir(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();

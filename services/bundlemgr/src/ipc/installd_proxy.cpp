@@ -1045,6 +1045,17 @@ ErrCode InstalldProxy::BackUpFirstBootLog()
     return TransactInstalldCmd(InstalldInterfaceCode::BACK_UP_FIRST_BOOT_LOG, data, reply, option);
 }
 
+ErrCode InstalldProxy::ClearDir(const std::string &dir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String, dir);
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::CLEAR_DIR, data, reply, option);
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
