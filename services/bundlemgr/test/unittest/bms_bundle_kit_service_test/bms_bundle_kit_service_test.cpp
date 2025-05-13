@@ -1649,7 +1649,7 @@ ErrCode BmsBundleKitServiceTest::MockGetAllBundleCacheStat(const sptr<IProcessCa
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     auto userId = MockGetCurrentActiveUserId();
-    if (userId <= Constants::DEFAULT_USERID) {
+    if (userId <= Constants::U1) {
         APP_LOGE("Invalid userid: %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
@@ -1666,7 +1666,7 @@ ErrCode BmsBundleKitServiceTest::MockCleanAllBundleCache(const sptr<IProcessCach
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     auto userId = MockGetCurrentActiveUserId();
-    if (userId <= Constants::DEFAULT_USERID) {
+    if (userId <= Constants::U1) {
         APP_LOGE("Invalid userid: %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
@@ -12077,6 +12077,24 @@ HWTEST_F(BmsBundleKitServiceTest, SetAllowedAcls_0003, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: IsU1Enable_0001
+ * @tc.name: Test IsU1Enable
+ * @tc.desc: 1.Test IsU1Enable of InnerBundleInfo, acls has PERMISSION_U1_ENABLED
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsU1Enable_0001, Function | SmallTest | Level1)
+{
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    InnerBundleInfo info;
+    bool isU1Enable = info.IsU1Enable();
+    EXPECT_FALSE(isU1Enable);
+    info.SetAllowedAcls(acls);
+    isU1Enable = info.IsU1Enable();
+    EXPECT_TRUE(isU1Enable);
+}
+
+
+/**
  * @tc.number: GetSpecifiedDistributionType_0001
  * @tc.name: test can get the bundleName's SpecifiedDistributionType
  * @tc.desc: 1.system run normally
@@ -14241,6 +14259,24 @@ HWTEST_F(BmsBundleKitServiceTest, Dump_0001, Function | SmallTest | Level0)
     agingRequest.AddAgingBundle(bundleInfo);
     agingRequest.Dump();
     EXPECT_EQ(agingRequest.agingBundles_[0].GetStartCount(), 2);
+}
+
+/**
+ * @tc.number: NotifyBundleStatus_0100
+ * @tc.name: test NotifyBundleStatus
+ * @tc.desc: 1.NotifyBundleStatus
+ */
+HWTEST_F(BmsBundleKitServiceTest, NotifyBundleStatus_0100, Function | SmallTest | Level1)
+{
+    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
+    bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
+    bool result = GetBundleDataMgr()->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_TRUE(result);
+    EXPECT_NE(commonEventMgr_, nullptr);
+    installRes_.uid = 1;
+    commonEventMgr_->NotifyBundleStatus(installRes_, GetBundleDataMgr());
+    int32_t callbackResult = bundleStatusCallback->GetResultCode();
+    EXPECT_EQ(callbackResult, ERR_OK);
 }
 
 /**

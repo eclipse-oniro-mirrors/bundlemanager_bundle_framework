@@ -2634,4 +2634,162 @@ HWTEST_F(BmsBundleInstallCheckerTest, BaseBundleInstaller_0200, Function | Small
     auto ret = baseBundleInstaller.IsEnterpriseForAllUser(installParam, "");
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: CheckNoU1Enable_0100
+ * @tc.name: Test CheckNoU1Enable
+ * @tc.desc: 1.Test CheckNoU1Enable
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckNoU1Enable_0100, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    auto ret = installChecker.CheckNoU1Enable(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckNoU1Enable_0200
+ * @tc.name: Test CheckNoU1Enable
+ * @tc.desc: 1.Test CheckNoU1Enable
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckNoU1Enable_0200, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("2", innerBundleInfo2));
+    auto ret = installChecker.CheckNoU1Enable(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckNoU1Enable_0300
+ * @tc.name: Test CheckNoU1Enable
+ * @tc.desc: 1.Test CheckNoU1Enable
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckNoU1Enable_0300, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    innerBundleInfo1.SetAllowedAcls(acls);
+    EXPECT_FALSE(innerBundleInfo1.GetAllowedAcls().empty());
+
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo2.SetAllowedAcls(acls);
+    EXPECT_FALSE(innerBundleInfo2.GetAllowedAcls().empty());
+
+    infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("2", innerBundleInfo2));
+    auto ret = installChecker.CheckNoU1Enable(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_U1_ENABLE_NOT_SUPPORT_APP_SERVICE_AND_SHARED_BUNDLE);
+}
+
+/**
+ * @tc.number: CheckNoU1Enable_0400
+ * @tc.name: Test CheckNoU1Enable
+ * @tc.desc: 1.Test CheckNoU1Enable
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckNoU1Enable_0400, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    innerBundleInfo1.SetAllowedAcls(acls);
+    EXPECT_FALSE(innerBundleInfo1.GetAllowedAcls().empty());
+
+    InnerBundleInfo innerBundleInfo2;
+    infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("2", innerBundleInfo2));
+    auto ret = installChecker.CheckNoU1Enable(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_U1_ENABLE_NOT_SUPPORT_APP_SERVICE_AND_SHARED_BUNDLE);
+}
+
+/**
+ * @tc.number: CheckU1EnableSameInHaps_0100
+ * @tc.name: Test CheckU1EnableSameInHaps
+ * @tc.desc: 1.Test CheckU1EnableSameInHaps
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckU1EnableSameInHaps_0100, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    bool u1Enable = false;
+    auto ret = installChecker.CheckU1EnableSameInHaps(infos, "", u1Enable);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckU1EnableSameInHaps_0200
+ * @tc.name: Test CheckU1EnableSameInHaps
+ * @tc.desc: 1.Test CheckU1EnableSameInHaps
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckU1EnableSameInHaps_0200, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("2", innerBundleInfo2));
+    bool u1Enable = false;
+    auto ret = installChecker.CheckU1EnableSameInHaps(infos, "", u1Enable);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckU1EnableSameInHaps_0300
+ * @tc.name: Test CheckU1EnableSameInHaps
+ * @tc.desc: 1.Test CheckU1EnableSameInHaps
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckU1EnableSameInHaps_0300, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    innerBundleInfo1.SetAllowedAcls(acls);
+    EXPECT_FALSE(innerBundleInfo1.GetAllowedAcls().empty());
+
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo2.SetAllowedAcls(acls);
+    EXPECT_FALSE(innerBundleInfo2.GetAllowedAcls().empty());
+
+    infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("2", innerBundleInfo2));
+    bool u1Enable = false;
+    auto ret = installChecker.CheckU1EnableSameInHaps(infos, "", u1Enable);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckU1EnableSameInHaps_0400
+ * @tc.name: Test CheckU1EnableSameInHaps
+ * @tc.desc: 1.Test CheckU1EnableSameInHaps
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckU1EnableSameInHaps_0400, Function | SmallTest | Level1)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    innerBundleInfo1.SetAllowedAcls(acls);
+    EXPECT_FALSE(innerBundleInfo1.GetAllowedAcls().empty());
+
+    InnerBundleInfo innerBundleInfo2;
+    infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
+    infos.insert(pair<string, InnerBundleInfo>("2", innerBundleInfo2));
+    bool u1Enable = false;
+    auto ret = installChecker.CheckU1EnableSameInHaps(infos, "", u1Enable);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_U1_ENABLE_NOT_SAME_IN_ALL_BUNDLE_INFOS);
+}
 } // OHOS

@@ -528,6 +528,9 @@ ErrCode BundleInstallChecker::CheckNoU1Enable(const std::unordered_map<std::stri
 ErrCode BundleInstallChecker::CheckU1EnableSameInHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos,
     const std::string &bundleName, bool &u1Enable)
 {
+    if (infos.empty()) {
+        return ERR_OK;
+    }
     u1Enable = infos.begin()->second.IsU1Enable();
     for (auto &item : infos) {
         if (u1Enable != item.second.IsU1Enable()) {

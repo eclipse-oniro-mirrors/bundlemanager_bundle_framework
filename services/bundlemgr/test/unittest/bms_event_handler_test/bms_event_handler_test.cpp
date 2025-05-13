@@ -2381,4 +2381,25 @@ HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTe
     EXPECT_FALSE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
     setuid(Constants::ROOT_UID);
 }
+
+/**
+ * @tc.number: CreateAppInstallDir_0100
+ * @tc.name: CreateAppInstallDir
+ * @tc.desc: test CreateAppInstallDir
+ */
+HWTEST_F(BmsEventHandlerTest, CreateAppInstallDir_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(Constants::U1);
+    dataMgr->AddUserId(Constants::START_USERID);
+    handler->CreateAppInstallDir();
+    std::string path = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::GALLERY_DOWNLOAD_PATH + std::to_string(Constants::U1);
+    EXPECT_EQ(BundleUtil::IsExistDir(path), false);
+    std::string appClonePath = path + ServiceConstants::GALLERY_CLONE_PATH;
+    EXPECT_EQ(BundleUtil::IsExistDir(appClonePath), false);
+}
 } // OHOS

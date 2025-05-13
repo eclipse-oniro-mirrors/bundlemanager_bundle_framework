@@ -77,6 +77,8 @@ constexpr const char* COMPILE_FULL = "full";
 constexpr const char* USER_STATUS_SO_NAME = "libuser_status_client.z.so";
 constexpr const char* FAILURE_REASON_BUNDLE_NOT_EXIST = "bundle not exist";
 constexpr const char* UPDATE_TYPE_NIGHT = "night";
+const int32_t TEST_U0 = 0;
+const int32_t TEST_U1 = 1;
 }  // namespace
 
 class BmsAOTMgrTest : public testing::Test {
@@ -1800,5 +1802,16 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_1000, Function | SmallTest | Level1)
     EXPECT_EQ(ret, ERR_OK);
     InstalldClient::GetInstance()->installdProxy_ = nullptr;
     InstalldClient::GetInstance()->GetInstalldProxy();
+}
+
+/**
+* @tc.number: CheckAllUser_0010
+* @tc.name: test CheckAllUser
+* @tc.desc: 1.test CheckAllUser
+*/
+HWTEST_F(BmsAOTMgrTest, CheckAllUser_0010, Function | SmallTest | Level1)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->AddUserId(TEST_U1);
+    DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
 }
 } // OHOS
