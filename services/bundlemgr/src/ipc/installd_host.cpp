@@ -233,6 +233,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::MIGRATE_DATA):
             result = HandleMigrateData(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CLEAR_DIR):
+            result = HandleClearDir(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1076,6 +1079,14 @@ bool InstalldHost::HandleBackUpFirstBootLog(MessageParcel &data, MessageParcel &
     if (result != ERR_OK) {
         return false;
     }
+    return true;
+}
+
+bool InstalldHost::HandleClearDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string dir = data.ReadString();
+    ErrCode result = ClearDir(dir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 }  // namespace AppExecFwk

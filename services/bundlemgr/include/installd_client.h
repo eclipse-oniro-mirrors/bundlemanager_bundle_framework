@@ -257,6 +257,8 @@ public:
 
     ErrCode BackUpFirstBootLog();
 
+    ErrCode ClearDir(const std::string &dir);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

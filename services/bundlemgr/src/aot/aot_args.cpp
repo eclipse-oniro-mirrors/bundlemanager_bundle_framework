@@ -126,6 +126,8 @@ bool AOTArgs::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isScreenOff);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEnableBaselinePgo);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSysComp);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, sysCompPath);
     return true;
 }
 
@@ -153,6 +155,8 @@ bool AOTArgs::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isScreenOff);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEnableBaselinePgo);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSysComp);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, sysCompPath);
     return true;
 }
 
@@ -186,7 +190,9 @@ std::string AOTArgs::ToString() const
         + ", optBCRangeList = " + optBCRangeList
         + ", isScreenOff = " + std::to_string(isScreenOff)
         + ", isEnableBaselinePgo = " + std::to_string(isEnableBaselinePgo)
-        + ", codeLanguage = " + codeLanguage + "]";
+        + ", codeLanguage = " + codeLanguage
+        + ", isSysComp = " + (isSysComp ? "true" : "false")
+        + ", sysCompPath = " + sysCompPath + "]";
     ret.append(" hspVector = ");
     for (const auto &hspInfo : hspVector) {
         ret.append(hspInfo.ToString());
