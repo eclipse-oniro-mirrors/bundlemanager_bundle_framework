@@ -129,9 +129,45 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
 
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId)) {
-        APP_LOGE("PublishCommonEventAsUser failed");
+        APP_LOGE("PublishCommonEventAsUser failed, userId:%{public}d", publishUserId);
     }
+    (void)ProcessBundleChangedEventForOtherUsers(dataMgr, installResult.bundleName,
+        want.GetAction(), publishUserId, commonData);
     IPCSkeleton::SetCallingIdentity(identity);
+}
+
+bool BundleCommonEventMgr::ProcessBundleChangedEventForOtherUsers(
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    const std::string &bundleName,
+    const std::string &action,
+    const int32_t publishUserId,
+    const EventFwk::CommonEventData &commonData)
+{
+    if (action != EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED) {
+        return false;
+    }
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr -n %{public}s", bundleName.c_str());
+        return false;
+    }
+    auto userIds = dataMgr->GetUserIds(bundleName);
+    if (userIds.size() <= 1) {
+        APP_LOGD("-n %{public}s only has one user", bundleName.c_str());
+        return true;
+    }
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    for (const auto &userId : userIds) {
+        if (userId == publishUserId) {
+            continue;
+        }
+        APP_LOGI("-n %{public}s publish change event for -u %{public}d", bundleName.c_str(), userId);
+        if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishInfo, userId)) {
+            APP_LOGE("PublishCommonEventAsUser failed, userId:%{public}d", userId);
+        }
+    }
+    return true;
 }
 
 void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBundleEvents &installResult)
