@@ -3080,4 +3080,21 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationLabelInfo_0003, Function | MediumTe
     hostImpl->GetApplicationLabelInfo(abilityInfos);
     EXPECT_EQ(abilityInfos[0].applicationInfo.label, info.applicationInfo.bundleName);
 }
+
+/**
+ * @tc.number: BundleMgrService_0100
+ * @tc.name: test BundleMgrService
+ * @tc.desc: 1.test OnExtension
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrService_0100, Function | MediumTest | Level1)
+{
+    std::string extension = "backup";
+    MessageParcel data;
+    MessageParcel reply;
+    int32_t ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, data, reply);
+    EXPECT_EQ(ret, -1);
+    extension = "restore";
+    ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, data, reply);
+    EXPECT_EQ(ret, -1);
+}
 } // OHOS

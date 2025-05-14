@@ -34,6 +34,7 @@
 #endif
 #include "perf_profile.h"
 #include "scope_guard.h"
+#include "bundle_backup_mgr.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 #include "xcollie_helper.h"
@@ -45,6 +46,8 @@ constexpr int32_t BUNDLE_BROKER_SERVICE_ABILITY_ID = 0x00010500;
 constexpr int16_t EL5_FILEKEY_SERVICE_ABILITY_ID = 8250;
 constexpr const char* FUN_BMS_START = "BundleMgrService::Start";
 constexpr unsigned int BMS_START_TIME_OUT_SECONDS = 60 * 4;
+const std::string EXTENSION_BACKUP = "backup";
+const std::string EXTENSION_RESTORE = "restore";
 } // namespace
 
 const bool REGISTER_RESULT =
@@ -585,6 +588,27 @@ bool BundleMgrService::Hidump(const std::vector<std::string> &args, std::string&
 bool BundleMgrService::IsBrokerServiceStarted() const
 {
     return isBrokerServiceStarted_;
+}
+
+int32_t BundleMgrService::OnExtension(const std::string& extension, MessageParcel& data, MessageParcel& reply)
+{
+    APP_LOGI("extension is %{public}s.", extension.c_str());
+    auto bundleBackupMgr = BundleBackupMgr::GetInstance();
+    ErrCode ret = ERR_OK;
+    if (extension == EXTENSION_BACKUP) {
+        ret = bundleBackupMgr.OnBackup(data, reply);
+        if (ret != ERR_OK) {
+            APP_LOGE("OnBackup failed, err is %{public}d.", ret);
+            return -1;
+        }
+    } else if (extension == EXTENSION_RESTORE) {
+        ret = bundleBackupMgr.OnRestore(data, reply);
+        if (ret != ERR_OK) {
+            APP_LOGE("OnRestore failed, err is %{public}d.", ret);
+            return -1;
+        }
+    }
+    return 0;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

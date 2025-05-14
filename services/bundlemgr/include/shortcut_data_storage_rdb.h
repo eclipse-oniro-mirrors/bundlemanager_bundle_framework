@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_SHORTCUT_DATA_STORAGE_RDB_H
 
 #include "bundle_constants.h"
+#include "json_serializer.h"
 #include "rdb_data_manager.h"
 #include "shortcut_data_storage_interface.h"
 
@@ -32,6 +33,8 @@ public:
     void GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos);
     bool DeleteDesktopShortcutInfo(const std::string &bundleName);
     bool DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
+    bool GetAllTableDataToJson(nlohmann::json &jsonResult);
+    bool UpdateAllShortcuts(nlohmann::json &jsonResult);
 
 private:
     bool ShortcutIdVerification(const ShortcutInfo &shortcutInfo, int32_t userId);

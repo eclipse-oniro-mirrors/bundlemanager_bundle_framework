@@ -159,6 +159,8 @@ public:
 
     bool IsBrokerServiceStarted() const;
 
+    int32_t OnExtension(const std::string& extension, MessageParcel& data, MessageParcel& reply) override;
+
 protected:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
