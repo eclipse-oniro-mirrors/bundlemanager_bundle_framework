@@ -34,10 +34,12 @@ namespace AppExecFwk {
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* ABILITY_INFO = "abilityInfo";
+constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* IS_ENABLE = "isEnable";
 constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* HAP_FILE_PATH = "hapFilePath";
+constexpr const char* SANDBOX_DATA_DIR = "sandboxDataDir";
 constexpr const char* UID = "uid";
 constexpr const char* EXTENSIONABILITY_TYPE = "extensionAbilityType";
 constexpr const char* FLAGS = "flags";
@@ -57,6 +59,7 @@ const char* QUERY_EXTENSION_INFOS_SYNC = "QueryExtensionInfosSync";
 const char* GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
 const char* GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
 const char* GET_SIGNATURE_INFO_SYNC = "GetSignatureInfoSync";
+const char* GET_SANDBOX_DATA_DIR_SYNC = "GetSandboxDataDirSync";
 const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
 const char* BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const char* PERMISSION_NAME = "permissionName";
@@ -66,6 +69,9 @@ const char* PARAM_TYPE_CHECK_ERROR = "param type check error";
 const char* PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
     "BusinessError 401: Parameter error.Parameter extensionAbilityType is empty.";
 const char* LINK_FEATURE = "linkFeature";
+const std::string ATOMIC_SERVICE_DIR_PREFIX = "+auid-";
+const std::string CLONE_APP_DIR_PREFIX = "+clone-";
+const std::string PLUS = "+";
 bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
 {
     napi_valuetype valueType;
@@ -1018,6 +1024,117 @@ napi_value GetSignatureInfoSync(napi_env env, napi_callback_info info)
     CommonFunc::ConvertSignatureInfo(env, signatureInfo, nSignatureInfo);
     APP_LOGD("call GetSignatureInfoSync done");
     return nSignatureInfo;
+}
+
+napi_value GetSandboxDataDirSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetSandboxDataDirSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    int32_t appIndex;
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            GET_SANDBOX_DATA_DIR_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, error);
+        return nullptr;
+    }
+
+    std::string sandboxDataDir;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetSandboxDataDir(bundleName, appIndex, sandboxDataDir));
+    if (ret != ERR_OK) {
+        APP_LOGE("GetSandboxDataDirSync failed ret=%{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_SANDBOX_DATA_DIR_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    napi_value nSandboxDataDir = nullptr;
+    napi_create_string_utf8(env, sandboxDataDir.c_str(), NAPI_AUTO_LENGTH, &nSandboxDataDir);
+
+    APP_LOGD("call GetSandboxDataDirSync done");
+    return nSandboxDataDir;
+}
+
+void GetBundleNameAndIndexBySandboxDataDir(
+    const std::string &keyName, std::string &bundleName, int32_t &appIndex)
+{
+    bundleName = keyName;
+    appIndex = 0;
+    bool isApp = true;
+    // for clone bundle name
+    auto pos = keyName.find(CLONE_APP_DIR_PREFIX);
+    if (pos == std::string::npos) {
+        //for atomic service
+        pos = keyName.find(ATOMIC_SERVICE_DIR_PREFIX);
+        if (pos == std::string::npos) {
+            return;
+        }
+        isApp = false;
+    }
+
+    size_t indexBegin = 0;
+    if (isApp) {
+        indexBegin = pos + CLONE_APP_DIR_PREFIX.size();
+    } else {
+        indexBegin = pos + ATOMIC_SERVICE_DIR_PREFIX.size();
+    }
+
+    auto plus = keyName.find(PLUS, indexBegin);
+    if ((plus == std::string::npos) || (plus == 0)) {
+        return;
+    }
+
+    if (isApp) {
+        std::string index = keyName.substr(indexBegin, plus - indexBegin);
+        if (!OHOS::StrToInt(index, appIndex)) {
+            appIndex = 0;
+            return;
+        }
+    }
+
+    bundleName = keyName.substr(plus + PLUS.size());
+}
+
+napi_value GetAppCloneIdentityBySandboxDataDirSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetAppCloneIdentityBySandboxDataDirSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string sandboxDataDir;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], sandboxDataDir)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, SANDBOX_DATA_DIR, TYPE_STRING);
+        return nullptr;
+    }
+    std::string bundleName;
+    int32_t appIndex;
+    GetBundleNameAndIndexBySandboxDataDir(sandboxDataDir, bundleName, appIndex);
+
+    napi_value nAppCloneIdentity = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nAppCloneIdentity));
+    CommonFunc::ConvertAppCloneIdentity(env, bundleName, appIndex, nAppCloneIdentity);
+
+    APP_LOGD("call GetAppCloneIdentityBySandboxDataDirSync done");
+    return nAppCloneIdentity;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

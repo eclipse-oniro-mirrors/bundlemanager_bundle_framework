@@ -177,6 +177,7 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXCEED_MAX_NUMBER, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE, ERROR_APP_NOT_SUPPORTED_MULTI_TYPE },
     { ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP, ERROR_INVALID_APPINDEX },
+    { ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX, ERROR_INVALID_APPINDEX },
     { ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL, ERROR_SHORTCUT_ID_ILLEGAL_ERROR },
     { ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED, ERROR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED },
     { ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED,
@@ -2728,6 +2729,18 @@ void CommonFunc::ConvertDynamicIconInfos(napi_env env, const std::vector<Dynamic
         ConvertDynamicIconInfo(env, dynamicIconInfos[index], objInfo);
         napi_set_element(env, value, index, objInfo);
     }
+}
+
+void CommonFunc::ConvertAppCloneIdentity(
+    napi_env env, const std::string &bundleName, int32_t appIndex, napi_value nAppCloneIdentity)
+{
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nAppCloneIdentity, BUNDLE_NAME, nBundleName));
+
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nAppCloneIdentity, APP_INDEX, nAppIndex));
 }
 } // AppExecFwk
 } // OHOS

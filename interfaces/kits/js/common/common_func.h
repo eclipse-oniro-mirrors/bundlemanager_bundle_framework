@@ -189,6 +189,9 @@ static void ConvertRouterDataInfos(napi_env env, const std::map<std::string, std
 static void ConvertAbilitySkillUri(napi_env env, const SkillUri &skillUri, napi_value value, bool isExtension);
 static void ConvertAbilitySkill(napi_env env, const Skill &skill, napi_value value, bool isExtension);
 
+static void ConvertAppCloneIdentity(
+    napi_env env, const std::string &bundleName, int32_t appIndex, napi_value nAppCloneIdentity);
+
 static void ConvertParameters(napi_env env,
     const std::map<std::string, std::string> &data, napi_value objInfos);
 

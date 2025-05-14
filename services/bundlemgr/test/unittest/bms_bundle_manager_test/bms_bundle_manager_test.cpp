@@ -2906,4 +2906,30 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0900, Function | MediumTest | L
     retCode = hostImpl->GetApplicationInfosV9(flags, USERID, appInfos);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
+
+/**
+ * @tc.number: BundleMgrHostImpl_5000
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetSandboxDataDir
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5000, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string sandboxDataDir;
+    ErrCode retCode = hostImpl->GetSandboxDataDir(TEST_BUNDLE_NAME, -1, sandboxDataDir);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_5100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetSandboxDataDir
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string sandboxDataDir;
+    ErrCode retCode = hostImpl->GetSandboxDataDir(TEST_BUNDLE_NAME, 0, sandboxDataDir);
+    EXPECT_EQ(retCode, ERR_OK);
+}
 } // OHOS
