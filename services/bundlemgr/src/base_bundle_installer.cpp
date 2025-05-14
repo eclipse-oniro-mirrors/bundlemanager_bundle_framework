@@ -1739,6 +1739,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         }
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
         UninstallDebugAppSandbox(bundleName, uid, oldInfo);
+        if (dataMgr_->DeleteShortcutVisibleInfo(bundleName, userId_, 0) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER,
+                "DeleteShortcutVisibleInfo failed, bundleName: %{public}s, userId: %{public}d, appIndex: 0",
+                bundleName.c_str(), userId_);
+        }
         return ERR_OK;
     }
     dataMgr_->DisableBundle(bundleName);
@@ -1829,6 +1834,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "DeleteInnerPatchInfo failed, bundleName: %{public}s", bundleName.c_str());
     }
     DeleteCloudShader(bundleName);
+    if (dataMgr_->DeleteShortcutVisibleInfo(bundleName, userId_, 0) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER,
+            "DeleteShortcutVisibleInfo failed, bundleName: %{public}s, userId: %{public}d, appIndex: 0",
+            bundleName.c_str(), userId_);
+    }
     return ERR_OK;
 }
 

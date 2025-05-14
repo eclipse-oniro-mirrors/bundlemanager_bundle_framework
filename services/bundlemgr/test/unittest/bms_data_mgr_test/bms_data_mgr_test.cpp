@@ -29,8 +29,10 @@
 #include "json_constants.h"
 #include "json_serializer.h"
 #include "mime_type_mgr.h"
+#include "mock_ipc_skeleton.h"
 #include "parcel.h"
 #include "shortcut_data_storage_rdb.h"
+#include "shortcut_visible_data_storage_rdb.h"
 #include "uninstall_data_mgr_storage_rdb.h"
 #include "want_params_wrapper.h"
 
@@ -5243,5 +5245,205 @@ HWTEST_F(BmsDataMgrTest, CreateBundleDataDirWithEl_0002, TestSize.Level1)
     EXPECT_EQ(ret4, ERR_OK);
     dataMgr -> bundleInfos_.erase(bundleName);
     dataMgr -> installStates_.erase(bundleName);
+}
+
+/**
+ * @tc.number: SetShortcutVisibleForSelf_0001
+ * @tc.name: SetShortcutVisibleForSelf
+ * @tc.desc: test SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutVisible_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
+        std::make_shared<ShortcutVisibleDataStorageRdb>();
+    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    std::string bundleName = "TestShortcut";
+    std::string shortcutId = "shortcutId";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    bool visible = true;
+    BundleDataMgr bundleDataMgr;
+    auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
+    EXPECT_NE(result, ERR_OK);
+
+    bool ret =
+        shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
+    EXPECT_EQ(ret, false);
+
+    shortcutVisibleDataStorageRdb->SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible);
+    ret = shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
+    EXPECT_EQ(ret, true);
+
+    visible = false;
+    ret = shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
+    EXPECT_EQ(ret, false);
+
+    appIndex = 1;
+    ret = shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
+    EXPECT_EQ(ret, false);
+
+    userId = 110;
+    ret = shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: SetShortcutVisibleForSelf_0002
+ * @tc.name: SetShortcutVisibleForSelf
+ * @tc.desc: test SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
+        std::make_shared<ShortcutVisibleDataStorageRdb>();
+    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    std::string bundleName = "TestShortcut";
+    std::string shortcutId = "shortcutId";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    bool visible = true;
+    shortcutVisibleDataStorageRdb->rdbDataManager_ = nullptr;
+    bool ret = shortcutVisibleDataStorageRdb->
+        IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
+    EXPECT_EQ(ret, false);
+    ret = shortcutVisibleDataStorageRdb->
+        SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: SetShortcutVisibleForSelf_0003
+ * @tc.name: SetShortcutVisibleForSelf
+ * @tc.desc: test SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0003, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool visible = true;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
+    EXPECT_EQ(result, ERR_OK);
+    bundleDataMgr.shortcutVisibleStorage_->rdbDataManager_ = nullptr;
+    result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
+    EXPECT_EQ(result, ERR_APPEXECFWK_DB_INSERT_ERROR);
+}
+
+/**
+ * @tc.number: SetShortcutVisibleForSelf_0004
+ * @tc.name: SetShortcutVisibleForSelf
+ * @tc.desc: test SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0004, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string bundleName2 = "com.ohos.test";
+    std::string shortcutId = "id_test1";
+    bool visible = true;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName2, innerBundleInfo);
+    auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetShortcutVisibleForSelf_0005
+ * @tc.name: SetShortcutVisibleForSelf
+ * @tc.desc: test SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0005, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test2";
+    bool visible = true;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
+    EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+}
+
+/**
+ * @tc.number: SetShortcutVisibleForSelf_0006
+ * @tc.name: SetShortcutVisibleForSelf
+ * @tc.desc: test SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0006, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool visible = true;
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.shortcutVisibleStorage_->
+        SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible);
+    auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteShortcutVisibleInfo_0001
+ * @tc.name: DeleteShortcutVisibleInfo
+ * @tc.desc: test DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteShortcutVisibleInfo_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
+        std::make_shared<ShortcutVisibleDataStorageRdb>();
+    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    std::string bundleName = "TestShortcut";
+    std::string shortcutId = "shortcutId";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    bool visible = true;
+    BundleDataMgr bundleDataMgr;
+
+    shortcutVisibleDataStorageRdb->SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible);
+    bool ret =
+        shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
+    EXPECT_EQ(ret, true);
+
+    bundleDataMgr.DeleteShortcutVisibleInfo(bundleName, userId, appIndex);
+    ret = shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: DeleteShortcutVisibleInfo_0002
+ * @tc.name: DeleteShortcutVisibleInfo
+ * @tc.desc: test DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteShortcutVisibleInfo_0002, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.shortcutVisibleStorage_->rdbDataManager_ = nullptr;
+    auto ret = bundleDataMgr.DeleteShortcutVisibleInfo(bundleName, userId, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 } // OHOS

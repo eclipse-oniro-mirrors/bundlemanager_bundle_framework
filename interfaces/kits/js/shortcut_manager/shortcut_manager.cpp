@@ -35,6 +35,7 @@ constexpr const char* ADD_DESKTOP_SHORTCUT_INFO = "AddDesktopShortcutInfo";
 constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
 constexpr const char* USER_ID = "userId";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+constexpr const char* SET_SHORTCUT_VISIBLE = "SetShortcutVisibleForSelf";
 }
 static ErrCode InnerAddDesktopShortcutInfo(const OHOS::AppExecFwk::ShortcutInfo &shortcutInfo, int32_t userId)
 {
@@ -276,6 +277,86 @@ napi_value GetAllDesktopShortcutInfo(napi_env env, napi_callback_info info)
         "GetAllDesktopShortcutInfo", GetAllDesktopShortcutInfoExec, GetAllDesktopShortcutInfoComplete);
     callbackPtr.release();
     APP_LOGD("Call GetAllDesktopShortcutInfo done");
+    return promise;
+}
+
+static ErrCode InnerSetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    return iBundleMgr->SetShortcutVisibleForSelf(shortcutId, visible);
+}
+
+void SetShortcutVisibleForSelfExec(napi_env env, void *data)
+{
+    SetShortcutVisibleForSelfCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<SetShortcutVisibleForSelfCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err =
+        InnerSetShortcutVisibleForSelf(asyncCallbackInfo->shortcutId, asyncCallbackInfo->visible);
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
+}
+
+void SetShortcutVisibleForSelfComplete(napi_env env, napi_status status, void *data)
+{
+    SetShortcutVisibleForSelfCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<SetShortcutVisibleForSelfCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<SetShortcutVisibleForSelfCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ONE]));
+    } else {
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, SET_SHORTCUT_VISIBLE);
+    }
+    CommonFunc::NapiReturnDeferred<SetShortcutVisibleForSelfCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value SetShortcutVisibleForSelf(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("Napi begin SetShortcutVisibleForSelf");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("Args init is error");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    SetShortcutVisibleForSelfCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) SetShortcutVisibleForSelfCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<SetShortcutVisibleForSelfCallbackInfo> callbackPtr {asyncCallbackInfo};
+
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutId)) {
+        APP_LOGE("Parse shortcutId is error");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, "shortcutId", TYPE_STRING);
+        return nullptr;
+    }
+
+    if (!CommonFunc::ParseBool(env, args[ARGS_SIZE_ONE], asyncCallbackInfo->visible)) {
+        APP_LOGE("Parse visible is error");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, "visible", TYPE_BOOLEAN);
+        return nullptr;
+    }
+
+    auto promise = CommonFunc::AsyncCallNativeMethod<SetShortcutVisibleForSelfCallbackInfo>(env, asyncCallbackInfo,
+        "SetShortcutVisibleForSelf", SetShortcutVisibleForSelfExec, SetShortcutVisibleForSelfComplete);
+    callbackPtr.release();
+    APP_LOGD("Call SetShortcutVisibleForSelf done");
     return promise;
 }
 } // AppExecFwk

@@ -677,6 +677,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_DATA_DIR):
             errCode = HandleGetSandboxDataDir(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_SHORTCUT_VISIBLE):
+            errCode = HandleSetShortcutVisibleForSelf(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -4688,6 +4691,21 @@ ErrCode BundleMgrHost::HandleGetSandboxDataDir(MessageParcel &data, MessageParce
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetShortcutVisibleForSelf(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string shortcutId = data.ReadString();
+    bool visible = data.ReadBool();
+
+    APP_LOGD("shortcutId %{public}s, visible %{public}d", shortcutId.c_str(), visible);
+    auto ret = SetShortcutVisibleForSelf(shortcutId, visible);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
