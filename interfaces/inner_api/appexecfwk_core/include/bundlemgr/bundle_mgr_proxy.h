@@ -25,7 +25,6 @@
 #include "bundle_status_callback_interface.h"
 #include "clean_cache_callback_interface.h"
 #include "element_name.h"
-#include "iremote_object.h"
 #include "iremote_proxy.h"
 #include "preinstalled_application_info.h"
 #include "process_cache_callback_interface.h"
@@ -1262,10 +1261,6 @@ private:
     ErrCode WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const;
 
     ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, void *&data);
-
-    void OnRemoteDie(const wptr<IRemoteObject> &remoteObject);
-    sptr<IRemoteObject> remote_ = nullptr;
-    sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
 };
 
 }  // namespace AppExecFwk

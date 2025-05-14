@@ -30,8 +30,6 @@
 #include "appexecfwk_core_constants.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
-#include "bundle_framework_core_ipc_interface_code.h"
-#include "bundle_mgr_service_death_recipient.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_proxy.h"
 #endif
@@ -82,36 +80,12 @@ BundleMgrProxy::BundleMgrProxy(const sptr<IRemoteObject> &remote) : IRemoteProxy
         }
         ApiCacheManager::GetInstance().AddCacheApi(GetDescriptor(),
             static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF), GET_BUNDLE_FOR_SELF_CACHE_TIME);
-        deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(
-            [this](const wptr<IRemoteObject> &object) { this->OnRemoteDie(object); });
-        if (deathRecipient_ == nullptr) {
-            return;
-        }
-        if (!remote->AddDeathRecipient(deathRecipient_)) {
-            return;
-        }
-        remote_ = remote;
     }
 }
 
 BundleMgrProxy::~BundleMgrProxy()
 {
     APP_LOGD("destroy create bundle mgr proxy instance");
-    if (remote_ == nullptr) {
-        return;
-    }
-    if (deathRecipient_ == nullptr) {
-        return;
-    }
-    remote_->RemoveDeathRecipient(deathRecipient_);
-    remote_ = nullptr;
-}
-
-void BundleMgrProxy::OnRemoteDie(const wptr<IRemoteObject> &remoteObject)
-{
-    (void)remoteObject;
-    ApiCacheManager::GetInstance().ClearCache(GetDescriptor());
-    return;
 }
 
 bool BundleMgrProxy::GetApplicationInfo(
