@@ -3528,6 +3528,55 @@ HWTEST_F(BmsBundleDataMgrTest, GetSandboxAbilityInfo_0100, Function | MediumTest
 }
 
 /**
+ * @tc.number: ProcessBundleChangedEventForOtherUsers_0100
+ * @tc.name: test ProcessBundleChangedEventForOtherUsers
+ * @tc.desc: 1.ProcessBundleChangedEventForOtherUsers
+ */
+HWTEST_F(BmsBundleDataMgrTest, ProcessBundleChangedEventForOtherUsers_0100, Function | MediumTest | Level1)
+{
+    EventFwk::CommonEventData commonData;
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    bool ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(nullptr, "notExist", "", USERID, commonData);
+    EXPECT_FALSE(ret);
+
+    ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(nullptr, "notExist",
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, USERID, commonData);
+    EXPECT_FALSE(ret);
+
+    auto dataMgr = GetBundleDataMgr();
+    ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, "notExist",
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, USERID, commonData);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ProcessBundleChangedEventForOtherUsers_0200
+ * @tc.name: test ProcessBundleChangedEventForOtherUsers
+ * @tc.desc: 1.ProcessBundleChangedEventForOtherUsers
+ */
+HWTEST_F(BmsBundleDataMgrTest, ProcessBundleChangedEventForOtherUsers_0200, Function | MediumTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.innerBundleUserInfos_["100"] = userInfo;
+    userInfo.bundleUserInfo.userId = 101;
+    innerBundleInfo.innerBundleUserInfos_["101"] = userInfo;
+
+    auto dataMgr = GetBundleDataMgr();
+    dataMgr->bundleInfos_["bundleName"] = innerBundleInfo;
+    EventFwk::CommonEventData commonData;
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    bool ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, "bundleName",
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, USERID, commonData);
+    EXPECT_TRUE(ret);
+    auto iter = dataMgr->bundleInfos_.find("bundleName");
+    if (iter != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(iter);
+    }
+}
+
+/**
  * @tc.number: GetStringById_0100
  * @tc.name: test GetStringById
  * @tc.desc: test GetStringById
