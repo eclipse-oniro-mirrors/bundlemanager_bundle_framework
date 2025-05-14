@@ -390,8 +390,7 @@ void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bun
             continue;
         }
         Element element;
-        if (defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, item.first, element) &&
-            element.bundleName != bundleName) {
+        if (defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, item.first, element)) {
             LOG_I(BMS_TAG_DEFAULT, "set default application to preset, type : %{public}s", item.first.c_str());
             newInfos.emplace(item.first, element);
         } else {

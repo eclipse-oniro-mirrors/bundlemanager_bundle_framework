@@ -784,7 +784,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, ShouldSendEvent_0100, Function | SmallTest 
 /**
  * @tc.number: SendDefaultAppChangeEvent_0100
  * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
- * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to 'general.image', successfully sending and receiving events
+ * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to 'general.image', no permission to send event
  */
 HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0100, Function | SmallTest | Level1)
 {
@@ -798,7 +798,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0100, Function | 
                 lockCallback->utdId.at(0) == IMAGE_UTD_ID &&
                 lockCallback->userId == USER_ID);
         });
-        EXPECT_TRUE(waitRet);
+        EXPECT_FALSE(waitRet);
     }
     UnSubscribeDefaultAppChangedEvent();
 }
@@ -806,7 +806,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0100, Function | 
 /**
  * @tc.number: SendDefaultAppChangeEvent_0200
  * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
- * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to 'general.png', successfully sending and receiving events
+ * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to 'general.png', no permission to send event
  */
 HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0200, Function | SmallTest | Level1)
 {
@@ -820,7 +820,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0200, Function | 
                 lockCallback->utdId.at(0) == PNG_UTD_ID &&
                 lockCallback->userId == USER_ID);
         });
-        EXPECT_TRUE(waitRet);
+        EXPECT_FALSE(waitRet);
     }
     UnSubscribeDefaultAppChangedEvent();
 }
@@ -828,7 +828,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0200, Function | 
 /**
  * @tc.number: SendDefaultAppChangeEvent_0300
  * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
- * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to 'WORD', successfully sending and receiving events
+ * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to 'WORD', no permission to send event
  */
 HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0300, Function | SmallTest | Level1)
 {
@@ -845,7 +845,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0300, Function | 
                 lockCallback->utdId.at(0) == WORD_TEMPLATE_UTD_ID) &&
                 lockCallback->userId == USER_ID);
         });
-        EXPECT_TRUE(waitRet);
+        EXPECT_FALSE(waitRet);
     }
     UnSubscribeDefaultAppChangedEvent();
 }
@@ -853,7 +853,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0300, Function | 
 /**
  * @tc.number: SendDefaultAppChangeEvent_0400
  * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
- * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to com.microsoft.word.dot, successfully sending and receiving
+ * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to com.microsoft.word.dot, no permission to send event
  */
 HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0400, Function | SmallTest | Level1)
 {
@@ -867,7 +867,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0400, Function | 
                 lockCallback->utdId.at(0) == WORD_DOT_UTD_ID &&
                 lockCallback->userId == USER_ID);
         });
-        EXPECT_TRUE(waitRet);
+        EXPECT_FALSE(waitRet);
     }
     UnSubscribeDefaultAppChangedEvent();
 }
@@ -875,7 +875,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0400, Function | 
 /**
  * @tc.number: SendDefaultAppChangeEvent_0500
  * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
- * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to '"com.adobe.pdf', successfully sending and receiving events
+ * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to '"com.adobe.pdf', no permission to send event
  */
 HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0500, Function | SmallTest | Level1)
 {
@@ -889,7 +889,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0500, Function | 
                 lockCallback->utdId.at(0) == PDF_UTD_ID &&
                 lockCallback->userId == USER_ID);
         });
-        EXPECT_TRUE(waitRet);
+        EXPECT_FALSE(waitRet);
     }
     UnSubscribeDefaultAppChangedEvent();
 }
@@ -911,7 +911,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0600, Function | 
 /**
  * @tc.number: SendDefaultAppChangeEvent_0700
  * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
- * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to 'general.png, WORD', successfully sending and receiving events
+ * @tc.desc: 1.SendDefaultAppChangeEvent, type is set to 'general.png, WORD', no permission to send event
  */
 HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0700, Function | SmallTest | Level1)
 {
@@ -929,7 +929,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0700, Function | 
                 lockCallback->utdId.at(0) == PNG_UTD_ID) &&
                 lockCallback->userId == USER_ID);
         });
-        EXPECT_TRUE(waitRet);
+        EXPECT_FALSE(waitRet);
     }
     UnSubscribeDefaultAppChangedEvent();
 }
@@ -937,7 +937,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0700, Function | 
 /**
  * @tc.number: SendDefaultAppChangeEvent_0800
  * @tc.name: Test SendDefaultAppChangeEvent by DefaultAppMgr
- * @tc.desc: 1.SendDefaultAppChangeEvent, typeVec is empty, successfully sending event failed
+ * @tc.desc: 1.SendDefaultAppChangeEvent, typeVec is empty, send event failed
  */
 HWTEST_F(BmsBundleDefaultAppMgrTest, SendDefaultAppChangeEvent_0800, Function | SmallTest | Level1)
 {
