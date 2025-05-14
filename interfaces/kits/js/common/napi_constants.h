@@ -89,6 +89,14 @@ constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityRe
 constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
 constexpr const char* GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = "GetAllLauncherAbilityResourceInfo";
 constexpr const char* ENABLE_DYNAMIC_ICON = "EnableDynamicIcon";
+constexpr const char* RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE = "isHapModuleRemovable";
+constexpr const char* RESOURCE_NAME_OF_SET_HAP_MODULE_UPGRADE_FLAG = "setHapModuleUpgradeFlag";
+constexpr const char* RESOURCE_NAME_OF_GET_BUNDLE_PACK_INFO = "getBundlePackInfo";
+constexpr const char* RESOURCE_NAME_OF_GET_DISPATCH_INFO = "getDispatchInfo";
+constexpr const char* DISPATCH_INFO_VERSION = "1";
+constexpr const char* DISPATCH_INFO_DISPATCH_API = "1.0";
+constexpr const char* UPGRADE_FLAG = "upgradeFlag";
+constexpr const char* BUNDLE_PACK_FLAG = "bundlePackFlag";
 }
 }
 }
