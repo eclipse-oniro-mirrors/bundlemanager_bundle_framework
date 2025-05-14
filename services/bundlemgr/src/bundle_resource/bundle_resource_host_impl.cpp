@@ -293,6 +293,46 @@ ErrCode BundleResourceHostImpl::DeleteResourceInfo(const std::string &key)
     return ret;
 }
 
+ErrCode BundleResourceHostImpl::GetExtensionAbilityResourceInfo(const std::string &bundleName,
+    const ExtensionAbilityType extensionAbilityType, const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex)
+{
+    APP_LOGD("start, bundleName:%{public}s extensionAbilityType:%{public}u flags:%{public}u",
+        bundleName.c_str(), extensionAbilityType, flags);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_GET_BUNDLE_RESOURCES)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    
+    if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
+        APP_LOGE("get bundle resource Fail, bundleName: %{public}s appIndex: %{public}d not in valid range",
+            bundleName.c_str(), appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("manager nullptr, bundleName %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    if (extensionAbilityType != ExtensionAbilityType::INPUTMETHOD &&
+        extensionAbilityType != ExtensionAbilityType::SHARE &&
+        extensionAbilityType != ExtensionAbilityType::ACTION) {
+        APP_LOGD("extension type %{public}d not supported", extensionAbilityType);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    if (!manager->GetExtensionAbilityResourceInfo(bundleName, extensionAbilityType, flags,
+        extensionAbilityResourceInfo, appIndex)) {
+        return CheckExtensionAbilityValid(bundleName, extensionAbilityType, flags, appIndex);
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleResourceHostImpl::CheckBundleNameValid(const std::string &bundleName, int32_t appIndex)
 {
     if (appIndex == 0) {
@@ -309,6 +349,26 @@ ErrCode BundleResourceHostImpl::CheckBundleNameValid(const std::string &bundleNa
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     APP_LOGE("get failed, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+    return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+}
+
+ErrCode BundleResourceHostImpl::CheckExtensionAbilityValid(const std::string &bundleName,
+    const ExtensionAbilityType extensionAbilityType, const uint32_t flags, int32_t appIndex)
+{
+    if (appIndex == 0) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("manager nullptr, bundleName %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::vector<LauncherAbilityResourceInfo> extensionAbilityResourceInfo;
+    if (!manager->GetExtensionAbilityResourceInfo(bundleName, extensionAbilityType, flags,
+        extensionAbilityResourceInfo)) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    APP_LOGE("get failed, bundleName:%{public}s appIndex:%{public}d extensionAbilityType:%{public}d", bundleName.c_str(), appIndex, extensionAbilityType);
     return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
 }
 } // AppExecFwk

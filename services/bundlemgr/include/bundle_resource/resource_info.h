@@ -52,6 +52,7 @@ public:
     std::string abilityName_;
     std::string label_;
     std::string icon_;
+    int32_t extensionAbilityType_ = -1;
     // used for parse label and icon
     std::string hapPath_;
     // used for parse overlay label and icon

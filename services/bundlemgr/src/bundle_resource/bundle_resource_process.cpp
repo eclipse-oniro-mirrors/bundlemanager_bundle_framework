@@ -304,6 +304,7 @@ ResourceInfo BundleResourceProcess::ConvertToLauncherAbilityResourceInfo(const A
     resourceInfo.labelId_ = info.labelId;
     resourceInfo.iconId_ = info.iconId;
     resourceInfo.hapPath_ = info.hapPath;
+    resourceInfo.extensionAbilityType_ = -1;
     return resourceInfo;
 }
 
@@ -327,6 +328,20 @@ ResourceInfo BundleResourceProcess::ConvertToBundleResourceInfo(const InnerBundl
     resourceInfo.abilityName_ = std::string();
     return resourceInfo;
 }
+
+ResourceInfo BundleResourceProcess::ConvertToExtensionAbilityResourceInfo(const ExtensionAbilityInfo &info)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = info.bundleName;
+    resourceInfo.moduleName_ = info.moduleName;
+    resourceInfo.abilityName_ = info.name;
+    resourceInfo.labelId_ = info.labelId;
+    resourceInfo.iconId_ = info.iconId;
+    resourceInfo.hapPath_ = info.hapPath;
+    resourceInfo.extensionAbilityType_ = static_cast<int32_t>(info.type);
+    return resourceInfo;
+}
+
 
 bool BundleResourceProcess::GetLauncherAbilityResourceInfos(
     const InnerBundleInfo &innerBundleInfo,
@@ -480,6 +495,16 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
     std::map<std::string, AbilityInfo> abilityInfos = innerBundleInfo.GetInnerAbilityInfos();
     for (const auto &item : abilityInfos) {
         resourceInfos.emplace_back(ConvertToLauncherAbilityResourceInfo(item.second));
+    }
+    std::map<std::string, ExtensionAbilityInfo> extensionAbilityInfos = innerBundleInfo.GetInnerExtensionInfos();
+    for (const auto &item : extensionAbilityInfos) {
+        if (item.second.type != ExtensionAbilityType::INPUTMETHOD &&
+            item.second.type != ExtensionAbilityType::SHARE &&
+            item.second.type != ExtensionAbilityType::ACTION) {
+            APP_LOGD("skip extension type %{public}d", item.second.type);
+            continue;
+        }
+        resourceInfos.emplace_back(ConvertToExtensionAbilityResourceInfo(item.second));
     }
     // process overlay hap paths
     size_t size = resourceInfos.size();
