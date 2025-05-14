@@ -478,6 +478,29 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::GetBundleInfoForSelfWithOutCache(int32_t flags, BundleInfo &bundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    LOG_D(BMS_TAG_QUERY, "begin to get bundle info for self");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelfWithOutCache due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelfWithOutCache due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto res = GetParcelableInfoWithErrCode<BundleInfo>(
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
+    if (res != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForSelfWithOutCache failed err:%{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo,
     GetDependentBundleInfoFlag flag)
 {

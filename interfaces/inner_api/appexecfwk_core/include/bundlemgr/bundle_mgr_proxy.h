@@ -159,6 +159,15 @@ public:
      */
     virtual ErrCode GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo) override;
     /**
+     * @brief Obtains the BundleInfo based on calling uid.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+     virtual ErrCode GetBundleInfoForSelfWithOutCache(int32_t flags, BundleInfo &bundleInfo) override;
+    /**
      * @brief Obtains the BundleInfo based on a given bundle name, which the calling app depends on.
      * @param sharedBundleName Indicates the bundle name to be queried.
      * @param sharedBundleInfo Indicates the obtained BundleInfo object.
