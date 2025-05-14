@@ -19,7 +19,9 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <unistd.h>
 
+#include "ffrt.h"
 #include "unzip.h"
 
 namespace OHOS {
@@ -151,7 +153,7 @@ struct ZipEntry {
 // zip file extract class for bundle format.
 class ZipFile {
 public:
-    explicit ZipFile(const std::string &pathName);
+    explicit ZipFile(const std::string &pathName, bool parallel = false);
     ~ZipFile();
     /**
      * @brief Open zip file.
@@ -206,6 +208,14 @@ public:
      * @return Returns true if file is successfully extracted; returns false otherwise.
      */
     bool ExtractFile(const std::string &file, std::ostream &dest) const;
+    /**
+     * @brief Extract data from file parallelly.
+     * @brief Get data relative offset for file.
+     * @param file Indicates the entry name.
+     * @param dest Indicates the obtained ostream object.
+     * @return Returns true if file is successfully extracted; returns false otherwise.
+     */
+    bool ExtractFileParallel(const std::string &file, std::ostream &dest) const;
 
 private:
     /**
@@ -239,12 +249,28 @@ private:
      */
     ZipPos GetEntryDataOffset(const ZipEntry &zipEntry, const uint16_t extraSize) const;
     /**
+     * @brief Check data description with specific file handler.
+     * @param zipEntry Indicates the ZipEntry object.
+     * @param localHeader Indicates the localHeader object.
+     * @param file Indicates the file handler used to read data.
+     * @return Returns true if successfully checked; returns false otherwise.
+     */
+    bool CheckDataDescInternal(const ZipEntry &zipEntry, const LocalHeader &localHeader, FILE *file) const;
+    /**
      * @brief Check data description.
      * @param zipEntry Indicates the ZipEntry object.
      * @param localHeader Indicates the localHeader object.
      * @return Returns true if successfully checked; returns false otherwise.
      */
     bool CheckDataDesc(const ZipEntry &zipEntry, const LocalHeader &localHeader) const;
+    /**
+     * @brief Check coherency LocalHeader object with specific file handler.
+     * @param zipEntry Indicates the ZipEntry object.
+     * @param extraSize Indicates the obtained size.
+     * @param file Indicates the file handler used to read data.
+     * @return Returns true if successfully checked; returns false otherwise.
+     */
+    bool CheckCoherencyLocalHeaderInternal(const ZipEntry &zipEntry, uint16_t &extraSize, FILE *file) const;
     /**
      * @brief Check coherency LocalHeader object.
      * @param zipEntry Indicates the ZipEntry object.
@@ -257,17 +283,27 @@ private:
      * @param zipEntry Indicates the ZipEntry object.
      * @param extraSize Indicates the size.
      * @param dest Indicates the obtained ostream object.
+     * @param file Indicates the file handler used to read data.
      * @return Returns true if successfully Unzip; returns false otherwise.
      */
-    bool UnzipWithStore(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest) const;
+    bool UnzipWithStore(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest, FILE *file) const;
     /**
      * @brief Unzip ZipEntry object to ostream.
      * @param zipEntry Indicates the ZipEntry object.
      * @param extraSize Indicates the size.
      * @param dest Indicates the obtained ostream object.
+     * @param file Indicates the file handler used to read data.
      * @return Returns true if successfully Unzip; returns false otherwise.
      */
-    bool UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest) const;
+    bool UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest, FILE *file) const;
+    /**
+     * @brief Seek to Entry start with specific file handler.
+     * @param zipEntry Indicates the ZipEntry object.
+     * @param extraSize Indicates the extra size.
+     * @param file Indicates the file handler used to read data.
+     * @return Returns true if successfully Seeked; returns false otherwise.
+     */
+    bool SeekToEntryStartInternal(const ZipEntry &zipEntry, const uint16_t extraSize, FILE *file) const;
     /**
      * @brief Seek to Entry start.
      * @param zipEntry Indicates the ZipEntry object.
@@ -286,9 +322,20 @@ private:
      * @param buffer Indicates the buffer to read.
      * @param zstream Indicates the obtained z_stream object.
      * @param remainCompressedSize Indicates the obtained size.
+     * @param file Indicates the file handler used to read data.
      * @return Returns true if successfully read; returns false otherwise.
      */
-    bool ReadZStream(const BytePtr &buffer, z_stream &zstream, uint32_t &remainCompressedSize) const;
+    bool ReadZStream(const BytePtr &buffer, z_stream &zstream, uint32_t &remainCompressedSize, FILE *file) const;
+    /**
+     * @brief Get file handler for parallel decompression.
+     * @param resourceId Indicates the initial resource id, returns actual resource id by input parameter.
+     */
+    void GetFileHandler(int32_t &resourceId) const;
+    /**
+     * @brief Release file handler for parallel compression
+     * @param resourceId Indicates the file handler id to release.    
+     */
+    void ReleaseFileHandler(const int32_t resourceId) const;
 
 private:
     bool isOpen_ = false;
@@ -302,6 +349,11 @@ private:
     ZipPos fileLength_ = 0;
     EndDir endDir_;
     ZipEntryMap entriesMap_;
+    
+    bool parallel_ = false;
+    const int32_t concurrency_ = sysconf(_SC_NPROCESSORS_ONLN);
+    mutable std::vector<ffrt::mutex> mtxes_ = std::vector<ffrt::mutex> (concurrency_);
+    std::vector<FILE *> files_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
