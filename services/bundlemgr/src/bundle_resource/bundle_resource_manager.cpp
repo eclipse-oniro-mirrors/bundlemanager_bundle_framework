@@ -579,7 +579,7 @@ bool BundleResourceManager::UpdateBundleIcon(const std::string &bundleName, Reso
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), launcherAbilityResourceInfos)) {
         APP_LOGW("bundle %{public}s index %{public}d get resource failed", bundleName.c_str(), resourceInfo.appIndex_);
     } else {
-        for (auto &launcherAbilityResourceInfo : launcherAbilityResourceInfos) {
+        for (const auto &launcherAbilityResourceInfo : launcherAbilityResourceInfos) {
             LauncherAbilityResourceConvertToResourceInfo(launcherAbilityResourceInfo, resourceInfo);
             resourceInfos.emplace_back(resourceInfo);
         }
