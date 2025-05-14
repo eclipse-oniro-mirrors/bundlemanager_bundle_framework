@@ -55,6 +55,8 @@ const std::string BUNDLETYPE = "bundleType";
 const std::string BUNDLE_TYPE_APP = "app";
 const std::string PROFILE_KEY_LABEL_ID = "labelId";
 const std::string PROFILE_KEY_LABEL = "label";
+const std::string ATOMIC_SERVICE = "atomicService";
+const std::string RESIZEABLE = "resizeable";
 const std::string BUNDLE_MODULE_PROFILE_KEY_DISTRO = "distro";
 const std::string BUNDLE_MODULE_PROFILE_KEY_MODULE_TYPE = "moduleType";
 const std::string MODULE_TYPE_SHARED = "shared";
@@ -611,7 +613,8 @@ const nlohmann::json MODULE_JSON = R"(
             "type": "unknowtype",
             "virtualMachine": "ark0.0.0.3",
             "atomicService":{
-                "preloads":[]
+                "preloads":[],
+                "resizeable": true
             }
         }
     }
@@ -3120,6 +3123,75 @@ HWTEST_F(BmsBundleParserTest, TestParse_6900, Function | SmallTest | Level1)
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_7100
+ * @tc.desc: 1. system running normally
+ *           2. test ParserAtomicConfig
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7100, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson[MODULE][ATOMIC_SERVICE][RESIZEABLE] = "true";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_7200
+ * @tc.desc: 1. system running normally
+ *           2. test ParserAtomicConfig
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    EXPECT_NE(hapModule, std::nullopt);
+    EXPECT_TRUE(hapModule->resizeable);
+}
+
+/**
+ * @tc.name: TestParse_7300
+ * @tc.desc: 1. system running normally
+ *           2. test ParserAtomicConfig
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7300, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson[MODULE][ATOMIC_SERVICE] = "{\"array1\", \"array2\"}";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR) << profileFileBuffer.str();
 }
 
 /**

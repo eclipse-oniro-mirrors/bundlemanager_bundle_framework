@@ -70,6 +70,7 @@ const char* HAP_MODULE_INFO_CPU_ABI = "cpuAbi";
 const char* HAP_MODULE_INFO_MODULE_SOURCE_DIR = "moduleSourceDir";
 const char* HAP_OVERLAY_MODULE_INFO = "overlayModuleInfos";
 const char* HAP_MODULE_INFO_PRELOADS = "preloads";
+const char* HAP_MODULE_INFO_RESIZEABLE = "resizeable";
 const char* PRELOAD_ITEM_MODULE_NAME = "moduleName";
 const char* HAP_MODULE_INFO_VERSION_CODE = "versionCode";
 const char* HAP_MODULE_INFO_PROXY_DATAS = "proxyDatas";
@@ -612,6 +613,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         }
         preloads.emplace_back(*preload);
     }
+    resizeable = parcel.ReadBool();
     int32_t proxyDatasSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, proxyDatasSize);
     CONTAINER_SECURITY_VERIFY(parcel, proxyDatasSize, &proxyDatas);
@@ -770,6 +772,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     for (auto &item : preloads) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, resizeable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, proxyDatas.size());
     for (auto &item : proxyDatas) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
@@ -849,6 +852,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_MODULE_SOURCE_DIR, hapModuleInfo.moduleSourceDir},
         {HAP_OVERLAY_MODULE_INFO, hapModuleInfo.overlayModuleInfos},
         {HAP_MODULE_INFO_PRELOADS, hapModuleInfo.preloads},
+        {HAP_MODULE_INFO_RESIZEABLE, hapModuleInfo.resizeable},
         {HAP_MODULE_INFO_PROXY_DATAS, hapModuleInfo.proxyDatas},
         {HAP_MODULE_INFO_BUILD_HASH, hapModuleInfo.buildHash},
         {HAP_MODULE_INFO_ISOLATION_MODE, hapModuleInfo.isolationMode},
@@ -1191,6 +1195,12 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::OBJECT);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_RESIZEABLE,
+        hapModuleInfo.resizeable,
+        false,
+        parseResult);
     GetValueIfFindKey<std::vector<ProxyData>>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_PROXY_DATAS,

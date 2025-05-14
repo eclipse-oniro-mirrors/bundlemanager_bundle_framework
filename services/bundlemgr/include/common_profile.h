@@ -513,6 +513,8 @@ constexpr const char* APP_ATOMIC_SERVICE_MAIN = "main";
 constexpr const char* MODULE_ATOMIC_SERVICE_PRELOADS = "preloads";
 // module atomicService preloads
 constexpr const char* PRELOADS_MODULE_NAME = "moduleName";
+// module atomicService resizeable
+constexpr const char* MODULE_ATOMIC_SERVICE_RESIZEABLE = "resizeable";
 
 // bundleType
 constexpr const char* BUNDLE_TYPE_APP = "app";
