@@ -1819,7 +1819,7 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0900, Function | SmallTest | Level1)
     SetPendSignAOTCode(ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE);
     InstalldClient::GetInstance()->installdProxy_ = new (std::nothrow) MockInstalldProxy(nullptr);
     bool ret = signDataCacheMgr.EnforceCodeSign();
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -1838,5 +1838,259 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_1000, Function | SmallTest | Level1)
     EXPECT_TRUE(ret);
     InstalldClient::GetInstance()->installdProxy_ = nullptr;
     InstalldClient::GetInstance()->GetInstalldProxy();
+}
+
+
+/**
+ * @tc.number: AddSignDataForSysComp_0100
+ * @tc.name: Test AddSignDataForSysComp
+ * @tc.desc: 1.AddSignDataForSysComp success testcase
+ */
+HWTEST_F(BmsAOTMgrTest, AddSignDataForSysComp_0100, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.clear();
+
+    std::string anFileName = "anFileName";
+    std::vector<uint8_t> signData = {0};
+    AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
+    ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForSysComp(anFileName, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.size();
+    EXPECT_NE(size, 0);
+
+    AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.clear();
+}
+
+/**
+ * @tc.number: AddSignDataForSysComp_0200
+ * @tc.name: Test AddSignDataForSysComp
+ * @tc.desc: 1.AddSignDataForSysComp, anFileName is empty
+ */
+HWTEST_F(BmsAOTMgrTest, AddSignDataForSysComp_0200, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.clear();
+
+    std::string anFileName;
+    std::vector<uint8_t> signData = {0};
+    AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
+    ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForSysComp(anFileName, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.size();
+    EXPECT_EQ(size, 0);
+}
+
+/**
+ * @tc.number: AddSignDataForSysComp_0300
+ * @tc.name: Test AddSignDataForSysComp
+ * @tc.desc: 1.AddSignDataForSysComp, signData is empty
+ */
+HWTEST_F(BmsAOTMgrTest, AddSignDataForSysComp_0300, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.clear();
+
+    std::string anFileName = "anFileName";
+    std::vector<uint8_t> signData;
+    AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
+    ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForSysComp(anFileName, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.size();
+    EXPECT_EQ(size, 0);
+}
+
+/**
+ * @tc.number: AddSignDataForSysComp_0400
+ * @tc.name: Test AddSignDataForSysComp
+ * @tc.desc: 1.AddSignDataForSysComp, isLocked_ is false
+ */
+HWTEST_F(BmsAOTMgrTest, AddSignDataForSysComp_0400, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.clear();
+
+    std::string anFileName = "anFileName";
+    std::vector<uint8_t> signData = {0};
+    AOTSignDataCacheMgr::GetInstance().isLocked_ = false;
+    ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForSysComp(anFileName, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.size();
+    EXPECT_EQ(size, 0);
+}
+
+/**
+ * @tc.number: AddSignDataForSysComp_0500
+ * @tc.name: Test AddSignDataForSysComp
+ * @tc.desc: 1.AddSignDataForSysComp, ret is ERR_OK
+ */
+HWTEST_F(BmsAOTMgrTest, AddSignDataForSysComp_0500, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.clear();
+
+    std::string anFileName = "anFileName";
+    std::vector<uint8_t> signData = {0};
+    AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
+    ErrCode ret = ERR_OK;
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForSysComp(anFileName, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.size();
+    EXPECT_EQ(size, 0);
+}
+
+/**
+ * @tc.number: AddSignDataForHap_0100
+ * @tc.name: Test AddSignDataForHap
+ * @tc.desc: 1.AddSignDataForHap success testcase
+ */
+HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0100, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "bundleName";
+    aotArgs.moduleName = "moduleName";
+    std::vector<uint8_t> signData = {0};
+    AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
+    ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(aotArgs, 0, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.size();
+    EXPECT_NE(size, 0);
+
+    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+}
+
+/**
+ * @tc.number: AddSignDataForHap_0200
+ * @tc.name: Test AddSignDataForHap
+ * @tc.desc: 1.AddSignDataForHap failed testcase, bundleName is empty
+ */
+HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0200, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+
+    AOTArgs aotArgs;
+    aotArgs.bundleName;
+    aotArgs.moduleName = "moduleName";
+    std::vector<uint8_t> signData = {0};
+    AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
+    ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(aotArgs, 0, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.size();
+    EXPECT_EQ(size, 0);
+}
+
+/**
+ * @tc.number: AddSignDataForHap_0300
+ * @tc.name: Test AddSignDataForHap
+ * @tc.desc: 1.AddSignDataForHap failed testcase, moduleName is empty
+ */
+HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0300, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "bundleName";
+    aotArgs.moduleName;
+    std::vector<uint8_t> signData = {0};
+    AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
+    ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(aotArgs, 0, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.size();
+    EXPECT_EQ(size, 0);
+}
+
+/**
+ * @tc.number: AddSignDataForHap_0400
+ * @tc.name: Test AddSignDataForHap
+ * @tc.desc: 1.AddSignDataForHap failed testcase, signData is empty
+ */
+HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0400, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "bundleName";
+    aotArgs.moduleName = "moduleName";
+    std::vector<uint8_t> signData;
+    AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
+    ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(aotArgs, 0, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.size();
+    EXPECT_EQ(size, 0);
+}
+
+/**
+ * @tc.number: AddSignDataForHap_0500
+ * @tc.name: Test AddSignDataForHap
+ * @tc.desc: 1.AddSignDataForHap failed testcase, isLocked_ is false
+ */
+HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0500, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "bundleName";
+    aotArgs.moduleName = "moduleName";
+    std::vector<uint8_t> signData = {0};
+    AOTSignDataCacheMgr::GetInstance().isLocked_ = false;
+    ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(aotArgs, 0, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.size();
+    EXPECT_EQ(size, 0);
+}
+
+/**
+ * @tc.number: AddSignDataForHap_0600
+ * @tc.name: Test AddSignDataForHap
+ * @tc.desc: 1.AddSignDataForHap failed testcase, ret is ERR_OK
+ */
+HWTEST_F(BmsAOTMgrTest, AddSignDataForHap_0600, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.clear();
+
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "bundleName";
+    aotArgs.moduleName = "moduleName";
+    std::vector<uint8_t> signData = {0};
+    AOTSignDataCacheMgr::GetInstance().isLocked_ = true;
+    ErrCode ret = ERR_OK;
+
+    AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(aotArgs, 0, signData, ret);
+    size_t size = AOTSignDataCacheMgr::GetInstance().hapSignDataVector_.size();
+    EXPECT_EQ(size, 0);
+}
+
+/**
+ * @tc.number: EnforceCodeSign_0100
+ * @tc.name: Test EnforceCodeSign
+ * @tc.desc: 1.EnforceCodeSign success testcase
+ */
+HWTEST_F(BmsAOTMgrTest, EnforceCodeSign_0100, Function | SmallTest | Level1)
+{
+    bool ret = AOTSignDataCacheMgr::GetInstance().EnforceCodeSign();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: EnforceCodeSignForSysComp_0100
+ * @tc.name: Test EnforceCodeSignForSysComp
+ * @tc.desc: 1.EnforceCodeSignForSysComp success testcase
+ */
+HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForSysComp_0100, Function | SmallTest | Level1)
+{
+    bool ret = AOTSignDataCacheMgr::GetInstance().EnforceCodeSignForSysComp();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: EnforceCodeSignForHap_0100
+ * @tc.name: Test EnforceCodeSignForHap
+ * @tc.desc: 1.EnforceCodeSignForHap success testcase
+ */
+HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForHap_0100, Function | SmallTest | Level1)
+{
+    bool ret = AOTSignDataCacheMgr::GetInstance().EnforceCodeSignForHap();
+    EXPECT_TRUE(ret);
 }
 } // OHOS
