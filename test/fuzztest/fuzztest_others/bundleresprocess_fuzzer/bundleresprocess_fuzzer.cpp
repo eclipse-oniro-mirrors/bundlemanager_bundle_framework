@@ -65,7 +65,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     std::vector<std::string> overlayHapPaths;
     BundleResourceProcess::GetOverlayModuleHapPaths(bundleInfo, MODULE_NAME, USERID, overlayHapPaths);
     BundleResourceProcess::ChangeDynamicIcon(resourceInfos, resourceInfo);
-    BundleResourceProcess::GetDynamicIcon(bundleInfo, resourceInfo);
+    BundleResourceProcess::GetDynamicIcon(bundleInfo, USERID, resourceInfo);
     return true;
 }
 }

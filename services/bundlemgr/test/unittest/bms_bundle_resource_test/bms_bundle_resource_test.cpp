@@ -4220,6 +4220,302 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0195, Function | SmallTest
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
+
+/**
+ * @tc.number: BmsBundleResourceTest_0196
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetCurDynamicIconModule, dataMgr is nullptr
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0196, Function | SmallTest | Level0)
+{
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    std::string dynamicIcon = BundleResourceProcess::GetCurDynamicIconModule(BUNDLE_NAME, USERID, 0);
+    EXPECT_TRUE(dynamicIcon.empty());
+    bundleMgrService_->RegisterDataMgr(savedDataMgr);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0197
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetCurDynamicIconModule
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0197, Function | SmallTest | Level0)
+{
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.curDynamicIconModule = BUNDLE_NAME;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+    savedDataMgr->bundleInfos_[BUNDLE_NAME_NOT_EXIST] = bundleInfo;
+
+    std::string dynamicIcon = BundleResourceProcess::GetCurDynamicIconModule(BUNDLE_NAME, USERID, 0);
+    EXPECT_TRUE(dynamicIcon.empty());
+    dynamicIcon = BundleResourceProcess::GetCurDynamicIconModule(BUNDLE_NAME_NOT_EXIST, USERID, 0);
+    EXPECT_EQ(dynamicIcon, BUNDLE_NAME);
+    auto iter = savedDataMgr->bundleInfos_.find(BUNDLE_NAME_NOT_EXIST);
+    if (iter != savedDataMgr->bundleInfos_.end()) {
+        savedDataMgr->bundleInfos_.erase(iter);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0198
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetExtendResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0198, Function | SmallTest | Level0)
+{
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    ExtendResourceInfo extendResourceInfo;
+    bool ret = BundleResourceProcess::GetExtendResourceInfo(BUNDLE_NAME, BUNDLE_NAME, extendResourceInfo);
+    EXPECT_FALSE(ret);
+    bundleMgrService_->RegisterDataMgr(savedDataMgr);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0199
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetExtendResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0199, Function | SmallTest | Level0)
+{
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.curDynamicIconModule = BUNDLE_NAME;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+    ExtendResourceInfo resourceInfo;
+    resourceInfo.moduleName = BUNDLE_NAME;
+    bundleInfo.extendResourceInfos_[BUNDLE_NAME] = resourceInfo;
+    savedDataMgr->bundleInfos_[BUNDLE_NAME_NOT_EXIST] = bundleInfo;
+
+    ExtendResourceInfo extendResourceInfo;
+    bool ret = BundleResourceProcess::GetExtendResourceInfo(BUNDLE_NAME, "", extendResourceInfo);
+    EXPECT_FALSE(ret);
+
+    ret = BundleResourceProcess::GetExtendResourceInfo(BUNDLE_NAME_NOT_EXIST,
+        BUNDLE_NAME_NOT_EXIST, extendResourceInfo);
+    EXPECT_FALSE(ret);
+
+    ret = BundleResourceProcess::GetExtendResourceInfo(BUNDLE_NAME_NOT_EXIST,
+        BUNDLE_NAME, extendResourceInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(extendResourceInfo.moduleName, BUNDLE_NAME);
+
+    auto iter = savedDataMgr->bundleInfos_.find(BUNDLE_NAME_NOT_EXIST);
+    if (iter != savedDataMgr->bundleInfos_.end()) {
+        savedDataMgr->bundleInfos_.erase(iter);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0200
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetDynamicIcon
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0200, Function | SmallTest | Level0)
+{
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+
+    ResourceInfo resourceInfo;
+    resourceInfo.appIndex_ = 1;
+    bool ret = BundleResourceProcess::GetDynamicIcon(bundleInfo, USERID, resourceInfo);
+    EXPECT_FALSE(ret);
+
+    resourceInfo.appIndex_ = 0;
+    ret = BundleResourceProcess::GetDynamicIcon(bundleInfo, USERID, resourceInfo);
+    EXPECT_FALSE(ret);
+
+    bundleInfo.innerBundleUserInfos_["_100"].curDynamicIconModule = BUNDLE_NAME;
+    ret = BundleResourceProcess::GetDynamicIcon(bundleInfo, USERID, resourceInfo);
+    EXPECT_FALSE(ret);
+
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = BUNDLE_NAME;
+    bundleInfo.extendResourceInfos_[BUNDLE_NAME] = extendResourceInfo;
+    ret = BundleResourceProcess::GetDynamicIcon(bundleInfo, USERID, resourceInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0201
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddCloneBundleResourceInfo, bundleName not exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0201, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        // add clone bundle resource
+        int32_t appIndex = 1;
+        bool ret = manager->AddCloneBundleResourceInfo(BUNDLE_NAME, appIndex, USERID);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0202
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddCloneBundleResourceInfo, bundleName exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0202, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        BundleResourceInfo bundleResourceInfo;
+        bool ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+            bundleResourceInfo);
+        EXPECT_TRUE(ret);
+        // add clone bundle resource
+        int32_t appIndex = 1;
+        ret = manager->AddCloneBundleResourceInfo(BUNDLE_NAME, appIndex, USERID);
+        EXPECT_TRUE(ret);
+        BundleResourceInfo cloneBundleResourceInfo;
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME, static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+            cloneBundleResourceInfo, appIndex);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(cloneBundleResourceInfo.bundleName, bundleResourceInfo.bundleName);
+        EXPECT_EQ(cloneBundleResourceInfo.appIndex, appIndex);
+        EXPECT_EQ(cloneBundleResourceInfo.label, bundleResourceInfo.label + std::to_string(appIndex));
+        EXPECT_FALSE(cloneBundleResourceInfo.icon.empty());
+        EXPECT_FALSE(cloneBundleResourceInfo.foreground.empty());
+        ret = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
+        EXPECT_TRUE(ret);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0203
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateCloneBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0203, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, USERID, 0, 0);
+        EXPECT_FALSE(ret);
+
+        ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, USERID, 1,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
+        EXPECT_FALSE(ret);
+
+        ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, USERID, 1,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE));
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0204
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateCloneBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0204, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        int32_t appIndex = 1;
+        bool ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, USERID, appIndex,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE));
+        EXPECT_TRUE(ret);
+
+        ret = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
+        EXPECT_TRUE(ret);
+    }
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0205
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceConvertToResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0205, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        BundleResourceInfo bundleResourceInfo;
+        bundleResourceInfo.label = "label";
+        ResourceInfo resourceInfo;
+        manager->BundleResourceConvertToResourceInfo(bundleResourceInfo, resourceInfo);
+        EXPECT_EQ(bundleResourceInfo.label, resourceInfo.label_);
+
+        ResourceInfo resourceInfo2;
+        resourceInfo2.appIndex_ = 1;
+        manager->BundleResourceConvertToResourceInfo(bundleResourceInfo, resourceInfo2);
+        EXPECT_NE(bundleResourceInfo.label, resourceInfo2.label_);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0206
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test LauncherAbilityResourceConvertToResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0206, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+        launcherAbilityResourceInfo.label = "label";
+        ResourceInfo resourceInfo;
+        manager->LauncherAbilityResourceConvertToResourceInfo(launcherAbilityResourceInfo, resourceInfo);
+        EXPECT_EQ(launcherAbilityResourceInfo.label, resourceInfo.label_);
+
+        ResourceInfo resourceInfo2;
+        resourceInfo2.appIndex_ = 1;
+        manager->LauncherAbilityResourceConvertToResourceInfo(launcherAbilityResourceInfo, resourceInfo2);
+        EXPECT_NE(launcherAbilityResourceInfo.label, resourceInfo2.label_);
+    }
+}
 #endif
 
 /**

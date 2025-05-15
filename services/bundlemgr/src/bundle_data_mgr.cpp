@@ -10595,5 +10595,16 @@ ErrCode BundleDataMgr::GetAllDynamicInfo(const int32_t userId, std::vector<Dynam
     }
     return ERR_OK;
 }
+
+std::string BundleDataMgr::GetCurDynamicIconModule(
+    const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        return Constants::EMPTY_STRING;
+    }
+    return item->second.GetCurDynamicIconModule(userId, appIndex);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

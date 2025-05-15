@@ -158,7 +158,7 @@ bool BundleResourceHelper::AddCloneBundleResourceInfo(const std::string &bundleN
         APP_LOGE("failed, manager is nullptr");
         return false;
     }
-    if (!manager->AddCloneBundleResourceInfo(bundleName, appIndex)) {
+    if (!manager->AddCloneBundleResourceInfo(bundleName, appIndex, userId)) {
         APP_LOGE("add clone bundle resource failed, bundleName:%{public}s, appIndex:%{public}d",
             bundleName.c_str(), appIndex);
         return false;

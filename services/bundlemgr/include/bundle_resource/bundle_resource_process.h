@@ -31,7 +31,7 @@ class BundleResourceProcess {
 public:
     // get LauncherAbilityResourceInfo and BundleResourceInfo by bundleName
     static bool GetResourceInfoByBundleName(const std::string &bundleName, const int32_t userId,
-        std::vector<ResourceInfo> &resourceInfo);
+        std::vector<ResourceInfo> &resourceInfo, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);
     // get LauncherAbilityResourceInfo by abilityName
     static bool GetLauncherResourceInfoByAbilityName(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const int32_t userId,
@@ -46,6 +46,12 @@ public:
     static void GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName);
 
     static std::set<int32_t> GetAppIndexByBundleName(const std::string &bundleName);
+
+    static std::string GetCurDynamicIconModule(const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex);
+
+    static bool GetExtendResourceInfo(const std::string &bundleName, const std::string &moduleName,
+        ExtendResourceInfo &extendResourceInfo);
 
 private:
     // used for show in settings
@@ -63,7 +69,7 @@ private:
     static ResourceInfo ConvertToBundleResourceInfo(const InnerBundleInfo &innerBundleInfo);
 
     static bool InnerGetResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
-        std::vector<ResourceInfo> &resourceInfos);
+        std::vector<ResourceInfo> &resourceInfos, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);
 
     static bool OnGetResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfos);
@@ -77,7 +83,7 @@ private:
         std::vector<ResourceInfo> &resourceInfos, const ResourceInfo &resourceInfo);
 
     static bool GetDynamicIcon(
-        const InnerBundleInfo &innerBundleInfo, ResourceInfo &resourceInfo);
+        const InnerBundleInfo &innerBundleInfo, const int32_t userId, ResourceInfo &resourceInfo);
 
     static bool GetExternalOverlayHapState(const std::string &bundleName,
         const std::string &moduleName, const int32_t userId, int32_t &state);
