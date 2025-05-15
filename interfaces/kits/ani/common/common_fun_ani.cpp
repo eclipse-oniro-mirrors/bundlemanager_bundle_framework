@@ -16,11 +16,13 @@
 #include <charconv>
 #include <vector>
 
+#include "ani_common_want.h"
 #include "app_log_wrapper.h"
 #include "common_fun_ani.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+using Want = OHOS::AAFwk::Want;
 namespace {
 constexpr const char* CLASSNAME_ABILITYINFO = "LbundleManager/AbilityInfoInner/AbilityInfoInner;";
 constexpr const char* CLASSNAME_EXTENSIONABILITYINFO =
@@ -70,6 +72,9 @@ constexpr const char* CLASSNAME_API_VERSION_INNER = "LbundleManager/BundlePackIn
 constexpr const char* CLASSNAME_DISPATCH_INFO_INNER = "LbundleManager/DispatchInfoInner/DispatchInfoInner;";
 constexpr const char* CLASSNAME_OVERLAY_MOUDLE_INFO_INNER =
     "LbundleManager/OverlayModuleInfoInner/OverlayModuleInfoInner;";
+constexpr const char* CLASSNAME_DISPOSED_RULE_INNER = "L@ohos/bundle/appControl/appControl/DisposedRuleInner;";
+constexpr const char* CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER =
+    "L@ohos/bundle/appControl/appControl/UninstallDisposedRuleInner;";
 
 constexpr const char* PROPERTYNAME_NAME = "name";
 constexpr const char* PROPERTYNAME_VENDOR = "vendor";
@@ -228,6 +233,13 @@ constexpr const char* PROPERTYNAME_DISPATCHAPIVERSION = "dispatchAPIVersion";
 constexpr const char* PROPERTYNAME_TARGETMOUDLENAME = "targetModuleName";
 constexpr const char* PROPERTYNAME_PRIORITY = "priority";
 constexpr const char* PROPERTYNAME_STATE = "state";
+constexpr const char* PROPERTYNAME_ACTION = "action";
+constexpr const char* PROPERTYNAME_WANT = "want";
+constexpr const char* PROPERTYNAME_COMPONENTTYPE = "componentType";
+constexpr const char* PROPERTYNAME_DISPOSEDTYPE = "disposedType";
+constexpr const char* PROPERTYNAME_CONTROLTYPE = "controlType";
+constexpr const char* PROPERTYNAME_ELEMENTLIST = "elementList";
+constexpr const char* PROPERTYNAME_UNINSTALLCOMPONENTTYPE = "uninstallComponentType";
 
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
 constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
@@ -1587,6 +1599,78 @@ ani_object CommonFunAni::ConvertOverlayModuleInfo(ani_env* env, const OverlayMod
     return object;
 }
 
+ani_object CommonFunAni::ConvertDisposedRule(ani_env* env, const DisposedRule& disposedRule)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_DISPOSED_RULE_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    // want: Want
+    if (disposedRule.want != nullptr) {
+        ani_object aWant = WrapWant(env, *disposedRule.want);
+        RETURN_NULL_IF_NULL(aWant);
+        RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_WANT, aWant));
+    } else {
+        RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_WANT));
+    }
+
+    // componentType: ComponentType
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_COMPONENTTYPE,
+        EnumUtils::EnumNativeToETS_AppControl_ComponentType(env, static_cast<int32_t>(disposedRule.componentType))));
+
+    // disposedType: DisposedType
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DISPOSEDTYPE,
+        EnumUtils::EnumNativeToETS_AppControl_DisposedType(env, static_cast<int32_t>(disposedRule.disposedType))));
+
+    // controlType: ControlType
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_CONTROLTYPE,
+        EnumUtils::EnumNativeToETS_AppControl_ControlType(env, static_cast<int32_t>(disposedRule.controlType))));
+
+    // elementList: Array<ElementName>
+    ani_object aElementList = ConvertAniArray(env, disposedRule.elementList, ConvertElementName);
+    RETURN_NULL_IF_NULL(aElementList);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ELEMENTLIST, aElementList));
+
+    // priority: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PRIORITY, disposedRule.priority));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertUninstallDisposedRule(ani_env* env, const UninstallDisposedRule& uninstallDisposedRule)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    // want: Want
+    if (uninstallDisposedRule.want != nullptr) {
+        ani_object aWant = WrapWant(env, *uninstallDisposedRule.want);
+        RETURN_NULL_IF_NULL(aWant);
+        RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_WANT, aWant));
+    } else {
+        RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_WANT));
+    }
+
+    // uninstallComponentType: UninstallComponentType
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_UNINSTALLCOMPONENTTYPE,
+        EnumUtils::EnumNativeToETS_AppControl_UninstallComponentType(
+            env, static_cast<int32_t>(uninstallDisposedRule.uninstallComponentType))));
+
+    // priority: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PRIORITY, uninstallDisposedRule.priority));
+
+    return object;
+}
+
 ani_object CommonFunAni::CreateBundleChangedInfo(
     ani_env* env, const std::string& bundleName, int32_t userId, int32_t appIndex)
 {
@@ -2734,6 +2818,184 @@ bool CommonFunAni::ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo
     // orientationId: number
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ORIENTATIONID, &uintValue));
     abilityInfo.orientationId = uintValue;
+
+    return true;
+}
+
+bool CommonFunAni::ParseElementName(ani_env* env, ani_object object, ElementName& elementName)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // deviceId?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_DEVICEID, &string)) {
+        elementName.SetDeviceID(AniStrToString(env, string));
+    }
+
+    // bundleName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
+    elementName.SetBundleName(AniStrToString(env, string));
+
+    // moduleName?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_MODULENAME, &string)) {
+        elementName.SetModuleName(AniStrToString(env, string));
+    }
+
+    // abilityName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ABILITYNAME, &string));
+    elementName.SetAbilityName(AniStrToString(env, string));
+
+    return true;
+}
+
+bool CommonFunAni::ParseWantWithoutVerification(ani_env* env, ani_object object, Want& want)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+    ani_int intValue = 0;
+    ani_array array = nullptr;
+
+    // bundleName?: string
+    std::string bundleName = "";
+    if (CallGetterOptional(env, object, PROPERTYNAME_BUNDLENAME, &string)) {
+        bundleName = AniStrToString(env, string);
+    }
+
+    // abilityName?: string
+    std::string abilityName = "";
+    if (CallGetterOptional(env, object, PROPERTYNAME_ABILITYNAME, &string)) {
+        abilityName = AniStrToString(env, string);
+    }
+
+    // deviceId?: string
+    std::string deviceId = "";
+    if (CallGetterOptional(env, object, PROPERTYNAME_DEVICEID, &string)) {
+        deviceId = AniStrToString(env, string);
+    }
+
+    // uri?: string
+    std::string uri = "";
+    if (CallGetterOptional(env, object, PROPERTYNAME_URI, &string)) {
+        uri = AniStrToString(env, string);
+    }
+
+    // type?: string
+    std::string type = "";
+    if (CallGetterOptional(env, object, PROPERTYNAME_TYPE, &string)) {
+        type = AniStrToString(env, string);
+    }
+
+    // flags?: number
+    int32_t flags = 0;
+    if (CallGetterOptional(env, object, PROPERTYNAME_FLAGS, &intValue)) {
+        CommonFunAni::TryCastDoubleTo(intValue, &flags);
+    }
+
+    // action?: string
+    std::string action = "";
+    if (CallGetterOptional(env, object, PROPERTYNAME_ACTION, &string)) {
+        action = AniStrToString(env, string);
+    }
+
+    // entities?: Array<string>
+    if (CallGetterOptional(env, object, PROPERTYNAME_ENTITIES, &array)) {
+        std::vector<std::string> entities;
+        if (ParseStrArray(env, array, entities)) {
+            for (size_t idx = 0; idx < entities.size(); ++idx) {
+                APP_LOGD("entity:%{public}s", entities[idx].c_str());
+                want.AddEntity(entities[idx]);
+            }
+        }
+    }
+
+    // moduleName?: string
+    std::string moduleName = "";
+    if (CallGetterOptional(env, object, PROPERTYNAME_MODULENAME, &string)) {
+        moduleName = AniStrToString(env, string);
+    }
+
+    want.SetAction(action);
+    want.SetUri(uri);
+    want.SetType(type);
+    want.SetFlags(flags);
+    ElementName elementName(deviceId, bundleName, abilityName, moduleName);
+    want.SetElement(elementName);
+
+    return true;
+}
+
+bool CommonFunAni::ParseDisposedRule(ani_env* env, ani_object object, DisposedRule& disposedRule)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_object objectValue = nullptr;
+    ani_enum_item enumItem = nullptr;
+    ani_array array = nullptr;
+    ani_int intValue = 0;
+
+    // want: Want
+    Want want;
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_WANT, &objectValue));
+    if (!UnwrapWant(env, objectValue, want)) {
+        APP_LOGE("parse want failed");
+        return false;
+    }
+    disposedRule.want = std::make_shared<Want>(want);
+
+    // componentType: ComponentType
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_COMPONENTTYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, disposedRule.componentType));
+
+    // disposedType: DisposedType
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DISPOSEDTYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, disposedRule.disposedType));
+
+    // controlType: ControlType
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_CONTROLTYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, disposedRule.disposedType));
+
+    // elementList: Array<ElementName>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ELEMENTLIST, &array));
+    RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, disposedRule.elementList, ParseElementName));
+
+    // priority: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PRIORITY, &intValue));
+    disposedRule.priority = intValue;
+
+    return true;
+}
+
+bool CommonFunAni::ParseUninstallDisposedRule(ani_env* env,
+    ani_object object, UninstallDisposedRule& uninstallDisposedRule)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_object objectValue = nullptr;
+    ani_enum_item enumItem = nullptr;
+    ani_int intValue = 0;
+
+    // want: Want
+    Want want;
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_WANT, &objectValue));
+    if (!UnwrapWant(env, objectValue, want)) {
+        APP_LOGE("parse want failed");
+        return false;
+    }
+    uninstallDisposedRule.want = std::make_shared<Want>(want);
+
+    // uninstallComponentType: UninstallComponentType
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_UNINSTALLCOMPONENTTYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, uninstallDisposedRule.uninstallComponentType));
+
+    // priority: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PRIORITY, &intValue));
+    uninstallDisposedRule.priority = intValue;
 
     return true;
 }

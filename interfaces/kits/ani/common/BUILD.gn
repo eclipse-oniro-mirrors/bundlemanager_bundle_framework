@@ -53,6 +53,8 @@ ohos_shared_library("bms_ani_common") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ani_common",
+    "ability_runtime:runtime",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",

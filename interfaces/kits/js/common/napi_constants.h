@@ -34,6 +34,8 @@ constexpr size_t ARGS_POS_FOUR = 4;
 constexpr size_t NAPI_RETURN_ONE = 1;
 constexpr size_t CALLBACK_PARAM_SIZE = 2;
 
+constexpr int32_t GET_REMOTE_ABILITY_INFO_MAX_SIZE = 10;
+
 constexpr const char* TYPE_NUMBER = "number";
 constexpr const char* TYPE_STRING = "string";
 constexpr const char* TYPE_OBJECT = "object";
@@ -108,6 +110,27 @@ constexpr const char* GET_OVERLAY_MODULE_INFO = "GetOverlayModuleInfo";
 constexpr const char* GET_TARGET_OVERLAY_MODULE_INFOS = "GetTargetOverlayModuleInfos";
 constexpr const char* GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME = "GetOverlayModuleInfoByBundleName";
 constexpr const char* GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME = "GetTargetOverlayModuleInfosByBundleName";
+constexpr const char* RESOURCE_NAME_GET_REMOTE_ABILITY_INFO = "GetRemoteAbilityInfo";
+constexpr const char* PARAMETER_ELEMENT_NAME = "elementName";
+constexpr const char* PARAMETER_LOCALE = "locale";
+constexpr const char* TYPE_WANT = "want";
+constexpr const char* PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
+constexpr const char* SET_DISPOSED_STATUS = "SetDisposedStatus";
+constexpr const char* GET_DISPOSED_STATUS = "GetDisposedStatus";
+constexpr const char* DELETE_DISPOSED_STATUS = "DeleteDisposedStatus";
+constexpr const char* SET_DISPOSED_STATUS_SYNC = "SetDisposedStatusSync";
+constexpr const char* DELETE_DISPOSED_STATUS_SYNC = "DeleteDisposedStatusSync";
+constexpr const char* GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
+constexpr const char* APP_ID = "appId";
+constexpr const char* APP_IDENTIFIER = "appIdentifier";
+constexpr const char* DISPOSED_WANT = "disposedWant";
+constexpr const char* DISPOSED_RULE = "disposedRule";
+constexpr const char* DISPOSED_RULE_TYPE = "DisposedRule";
+constexpr const char* UNINSTALL_DISPOSED_RULE = "uninstallDisposedRule";
+constexpr const char* UNINSTALL_DISPOSED_RULE_TYPE = "UninstallDisposedRule";
+constexpr const char* SET_UNINSTALL_DISPOSED_RULE = "SetUninstallDisposedRule";
+constexpr const char* DELETE_UNINSTALL_DISPOSED_RULE = "DeleteUninstallDisposedRule";
+constexpr const char* GET_UNINSTALL_DISPOSED_RULE = "GetUninstallDisposedRule";
 }
 }
 }
