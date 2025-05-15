@@ -577,7 +577,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .appId = uninstallBundleAppId_,
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
-            .keepData = installParam.isKeepData
+            .keepData = installParam.isKeepData,
+            .isBundleExist = isBundleExist_
         };
         NotifyBundleStatus(installRes);
     }
@@ -2068,6 +2069,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     driverInstaller->RemoveDriverSoFile(oldInfo, oldInfo.GetModuleName(modulePackage), false);
+    isBundleExist_ = true;
     LOG_D(BMS_TAG_INSTALLER, "finish %{public}s in %{public}s uninstall", bundleName.c_str(), modulePackage.c_str());
     return ERR_OK;
 }
@@ -5168,6 +5170,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     needDeleteAppTempPath_ = false;
     isPreBundleRecovered_ = false;
     callerToken_ = 0;
+    isBundleExist_ = false;
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool killProcess)

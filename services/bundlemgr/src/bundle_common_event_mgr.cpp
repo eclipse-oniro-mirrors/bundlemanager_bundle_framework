@@ -54,6 +54,7 @@ constexpr const char* USER_ID = "userId";
 constexpr const char* SHORTCUT_CHANGED = "usual.event.SHORTCUT_CHANGED";
 constexpr const char* SHORTCUT_ID = "shortcutId";
 constexpr const char* MANAGE_SHORTCUTS = "ohos.permission.MANAGE_SHORTCUTS";
+constexpr const char* IS_BUNDLE_EXIST = "isBundleExist";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -207,6 +208,7 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
         want.SetParam(ASSET_ACCESS_GROUPS, installResult.assetAccessGroups);
         want.SetParam(DEVELOPERID, installResult.developerId);
     }
+    want.SetParam(IS_BUNDLE_EXIST, installResult.isBundleExist);
 }
 
 ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info, int32_t uid, int32_t userId,
