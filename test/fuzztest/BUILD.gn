@@ -15,7 +15,7 @@ import("../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 group("fuzztest") {
   testonly = true
-  deps = []
+  deps = [ "fuzztest_bundlemanager:bundlemanagerfuzztest" ]
 
   deps += [
     # deps file

@@ -191,6 +191,24 @@ ohos_unittest("BmsBundleManagerTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
+
+  if (global_i18n_enable) {
+    defines += [ "GLOBAL_I18_ENABLE" ]
+    external_deps += [ "i18n:intl_util" ]
+  }
+
+  if (bundle_framework_bundle_resource) {
+    defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
+    external_deps += [ "ability_base:configuration" ]
+    if (bundle_framework_graphics) {
+      defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
+      external_deps += [
+        "ace_engine:drawable_descriptor",
+        "image_framework:image_native",
+      ]
+    }
+    sources += bundle_resource
+  }
 }
 
 ohos_unittest("BmsBundleManagerTest2") {

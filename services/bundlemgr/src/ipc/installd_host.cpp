@@ -230,6 +230,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::MIGRATE_DATA):
             result = HandleMigrateData(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::LOAD_INSTALLS):
+            result = HandleLoadInstalls(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1042,6 +1045,12 @@ bool InstalldHost::HandleMigrateData(MessageParcel &data, MessageParcel &reply)
     ErrCode result = MigrateData(sourcePaths, destinationPath);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleLoadInstalls(MessageParcel &data, MessageParcel &reply)
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_OK);
     return true;
 }
 

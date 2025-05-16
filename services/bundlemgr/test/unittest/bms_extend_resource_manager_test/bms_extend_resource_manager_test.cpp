@@ -52,6 +52,7 @@ const std::string TEST_MODULE = "testModule";
 const std::string EMPTY_STRING = "";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t USER_ID = 100;
+const int32_t INVALID_ID = -1;
 }  // namespace
 
 class BmsExtendResourceManagerTest : public testing::Test {
@@ -1345,12 +1346,62 @@ HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0700, Function | 
  * @tc.name: Test delete resource failure (path not exist)
  * @tc.desc: Verify function returns false when resource path not exist
  */
-HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_1000, Function | SmallTest | Level1) {
-    std::string cmd = "rm -rf /data/service/el1/public/bms/bundle_resource/" + BUNDLE_NAME;
-    system(cmd.c_str());
+HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_1000, Function | SmallTest | Level1)
+{
     ExtendResourceManagerHostImpl impl;
     bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME);
     
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsNeedUpdateBundleResourceInfo_0100
+ * @tc.name: IsNeedUpdateBundleResourceInfo
+ * @tc.desc: Test function IsNeedUpdateBundleResourceInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, IsNeedUpdateBundleResourceInfo_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.IsNeedUpdateBundleResourceInfo(BUNDLE_NAME, 0);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsNeedUpdateBundleResourceInfo_0200
+ * @tc.name: IsNeedUpdateBundleResourceInfo
+ * @tc.desc: Test function IsNeedUpdateBundleResourceInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, IsNeedUpdateBundleResourceInfo_0200, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.IsNeedUpdateBundleResourceInfo(BUNDLE_NAME, USER_ID);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsNeedUpdateBundleResourceInfo_0300
+ * @tc.name: IsNeedUpdateBundleResourceInfo
+ * @tc.desc: Test function IsNeedUpdateBundleResourceInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, IsNeedUpdateBundleResourceInfo_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    InnerBundleUserInfo userInfo2;
+    userInfo2.bundleUserInfo.userId = INVALID_ID;
+    InnerBundleInfo info;
+    info.innerBundleUserInfos_["100"] = userInfo;
+    info.innerBundleUserInfos_["-1"] = userInfo2;
+    dataMgr->bundleInfos_.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.IsNeedUpdateBundleResourceInfo(BUNDLE_NAME, USER_ID);
+    EXPECT_TRUE(ret);
+
+    ret = impl.IsNeedUpdateBundleResourceInfo(BUNDLE_NAME, INVALID_ID);
     EXPECT_FALSE(ret);
 }
 } // OHOS

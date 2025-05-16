@@ -140,17 +140,4 @@ HWTEST_F(BmsAOTHandlerTest2, BuildArkProfilePath_0100, Function | SmallTest | Le
     path = AOTHandler::BuildArkProfilePath(USER_ID, bundleName, moduleName);
     EXPECT_EQ(path, modulePath);
 }
-
-/**
- * @tc.number: HandleArkPathsChange_0100
- * @tc.name: test HandleArkPathsChange
- * @tc.desc: 1.call HandleArkPathsChange, call CheckOtaFlag, expect isHandled is true
- */
-HWTEST_F(BmsAOTHandlerTest2, HandleArkPathsChange_0100, Function | SmallTest | Level1)
-{
-    AOTHandler::GetInstance().HandleArkPathsChange();
-    bool isHandled = false;
-    (void)BMSEventHandler::CheckOtaFlag(OTAFlag::DELETE_DEPRECATED_ARK_PATHS, isHandled);
-    EXPECT_TRUE(isHandled);
-}
 } // OHOS

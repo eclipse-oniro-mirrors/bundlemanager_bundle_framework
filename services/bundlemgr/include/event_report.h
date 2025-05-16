@@ -88,17 +88,17 @@ enum class UserEventType : uint8_t {
     CREATE_WITH_SKIP_PRE_INSTALL_END = 6,
 };
 
-enum class ACTION_TYPE_ENUM : uint8_t {
-    ACTION_TYPE_OF_INSTALL = 1,
-    ACTION_TYPE_OF_RUNUING = 2,
-    ACTION_TYPE_DISPOSE_STATUS = 3,
-    ACTION_TYPE_DISPOSE_RULE = 4,
-    ACTION_TYPE_UNINSTALL_DISPOSE_RULE = 5,
+enum class ControlActionType : uint8_t {
+    INSTALL = 1,
+    RUNUING = 2,
+    DISPOSE_STATUS = 3,
+    DISPOSE_RULE = 4,
+    UNINSTALL_DISPOSE_RULE = 5,
 };
 
-enum class OPERATION_TYPE_ENUM : uint8_t {
-    OPERATION_TYPE_ADD_RULE = 1,
-    OPERATION_TYPE_REMOVE_RULE = 2,
+enum class ControlOperationType : uint8_t {
+    ADD_RULE = 1,
+    REMOVE_RULE = 2,
 };
 
 enum class DB_OPERATION_TYPE : uint8_t {

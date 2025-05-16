@@ -603,5 +603,31 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3600, Function | SmallTest | 
     auto result = bundleMgrProxy.GetParcelInfoFromAshMem(reply, data);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_3700
+ * @tc.name: test the RegisterPluginEventCallback
+ * @tc.desc: 1. callback is nullptr
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3700, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    auto result = bundleMgrProxy.RegisterPluginEventCallback(nullptr);
+    EXPECT_EQ(result, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_3800
+ * @tc.name: test the UnregisterPluginEventCallback
+ * @tc.desc: 1. callback is nullptr
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3800, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    auto result = bundleMgrProxy.UnregisterPluginEventCallback(nullptr);
+    EXPECT_EQ(result, ERR_APPEXECFWK_NULL_PTR);
+}
 } // AppExecFwk
 } // OHOS

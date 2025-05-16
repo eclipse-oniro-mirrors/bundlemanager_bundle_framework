@@ -225,6 +225,18 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
+     * @brief Obtains the BundleInfo for the calling app.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+     virtual ErrCode GetBundleInfoForSelfWithOutCache(int32_t flags, BundleInfo &bundleInfo)
+     {
+         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+     }
+    /**
      * @brief Obtains the BundleInfo based on a given bundle name, which the calling app depends on.
      * @param sharedBundleName Indicates the bundle name to be queried.
      * @param sharedBundleInfo Indicates the obtained BundleInfo object.
@@ -530,6 +542,18 @@ public:
      */
     virtual ErrCode QueryAbilityInfosV9(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    /**
+     * @brief Get AbilityInfo by the given uri.
+     * @param uri Indicates the uri used for matching ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
+     */
+    virtual ErrCode GetAbilityInfos(
+        const std::string &uri, uint32_t flags, std::vector<AbilityInfo> &abilityInfos)
     {
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }

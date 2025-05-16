@@ -2173,6 +2173,18 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundle
     return cloneAppIndexes;
 }
 
+std::set<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundleName) const
+{
+    std::set<int32_t> cloneAppIndexes;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        LOG_W(BMS_TAG_QUERY, "no bundleName %{public}s found", bundleName.c_str());
+        return cloneAppIndexes;
+    }
+    return infoItem->second.GetCloneBundleAppIndexes();
+}
+
 std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesNoLock(const std::string &bundleName, int32_t userId) const
 {
     std::vector<int32_t> cloneAppIndexes;
@@ -2277,9 +2289,10 @@ void BundleDataMgr::GetAllLauncherAbility(const Want &want, std::vector<AbilityI
         int64_t installTime = 0;
         std::string userIdKey = info.GetBundleName() + "_" + std::to_string(userId);
         std::string userZeroKey = info.GetBundleName() + "_" + std::to_string(0);
+        std::string userOneKey = info.GetBundleName() + "_" + std::to_string(1);
         auto iter = std::find_if(info.GetInnerBundleUserInfos().begin(), info.GetInnerBundleUserInfos().end(),
-            [&userIdKey, &userZeroKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
-            return (infoMap.first == userIdKey || infoMap.first == userZeroKey);
+            [&userIdKey, &userZeroKey, &userOneKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
+            return (infoMap.first == userIdKey || infoMap.first == userZeroKey || infoMap.first == userOneKey);
         });
         if (iter != info.GetInnerBundleUserInfos().end()) {
             installTime = iter->second.installTime;
@@ -2315,9 +2328,10 @@ ErrCode BundleDataMgr::GetLauncherAbilityByBundleName(const Want &want, std::vec
     int64_t installTime = 0;
     std::string userIdKey = info.GetBundleName() + "_" + std::to_string(userId);
     std::string userZeroKey = info.GetBundleName() + "_" + std::to_string(0);
+    std::string userOneKey = info.GetBundleName() + "_" + std::to_string(1);
     auto iter = std::find_if(info.GetInnerBundleUserInfos().begin(), info.GetInnerBundleUserInfos().end(),
-        [&userIdKey, &userZeroKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
-        return (infoMap.first == userIdKey || infoMap.first == userZeroKey);
+        [&userIdKey, &userZeroKey, &userOneKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
+        return (infoMap.first == userIdKey || infoMap.first == userZeroKey || infoMap.first == userOneKey);
     });
     if (iter != info.GetInnerBundleUserInfos().end()) {
         installTime = iter->second.installTime;
@@ -2391,9 +2405,10 @@ ErrCode BundleDataMgr::GetLauncherAbilityInfoSync(const Want &want, const int32_
     int64_t installTime = 0;
     std::string userIdKey = info.GetBundleName() + "_" + std::to_string(userId);
     std::string userZeroKey = info.GetBundleName() + "_" + std::to_string(0);
+    std::string userOneKey = info.GetBundleName() + "_" + std::to_string(1);
     auto iter = std::find_if(info.GetInnerBundleUserInfos().begin(), info.GetInnerBundleUserInfos().end(),
-        [&userIdKey, &userZeroKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
-        return (infoMap.first == userIdKey || infoMap.first == userZeroKey);
+        [&userIdKey, &userZeroKey, &userOneKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
+        return (infoMap.first == userIdKey || infoMap.first == userZeroKey || infoMap.first == userOneKey);
     });
     if (iter != info.GetInnerBundleUserInfos().end()) {
         installTime = iter->second.installTime;
@@ -10579,6 +10594,17 @@ ErrCode BundleDataMgr::GetAllDynamicInfo(const int32_t userId, std::vector<Dynam
         item.second.GetAllDynamicIconInfo(userId, dynamicIconInfos);
     }
     return ERR_OK;
+}
+
+std::string BundleDataMgr::GetCurDynamicIconModule(
+    const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        return Constants::EMPTY_STRING;
+    }
+    return item->second.GetCurDynamicIconModule(userId, appIndex);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

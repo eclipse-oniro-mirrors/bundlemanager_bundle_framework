@@ -25,21 +25,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr uint8_t MAX_MODULE_NAME = 128;
-const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
-const int32_t THRESHOLD_VAL_LEN = 40;
-bool IsSupportCompressNativeLibs()
-{
-    char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
-    if (ret <= 0) {
-        APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS.c_str());
-        return false;
-    }
-    if (std::strcmp(compressNativeLibs, "true") == 0) {
-        return true;
-    }
-    return false;
-}
 }
 
 namespace Profile {
@@ -268,6 +253,8 @@ struct App {
     int32_t minCompatibleVersionCode = -1;
     uint32_t minAPIVersion = 0;
     int32_t targetAPIVersion = 0;
+    int32_t targetMinorApiVersion = 0;
+    int32_t targetPatchApiVersion = 0;
     int32_t targetPriority = 0;
     int32_t maxChildProcess = OHOS::system::GetIntParameter(MAX_CHILD_PROCESS, 1);
     std::string bundleName;
@@ -295,6 +282,7 @@ struct Module {
     bool installationFree = false;
     bool isLibIsolated = false;
     bool compressNativeLibs = true;
+    bool extractNativeLibs = true;
     bool hasInsightIntent = false;
     uint32_t descriptionId = 0;
     int32_t targetPriority = 0;
@@ -307,6 +295,7 @@ struct Module {
     std::string process;
     std::string mainElement;
     std::vector<std::string> deviceTypes;
+    std::vector<std::string> deviceFeatures;
     std::string virtualMachine = MODULE_VIRTUAL_MACHINE_DEFAULT_VALUE;
     std::string pages;
     std::string systemTheme;
@@ -989,6 +978,22 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         true,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_TARGET_MINOR_API_VERSION,
+        app.targetMinorApiVersion,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_TARGET_PATCH_API_VERSION,
+        app.targetPatchApiVersion,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         APP_DEBUG,
@@ -1332,6 +1337,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         true,
         g_parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_DEVICE_FEATURES,
+        module.deviceFeatures,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_DELIVERY_WITH_INSTALL,
@@ -1526,14 +1539,18 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.isolationMode,
         false,
         g_parseResult);
-    if (IsSupportCompressNativeLibs()) {
-        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
-            jsonObjectEnd,
-            MODULE_COMPRESS_NATIVE_LIBS,
-            module.compressNativeLibs,
-            false,
-            g_parseResult);
-    }
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_COMPRESS_NATIVE_LIBS,
+        module.compressNativeLibs,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_EXTRACT_NATIVE_LIBS,
+        module.extractNativeLibs,
+        false,
+        g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_FILE_CONTEXT_MENU,
@@ -2015,6 +2032,8 @@ bool ToApplicationInfo(
 
     applicationInfo.apiCompatibleVersion = app.minAPIVersion;
     applicationInfo.apiTargetVersion = app.targetAPIVersion;
+    applicationInfo.targetMinorApiVersion = app.targetMinorApiVersion;
+    applicationInfo.targetPatchApiVersion = app.targetPatchApiVersion;
 
     applicationInfo.iconPath = app.icon;
     applicationInfo.iconId = app.iconId;
@@ -2137,6 +2156,8 @@ bool ToBundleInfo(
 
     bundleInfo.compatibleVersion = static_cast<uint32_t>(applicationInfo.apiCompatibleVersion);
     bundleInfo.targetVersion = static_cast<uint32_t>(applicationInfo.apiTargetVersion);
+    bundleInfo.targetMinorApiVersion = applicationInfo.targetMinorApiVersion;
+    bundleInfo.targetPatchApiVersion = applicationInfo.targetPatchApiVersion;
 
     bundleInfo.isKeepAlive = applicationInfo.keepAlive;
     bundleInfo.singleton = applicationInfo.singleton;
@@ -2278,6 +2299,8 @@ bool ToAbilityInfo(
     }
     abilityInfo.orientationId = ability.orientationId;
     abilityInfo.process = ability.process;
+    APP_LOGI("startWindowIconId %{public}s_%{public}s_%{public}s_%{public}d", abilityInfo.bundleName.c_str(),
+        abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(), abilityInfo.startWindowIconId);
     return true;
 }
 
@@ -2405,6 +2428,9 @@ bool ToInnerModuleInfo(
     for (const std::string &deviceType : moduleJson.module.deviceTypes) {
         innerModuleInfo.deviceTypes.emplace_back(deviceType);
     }
+    for (const std::string &deviceFeature : moduleJson.module.deviceFeatures) {
+        innerModuleInfo.deviceFeatures.emplace_back(deviceFeature);
+    }
 
     if (Profile::VIRTUAL_MACHINE_SET.find(moduleJson.module.virtualMachine) != Profile::VIRTUAL_MACHINE_SET.end()) {
         innerModuleInfo.virtualMachine = moduleJson.module.virtualMachine;
@@ -2435,7 +2461,7 @@ bool ToInnerModuleInfo(
     }
     innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
-    innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;
+    innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs || moduleJson.module.extractNativeLibs;
     innerModuleInfo.fileContextMenu = moduleJson.module.fileContextMenu;
 
     if (moduleJson.module.querySchemes.size() > Profile::MAX_QUERYSCHEMES_LENGTH) {
@@ -2498,7 +2524,7 @@ bool ToInnerBundleInfo(
     ApplicationInfo applicationInfo;
     applicationInfo.isSystemApp = innerBundleInfo.GetAppType() == Constants::AppType::SYSTEM_APP;
     transformParam.isSystemApp = applicationInfo.isSystemApp;
-    applicationInfo.isCompressNativeLibs = moduleJson.module.compressNativeLibs;
+    applicationInfo.isCompressNativeLibs = moduleJson.module.compressNativeLibs || moduleJson.module.extractNativeLibs;
     if (!ToApplicationInfo(moduleJson, bundleExtractor, transformParam, applicationInfo)) {
         APP_LOGE("To applicationInfo failed");
         return false;

@@ -348,8 +348,8 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
     std::unique_ptr<uint8_t[]> jsonBuf;
     Global::Resource::RState state = resourceManager->GetDrawableInfoById(resourceInfo.iconId_, type, len, jsonBuf, 0);
     if (state != Global::Resource::SUCCESS) {
-        APP_LOGE("%{public}s failed to get id:%{public}d", resourceInfo.bundleName_.c_str(),
-            resourceInfo.iconId_);
+        APP_LOGE("%{public}s failed to get id:%{public}d, err:%{public}d", resourceInfo.bundleName_.c_str(),
+            resourceInfo.iconId_, state);
         return false;
     }
     transform(type.begin(), type.end(), type.begin(), ::tolower);

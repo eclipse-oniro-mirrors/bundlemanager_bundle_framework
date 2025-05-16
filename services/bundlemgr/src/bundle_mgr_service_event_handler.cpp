@@ -314,6 +314,8 @@ void BMSEventHandler::AfterBmsStart()
     if (needNotifyBundleScanStatus_) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bmsExtensionDataMgr.RegisterPreInstallWithCard();
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
     BundleResourceHelper::RegisterCommonEventSubscriber();

@@ -83,11 +83,14 @@ public:
 
     bool UpdateBundleIcon(const std::string &bundleName, ResourceInfo &resourceInfo);
 
-    bool AddCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
+    bool AddCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId = Constants::UNSPECIFIED_USERID);
 
     bool DeleteCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
 
     bool DeleteNotExistResourceInfo();
+
+    bool AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
 
 private:
     bool AddResourceInfo(const int32_t userId, ResourceInfo &resourceInfo);
@@ -132,10 +135,20 @@ private:
 
     bool UpdateCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex, const uint32_t type);
 
+    bool UpdateCloneBundleResourceInfo(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, const uint32_t type);
+
     void DeleteNotExistResourceInfo(const std::string &bundleName,
         const int32_t appIndex, const std::vector<ResourceInfo> &resourceInfos);
 
     void ProcessResourceInfoNoNeedToParseOtherIcon(std::vector<ResourceInfo> &resourceInfos);
+
+    bool ProcessUpdateCloneBundleResourceInfo(const std::string &bundleName);
+
+    void BundleResourceConvertToResourceInfo(const BundleResourceInfo &bundleResourceInfo, ResourceInfo &resourceInfo);
+
+    void LauncherAbilityResourceConvertToResourceInfo(
+        const LauncherAbilityResourceInfo &launcherAbilityResourceInfo, ResourceInfo &resourceInfo);
 
     void PrepareSysRes();
 

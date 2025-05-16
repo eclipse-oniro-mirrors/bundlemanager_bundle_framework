@@ -487,10 +487,22 @@ bool ExtendResourceManagerHostImpl::ParseBundleResource(
 {
     APP_LOGI("ParseBundleResource %{public}s", bundleName.c_str());
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    BundleResourceParser bundleResourceParser;
     ResourceInfo info;
     info.bundleName_ = bundleName;
     info.iconId_ = extendResourceInfo.iconId;
+    if ((userId == Constants::UNSPECIFIED_USERID) && (appIndex == Constants::DEFAULT_APP_INDEX)) {
+        // process all appIndex
+        info.appIndex_ = Constants::UNSPECIFIED_USERID;
+    } else {
+        // process one appIndex
+        info.appIndex_ = appIndex;
+        if (!IsNeedUpdateBundleResourceInfo(bundleName, userId)) {
+            APP_LOGI("bundle %{public}s userId %{public}d no need to update bundle resource",
+                bundleName.c_str(), userId);
+            return true;
+        }
+    }
+    BundleResourceParser bundleResourceParser;
     if (!bundleResourceParser.ParseIconResourceByPath(extendResourceInfo.filePath,
         extendResourceInfo.iconId, info)) {
         APP_LOGW("ParseIconResourceByPath failed, bundleName:%{public}s", bundleName.c_str());
@@ -582,7 +594,7 @@ ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bun
     }
 
     SaveCurDynamicIcon(bundleName, "", userId, appIndex);
-    ResetBundleResourceIcon(bundleName, userId, appIndex);
+    (void)ResetBundleResourceIcon(bundleName, userId, appIndex);
     SendBroadcast(bundleName, false, userId, appIndex);
     return ERR_OK;
 }
@@ -591,26 +603,34 @@ bool ExtendResourceManagerHostImpl::ResetBundleResourceIcon(const std::string &b
     const int32_t userId, const int32_t appIndex)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGI("ResetBundleResourceIcon %{public}s", bundleName.c_str());
+    APP_LOGI("ResetBundleResourceIcon %{public}s userId %{public}d appIndex %{public}d", bundleName.c_str(),
+        userId, appIndex);
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("failed, manager is nullptr");
         return false;
     }
+    if ((userId == Constants::UNSPECIFIED_USERID) && (appIndex == Constants::DEFAULT_APP_INDEX)) {
+        // Reset default icon
+        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+        if ((currentUserId <= 0)) {
+            currentUserId = Constants::START_USERID;
+        }
+        if (!manager->AddResourceInfoByBundleName(bundleName, currentUserId)) {
+            APP_LOGE("No default icon, bundleName:%{public}s", bundleName.c_str());
+        }
+        return true;
+    }
+    if (!IsNeedUpdateBundleResourceInfo(bundleName, userId)) {
+        APP_LOGI("%{public}s userId %{public}d appIndex %{public}d no need to process", bundleName.c_str(),
+            userId, appIndex);
+        return true;
+    }
 
-    // Delete dynamic icon resource
-    if (!manager->DeleteResourceInfo(bundleName)) {
-        APP_LOGE("DeleteResourceInfo failed, bundleName:%{public}s", bundleName.c_str());
+    if (!manager->AddResourceInfoByBundleName(bundleName, userId, appIndex)) {
+        APP_LOGE("%{public}s userId %{public}d appIndex %{public}d add resource failed", bundleName.c_str(),
+            userId, appIndex);
         return false;
-    }
-
-    // Reset default icon
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-    if ((currentUserId <= 0)) {
-        currentUserId = Constants::START_USERID;
-    }
-    if (!manager->AddResourceInfoByBundleName(bundleName, currentUserId)) {
-        APP_LOGE("No default icon, bundleName:%{public}s", bundleName.c_str());
     }
     return true;
 #else
@@ -759,6 +779,35 @@ ErrCode ExtendResourceManagerHostImpl::GetAllDynamicIconInfo(
         APP_LOGI("get all dynamic info userId %{public}d size %{public}zu", userId, dynamicInfos.size());
     }
     return ret;
+}
+
+bool ExtendResourceManagerHostImpl::IsNeedUpdateBundleResourceInfo(
+    const std::string &bundleName, const int32_t userId)
+{
+    if (userId == Constants::DEFAULT_USERID) {
+        return true;
+    }
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if ((currentUserId <= 0)) {
+        currentUserId = Constants::START_USERID;
+    }
+    if (currentUserId == userId) {
+        return true;
+    }
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+    std::vector<int32_t> userIds = dataMgr->GetUserIds(bundleName);
+    // bundleName exist in current userId, need check userId
+    if (std::find(userIds.begin(), userIds.end(), currentUserId) != userIds.end()) {
+        APP_LOGW("currentUserId %{public}d userId %{public}d not same", currentUserId, userId);
+        return false;
+    }
+    APP_LOGI("bundle %{public}s userId %{public}d need update bundle resource", bundleName.c_str(), userId);
+    return true;
 }
 } // AppExecFwk
 } // namespace OHOS

@@ -835,6 +835,7 @@ private:
         const std::string &modulePath, std::string &nativeLibraryPath, std::string &targetSoPath);
     ErrCode RecoverOnDemandInstallBundle(const std::string &bundleName,
         const InstallParam &installParam, int32_t &uid);
+    void PrintStartWindowIconId(const InnerBundleInfo &info);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;
@@ -863,7 +864,7 @@ private:
     int32_t atomicServiceModuleUpgrade_ = 0;
     SingletonState singletonState_ = SingletonState::DEFAULT;
     BundleType bundleType_ = BundleType::APP;
-    Security::AccessToken::AccessTokenID callerToken_;
+    Security::AccessToken::AccessTokenID callerToken_ = 0;
     std::string bundleName_;
     std::string modulePath_;
     std::string baseDataPath_;

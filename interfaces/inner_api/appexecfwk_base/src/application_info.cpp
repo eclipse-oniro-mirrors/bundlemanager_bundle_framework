@@ -41,6 +41,8 @@ const char* APPLICATION_VERSION_NAME = "versionName";
 const char* APPLICATION_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
 const char* APPLICATION_API_COMPATIBLE_VERSION = "apiCompatibleVersion";
 const char* APPLICATION_API_TARGET_VERSION = "apiTargetVersion";
+const char* APPLICATION_TARGET_MINOR_API_VERSION = "targetMinorApiVersion";
+const char* APPLICATION_TARGET_PATCH_API_VERSION = "targetPatchApiVersion";
 const char* APPLICATION_ICON_PATH = "iconPath";
 const char* APPLICATION_ICON_ID = "iconId";
 const char* APPLICATION_LABEL = "label";
@@ -121,6 +123,7 @@ const char* APPLICATION_COMPILE_SDK_VERSION = "compileSdkVersion";
 const char* APPLICATION_COMPILE_SDK_TYPE = "compileSdkType";
 const char* APPLICATION_RESOURCES_APPLY = "resourcesApply";
 const char* APPLICATION_ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
+const char* APPLICATION_ALLOW_ARK_TS_LARGE_HEAP = "allowArkTsLargeHeap";
 const char* APPLICATION_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 const char* APPLICATION_RESERVED_FLAG = "applicationReservedFlag";
 const char* APPLICATION_TSAN_ENABLED = "tsanEnabled";
@@ -372,6 +375,8 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     minCompatibleVersionCode = parcel.ReadInt32();
     apiCompatibleVersion = parcel.ReadUint32();
     apiTargetVersion = parcel.ReadInt32();
+    targetMinorApiVersion = parcel.ReadInt32();
+    targetPatchApiVersion = parcel.ReadInt32();
     crowdtestDeadline = parcel.ReadInt64();
 
     iconPath = Str16ToStr8(parcel.ReadString16());
@@ -433,6 +438,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     distributedNotificationEnabled = parcel.ReadBool();
     installedForAllUser = parcel.ReadBool();
     allowEnableNotification = parcel.ReadBool();
+    allowArkTsLargeHeap = parcel.ReadBool();
     entityType = Str16ToStr8(parcel.ReadString16());
     process = Str16ToStr8(parcel.ReadString16());
     supportedModes = parcel.ReadInt32();
@@ -623,6 +629,8 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, apiCompatibleVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, apiTargetVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetMinorApiVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetPatchApiVersion);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, crowdtestDeadline);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(iconPath));
@@ -667,6 +675,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, distributedNotificationEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, installedForAllUser);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowEnableNotification);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowArkTsLargeHeap);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(entityType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportedModes);
@@ -934,6 +943,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_MIN_COMPATIBLE_VERSION_CODE, applicationInfo.minCompatibleVersionCode},
         {APPLICATION_API_COMPATIBLE_VERSION, applicationInfo.apiCompatibleVersion},
         {APPLICATION_API_TARGET_VERSION, applicationInfo.apiTargetVersion},
+        {APPLICATION_TARGET_MINOR_API_VERSION, applicationInfo.targetMinorApiVersion},
+        {APPLICATION_TARGET_PATCH_API_VERSION, applicationInfo.targetPatchApiVersion},
         {APPLICATION_ICON_PATH, applicationInfo.iconPath},
         {APPLICATION_ICON_ID, applicationInfo.iconId},
         {APPLICATION_LABEL, applicationInfo.label},
@@ -965,6 +976,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED, applicationInfo.distributedNotificationEnabled},
         {APPLICATION_INSTALLED_FOR_ALL_USER, applicationInfo.installedForAllUser},
         {APPLICATION_ALLOW_ENABLE_NOTIFICATION, applicationInfo.allowEnableNotification},
+        {APPLICATION_ALLOW_ARK_TS_LARGE_HEAP, applicationInfo.allowArkTsLargeHeap},
         {APPLICATION_ENTITY_TYPE, applicationInfo.entityType},
         {APPLICATION_PROCESS, applicationInfo.process},
         {APPLICATION_SUPPORTED_MODES, applicationInfo.supportedModes},
@@ -1048,6 +1060,10 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.apiCompatibleVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_API_TARGET_VERSION,
         applicationInfo.apiTargetVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_TARGET_MINOR_API_VERSION,
+        applicationInfo.targetMinorApiVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_TARGET_PATCH_API_VERSION,
+        applicationInfo.targetPatchApiVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ICON_PATH,
         applicationInfo.iconPath, false, parseResult);
     GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_ICON_ID,
@@ -1110,6 +1126,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.installedForAllUser, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ENABLE_NOTIFICATION,
         applicationInfo.allowEnableNotification, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ARK_TS_LARGE_HEAP,
+        applicationInfo.allowArkTsLargeHeap, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ENTITY_TYPE,
         applicationInfo.entityType, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_PROCESS,

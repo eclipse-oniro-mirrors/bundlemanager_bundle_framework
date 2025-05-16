@@ -134,6 +134,10 @@ const std::string FORM_LANDSCAPE_LAYOUTS1 = "land1";
 const std::string FORM_LANDSCAPE_LAYOUTS2 = "land2";
 const std::string FORM_SRC = "page/card/index";
 constexpr int32_t FORM_JS_WINDOW_DESIGNWIDTH = 720;
+const std::string FORM_ABILITY_NAME = "GameLoaderExtensionAbility";
+const std::string FORM_TARGET_BUNDLE_NAME = "Game";
+const std::string FORM_DISABLED_DESKTOP_BEHAVIORS = "PULL_DOWN_SEARCH|LONG_CLICK";
+constexpr int32_t FORM_KEEP_STATE_DURATION = 10000;
 const std::string SHORTCUT_TEST_ID = "shortcutTestId";
 const std::string SHORTCUT_DEMO_ID = "shortcutDemoId";
 const std::string SHORTCUT_HOST_ABILITY = "hostAbility";
@@ -732,6 +736,12 @@ FormInfo BmsBundleDataMgrTest::MockFormInfo(
         info.name = FORM_CUSTOMIZE_DATAS_NAME;
         info.value = FORM_CUSTOMIZE_DATAS_VALUE;
     }
+    formInfo.funInteractionParams.abilityName = FORM_ABILITY_NAME;
+    formInfo.funInteractionParams.targetBundleName = FORM_TARGET_BUNDLE_NAME;
+    formInfo.funInteractionParams.keepStateDuration = FORM_KEEP_STATE_DURATION;
+    formInfo.sceneAnimationParams.abilityName = FORM_ABILITY_NAME;
+    formInfo.sceneAnimationParams.isAlwaysActive = false;
+    formInfo.sceneAnimationParams.disabledDesktopBehaviors = FORM_DISABLED_DESKTOP_BEHAVIORS;
     return formInfo;
 }
 
@@ -3515,6 +3525,55 @@ HWTEST_F(BmsBundleDataMgrTest, GetSandboxAbilityInfo_0100, Function | MediumTest
     appIndex = 101;
     bundleMgrHostImpl_->GetSandboxAbilityInfo(want, appIndex, 0, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ProcessBundleChangedEventForOtherUsers_0100
+ * @tc.name: test ProcessBundleChangedEventForOtherUsers
+ * @tc.desc: 1.ProcessBundleChangedEventForOtherUsers
+ */
+HWTEST_F(BmsBundleDataMgrTest, ProcessBundleChangedEventForOtherUsers_0100, Function | MediumTest | Level1)
+{
+    EventFwk::CommonEventData commonData;
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    bool ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(nullptr, "notExist", "", USERID, commonData);
+    EXPECT_FALSE(ret);
+
+    ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(nullptr, "notExist",
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, USERID, commonData);
+    EXPECT_FALSE(ret);
+
+    auto dataMgr = GetBundleDataMgr();
+    ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, "notExist",
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, USERID, commonData);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ProcessBundleChangedEventForOtherUsers_0200
+ * @tc.name: test ProcessBundleChangedEventForOtherUsers
+ * @tc.desc: 1.ProcessBundleChangedEventForOtherUsers
+ */
+HWTEST_F(BmsBundleDataMgrTest, ProcessBundleChangedEventForOtherUsers_0200, Function | MediumTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.innerBundleUserInfos_["100"] = userInfo;
+    userInfo.bundleUserInfo.userId = 101;
+    innerBundleInfo.innerBundleUserInfos_["101"] = userInfo;
+
+    auto dataMgr = GetBundleDataMgr();
+    dataMgr->bundleInfos_["bundleName"] = innerBundleInfo;
+    EventFwk::CommonEventData commonData;
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    bool ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, "bundleName",
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, USERID, commonData);
+    EXPECT_TRUE(ret);
+    auto iter = dataMgr->bundleInfos_.find("bundleName");
+    if (iter != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(iter);
+    }
 }
 
 /**

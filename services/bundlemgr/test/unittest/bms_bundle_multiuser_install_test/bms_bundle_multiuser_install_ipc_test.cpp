@@ -491,6 +491,28 @@ HWTEST_F(BmsBundleMultiuserInstallIPCTest, ProcessBundleInstall_0900, Function |
 }
 
 /**
+ * @tc.number: ProcessBundleInstall_1000
+ * @tc.name: ProcessBundleInstall by BundleMultiUserInstaller
+ * @tc.desc: test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleMultiuserInstallIPCTest, ProcessBundleInstall_1000, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(installer.dataMgr_, nullptr);
+    std::string bundleName = "test";
+    InnerBundleInfo info;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 0;
+    info.AddInnerBundleUserInfo(userInfo);
+    info.SetSingleton(true);
+    installer.dataMgr_->bundleInfos_.try_emplace(bundleName, info);
+    installer.dataMgr_->multiUserIdsSet_.insert(TEST_INSTALLER_UID);
+    auto res = installer.ProcessBundleInstall(bundleName, TEST_INSTALLER_UID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: CreateEl5Dir_0100
  * @tc.name: CreateEl5Dir by BundleMultiUserInstaller
  * @tc.desc: test CreateEl5Dir

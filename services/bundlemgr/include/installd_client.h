@@ -255,6 +255,8 @@ public:
 
     ErrCode DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId);
 
+    ErrCode LoadInstalls();
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

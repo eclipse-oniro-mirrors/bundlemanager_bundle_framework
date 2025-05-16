@@ -32,6 +32,7 @@
 #include "bundle_file_util.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_resource_rdb.h"
 #include "directory_ex.h"
 #include "install_param.h"
 #include "installd/installd_service.h"
@@ -2931,5 +2932,152 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5100, Function | MediumTest | L
     std::string sandboxDataDir;
     ErrCode retCode = hostImpl->GetSandboxDataDir(TEST_BUNDLE_NAME, 0, sandboxDataDir);
     EXPECT_EQ(retCode, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAbilityInfos_0100
+ * @tc.name: test GetAbilityInfos
+ * @tc.desc: 1.get ability not exist
+ */
+HWTEST_F(BmsBundleManagerTest, GetAbilityInfos_0100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION);
+    std::string uri = "https://www.example.com";
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode retCode = hostImpl->GetAbilityInfos(uri, flags, abilityInfos);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAbilityInfos_0200
+ * @tc.name: test GetAbilityInfos
+ * @tc.desc: 1.enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleManagerTest, GetAbilityInfos_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION);
+    std::string uri = "https://www.example.com";
+    std::vector<AbilityInfo> abilityInfos;
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    EXPECT_EQ(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_, nullptr);
+    ErrCode retCode = hostImpl->GetAbilityInfos(uri, flags, abilityInfos);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: GetAbilityLabelInfo_0001
+ * @tc.name: GetAbilityLabelInfo_0001
+ * @tc.desc: Test GetAbilityLabelInfo with valid ability info
+ */
+HWTEST_F(BmsBundleManagerTest, GetAbilityLabelInfo_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.moduleName_ = "moduleName";
+    resourceInfo.abilityName_ = "abilityName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    resourceInfo.foreground_.emplace_back(1);
+    resourceInfo.background_.emplace_back(2);
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+
+    std::vector<AbilityInfo> abilityInfos;
+    AbilityInfo info;
+    info.bundleName = resourceInfo.bundleName_;
+    info.name = resourceInfo.abilityName_;
+    info.appIndex = 0;
+    abilityInfos.push_back(info);
+
+    hostImpl->GetAbilityLabelInfo(abilityInfos);
+    EXPECT_EQ(abilityInfos[0].label, resourceInfo.label_);
+    resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+}
+
+/**
+ * @tc.number: GetAbilityLabelInfo_0002
+ * @tc.name: GetAbilityLabelInfo_0002
+ * @tc.desc: Test GetAbilityLabelInfo with empty ability info vector
+ */
+HWTEST_F(BmsBundleManagerTest, GetAbilityLabelInfo_0002, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AbilityInfo> abilityInfos;
+    AbilityInfo info;
+    info.bundleName = "bundleName";
+    info.name = "abilityName";
+    info.appIndex = 0;
+    abilityInfos.push_back(info);
+
+    hostImpl->GetAbilityLabelInfo(abilityInfos);
+    EXPECT_EQ(abilityInfos[0].label, "bundleName");
+}
+
+/**
+ * @tc.number: GetApplicationLabelInfo_0001
+ * @tc.name: GetApplicationLabelInfo_0001
+ * @tc.desc: Test GetApplicationLabelInfo with valid application info
+ */
+HWTEST_F(BmsBundleManagerTest, GetApplicationLabelInfo_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.label_ = "label";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+
+    std::vector<AbilityInfo> abilityInfos;
+    AbilityInfo info;
+    info.applicationInfo.bundleName = resourceInfo.bundleName_;
+    info.applicationInfo.name = "appName";
+    info.applicationInfo.appIndex = 0;
+    abilityInfos.push_back(info);
+
+    hostImpl->GetApplicationLabelInfo(abilityInfos);
+    EXPECT_EQ(abilityInfos[0].applicationInfo.label, resourceInfo.label_);
+    resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+}
+
+/**
+ * @tc.number: GetApplicationLabelInfo_0002
+ * @tc.name: GetApplicationLabelInfo_0002
+ * @tc.desc: Test GetApplicationLabelInfo with empty application name
+ */
+HWTEST_F(BmsBundleManagerTest, GetApplicationLabelInfo_0002, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AbilityInfo> abilityInfos;
+    AbilityInfo info;
+    info.applicationInfo.bundleName = "bundleName";
+    info.applicationInfo.name = "";
+    info.applicationInfo.appIndex = 0;
+    abilityInfos.push_back(info);
+
+    hostImpl->GetApplicationLabelInfo(abilityInfos);
+    EXPECT_EQ(abilityInfos[0].applicationInfo.label, "");
+}
+
+/**
+ * @tc.number: GetApplicationLabelInfo_0003
+ * @tc.name: GetApplicationLabelInfo_0003
+ * @tc.desc: Test GetApplicationLabelInfo with empty bundle name
+ */
+HWTEST_F(BmsBundleManagerTest, GetApplicationLabelInfo_0003, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AbilityInfo> abilityInfos;
+    AbilityInfo info;
+    info.applicationInfo.bundleName = "bundleName";
+    info.applicationInfo.name = "appName";
+    info.applicationInfo.appIndex = 0;
+    abilityInfos.push_back(info);
+
+    hostImpl->GetApplicationLabelInfo(abilityInfos);
+    EXPECT_EQ(abilityInfos[0].applicationInfo.label, info.applicationInfo.bundleName);
 }
 } // OHOS

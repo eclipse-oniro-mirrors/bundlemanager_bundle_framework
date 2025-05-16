@@ -190,6 +190,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_V9):
             errCode = this->HandleQueryAbilityInfosV9(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_INFOS):
+            errCode = this->HandleGetAbilityInfos(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_QUERY_ABILITY_INFOS):
             errCode = this->HandleBatchQueryAbilityInfos(data, reply);
             break;
@@ -1334,6 +1337,26 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfosV9(MessageParcel &data, MessagePar
     int32_t userId = data.ReadInt32();
     std::vector<AbilityInfo> abilityInfos;
     ErrCode ret = QueryAbilityInfosV9(*want, flags, userId, abilityInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(abilityInfos, reply)) {
+            APP_LOGE("WriteVectorToParcelIntelligent failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAbilityInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string uri = data.ReadString();
+    uint32_t flags = data.ReadUint32();
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = GetAbilityInfos(uri, flags, abilityInfos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

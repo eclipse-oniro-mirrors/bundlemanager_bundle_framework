@@ -1133,5 +1133,21 @@ HWTEST_F(BmsBundleMgrProxyTest, ParseStr_0100, Function | MediumTest | Level0)
     auto res = ParseStr(buf, itemLen, index, result);
     EXPECT_TRUE(res);
 }
+/**
+ * @tc.number: GetAbilityInfos_0100
+ * @tc.name: test the GetAbilityInfos
+ * @tc.desc: 1. system running normally
+ *           2. test GetAbilityInfos
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAbilityInfos_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string uri = "https://";
+    int32_t flags = 2;
+    std::vector<AbilityInfo> abilityInfos;
+    auto res = bundleMgrProxy.GetAbilityInfos(uri, flags, abilityInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
 }
 }

@@ -94,6 +94,7 @@ void BundleDataStorageRdb::TransformStrToInfo(
         // reset privilege capability when load info from db
         ApplicationInfo applicationInfo;
         innerBundleInfo.UpdatePrivilegeCapability(applicationInfo);
+        innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         infos.emplace(innerBundleInfo.GetBundleName(), innerBundleInfo);
         // database update
         std::string key = data.first;

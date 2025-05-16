@@ -1036,6 +1036,16 @@ ErrCode InstalldProxy::DeleteDataGroupDirs(const std::vector<std::string> &uuidL
     return TransactInstalldCmd(InstalldInterfaceCode::DELETE_DATA_GROUP_DIRS, data, reply, option);
 }
 
+ErrCode InstalldProxy::LoadInstalls()
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::LOAD_INSTALLS, data, reply, option);
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {

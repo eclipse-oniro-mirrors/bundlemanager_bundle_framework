@@ -57,6 +57,13 @@ constexpr const char* PRIVACY_LEVEL = "privacyLevel";
 constexpr const char* FONT_SCALE_FOLLOW_SYSTEM = "fontScaleFollowSystem";
 constexpr const char* SUPPORT_SHAPES = "supportShapes";
 constexpr const char* ENABLE_BLUR_BACKGROUND = "enableBlurBackground";
+constexpr const char* FUN_INTERACTION_PARAMS = "funInteractionParams";
+constexpr const char* SCENE_ANIMATION_PARAMS = "sceneAnimationParams";
+constexpr const char* ABILITY_NAME = "abilityName";
+constexpr const char* IS_ALWAYS_ACTIVE = "isAlwaysActive";
+constexpr const char* DISABLED_DESKTOP_BEHAVIORS = "disabledDesktopBehaviors";
+constexpr const char* TARGET_BUNDLE_NAME = "targetBundleName";
+constexpr const char* KEEP_STATE_DURATION = "keepStateDuration";
 }
 
 class ExtensionFormProfile {

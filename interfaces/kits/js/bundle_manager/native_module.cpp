@@ -180,6 +180,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAllDynamicIconInfo", GetAllDynamicIconInfo),
         DECLARE_NAPI_FUNCTION("getSandboxDataDir", GetSandboxDataDirSync),
         DECLARE_NAPI_FUNCTION("getAppCloneIdentityBySandboxDataDir", GetAppCloneIdentityBySandboxDataDirSync),
+        DECLARE_NAPI_FUNCTION("getAbilityInfo", GetAbilityInfos),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

@@ -57,6 +57,7 @@ const std::string CONTROL_MESSAGE = "this is control message";
 const std::string CALLING_NAME = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 const std::string APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
 const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
+const std::string ABILITY_RUNNING_KEY = "ABILITY_RUNNING_KEY";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int NOT_EXIST_USERID = -5;
@@ -3066,5 +3067,64 @@ HWTEST_F(BmsBundleAppControlTest, PrintDisposedRuleInfo_0100, Function | SmallTe
     std::vector<DisposedRule> disposedRules;
     disposedRules.emplace_back(rule);
     EXPECT_NO_THROW(appControlManager->PrintDisposedRuleInfo(disposedRules));
+}
+
+/**
+ * @tc.number: AbilityRunningRuleCache_0100
+ * @tc.name: Test AbilityRunningRuleCache
+ * @tc.desc: AbilityRunningRuleCache test
+ */
+HWTEST_F(BmsBundleAppControlTest, AbilityRunningRuleCache_0100, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+
+    DisposedRule rule;
+    rule.callerName = "com.xxx.xx";
+    rule.setTime = 11111111;
+    std::vector<DisposedRule> disposedRules;
+    disposedRules.emplace_back(rule);
+    EXPECT_NO_THROW(appControlManager->SetAbilityRunningRuleCache(ABILITY_RUNNING_KEY, disposedRules));
+
+    std::vector<DisposedRule> resultRules;
+    bool ret = appControlManager->GetAbilityRunningRuleCache(ABILITY_RUNNING_KEY, resultRules);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(resultRules.empty());
+
+    EXPECT_NO_THROW(appControlManager->DeleteAbilityRunningRuleCache(ABILITY_RUNNING_KEY));
+
+    std::vector<DisposedRule> resultRules2;
+    ret = appControlManager->GetAbilityRunningRuleCache(ABILITY_RUNNING_KEY, resultRules2);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(resultRules2.empty());
+}
+
+/**
+ * @tc.number: GenerateAppRunningRuleCacheKey_0100
+ * @tc.name: Test GenerateAppRunningRuleCacheKey_0100
+ * @tc.desc: GenerateAppRunningRuleCacheKey_0100 test
+ */
+HWTEST_F(BmsBundleAppControlTest, GenerateAppRunningRuleCacheKey_0100, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    std::string key = appControlManager->GenerateAppRunningRuleCacheKey("appid", 100, 0);
+    EXPECT_EQ(key, "appid_100_0");
+}
+
+/**
+ * @tc.number: SendAppControlEvent_0100
+ * @tc.name: test SendAppControlEvent
+ * @tc.desc: SendAppControlEvent test
+ */
+HWTEST_F(BmsBundleAppControlTest, SendAppControlEvent_0100, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    EXPECT_NO_THROW(impl->SendAppControlEvent(ControlActionType::INSTALL, ControlOperationType::ADD_RULE,
+        "test", 100, 0, { "test_appId "}, "rule"));
 }
 } // OHOS

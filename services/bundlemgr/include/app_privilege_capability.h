@@ -31,6 +31,7 @@ struct AppPrivilegeCapability {
     bool formVisibleNotify = false;
     bool appShareLibrary = false;
     bool allowEnableNotification = false;
+    bool allowArkTsLargeHeap = false;
 
     std::string ToString()
     {
@@ -43,7 +44,8 @@ struct AppPrivilegeCapability {
             + ", hideDesktopIcon = " + BundleUtil::GetBoolStrVal(hideDesktopIcon)
             + ", formVisibleNotify = " + BundleUtil::GetBoolStrVal(formVisibleNotify)
             + ", appShareLibrary = " + BundleUtil::GetBoolStrVal(appShareLibrary)
-            + ", allowEnableNotification = " + BundleUtil::GetBoolStrVal(allowEnableNotification) + "]";
+            + ", allowEnableNotification = " + BundleUtil::GetBoolStrVal(allowEnableNotification)
+            + ", allowArkTsLargeHeap = " + BundleUtil::GetBoolStrVal(allowArkTsLargeHeap) + "]";
     }
 };
 }  // namespace AppExecFwk

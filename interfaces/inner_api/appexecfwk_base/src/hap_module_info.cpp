@@ -40,6 +40,7 @@ const char* HAP_MODULE_INFO_HASH_VALUE = "hashValue";
 const char* HAP_MODULE_INFO_SUPPORTED_MODES = "supportedModes";
 const char* HAP_MODULE_INFO_REQ_CAPABILITIES = "reqCapabilities";
 const char* HAP_MODULE_INFO_DEVICE_TYPES = "deviceTypes";
+const char* HAP_MODULE_INFO_DEVICE_FEATURES = "deviceFeatures";
 const char* HAP_MODULE_INFO_ABILITY_INFOS = "abilityInfos";
 const char* HAP_MODULE_INFO_COLOR_MODE = "colorMode";
 const char* HAP_MODULE_INFO_MAIN_ELEMENTNAME = "mainElementName";
@@ -519,6 +520,13 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         deviceTypes.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
+    int32_t deviceFeaturesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceFeaturesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, deviceFeaturesSize, &deviceFeatures);
+    for (auto i = 0; i < deviceFeaturesSize; i++) {
+        deviceFeatures.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+
     int32_t dependenciesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dependenciesSize);
     CONTAINER_SECURITY_VERIFY(parcel, dependenciesSize, &dependencies);
@@ -708,6 +716,11 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceType));
     }
 
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceFeatures.size());
+    for (auto &deviceFeature : deviceFeatures) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceFeature));
+    }
+
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dependencies.size());
     for (auto &dependency : dependencies) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &dependency);
@@ -806,6 +819,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_SUPPORTED_MODES, hapModuleInfo.supportedModes},
         {HAP_MODULE_INFO_REQ_CAPABILITIES, hapModuleInfo.reqCapabilities},
         {HAP_MODULE_INFO_DEVICE_TYPES, hapModuleInfo.deviceTypes},
+        {HAP_MODULE_INFO_DEVICE_FEATURES, hapModuleInfo.deviceFeatures},
         {HAP_MODULE_INFO_ABILITY_INFOS, hapModuleInfo.abilityInfos},
         {HAP_MODULE_INFO_COLOR_MODE, hapModuleInfo.colorMode},
         {Constants::BUNDLE_NAME, hapModuleInfo.bundleName},
@@ -967,6 +981,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         HAP_MODULE_INFO_DEVICE_TYPES,
         hapModuleInfo.deviceTypes,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_DEVICE_FEATURES,
+        hapModuleInfo.deviceFeatures,
         JsonType::ARRAY,
         false,
         parseResult,

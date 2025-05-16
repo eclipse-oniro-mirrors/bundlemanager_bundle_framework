@@ -82,6 +82,7 @@ constexpr const char* INNER_BUNDLE_USER_INFOS = "innerBundleUserInfos";
 constexpr const char* MODULE_PROCESS = "process";
 constexpr const char* MODULE_SRC_ENTRANCE = "srcEntrance";
 constexpr const char* MODULE_DEVICE_TYPES = "deviceTypes";
+constexpr const char* MODULE_DEVICE_FEATURES = "deviceFeatures";
 constexpr const char* MODULE_VIRTUAL_MACHINE = "virtualMachine";
 constexpr const char* MODULE_UI_SYNTAX = "uiSyntax";
 constexpr const char* MODULE_PAGES = "pages";
@@ -405,6 +406,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_PROCESS, info.process},
         {MODULE_SRC_ENTRANCE, info.srcEntrance},
         {MODULE_DEVICE_TYPES, info.deviceTypes},
+        {MODULE_DEVICE_FEATURES, info.deviceFeatures},
         {MODULE_VIRTUAL_MACHINE, info.virtualMachine},
         {MODULE_UI_SYNTAX, info.uiSyntax},
         {MODULE_PAGES, info.pages},
@@ -712,6 +714,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_DEVICE_TYPES,
         info.deviceTypes,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_DEVICE_FEATURES,
+        info.deviceFeatures,
         JsonType::ARRAY,
         false,
         parseResult,
@@ -1544,6 +1554,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.isModuleJson = it->second.isModuleJson;
     hapInfo.isStageBasedModel = it->second.isStageBasedModel;
     hapInfo.deviceTypes = it->second.deviceTypes;
+    hapInfo.deviceFeatures = it->second.deviceFeatures;
     hapInfo.appStartup = it->second.appStartup;
     hapInfo.hasIntent = BundleUtil::GetBitValue(it->second.boolSet, InnerModuleInfoBoolFlag::HAS_INTENT);
     std::string moduleType = it->second.distro.moduleType;
@@ -1760,6 +1771,8 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
     baseBundleInfo_->minCompatibleVersionCode = bundleInfo.minCompatibleVersionCode;
     baseBundleInfo_->compatibleVersion = bundleInfo.compatibleVersion;
     baseBundleInfo_->targetVersion = bundleInfo.targetVersion;
+    baseBundleInfo_->targetMinorApiVersion = bundleInfo.targetMinorApiVersion;
+    baseBundleInfo_->targetPatchApiVersion = bundleInfo.targetPatchApiVersion;
 
     baseBundleInfo_->isKeepAlive = bundleInfo.isKeepAlive;
     baseBundleInfo_->singleton = bundleInfo.singleton;
@@ -1789,6 +1802,8 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->minCompatibleVersionCode = applicationInfo.minCompatibleVersionCode;
     baseApplicationInfo_->apiCompatibleVersion = applicationInfo.apiCompatibleVersion;
     baseApplicationInfo_->apiTargetVersion = applicationInfo.apiTargetVersion;
+    baseApplicationInfo_->targetMinorApiVersion = applicationInfo.targetMinorApiVersion;
+    baseApplicationInfo_->targetPatchApiVersion = applicationInfo.targetPatchApiVersion;
 
     baseApplicationInfo_->iconPath = applicationInfo.iconPath;
     baseApplicationInfo_->iconId = applicationInfo.iconId;
@@ -1824,6 +1839,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
     baseApplicationInfo_->bundleType = applicationInfo.bundleType;
     baseApplicationInfo_->allowMultiProcess = applicationInfo.allowMultiProcess;
+    baseApplicationInfo_->allowArkTsLargeHeap = applicationInfo.allowArkTsLargeHeap;
     UpdatePrivilegeCapability(applicationInfo);
     SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION

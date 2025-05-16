@@ -1732,5 +1732,17 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldDeathRecipientTest_CleanBundleDataDir
     auto result = installClient_->CleanBundleDataDirByName(bundleName, USERID, GID);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: BmsInstalld_LoadInstalls0001
+ * @tc.name: LoadInstalls
+ * @tc.desc: call LoadInstalls.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalld_LoadInstalls0001, TestSize.Level0)
+{
+    ASSERT_NE(installClient_, nullptr);
+    auto result = installClient_->LoadInstalls();
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
 } // namespace AppExecFwk
 } // namespace OHOS

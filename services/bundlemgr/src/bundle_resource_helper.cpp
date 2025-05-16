@@ -158,7 +158,7 @@ bool BundleResourceHelper::AddCloneBundleResourceInfo(const std::string &bundleN
         APP_LOGE("failed, manager is nullptr");
         return false;
     }
-    if (!manager->AddCloneBundleResourceInfo(bundleName, appIndex)) {
+    if (!manager->AddCloneBundleResourceInfo(bundleName, appIndex, userId)) {
         APP_LOGE("add clone bundle resource failed, bundleName:%{public}s, appIndex:%{public}d",
             bundleName.c_str(), appIndex);
         return false;
@@ -209,6 +209,46 @@ void BundleResourceHelper::DeleteNotExistResourceInfo()
         APP_LOGE("delete not exist resource failed");
         return;
     }
+#endif
+}
+
+bool BundleResourceHelper::GetBundleResourceInfo(const std::string &bundleName,
+    const uint32_t flags, BundleResourceInfo &bundleResourceInfo, int32_t appIndex)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGI_NOFUNC("-n %{public}s -u get bundle resource info start", bundleName.c_str());
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return false;
+    }
+    if (!manager->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex)) {
+        APP_LOGE("failed, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool BundleResourceHelper::GetLauncherAbilityResourceInfo(const std::string &bundleName,
+    const uint32_t flags, std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, int32_t appIndex)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGI_NOFUNC("-n %{public}s -u get launcher ability resource info start", bundleName.c_str());
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return false;
+    }
+    if (!manager->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo, appIndex)) {
+        APP_LOGE("failed, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+    return true;
+#else
+    return false;
 #endif
 }
 } // AppExecFwk

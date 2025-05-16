@@ -70,7 +70,7 @@ HWTEST_F(BmsInstalldHostTest, HandleCreateBundleDir_0100, Function | SmallTest |
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleCreateBundleDir(data, reply);
+    bool res = installdHost.HandleCreateBundleDir(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -84,7 +84,7 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractModuleFiles_0100, Function | SmallTes
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleExtractModuleFiles(data, reply);
+    bool res = installdHost.HandleExtractModuleFiles(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -98,7 +98,7 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractFiles_0100, Function | SmallTest | Le
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleExtractFiles(data, reply);
+    bool res = installdHost.HandleExtractFiles(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -112,7 +112,7 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractHnpFiles_0100, Function | SmallTest |
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleExtractHnpFiles(data, reply);
+    bool res = installdHost.HandleExtractHnpFiles(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -126,7 +126,7 @@ HWTEST_F(BmsInstalldHostTest, HandleProcessBundleInstallNative_0100, Function | 
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleProcessBundleInstallNative(data, reply);
+    bool res = installdHost.HandleProcessBundleInstallNative(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -140,7 +140,7 @@ HWTEST_F(BmsInstalldHostTest, HandleProcessBundleUnInstallNative_0100, Function 
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleProcessBundleUnInstallNative(data, reply);
+    bool res = installdHost.HandleProcessBundleUnInstallNative(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -154,7 +154,7 @@ HWTEST_F(BmsInstalldHostTest, HandleExecuteAOT_0100, Function | SmallTest | Leve
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleExecuteAOT(data, reply);
+    bool res = installdHost.HandleExecuteAOT(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -168,7 +168,7 @@ HWTEST_F(BmsInstalldHostTest, HandlePendSignAOT_0100, Function | SmallTest | Lev
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandlePendSignAOT(data, reply);
+    bool res = installdHost.HandlePendSignAOT(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -182,7 +182,7 @@ HWTEST_F(BmsInstalldHostTest, HandleStopAOT_0100, Function | SmallTest | Level1)
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleStopAOT(data, reply);
+    bool res = installdHost.HandleStopAOT(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -196,7 +196,7 @@ HWTEST_F(BmsInstalldHostTest, HandleRenameModuleDir_0100, Function | SmallTest |
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleRenameModuleDir(data, reply);
+    bool res = installdHost.HandleRenameModuleDir(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -210,7 +210,7 @@ HWTEST_F(BmsInstalldHostTest, HandleCreateBundleDataDir_0100, Function | SmallTe
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleCreateBundleDataDir(data, reply);
+    bool res = installdHost.HandleCreateBundleDataDir(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -224,7 +224,7 @@ HWTEST_F(BmsInstalldHostTest, HandleCreateBundleDataDirWithVector_0100, Function
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleCreateBundleDataDirWithVector(data, reply);
+    bool res = installdHost.HandleCreateBundleDataDirWithVector(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -238,7 +238,7 @@ HWTEST_F(BmsInstalldHostTest, HandleRemoveBundleDataDir_0100, Function | SmallTe
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleRemoveBundleDataDir(data, reply);
+    bool res = installdHost.HandleRemoveBundleDataDir(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -252,7 +252,7 @@ HWTEST_F(BmsInstalldHostTest, HandleRemoveModuleDataDir_0100, Function | SmallTe
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleRemoveModuleDataDir(data, reply);
+    bool res = installdHost.HandleRemoveModuleDataDir(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -266,7 +266,7 @@ HWTEST_F(BmsInstalldHostTest, HandleRemoveDir_0100, Function | SmallTest | Level
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleRemoveDir(data, reply);
+    bool res = installdHost.HandleRemoveDir(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -280,7 +280,7 @@ HWTEST_F(BmsInstalldHostTest, HandleGetDiskUsage_0100, Function | SmallTest | Le
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleGetDiskUsage(data, reply);
+    bool res = installdHost.HandleGetDiskUsage(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -294,7 +294,7 @@ HWTEST_F(BmsInstalldHostTest, HandleCleanBundleDataDir_0100, Function | SmallTes
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleCleanBundleDataDir(data, reply);
+    bool res = installdHost.HandleCleanBundleDataDir(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -308,7 +308,7 @@ HWTEST_F(BmsInstalldHostTest, HandleCleanBundleDataDirByName_0100, Function | Sm
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleCleanBundleDataDirByName(data, reply);
+    bool res = installdHost.HandleCleanBundleDataDirByName(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -322,7 +322,7 @@ HWTEST_F(BmsInstalldHostTest, HandleGetBundleStats_0100, Function | SmallTest | 
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleGetBundleStats(data, reply);
+    bool res = installdHost.HandleGetBundleStats(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -336,7 +336,7 @@ HWTEST_F(BmsInstalldHostTest, HandleGetAllBundleStats_0100, Function | SmallTest
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleGetAllBundleStats(data, reply);
+    bool res = installdHost.HandleGetAllBundleStats(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -350,7 +350,7 @@ HWTEST_F(BmsInstalldHostTest, HandleSetDirApl_0100, Function | SmallTest | Level
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleSetDirApl(data, reply);
+    bool res = installdHost.HandleSetDirApl(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -364,7 +364,7 @@ HWTEST_F(BmsInstalldHostTest, HandleGetBundleCachePath_0100, Function | SmallTes
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleGetBundleCachePath(data, reply);
+    bool res = installdHost.HandleGetBundleCachePath(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -378,7 +378,7 @@ HWTEST_F(BmsInstalldHostTest, HandleScanDir_0100, Function | SmallTest | Level1)
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleScanDir(data, reply);
+    bool res = installdHost.HandleScanDir(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -392,7 +392,7 @@ HWTEST_F(BmsInstalldHostTest, HandleMoveFile_0100, Function | SmallTest | Level1
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleMoveFile(data, reply);
+    bool res = installdHost.HandleMoveFile(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -406,7 +406,7 @@ HWTEST_F(BmsInstalldHostTest, HandleCopyFile_0100, Function | SmallTest | Level1
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleCopyFile(data, reply);
+    bool res = installdHost.HandleCopyFile(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -420,7 +420,7 @@ HWTEST_F(BmsInstalldHostTest, HandleMkdir_0100, Function | SmallTest | Level1)
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleMkdir(data, reply);
+    bool res = installdHost.HandleMkdir(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -434,7 +434,7 @@ HWTEST_F(BmsInstalldHostTest, HandleGetFileStat_0100, Function | SmallTest | Lev
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleGetFileStat(data, reply);
+    bool res = installdHost.HandleGetFileStat(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -448,7 +448,7 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractDiffFiles_0100, Function | SmallTest 
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleExtractDiffFiles(data, reply);
+    bool res = installdHost.HandleExtractDiffFiles(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -462,7 +462,7 @@ HWTEST_F(BmsInstalldHostTest, HandleApplyDiffPatch_0100, Function | SmallTest | 
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleApplyDiffPatch(data, reply);
+    bool res = installdHost.HandleApplyDiffPatch(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -476,7 +476,7 @@ HWTEST_F(BmsInstalldHostTest, HandleIsExistDir_0100, Function | SmallTest | Leve
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleIsExistDir(data, reply);
+    bool res = installdHost.HandleIsExistDir(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -490,7 +490,7 @@ HWTEST_F(BmsInstalldHostTest, HandleIsExistFile_0100, Function | SmallTest | Lev
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleIsExistFile(data, reply);
+    bool res = installdHost.HandleIsExistFile(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -504,7 +504,7 @@ HWTEST_F(BmsInstalldHostTest, HandleIsExistApFile_0100, Function | SmallTest | L
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleIsExistApFile(data, reply);
+    bool res = installdHost.HandleIsExistApFile(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -518,7 +518,7 @@ HWTEST_F(BmsInstalldHostTest, HandleIsDirEmpty_0100, Function | SmallTest | Leve
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleIsDirEmpty(data, reply);
+    bool res = installdHost.HandleIsDirEmpty(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -532,7 +532,7 @@ HWTEST_F(BmsInstalldHostTest, HandObtainQuickFixFileDir_0100, Function | SmallTe
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandObtainQuickFixFileDir(data, reply);
+    bool res = installdHost.HandObtainQuickFixFileDir(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -546,7 +546,7 @@ HWTEST_F(BmsInstalldHostTest, HandCopyFiles_0100, Function | SmallTest | Level1)
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandCopyFiles(data, reply);
+    bool res = installdHost.HandCopyFiles(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -560,7 +560,7 @@ HWTEST_F(BmsInstalldHostTest, HandGetNativeLibraryFileNames_0100, Function | Sma
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandGetNativeLibraryFileNames(data, reply);
+    bool res = installdHost.HandGetNativeLibraryFileNames(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -574,7 +574,7 @@ HWTEST_F(BmsInstalldHostTest, HandVerifyCodeSignature_0100, Function | SmallTest
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandVerifyCodeSignature(data, reply);
+    bool res = installdHost.HandVerifyCodeSignature(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -588,7 +588,7 @@ HWTEST_F(BmsInstalldHostTest, HandleCheckEncryption_0100, Function | SmallTest |
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleCheckEncryption(data, reply);
+    bool res = installdHost.HandleCheckEncryption(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -602,7 +602,7 @@ HWTEST_F(BmsInstalldHostTest, HandMoveFiles_0100, Function | SmallTest | Level1)
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandMoveFiles(data, reply);
+    bool res = installdHost.HandMoveFiles(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -616,7 +616,7 @@ HWTEST_F(BmsInstalldHostTest, HandExtractDriverSoFiles_0100, Function | SmallTes
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandExtractDriverSoFiles(data, reply);
+    bool res = installdHost.HandExtractDriverSoFiles(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -630,7 +630,7 @@ HWTEST_F(BmsInstalldHostTest, HandExtractEncryptedSoFiles_0100, Function | Small
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandExtractEncryptedSoFiles(data, reply);
+    bool res = installdHost.HandExtractEncryptedSoFiles(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -644,7 +644,7 @@ HWTEST_F(BmsInstalldHostTest, HandVerifyCodeSignatureForHap_0100, Function | Sma
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandVerifyCodeSignatureForHap(data, reply);
+    bool res = installdHost.HandVerifyCodeSignatureForHap(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -658,7 +658,7 @@ HWTEST_F(BmsInstalldHostTest, HandDeliverySignProfile_0100, Function | SmallTest
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandDeliverySignProfile(data, reply);
+    bool res = installdHost.HandDeliverySignProfile(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -672,7 +672,7 @@ HWTEST_F(BmsInstalldHostTest, HandRemoveSignProfile_0100, Function | SmallTest |
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandRemoveSignProfile(data, reply);
+    bool res = installdHost.HandRemoveSignProfile(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -686,7 +686,7 @@ HWTEST_F(BmsInstalldHostTest, HandleSetEncryptionDir_0100, Function | SmallTest 
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleSetEncryptionDir(data, reply);
+    bool res = installdHost.HandleSetEncryptionDir(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -700,7 +700,7 @@ HWTEST_F(BmsInstalldHostTest, HandleDeleteEncryptionKeyId_0100, Function | Small
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleDeleteEncryptionKeyId(data, reply);
+    bool res = installdHost.HandleDeleteEncryptionKeyId(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -714,7 +714,7 @@ HWTEST_F(BmsInstalldHostTest, HandleRemoveExtensionDir_0100, Function | SmallTes
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleRemoveExtensionDir(data, reply);
+    bool res = installdHost.HandleRemoveExtensionDir(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -728,7 +728,7 @@ HWTEST_F(BmsInstalldHostTest, HandleIsExistExtensionDir_0100, Function | SmallTe
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleIsExistExtensionDir(data, reply);
+    bool res = installdHost.HandleIsExistExtensionDir(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -742,7 +742,7 @@ HWTEST_F(BmsInstalldHostTest, HandleCreateExtensionDataDir_0100, Function | Smal
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleCreateExtensionDataDir(data, reply);
+    bool res = installdHost.HandleCreateExtensionDataDir(data, reply);
     EXPECT_FALSE(res);
 }
 
@@ -756,7 +756,7 @@ HWTEST_F(BmsInstalldHostTest, HandleGetExtensionSandboxTypeList_0100, Function |
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleGetExtensionSandboxTypeList(data, reply);
+    bool res = installdHost.HandleGetExtensionSandboxTypeList(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -784,7 +784,7 @@ HWTEST_F(BmsInstalldHostTest, HandleAddUserDirDeleteDfx_0100, Function | SmallTe
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleAddUserDirDeleteDfx(data, reply);
+    bool res = installdHost.HandleAddUserDirDeleteDfx(data, reply);
     EXPECT_TRUE(res);
 }
 
@@ -798,7 +798,21 @@ HWTEST_F(BmsInstalldHostTest, HandleMoveHapToCodeDir_0100, Function | SmallTest 
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    ErrCode res = installdHost.HandleMoveHapToCodeDir(data, reply);
+    bool res = installdHost.HandleMoveHapToCodeDir(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleLoadInstalls_0100
+ * @tc.name: test LoadInstalls
+ * @tc.desc: 1.LoadInstalls test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleLoadInstalls_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleLoadInstalls(data, reply);
     EXPECT_TRUE(res);
 }
 } // OHOS

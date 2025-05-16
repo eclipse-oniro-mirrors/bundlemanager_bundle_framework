@@ -111,6 +111,7 @@ ohos_shared_library("appexecfwk_core") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "safwk:api_cache_manager"
   ]
 
   public_external_deps = [

@@ -2049,7 +2049,11 @@ HWTEST_F(BmsBundleDataMgrTest2, QueryAppGalleryBundleName_0001, Function | Mediu
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     bool ret = bundleMgrHostImpl_->QueryAppGalleryBundleName(bundleName);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_TRUE(ret);
+    #else
     EXPECT_FALSE(ret);
+    #endif
 }
 
 /**
@@ -2063,7 +2067,11 @@ HWTEST_F(BmsBundleDataMgrTest2, QueryAppGalleryBundleName_0002, Function | Mediu
     ASSERT_NE(bundleMgrHostImpl_, nullptr);
     std::string bundleName;
     bool ret = bundleMgrHostImpl_->QueryAppGalleryBundleName(bundleName);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_TRUE(ret);
+    #else
     EXPECT_FALSE(ret);
+    #endif
 }
 
 /**

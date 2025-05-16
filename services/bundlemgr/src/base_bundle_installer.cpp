@@ -183,12 +183,12 @@ void BaseBundleInstaller::SendStartInstallNotify(const InstallParam &installPara
             bundleName_.c_str(), item.second.GetCurModuleName().c_str(),
             item.second.GetAppId().c_str(), item.second.GetAppIdentifier().c_str());
         NotifyBundleEvents installRes = {
+            .isAppUpdate = isAppExist,
             .type = NotifyType::START_INSTALL,
             .bundleName = bundleName_,
             .modulePackage = item.second.GetCurModuleName(),
             .appId = item.second.GetAppId(),
-            .appIdentifier = item.second.GetAppIdentifier(),
-            .isAppUpdate = isAppExist
+            .appIdentifier = item.second.GetAppIdentifier()
         };
         NotifyBundleStatus(installRes);
     }
@@ -6739,6 +6739,7 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
                 return ERR_APPEXECFWK_ADD_BUNDLE_ERROR;
             }
         }
+        PrintStartWindowIconId(info);
         return ERR_OK;
     }
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, info, false)) {
@@ -6751,7 +6752,18 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
         LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
+    PrintStartWindowIconId(info);
     return ERR_OK;
+}
+
+void BaseBundleInstaller::PrintStartWindowIconId(const InnerBundleInfo &info)
+{
+    const auto &abilityMap = info.GetInnerAbilityInfos();
+    for (const auto &ability : abilityMap) {
+        const auto &abilityInfo = ability.second;
+        APP_LOGI("startWindowIconId %{public}s_%{public}s_%{public}s_%{public}d", abilityInfo.bundleName.c_str(),
+        abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(), abilityInfo.startWindowIconId);
+    }
 }
 
 bool BaseBundleInstaller::HasDriverExtensionAbility(const std::string &bundleName)
@@ -6939,7 +6951,7 @@ bool BaseBundleInstaller::AddAppGalleryHapToTempPath(const bool isPreInstall,
             LOG_E(BMS_TAG_INSTALLER, "path %{public}s may error", item.first.c_str());
             continue;
         }
-        if (!BundleUtil::CopyFileFast(item.first, targetPath + item.first.substr(pos))) {
+        if (!BundleUtil::CopyFileFast(item.first, targetPath + item.first.substr(pos), true)) {
             LOG_E(BMS_TAG_INSTALLER, "copy hap %{public}s failed err %{public}d", item.first.c_str(), errno);
         }
     }
@@ -7195,8 +7207,7 @@ ErrCode BaseBundleInstaller::CheckPreAppAllowHdcInstall(const InstallParam &inst
     }
 
     if (hapVerifyRes.empty()) {
-        LOG_W(BMS_TAG_INSTALLER, "hapVerifyRes empty");
-        return ERR_APPEXECFWK_HAP_VERIFY_RES_EMPTY;
+        return ERR_OK;
     }
 
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();

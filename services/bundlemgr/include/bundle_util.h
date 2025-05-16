@@ -181,7 +181,7 @@ public:
     static bool CopyFile(
         const std::string &oldPath, const std::string &newPath);
 
-    static bool CopyFileFast(const std::string &sourcePath, const std::string &destPath);
+    static bool CopyFileFast(const std::string &sourcePath, const std::string &destPath, const bool needFsync = false);
     /**
      * @brief Delete all dir or file.
      * @param path Indicates sourceStr.

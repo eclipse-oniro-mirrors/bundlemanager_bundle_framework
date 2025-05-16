@@ -86,6 +86,7 @@ ohos_unittest("BmsBundleDataMgrTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "jsoncpp:jsoncpp",
+    "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -276,6 +277,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "jsoncpp:jsoncpp",
+    "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -419,6 +421,9 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   sources += bundle_install_sources
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
+
+  sources -= [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources += [ "bms_bundle_get_window_properties_test.cpp" ]
 
@@ -631,6 +636,7 @@ ohos_unittest("BmsBundleDataMgrTest2") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "jsoncpp:jsoncpp",
+    "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -638,6 +644,9 @@ ohos_unittest("BmsBundleDataMgrTest2") {
   external_deps += bundle_install_external_deps
 
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_EXTENSION_DATA" ]
+  }
   include_dirs = []
   if (code_signature_enable) {
     sources += [
@@ -817,6 +826,7 @@ ohos_unittest("BmsBundleDataMgrTest3") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "jsoncpp:jsoncpp",
+    "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -824,6 +834,9 @@ ohos_unittest("BmsBundleDataMgrTest3") {
   external_deps += bundle_install_external_deps
 
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_EXTENSION_DATA" ]
+  }
   include_dirs = []
   if (code_signature_enable) {
     sources += [

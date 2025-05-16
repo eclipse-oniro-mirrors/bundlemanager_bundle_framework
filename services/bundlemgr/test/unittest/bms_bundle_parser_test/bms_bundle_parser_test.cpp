@@ -157,7 +157,17 @@ const nlohmann::json CONFIG_JSON = R"(
                                         "value": "com.weather.testWidget"
                                     }
                                 ]
-                            }
+                            },
+                        "funInteractionParams": {
+                            "abilityName": "GameLoaderExtensionAbility",
+                            "targetBundleName": "Game",
+                            "keepStateDuration": 10000
+                        },
+                        "sceneAnimationParams": {
+                            "abilityName": "GameLoaderExtensionAbility",
+                            "isAlwaysActive": false,
+                            "disabledDesktopBehaviors": "PULL_DOWN_SEARCH|LONG_CLICK"
+                        }
                         }
                     ],
                     "skills": [
@@ -805,6 +815,206 @@ const nlohmann::json MODULE_JSON_5 = R"(
         "packageName": "entry"
         }
     }
+)"_json;
+
+const nlohmann::json MODULE_JSON_6 = R"(
+{
+    "app": {
+        "bundleName": "com.example.backuptest",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0"
+    },
+    "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "deviceTypes": [
+            "default"
+        ],
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "name": "entry",
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark0.0.0.3",
+        "compressNativeLibs": false,
+        "extractNativeLibs": false
+    }
+}
+)"_json;
+
+const nlohmann::json MODULE_JSON_7 = R"(
+{
+    "app": {
+        "bundleName": "com.example.backuptest",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0"
+    },
+    "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "deviceTypes": [
+            "default"
+        ],
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "name": "entry",
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark0.0.0.3",
+        "compressNativeLibs": true,
+        "extractNativeLibs": true
+    }
+}
+)"_json;
+
+const nlohmann::json MODULE_JSON_8 = R"(
+{
+    "app": {
+        "bundleName": "com.example.backuptest",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0"
+    },
+    "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "deviceTypes": [
+            "default"
+        ],
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "name": "entry",
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark0.0.0.3",
+        "compressNativeLibs": true,
+        "extractNativeLibs": false
+    }
+}
+)"_json;
+
+const nlohmann::json MODULE_JSON_9 = R"(
+{
+    "app": {
+        "bundleName": "com.example.backuptest",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0"
+    },
+    "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "deviceTypes": [
+            "default"
+        ],
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "name": "entry",
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark0.0.0.3",
+        "compressNativeLibs": false,
+        "extractNativeLibs": true
+    }
+}
 )"_json;
 }  // namespace
 
@@ -1915,6 +2125,106 @@ HWTEST_F(BmsBundleParserTest, TestExtractByName_0500, Function | SmallTest | Lev
     std::ostringstream fileBuffer;
 
     BundleExtractor bundleExtractor(pathStream_.str());
+    bool result = bundleExtractor.ExtractByName(fileInBundle, fileBuffer);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: TestExtractByName_0600
+ * @tc.name: extract file stream by file name from package parallelly
+ * @tc.desc: 1. system running normally
+ *           2. test extract file from is not exist bundle or ability package
+ */
+HWTEST_F(BmsBundleParserTest, TestExtractByName_0600, Function | SmallTest | Level0)
+{
+    pathStream_ << RESOURCE_ROOT_PATH << UNKOWN_PATH << INSTALL_FILE_SUFFIX;
+    std::string fileInBundle = "";
+    std::ostringstream fileBuffer;
+
+    BundleParallelExtractor bundleExtractor(pathStream_.str());
+    bool result = bundleExtractor.ExtractByName(fileInBundle, fileBuffer);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: TestExtractByName_0700
+ * @tc.name: extract file stream by file name from package parallelly
+ * @tc.desc: 1. system running normally
+ *           2. test extract is not exist file from bundle or ability package
+ */
+HWTEST_F(BmsBundleParserTest, TestExtractByName_0700, Function | SmallTest | Level0)
+{
+    pathStream_ << RESOURCE_ROOT_PATH << NEW_APP << INSTALL_FILE_SUFFIX;
+    std::string fileInBundle = "unknown";
+    std::ostringstream fileBuffer;
+
+    BundleParallelExtractor bundleExtractor(pathStream_.str());
+    bool result = bundleExtractor.ExtractByName(fileInBundle, fileBuffer);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: TestExtractByName_0800
+ * @tc.name: extract file stream by file name from package parallelly
+ * @tc.desc: 1. system running normally
+ *           2. test failed to extract files from a package with a deep file path depth
+ */
+HWTEST_F(BmsBundleParserTest, TestExtractByName_0800, Function | SmallTest | Level1)
+{
+    pathStream_ << RESOURCE_ROOT_PATH;
+    int maxDeep = 100;
+    for (int i = 0; i < maxDeep; i++) {
+        pathStream_ << "test/";
+    }
+    pathStream_ << BUNDLE_TYPE_APP << INSTALL_FILE_SUFFIX;
+
+    std::string fileInBundle = "config.json";
+    std::ostringstream fileBuffer;
+
+    BundleParallelExtractor bundleExtractor(pathStream_.str());
+    bool result = bundleExtractor.ExtractByName(fileInBundle, fileBuffer);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: TestExtractByName_0900
+ * @tc.name: extract file stream by file name from package parallelly
+ * @tc.desc: 1. system running normally
+ *           2. test failed to extract files from a file with a long path
+ */
+HWTEST_F(BmsBundleParserTest, TestExtractByName_0900, Function | SmallTest | Level1)
+{
+    pathStream_ << RESOURCE_ROOT_PATH;
+    int maxLength = 256;
+    for (int i = 0; i < maxLength; i++) {
+        pathStream_ << "test";
+    }
+    pathStream_ << "new" << INSTALL_FILE_SUFFIX;
+
+    std::string fileInBundle = "config.json";
+    std::ostringstream fileBuffer;
+
+    BundleParallelExtractor bundleExtractor(pathStream_.str());
+    bool result = bundleExtractor.ExtractByName(fileInBundle, fileBuffer);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: TestExtractByName_1000
+ * @tc.name: extract file stream by file name from package parallelly
+ * @tc.desc: 1. system running normally
+ *           2. test failed to extract files from a package with special character in the file path
+ */
+HWTEST_F(BmsBundleParserTest, TestExtractByName_1000, Function | SmallTest | Level1)
+{
+    pathStream_ << RESOURCE_ROOT_PATH;
+    std::string specialChars = "~!@#$%^&*(){}[]:;'?<>,.|`/./+_-";
+    pathStream_ << specialChars << "new" << INSTALL_FILE_SUFFIX;
+
+    std::string fileInBundle = "config.json";
+    std::ostringstream fileBuffer;
+
+    BundleParallelExtractor bundleExtractor(pathStream_.str());
     bool result = bundleExtractor.ExtractByName(fileInBundle, fileBuffer);
     EXPECT_FALSE(result);
 }
@@ -3343,5 +3653,140 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0200, Function | MediumTest | Level1)
     to_json(jsonObject, formInfo);
     EXPECT_TRUE(jsonObject["appFormVisibleNotify"]);
     EXPECT_EQ(jsonObject["name"], "testName");
+}
+
+/**
+* @tc.number: ParseCompressExtractNativeLibs
+* @tc.name: Test ParseCompressExtractNativeLibs
+* @tc.desc: test parse compressNativeLibs extractNativeLibs
+*/
+HWTEST_F(BmsBundleParserTest, ParseCompressExtractNativeLibs_0100, Function | MediumTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_6;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    auto appInfo = innerBundleInfo.GetBaseApplicationInfo();
+    EXPECT_EQ(appInfo.isCompressNativeLibs, false);
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    EXPECT_NE(hapModule, std::nullopt);
+    EXPECT_EQ(hapModule->compressNativeLibs, false);
+}
+
+/**
+* @tc.number: ParseCompressExtractNativeLibs_0200
+* @tc.name: Test ParseCompressExtractNativeLibs
+* @tc.desc: test parse compressNativeLibs extractNativeLibs
+*/
+HWTEST_F(BmsBundleParserTest, ParseCompressExtractNativeLibs_0200, Function | MediumTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_7;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    auto appInfo = innerBundleInfo.GetBaseApplicationInfo();
+    EXPECT_EQ(appInfo.isCompressNativeLibs, true);
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    EXPECT_NE(hapModule, std::nullopt);
+    EXPECT_EQ(hapModule->compressNativeLibs, true);
+}
+
+/**
+* @tc.number: ParseCompressExtractNativeLibs_0300
+* @tc.name: Test ParseCompressExtractNativeLibs
+* @tc.desc: test parse compressNativeLibs extractNativeLibs
+*/
+HWTEST_F(BmsBundleParserTest, ParseCompressExtractNativeLibs_0300, Function | MediumTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_8;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    auto appInfo = innerBundleInfo.GetBaseApplicationInfo();
+    EXPECT_EQ(appInfo.isCompressNativeLibs, true);
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    EXPECT_NE(hapModule, std::nullopt);
+    EXPECT_EQ(hapModule->compressNativeLibs, true);
+}
+
+/**
+* @tc.number: ParseCompressExtractNativeLibs_0400
+* @tc.name: Test ParseCompressExtractNativeLibs
+* @tc.desc: test parse compressNativeLibs extractNativeLibs
+*/
+HWTEST_F(BmsBundleParserTest, ParseCompressExtractNativeLibs_0400, Function | MediumTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_9;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    auto appInfo = innerBundleInfo.GetBaseApplicationInfo();
+    EXPECT_EQ(appInfo.isCompressNativeLibs, true);
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    EXPECT_NE(hapModule, std::nullopt);
+    EXPECT_EQ(hapModule->compressNativeLibs, true);
+}
+
+/**
+* @tc.number: ParseCompressExtractNativeLibs_0500
+* @tc.name: Test ParseCompressExtractNativeLibs
+* @tc.desc: test parse compressNativeLibs extractNativeLibs
+*/
+HWTEST_F(BmsBundleParserTest, ParseCompressExtractNativeLibs_0500, Function | MediumTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    auto appInfo = innerBundleInfo.GetBaseApplicationInfo();
+    EXPECT_EQ(appInfo.isCompressNativeLibs, true);
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    EXPECT_NE(hapModule, std::nullopt);
+    EXPECT_EQ(hapModule->compressNativeLibs, true);
 }
 } // OHOS
