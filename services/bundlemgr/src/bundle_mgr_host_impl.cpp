@@ -24,6 +24,7 @@
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_service_constants.h"
+#include "bundle_resource_helper.h"
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_proxy.h"
 #endif
@@ -937,6 +938,34 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
         LOG_D(BMS_TAG_QUERY, "query ability infos from bms extension successfully");
         return ERR_OK;
     }
+    return res;
+}
+
+ErrCode BundleMgrHostImpl::GetAbilityInfos(
+    const std::string &uri, uint32_t flags, std::vector<AbilityInfo> &abilityInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    LOG_D(BMS_TAG_QUERY, "start GetAbilityInfos, uri : %{public}s, flags : %{public}d",
+        uri.c_str(), flags);
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_ABILITY_INFO)) {
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    Want want;
+    want.SetUri(uri);
+    auto uid = IPCSkeleton::GetCallingUid();
+    auto res = dataMgr->QueryAbilityInfosV9(want, flags, BundleUtil::GetUserIdByUid(uid), abilityInfos);
+    if (res != ERR_OK) {
+        APP_LOGE("GetAbilityInfos failed %{public}d", res);
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    GetAbilityLabelInfo(abilityInfos);
+    GetApplicationLabelInfo(abilityInfos);
     return res;
 }
 
@@ -5328,6 +5357,67 @@ void BundleMgrHostImpl::AddPreinstalledApplicationInfo(PreInstallBundleInfo &pre
     preinstalledApplicationInfo.labelId = preInstallBundleInfo.GetLabelId();
     preinstalledApplicationInfo.iconId = preInstallBundleInfo.GetIconId();
     preinstalledApplicationInfos.emplace_back(preinstalledApplicationInfo);
+}
+
+void BundleMgrHostImpl::GetAbilityLabelInfo(std::vector<AbilityInfo> &abilityInfos)
+{
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
+    std::unordered_map<std::string, std::vector<LauncherAbilityResourceInfo>> resourceCache;
+    for (auto &abilityInfo : abilityInfos) {
+        std::string cacheKey = abilityInfo.bundleName + "_" + std::to_string(abilityInfo.appIndex);
+        if (GetLabelFromCache(cacheKey, abilityInfo.name, resourceCache, abilityInfo.label)) {
+            continue;
+        }
+        std::vector<LauncherAbilityResourceInfo> launcherResources;
+        if (!BundleResourceHelper::GetLauncherAbilityResourceInfo(abilityInfo.bundleName, flags,
+            launcherResources, abilityInfo.appIndex)) {
+            APP_LOGW("get launcher resource failed -n %{public}s -f %{public}u",
+                abilityInfo.bundleName.c_str(), flags);
+            abilityInfo.label = abilityInfo.bundleName;
+            continue;
+        }
+        resourceCache[cacheKey] = launcherResources;
+        for (const auto& resource : launcherResources) {
+            if (resource.abilityName == abilityInfo.name) {
+                abilityInfo.label = resource.label;
+                break;
+            }
+        }
+    }
+}
+
+void BundleMgrHostImpl::GetApplicationLabelInfo(std::vector<AbilityInfo> &abilityInfos)
+{
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
+    for (auto &abilityInfo : abilityInfos) {
+        if (abilityInfo.applicationInfo.name.empty()) {
+            continue;
+        }
+        BundleResourceInfo bundleResourceInfo;
+        if (!BundleResourceHelper::GetBundleResourceInfo(abilityInfo.applicationInfo.bundleName, flags,
+            bundleResourceInfo, abilityInfo.applicationInfo.appIndex)) {
+            APP_LOGW("get resource failed -n %{public}s -f %{public}u",
+                abilityInfo.applicationInfo.bundleName.c_str(), flags);
+            abilityInfo.applicationInfo.label = abilityInfo.applicationInfo.bundleName;
+            continue;
+        }
+        abilityInfo.applicationInfo.label = bundleResourceInfo.label;
+    }
+}
+
+bool BundleMgrHostImpl::GetLabelFromCache(const std::string &cacheKey, const std::string &abilityName,
+    const std::unordered_map<std::string, std::vector<LauncherAbilityResourceInfo>> &resourceCache, std::string &label)
+{
+    auto cacheIter = resourceCache.find(cacheKey);
+    if (cacheIter != resourceCache.end()) {
+        for (const auto& resource : cacheIter->second) {
+            if (resource.abilityName == abilityName) {
+                label = resource.label;
+                return true;
+            }
+        }
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

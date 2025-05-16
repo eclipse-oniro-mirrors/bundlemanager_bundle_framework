@@ -20,7 +20,9 @@
 #include <vector>
 
 #include "bundle_constants.h"
+#include "bundle_resource_info.h"
 #include "inner_bundle_info.h"
+#include "launcher_ability_resource_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -62,6 +64,12 @@ public:
         const int32_t userId = Constants::UNSPECIFIED_USERID);
 
     static void DeleteNotExistResourceInfo();
+
+    static bool GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
+        BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
+        
+    static bool GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
 };
 } // AppExecFwk
 } // OHOS

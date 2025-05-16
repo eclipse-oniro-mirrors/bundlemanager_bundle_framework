@@ -77,6 +77,15 @@ struct AbilityCallbackInfo : public BaseCallbackInfo {
     OHOS::AAFwk::Want want;
 };
 
+struct GetAbilityCallbackInfo : public BaseCallbackInfo {
+    explicit GetAbilityCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+
+    bool isSavedInCache = false;
+    uint32_t flags = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    std::string uri;
+};
+
 struct BatchAbilityCallbackInfo : public BaseCallbackInfo {
     explicit BatchAbilityCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
@@ -387,6 +396,7 @@ napi_value CleanAllBundleCache(napi_env env, napi_callback_info info);
 napi_value GetLaunchWant(napi_env env, napi_callback_info info);
 napi_value MigrateData(napi_env env, napi_callback_info info);
 napi_value GetAllDynamicIconInfo(napi_env env, napi_callback_info info);
+napi_value GetAbilityInfos(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
