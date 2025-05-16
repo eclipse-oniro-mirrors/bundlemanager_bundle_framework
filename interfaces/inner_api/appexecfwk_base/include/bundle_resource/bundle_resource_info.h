@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,8 @@ enum class ResourceFlag {
     GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = 0x00000008,
     // Used to obtain the icon drawable object
     GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR = 0x00000010,
+    // Used to obtain only main ability resource
+    GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY = 0x00000020,
 };
 
 struct BundleResourceInfo : Parcelable {

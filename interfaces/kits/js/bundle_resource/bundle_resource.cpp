@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,6 +55,7 @@ constexpr const char* GET_RESOURCE_INFO_WITH_ICON = "GET_RESOURCE_INFO_WITH_ICON
 constexpr const char* GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = "GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL";
 constexpr const char* GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR = "GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR";
 constexpr const char* EXTENSION_ABILITY_TYPE = "extensionAbilityType";
+constexpr const char* GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY = "GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY";
 
 class ResourceHelper {
 public:
@@ -554,6 +555,12 @@ void CreateBundleResourceFlagObject(napi_env env, napi_value value)
         env, static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), &nGetDrawable));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value,
         GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR, nGetDrawable));
+
+    napi_value nGetMainAbility;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(
+        env, static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), &nGetMainAbility));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value,
+        GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY, nGetMainAbility));
 }
 
 static ErrCode InnerGetExtensionAbilityResourceInfo(
