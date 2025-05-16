@@ -1084,7 +1084,11 @@ HWTEST_F(ExtendResourceManagerProxyTest, GetAllDynamicIconInfo_0001, Function | 
         if (proxy != nullptr) {
             std::vector<DynamicIconInfo> infos;
             ErrCode ret = proxy->GetAllDynamicIconInfo(infos);
-            EXPECT_EQ(ret, ERR_OK);
+            if (ret == ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED) {
+                EXPECT_TRUE(infos.empty());
+            } else {
+                EXPECT_FALSE(infos.empty());
+            }
 
             std::vector<DynamicIconInfo> infos2;
             ret = proxy->GetAllDynamicIconInfo(-100, infos2);
@@ -1093,7 +1097,11 @@ HWTEST_F(ExtendResourceManagerProxyTest, GetAllDynamicIconInfo_0001, Function | 
 
             std::vector<DynamicIconInfo> infos3;
             ret = proxy->GetAllDynamicIconInfo(USERID, infos3);
-            EXPECT_EQ(ret, ERR_OK);
+            if (ret == ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED) {
+                EXPECT_TRUE(infos3.empty());
+            } else {
+                EXPECT_FALSE(infos3.empty());
+            }
         }
     }
 }
@@ -1148,6 +1156,161 @@ HWTEST_F(ExtendResourceManagerProxyTest, GetAllDynamicIconInfo_0002, Function | 
             ret = proxy->GetAllDynamicIconInfo(USERID, infos2);
             EXPECT_EQ(ret, ERR_OK);
             EXPECT_TRUE(infos2.size() > 1);
+        }
+    }
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME_DEMO, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success");
+}
+
+/**
+ * @tc.number: GetDynamicIconInfo_0001
+ * @tc.name: test GetDynamicIconInfo
+ * @tc.desc: 1.call GetDynamicIconInfo
+ */
+HWTEST_F(ExtendResourceManagerProxyTest, GetDynamicIconInfo_0001, Function | SmallTest | Level1)
+{
+    StartProcess();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetExtendResourceManager();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            std::vector<DynamicIconInfo> infos;
+            ErrCode ret = proxy->GetDynamicIconInfo(BUNDLE_NAME_DEMO, infos);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+            EXPECT_TRUE(infos.empty());
+
+            ret = proxy->GetDynamicIconInfo("", infos);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+            EXPECT_TRUE(infos.empty());
+        }
+    }
+}
+
+/**
+ * @tc.number: GetDynamicIconInfo_0002
+ * @tc.name: test GetDynamicIconInfo
+ * @tc.desc: 1.call GetDynamicIconInfo
+ */
+HWTEST_F(ExtendResourceManagerProxyTest, GetDynamicIconInfo_0002, Function | SmallTest | Level1)
+{
+    StartProcess();
+    std::string installMsg;
+    InstallBundle(BUNDLE_PATH_1, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << BUNDLE_PATH_1;
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetExtendResourceManager();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            std::vector<DynamicIconInfo> infos;
+            ErrCode ret = proxy->GetDynamicIconInfo(BUNDLE_NAME_DEMO, infos);
+            EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED);
+            EXPECT_TRUE(infos.empty());
+        }
+    }
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME_DEMO, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success");
+}
+
+/**
+ * @tc.number: GetDynamicIconInfo_0003
+ * @tc.name: test GetDynamicIconInfo
+ * @tc.desc: 1.call GetDynamicIconInfo
+ */
+HWTEST_F(ExtendResourceManagerProxyTest, GetDynamicIconInfo_0003, Function | SmallTest | Level1)
+{
+    StartProcess();
+    std::string installMsg;
+    InstallBundle(BUNDLE_PATH_1, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << BUNDLE_PATH_1;
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetExtendResourceManager();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            std::vector<std::string> filePath;
+            filePath.push_back(BUNDLE_PATH_2);
+            std::vector<std::string> destFiles;
+            ErrCode ret = proxy->CopyFiles(filePath, destFiles);
+            EXPECT_EQ(ret, ERR_OK);
+
+            ret = proxy->AddExtResource(BUNDLE_NAME_DEMO, destFiles);
+            EXPECT_EQ(ret, ERR_OK);
+
+            ret = proxy->EnableDynamicIcon(BUNDLE_NAME_DEMO, DYNAMIC_NAME, USERID, 0);
+            EXPECT_EQ(ret, ERR_OK);
+
+            std::vector<DynamicIconInfo> infos;
+            ret = proxy->GetDynamicIconInfo(BUNDLE_NAME_DEMO, infos);
+            EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(infos.size(), 1);
+            for (const auto &info : infos) {
+                EXPECT_EQ(info.bundleName, BUNDLE_NAME_DEMO);
+                EXPECT_EQ(info.moduleName, DYNAMIC_NAME);
+                EXPECT_EQ(info.userId, USERID);
+                EXPECT_EQ(info.appIndex, 0);
+            }
+        }
+    }
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME_DEMO, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success");
+}
+
+/**
+ * @tc.number: GetDynamicIconInfo_0004
+ * @tc.name: test GetDynamicIconInfo
+ * @tc.desc: 1.call GetDynamicIconInfo
+ */
+HWTEST_F(ExtendResourceManagerProxyTest, GetDynamicIconInfo_0004, Function | SmallTest | Level1)
+{
+    StartProcess();
+    std::string installMsg;
+    InstallBundle(BUNDLE_PATH_1, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << BUNDLE_PATH_1;
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetExtendResourceManager();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            std::vector<std::string> filePath;
+            filePath.push_back(BUNDLE_PATH_2);
+            std::vector<std::string> destFiles;
+            ErrCode ret = proxy->CopyFiles(filePath, destFiles);
+            EXPECT_EQ(ret, ERR_OK);
+
+            ret = proxy->AddExtResource(BUNDLE_NAME_DEMO, destFiles);
+            EXPECT_EQ(ret, ERR_OK);
+
+            ret = proxy->EnableDynamicIcon(BUNDLE_NAME_DEMO, DYNAMIC_NAME, USERID, 0);
+            EXPECT_EQ(ret, ERR_OK);
+
+            InstallCloneApp(BUNDLE_NAME_DEMO, USERID, APP_INDEX);
+            ret = proxy->EnableDynamicIcon(BUNDLE_NAME_DEMO, DYNAMIC_NAME, USERID, APP_INDEX);
+            EXPECT_EQ(ret, ERR_OK);
+
+            std::vector<DynamicIconInfo> infos;
+            ret = proxy->GetDynamicIconInfo(BUNDLE_NAME_DEMO, infos);
+            EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(infos.size(), 2);
+            for (const auto &info : infos) {
+                EXPECT_EQ(info.bundleName, BUNDLE_NAME_DEMO);
+                EXPECT_EQ(info.moduleName, DYNAMIC_NAME);
+                EXPECT_EQ(info.userId, USERID);
+            }
         }
     }
 

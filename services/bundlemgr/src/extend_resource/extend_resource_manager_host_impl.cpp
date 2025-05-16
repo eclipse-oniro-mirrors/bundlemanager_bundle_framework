@@ -794,8 +794,11 @@ ErrCode ExtendResourceManagerHostImpl::GetAllDynamicIconInfo(
         return ERR_APPEXECFWK_NULL_PTR;
     }
     auto ret = dataMgr->GetAllDynamicIconInfo(userId, dynamicInfos);
-    if (ret == ERR_OK) {
-        APP_LOGI("get all dynamic info userId %{public}d size %{public}zu", userId, dynamicInfos.size());
+    if ((ret == ERR_OK) && dynamicInfos.empty()) {
+        ret = ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED;
+    }
+    if (ret != ERR_OK) {
+        APP_LOGE("-u %{public}d get all dynamic info failed ret %{public}d", userId, ret);
     }
     return ret;
 }
@@ -819,8 +822,11 @@ ErrCode ExtendResourceManagerHostImpl::GetDynamicIconInfo(const std::string &bun
         return ERR_APPEXECFWK_NULL_PTR;
     }
     auto ret = dataMgr->GetDynamicIconInfo(bundleName, dynamicInfos);
+    if ((ret == ERR_OK) && dynamicInfos.empty()) {
+        ret = ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED;
+    }
     if (ret != ERR_OK) {
-        APP_LOGE("-n %{public}s get dynamic info failed", bundleName.c_str());
+        APP_LOGE("-n %{public}s get dynamic info failed ret %{public}d", bundleName.c_str(), ret);
     }
     return ret;
 }

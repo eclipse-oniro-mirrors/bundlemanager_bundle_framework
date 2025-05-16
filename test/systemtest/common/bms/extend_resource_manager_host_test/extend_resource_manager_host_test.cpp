@@ -30,6 +30,7 @@ const uint32_t DISABLE_DYNAMIC_ICON = 4;
 const uint32_t GET_DYNAMIC_ICON = 5;
 const uint32_t CREATE_FD = 6;
 const uint32_t GET_ALL_DYNAMIC_ICON_INFO = 7;
+const uint32_t GET_DYNAMIC_ICON_INFO = 8;
 const uint32_t OTHER_CODE = 100;
 const uint32_t ERROR_CODE = 305;
 }
@@ -106,6 +107,11 @@ HWTEST_F(ExtendResourceManagerHostTest, OnRemoteRequest_0100, Function | MediumT
 
     data.WriteInterfaceToken(descriptor);
     code = GET_ALL_DYNAMIC_ICON_INFO;
+    res = extendResource.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+
+    data.WriteInterfaceToken(descriptor);
+    code = GET_DYNAMIC_ICON_INFO;
     res = extendResource.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, ERR_OK);
 
@@ -217,6 +223,36 @@ HWTEST_F(ExtendResourceManagerHostTest, HandleCreateFd_0100, Function | MediumTe
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = extendResource.HandleCreateFd(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetDynamicIconInfo_0100
+ * @tc.name: test the HandleGetDynamicIcon
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetDynamicIcon
+ */
+HWTEST_F(ExtendResourceManagerHostTest, HandleGetDynamicIconInfo_0100, Function | MediumTest | Level1)
+{
+    ExtendResourceManagerHost extendResource;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = extendResource.HandleGetDynamicIconInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetAllDynamicIconInfo_0100
+ * @tc.name: test the HandleGetDynamicIcon
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetDynamicIcon
+ */
+HWTEST_F(ExtendResourceManagerHostTest, HandleGetAllDynamicIconInfo_0100, Function | MediumTest | Level1)
+{
+    ExtendResourceManagerHost extendResource;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = extendResource.HandleGetAllDynamicIconInfo(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
 } // AppExecFwk

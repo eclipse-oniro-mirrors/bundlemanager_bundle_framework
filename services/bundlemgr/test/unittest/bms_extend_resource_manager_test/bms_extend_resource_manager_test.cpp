@@ -1408,4 +1408,69 @@ HWTEST_F(BmsExtendResourceManagerTest, IsNeedUpdateBundleResourceInfo_0300, Func
     ret = impl.IsNeedUpdateBundleResourceInfo(BUNDLE_NAME, INVALID_ID);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: GetDynamicIconInfo_0001
+ * @tc.name: Test GetDynamicIconInfo
+ * @tc.desc: 1.GetDynamicIconInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetDynamicIconInfo_0001, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<DynamicIconInfo> dynamicInfos;
+    auto ret = impl.GetDynamicIconInfo(EMPTY_STRING, dynamicInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(dynamicInfos.empty());
+}
+
+/**
+ * @tc.number: GetDynamicIconInfo_0002
+ * @tc.name: Test GetDynamicIconInfo
+ * @tc.desc: 1.GetDynamicIconInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetDynamicIconInfo_0002, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    InnerBundleInfo info;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    std::vector<DynamicIconInfo> dynamicInfos;
+    ErrCode ret = impl.GetDynamicIconInfo(BUNDLE_NAME, dynamicInfos);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED);
+    EXPECT_TRUE(dynamicInfos.empty());
+}
+
+/**
+ * @tc.number: GetDynamicIconInfo_0003
+ * @tc.name: Test GetDynamicIconInfo
+ * @tc.desc: 1.GetDynamicIconInfo
+ */
+HWTEST_F(BmsExtendResourceManagerTest, GetDynamicIconInfo_0003, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.curDynamicIconModule = BUNDLE_NAME;
+    cloneInfo.appIndex = 1;
+    InnerBundleUserInfo userInfo;
+    userInfo.curDynamicIconModule = BUNDLE_NAME2;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    InnerBundleInfo info;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    std::vector<DynamicIconInfo> dynamicInfos;
+    ErrCode ret = impl.GetDynamicIconInfo(BUNDLE_NAME, dynamicInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(dynamicInfos.empty());
+}
 } // OHOS

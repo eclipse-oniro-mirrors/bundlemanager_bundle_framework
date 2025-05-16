@@ -5918,7 +5918,7 @@ void GetAllDynamicIconInfoComplete(napi_env env, napi_status status, void *data)
         CommonFunc::ConvertDynamicIconInfos(env, asyncCallbackInfo->dynamicIconInfos, result[ARGS_POS_ONE]);
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_ALL_DYNAMIC_ICON, BUNDLE_DYNAMIC_PERMISSIONS);
+            GET_ALL_DYNAMIC_ICON, BUNDLE_GET_ALL_DYNAMIC_PERMISSIONS);
     }
 
     CommonFunc::NapiReturnDeferred<DynamicIconInfoCallbackInfo>(
@@ -6000,7 +6000,7 @@ void GetDynamicIconInfoComplete(napi_env env, napi_status status, void *data)
         CommonFunc::ConvertDynamicIconInfos(env, asyncCallbackInfo->dynamicIconInfos, result[ARGS_POS_ONE]);
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_DYNAMIC_ICON, BUNDLE_DYNAMIC_PERMISSIONS);
+            GET_DYNAMIC_ICON, BUNDLE_GET_ALL_DYNAMIC_PERMISSIONS);
     }
 
     CommonFunc::NapiReturnDeferred<DynamicIconInfoCallbackInfo>(
