@@ -77,6 +77,7 @@ enum class ExtensionAbilityType {
     ASSET_ACCELERATION = 26,
     FORM_EDIT = 27,
     DISTRIBUTED = 28,
+    APP_SERVICE = 29,
     LIVE_FORM = 30,
     UNSPECIFIED = 255,
     UI = 256,
@@ -179,6 +180,7 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::string process;
     std::string customProcess;
     std::vector<std::string> permissions;
+    std::vector<std::string> appIdentifierAllowList;
     std::vector<Metadata> metadata;
 
     // for Check flags, add to abilityInfo and extensionAbilityInfo

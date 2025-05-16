@@ -42,6 +42,7 @@ const char* PRIORITY = "priority";
 const char* TYPE = "type";
 const char* EXTENSION_TYPE_NAME = "extensionTypeName";
 const char* PERMISSIONS = "permissions";
+const char* APPIDENTIFIER_ALLOW_LIST = "appIdentifierAllowList";
 const char* READ_PERMISSION = "readPermission";
 const char* WRITE_PERMISSION = "writePermission";
 const char* URI = "uri";
@@ -74,6 +75,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "wallpaper", ExtensionAbilityType::WALLPAPER },
     { "backup", ExtensionAbilityType::BACKUP },
     { "distributed", ExtensionAbilityType::DISTRIBUTED },
+    { "appService", ExtensionAbilityType::APP_SERVICE },
     { "window", ExtensionAbilityType::WINDOW },
     { "enterpriseAdmin", ExtensionAbilityType::ENTERPRISE_ADMIN },
     { "fileAccess", ExtensionAbilityType::FILEACCESS_EXTENSION },
@@ -211,6 +213,12 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     for (auto i = 0; i < permissionsSize; i++) {
         permissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
+    int32_t appIdentifierAllowListSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIdentifierAllowListSize);
+    CONTAINER_SECURITY_VERIFY(parcel, appIdentifierAllowListSize, &appIdentifierAllowList);
+    for (auto i = 0; i < appIdentifierAllowListSize; i++) {
+        appIdentifierAllowList.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     readPermission = Str16ToStr8(parcel.ReadString16());
     writePermission = Str16ToStr8(parcel.ReadString16());
     uri = Str16ToStr8(parcel.ReadString16());
@@ -315,6 +323,10 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     for (auto &permission : permissions) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(permission));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIdentifierAllowList.size());
+    for (auto &appIdentifier : appIdentifierAllowList) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
+    }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(readPermission));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(writePermission));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri));
@@ -376,6 +388,7 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {WRITE_PERMISSION, extensionInfo.writePermission},
         {URI, extensionInfo.uri},
         {PERMISSIONS, extensionInfo.permissions},
+        {APPIDENTIFIER_ALLOW_LIST, extensionInfo.appIdentifierAllowList},
         {VISIBLE, extensionInfo.visible},
         {META_DATA, extensionInfo.metadata},
         {RESOURCE_PATH, extensionInfo.resourcePath},
@@ -509,6 +522,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         jsonObjectEnd,
         PERMISSIONS,
         extensionInfo.permissions,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        APPIDENTIFIER_ALLOW_LIST,
+        extensionInfo.appIdentifierAllowList,
         JsonType::ARRAY,
         false,
         parseResult,
