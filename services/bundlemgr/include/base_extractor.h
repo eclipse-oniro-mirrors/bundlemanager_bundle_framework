@@ -24,7 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class BaseExtractor {
 public:
-    explicit BaseExtractor(const std::string &source, bool parallel = false);
+    explicit BaseExtractor(const std::string &source);
     virtual ~BaseExtractor();
     /**
      * @brief Open compressed file.
@@ -37,7 +37,7 @@ public:
      * @param dest Indicates the obtained std::ostream object.
      * @return Returns true if the file extracted successfully; returns false otherwise.
      */
-    virtual bool ExtractByName(const std::string &fileName, std::ostream &dest) const;
+    bool ExtractByName(const std::string &fileName, std::ostream &dest) const;
     /**
      * @brief Extract to dest path on filesystem.
      * @param fileName Indicates the file name.
