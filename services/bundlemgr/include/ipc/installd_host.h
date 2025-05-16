@@ -231,6 +231,8 @@ private:
 
     bool HandleDeleteDataGroupDirs(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleLoadInstalls(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();
