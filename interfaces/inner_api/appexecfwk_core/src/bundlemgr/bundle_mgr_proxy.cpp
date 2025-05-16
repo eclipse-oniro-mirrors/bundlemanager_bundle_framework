@@ -6026,6 +6026,38 @@ ErrCode BundleMgrProxy::GetPluginAbilityInfo(const std::string &hostBundleName, 
         BundleMgrInterfaceCode::GET_PLUGIN_ABILITY_INFO, data, abilityInfo);
 }
 
+ErrCode BundleMgrProxy::GetSandboxDataDir(const std::string &bundleName, int32_t appIndex, std::string &sandboxDataDir)
+{
+    APP_LOGD("begin to GetSandboxDataDir");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    ErrCode ret = SendTransactCmdWithLogErrCode(BundleMgrInterfaceCode::GET_SANDBOX_DATA_DIR, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE("fail to GetSandboxDataDir from server, %{public}d", ret);
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host return error:%{public}d", ret);
+        return ret;
+    }
+    sandboxDataDir = reply.ReadString();
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::GetPluginHapModuleInfo(const std::string &hostBundleName,
     const std::string &pluginBundleName, const std::string &pluginModuleName,
     const int32_t userId, HapModuleInfo &hapModuleInfo)

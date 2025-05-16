@@ -10387,5 +10387,24 @@ HWTEST_F(ActsBmsKitSystemTest, CleanAllBundleCache_0001, Function | MediumTest |
     }
     std::cout << "END CleanAllBundleCache_0001" << std::endl;
 }
+/**
+ * @tc.number: GetSandboxDataDir_0001
+ * @tc.name: test GetSandboxDataDir interface
+ * @tc.desc: 1. call GetSandboxDataDir
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetSandboxDataDir_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetSandboxDataDir_0001" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string sandboxDataDir;
+
+    ErrCode queryResult = bundleMgrProxy->GetSandboxDataDir(DEFAULT_APP_BUNDLE_NAME, -1, sandboxDataDir);
+    EXPECT_EQ(queryResult, ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+
+    queryResult = bundleMgrProxy->GetSandboxDataDir(DEFAULT_APP_BUNDLE_NAME, 0, sandboxDataDir);
+    EXPECT_EQ(queryResult, ERR_OK);
+    std::cout << "END GetSandboxDataDir_0001" << std::endl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

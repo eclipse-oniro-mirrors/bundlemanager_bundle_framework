@@ -879,6 +879,15 @@ public:
     virtual ErrCode GetSandboxBundleInfo(
         const std::string &bundleName, int32_t appIndex, int32_t userId, BundleInfo &info) override;
 
+    /**
+     * @brief Obtains sandbox data directory by bundleName and appIndex.
+     * @param bundleName Indicates the bundle name of the sandbox application to be install.
+     * @param appIndex Indicates application index of the sandbox application.
+     * @return Returns ERR_OK if the get sandbox data dir successfully; returns errcode otherwise.
+     */
+    virtual ErrCode GetSandboxDataDir(
+        const std::string &bundleName, int32_t appIndex, std::string &sandboxDataDir) override;
+
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,

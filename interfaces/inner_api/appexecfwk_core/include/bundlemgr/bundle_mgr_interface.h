@@ -1236,6 +1236,17 @@ public:
     }
 
     /**
+     * @brief Obtains sandbox data directory by bundleName and appIndex.
+     * @param bundleName Indicates the bundle name of the sandbox application to be install.
+     * @param appIndex Indicates application index of the sandbox application.
+     * @return Returns ERR_OK if the get sandbox data dir successfully; returns errcode otherwise.
+     */
+    virtual ErrCode GetSandboxDataDir(const std::string &bundleName, int32_t appIndex, std::string &sandboxDataDir)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    /**
      * @brief Obtains the value of upgradeFlag based on a given bundle name and module name.
      * @param bundleName Indicates the bundle name to be queried.
      * @param moduleName Indicates the module name to be queried.

@@ -178,6 +178,8 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getSignatureInfo", GetSignatureInfoSync),
         DECLARE_NAPI_FUNCTION("migrateData", MigrateData),
         DECLARE_NAPI_FUNCTION("getAllDynamicIconInfo", GetAllDynamicIconInfo),
+        DECLARE_NAPI_FUNCTION("getSandboxDataDir", GetSandboxDataDirSync),
+        DECLARE_NAPI_FUNCTION("getAppCloneIdentityBySandboxDataDir", GetAppCloneIdentityBySandboxDataDirSync),
         DECLARE_NAPI_FUNCTION("getAbilityInfo", GetAbilityInfos),
     };
 
