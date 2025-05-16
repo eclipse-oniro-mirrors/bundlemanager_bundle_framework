@@ -31,7 +31,7 @@ const std::string DB_NAME = "rdbTestDb.db";
 const std::string TABLE_NAME = "rdbTestTable";
 const std::string KEY_ONE = "KEY_ONE";
 const std::string VALUE_ONE = "VALUE_ONE";
-const std::string BMS_BACK_UP_RDB_NAME = "bms-backup.db";
+const std::string BMS_BACK_UP_RDB_NAME = "rdbTestDb_slave.db";
 const std::string BMS_KEY = "KEY";
 const std::string BMS_VALUE = "VALUE";
 } // namespace
@@ -103,7 +103,6 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_0200, Function | SmallTest 
     ASSERT_NE(rdbDataManager, nullptr);
     MockGetRdbStore(nullptr);
     rdbDataManager->rdbStore_ = nullptr;
-    rdbDataManager->BackupRdb();
     NativeRdb::ValuesBucket valuesBucket;
     auto ret = rdbDataManager->InsertData(valuesBucket);
     EXPECT_FALSE(ret);
@@ -609,7 +608,6 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_3300, Function | SmallTest 
     MockGetRdbStore(nullptr);
     rdbDataManager->bmsRdbConfig_.createTableSql = "";
     bool ret = rdbDataManager->CreateTable();
-    rdbDataManager->BackupRdb();
     EXPECT_FALSE(ret);
 }
 
@@ -625,7 +623,6 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_3400, Function | SmallTest 
     auto store = std::make_shared<MockAppProvisionInfo>();
     MockGetRdbStore(store);
     bool ret = rdbDataManager->CreateTable();
-    rdbDataManager->BackupRdb();
     EXPECT_FALSE(ret);
 }
 

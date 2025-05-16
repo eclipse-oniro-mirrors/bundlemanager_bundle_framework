@@ -671,6 +671,27 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1100, Function | SmallTest | Leve
     EXPECT_EQ(ret, NativeRdb::E_OK);
 }
 
+/**
+ * @tc.number: RdbDataManager_1200
+ * @tc.name: test GetRdbStore
+ * @tc.desc: 1.test GetRdbStore
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1200, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    ASSERT_NE(rdbDataManager, nullptr);
+
+    auto rdbStore = rdbDataManager->GetRdbStore();
+    ASSERT_NE(rdbStore, nullptr);
+
+    std::string path = DB_PATH + DB_NAME;
+    auto res = BundleUtil::DeleteDir(path);
+    EXPECT_TRUE(res);
+
+    rdbStore = rdbDataManager->GetRdbStore();
+    ASSERT_NE(rdbStore, nullptr);
+}
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 /**
  * @tc.number: DefaultAppRdb_0100

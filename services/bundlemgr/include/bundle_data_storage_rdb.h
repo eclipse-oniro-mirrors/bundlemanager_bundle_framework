@@ -20,7 +20,6 @@
 #include "bundle_data_storage_interface.h"
 #include "inner_bundle_info.h"
 #include "rdb_data_manager.h"
-#include "single_delayed_task_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -41,10 +40,7 @@ private:
         std::map<std::string, InnerBundleInfo> &infos);
     void UpdateDataBase(std::map<std::string, InnerBundleInfo> &infos);
 
-    void BackupRdb();
-
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
-    std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

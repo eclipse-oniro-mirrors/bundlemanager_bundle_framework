@@ -31,7 +31,6 @@ constexpr int8_t BMS_KEY_INDEX = 0;
 constexpr int8_t BMS_VALUE_INDEX = 1;
 constexpr int16_t WRITE_TIMEOUT = 300; // 300s
 constexpr int32_t CLOSE_TIME = 20 * 1000; // delay 20s stop rdbStore
-constexpr const char* BMS_BACK_UP_RDB_NAME = "bms-backup.db";
 constexpr int32_t OPERATION_TYPE_OF_INSUFFICIENT_DISK = 3;
 static std::atomic<int64_t> g_lastReportTime = 0;
 constexpr int64_t REPORTING_INTERVAL = 1000 * 60 * 30; // 30min
@@ -66,15 +65,11 @@ void RdbDataManager::GetRdbStoreFromNative()
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
     rdbStoreConfig.SetAllowRebuild(true);
+    rdbStoreConfig.SetHaMode(NativeRdb::HAMode::MAIN_REPLICA);
     // for check db exist or not
-    bool isNeedRebuildDb = false;
-    std::string rdbFilePath = bmsRdbConfig_.dbPath + std::string("/") + std::string(BMS_BACK_UP_RDB_NAME);
     if (access(rdbStoreConfig.GetPath().c_str(), F_OK) != 0) {
         APP_LOGW("bms db :%{public}s is not exist, need to create. errno:%{public}d",
             rdbStoreConfig.GetPath().c_str(), errno);
-        if (access(rdbFilePath.c_str(), F_OK) == 0) {
-            isNeedRebuildDb = true;
-        }
     }
     int32_t errCode = NativeRdb::E_OK;
     BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
@@ -88,7 +83,8 @@ void RdbDataManager::GetRdbStoreFromNative()
         return;
     }
     CheckSystemSizeAndHisysEvent(bmsRdbConfig_.dbPath, bmsRdbConfig_.dbName);
-    if (!isInitial_ && !isNeedRebuildDb) {
+    bool isNeedRebuildDb = false;
+    if (!isInitial_) {
         isNeedRebuildDb = RdbIntegrityCheckNeedRestore();
         isInitial_ = true;
     }
@@ -97,7 +93,7 @@ void RdbDataManager::GetRdbStoreFromNative()
     if (rebuildType == NativeRdb::RebuiltType::REBUILT || isNeedRebuildDb) {
         APP_LOGI("start %{public}s restore ret %{public}d, type:%{public}d", bmsRdbConfig_.dbName.c_str(),
             rebuildCode, static_cast<int32_t>(rebuildType));
-        int32_t restoreRet = rdbStore_->Restore(rdbFilePath);
+        int32_t restoreRet = rdbStore_->Restore("");
         if (restoreRet != NativeRdb::E_OK) {
             APP_LOGE("rdb restore failed ret:%{public}d", restoreRet);
         }
@@ -145,21 +141,6 @@ bool RdbDataManager::CheckIsSatisfyTime()
 void RdbDataManager::SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode)
 {
     EventReport::SendDbErrorEvent(dbName, operationType, errorCode);
-}
-
-void RdbDataManager::BackupRdb()
-{
-    APP_LOGI("%{public}s backup start", bmsRdbConfig_.dbName.c_str());
-    auto rdbStore = GetRdbStore();
-    if (rdbStore == nullptr) {
-        APP_LOGE("RdbStore is null");
-        return;
-    }
-    auto ret = rdbStore->Backup(bmsRdbConfig_.dbPath + std::string("/") + std::string(BMS_BACK_UP_RDB_NAME));
-    if (ret != NativeRdb::E_OK) {
-        APP_LOGE("Backup failed, errCode:%{public}d", ret);
-    }
-    APP_LOGI("%{public}s backup end", bmsRdbConfig_.dbName.c_str());
 }
 
 bool RdbDataManager::InsertData(const std::string &key, const std::string &value)
