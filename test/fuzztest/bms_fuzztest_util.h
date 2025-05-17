@@ -36,7 +36,7 @@ constexpr uint32_t CODE_MAX_TWO = 2;
 constexpr uint32_t CODE_MAX_THREE = 3;
 constexpr uint32_t CODE_MAX_FOUR = 4;
 constexpr uint32_t CODE_MAX_FIVE = 5;
-constexpr uint32_t ORIENTATION_MAX = 14
+constexpr uint32_t ORIENTATION_MAX = 14;
 constexpr uint32_t EXTENSION_ABILITY_MAX = 25;
 
 
