@@ -3900,4 +3900,25 @@ HWTEST_F(BmsBundleDataMgrTest, QueryLauncherAbility_0004, TestSize.Level1)
     EXPECT_EQ(abilityInfos[0].label, "Custom Label");
     EXPECT_EQ(abilityInfos[0].iconId, 3001);
 }
+
+/**
+ * @tc.number: BundleMgrHostImplSetShortcutVisibleForSelf_0001
+ * @tc.name: BundleMgrHostImplSetShortcutVisibleForSelf
+ * @tc.desc: test SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplSetShortcutVisibleForSelf_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> lcalBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(lcalBundleMgrHostImpl, nullptr);
+    std::string shortcutId = "shortcutId";
+    bool visible = true;
+
+    auto ret = lcalBundleMgrHostImpl->SetShortcutVisibleForSelf(shortcutId, true);
+    EXPECT_NE(ret, ERR_OK);
+
+    ClearDataMgr();
+    ret = lcalBundleMgrHostImpl->SetShortcutVisibleForSelf(shortcutId, true);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    EXPECT_NE(ret, ERR_OK);
+}
 } // OHOS

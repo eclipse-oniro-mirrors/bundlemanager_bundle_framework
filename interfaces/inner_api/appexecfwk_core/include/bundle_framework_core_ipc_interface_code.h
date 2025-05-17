@@ -213,6 +213,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_ADDITIONAL_INFO_FOR_ALL_USER = 187,
 	GET_ABILITY_INFOS = 188,
     GET_SANDBOX_DATA_DIR = 189,
+    SET_SHORTCUT_VISIBLE = 190,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

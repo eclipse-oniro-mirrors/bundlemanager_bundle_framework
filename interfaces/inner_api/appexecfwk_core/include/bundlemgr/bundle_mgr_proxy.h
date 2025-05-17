@@ -1205,6 +1205,8 @@ public:
     
     virtual ErrCode GetPluginHapModuleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const std::string &pluginModuleName, const int32_t userId, HapModuleInfo &hapModuleInfo) override;
+    
+    virtual ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

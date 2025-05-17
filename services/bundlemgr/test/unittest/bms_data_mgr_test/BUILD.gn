@@ -29,7 +29,10 @@ ohos_unittest("BmsDataMgrTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = [
+    "//third_party/jsoncpp/include",
+    "mock/include",
+  ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -44,7 +47,10 @@ ohos_unittest("BmsDataMgrTest") {
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
-  sources += [ "bms_data_mgr_test.cpp" ]
+  sources += [
+    "bms_data_mgr_test.cpp",
+    "mock/src/mock_ipc_skeleton.cpp",
+  ]
 
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",

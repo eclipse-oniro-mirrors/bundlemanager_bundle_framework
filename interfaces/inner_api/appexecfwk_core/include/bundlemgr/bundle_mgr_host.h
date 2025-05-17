@@ -892,6 +892,7 @@ private:
     ErrCode HandleSetAppDistributionTypes(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginAbilityInfo(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginHapModuleInfo(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleSetShortcutVisibleForSelf(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

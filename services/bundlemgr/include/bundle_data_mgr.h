@@ -56,6 +56,7 @@
 #include "preinstall_data_storage_interface.h"
 #include "router_data_storage_interface.h"
 #include "shortcut_data_storage_interface.h"
+#include "shortcut_visible_data_storage_rdb.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
 #endif
@@ -1124,6 +1125,8 @@ public:
     void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData);
     ErrCode GetAllDynamicInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos);
     std::string GetCurDynamicIconModule(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+    ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible);
+    ErrCode DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
 
 private:
     /**
@@ -1359,6 +1362,7 @@ private:
     std::shared_ptr<IRouterDataStorage> routerStorage_;
     std::shared_ptr<UninstallDataMgrStorageRdb> uninstallDataMgr_;
     std::shared_ptr<FirstInstallDataMgrStorageRdb> firstInstallDataMgr_;
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleStorage_;
     // use vector because these functions using for IPC, the bundleName may duplicate
     std::vector<sptr<IBundleStatusCallback>> callbackList_;
     // common event callback
