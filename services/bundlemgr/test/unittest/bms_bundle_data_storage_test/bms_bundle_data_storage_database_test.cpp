@@ -454,7 +454,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "maxCount":5
         },
         "configuration":"",
-        "applicationFlags":1
+        "applicationFlags":1,
+        "startMode":1
     },
     "baseBundleInfo":{
         "abilityInfos":[],
@@ -1230,7 +1231,8 @@ protected:
                 "cloudFileSyncEnabled": false,
                 "applicationFlags":1,
                 "installedForAllUser": false,
-                "hasPlugin": false
+                "hasPlugin": false,
+                "startMode":1
             },
             "baseBundleInfo": {
                 "abilityInfos": [

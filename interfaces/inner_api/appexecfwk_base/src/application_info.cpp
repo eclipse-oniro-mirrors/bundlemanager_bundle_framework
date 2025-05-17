@@ -145,6 +145,7 @@ const char* APPLICATION_ALLOW_MULTI_PROCESS = "allowMultiProcess";
 const char* APPLICATION_UBSAN_ENABLED = "ubsanEnabled";
 const char* APPLICATION_ASSET_ACCESS_GROUPS = "assetAccessGroups";
 const char* APPLICATION_HAS_PLUGIN = "hasPlugin";
+const char* APPLICATION_START_MODE = "startMode";
 }
 
 bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
@@ -603,6 +604,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     allowMultiProcess = parcel.ReadBool();
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, &assetAccessGroups);
     hasPlugin = parcel.ReadBool();
+    startMode = static_cast<StartMode>(parcel.ReadUint8());
     return true;
 }
 
@@ -786,6 +788,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowMultiProcess);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(StringVector, parcel, assetAccessGroups);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasPlugin);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(startMode));
     return true;
 }
 
@@ -1038,7 +1041,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_UBSAN_ENABLED, applicationInfo.ubsanEnabled},
         {APPLICATION_ALLOW_MULTI_PROCESS, applicationInfo.allowMultiProcess},
         {APPLICATION_ASSET_ACCESS_GROUPS, applicationInfo.assetAccessGroups},
-        {APPLICATION_HAS_PLUGIN, applicationInfo.hasPlugin}
+        {APPLICATION_HAS_PLUGIN, applicationInfo.hasPlugin},
+        {APPLICATION_START_MODE, applicationInfo.startMode}
     };
 }
 
@@ -1256,6 +1260,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.assetAccessGroups, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_HAS_PLUGIN,
         applicationInfo.hasPlugin, false, parseResult);
+    GetValueIfFindKey<StartMode>(jsonObject, jsonObjectEnd, APPLICATION_START_MODE,
+        applicationInfo.startMode, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error : %{public}d", parseResult);
     }

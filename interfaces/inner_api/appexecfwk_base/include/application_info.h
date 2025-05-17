@@ -96,6 +96,11 @@ enum class ApplicationInfoFlag {
     FLAG_PREINSTALLED_APP_UPDATE = 0x00000040,
 };
 
+enum class StartMode : uint8_t {
+    MAIN_TASK = 1,
+    RECENT_TASK = 2
+};
+
 struct MultiAppModeData : public Parcelable {
     MultiAppModeType multiAppModeType = MultiAppModeType::UNSPECIFIED;
     int32_t maxCount = 0;
@@ -260,6 +265,8 @@ struct ApplicationInfo : public Parcelable {
     BundleType bundleType = BundleType::APP;
 
     MultiAppModeData multiAppMode;
+
+    StartMode startMode = StartMode::MAIN_TASK;
     int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE;
     uint64_t accessTokenIdEx = 0;
     std::string name;  // application name is same to bundleName
