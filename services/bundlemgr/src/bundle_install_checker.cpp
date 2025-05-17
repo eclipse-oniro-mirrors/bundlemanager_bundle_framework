@@ -520,6 +520,35 @@ ErrCode BundleInstallChecker::CheckInstallPermission(const InstallCheckParam &ch
     return ERR_OK;
 }
 
+ErrCode BundleInstallChecker::CheckNoU1Enable(const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    for (auto &item : newInfos) {
+        if (item.second.IsU1Enable()) {
+            LOG_E(BMS_TAG_INSTALLER, "%{public}s: u1Enable in bundleinfos are not same",
+                item.second.GetBundleName().c_str());
+            return ERR_APPEXECFWK_INSTALL_U1_ENABLE_NOT_SUPPORT_APP_SERVICE_AND_SHARED_BUNDLE;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckU1EnableSameInHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const std::string &bundleName, bool &u1Enable)
+{
+    if (infos.empty()) {
+        return ERR_OK;
+    }
+    u1Enable = infos.begin()->second.IsU1Enable();
+    for (auto &item : infos) {
+        if (u1Enable != item.second.IsU1Enable()) {
+            LOG_E(BMS_TAG_INSTALLER, "%{public}s: u1Enable in bundleinfos are not same",
+                bundleName.c_str());
+            return ERR_APPEXECFWK_INSTALL_U1_ENABLE_NOT_SAME_IN_ALL_BUNDLE_INFOS;
+        }
+    }
+    return ERR_OK;
+}
+
 bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckParam &checkParam,
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
 {

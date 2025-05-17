@@ -86,6 +86,7 @@ const std::string BUNDLE_NAME_NO_ICON = "com.third.hiworld.example1";
 const std::string BUNDLE_NAME_LAYERED_IMAGE = "com.example.thumbnailtest";
 const std::string LAYERED_IMAGE_HAP_PATH = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
 const std::string TEST_BUNDLE_NAME = "testBundleName";
+const int32_t U1 = 1;
 }  // namespace
 
 class BmsBundleResourceTest : public testing::Test {
@@ -265,6 +266,23 @@ sptr<BundleMgrProxy> BmsBundleResourceTest::GetBundleMgrProxy()
 }
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+/**
+ * @tc.number: OnReceiveEvent_0010
+ * Function: OnReceiveEvent
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test OnReceiveEvent
+ */
+HWTEST_F(BmsBundleResourceTest, OnReceiveEvent_0010, Function | SmallTest | Level0)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+    OHOS::EventFwk::CommonEventData commonData2 { want };
+    commonData2.SetCode(U1); // userId not exist
+    bool ans = OnReceiveEvent(commonData2);
+    EXPECT_TRUE(ans);
+}
+
 /**
  * @tc.number: BmsBundleResourceTest_0001
  * Function: GetKey

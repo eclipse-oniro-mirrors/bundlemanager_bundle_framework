@@ -113,7 +113,6 @@ const char* INSTALL_SOURCE_UNKNOWN = "unknown";
 const char* ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
 const char* OLD_ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
 const char* NEW_ARK_WEB_BUNDLE_NAME = "com.ohos.arkwebcore";
-const size_t NUMBER_TWO = 2;
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -777,6 +776,9 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     ErrCode result = ERR_OK;
     result = CheckAppService(newInfos.begin()->second, oldInfo, isAppExist_);
     CHECK_RESULT(result, "Check appService failed %{public}d");
+    bool u1Enable = false;
+    result = bundleInstallChecker_->CheckU1EnableSameInHaps(newInfos, bundleName_, u1Enable);
+    CHECK_RESULT(result, "Check u1Enable in haps same failed %{public}d");
 
     if (installParam.needSavePreInstallInfo) {
         PreInstallBundleInfo preInstallBundleInfo;
@@ -811,6 +813,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
                 break;
             }
         }
+        preInstallBundleInfo.SetU1Enable(u1Enable);
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     } else {
         // remove userid record in preinstallbundleinfo
@@ -827,6 +830,9 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     result = CheckSingleton(newInfos.begin()->second, userId_);
     CHECK_RESULT(result, "Check singleton failed %{public}d");
 
+    result = CheckU1Enable(newInfos.begin()->second, userId_);
+    CHECK_RESULT(result, "Check u1Enable failed %{public}d");
+    
     bool isFreeInstallFlag = (installParam.installFlag == InstallFlag::FREE_INSTALL);
     CheckEnableRemovable(newInfos, oldInfo, userId_, isFreeInstallFlag, isAppExist_);
     // check MDM self update
@@ -1123,6 +1129,38 @@ ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const i
         return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
     }
 
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckU1Enable(const InnerBundleInfo &info,
+    const int32_t userId)
+{
+    LOG_I(BMS_TAG_INSTALLER, "start for -n %{public}s -u %{public}d",
+        info.GetBundleName().c_str(), userId);
+    std::string bundleName = info.GetBundleName();
+    bool u1Enable = info.IsU1Enable();
+    bool isU1 = (userId == Constants::U1);
+    if ((u1Enable && !isU1) || (!u1Enable && isU1)) {
+        LOG_E(BMS_TAG_INSTALLER, "u1Enable:%{public}d and userId:%{public}d not matched for %{public}s",
+            u1Enable, userId, bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON;
+    }
+
+    std::vector<int32_t> currentBundleUserIds = dataMgr_->GetUserIds(bundleName);
+    bool onlyInstallInU1 = currentBundleUserIds.size() == 1 && currentBundleUserIds[0] == Constants::U1;
+    if (u1Enable && isU1) {
+        if (isAppExist_ && !onlyInstallInU1) {
+            LOG_E(BMS_TAG_INSTALLER, "%{public}s existed in other users, but not u1", bundleName.c_str());
+            return ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS;
+        }
+    } else {
+        // u1Enable is false and userid is not u1
+        if (isAppExist_ && onlyInstallInU1) {
+            LOG_E(BMS_TAG_INSTALLER, "%{public}s existed in u1, but u1Enable is false and userId is not u1",
+                bundleName.c_str());
+            return ERR_APPEXECFWK_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON;
+        }
+    }
     return ERR_OK;
 }
 
@@ -2119,6 +2157,9 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
             ret = CheckSingleton(oldInfo, userId_);
             CHECK_RESULT(ret, "Check singleton failed %{public}d");
+
+            ret = CheckU1Enable(oldInfo, userId_);
+            CHECK_RESULT(ret, "CheckU1Enable failed %{public}d");
 
             InnerBundleUserInfo curInnerBundleUserInfo;
             curInnerBundleUserInfo.bundleUserInfo.userId = userId_;
@@ -4558,10 +4599,16 @@ int32_t BaseBundleInstaller::GetConfirmUserId(
     const int32_t &userId, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
 {
     bool isSingleton = newInfos.begin()->second.IsSingleton();
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "The userId is Unspecified and app is singleton(%{public}d) when install",
-        static_cast<int32_t>(isSingleton));
-    if (isSingleton && !otaInstall_) {
-        return Constants::DEFAULT_USERID;
+    bool u1Enabled = newInfos.begin()->second.IsU1Enable();
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "userId is Unspecified, singleton(%{public}d), u1Enabled(%{public}d)",
+        static_cast<int32_t>(isSingleton), static_cast<int32_t>(u1Enabled));
+    if (!otaInstall_) {
+        if (isSingleton) {
+            return Constants::DEFAULT_USERID;
+        }
+        if (u1Enabled) {
+            return Constants::U1;
+        }
     }
     if (userId != Constants::UNSPECIFIED_USERID || newInfos.size() <= 0) {
         return userId;
@@ -6980,8 +7027,9 @@ void BaseBundleInstaller::ProcessAddResourceInfo(const InstallParam &installPara
         BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
         return;
     }
-    // if user id 0 or only contains 0 and 100, need to add resource
-    if ((userId == Constants::DEFAULT_USERID) || (dataMgr_->GetAllUser().size() <= NUMBER_TWO)) {
+    // if user id is 0, 1, or 100, need to add resource
+    if ((userId == Constants::DEFAULT_USERID) || (userId == Constants::U1) ||
+        (userId == Constants::START_USERID)) {
         BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
         return;
     }

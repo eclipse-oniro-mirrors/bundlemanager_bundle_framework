@@ -156,4 +156,42 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0500, Function
     bool res = updateAppDataMgr.CreateEl5Dir(createDirParam);
     EXPECT_EQ(res, false);
 }
+
+/**
+ * @tc.number: UserUnlockedEventSubscriber_0600
+ * @tc.name: UserUnlockedEventSubscriber
+ * @tc.desc: test CreateEl5Dir false
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0600, Function | SmallTest | Level0)
+{
+    UpdateAppDataMgr updateAppDataMgr;
+    // test dataMgr is null
+    bool res = updateAppDataMgr.CheckU1EnableProcess("");
+    EXPECT_EQ(res, false);
+
+    // test no bundleinfo
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+    std::string testBudnleName = "com.example.u1Enable";
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    res = updateAppDataMgr.CheckU1EnableProcess(testBudnleName);
+    EXPECT_EQ(res, false);
+
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = testBudnleName;
+    // add u1Enable
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    info.SetAllowedAcls(acls);
+    info.SetSingleton(false);
+    dataMgr->bundleInfos_.emplace(testBudnleName, info);
+    res = updateAppDataMgr.CheckU1EnableProcess(testBudnleName);
+    EXPECT_EQ(res, true);
+
+    dataMgr->bundleInfos_.clear();
+    info.SetSingleton(true);
+    dataMgr->bundleInfos_.emplace(testBudnleName, info);
+    res = updateAppDataMgr.CheckU1EnableProcess(testBudnleName);
+    EXPECT_EQ(res, false);
+}
 } // OHOS

@@ -161,6 +161,9 @@ const std::string TEST_URI_HTTP = "http://www.test.com";
 const std::string META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr int32_t MOCK_BUNDLE_MGR_EXT_FLAG = 10;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
+const std::string BUNDLE_NAME_FOR_TEST_U1ENABLE = "com.example.u1Enable_test";
+const int32_t TEST_U100 = 100;
+const int32_t TEST_U1 = 1;
 const nlohmann::json APP_LIST0 = R"(
 {
     "app_list": [
@@ -413,6 +416,7 @@ public:
     void RemoveBundleinfo(const std::string &bundleName);
     ShortcutInfo InitShortcutInfo();
     bool CheckBmsExtensionProfile();
+    bool CheckPreInstallBundleInfo(const std::vector<PreInstallBundleInfo> &preInfos, const std::string &bundleName);
 
 public:
     static std::shared_ptr<InstalldService> installdService_;
@@ -970,6 +974,17 @@ bool BmsBundleDataMgrTest::CheckBmsExtensionProfile()
         return false;
     }
     return true;
+}
+
+bool BmsBundleDataMgrTest::CheckPreInstallBundleInfo(const std::vector<PreInstallBundleInfo> &preInfos,
+    const std::string &bundleName)
+{
+    for (auto info : preInfos) {
+        if (info.GetBundleName() == bundleName) {
+            return true;
+        }
+    }
+    return false;
 }
 
 class IBundleStatusCallbackTest : public IBundleStatusCallback {
@@ -3689,6 +3704,92 @@ HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0100, Function | MediumTest 
     std::optional<std::vector<AbilityInfo>> ret =
         info.FindAbilityInfos(Constants::ALL_USERID);
     EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_0100
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test GetRecoverablePreInstallBundleInfos, add u1enable, add innerBundleUserInfo for u1
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    // add u1Enable
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    info.SetAllowedAcls(acls);
+    // add innerBundleUserInfo for u1
+    InnerBundleUserInfo innerBundleUserInfo1;
+    innerBundleUserInfo1.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfo1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo1);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos();
+    EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_0200
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test GetRecoverablePreInstallBundleInfos, no u1enable, no innerBundleUserInfo for u1
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos();
+    EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_0300
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test GetRecoverablePreInstallBundleInfos
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    // add u1Enable
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    info.SetAllowedAcls(acls);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos();
+    EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_0400
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test GetRecoverablePreInstallBundleInfos
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    // add innerBundleUserInfo for u1
+    InnerBundleUserInfo innerBundleUserInfo1;
+    innerBundleUserInfo1.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfo1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo1);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos();
+    EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
 }
 
 /**

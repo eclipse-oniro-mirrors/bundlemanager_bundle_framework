@@ -47,7 +47,8 @@ void BundleResourceEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDa
         }
         int32_t userId = data.GetCode();
         // when boot, user 0 or -1 switch to user 100, no need to flush resource rdb
-        if ((oldUserId == Constants::DEFAULT_USERID) || (oldUserId == Constants::INVALID_USERID)) {
+        if ((oldUserId == Constants::DEFAULT_USERID) || (oldUserId == Constants::INVALID_USERID) ||
+            (oldUserId == Constants::U1)) {
             APP_LOGI("switch userId %{public}d to %{public}d, no need to process", oldUserId, userId);
             return;
         }

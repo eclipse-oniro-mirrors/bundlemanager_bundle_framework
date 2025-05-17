@@ -492,7 +492,7 @@ void BundleMgrService::CheckAllUser()
     std::set<int32_t> userIds = dataMgr_->GetAllUser();
     AccountHelper::QueryAllCreatedOsAccounts(userIds);
     for (auto userId : userIds) {
-        if (userId == Constants::DEFAULT_USERID) {
+        if (userId == Constants::DEFAULT_USERID || userId == Constants::U1) {
             continue;
         }
 
