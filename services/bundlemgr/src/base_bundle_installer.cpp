@@ -44,6 +44,7 @@
 #include "bundle_clone_installer.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
+#include "bundle_util.h"
 #include "code_protect_bundle_info.h"
 #include "datetime_ex.h"
 #include "driver_installer.h"
@@ -3086,6 +3087,8 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         LOG_E(BMS_TAG_INSTALLER, "fail to generate uid and gid");
         return ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR;
     }
+    BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
+        Constants::APP_PROVISION_TYPE_FILE_NAME);
     CreateDirParam createDirParam;
     createDirParam.bundleName = info.GetBundleName();
     createDirParam.userId = userId_;
@@ -5390,6 +5393,8 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
             LOG_E(BMS_TAG_INSTALLER, "fail to gererate uid and gid");
             return ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR;
         }
+        BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
+            Constants::APP_PROVISION_TYPE_FILE_NAME);
         mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
         if ((errCode = InstalldClient::GetInstance()->Mkdir(asanLogDir, mode,
             newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid)) != ERR_OK) {

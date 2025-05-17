@@ -5101,6 +5101,8 @@ bool BundleDataMgr::RestoreUidAndGid()
                 BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId,
                     ServiceConstants::SHAREFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH,
+                    info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
             }
             // appClone
             std::string bundleName = info.second.GetBundleName();
@@ -5120,6 +5122,8 @@ bool BundleDataMgr::RestoreUidAndGid()
                 BundleUtil::MakeFsConfig(cloneBundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(cloneBundleName, bundleId,
                     ServiceConstants::SHAREFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH,
+                    info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
             }
         }
     }

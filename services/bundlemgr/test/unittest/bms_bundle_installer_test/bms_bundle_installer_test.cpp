@@ -2531,6 +2531,8 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2400, Function | SmallTest 
     installer.dataMgr_ = GetBundleDataMgr();
     installer.userId_ = USERID;
     InnerBundleInfo info;
+    info.SetAppProvisionType(Constants::APP_PROVISION_TYPE_DEBUG);
+    installer.ProcessAsanDirectory(info);
     ErrCode res = installer.CreateBundleDataDir(info);
     EXPECT_EQ(res, ERR_APPEXECFWK_USER_NOT_EXIST);
 
@@ -2538,6 +2540,8 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2400, Function | SmallTest 
     ApplicationInfo applicationInfo;
     applicationInfo.bundleName = BUNDLE_NAME;
     info.SetBaseApplicationInfo(applicationInfo);
+    info.SetAppProvisionType(Constants::APP_PROVISION_TYPE_RELEASE);
+    installer.ProcessAsanDirectory(info);
     res = installer.CreateBundleDataDir(info);
     EXPECT_EQ(res, ERR_APPEXECFWK_USER_NOT_EXIST);
 }
@@ -5575,6 +5579,7 @@ HWTEST_F(BmsBundleInstallerTest, GetHapFilesFromBundlePath_0100, Function | Smal
         fileList.emplace_back(tmpFile);
     }
     bundleUtil.MakeFsConfig("testWrong.hap", 1, "/data/testWrong");
+    bundleUtil.MakeFsConfig("testWrong.hap", "/data/testWrong", "1", "appid");
     bool res = bundleUtil.GetHapFilesFromBundlePath(CURRENT_PATH, fileList);
     EXPECT_EQ(res, false);
     bundleUtil.DeleteTempDirs(fileList);
@@ -10901,5 +10906,44 @@ HWTEST_F(BmsBundleInstallerTest, RemoveExtensionDir_1000, Function | MediumTest 
     std::string extensionBundleDir = "/test/extension";
     ErrCode result = impl.RemoveExtensionDir(userId, extensionBundleDir);
     EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: MakeFsConfig_1000
+ * @tc.name: MakeFsConfig
+ * @tc.desc: 1.Test MakeFsConfig
+*/
+HWTEST_F(BmsBundleInstallerTest, MakeFsConfig_1000, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    BundleUtil bundleUtil;
+    bundleUtil.MakeFsConfig(BUNDLE_BACKUP_NAME, ServiceConstants::HMDFS_CONFIG_PATH, Constants::APP_PROVISION_TYPE_DEBUG,
+        Constants::APP_PROVISION_TYPE_FILE_NAME);
+    std::string path = ServiceConstants::HMDFS_CONFIG_PATH + BUNDLE_BACKUP_NAME +
+        std::string(ServiceConstants::PATH_SEPARATOR) + Constants::APP_PROVISION_TYPE_FILE_NAME;
+    int fd = open(path.c_str(), O_RDWR);
+    long length = lseek(fd, 0, SEEK_END);
+    std::string strAppInfo;
+    strAppInfo.resize(length - 1);
+    ssize_t retVal = read(fd, strAppInfo.data(), length);
+    EXPECT_GT(retVal, 0);
+    EXPECT_EQ(strAppInfo, Constants::DEBUG_TYPE_VALUE);
+    close(fd);
+
+    bundleUtil.MakeFsConfig(BUNDLE_BACKUP_NAME, ServiceConstants::HMDFS_CONFIG_PATH, Constants::APP_PROVISION_TYPE_RELEASE,
+        Constants::APP_PROVISION_TYPE_FILE_NAME);
+    int fd2 = open(path.c_str(), O_RDWR);
+    length = lseek(fd2, 0, SEEK_END);
+    strAppInfo;
+    strAppInfo.resize(length - 1);
+    retVal = read(fd2, strAppInfo.data(), length);
+    EXPECT_GT(retVal, 0);
+    EXPECT_EQ(strAppInfo, Constants::RELEASE_TYPE_VALUE);
+    close(fd2);
+
+    installResult = UnInstallBundle(BUNDLE_BACKUP_NAME);
+    EXPECT_EQ(installResult, ERR_OK);
 }
 } // OHOS

@@ -357,6 +357,8 @@ void BundleSandboxDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string
             }
             BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
             BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(info.first, ServiceConstants::HMDFS_CONFIG_PATH,
+                info.second.GetAppProvisionType(), Constants::APP_PROVISION_TYPE_FILE_NAME);
         }
     }
     APP_LOGD("RestoreSandboxUidAndGid finish");
