@@ -1141,6 +1141,10 @@ HWTEST_F(BmsExtendResourceManagerTest, GetAllDynamicIconInfo_0002, Function | Sm
     info.GetAllDynamicIconInfo(200, dynamicInfos4);
     EXPECT_FALSE(dynamicInfos4.empty());
     EXPECT_EQ(dynamicInfos4.size(), 1);
+
+    std::vector<DynamicIconInfo> dynamicInfos5;
+    info.GetAllDynamicIconInfo(0, dynamicInfos5);
+    EXPECT_TRUE(dynamicInfos5.empty());
 }
 
 /**

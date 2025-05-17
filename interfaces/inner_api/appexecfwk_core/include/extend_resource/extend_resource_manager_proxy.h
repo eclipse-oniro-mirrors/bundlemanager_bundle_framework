@@ -51,6 +51,9 @@ public:
 
     virtual ErrCode GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicInfos) override;
 
+    virtual ErrCode GetDynamicIconInfo(const std::string &bundleName,
+        std::vector<DynamicIconInfo> &dynamicInfos) override;
+
 private:
     virtual ErrCode CopyFiles(
         const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles) override;

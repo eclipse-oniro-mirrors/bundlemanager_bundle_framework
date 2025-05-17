@@ -44,6 +44,7 @@ const int32_t PERMS_INDEX_TWO = 2;
 const int32_t PERMS_INDEX_THREE = 3;
 const int32_t PERMS_INDEX_FORE = 4;
 const int32_t PERMS_INDEX_FIVE = 5;
+const int32_t PERMS_INDEX_SIX = 6;
 const std::string BUNDLE_PATH_1 = "/data/test/resource/bms/resource_manager/hapNotIncludeso5.hap";
 const std::string BUNDLE_PATH_2 = "/data/test/resource/bms/resource_manager/hapNotIncludesoFeature1.hsp";
 const std::string BUNDLE_PATH_3 = "/data/test/resource/bms/resource_manager/hapNotIncludesoFeature1.hap";
@@ -138,7 +139,7 @@ void ExtendResourceManagerProxyTest::TearDown()
 
 void ExtendResourceManagerProxyTest::StartProcess()
 {
-    const int32_t permsNum = 6;
+    const int32_t permsNum = 7;
     uint64_t tokenId;
     const char *perms[permsNum];
     perms[PERMS_INDEX_ZERO] = "ohos.permission.GET_BUNDLE_INFO";
@@ -147,6 +148,7 @@ void ExtendResourceManagerProxyTest::StartProcess()
     perms[PERMS_INDEX_THREE] = "ohos.permission.INSTALL_BUNDLE";
     perms[PERMS_INDEX_FORE] = "ohos.permission.INSTALL_CLONE_BUNDLE";
     perms[PERMS_INDEX_FIVE] = "ohos.permission.UNINSTALL_CLONE_BUNDLE";
+    perms[PERMS_INDEX_SIX] = "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
         .permsNum = permsNum,

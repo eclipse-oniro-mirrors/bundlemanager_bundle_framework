@@ -50,6 +50,8 @@ public:
 
     ErrCode GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicInfos) override;
 
+    ErrCode GetDynamicIconInfo(const std::string &bundleName, std::vector<DynamicIconInfo> &dynamicInfos) override;
+
 private:
     ErrCode BeforeAddExtResource(
         const std::string &bundleName, const std::vector<std::string> &filePaths);
@@ -93,6 +95,7 @@ private:
     ErrCode CheckParamInvalid(const InnerBundleInfo &bundleInfo,
         const int32_t userId, const int32_t appIndex);
     bool IsNeedUpdateBundleResourceInfo(const std::string &bundleName, const int32_t userId);
+    bool CheckAcrossUserPermission(const int32_t userId);
 
     std::atomic<uint32_t> id_ = 0;
 };

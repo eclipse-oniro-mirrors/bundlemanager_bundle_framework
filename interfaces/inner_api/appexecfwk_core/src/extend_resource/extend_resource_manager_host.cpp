@@ -65,7 +65,9 @@ int ExtendResourceManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& dat
         case static_cast<uint32_t>(ExtendResourceManagerInterfaceCode::CREATE_FD):
             return HandleCreateFd(data, reply);
         case static_cast<uint32_t>(ExtendResourceManagerInterfaceCode::GET_ALL_DYNAMIC_ICON_INFO):
-            return HandleGetAllDynamicInfo(data, reply);
+            return HandleGetAllDynamicIconInfo(data, reply);
+        case static_cast<uint32_t>(ExtendResourceManagerInterfaceCode::GET_DYNAMIC_ICON_INFO):
+            return HandleGetDynamicIconInfo(data, reply);
         default:
             APP_LOGW("ExtendResourceManagerHost receive unknown code %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -203,12 +205,28 @@ ErrCode ExtendResourceManagerHost::HandleCreateFd(MessageParcel& data, MessagePa
     return ERR_OK;
 }
 
-ErrCode ExtendResourceManagerHost::HandleGetAllDynamicInfo(MessageParcel& data, MessageParcel& reply)
+ErrCode ExtendResourceManagerHost::HandleGetAllDynamicIconInfo(MessageParcel& data, MessageParcel& reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t userId = data.ReadInt32();
     std::vector<DynamicIconInfo> dynamicIconInfos;
     ErrCode ret = GetAllDynamicIconInfo(userId, dynamicIconInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        return WriteParcelableVector<DynamicIconInfo>(dynamicIconInfos, reply);
+    }
+    return ERR_OK;
+}
+
+ErrCode ExtendResourceManagerHost::HandleGetDynamicIconInfo(MessageParcel& data, MessageParcel& reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::vector<DynamicIconInfo> dynamicIconInfos;
+    ErrCode ret = GetDynamicIconInfo(bundleName, dynamicIconInfos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

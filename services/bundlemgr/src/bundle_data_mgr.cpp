@@ -10591,7 +10591,7 @@ void BundleDataMgr::NotifyPluginEventCallback(const EventFwk::CommonEventData &e
     APP_LOGI("end");
 }
 
-ErrCode BundleDataMgr::GetAllDynamicInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos)
+ErrCode BundleDataMgr::GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos)
 {
     APP_LOGI("start userId %{public}d", userId);
     if (userId != Constants::UNSPECIFIED_USERID) {
@@ -10604,6 +10604,19 @@ ErrCode BundleDataMgr::GetAllDynamicInfo(const int32_t userId, std::vector<Dynam
     for (const auto &item : bundleInfos_) {
         item.second.GetAllDynamicIconInfo(userId, dynamicIconInfos);
     }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetDynamicIconInfo(const std::string &bundleName,
+    std::vector<DynamicIconInfo> &dynamicIconInfos)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGW("bundleName: %{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    item->second.GetAllDynamicIconInfo(Constants::UNSPECIFIED_USERID, dynamicIconInfos);
     return ERR_OK;
 }
 
