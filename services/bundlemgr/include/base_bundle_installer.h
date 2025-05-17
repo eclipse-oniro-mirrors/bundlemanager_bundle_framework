@@ -856,6 +856,7 @@ private:
     bool copyHapToInstallPath_ = false;
     bool needSetDisposeRule_ = false;
     bool needDeleteAppTempPath_ = false;
+    bool isBundleExist_ = false;
     InstallerState state_ = InstallerState::INSTALL_START;
     uint32_t versionCode_ = 0;
     uint32_t accessTokenId_ = 0;

@@ -70,6 +70,7 @@ struct NotifyBundleEvents {
     std::string developerId;
     std::string assetAccessGroups;
     bool keepData = false;
+    bool isBundleExist = false;
 };
 
 class BundleCommonEventMgr {
