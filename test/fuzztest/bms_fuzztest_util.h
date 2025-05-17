@@ -30,6 +30,15 @@ namespace AppExecFwk {
 namespace BMSFuzzTestUtil {
 constexpr size_t STRING_MAX_LENGTH = 128;
 constexpr size_t ARRAY_MAX_LENGTH = 128;
+constexpr uint32_t CODE_MIN_ONE = 1;
+constexpr uint32_t CODE_MAX_ONE = 1;
+constexpr uint32_t CODE_MAX_TWO = 2;
+constexpr uint32_t CODE_MAX_THREE = 3;
+constexpr uint32_t CODE_MAX_FOUR = 4;
+constexpr uint32_t CODE_MAX_FIVE = 5;
+constexpr uint32_t ORIENTATION_MAX = 14
+constexpr uint32_t EXTENSION_ABILITY_MAX = 25;
+
 
 std::vector<std::string> GenerateStringArray(FuzzedDataProvider& fdp, size_t arraySizeMax = ARRAY_MAX_LENGTH,
     size_t stringSize = STRING_MAX_LENGTH)
@@ -103,7 +112,7 @@ void GenerateApplicationInfo(FuzzedDataProvider& fdp, ApplicationInfo &applicati
     applicationInfo.overlayState = fdp.ConsumeIntegral<int32_t>();
     applicationInfo.maxChildProcess = fdp.ConsumeIntegral<int32_t>();
     applicationInfo.applicationFlags = fdp.ConsumeIntegral<int32_t>();
-    applicationInfo.bundleType = static_cast<BundleType>(fdp.ConsumeIntegralInRange<int32_t>(0, 4));
+    applicationInfo.bundleType = static_cast<BundleType>(fdp.ConsumeIntegralInRange<int32_t>(0, CODE_MAX_FOUR));
     applicationInfo.crowdtestDeadline = fdp.ConsumeIntegral<int64_t>();
     applicationInfo.accessTokenIdEx = fdp.ConsumeIntegral<uint64_t>();
     applicationInfo.name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
@@ -186,7 +195,7 @@ void GenerateAbilityInfo(FuzzedDataProvider& fdp, AbilityInfo &abilityInfo)
     abilityInfo.grantPermission = fdp.ConsumeBool();
     abilityInfo.directLaunch = fdp.ConsumeBool();
 
-    abilityInfo.linkType = static_cast<LinkType>(fdp.ConsumeIntegralInRange<uint8_t>(0, 2));
+    abilityInfo.linkType = static_cast<LinkType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_TWO));
     abilityInfo.labelId = fdp.ConsumeIntegral<uint32_t>();
     abilityInfo.descriptionId = fdp.ConsumeIntegral<uint32_t>();
     abilityInfo.iconId = fdp.ConsumeIntegral<uint32_t>();
@@ -208,12 +217,12 @@ void GenerateAbilityInfo(FuzzedDataProvider& fdp, AbilityInfo &abilityInfo)
     abilityInfo.priority = fdp.ConsumeIntegral<int32_t>();
     abilityInfo.appIndex = fdp.ConsumeIntegral<int32_t>();
     abilityInfo.uid = fdp.ConsumeIntegral<int32_t>();
-    abilityInfo.type = static_cast<AbilityType>(fdp.ConsumeIntegralInRange<uint8_t>(0, 5));
-    abilityInfo.extensionAbilityType = static_cast<ExtensionAbilityType>(fdp.ConsumeIntegralInRange<uint16_t>(0, 25));
-    abilityInfo.orientation = static_cast<DisplayOrientation>(fdp.ConsumeIntegralInRange<uint8_t>(0, 14));
-    abilityInfo.launchMode = static_cast<LaunchMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, 2));
-    abilityInfo.compileMode = static_cast<CompileMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, 1));
-    abilityInfo.subType = static_cast<AbilitySubType>(fdp.ConsumeIntegralInRange<uint8_t>(0, 1));
+    abilityInfo.type = static_cast<AbilityType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_FIVE));
+    abilityInfo.extensionAbilityType = static_cast<ExtensionAbilityType>(fdp.ConsumeIntegralInRange<uint16_t>(0, EXTENSION_ABILITY_MAX));
+    abilityInfo.orientation = static_cast<DisplayOrientation>(fdp.ConsumeIntegralInRange<uint8_t>(0, ORIENTATION_MAX));
+    abilityInfo.launchMode = static_cast<LaunchMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_TWO));
+    abilityInfo.compileMode = static_cast<CompileMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_ONE));
+    abilityInfo.subType = static_cast<AbilitySubType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_ONE));
 
     abilityInfo.name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);  // ability name, only the main class name
     abilityInfo.label = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
@@ -279,7 +288,7 @@ void GenerateBundleInfo(FuzzedDataProvider& fdp, BundleInfo &bundleInfo)
     bundleInfo.appIndex = fdp.ConsumeIntegral<int32_t>();
     bundleInfo.minSdkVersion = fdp.ConsumeIntegral<int32_t>();
     bundleInfo.maxSdkVersion = fdp.ConsumeIntegral<int32_t>();
-    bundleInfo.overlayType = fdp.ConsumeIntegralInRange<int32_t>(1, 3);
+    bundleInfo.overlayType = fdp.ConsumeIntegralInRange<int32_t>(CODE_MIN_ONE, CODE_MAX_THREE);
     bundleInfo.uid = fdp.ConsumeIntegral<int>();
     bundleInfo.gid = fdp.ConsumeIntegral<int>();
     bundleInfo.installTime = fdp.ConsumeIntegral<int64_t>();
@@ -314,9 +323,9 @@ void GenerateBundleInfo(FuzzedDataProvider& fdp, BundleInfo &bundleInfo)
 void GenerateMap(FuzzedDataProvider& fdp, std::map<std::string, std::string> &data)
 {
     // Generate number of key-value pairs (0 to 128)
-    const size_t num_pairs = fdp.ConsumeIntegralInRange<size_t>(0, ARRAY_MAX_LENGTH);
+    const size_t numPairs = fdp.ConsumeIntegralInRange<size_t>(0, ARRAY_MAX_LENGTH);
 
-    for (size_t i = 0; i < num_pairs; ++i) {
+    for (size_t i = 0; i < numPairs; ++i) {
         // Generate key with maximum length 128
         const std::string key = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
 
@@ -352,20 +361,20 @@ void GenerateInstallParam(FuzzedDataProvider& fdp, InstallParam &installParam)
     installParam.isPatch = fdp.ConsumeBool();
     installParam.isDataPreloadHap = fdp.ConsumeBool();
     installParam.userId = fdp.ConsumeIntegral<int32_t>();
-    installParam.installFlag = static_cast<InstallFlag>(fdp.ConsumeIntegralInRange<int8_t>(0, 1));
-    installParam.installLocation = static_cast<InstallLocation>(fdp.ConsumeIntegralInRange<int8_t>(1, 2));
+    installParam.installFlag = static_cast<InstallFlag>(fdp.ConsumeIntegralInRange<int8_t>(0, CODE_MAX_ONE));
+    installParam.installLocation = static_cast<InstallLocation>(fdp.ConsumeIntegralInRange<int8_t>(CODE_MIN_ONE, CODE_MAX_TWO));
     installParam.installBundlePermissionStatus =
-        static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, 2));
+        static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, CODE_MAX_TWO));
     installParam.installEnterpriseBundlePermissionStatus =
-        static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, 2));
+        static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, CODE_MAX_TWO));
     installParam.installEtpNormalBundlePermissionStatus =
-        static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, 2));
+        static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, CODE_MAX_TWO));
     installParam.installEtpMdmBundlePermissionStatus =
-        static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, 2));
+        static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, CODE_MAX_TWO));
     installParam.installInternaltestingBundlePermissionStatus =
-        static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, 2));
+        static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, CODE_MAX_TWO));
     installParam.installUpdateSelfBundlePermissionStatus =
-        static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, 2));
+        static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, CODE_MAX_TWO));
     installParam.preinstallSourceFlag = static_cast<ApplicationInfoFlag>(fdp.ConsumeIntegral<int32_t>());
     installParam.crowdtestDeadline = fdp.ConsumeIntegral<int64_t>(); // for crowdtesting type hap
     // Indicates the distribution type
