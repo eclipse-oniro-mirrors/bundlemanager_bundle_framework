@@ -1786,4 +1786,18 @@ HWTEST_F(BmsBundlePermissionFalseTest, IsBundleInstalled_0001, Function | SmallT
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     EXPECT_FALSE(isInstalled);
 }
+
+/**
+ * @tc.number: GetBundleNamesForUidExt_0001
+ * @tc.name: test GetBundleNamesForUidExt
+ * @tc.desc: test GetBundleNamesForUidExt
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetBundleNamesForUidExt_0001, Function | SmallTest | Level1)
+{
+    BundleMgrExtHostImpl impl;
+    int32_t uid = 111;
+    std::vector<std::string> bundleNames;
+    ErrCode ret = impl.GetBundleNamesForUidExt(uid, bundleNames);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS
