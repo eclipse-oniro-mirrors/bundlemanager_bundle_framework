@@ -56,7 +56,7 @@ private:
     static void CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t userId);
     static bool CreateEl5Dir(const CreateDirParam &createDirParam);
     static std::vector<std::string> GetBundleDataDirs(const int32_t userId);
-    static bool CheckU1EnableProcess(const std::string &bundleName);
+    static bool CheckU1EnableProcess(const BundleInfo &bundleInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

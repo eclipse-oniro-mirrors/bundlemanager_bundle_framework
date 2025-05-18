@@ -38,6 +38,8 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
+#include "bundle_resource_helper.h"
+#include "bundle_resource_manager.h"
 #include "directory_ex.h"
 #include "file_ex.h"
 #include "hmp_bundle_installer.h"
@@ -7202,7 +7204,6 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0108, Function | Sma
     auto ret = hostImpl.CreateSharefilesDataDirEl2(createDirParam2);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     CheckShareFilesDataDirsNonExist(TEST_SHARE_FILES);
-    DeleteShareFilesDataDirs("");
 }
 
 /**
@@ -7682,46 +7683,6 @@ HWTEST_F(BmsBundleInstallerTest, BundleUserMgrHostImpl_0200, Function | MediumTe
     EXPECT_TRUE(ret);
     ret = host.InnerProcessSkipPreInstallBundles(uninstallList, true);
     EXPECT_TRUE(ret);
-}
-
-/**
- * @tc.number: BundleUserMgrHostImpl_0300
- * @tc.name: test GetAllPreInstallBundleInfos
- * @tc.desc: 1.Test GetAllPreInstallBundleInfos the UserReceiverImpl
-*/
-HWTEST_F(BmsBundleInstallerTest, BundleUserMgrHostImpl_0300, Function | MediumTest | Level1)
-{
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    std::vector<std::string> disallowList;
-    std::set<PreInstallBundleInfo> preInstallBundleInfos;
-    BundleUserMgrHostImpl host;
-    bool ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::U1, false, preInstallBundleInfos);
-    EXPECT_FALSE(ret);
-
-    // test isU1 && !preInfo.GetU1Enable()
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool result = InstallSystemBundle(bundleFile);
-    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
-    InnerBundleInfo innerBundleInfo;
-    bool res = dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
-    EXPECT_TRUE(result) << "the bundle is not exist: " << BUNDLE_NAME;
-    ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::U1, false, preInstallBundleInfos);
-    EXPECT_FALSE(ret);
-
-    // add u1Enable, test !isU1 && preInfo.GetU1Enable()
-    std::vector<std::string> acls;
-    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
-    innerBundleInfo.SetAllowedAcls(acls);
-    dataMgr->UpdateInnerBundleInfo(innerBundleInfo, false);
-    ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::START_USERID, false, preInstallBundleInfos);
-    EXPECT_TRUE(ret);
-
-    // test isU1 && preInfo.GetU1Enable()
-    ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::U1, false, preInstallBundleInfos);
-    EXPECT_TRUE(ret);
-
-    ClearBundleInfo();
 }
 
 /**
@@ -9042,12 +9003,14 @@ HWTEST_F(BmsBundleInstallerTest, UninstallPlugin_0100, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7200, Function | SmallTest | Level0)
 {
+    
     std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
     ErrCode installResult = InstallThirdPartyBundle(bundleFile);
     EXPECT_EQ(installResult, ERR_OK);
 
     BaseBundleInstaller installer;
     installer.dataMgr_ = GetBundleDataMgr();
+    installer.dataMgr_->AddUserId(Constants::DEFAULT_USERID);
     InnerBundleInfo innerBundleInfo;
     int32_t uid = 0;
     InstallParam installParam;
@@ -9055,8 +9018,8 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7200, Function | SmallTest 
     ErrCode ret = installer.InnerProcessInstallByPreInstallInfo(
         GLOBAL_RESOURCE_BUNDLE_NAME, installParam, uid);
     EXPECT_EQ(ret, ERR_OK);
-
     UnInstallBundle(SYSTEMFIEID_NAME);
+    installer.dataMgr_->RemoveUserId(Constants::DEFAULT_USERID);
 }
 
 /**
@@ -11339,7 +11302,7 @@ HWTEST_F(BmsBundleInstallerTest, GetConfirmUserId_0001, Function | SmallTest | L
 /**
  * @tc.number: GetConfirmUserId_0002
  * @tc.name: test GetConfirmUserId
- * @tc.desc: 1.GetConfirmUserId, otaInstall_ is false, innerBundleInfo1 is not singleton, u1enabled
+ * @tc.desc: 1.GetConfirmUserId, otaInstall_ is false, innerBundleInfo1 is not singleton, u1enabled, but u1 not exist
  */
 HWTEST_F(BmsBundleInstallerTest, GetConfirmUserId_0002, Function | SmallTest | Level0)
 {
@@ -11355,6 +11318,44 @@ HWTEST_F(BmsBundleInstallerTest, GetConfirmUserId_0002, Function | SmallTest | L
     innerBundleInfo1.SetAllowedAcls(acls);
     infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
     auto res = installer.GetConfirmUserId(TEST_U100, infos);
-    EXPECT_EQ(res, Constants::U1);
+    EXPECT_EQ(res, TEST_U1);
+}
+
+/**
+ * @tc.number: GetAllPreInstallBundleInfos_0100
+ * @tc.name: test GetAllPreInstallBundleInfos
+ * @tc.desc: 1.Test GetAllPreInstallBundleInfos the BundleUserMgrHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, GetAllPreInstallBundleInfos_0100, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::vector<std::string> disallowList;
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    BundleUserMgrHostImpl host;
+    bool ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::U1, false, preInstallBundleInfos);
+    EXPECT_FALSE(ret);
+
+    // add u1Enable, test !isU1 && preInfo.GetU1Enable()
+    ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::START_USERID, false, preInstallBundleInfos);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: ProcessAddResourceInfo_0010
+ * @tc.name: test ProcessAddResourceInfo
+ * @tc.desc: 1.Test the ProcessAddResourceInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessAddResourceInfo_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    std::string testBudnleName = "com.example.u1Enable";
+    InstallParam installParam;
+    installer.ProcessAddResourceInfo(installParam, testBudnleName, 1);
+    bool res = BundleResourceHelper::DeleteResourceInfo(testBudnleName, 1);
+    EXPECT_FALSE(res);
+    res = BundleResourceHelper::DeleteResourceInfo(testBudnleName, -1);
+    EXPECT_FALSE(res);
 }
 } // OHOS

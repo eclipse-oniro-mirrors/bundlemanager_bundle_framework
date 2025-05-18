@@ -166,32 +166,125 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0600, Function
 {
     UpdateAppDataMgr updateAppDataMgr;
     // test dataMgr is null
-    bool res = updateAppDataMgr.CheckU1EnableProcess("");
+    BundleInfo bundleInfo;
+    bool res = updateAppDataMgr.CheckU1EnableProcess(bundleInfo);
     EXPECT_EQ(res, false);
 
     // test no bundleinfo
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
     std::string testBudnleName = "com.example.u1Enable";
+    bundleInfo.name = testBudnleName;
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+    
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
-    res = updateAppDataMgr.CheckU1EnableProcess(testBudnleName);
+    res = updateAppDataMgr.CheckU1EnableProcess(bundleInfo);
     EXPECT_EQ(res, false);
 
     InnerBundleInfo info;
     info.baseApplicationInfo_->bundleName = testBudnleName;
-    // add u1Enable
+
+    // test !u1enable
+    dataMgr->bundleInfos_.emplace(testBudnleName, info);
+    res = updateAppDataMgr.CheckU1EnableProcess(bundleInfo);
+    EXPECT_EQ(res, false);
+    dataMgr->bundleInfos_.clear();
+
+    // test u1enable and !singleton
     std::vector<std::string> acls;
     acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
     info.SetAllowedAcls(acls);
+    bundleInfo.singleton = false;
+    dataMgr->bundleInfos_.emplace(testBudnleName, info);
+    res = updateAppDataMgr.CheckU1EnableProcess(bundleInfo);
+    EXPECT_EQ(res, true);
+    dataMgr->bundleInfos_.clear();
+
+    // test u1enable and singleton
+    bundleInfo.singleton = true;
+    dataMgr->bundleInfos_.emplace(testBudnleName, info);
+    res = updateAppDataMgr.CheckU1EnableProcess(bundleInfo);
+    EXPECT_EQ(res, false);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: UserUnlockedEventSubscriber_0700
+ * @tc.name: UserUnlockedEventSubscriber
+ * @tc.desc: test CreateEl5Dir false
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0700, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string testBudnleName = "com.example.u1Enable";
+    std::vector<BundleInfo> bundleInfos;
+    BundleInfo bundleInfo;
+    bundleInfo.name = testBudnleName;
+    bundleInfos.push_back(bundleInfo);
+
+    // test userId != 1 and CheckU1EnableProcess failed
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = testBudnleName;
     info.SetSingleton(false);
     dataMgr->bundleInfos_.emplace(testBudnleName, info);
-    res = updateAppDataMgr.CheckU1EnableProcess(testBudnleName);
-    EXPECT_EQ(res, true);
-
+    std::string parentDir100 = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(100) + ServiceConstants::LOG;
+    std::string bundleLogDir100 = parentDir100 + bundleInfo.name;
+    UpdateAppDataMgr updateAppDataMgr1;
+    updateAppDataMgr1.ProcessUpdateAppLogDir(bundleInfos, 100);
+    bool isExist = false;
+    (void)InstalldClient::GetInstance()->IsExistDir(bundleLogDir100, isExist);
+    EXPECT_FALSE(isExist);
+    (void)InstalldClient::GetInstance()->RemoveDir(bundleLogDir100);
     dataMgr->bundleInfos_.clear();
-    info.SetSingleton(true);
-    dataMgr->bundleInfos_.emplace(testBudnleName, info);
-    res = updateAppDataMgr.CheckU1EnableProcess(testBudnleName);
-    EXPECT_EQ(res, false);
+
+    // test userId != 1 and CheckU1EnableProcess succeed
+    InnerBundleInfo info2;
+    info2.baseApplicationInfo_->bundleName = testBudnleName;
+    std::vector<std::string> acls1;
+    acls1.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    info2.SetAllowedAcls(acls1);
+    info2.SetSingleton(false);
+    dataMgr->bundleInfos_.emplace(testBudnleName, info2);
+    UpdateAppDataMgr updateAppDataMgr2;
+    updateAppDataMgr2.ProcessUpdateAppLogDir(bundleInfos, 100);
+    isExist = false;
+    (void)InstalldClient::GetInstance()->IsExistDir(bundleLogDir100, isExist);
+    EXPECT_FALSE(isExist);
+    (void)InstalldClient::GetInstance()->RemoveDir(bundleLogDir100);
+    dataMgr->bundleInfos_.clear();
+
+    // test userId == 1 and CheckU1EnableProcess succeed
+    InnerBundleInfo info3;
+    info3.baseApplicationInfo_->bundleName = testBudnleName;
+    std::vector<std::string> acls2;
+    acls2.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    info3.SetAllowedAcls(acls2);
+    info3.SetSingleton(false);
+    dataMgr->bundleInfos_.emplace(testBudnleName, info3);
+    UpdateAppDataMgr updateAppDataMgr3;
+    updateAppDataMgr3.ProcessUpdateAppLogDir(bundleInfos, 1);
+    std::string parentDir1 = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(1) + ServiceConstants::LOG;
+    std::string bundleLogDir1 = parentDir1 + bundleInfo.name;
+    isExist = false;
+    (void)InstalldClient::GetInstance()->IsExistDir(bundleLogDir1, isExist);
+    EXPECT_FALSE(isExist);
+    (void)InstalldClient::GetInstance()->RemoveDir(bundleLogDir1);
+    dataMgr->bundleInfos_.clear();
+
+    // test userId == 1 and CheckU1EnableProcess failed
+    InnerBundleInfo info4;
+    info4.baseApplicationInfo_->bundleName = testBudnleName;
+    info4.SetSingleton(true);
+    dataMgr->bundleInfos_.emplace(testBudnleName, info4);
+    UpdateAppDataMgr updateAppDataMgr4;
+    updateAppDataMgr4.ProcessUpdateAppLogDir(bundleInfos, 1);
+    isExist = false;
+    (void)InstalldClient::GetInstance()->IsExistDir(bundleLogDir1, isExist);
+    EXPECT_FALSE(isExist);
+    (void)InstalldClient::GetInstance()->RemoveDir(bundleLogDir1);
+    dataMgr->bundleInfos_.clear();
 }
 } // OHOS

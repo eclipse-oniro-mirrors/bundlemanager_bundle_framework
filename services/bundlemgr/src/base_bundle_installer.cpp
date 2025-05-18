@@ -1279,6 +1279,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_PARSED);                          // ---- 20%
 
     userId_ = GetConfirmUserId(userId_, newInfos);
+    result = CheckUserId(userId_);
+    CHECK_RESULT(result, "userId check failed %{public}d");
+    
     if (!installParam.isPreInstallApp && IsAppInBlocklist((newInfos.begin()->second).GetBundleName(), userId_)) {
         result = ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
         CHECK_RESULT(result, "app is in block list %{public}d");

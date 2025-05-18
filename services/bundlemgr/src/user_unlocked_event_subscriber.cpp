@@ -287,8 +287,10 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
             }
         }
         if ((userId != Constants::DEFAULT_USERID && bundleInfo.singleton) ||
-            (userId != Constants::U1 || !CheckU1EnableProcess(bundleInfo.name)) ||
-            !CreateBundleDataDir(bundleInfo, userId, elDir)) {
+            (userId != Constants::U1 && CheckU1EnableProcess(bundleInfo))) {
+            continue;
+        }
+        if (!CreateBundleDataDir(bundleInfo, userId, elDir)) {
             continue;
         }
         std::string baseDir = baseBundleDataDir + ServiceConstants::BASE + bundleInfo.name;
@@ -326,7 +328,7 @@ void UpdateAppDataMgr::ProcessUpdateAppLogDir(const std::vector<BundleInfo> &bun
         if (userId != Constants::DEFAULT_USERID && bundleInfo.singleton) {
             continue;
         }
-        if (userId != Constants::U1 || !CheckU1EnableProcess(bundleInfo.name)) {
+        if (userId != Constants::U1 && CheckU1EnableProcess(bundleInfo)) {
             continue;
         }
         if (!CreateBundleLogDir(bundleInfo, userId)) {
@@ -498,21 +500,19 @@ void UpdateAppDataMgr::CreateSharefilesSubDataDirs(const std::vector<BundleInfo>
     APP_LOGD("end for userid: [%{public}d]", userId);
 }
 
-bool UpdateAppDataMgr::CheckU1EnableProcess(const std::string &bundleName)
+bool UpdateAppDataMgr::CheckU1EnableProcess(const BundleInfo &bundleInfo)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
+    bool singleton = bundleInfo.singleton;
     bool u1Enable = false;
     InnerBundleInfo info;
-    if (dataMgr->FetchInnerBundleInfo(bundleName, info)) {
-        u1Enable = info.IsU1Enable();
-    }
-    APP_LOGI("get u1Enable: %{public}d for -n %{public}s, singleton: %{public}d", u1Enable,
-        bundleName.c_str(), info.IsSingleton());
-    if (u1Enable && !info.IsSingleton()) {
+    dataMgr->FetchInnerBundleInfo(bundleInfo.name, info);
+    u1Enable = info.IsU1Enable();
+    if (u1Enable && !singleton) {
         return true;
     }
     return false;
