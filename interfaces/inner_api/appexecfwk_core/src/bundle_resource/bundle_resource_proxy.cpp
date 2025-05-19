@@ -256,6 +256,41 @@ ErrCode BundleResourceProxy::DeleteResourceInfo(const std::string &key)
     return ERR_OK;
 }
 
+ErrCode BundleResourceProxy::GetExtensionAbilityResourceInfo(const std::string &bundleName,
+    const ExtensionAbilityType extensionAbilityType,
+    const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo,
+    const int32_t appIndex)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("start, bundleName:%{public}s, extensionAbilityType:%{public}u, flags:%{public}u",
+        bundleName.c_str(), extensionAbilityType, flags);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to write bundleName");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(extensionAbilityType))) {
+        APP_LOGE("fail to write extensionAbilityType");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(flags)) {
+        APP_LOGE("fail to write flags");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to write appIndex");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetVectorParcelInfo<LauncherAbilityResourceInfo>(
+        BundleResourceInterfaceCode::GET_EXTENSION_ABILITY_RESOURCE_INFO, data, extensionAbilityResourceInfo);
+}
+
 template<typename T>
 ErrCode BundleResourceProxy::GetParcelInfo(BundleResourceInterfaceCode code, MessageParcel &data, T &parcelInfo)
 {

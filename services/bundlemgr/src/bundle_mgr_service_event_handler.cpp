@@ -360,6 +360,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_INSTALL_SOURCE);
     UpdateOtaFlag(OTAFlag::DELETE_DEPRECATED_ARK_PATHS);
     (void)SaveBmsSystemTimeForShortcut();
+    UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
     PerfProfile::GetInstance().Dump();
 }
 
@@ -1247,6 +1248,7 @@ void BMSEventHandler::ProcessRebootBundle()
     RefreshQuotaForAllUid();
     ProcessCheckRecoverableApplicationInfo();
     ProcessCheckInstallSource();
+    ProcessCheckAppExtensionAbility();
     // Driver update may cause shader cache invalidity and need to be cleared
     CleanAllBundleShaderCache();
     CleanAllBundleEl1ShaderCacheLocal();
@@ -2485,6 +2487,49 @@ bool BMSEventHandler::InnerProcessUninstallAppServiceModule(const InnerBundleInf
         }
     }
     return true;
+}
+
+void BMSEventHandler::ProcessCheckAppExtensionAbility()
+{
+    bool checkExtensionAbility = false;
+    CheckOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY, checkExtensionAbility);
+    if (checkExtensionAbility) {
+        LOG_I(BMS_TAG_DEFAULT, "Not need to check extension ability due to has checked");
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "Need to check extension ability");
+    InnerProcessCheckAppExtensionAbility();
+    UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
+}
+
+void BMSEventHandler::InnerProcessCheckAppExtensionAbility()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
+        return;
+    }
+    std::vector<ExtensionAbilityType> types = {
+        ExtensionAbilityType::INPUTMETHOD,
+        ExtensionAbilityType::SHARE,
+        ExtensionAbilityType::ACTION
+    };
+    std::vector<std::string> bundleNames = dataMgr->GetAllExtensionBundleNames(types);
+    if (bundleNames.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "bundleNames is empty");
+        return;
+    }
+
+    int32_t userId = Constants::START_USERID;
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserIdWithRetry(true);
+    if (currentUserId != Constants::INVALID_USERID) {
+        userId = currentUserId;
+    }
+
+    for (const auto &bundleName : bundleNames) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "-n %{public}s add resource when ota", bundleName.c_str());
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+    }
 }
 
 ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &filePaths)
