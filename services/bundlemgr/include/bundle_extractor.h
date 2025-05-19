@@ -24,7 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleExtractor : public BaseExtractor {
 public:
-    explicit BundleExtractor(const std::string &source);
+    explicit BundleExtractor(const std::string &source, bool parallel = false);
     virtual ~BundleExtractor() override;
     /**
      * @brief Extract the config.json of a hap to dest stream.
@@ -39,6 +39,14 @@ public:
      */
     bool ExtractPackFile(std::ostream &dest) const;
 };
+
+class BundleParallelExtractor : public BundleExtractor {
+public:
+    explicit BundleParallelExtractor(const std::string &source);
+    virtual ~BundleParallelExtractor() override;
+    virtual bool ExtractByName(const std::string &fileName, std::ostream &dest) const override;
+};
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_EXTRACTOR_H
