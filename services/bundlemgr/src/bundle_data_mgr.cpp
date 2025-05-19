@@ -10109,11 +10109,25 @@ std::string BundleDataMgr::GetDirForApp(const std::string &bundleName, const int
 }
 
 ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
-    std::string &dataDir) const
+    std::string &dataDir)
 {
     APP_LOGD("start GetDir bundleName : %{public}s appIndex : %{public}d", bundleName.c_str(), appIndex);
-    if (appIndex < 0) {
+    if (appIndex < 0 || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
         return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+    }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        int32_t callingUid = IPCSkeleton::GetCallingUid();
+        int32_t userId = callingUid / Constants::BASE_USER_RANGE;
+        bool isBundleInstalled = false;
+        auto ret = IsBundleInstalled(bundleName, userId, appIndex, isBundleInstalled);
+        if (ret != ERR_OK) {
+            APP_LOGE("IsBundleInstalled failed, ret:%{public}d", ret);
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+        if (!isBundleInstalled) {
+            APP_LOGE("bundle %{public}s is not installed", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
     }
     BundleType type = BundleType::APP;
     GetBundleType(bundleName, type);

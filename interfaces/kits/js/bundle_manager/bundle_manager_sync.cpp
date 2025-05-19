@@ -1035,6 +1035,11 @@ napi_value GetSandboxDataDirSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
         return nullptr;
     }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("appIndex: %{public}d not in valid range", appIndex);
+        BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
+        return nullptr;
+    }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
@@ -1069,10 +1074,10 @@ void GetBundleNameAndIndexBySandboxDataDir(
     bool isApp = true;
     // for clone bundle name
     auto pos = keyName.find(CLONE_APP_DIR_PREFIX);
-    if (pos == std::string::npos) {
+    if (pos == std::string::npos || pos != 0) {
         //for atomic service
         pos = keyName.find(ATOMIC_SERVICE_DIR_PREFIX);
-        if (pos == std::string::npos) {
+        if (pos == std::string::npos || pos != 0) {
             return;
         }
         isApp = false;
@@ -1086,7 +1091,7 @@ void GetBundleNameAndIndexBySandboxDataDir(
     }
 
     auto plus = keyName.find(PLUS, indexBegin);
-    if ((plus == std::string::npos) || (plus == 0)) {
+    if ((plus == std::string::npos) || (plus <= indexBegin)) {
         return;
     }
 
