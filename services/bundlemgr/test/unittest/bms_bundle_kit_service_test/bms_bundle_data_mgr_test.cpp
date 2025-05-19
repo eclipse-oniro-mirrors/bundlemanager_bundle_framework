@@ -8447,4 +8447,42 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplSetShortcutVisibleForSelf_0001, 
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_NE(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: GetDirByBundleNameAndAppIndex_0100
+ * @tc.name: test GetDirByBundleNameAndAppIndex
+ * @tc.desc: 1.system run normally
+ *           2.check appIndex invalid
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetDirByBundleNameAndAppIndex_0100, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string bundleName;
+    std::string sandboxDataDir;
+    ErrCode result = bundleDataMgr->GetDirByBundleNameAndAppIndex(bundleName, -1, sandboxDataDir);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+
+    result = bundleDataMgr->GetDirByBundleNameAndAppIndex(bundleName, 6, sandboxDataDir);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX);
+}
+
+/**
+ * @tc.number: GetDirByBundleNameAndAppIndex_0200
+ * @tc.name: test GetDirByBundleNameAndAppIndex
+ * @tc.desc: 1.system run normally
+ *           2.bundleName not installed
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetDirByBundleNameAndAppIndex_0200, Function | MediumTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string bundleName;
+    std::string sandboxDataDir;
+    ErrCode result = bundleDataMgr->GetDirByBundleNameAndAppIndex(bundleName, 0, sandboxDataDir);
+    EXPECT_EQ(result, ERR_OK);
+}
+
 } // OHOS
