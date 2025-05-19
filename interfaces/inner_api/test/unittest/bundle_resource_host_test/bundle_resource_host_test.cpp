@@ -303,6 +303,23 @@ HWTEST_F(BundleResourceHostTest, HandleDeleteResourceInfo_0100, Function | Small
 }
 
 /**
+ * @tc.number: HandleGetExtensionAbilityResourceInfo_0100
+ * @tc.name: test the HandleGetExtensionAbilityResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetExtensionAbilityResourceInfo
+ */
+HWTEST_F(BundleResourceHostTest, HandleGetExtensionAbilityResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "HandleGetExtensionAbilityResourceInfo_0100 start";
+    BundleResourceHost bundleResourceHost;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = bundleResourceHost.HandleGetExtensionAbilityResourceInfo(data, reply);
+    GTEST_LOG_(INFO) << "HandleGetExtensionAbilityResourceInfo_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: AllocatAshmemNum_0100
  * @tc.name: test the AllocatAshmemNum
  * @tc.desc: 1. system running normally

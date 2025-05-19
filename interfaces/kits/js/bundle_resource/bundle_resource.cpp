@@ -45,6 +45,7 @@ constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
     "ohos.permission.GET_INSTALLED_BUNDLE_LIST and ohos.permission.GET_BUNDLE_RESOURCES";
 constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
 constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityResourceInfo";
+constexpr const char* GET_EXTENSION_ABILITY_RESOURCE_INFO = "GetExtensionAbilityResourceInfo";
 constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
 constexpr const char* GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = "GetAllLauncherAbilityResourceInfo";
 constexpr const char* RESOURCE_FLAGS = "resourceFlags";
@@ -53,6 +54,7 @@ constexpr const char* GET_RESOURCE_INFO_WITH_LABEL = "GET_RESOURCE_INFO_WITH_LAB
 constexpr const char* GET_RESOURCE_INFO_WITH_ICON = "GET_RESOURCE_INFO_WITH_ICON";
 constexpr const char* GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = "GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL";
 constexpr const char* GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR = "GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR";
+constexpr const char* EXTENSION_ABILITY_TYPE = "extensionAbilityType";
 
 class ResourceHelper {
 public:
@@ -553,5 +555,83 @@ void CreateBundleResourceFlagObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value,
         GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR, nGetDrawable));
 }
+
+static ErrCode InnerGetExtensionAbilityResourceInfo(
+    const std::string &bundleName, ExtensionAbilityType extensionAbilityType, uint32_t flags, int32_t appIndex,
+    std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfos)
+{
+    APP_LOGD("InnerGetExtensionAbilityResourceInfo start");
+    auto bundleResourceProxy = ResourceHelper::GetBundleResourceMgr();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleResourceProxy->GetExtensionAbilityResourceInfo(bundleName, extensionAbilityType,
+        flags, extensionAbilityResourceInfos, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, bundleName is %{public}s, errCode: %{public}d", bundleName.c_str(), ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+napi_value GetExtensionAbilityResourceInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetExtensionAbilityResourceInfo start");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_FOUR)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("parse bundleName failed, bundleName is %{public}s", bundleName.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE("invalid bundleName");
+        napi_value businessError = BusinessError::CreateCommonError(env, ERROR_BUNDLE_NOT_EXIST,
+            GET_EXTENSION_ABILITY_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    int32_t extensionAbilityType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], extensionAbilityType)) {
+        APP_LOGE("parse extensionAbilityType failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, EXTENSION_ABILITY_TYPE, TYPE_NUMBER);
+        return nullptr;
+    }
+    int32_t flags = 0;
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], flags)) {
+        APP_LOGE("parse flags failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
+        return nullptr;
+    }
+    if (flags <= 0) {
+        flags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    }
+    int32_t appIndex = 0;
+    if (args.GetMaxArgc() >= ARGS_SIZE_FOUR) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_THREE], appIndex)) {
+            APP_LOGW("parse appIndex failed");
+        }
+    }
+    std::vector<LauncherAbilityResourceInfo> entensionAbilityResourceInfos;
+    auto ret = InnerGetExtensionAbilityResourceInfo(bundleName,
+        static_cast<ExtensionAbilityType>(extensionAbilityType), flags, appIndex, entensionAbilityResourceInfos);
+    if (ret != ERR_OK) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_EXTENSION_ABILITY_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nExtensionAbilityResourceInfos = nullptr;
+    NAPI_CALL(env, napi_create_array(env, &nExtensionAbilityResourceInfos));
+    ConvertLauncherAbilityResourceInfos(env, entensionAbilityResourceInfos, nExtensionAbilityResourceInfos);
+    APP_LOGD("GetExtensionAbilityResourceInfo end");
+    return nExtensionAbilityResourceInfos;
+}
+
 } // AppExecFwk
 } // OHOS
