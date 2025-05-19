@@ -1800,4 +1800,84 @@ HWTEST_F(BmsBundlePermissionFalseTest, GetBundleNamesForUidExt_0001, Function | 
     ErrCode ret = impl.GetBundleNamesForUidExt(uid, bundleNames);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: ExtendResourceTest_0001
+ * @tc.name: test GetDynamicIcon
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, ExtendResourceTest_0001, Function | SmallTest | Level1)
+{
+    auto proxy = bundleMgrHostImpl_->GetExtendResourceManager();
+    EXPECT_NE(proxy, nullptr);
+    if (proxy != nullptr) {
+        std::string moduleName;
+        auto ret = proxy->GetDynamicIcon(BUNDLE_NAME, moduleName);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
+    }
+}
+
+/**
+ * @tc.number: ExtendResourceTest_0002
+ * @tc.name: test EnableDynamicIcon
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, ExtendResourceTest_0002, Function | SmallTest | Level1)
+{
+    auto proxy = bundleMgrHostImpl_->GetExtendResourceManager();
+    EXPECT_NE(proxy, nullptr);
+    if (proxy != nullptr) {
+        auto ret = proxy->EnableDynamicIcon(BUNDLE_NAME, MOUDLE_NAME);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
+    }
+}
+
+/**
+ * @tc.number: ExtendResourceTest_0003
+ * @tc.name: test EnableDynamicIcon
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, ExtendResourceTest_0003, Function | SmallTest | Level1)
+{
+    auto proxy = bundleMgrHostImpl_->GetExtendResourceManager();
+    EXPECT_NE(proxy, nullptr);
+    if (proxy != nullptr) {
+        auto ret = proxy->DisableDynamicIcon(BUNDLE_NAME);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
+    }
+}
+
+/**
+ * @tc.number: ExtendResourceTest_0004
+ * @tc.name: test EnableDynamicIcon
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, ExtendResourceTest_0004, Function | SmallTest | Level1)
+{
+    auto proxy = bundleMgrHostImpl_->GetExtendResourceManager();
+    EXPECT_NE(proxy, nullptr);
+    if (proxy != nullptr) {
+        std::vector<DynamicIconInfo> iconInfos;
+        auto ret = proxy->GetAllDynamicIconInfo(iconInfos);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
+        EXPECT_TRUE(iconInfos.empty());
+    }
+}
+
+/**
+ * @tc.number: ExtendResourceTest_0005
+ * @tc.name: test EnableDynamicIcon
+ * @tc.desc: 1.system run normal
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, ExtendResourceTest_0005, Function | SmallTest | Level1)
+{
+    auto proxy = bundleMgrHostImpl_->GetExtendResourceManager();
+    EXPECT_NE(proxy, nullptr);
+    if (proxy != nullptr) {
+        std::vector<DynamicIconInfo> iconInfos;
+        auto ret = proxy->GetDynamicIconInfo(BUNDLE_NAME, iconInfos);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
+        EXPECT_TRUE(iconInfos.empty());
+    }
+}
 } // OHOS

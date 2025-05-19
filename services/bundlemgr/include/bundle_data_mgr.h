@@ -1123,7 +1123,8 @@ public:
     ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
     ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
     void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData);
-    ErrCode GetAllDynamicInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos);
+    ErrCode GetDynamicIconInfo(const std::string &bundleName, std::vector<DynamicIconInfo> &dynamicIconInfos);
+    ErrCode GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos);
     std::string GetCurDynamicIconModule(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible);
     ErrCode DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);

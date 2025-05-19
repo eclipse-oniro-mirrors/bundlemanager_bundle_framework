@@ -442,10 +442,15 @@ ErrCode ExtendResourceManagerHostImpl::EnableDynamicIcon(
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
-        Constants::PERMISSION_ACCESS_DYNAMIC_ICON)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_ACCESS_DYNAMIC_ICON)) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    if ((userId != Constants::UNSPECIFIED_USERID)) {
+        if (!CheckAcrossUserPermission(userId)) {
+            APP_LOGE("verify permission across local account failed");
+            return ERR_APPEXECFWK_PERMISSION_DENIED;
+        }
     }
 
     ExtendResourceInfo extendResourceInfo;
@@ -579,6 +584,13 @@ ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bun
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
 
+    if ((userId != Constants::UNSPECIFIED_USERID)) {
+        if (!CheckAcrossUserPermission(userId)) {
+            APP_LOGE("verify permission across local account failed");
+            return ERR_APPEXECFWK_PERMISSION_DENIED;
+        }
+    }
+
     InnerBundleInfo info;
     if (!GetInnerBundleInfo(bundleName, info)) {
         APP_LOGE("GetInnerBundleInfo failed %{public}s", bundleName.c_str());
@@ -672,6 +684,9 @@ ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
     CHECK_RESULT(ret, "check user or appIndex failed %{public}d");
 
     std::string curDynamicModule = info.GetCurDynamicIconModule(userId, appIndex);
+    if (curDynamicModule.empty() && (userId == Constants::UNSPECIFIED_USERID)) {
+        curDynamicModule = info.GetCurDynamicIconModule(BundleUtil::GetUserIdByCallingUid(), appIndex);
+    }
     if (curDynamicModule.empty()) {
         APP_LOGE("%{public}s no enabled dynamic icon", bundleName.c_str());
         return ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED;
@@ -769,14 +784,49 @@ ErrCode ExtendResourceManagerHostImpl::GetAllDynamicIconInfo(
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE("verify permission across local account failed");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    auto ret = dataMgr->GetAllDynamicInfo(userId, dynamicInfos);
-    if (ret == ERR_OK) {
-        APP_LOGI("get all dynamic info userId %{public}d size %{public}zu", userId, dynamicInfos.size());
+    auto ret = dataMgr->GetAllDynamicIconInfo(userId, dynamicInfos);
+    if ((ret == ERR_OK) && dynamicInfos.empty()) {
+        ret = ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED;
+    }
+    if (ret != ERR_OK) {
+        APP_LOGE("-u %{public}d get all dynamic info failed ret %{public}d", userId, ret);
+    }
+    return ret;
+}
+
+ErrCode ExtendResourceManagerHostImpl::GetDynamicIconInfo(const std::string &bundleName,
+    std::vector<DynamicIconInfo> &dynamicInfos)
+{
+    APP_LOGI("get dynamic info -n %{public}s", bundleName.c_str());
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) ||
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS)) {
+        APP_LOGE("verify permission failed");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    auto ret = dataMgr->GetDynamicIconInfo(bundleName, dynamicInfos);
+    if ((ret == ERR_OK) && dynamicInfos.empty()) {
+        ret = ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED;
+    }
+    if (ret != ERR_OK) {
+        APP_LOGE("-n %{public}s get dynamic info failed ret %{public}d", bundleName.c_str(), ret);
     }
     return ret;
 }
@@ -807,6 +857,22 @@ bool ExtendResourceManagerHostImpl::IsNeedUpdateBundleResourceInfo(
         return false;
     }
     APP_LOGI("bundle %{public}s userId %{public}d need update bundle resource", bundleName.c_str(), userId);
+    return true;
+}
+
+bool ExtendResourceManagerHostImpl::CheckAcrossUserPermission(const int32_t userId)
+{
+    // sa no need to check across user permission
+    if (BundlePermissionMgr::IsNativeTokenType()) {
+        return true;
+    }
+    if (userId == BundleUtil::GetUserIdByCallingUid()) {
+        return true;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS)) {
+        APP_LOGE("verify permission across local account failed");
+        return false;
+    }
     return true;
 }
 } // AppExecFwk

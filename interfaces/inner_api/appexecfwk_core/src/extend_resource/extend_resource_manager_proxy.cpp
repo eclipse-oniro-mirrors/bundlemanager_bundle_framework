@@ -405,11 +405,33 @@ ErrCode ExtendResourceManagerProxy::GetAllDynamicIconInfo(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetAllDynamicIconInfo due to write bundleName fail");
+        APP_LOGE("fail to GetAllDynamicIconInfo due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfosWithErrCode<DynamicIconInfo>(
         ExtendResourceManagerInterfaceCode::GET_ALL_DYNAMIC_ICON_INFO, data, dynamicInfos);
+}
+
+ErrCode ExtendResourceManagerProxy::GetDynamicIconInfo(const std::string &bundleName,
+    std::vector<DynamicIconInfo> &dynamicInfos)
+{
+    APP_LOGD("begin to GetDynamicIconInfo");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetDynamicIconInfo due to WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetDynamicIconInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<DynamicIconInfo>(
+        ExtendResourceManagerInterfaceCode::GET_DYNAMIC_ICON_INFO, data, dynamicInfos);
 }
 
 bool ExtendResourceManagerProxy::SendRequest(
