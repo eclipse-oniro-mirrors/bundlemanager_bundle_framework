@@ -22,6 +22,8 @@
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_backup_mgr.h"
+#include "bundle_backup_service.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
@@ -5445,5 +5447,140 @@ HWTEST_F(BmsDataMgrTest, DeleteShortcutVisibleInfo_0002, Function | MediumTest |
     bundleDataMgr.shortcutVisibleStorage_->rdbDataManager_ = nullptr;
     auto ret = bundleDataMgr.DeleteShortcutVisibleInfo(bundleName, userId, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_DB_DELETE_ERROR);
+}
+
+/**
+ * @tc.number: OnExtension_0010
+ * @tc.name: OnExtension
+ * @tc.desc: test OnExtension can backup and restore
+ */
+HWTEST_F(BmsDataMgrTest, OnExtension_0010, Function | SmallTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    int32_t USERID = 100;
+    bool isIdIllegal = false;
+    bool ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    EXPECT_TRUE(ret);
+
+    nlohmann::json backupJson = nlohmann::json::array();
+    ret = shortcutDataStorageRdb->GetAllTableDataToJson(backupJson);
+    EXPECT_TRUE(ret);
+
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_TRUE(ret);
+    
+    ret = shortcutDataStorageRdb->UpdateAllShortcuts(backupJson);
+    EXPECT_TRUE(ret);
+
+    std::vector<ShortcutInfo> vecShortcutInfo;
+    shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_GE(vecShortcutInfo.size(), 0);
+
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: OnExtension_0020
+ * @tc.name: test OnExtension
+ * @tc.desc: 1.test OnExtension get dbdata failed
+ */
+HWTEST_F(BmsDataMgrTest, OnExtension_0020, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    nlohmann::json backupJson;
+    NativeRdb::AbsRdbPredicates absRdbPredicates("shortcut_info");
+    shortcutDataStorageRdb->rdbDataManager_->DeleteData(absRdbPredicates);
+    auto ret = BundleBackupService::GetInstance().OnBackup(backupJson);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_GET_DATA_ERROR);
+    EXPECT_EQ(shortcutDataStorageRdb->GetAllTableDataToJson(backupJson), false);
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+    EXPECT_EQ(shortcutDataStorageRdb->GetAllTableDataToJson(backupJson), false);
+}
+
+/**
+ * @tc.number: OnExtension_0030
+ * @tc.name: test OnExtension
+ * @tc.desc: 1.test OnExtension update dbdata failed
+ */
+HWTEST_F(BmsDataMgrTest, OnExtension_0030, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    nlohmann::json backupJson;
+    auto ret = BundleBackupService::GetInstance().OnRestore(backupJson);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_UPDATE_ERROR);
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+    backupJson = nlohmann::json::array();
+    EXPECT_EQ(shortcutDataStorageRdb->UpdateAllShortcuts(backupJson), false);
+}
+
+/**
+ * @tc.number: BundleBackupMgr_0100
+ * @tc.name: test BundleBackupMgr
+ * @tc.desc: 1.test OnExtension backup
+ */
+HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0100, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    int32_t USERID = 100;
+    bool isIdIllegal = false;
+    shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = BundleBackupMgr::GetInstance().OnBackup(data, reply);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GE(reply.ReadFileDescriptor(), 0);
+
+    bool result = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: BundleBackupMgr_0200
+ * @tc.name: test BundleBackupMgr
+ * @tc.desc: 1.test OnExtension restore with invalid fd
+ */
+HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0200, Function | MediumTest | Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteFileDescriptor(-1); 
+    auto ret = BundleBackupMgr::GetInstance().OnRestore(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: BundleBackupMgr_0300
+ * @tc.name: test BundleBackupMgr
+ * @tc.desc: 1.test OnExtension restore with valid fd
+ */
+HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0300, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    int32_t USERID = 100;
+    bool isIdIllegal = false;
+    shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    
+    const char* BACKUP_FILE_PATH = "/data/service/el1/public/bms/bundle_manager_service/backup_config.conf";
+    MessageParcel data;
+    MessageParcel reply;
+    FILE* filePtr = fopen(BACKUP_FILE_PATH, "re");
+    EXPECT_NE(filePtr, nullptr);
+    int32_t fd = fileno(filePtr);
+    data.WriteFileDescriptor(fd); 
+    auto ret = BundleBackupMgr::GetInstance().OnRestore(data, reply);
+    (void)close(fd);
+    EXPECT_EQ(ret, ERR_OK);
+    bool result = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_TRUE(result);
 }
 } // OHOS

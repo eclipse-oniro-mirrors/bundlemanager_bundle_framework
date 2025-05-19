@@ -29,6 +29,10 @@ const std::string USER_ID = "USER_ID";
 const std::string APP_INDEX = "APP_INDEX";
 const std::string SHORTCUT_INFO = "SHORTCUT_INFO";
 const int32_t SHORTCUT_INFO_INDEX = 5;
+const int32_t BUNDLE_NAME_INDEX = 1;
+const int32_t SHORTCUT_ID_INDEX = 2;
+const int32_t USER_ID_INDEX = 3;
+const int32_t APP_INDEX_INDEX = 4;
 }
 ShortcutDataStorageRdb::ShortcutDataStorageRdb()
 {
@@ -226,6 +230,95 @@ void ShortcutDataStorageRdb::GetDesktopShortcutInfosByDefaultUserId(std::vector<
         from_json(jsonObject, shortcutInfo);
         shortcutInfos.emplace_back(shortcutInfo);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+}
+
+bool ShortcutDataStorageRdb::GetAllTableDataToJson(nlohmann::json &jsonResult)
+{
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    NativeRdb::AbsRdbPredicates absRdbPredicates(SHORTCUT_RDB_TABLE_NAME);
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("absSharedResultSet is null.");
+        return false;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        return false;
+    }
+    do {
+        nlohmann::json rowData;
+        std::string bundleName;
+        if (absSharedResultSet->GetString(BUNDLE_NAME_INDEX, bundleName) == NativeRdb::E_OK) {
+            rowData[BUNDLE_NAME] = bundleName;
+        }
+        
+        std::string shortcutId;
+        if (absSharedResultSet->GetString(SHORTCUT_ID_INDEX, shortcutId) == NativeRdb::E_OK) {
+            rowData[SHORTCUT_ID] = shortcutId;
+        }
+        
+        int32_t userId = 0;
+        if (absSharedResultSet->GetInt(USER_ID_INDEX, userId) == NativeRdb::E_OK) {
+            rowData[USER_ID] = userId;
+        }
+        
+        int32_t appIndex = 0;
+        if (absSharedResultSet->GetInt(APP_INDEX_INDEX, appIndex) == NativeRdb::E_OK) {
+            rowData[APP_INDEX] = appIndex;
+        }
+        
+        std::string shortcutInfoJson;
+        if (absSharedResultSet->GetString(SHORTCUT_INFO_INDEX, shortcutInfoJson) == NativeRdb::E_OK) {
+            auto jsonObj = nlohmann::json::parse(shortcutInfoJson, nullptr, false);
+            if (!jsonObj.is_discarded()) {
+                rowData[SHORTCUT_INFO] = jsonObj;
+            }
+        }
+        jsonResult.emplace_back(rowData);
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    return true;
+}
+
+bool ShortcutDataStorageRdb::UpdateAllShortcuts(nlohmann::json &jsonResult)
+{
+    if (!jsonResult.is_array()) {
+        APP_LOGE("Invalid JSON format: expected array");
+        return false;
+    }
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    bool finalResult = true;
+    for (auto& item : jsonResult) {
+        NativeRdb::AbsRdbPredicates absRdbPredicates(SHORTCUT_RDB_TABLE_NAME);
+        absRdbPredicates.EqualTo(BUNDLE_NAME, item[BUNDLE_NAME].get<std::string>());
+        absRdbPredicates.EqualTo(SHORTCUT_ID, item[SHORTCUT_ID].get<std::string>());
+        absRdbPredicates.EqualTo(APP_INDEX, item[APP_INDEX].get<int>());
+        absRdbPredicates.EqualTo(USER_ID, item[USER_ID].get<int>());
+
+        auto resultSet = rdbDataManager_->QueryData(absRdbPredicates);
+        if (resultSet == nullptr) {
+            APP_LOGE("resultSet is null.");
+            continue;
+        }
+        ScopeGuard guard([resultSet] { resultSet->Close(); });
+        NativeRdb::ValuesBucket bucket;
+        bucket.PutString(BUNDLE_NAME, item[BUNDLE_NAME]);
+        bucket.PutString(SHORTCUT_ID, item[SHORTCUT_ID]);
+        bucket.PutInt(USER_ID, item[USER_ID]);
+        bucket.PutInt(APP_INDEX, item[APP_INDEX]);
+        bucket.PutString(SHORTCUT_INFO, item[SHORTCUT_INFO].dump());
+        if (!rdbDataManager_->UpdateOrInsertData(bucket, absRdbPredicates)) {
+            finalResult = false;
+        }
+    }
+    return finalResult;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
