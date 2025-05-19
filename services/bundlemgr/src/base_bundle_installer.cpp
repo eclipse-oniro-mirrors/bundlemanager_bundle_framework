@@ -221,7 +221,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .abilityName = mainAbility_,
             .appDistributionType = appDistributionType_,
         };
-        if (installParam.allUser || HasDriverExtensionAbility(bundleName_) ||
+        if (installParam.allUser || IsDriverForAllUser(bundleName_) ||
             IsEnterpriseForAllUser(installParam, bundleName_)) {
             AddBundleStatus(installRes);
         } else {
@@ -266,7 +266,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
         };
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
-        } else if (HasDriverExtensionAbility(bundleName) || IsEnterpriseForAllUser(installParam, bundleName)) {
+        } else if (IsDriverForAllUser(bundleName) || IsEnterpriseForAllUser(installParam, bundleName)) {
             AddBundleStatus(installRes);
         } else {
             NotifyBundleStatus(installRes);
@@ -6826,8 +6826,12 @@ void BaseBundleInstaller::PrintStartWindowIconId(const InnerBundleInfo &info)
     }
 }
 
-bool BaseBundleInstaller::HasDriverExtensionAbility(const std::string &bundleName)
+bool BaseBundleInstaller::IsDriverForAllUser(const std::string &bundleName)
 {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, true)) {
+        return false;
+    }
+
     if (!InitDataMgr()) {
         return false;
     }
