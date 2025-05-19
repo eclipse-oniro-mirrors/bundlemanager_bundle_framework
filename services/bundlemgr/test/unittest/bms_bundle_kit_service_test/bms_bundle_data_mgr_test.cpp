@@ -3956,7 +3956,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetDirByBundleNameAndAppIndex_0200, Function | Me
     std::string bundleName;
     std::string sandboxDataDir;
     ErrCode result = bundleDataMgr->GetDirByBundleNameAndAppIndex(bundleName, 0, sandboxDataDir);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(result, ERR_OK);
 }
 
 } // OHOS
