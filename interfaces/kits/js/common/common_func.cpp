@@ -2250,6 +2250,10 @@ void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutI
     napi_value sourceType;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.sourceType, &sourceType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "sourceType", sourceType));
+
+    napi_value visible;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, shortcutInfo.visible, &visible));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "visible", visible));
 }
 
 void CommonFunc::ConvertShortCutInfos(napi_env env, const std::vector<ShortcutInfo> &shortcutInfos, napi_value value)
@@ -2642,6 +2646,14 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
         sourceType = -1;
     }
     shortcutInfo.sourceType = sourceType;
+
+    // parse visible
+    napi_get_named_property(env, param, "visible", &prop);
+    bool isVisible;
+    if (!ParseBool(env, prop, isVisible)) {
+        isVisible = true;
+    }
+    shortcutInfo.visible = isVisible;
     return true;
 }
 

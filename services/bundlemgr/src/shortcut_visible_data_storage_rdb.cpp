@@ -16,6 +16,7 @@
 #include "shortcut_visible_data_storage_rdb.h"
 
 #include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -121,6 +122,52 @@ bool ShortcutVisibleDataStorageRdb::DeleteShortcutVisibleInfo(
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     APP_LOGD("DeleteShortcutVisibleInfo %{public}d", ret);
     return ret;
+}
+
+ErrCode ShortcutVisibleDataStorageRdb::GetShortcutVisibleStatus(const int32_t userId,
+    const int32_t appIndex, ShortcutInfo &shortcutInfo)
+{
+    std::string bundleName = shortcutInfo.bundleName;
+    std::string shortcutId = shortcutInfo.id;
+    if (bundleName.empty() || shortcutId.empty()) {
+        APP_LOGE("bundleName or shortcutId is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    NativeRdb::AbsRdbPredicates absRdbPredicates(SHORTCUT_VISIBLE_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
+    absRdbPredicates.EqualTo(SHORTCUT_ID, shortcutId);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("absSharedResultSet is null, bundleName: %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GetRowCount failed, bundleName: %{public}s, ret: %{public}d", bundleName.c_str(), ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    if (count == 0) {
+        APP_LOGD("count size 0");
+        return ERR_OK;
+    }
+    ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed, bundleName: %{public}s, ret: %{public}d", bundleName.c_str(), ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+
+    int32_t value;
+    ret = absSharedResultSet->GetInt(VISIBLE_INDEX, value);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GetInt failed, bundleName: %{public}s, ret: %{public}d", bundleName.c_str(), ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    shortcutInfo.visible = value == 1;
+    return ERR_OK;
 }
 }
 }

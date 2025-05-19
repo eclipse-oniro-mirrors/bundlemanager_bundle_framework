@@ -5296,6 +5296,19 @@ bool BundleDataMgr::GetShortcutInfos(
         return false;
     }
     GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
+
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    int32_t appIndex = 0;
+    std::string name;
+    auto ret = GetBundleNameAndIndex(uid, name, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGD("get Index failed");
+    }
+
+    // get shortcut visible status
+    for (auto &info : shortcutInfos) {
+        shortcutVisibleStorage_->GetShortcutVisibleStatus(requestUserId, appIndex, info);
+    }
     return true;
 }
 
@@ -5478,6 +5491,20 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
     }
 
     GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
+
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    int32_t appIndex = 0;
+    std::string name;
+    ret = GetBundleNameAndIndex(uid, name, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGD("get Index failed");
+        return ERR_OK;
+    }
+
+    // get shortcut visible status
+    for (auto &info : shortcutInfos) {
+        shortcutVisibleStorage_->GetShortcutVisibleStatus(requestUserId, appIndex, info);
+    }
     return ERR_OK;
 }
 
