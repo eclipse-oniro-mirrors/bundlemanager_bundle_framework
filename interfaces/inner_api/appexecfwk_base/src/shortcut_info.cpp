@@ -36,6 +36,7 @@ constexpr const char* JSON_KEY_BUNDLE_DISABLE_MESSAGE = "disableMessage";
 constexpr const char* JSON_KEY_BUNDLE_IS_STATIC = "isStatic";
 constexpr const char* JSON_KEY_BUNDLE_IS_HOME_SHORTCUT = "isHomeShortcut";
 constexpr const char* JSON_KEY_BUNDLE_IS_ENABLES = "isEnables";
+constexpr const char* JSON_KEY_BUNDLE_VISIBLE = "visible";
 constexpr const char* JSON_KEY_BUNDLE_INTENTS = "intents";
 constexpr const char* JSON_KEY_BUNDLE_TARGET_BUNDLE = "targetBundle";
 constexpr const char* JSON_KEY_BUNDLE_TARGET_MODULE = "targetModule";
@@ -49,6 +50,7 @@ constexpr const char* SHORTCUTS = "shortcuts";
 constexpr const char* SHORTCUT_ID = "shortcutId";
 constexpr const char* SHORTCUT_WANTS = "wants";
 constexpr const char* ICON = "icon";
+constexpr const char* VISIBLE = "visible";
 constexpr const char* ICON_ID = "iconId";
 constexpr const char* LABEL = "label";
 constexpr const char* LABEL_ID = "labelId";
@@ -68,6 +70,7 @@ bool ShortcutInfo::ReadFromParcel(Parcel &parcel)
     isStatic = parcel.ReadBool();
     isHomeShortcut = parcel.ReadBool();
     isEnables = parcel.ReadBool();
+    visible = parcel.ReadBool();
     int32_t intentsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, intentsSize);
     CONTAINER_SECURITY_VERIFY(parcel, intentsSize, &intents);
@@ -116,6 +119,7 @@ bool ShortcutInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isStatic);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isHomeShortcut);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEnables);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, visible);
 
     const auto intentsSize = static_cast<int32_t>(intents.size());
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, intentsSize);
@@ -162,6 +166,7 @@ void to_json(nlohmann::json &jsonObject, const ShortcutInfo &shortcutInfo)
         {JSON_KEY_LABEL_ID, shortcutInfo.labelId},
         {JSON_KEY_APP_INDEX, shortcutInfo.appIndex},
         {JSON_KEY_SOURCE_TYPE, shortcutInfo.sourceType},
+        {JSON_KEY_BUNDLE_VISIBLE, shortcutInfo.visible},
   };
 }
 
@@ -306,6 +311,12 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_BUNDLE_VISIBLE,
+        shortcutInfo.visible,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read shortcutInfo jsonObject error : %{public}d", parseResult);
     }
@@ -392,6 +403,12 @@ void from_json(const nlohmann::json &jsonObject, Shortcut &shortcut)
         false,
         parseResult,
         ArrayType::OBJECT);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        VISIBLE,
+        shortcut.visible,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read Shortcut module.json error : %{public}d", parseResult);
     }

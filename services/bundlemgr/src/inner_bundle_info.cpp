@@ -4288,6 +4288,7 @@ void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, Shortcut
     shortcutInfo.id = oldShortcut.shortcutId;
     shortcutInfo.icon = oldShortcut.icon;
     shortcutInfo.label = oldShortcut.label;
+    shortcutInfo.visible = oldShortcut.visible;
     shortcutInfo.iconId = oldShortcut.iconId;
     if (shortcutInfo.iconId == 0) {
         auto iter = oldShortcut.icon.find(PORT_SEPARATOR);

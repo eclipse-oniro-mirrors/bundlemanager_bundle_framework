@@ -33,6 +33,7 @@ public:
         const std::string &bundleName, const std::string &shortcutId, int32_t appIndex, int32_t userId, bool visible);
     bool DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
 
+    ErrCode GetShortcutVisibleStatus(const int32_t userId, const int32_t appIndex, ShortcutInfo &shortcutInfo);
 private:
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
 };
