@@ -7611,7 +7611,8 @@ std::vector<std::string> BundleDataMgr::GetBundleNamesForNewUser() const
         }
         const auto extensions = item.second.GetInnerExtensionInfos();
         for (const auto &extensionItem : extensions) {
-            if (extensionItem.second.type == ExtensionAbilityType::DRIVER) {
+            if (extensionItem.second.type == ExtensionAbilityType::DRIVER && 
+                OHOS::system::GetBoolParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, true)) {
                 bundleNames.emplace_back(extensionItem.second.bundleName);
                 APP_LOGI("driver bundle found: %{public}s", extensionItem.second.bundleName.c_str());
                 break;

@@ -119,7 +119,7 @@ void BundleInstaller::Uninstall(const std::string &bundleName, const InstallPara
 {
     ErrCode resultCode = ERR_OK;
     if (installParam.userId == Constants::ALL_USERID ||
-        (!installParam.isRemoveUser && HasDriverExtensionAbility(bundleName))) {
+        (!installParam.isRemoveUser && IsDriverForAllUser(bundleName))) {
         std::vector<ErrCode> errCode;
         auto userInstallParam = installParam;
         for (auto userId : GetExistsCommonUserIds()) {
@@ -162,7 +162,7 @@ void BundleInstaller::Uninstall(
     const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam)
 {
     ErrCode resultCode = ERR_OK;
-    if (installParam.userId == Constants::ALL_USERID || HasDriverExtensionAbility(bundleName)) {
+    if (installParam.userId == Constants::ALL_USERID || IsDriverForAllUser(bundleName)) {
         std::vector<ErrCode> errCode;
         auto userInstallParam = installParam;
         for (auto userId : GetExistsCommonUserIds()) {
@@ -222,7 +222,7 @@ std::set<int32_t> BundleInstaller::GetExistsCommonUserIds()
 void BundleInstaller::InstallForAllUsers(const InstallParam &installParam)
 {
     std::string bundleName = GetCurrentBundleName();
-    if (!HasDriverExtensionAbility(bundleName) && !IsEnterpriseForAllUser(installParam, bundleName)) {
+    if (!IsDriverForAllUser(bundleName) && !IsEnterpriseForAllUser(installParam, bundleName)) {
         APP_LOGD("bundle %{public}s has no driver extension ability", bundleName.c_str());
         return;
     }
@@ -246,7 +246,7 @@ void BundleInstaller::InstallForAllUsers(const InstallParam &installParam)
 
 void BundleInstaller::RecoverDriverForAllUsers(const std::string &bundleName, const InstallParam &installParam)
 {
-    if (!HasDriverExtensionAbility(bundleName)) {
+    if (!IsDriverForAllUser(bundleName)) {
         APP_LOGD("bundle %{public}s has no driver extension ability", bundleName.c_str());
         return;
     }
