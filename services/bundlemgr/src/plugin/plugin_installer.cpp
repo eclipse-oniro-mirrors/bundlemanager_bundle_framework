@@ -886,9 +886,9 @@ void PluginInstaller::NotifyPluginEvents(const NotifyType &type, int32_t uid)
 {
     NotifyBundleEvents event = {
         .type = type,
+        .uid = uid,
         .bundleType = static_cast<int32_t>(BundleType::APP_PLUGIN),
         .bundleName = bundleName_,
-        .uid = uid,
         .modulePackage = GetModuleNames(),
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
