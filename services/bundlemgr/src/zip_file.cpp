@@ -47,9 +47,9 @@ ZipEntry::ZipEntry(const CentralDirEntry &centralEntry)
     flags = centralEntry.flags;
 }
 
-ZipFile::ZipFile(const std::string &pathName) : pathName_(pathName)
+ZipFile::ZipFile(const std::string &pathName, bool parallel) : pathName_(pathName), parallel_(parallel)
 {
-    APP_LOGD("create instance from %{private}s", pathName_.c_str());
+    APP_LOGD("create instance from %{private}s, parallel mode is %{private}d", pathName_.c_str(), parallel_);
 }
 
 ZipFile::~ZipFile()
@@ -229,6 +229,21 @@ bool ZipFile::Open()
     }
 
     file_ = tmpFile;
+    if (parallel_) {
+        for (int32_t i = 0; i < concurrency_; i++) {
+            tmpFile = fopen(realPath.c_str(), "rb");
+            if (tmpFile != nullptr) {
+                files_.push_back(tmpFile);
+                continue;
+            }
+            APP_LOGE("open file(%{private}s) failed, error: %{public}d", pathName_.c_str(), errno);
+            fclose(file_);
+            for (int j = 0; j < i; j++) {
+                fclose(files_[j]);
+            }
+            return false;
+        }
+    }
     bool result = ParseEndDirectory();
     if (result) {
         result = ParseAllEntries();
@@ -255,6 +270,15 @@ void ZipFile::Close()
         APP_LOGW("close failed err: %{public}d", errno);
     }
     file_ = nullptr;
+    if (parallel_) {
+        for (int32_t i = 0; i < concurrency_; i++) {
+            if (fclose(files_[i]) != 0) {
+                APP_LOGW("close failed err: %{public}d", errno);
+            }
+            files_[i] = nullptr;
+        }
+        files_.clear();
+    }
 }
 
 // Get all file zipEntry in this file
@@ -309,7 +333,7 @@ size_t ZipFile::GetLocalHeaderSize(const uint16_t nameSize, const uint16_t extra
     return sizeof(LocalHeader) + nameSize + extraSize;
 }
 
-bool ZipFile::CheckDataDesc(const ZipEntry &zipEntry, const LocalHeader &localHeader) const
+bool ZipFile::CheckDataDescInternal(const ZipEntry &zipEntry, const LocalHeader &localHeader, FILE *file) const
 {
     uint32_t crcLocal = 0;
     uint32_t compressedLocal = 0;
@@ -320,12 +344,12 @@ bool ZipFile::CheckDataDesc(const ZipEntry &zipEntry, const LocalHeader &localHe
         auto descPos = zipEntry.localHeaderOffset + GetLocalHeaderSize(localHeader.nameSize, localHeader.extraSize);
         descPos += fileStartPos_ + zipEntry.compressedSize;
 
-        if (fseek(file_, descPos, SEEK_SET) != 0) {
+        if (fseek(file, descPos, SEEK_SET) != 0) {
             APP_LOGE("check local header seek datadesc failed, error: %{public}d", errno);
             return false;
         }
 
-        if (fread(&dataDesc, sizeof(DataDesc), FILE_READ_COUNT, file_) != FILE_READ_COUNT) {
+        if (fread(&dataDesc, sizeof(DataDesc), FILE_READ_COUNT, file) != FILE_READ_COUNT) {
             APP_LOGE("check local header read datadesc failed, error: %{public}d", errno);
             return false;
         }
@@ -353,7 +377,12 @@ bool ZipFile::CheckDataDesc(const ZipEntry &zipEntry, const LocalHeader &localHe
     return true;
 }
 
-bool ZipFile::CheckCoherencyLocalHeader(const ZipEntry &zipEntry, uint16_t &extraSize) const
+bool ZipFile::CheckDataDesc(const ZipEntry &zipEntry, const LocalHeader &localHeader) const
+{
+    return CheckDataDescInternal(zipEntry, localHeader, file_);
+}
+
+bool ZipFile::CheckCoherencyLocalHeaderInternal(const ZipEntry &zipEntry, uint16_t &extraSize, FILE *file) const
 {
     LocalHeader localHeader = {0};
 
@@ -362,12 +391,12 @@ bool ZipFile::CheckCoherencyLocalHeader(const ZipEntry &zipEntry, uint16_t &extr
         return false;
     }
 
-    if (fseek(file_, fileStartPos_ + zipEntry.localHeaderOffset, SEEK_SET) != 0) {
+    if (fseek(file, fileStartPos_ + zipEntry.localHeaderOffset, SEEK_SET) != 0) {
         APP_LOGE("check local header seek failed, error: %{public}d", errno);
         return false;
     }
 
-    if (fread(&localHeader, sizeof(LocalHeader), FILE_READ_COUNT, file_) != FILE_READ_COUNT) {
+    if (fread(&localHeader, sizeof(LocalHeader), FILE_READ_COUNT, file) != FILE_READ_COUNT) {
         APP_LOGE("check local header read localheader failed, error: %{public}d", errno);
         return false;
     }
@@ -392,7 +421,7 @@ bool ZipFile::CheckCoherencyLocalHeader(const ZipEntry &zipEntry, uint16_t &extr
         APP_LOGE("check local header file name size failed");
         return false;
     }
-    if (fread(&(fileName[0]), fileLength, FILE_READ_COUNT, file_) != FILE_READ_COUNT) {
+    if (fread(&(fileName[0]), fileLength, FILE_READ_COUNT, file) != FILE_READ_COUNT) {
         APP_LOGE("check local header read file name failed, error: %{public}d", errno);
         return false;
     }
@@ -402,7 +431,7 @@ bool ZipFile::CheckCoherencyLocalHeader(const ZipEntry &zipEntry, uint16_t &extr
         return false;
     }
 
-    if (!CheckDataDesc(zipEntry, localHeader)) {
+    if (!CheckDataDescInternal(zipEntry, localHeader, file)) {
         APP_LOGE("check data desc failed");
         return false;
     }
@@ -411,7 +440,12 @@ bool ZipFile::CheckCoherencyLocalHeader(const ZipEntry &zipEntry, uint16_t &extr
     return true;
 }
 
-bool ZipFile::SeekToEntryStart(const ZipEntry &zipEntry, const uint16_t extraSize) const
+bool ZipFile::CheckCoherencyLocalHeader(const ZipEntry &zipEntry, uint16_t &extraSize) const
+{
+    return CheckCoherencyLocalHeaderInternal(zipEntry, extraSize, file_);
+}
+
+bool ZipFile::SeekToEntryStartInternal(const ZipEntry &zipEntry, const uint16_t extraSize, FILE *file) const
 {
     ZipPos startOffset = zipEntry.localHeaderOffset;
     // get data offset, add signature+localheader+namesize+extrasize
@@ -426,18 +460,23 @@ bool ZipFile::SeekToEntryStart(const ZipEntry &zipEntry, const uint16_t extraSiz
     startOffset += fileStartPos_;  // add file start relative to file stream
 
     APP_LOGD("seek to entry start 0x%{public}08llx", startOffset);
-    if (fseek(file_, startOffset, SEEK_SET) != 0) {
+    if (fseek(file, startOffset, SEEK_SET) != 0) {
         APP_LOGE("seek failed, error: %{public}d", errno);
         return false;
     }
     return true;
 }
 
-bool ZipFile::UnzipWithStore(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest) const
+bool ZipFile::SeekToEntryStart(const ZipEntry &zipEntry, const uint16_t extraSize) const
+{
+    return SeekToEntryStartInternal(zipEntry, extraSize, file_);
+}
+
+bool ZipFile::UnzipWithStore(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest, FILE *file) const
 {
     APP_LOGD("unzip with store");
 
-    if (!SeekToEntryStart(zipEntry, extraSize)) {
+    if (!SeekToEntryStartInternal(zipEntry, extraSize, file)) {
         APP_LOGE("seek to entry start failed");
         return false;
     }
@@ -449,9 +488,9 @@ bool ZipFile::UnzipWithStore(const ZipEntry &zipEntry, const uint16_t extraSize,
     while (remainSize > 0) {
         size_t readBytes;
         size_t readLen = (remainSize > UNZIP_BUF_OUT_LEN) ? UNZIP_BUF_OUT_LEN : remainSize;
-        readBytes = fread(&(readBuffer[0]), sizeof(Byte), readLen, file_);
+        readBytes = fread(&(readBuffer[0]), sizeof(Byte), readLen, file);
         if (readBytes == 0) {
-            APP_LOGE("unzip store read failed, error: %{public}d", ferror(file_));
+            APP_LOGE("unzip store read failed, error: %{public}d", ferror(file));
             return false;
         }
         remainSize -= readBytes;
@@ -492,14 +531,14 @@ bool ZipFile::InitZStream(z_stream &zstream) const
     return true;
 }
 
-bool ZipFile::ReadZStream(const BytePtr &buffer, z_stream &zstream, uint32_t &remainCompressedSize) const
+bool ZipFile::ReadZStream(const BytePtr &buffer, z_stream &zstream, uint32_t &remainCompressedSize, FILE *file) const
 {
     if (zstream.avail_in == 0) {
         size_t readBytes;
         size_t remainBytes = (remainCompressedSize > UNZIP_BUF_IN_LEN) ? UNZIP_BUF_IN_LEN : remainCompressedSize;
-        readBytes = fread(buffer, sizeof(Byte), remainBytes, file_);
+        readBytes = fread(buffer, sizeof(Byte), remainBytes, file);
         if (readBytes == 0) {
-            APP_LOGE("unzip inflated read failed, error: %{public}d", ferror(file_));
+            APP_LOGE("unzip inflated read failed, error: %{public}d", ferror(file));
             return false;
         }
 
@@ -510,12 +549,13 @@ bool ZipFile::ReadZStream(const BytePtr &buffer, z_stream &zstream, uint32_t &re
     return true;
 }
 
-bool ZipFile::UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest) const
+bool ZipFile::UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSize, std::ostream &dest,
+    FILE *file) const
 {
     APP_LOGD("unzip with inflated");
 
     z_stream zstream;
-    if (!SeekToEntryStart(zipEntry, extraSize) || !InitZStream(zstream)) {
+    if (!SeekToEntryStartInternal(zipEntry, extraSize, file) || !InitZStream(zstream)) {
         return false;
     }
 
@@ -527,7 +567,7 @@ bool ZipFile::UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSi
     uint32_t remainCompressedSize = zipEntry.compressedSize;
     uint8_t errorTimes = 0;
     while ((remainCompressedSize > 0) || (zstream.avail_in > 0)) {
-        if (!ReadZStream(bufIn, zstream, remainCompressedSize)) {
+        if (!ReadZStream(bufIn, zstream, remainCompressedSize, file)) {
             ret = false;
             break;
         }
@@ -589,7 +629,7 @@ bool ZipFile::GetDataOffsetRelative(const std::string &file, ZipPos &offset, uin
     }
 
     uint16_t extraSize = 0;
-    if (!CheckCoherencyLocalHeader(zipEntry, extraSize)) {
+    if (!CheckCoherencyLocalHeaderInternal(zipEntry, extraSize, file_)) {
         APP_LOGE("check coherency local header failed");
         return false;
     }
@@ -610,17 +650,66 @@ bool ZipFile::ExtractFile(const std::string &file, std::ostream &dest) const
     }
 
     uint16_t extraSize = 0;
-    if (!CheckCoherencyLocalHeader(zipEntry, extraSize)) {
+    if (!CheckCoherencyLocalHeaderInternal(zipEntry, extraSize, file_)) {
         APP_LOGE("check coherency local header failed");
         return false;
     }
 
     bool ret = true;
     if (zipEntry.compressionMethod == 0) {
-        ret = UnzipWithStore(zipEntry, extraSize, dest);
+        ret = UnzipWithStore(zipEntry, extraSize, dest, file_);
     } else {
-        ret = UnzipWithInflated(zipEntry, extraSize, dest);
+        ret = UnzipWithInflated(zipEntry, extraSize, dest, file_);
     }
+
+    return ret;
+}
+
+void ZipFile::GetFileHandler(int32_t &resourceId) const
+{
+    resourceId %= concurrency_;
+    while (!mtxes_[resourceId].try_lock()) {
+        resourceId = (resourceId + 1) % concurrency_;
+    }
+}
+
+void ZipFile::ReleaseFileHandler(const int32_t resourceId) const
+{
+    mtxes_[resourceId].unlock();
+}
+
+bool ZipFile::ExtractFileParallel(const std::string &file, std::ostream &dest) const
+{
+    APP_LOGD("extract file %{private}s", file.c_str());
+
+    ZipEntry zipEntry;
+    if (!GetEntry(file, zipEntry)) {
+        APP_LOGE("extract file: not find file");
+        return false;
+    }
+
+    int resourceId = sched_getcpu();
+    APP_LOGD("get file handler with initial id %{private}d", resourceId);
+    GetFileHandler(resourceId);
+    APP_LOGD("get file handler id %{private}d success", resourceId);
+
+    uint16_t extraSize = 0;
+    if (!CheckCoherencyLocalHeaderInternal(zipEntry, extraSize, files_[resourceId])) {
+        APP_LOGE("check coherency local header failed");
+        ReleaseFileHandler(resourceId);
+        return false;
+    }
+
+    bool ret = true;
+    if (zipEntry.compressionMethod == 0) {
+        ret = UnzipWithStore(zipEntry, extraSize, dest, files_[resourceId]);
+    } else {
+        ret = UnzipWithInflated(zipEntry, extraSize, dest, files_[resourceId]);
+    }
+
+    APP_LOGD("release file handler id %{private}d", resourceId);
+    ReleaseFileHandler(resourceId);
+    APP_LOGD("release file handler id %{private}d success", resourceId);
 
     return ret;
 }
