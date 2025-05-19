@@ -33,7 +33,7 @@ const char NAME[] = "name";
     {
         nlohmann::json infoJson;
         FuzzedDataProvider fdp(data, size);
-        std::string name = fdp.ConsumeRandomLengthString(BMSFuzzTestUtil::STRING_MAX_LENGTH);;
+        std::string name = fdp.ConsumeRandomLengthString(BMSFuzzTestUtil::STRING_MAX_LENGTH);
         infoJson[NAME] = name;
         BundleInfo bundleInfo = infoJson;
         return true;

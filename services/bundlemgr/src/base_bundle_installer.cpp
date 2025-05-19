@@ -6822,7 +6822,7 @@ void BaseBundleInstaller::PrintStartWindowIconId(const InnerBundleInfo &info)
     for (const auto &ability : abilityMap) {
         const auto &abilityInfo = ability.second;
         APP_LOGI("startWindowIconId %{public}s_%{public}s_%{public}s_%{public}d", abilityInfo.bundleName.c_str(),
-        abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(), abilityInfo.startWindowIconId);
+            abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(), abilityInfo.startWindowIconId);
     }
 }
 
