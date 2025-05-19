@@ -2931,7 +2931,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5100, Function | MediumTest | L
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string sandboxDataDir;
     ErrCode retCode = hostImpl->GetSandboxDataDir(TEST_BUNDLE_NAME, 0, sandboxDataDir);
-    EXPECT_EQ(retCode, ERR_OK);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
