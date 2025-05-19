@@ -6118,5 +6118,17 @@ ErrCode BundleMgrProxy::SetShortcutVisibleForSelf(const std::string &shortcutId,
     }
     return reply.ReadInt32();
 }
+
+ErrCode BundleMgrProxy::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("GetAllShortcutInfoForSelf write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<ShortcutInfo>(
+        BundleMgrInterfaceCode::GET_ALL_SHORTCUT_INFO_FOR_SELF, data, shortcutInfos);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

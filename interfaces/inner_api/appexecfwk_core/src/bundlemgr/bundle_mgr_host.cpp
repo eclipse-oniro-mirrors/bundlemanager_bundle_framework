@@ -680,6 +680,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_SHORTCUT_VISIBLE):
             errCode = HandleSetShortcutVisibleForSelf(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_SHORTCUT_INFO_FOR_SELF):
+            errCode = HandleGetAllShortcutInfoForSelf(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -4705,6 +4708,22 @@ ErrCode BundleMgrHost::HandleSetShortcutVisibleForSelf(MessageParcel &data, Mess
     auto ret = SetShortcutVisibleForSelf(shortcutId, visible);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllShortcutInfoForSelf(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::vector<ShortcutInfo> infos;
+    auto ret = GetAllShortcutInfoForSelf(infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteVectorToParcelIntelligent(infos, reply)) {
+        APP_LOGE("Write shortcut infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

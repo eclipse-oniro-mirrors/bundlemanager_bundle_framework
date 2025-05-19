@@ -4012,4 +4012,24 @@ HWTEST_F(BmsBundleDataMgrTest, AppIdAndAppIdentifierTransform_0100, Function | S
 
     RemoveBundleinfo(bundleName);
 }
+
+/**
+ * @tc.number: BundleMgrHostImplGetAllShortcutInfoForSelf_0001
+ * @tc.name: BundleMgrHostImplGetAllShortcutInfoForSelf
+ * @tc.desc: test GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAllShortcutInfoForSelf_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> lcalBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(lcalBundleMgrHostImpl, nullptr);
+    std::vector<ShortcutInfo> shortcutInfos;
+
+    auto ret = lcalBundleMgrHostImpl->GetAllShortcutInfoForSelf(shortcutInfos);
+    EXPECT_NE(ret, ERR_OK);
+
+    ClearDataMgr();
+    ret = lcalBundleMgrHostImpl->GetAllShortcutInfoForSelf(shortcutInfos);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    EXPECT_NE(ret, ERR_OK);
+}
 } // OHOS

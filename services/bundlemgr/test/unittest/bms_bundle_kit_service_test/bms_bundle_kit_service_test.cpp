@@ -14733,4 +14733,17 @@ HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_SetShortcutVisibleForSelf_0100, Func
     auto ret = bundleMgrProxy->SetShortcutVisibleForSelf(shortcutId, visible);
     EXPECT_NE(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: Mgr_Proxy_GetAllShortcutInfoForSelf_0100
+ * @tc.name: test BundleMgrProxy interface GetAllShortcutInfoForSelf
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetAllShortcutInfoForSelf_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto ret = bundleMgrProxy->GetAllShortcutInfoForSelf(shortcutInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
 }

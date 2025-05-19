@@ -10780,5 +10780,37 @@ ErrCode BundleDataMgr::DeleteShortcutVisibleInfo(const std::string &bundleName, 
     }
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos)
+{
+    APP_LOGD("GetAllShortcutInfoForSelf begin");
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    int32_t appIndex = 0;
+    std::string bundleName;
+    auto ret = GetBundleNameAndIndex(uid, bundleName, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("get inner bundle info failed");
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    int32_t userId = GetUserIdByCallingUid();
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto iter = bundleInfos_.find(bundleName);
+        if (iter != bundleInfos_.end()) {
+            GetShortcutInfosByInnerBundleInfo(iter->second, shortcutInfos);
+        } else {
+            APP_LOGE("%{public}s not exist", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
+    for (auto &info : shortcutInfos) {
+        ret = shortcutVisibleStorage_->GetShortcutVisibleStatus(userId, appIndex, info);
+        if (ret != ERR_OK) {
+            APP_LOGD("visible not exist in table");
+        }
+        info.appIndex = appIndex;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

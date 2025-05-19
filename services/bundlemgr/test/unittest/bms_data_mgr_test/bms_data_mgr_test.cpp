@@ -5666,4 +5666,84 @@ HWTEST_F(BmsDataMgrTest, GetAllExtensionBundleNames_0002, Function | MediumTest 
     EXPECT_EQ(bundleNames.size(), 1);
     EXPECT_EQ(bundleNames[0], "test.bundle");
 }
+
+/**
+ * @tc.number: GetAllShortcutInfoForSelf_0010
+ * @tc.name: test GetAllShortcutInfoForSelf
+ * @tc.desc: 1.test GetAllShortcutInfoForSelf get bundleName and appIndex failed
+ */
+HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0010, Function | MediumTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    BundleDataMgr bundleDataMgr;
+    auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: GetAllShortcutInfoForSelf_0020
+ * @tc.name: test GetAllShortcutInfoForSelf
+ * @tc.desc: 1.test GetAllShortcutInfoForSelf get bundleInfo failed
+ */
+HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0020, Function | MediumTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAllShortcutInfoForSelf_0030
+ * @tc.name: test GetAllShortcutInfoForSelf
+ * @tc.desc: 1.test GetAllShortcutInfoForSelf get shortcut info failed
+ */
+HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0030, Function | MediumTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleInfos_.emplace("fake_bundle", innerBundleInfo);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAllShortcutInfoForSelf_0040
+ * @tc.name: test GetAllShortcutInfoForSelf
+ * @tc.desc: 1.test GetAllShortcutInfoForSelf success
+ */
+HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0040, Function | MediumTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    auto ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
+        std::make_shared<ShortcutVisibleDataStorageRdb>();
+    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    shortcutVisibleDataStorageRdb->SaveStorageShortcutVisibleInfo(
+        bundleName, shortcutId, 0, 100, false);
+    ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(shortcutInfos[0].visible);
+}
 } // OHOS

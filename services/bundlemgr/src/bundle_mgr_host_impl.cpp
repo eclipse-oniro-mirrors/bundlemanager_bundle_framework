@@ -5459,5 +5459,16 @@ ErrCode BundleMgrHostImpl::SetShortcutVisibleForSelf(const std::string &shortcut
     }
     return dataMgr->SetShortcutVisibleForSelf(shortcutId, visible);
 }
+
+ErrCode BundleMgrHostImpl::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos)
+{
+    // The application itself is the caller, so there is no need for permission control.
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetAllShortcutInfoForSelf(shortcutInfos);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

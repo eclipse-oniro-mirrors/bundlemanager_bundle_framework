@@ -1134,6 +1134,7 @@ public:
     std::string GetCurDynamicIconModule(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible);
     ErrCode DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
+    ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos);
 
 private:
     /**
