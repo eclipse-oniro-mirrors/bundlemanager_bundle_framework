@@ -44,8 +44,14 @@ public:
 
     virtual ErrCode DeleteResourceInfo(const std::string &key) override;
 
+    virtual ErrCode GetExtensionAbilityResourceInfo(const std::string &bundleName,
+        const ExtensionAbilityType extensionAbilityType, const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex = 0) override;
+
 private:
     ErrCode CheckBundleNameValid(const std::string &bundleName, int32_t appIndex);
+    ErrCode CheckExtensionAbilityValid(const std::string &bundleName, const ExtensionAbilityType extensionAbilityType,
+        const uint32_t flags, int32_t appIndex);
 };
 } // AppExecFwk
 } // OHOS

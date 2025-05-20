@@ -678,6 +678,15 @@ bool BundleResourceManager::GetBundleResourceInfoForCloneBundle(const std::strin
         launcherResource.ConvertFromLauncherAbilityResourceInfo(launcherAbility);
         resourceInfos.emplace_back(launcherResource);
     }
+    // 3. get extension ability resource info
+    std::vector<LauncherAbilityResourceInfo> extensionAbilityResourceInfos;
+    bundleResourceRdb_->GetAllExtensionAbilityResourceInfo(bundleName, flags, extensionAbilityResourceInfos);
+    for (auto &extensionAbility : extensionAbilityResourceInfos) {
+        extensionAbility.appIndex = appIndex;
+        ResourceInfo extensionResource;
+        extensionResource.ConvertFromLauncherAbilityResourceInfo(extensionAbility);
+        resourceInfos.emplace_back(extensionResource);
+    }
     APP_LOGI("%{public}s appIndex:%{public}d add resource size:%{public}zu", bundleName.c_str(), appIndex,
         resourceInfos.size());
     return true;
@@ -771,6 +780,21 @@ bool BundleResourceManager::DeleteNotExistResourceInfo()
 {
     APP_LOGD("start delete not exist resource");
     return bundleResourceRdb_->DeleteNotExistResourceInfo();
+}
+
+bool BundleResourceManager::GetExtensionAbilityResourceInfo(const std::string &bundleName,
+    const ExtensionAbilityType extensionAbilityType, const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex)
+{
+    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
+    uint32_t resourceFlags = CheckResourceFlags(flags);
+    if (bundleResourceRdb_->GetExtensionAbilityResourceInfo(bundleName, extensionAbilityType, resourceFlags,
+        extensionAbilityResourceInfo, appIndex)) {
+        return true;
+    }
+    APP_LOGE_NOFUNC("%{public}s extension ability %{public}d not exist in resource rdb", bundleName.c_str(),
+        extensionAbilityType);
+    return false;
 }
 
 void BundleResourceManager::ProcessResourceInfoNoNeedToParseOtherIcon(std::vector<ResourceInfo> &resourceInfos)
