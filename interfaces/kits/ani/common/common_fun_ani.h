@@ -168,6 +168,19 @@ public:
 
     static ani_object CreateBundleChangedInfo(
         ani_env* env, const std::string& bundleName, int32_t userId, int32_t appIndex);
+    static ani_object ConvertVersion(ani_env* env, const Version& version);
+    static ani_object ConvertPackageApp(ani_env* env, const PackageApp& packageApp);
+    static ani_object ConvertAbilityFormInfo(ani_env* env, const AbilityFormInfo& abilityFormInfo);
+    static ani_object ConvertModuleAbilityInfo(ani_env* env, const ModuleAbilityInfo& moduleAbilityInfo);
+    static ani_object ConvertModuleDistro(ani_env* env, const ModuleDistro& moduleDistro);
+    static ani_object ConvertApiVersion(ani_env* env, const ApiVersion& apiVersion);
+    static ani_object ConvertExtensionAbilities(ani_env* env, const ExtensionAbilities& extensionAbilities);
+    static ani_object ConvertPackageModule(ani_env* env, const PackageModule& packageModule);
+    static ani_object ConvertSummary(ani_env* env, const Summary& summary);
+    static ani_object ConvertPackages(ani_env* env, const Packages& packages);
+    static ani_object ConvertBundlePackInfo(ani_env* env, const BundlePackInfo& bundlePackInfo);
+    static ani_object CreateDispatchInfo(
+        ani_env* env, const std::string& version, const std::string& dispatchAPIVersion);
 
     // Parse from ets to native
     static bool ParseShortcutInfo(ani_env* env, ani_object object, ShortcutInfo& shortcutInfo);
@@ -205,7 +218,6 @@ public:
     static bool ParseUninstallParam(ani_env* env, ani_object object, UninstallParam& uninstallParam);
     static bool ParseCreateAppCloneParam(ani_env* env, ani_object object, int32_t& userId, int32_t& appIdx);
     static bool ParseDestroyAppCloneParam(ani_env* env, ani_object object, DestroyAppCloneParam& destroyAppCloneParam);
-    
     static bool ParseMetadata(ani_env* env, ani_object object, Metadata& metadata);
     static bool ParseResource(ani_env* env, ani_object object, Resource& resource);
     static bool ParseMultiAppMode(ani_env* env, ani_object object, MultiAppModeData& multiAppMode);
