@@ -34,7 +34,6 @@ constexpr const char* RETAIL_MODE_KEY = "const.dfx.enable_retail";
 constexpr unsigned int TIME_OUT_SECONDS = 60 * 25;
 constexpr int8_t MAX_TASK_NUMBER = 10;
 constexpr int8_t RETAIL_MODE_THREAD_NUMBER = 1;
-constexpr int8_t RETAIL_MODE_MAX_TASK_NUMBER = MAX_TASK_NUMBER / 2;
 constexpr int8_t DELAY_INTERVAL_SECONDS = 60;
 static std::atomic<int32_t> g_taskCounter = 0;
 }
