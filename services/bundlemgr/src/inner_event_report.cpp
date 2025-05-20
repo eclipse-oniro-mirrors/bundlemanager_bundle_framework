@@ -85,6 +85,7 @@ const char* EVENT_PARAM_OPERATION_TYPE = "OPERATION_TYPE";
 const char* EVENT_PARAM_ACTION_TYPE = "ACTION_TYPE";
 const char* EVENT_PARAM_RULE = "ACTION_RULE";
 const char* EVENT_PARAM_APP_INDEX = "APP_INDEX";
+const char* EVENT_PARAM_IS_PATCH = "IS_PATCH";
 
 const char* FREE_INSTALL_TYPE = "FreeInstall";
 const char* PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -322,7 +323,8 @@ void InnerEventReport::InnerSendBundleInstallExceptionEvent(const EventInfo& eve
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
         EVENT_PARAM_SCENE, std::to_string(eventInfo.callingUid),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
-        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_IS_PATCH, eventInfo.isPatch);
 }
 
 void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& eventInfo)
@@ -356,7 +358,8 @@ void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& even
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_INSTALL_TYPE, std::to_string(eventInfo.callingUid),
-        EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
+        EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
+        EVENT_PARAM_IS_PATCH, eventInfo.isPatch);
 }
 
 void InnerEventReport::InnerSendPreBundleRecoverExceptionEvent(const EventInfo& eventInfo)
@@ -443,7 +446,8 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_HIDE_DESKTOP_ICON, eventInfo.hideDesktopIcon,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
         EVENT_PARAM_SCENE, GetInstallScene(eventInfo),
-        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_IS_PATCH, eventInfo.isPatch);
 }
 
 void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
@@ -482,7 +486,8 @@ void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
         EVENT_PARAM_HASH_VALUE, eventInfo.hashValue,
         EVENT_PARAM_FINGERPRINT, eventInfo.fingerprint,
         EVENT_PARAM_HIDE_DESKTOP_ICON, eventInfo.hideDesktopIcon,
-        EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo));
+        EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
+        EVENT_PARAM_IS_PATCH, eventInfo.isPatch);
 }
 
 void InnerEventReport::InnerSendPreBundleRecoverEvent(const EventInfo& eventInfo)

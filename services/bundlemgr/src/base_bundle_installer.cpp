@@ -5253,6 +5253,7 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     sysEventInfo_.userId = userId_;
     sysEventInfo_.versionCode = versionCode_;
     sysEventInfo_.preBundleScene = preBundleScene;
+    sysEventInfo_.isPatch = installParam.isPatch;
     GetCallingEventInfo(sysEventInfo_);
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo_);
 }
