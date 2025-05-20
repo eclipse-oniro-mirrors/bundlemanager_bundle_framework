@@ -685,6 +685,11 @@ private:
         std::unordered_map<std::string, InnerBundleInfo> &infos);
     void ConvertToOnDemandInstallBundleInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         PreInstallBundleInfo &preInstallBundleInfo);
+    void SavePreloadAppUninstallInfo(const std::string &bundleName,
+        std::vector<std::string> &preloadBundleNames);
+    void SaveUninstalledPreloadAppToFile(const std::vector<std::string> &preloadBundleNames);
+    void CreateUninstalledPreloadDir();
+    void RemoveUninstalledPreloadFile();
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
     // Used to notify bundle scan status

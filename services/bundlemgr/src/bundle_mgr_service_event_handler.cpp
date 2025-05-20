@@ -385,6 +385,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
         CheckBundleProvisionInfo();
         CheckALLResourceInfo();
+        RemoveUninstalledPreloadFile();
     }
     // need process main bundle status
     BmsKeyEventMgr::ProcessMainBundleStatusFinally();
@@ -3072,6 +3073,7 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
         return;
     }
 
+    std::vector<std::string> preloadBundleNames;
     for (auto &loadIter : loadExistData_) {
         std::string bundleName = loadIter.first;
         BundleInfo hasInstalledInfo;
@@ -3091,6 +3093,9 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
                 LOG_I(BMS_TAG_DEFAULT, "OTA uninstall preInstall bundleName:%{public}s succeed", bundleName.c_str());
                 std::string moduleName;
                 DeletePreInfoInDb(bundleName, moduleName, true);
+                if (hasBundleInstalled) {
+                   SavePreloadAppUninstallInfo(bundleName, preloadBundleNames);
+                }
             }
 
             continue;
@@ -3123,8 +3128,56 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
             DeletePreInfoInDb(bundleName, preBundlePath, false);
         }
     }
-
+    SaveUninstalledPreloadAppToFile(preloadBundleNames);
     LOG_I(BMS_TAG_DEFAULT, "Reboot scan and OTA uninstall success");
+}
+
+void BMSEventHandler::SavePreloadAppUninstallInfo(const std::string &bundleName,
+    std::vector<std::string> &preloadBundleNames)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    bool isBundleExist = dataMgr->IsBundleExist(bundleName);
+    if (!isBundleExist) {
+        preloadBundleNames.emplace_back(bundleName);
+    }
+}
+
+void BMSEventHandler::SaveUninstalledPreloadAppToFile(const std::vector<std::string> &preloadBundleNames)
+{
+    if (preloadBundleNames.empty()) {
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "save preload app:%{public}s", GetJsonStrFromInfo(preloadBundleNames).c_str());
+    CreateUninstalledPreloadDir();
+    std::string filePath = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::UNINSTALLED_PRELOAD_PATH + ServiceConstants::UNINSTALLED_PRELOAD_FILE;
+    nlohmann::json jsonData;
+    jsonData[ServiceConstants::UNINSTALL_PRELOAD_LIST] = preloadBundleNames;
+
+    FILE *out = fopen(filePath.c_str(), "w");
+    if (out == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "fopen %{public}s failed", filePath.c_str());
+        return;
+    }
+    int32_t outFd = fileno(out);
+    if (outFd < 0) {
+        LOG_E(BMS_TAG_DEFAULT, "open %{public}s failed", filePath.c_str());
+        (void)fclose(out);
+        return;
+    }
+    if (fputs(jsonData.dump().c_str(), out) == EOF) {
+        LOG_E(BMS_TAG_DEFAULT, "fputs %{public}s failed", filePath.c_str());
+        (void)fclose(out);
+        return;
+    }
+    if (fsync(outFd) != 0) {
+        LOG_E(BMS_TAG_DEFAULT, "fsync %{public}s failed", filePath.c_str());
+    }
+    (void)fclose(out);
 }
 
 bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
@@ -4808,6 +4861,24 @@ void BMSEventHandler::ConvertToOnDemandInstallBundleInfo(const std::unordered_ma
         if (!moduleMap.empty() && moduleMap.begin()->second.distro.moduleType == Profile::MODULE_TYPE_ENTRY) {
             break;
         }
+    }
+}
+
+void BMSEventHandler::CreateUninstalledPreloadDir()
+{
+    std::string path = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::UNINSTALLED_PRELOAD_PATH;
+    if (!BundleUtil::CreateDir(path)) {
+        LOG_E(BMS_TAG_DEFAULT, "create uninstalled preload dir failed");
+    }
+}
+
+void BMSEventHandler::RemoveUninstalledPreloadFile()
+{
+    std::string path = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
+        ServiceConstants::UNINSTALLED_PRELOAD_PATH + ServiceConstants::UNINSTALLED_PRELOAD_FILE;
+    if (!BundleUtil::DeleteDir(path)) {
+        LOG_E(BMS_TAG_DEFAULT, "remove uninstalled preload file %{public}d failed", errno);
     }
 }
 }  // namespace AppExecFwk
