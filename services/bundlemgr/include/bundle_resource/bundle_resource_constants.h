@@ -28,6 +28,7 @@ constexpr const char* BUNDLE_RESOURCE_RDB_NAME = "/bundleResource.db";
 // resource table name
 constexpr const char* BUNDLE_RESOURCE_RDB_TABLE_NAME = "bundleResource";
 constexpr const char* SEPARATOR = "/";
+constexpr const char* EXTENSION_ABILITY_SEPARATOR = "+";
 // bundle resource rdb table key
 constexpr const char* NAME = "NAME";
 constexpr const char* UPDATE_TIME = "UPDATE_TIME";

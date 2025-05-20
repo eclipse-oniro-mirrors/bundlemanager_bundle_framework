@@ -7594,6 +7594,23 @@ std::vector<std::string> BundleDataMgr::GetAllSystemHspCodePaths() const
     return systemHspCodePaths;
 }
 
+std::vector<std::string> BundleDataMgr::GetAllExtensionBundleNames(const std::vector<ExtensionAbilityType> &types) const
+{
+    APP_LOGD("GetAllExtensionBundleNames begin");
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::vector<std::string> bundleNames;
+    for (const auto &[bundleName, innerBundleInfo] : bundleInfos_) {
+        const auto extensionAbilityInfos = innerBundleInfo.GetInnerExtensionInfos();
+        for (const auto &extensionItem : extensionAbilityInfos) {
+            if (std::find(types.begin(), types.end(), extensionItem.second.type) != types.end()) {
+                bundleNames.emplace_back(bundleName);
+                break;
+            }
+        }
+    }
+    return bundleNames;
+}
+
 std::vector<std::tuple<std::string, int32_t, int32_t>> BundleDataMgr::GetAllLiteBundleInfo(const int32_t userId) const
 {
     std::set<int32_t> userIds = GetAllUser();
