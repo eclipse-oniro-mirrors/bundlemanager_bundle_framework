@@ -1057,6 +1057,11 @@ public:
 
     ErrCode GetAppIdByBundleName(const std::string &bundleName, std::string &appId) const;
 
+    ErrCode GetAppIdAndAppIdentifierByBundleName(const std::string &bundleName, std::string &appId,
+        std::string &appIdentifier) const;
+
+    std::string AppIdAndAppIdentifierTransform(const std::string appIdOrAppIdentifier) const;
+
     ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) const;
 
     ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo) const;

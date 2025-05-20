@@ -103,7 +103,7 @@ private:
     std::string GetControlRuleType(const AppInstallControlRuleType controlRuleType);
     void UpdateAppControlledInfo(int32_t userId, const std::vector<std::string> &modifyAppIds) const;
     void GetCallerByUid(const int32_t uid, std::string &callerName);
-    void SendAppControlEvent(ControlActionType actiopType, ControlOperationType operationType,
+    void SendAppControlEvent(ControlActionType actionType, ControlOperationType operationType,
         const std::string &callingName, int32_t userId, int32_t appIndex, const std::vector<std::string> &appIds,
         const std::string &rule);
 

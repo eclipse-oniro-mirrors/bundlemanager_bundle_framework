@@ -3959,4 +3959,57 @@ HWTEST_F(BmsBundleDataMgrTest, GetDirByBundleNameAndAppIndex_0200, Function | Me
     EXPECT_EQ(result, ERR_OK);
 }
 
+/**
+ * @tc.number: GetAppIdAndAppIdentifierByBundleName_0100
+ * @tc.name: test GetAppIdAndAppIdentifierByBundleName
+ * @tc.desc: test GetAppIdAndAppIdentifierByBundleName
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAppIdAndAppIdentifierByBundleName_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetAppIdentifier("appIdentifier");
+    innerBundleInfo.SetProvisionId("appId");
+    std::string bundleName = "com.test.appid";
+    GetBundleDataMgr()->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    std::string appId;
+    std::string appIdentifier;
+    ErrCode ret = GetBundleDataMgr()->GetAppIdAndAppIdentifierByBundleName(bundleName, appId, appIdentifier);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(appId, "_appId");
+    EXPECT_EQ(appIdentifier, "appIdentifier");
+
+    ret = GetBundleDataMgr()->GetAppIdAndAppIdentifierByBundleName("com.test.not.exist", appId, appIdentifier);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    RemoveBundleinfo(bundleName);
+}
+
+/**
+ * @tc.number: AppIdAndAppIdentifierTransform_0100
+ * @tc.name: test AppIdAndAppIdentifierTransform
+ * @tc.desc: test AppIdAndAppIdentifierTransform
+ */
+HWTEST_F(BmsBundleDataMgrTest, AppIdAndAppIdentifierTransform_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetAppIdentifier("appIdentifier");
+    innerBundleInfo.SetProvisionId("appId");
+    std::string bundleName = "com.test.appid";
+    GetBundleDataMgr()->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    std::string ret = GetBundleDataMgr()->AppIdAndAppIdentifierTransform("appIdentifier");
+    EXPECT_EQ(ret, "_appId");
+
+    ret = GetBundleDataMgr()->AppIdAndAppIdentifierTransform("_appId");
+    EXPECT_EQ(ret, "appIdentifier");
+
+    ret = GetBundleDataMgr()->AppIdAndAppIdentifierTransform("");
+    EXPECT_EQ(ret, "");
+
+    ret = GetBundleDataMgr()->AppIdAndAppIdentifierTransform("notexistappId");
+    EXPECT_EQ(ret, "");
+
+    RemoveBundleinfo(bundleName);
+}
 } // OHOS

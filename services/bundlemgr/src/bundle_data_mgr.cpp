@@ -9836,6 +9836,41 @@ ErrCode BundleDataMgr::GetAppIdByBundleName(
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetAppIdAndAppIdentifierByBundleName(
+    const std::string &bundleName, std::string &appId, std::string &appIdentifier) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    appId = item->second.GetAppId();
+    appIdentifier = item->second.GetAppIdentifier();
+    return ERR_OK;
+}
+
+std::string BundleDataMgr::AppIdAndAppIdentifierTransform(const std::string appIdOrAppIdentifier) const
+{
+    if (appIdOrAppIdentifier.empty()) {
+        APP_LOGW("appIdOrAppIdentifier is empty");
+        return Constants::EMPTY_STRING;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto it = std::find_if(bundleInfos_.cbegin(), bundleInfos_.cend(), [&appIdOrAppIdentifier](const auto &pair) {
+        return (appIdOrAppIdentifier == pair.second.GetAppId() ||
+            appIdOrAppIdentifier == pair.second.GetAppIdentifier());
+    });
+    if (it == bundleInfos_.cend()) {
+        APP_LOGW("can't find appIdOrAppIdentifier in the installed bundle");
+        return Constants::EMPTY_STRING;
+    }
+    if (appIdOrAppIdentifier == it->second.GetAppId()) {
+        return it->second.GetAppIdentifier();
+    }
+    return it->second.GetAppId();
+}
+
 ErrCode BundleDataMgr::GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) const
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);

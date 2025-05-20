@@ -339,9 +339,16 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
             callerName.c_str(), userId, appIndex);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    ErrCode ret = appControlManagerDb_->DeleteDisposedRule(callerName, appId, appIndex, userId);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::string transformedAppId = dataMgr->AppIdAndAppIdentifierTransform(appId);
+    ErrCode ret = appControlManagerDb_->DeleteDisposedRule(callerName, { appId, transformedAppId }, appIndex, userId);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedRule failed");
+        LOG_E(BMS_TAG_DEFAULT, "delete failed caller:%{public}s id:%{private}s user:%{public}d index:%{public}d",
+            callerName.c_str(), appId.c_str(), userId, appIndex);
         return ret;
     }
     ret = appControlManagerDb_->SetDisposedRule(callerName, appId, rule, appIndex, userId);
@@ -350,8 +357,9 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
             callerName.c_str(), userId, appIndex);
         return ret;
     }
-    std::string key = GenerateAppRunningRuleCacheKey(appId, userId, appIndex);
-    DeleteAbilityRunningRuleCache(key);
+    std::string appIdKey = GenerateAppRunningRuleCacheKey(appId, userId, appIndex);
+    std::string transformedAppIdKey = GenerateAppRunningRuleCacheKey(transformedAppId, userId, appIndex);
+    DeleteAbilityRunningRuleCache({ appIdKey, transformedAppIdKey });
     LOG_D(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
         callerName.c_str(), userId, appIndex);
     commonEventMgr_->NotifySetDiposedRule(appId, userId, rule.ToString(), appIndex);
@@ -372,13 +380,21 @@ ErrCode AppControlManager::GetDisposedRule(
 ErrCode AppControlManager::DeleteDisposedRule(
     const std::string &callerName, const std::string &appId, int32_t appIndex, int32_t userId)
 {
-    auto ret = appControlManagerDb_->DeleteDisposedRule(callerName, appId, appIndex, userId);
+    auto ret = appControlManagerDb_->DeleteDisposedRule(callerName, { appId }, appIndex, userId);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedRule to rdb failed");
+        LOG_E(BMS_TAG_DEFAULT, "failed caller:%{public}s id:%{private}s user:%{public}d index:%{public}d",
+            callerName.c_str(), appId.c_str(), userId, appIndex);
         return ret;
     }
-    std::string key = GenerateAppRunningRuleCacheKey(appId, userId, appIndex);
-    DeleteAbilityRunningRuleCache(key);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::string transformedAppId = dataMgr->AppIdAndAppIdentifierTransform(appId);
+    std::string appIdKey = GenerateAppRunningRuleCacheKey(appId, userId, appIndex);
+    std::string transformedAppIdKey = GenerateAppRunningRuleCacheKey(transformedAppId, userId, appIndex);
+    DeleteAbilityRunningRuleCache({ appIdKey, transformedAppIdKey});
     commonEventMgr_->NotifyDeleteDiposedRule(appId, userId, appIndex);
     return ERR_OK;
 }
@@ -402,7 +418,7 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const InnerBundleInfo &
     DeleteAppRunningRuleCache(key);
     key = key + std::string("_");
     std::string cacheKey = key + std::to_string(appIndex);
-    DeleteAbilityRunningRuleCache(cacheKey);
+    DeleteAbilityRunningRuleCache({ cacheKey });
     commonEventMgr_->NotifyDeleteDiposedRule(appId, userId, appIndex);
     if (appIndex != Constants::MAIN_APP_INDEX) {
         return ERR_OK;
@@ -417,7 +433,7 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const InnerBundleInfo &
     std::vector<int32_t> appIndexVec = dataMgr->GetCloneAppIndexes(bundleName, Constants::ALL_USERID);
     for (const int32_t index : appIndexVec) {
         std::string ruleCacheKey = key + std::to_string(index);
-        DeleteAbilityRunningRuleCache(ruleCacheKey);
+        DeleteAbilityRunningRuleCache({ ruleCacheKey });
         commonEventMgr_->NotifyDeleteDiposedRule(appId, userId, index);
     }
     return ERR_OK;
@@ -450,15 +466,16 @@ void AppControlManager::SetAbilityRunningRuleCache(const std::string &key,
     abilityRunningControlRuleCache_[key] = disposedRules;
 }
 
-void AppControlManager::DeleteAbilityRunningRuleCache(const std::string &key)
+void AppControlManager::DeleteAbilityRunningRuleCache(const std::vector<std::string> &keyList)
 {
-    std::lock_guard<std::mutex> cacheLock(abilityRunningControlRuleMutex_);
-    auto cacheIter = abilityRunningControlRuleCache_.find(key);
-    if (cacheIter != abilityRunningControlRuleCache_.end()) {
-        abilityRunningControlRuleCache_.erase(cacheIter);
+    for (const std::string &key : keyList) { 
+        std::lock_guard<std::mutex> cacheLock(abilityRunningControlRuleMutex_);
+        auto cacheIter = abilityRunningControlRuleCache_.find(key);
+        if (cacheIter != abilityRunningControlRuleCache_.end()) {
+            abilityRunningControlRuleCache_.erase(cacheIter);
+        }
     }
 }
-
 ErrCode AppControlManager::GetAbilityRunningControlRule(
     const std::string &bundleName, int32_t appIndex, int32_t userId, std::vector<DisposedRule> &disposedRules)
 {
@@ -469,7 +486,8 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string appId;
-    ErrCode ret = dataMgr->GetAppIdByBundleName(bundleName, appId);
+    std::string appIdentifier;
+    ErrCode ret = dataMgr->GetAppIdAndAppIdentifierByBundleName(bundleName, appId, appIdentifier);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "DataMgr GetBundleInfoAppId failed");
         return ret;
@@ -480,7 +498,7 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
         PrintDisposedRuleInfo(disposedRules);
         return ERR_OK;
     }
-    ret = appControlManagerDb_->GetAbilityRunningControlRule(appId, appIndex, userId, disposedRules);
+    ret = appControlManagerDb_->GetAbilityRunningControlRule({ appId, appIdentifier }, appIndex, userId, disposedRules);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "GetAbilityRunningControlRule from rdb failed");
         return ret;
