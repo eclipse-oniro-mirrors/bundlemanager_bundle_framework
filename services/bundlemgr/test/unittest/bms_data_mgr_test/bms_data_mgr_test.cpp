@@ -5583,4 +5583,46 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0300, Function | MediumTest | Level1)
     bool result = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_TRUE(result);
 }
+
+/**
+ * @tc.number: GetShortcutVisibleStatus_0001
+ * @tc.name: GetShortcutVisibleStatus
+ * @tc.desc: test GetShortcutVisibleStatus(
+ *     const std::string &bundleName, const std::string &shortcutId, int32_t userId, int32_t appIndex) const
+ */
+HWTEST_F(BmsDataMgrTest, GetShortcutVisibleStatus_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
+        std::make_shared<ShortcutVisibleDataStorageRdb>();
+    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "";
+    shortcutInfo.id = "";
+    shortcutInfo.visible = true;
+    int32_t appIndex = 0;
+    auto ret = shortcutVisibleDataStorageRdb->GetShortcutVisibleStatus(USERID, appIndex, shortcutInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(shortcutInfo.visible, true);
+}
+
+/**
+ * @tc.number: GetShortcutVisibleStatus_0002
+ * @tc.name: GetShortcutVisibleStatus
+ * @tc.desc: test GetShortcutVisibleStatus(
+ *     const std::string &bundleName, const std::string &shortcutId, int32_t userId, int32_t appIndex) const
+ */
+HWTEST_F(BmsDataMgrTest, GetShortcutVisibleStatus_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
+        std::make_shared<ShortcutVisibleDataStorageRdb>();
+    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = "bundleName";
+    shortcutInfo.id = "shortcutId";
+    shortcutInfo.visible = false;
+    int32_t appIndex = 0;
+    auto ret = shortcutVisibleDataStorageRdb->GetShortcutVisibleStatus(USERID, appIndex, shortcutInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(shortcutInfo.visible, false);
+}
 } // OHOS
