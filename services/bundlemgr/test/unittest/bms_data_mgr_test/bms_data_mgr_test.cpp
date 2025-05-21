@@ -3608,9 +3608,12 @@ HWTEST_F(BmsDataMgrTest, PreProcessAnyUserFlag_0001, Function | SmallTest | Leve
 {
     BundleDataMgr bundleDataMgr;
     std::string bundleName = "test";
+    std::vector<BundleInfo> bundleInfos;
     int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
     int32_t userId = 101;
     bundleDataMgr.PreProcessAnyUserFlag(bundleName, flags, userId);
+    bool ret = bundleDataMgr.GetBundleInfos(flags, bundleInfos, userId);
+    EXPECT_EQ(ret, false);
 }
 
 /**

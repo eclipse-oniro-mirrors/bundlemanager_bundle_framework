@@ -1911,6 +1911,7 @@ HWTEST_F(BmsAOTMgrTest, CheckAllUser_0010, Function | SmallTest | Level1)
 {
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->AddUserId(TEST_U1);
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
+    EXPECT_EQ(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->GetUserId(TEST_U1), TEST_U1);
 }
 
 /**
