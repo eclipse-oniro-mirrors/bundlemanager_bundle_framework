@@ -947,6 +947,8 @@ public:
         std::vector<ProxyData> &proxyDatas, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetSpecifiedDistributionType(const std::string &bundleName,
         std::string &specifiedDistributionType) override;
+    virtual ErrCode BatchGetSpecifiedDistributionType(const std::vector<std::string> &bundleNames,
+        std::vector<BundleDistributionType> &specifiedDistributionTypes) override;
     virtual ErrCode GetAdditionalInfo(const std::string &bundleName,
         std::string &additionalInfo) override;
     virtual ErrCode GetAdditionalInfoForAllUser(const std::string &bundleName,

@@ -762,6 +762,8 @@ private:
 
     ErrCode HandleGetSpecifiedDistributionType(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleBatchGetSpecifiedDistributionType(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAdditionalInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAdditionalInfoForAllUser(MessageParcel &data, MessageParcel &reply);

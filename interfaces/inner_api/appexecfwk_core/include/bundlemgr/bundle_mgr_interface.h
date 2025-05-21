@@ -22,6 +22,7 @@
 #include "app_provision_info.h"
 #include "bundle_constants.h"
 #include "bundle_dir.h"
+#include "bundle_distribution_type.h"
 #include "bundle_event_callback_interface.h"
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
@@ -1433,6 +1434,12 @@ public:
     }
 
     virtual ErrCode GetSpecifiedDistributionType(const std::string &bundleName, std::string &specifiedDistributionType)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode BatchGetSpecifiedDistributionType(const std::vector<std::string> &bundleNames,
+        std::vector<BundleDistributionType> &specifiedDistributionTypes)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

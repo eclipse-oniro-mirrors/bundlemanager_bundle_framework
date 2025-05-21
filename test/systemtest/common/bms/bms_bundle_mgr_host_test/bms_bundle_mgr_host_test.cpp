@@ -1665,6 +1665,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetSpecifiedDistributionType_0100, Function
 }
 
 /**
+ * @tc.number: HandleBatchGetSpecifiedDistributionType
+ * @tc.name: test the HandleBatchGetSpecifiedDistributionType
+ * @tc.desc: 1. system running normally
+ *           2. test HandleBatchGetSpecifiedDistributionType
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetSpecifiedDistributionType_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleBatchGetSpecifiedDistributionType(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
  * @tc.number: HandleGetAdditionalInfo
  * @tc.name: test the HandleGetAdditionalInfo
  * @tc.desc: 1. system running normally

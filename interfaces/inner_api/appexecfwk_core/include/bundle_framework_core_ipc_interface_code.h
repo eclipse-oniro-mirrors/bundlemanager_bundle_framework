@@ -216,6 +216,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     SET_SHORTCUT_VISIBLE = 190,
     GET_ALL_SHORTCUT_INFO_FOR_SELF = 191,
     GREAT_OR_EQUAL_API_TARGET_VERSION  = 192,
+    BATCH_GET_SPECIFIED_DISTRIBUTED_TYPE = 193,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
