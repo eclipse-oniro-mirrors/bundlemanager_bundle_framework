@@ -1130,6 +1130,7 @@ public:
     ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
     void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData);
     ErrCode GetDynamicIconInfo(const std::string &bundleName, std::vector<DynamicIconInfo> &dynamicIconInfos);
+    void ProcessDynamicIconForOta();
     ErrCode GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos);
     std::string GetCurDynamicIconModule(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible);

@@ -1473,4 +1473,38 @@ HWTEST_F(BmsExtendResourceManagerTest, GetDynamicIconInfo_0003, Function | Small
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_FALSE(dynamicInfos.empty());
 }
+
+/**
+ * @tc.number: ProcessDynamicIconForOta_0001
+ * @tc.name: Test ProcessDynamicIconForOta
+ * @tc.desc: 1.ProcessDynamicIconForOta
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ProcessDynamicIconForOta_0001, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleUserInfo userInfo;
+    userInfo.curDynamicIconModule = "";
+    userInfo.bundleUserInfo.userId = USER_ID;
+    InnerBundleInfo info;
+    info.innerBundleUserInfos_["100"] = userInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    dataMgr->ProcessDynamicIconForOta();
+    InnerBundleInfo newInfo = dataMgr->bundleInfos_[BUNDLE_NAME];
+    EXPECT_EQ(newInfo.innerBundleUserInfos_["100"].curDynamicIconModule, "");
+
+    info.curDynamicIconModule_ = BUNDLE_NAME;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    dataMgr->ProcessDynamicIconForOta();
+    InnerBundleInfo newInfo2 = dataMgr->bundleInfos_[BUNDLE_NAME];
+    EXPECT_EQ(newInfo2.innerBundleUserInfos_["100"].curDynamicIconModule, info.curDynamicIconModule_);
+
+    auto item = dataMgr->bundleInfos_.find(BUNDLE_NAME);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+    }
+}
 } // OHOS

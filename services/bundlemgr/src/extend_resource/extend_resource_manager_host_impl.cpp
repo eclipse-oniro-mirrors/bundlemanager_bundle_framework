@@ -600,8 +600,12 @@ ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bun
     CHECK_RESULT(ret, "check user or appIndex failed %{public}d");
 
     std::string curDynamicModule = info.GetCurDynamicIconModule(userId, appIndex);
-    if (curDynamicModule.empty()) {
-        APP_LOGE("%{public}s no enabled dynamic icon", bundleName.c_str());
+    std::vector<DynamicIconInfo> dynamicIconInfos;
+    if (curDynamicModule.empty() && (userId == Constants::UNSPECIFIED_USERID)) {
+        info.GetAllDynamicIconInfo(userId, dynamicIconInfos);
+    }
+    if (curDynamicModule.empty() && dynamicIconInfos.empty()) {
+        APP_LOGE("%{public}s -u %{public}d no enabled dynamic icon", bundleName.c_str(), userId);
         return ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED;
     }
 
@@ -685,7 +689,9 @@ ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
 
     std::string curDynamicModule = info.GetCurDynamicIconModule(userId, appIndex);
     if (curDynamicModule.empty() && (userId == Constants::UNSPECIFIED_USERID)) {
-        curDynamicModule = info.GetCurDynamicIconModule(BundleUtil::GetUserIdByCallingUid(), appIndex);
+        int32_t realUserId = BundleUtil::GetUserIdByCallingUid();
+        realUserId = (realUserId == Constants::DEFAULT_USERID) ? AccountHelper::GetCurrentActiveUserId() : realUserId;
+        curDynamicModule = info.GetCurDynamicIconModule(realUserId, appIndex);
     }
     if (curDynamicModule.empty()) {
         APP_LOGE("%{public}s no enabled dynamic icon", bundleName.c_str());

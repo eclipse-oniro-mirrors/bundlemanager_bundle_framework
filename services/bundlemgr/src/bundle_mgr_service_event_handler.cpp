@@ -359,6 +359,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
     UpdateOtaFlag(OTAFlag::CHECK_INSTALL_SOURCE);
     UpdateOtaFlag(OTAFlag::DELETE_DEPRECATED_ARK_PATHS);
+    UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_CION);
     (void)SaveBmsSystemTimeForShortcut();
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
     PerfProfile::GetInstance().Dump();
@@ -1250,6 +1251,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckRecoverableApplicationInfo();
     ProcessCheckInstallSource();
     ProcessCheckAppExtensionAbility();
+    InnerProcessAllDynamicIconInfoWhenOta();
     // Driver update may cause shader cache invalidity and need to be cleared
     CleanAllBundleShaderCache();
     CleanAllBundleEl1ShaderCacheLocal();
@@ -4736,6 +4738,24 @@ bool BMSEventHandler::SaveBmsSystemTimeForShortcut()
     }
     LOG_I(BMS_TAG_DEFAULT, "save BMS_SYSTEM_TIME_FOR_SHORTCUT succeed");
     return true;
+}
+
+void BMSEventHandler::InnerProcessAllDynamicIconInfoWhenOta()
+{
+    bool checkDynamicIcon = false;
+    CheckOtaFlag(OTAFlag::PROCESS_DYNAMIC_CION, checkDynamicIcon);
+    if (checkDynamicIcon) {
+        LOG_I(BMS_TAG_DEFAULT, "Not need to process dynamic due to has checked");
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "Need to process dynamic");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    dataMgr->ProcessDynamicIconForOta();
+    UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_CION);
 }
 
 void BMSEventHandler::InnerProcessBootCheckOnDemandBundle()
