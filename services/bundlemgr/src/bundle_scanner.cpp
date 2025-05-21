@@ -27,12 +27,12 @@ namespace AppExecFwk {
 
 BundleScanner::BundleScanner()
 {
-    APP_LOGI("BundleScanner instance is created");
+    APP_LOGI("instance is created");
 }
 
 BundleScanner::~BundleScanner()
 {
-    APP_LOGI("BundleScanner instance is destroyed");
+    APP_LOGI("instance is destroyed");
 }
 
 const std::list<std::string> &BundleScanner::Scan(const std::string &dirPath)
