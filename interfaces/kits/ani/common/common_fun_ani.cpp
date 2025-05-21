@@ -18,12 +18,10 @@
 
 #include "app_log_wrapper.h"
 #include "common_fun_ani.h"
-#include "enum_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* CLASSNAME_STDSTRING = "Lstd/core/String;";
 constexpr const char* CLASSNAME_ABILITYINFO = "LbundleManager/AbilityInfoInner/AbilityInfoInner;";
 constexpr const char* CLASSNAME_EXTENSIONABILITYINFO =
     "LbundleManager/ExtensionAbilityInfoInner/ExtensionAbilityInfoInner;";
@@ -245,34 +243,6 @@ ani_object CommonFunAni::CreateNewObjectByClass(ani_env* env, ani_class cls)
         return nullptr;
     }
     return object;
-}
-
-ani_ref CommonFunAni::ConvertAniArrayString(ani_env* env, const std::vector<std::string>& cArray)
-{
-    RETURN_NULL_IF_NULL(env);
-
-    ani_size length = cArray.size();
-    ani_array_ref aArrayRef = nullptr;
-    ani_class aStringcls = nullptr;
-    ani_status status = env->FindClass(CLASSNAME_STDSTRING, &aStringcls);
-    if (status != ANI_OK) {
-        APP_LOGE("FindClass failed %{public}d", status);
-        return nullptr;
-    }
-    status = env->Array_New_Ref(aStringcls, length, nullptr, &aArrayRef);
-    if (status != ANI_OK) {
-        APP_LOGE("Array_New_Ref failed %{public}d", status);
-        return nullptr;
-    }
-    ani_string aString = nullptr;
-    for (ani_size i = 0; i < length; ++i) {
-        if (StringToAniStr(env, cArray[i], aString)) {
-            env->Array_Set_Ref(aArrayRef, i, aString);
-        } else {
-            return nullptr;
-        }
-    }
-    return aArrayRef;
 }
 
 ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo, int32_t flags)
@@ -1558,23 +1528,6 @@ bool CommonFunAni::ParseKeyValuePairWithName(ani_env* env, ani_object object,
 bool CommonFunAni::ParseKeyValuePair(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
 {
     return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_KEY, PROPERTYNAME_VALUE);
-}
-
-bool CommonFunAni::ParseStrArray(ani_env* env, ani_object arrayObj, std::vector<std::string>& strings)
-{
-    RETURN_FALSE_IF_NULL(env);
-    RETURN_FALSE_IF_NULL(arrayObj);
-
-    ani_double length;
-    ani_status res = env->Object_GetPropertyByName_Double(arrayObj, "length", &length);
-    RETURN_FALSE_IF_FALSE(res == ANI_OK);
-    for (int i = 0; i < int(length); i++) {
-        ani_ref stringEntryRef;
-        res = env->Object_CallMethodByName_Ref(arrayObj, "$_get", "I:Lstd/core/Object;", &stringEntryRef, (ani_int)i);
-        RETURN_FALSE_IF_FALSE(res == ANI_OK);
-        strings.emplace_back(AniStrToString(env, static_cast<ani_string>(stringEntryRef)));
-    }
-    return true;
 }
 
 bool CommonFunAni::ParseHashParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
