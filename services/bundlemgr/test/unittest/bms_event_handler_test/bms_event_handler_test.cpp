@@ -540,6 +540,19 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallModule_0200, Function | Small
 }
 
 /**
+ * @tc.number: FilterVersionSpecialCustomApps_0100
+ * @tc.name: test FilterVersionSpecialCustomApps
+ * @tc.desc: 1.call FilterVersionSpecialCustomApps, expect installList not empty
+ */
+HWTEST_F(BmsEventHandlerTest, FilterVersionSpecialCustomApps_0100, Function | SmallTest | Level0)
+{
+    std::set<PreScanInfo> installList;
+    installList.insert(PreScanInfo());
+    BMSEventHandler::FilterVersionSpecialCustomApps(installList);
+    EXPECT_FALSE(installList.empty());
+}
+
+/**
  * @tc.number: ProcessOTAInstallSystemSharedBundle_0100
  * @tc.name: ProcessOTAInstallSystemSharedBundle
  * @tc.desc: test ProcessOTAInstallSystemSharedBundle with empty filePath

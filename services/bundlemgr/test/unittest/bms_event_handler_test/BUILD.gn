@@ -35,6 +35,7 @@ ohos_unittest("BmsEventHandlerTest") {
   sources += [ "bms_event_handler_test.cpp" ]
   sources += [ "mock_system_bundle_installer.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp" ]
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {

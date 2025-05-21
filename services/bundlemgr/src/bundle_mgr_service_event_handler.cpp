@@ -105,6 +105,7 @@ constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.syste
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold";
 constexpr const char* SYSTEM_BUNDLE_PATH = "/internal";
 constexpr const char* SHARED_BUNDLE_PATH = "/shared_bundles";
+constexpr const char* VERSION_SPECIAL_CUSTOM_APP_DIR = "/version/special_cust/app/";
 constexpr const char* RESTOR_BUNDLE_NAME_LIST = "list";
 constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/temp/quickfix_app_recover.json";
 constexpr const char* INNER_UNDER_LINE = "_";
@@ -732,6 +733,7 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
     } else {
         LOG_W(BMS_TAG_DEFAULT, "data preload app is not support OTA");
     }
+    FilterVersionSpecialCustomApps(installList_);
     if (!installList_.empty() && !onDemandInstallList_.empty()) {
         for (const auto &preScanInfo : installList_) {
             auto iter = std::find(onDemandInstallList_.begin(), onDemandInstallList_.end(), preScanInfo);
@@ -1215,6 +1217,28 @@ void BMSEventHandler::SetAllInstallFlag() const
     }
 
     dataMgr->SetInitialUserFlag(true);
+}
+
+void BMSEventHandler::FilterVersionSpecialCustomApps(std::set<PreScanInfo> &installList)
+{
+    const bool isRetailMode = system::GetBoolParameter(ServiceConstants::RETAIL_MODE_KEY, false);
+    if (!isRetailMode) {
+        return;
+    }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    const bool isMCFlagSet = bmsExtensionDataMgr.IsMCFlagSet();
+    if (isMCFlagSet) {
+        return;
+    }
+    for (auto it = installList.begin(); it != installList.end();) {
+        bool isVersionSpecialCustomApp = it->bundleDir.rfind(VERSION_SPECIAL_CUSTOM_APP_DIR, 0) == 0;
+        if (isVersionSpecialCustomApp) {
+            LOG_I(BMS_TAG_DEFAULT, "filter version special custom app, %{public}s", it->bundleDir.c_str());
+            it = installList.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 void BMSEventHandler::OnBundleRebootStart()

@@ -24,6 +24,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace ServiceConstants {
+constexpr const char* RETAIL_MODE_KEY = "const.dfx.enable_retail";
 constexpr const char* ASSETS_DIR = "assets";
 constexpr const char* RESOURCES_INDEX = "resources.index";
 constexpr int8_t INVALID_GID = -1;

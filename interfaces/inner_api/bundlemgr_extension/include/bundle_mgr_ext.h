@@ -178,6 +178,10 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
+    virtual bool IsMCFlagSet()
+    {
+        return false;
+    }
 };
 
 } // AppExecFwk

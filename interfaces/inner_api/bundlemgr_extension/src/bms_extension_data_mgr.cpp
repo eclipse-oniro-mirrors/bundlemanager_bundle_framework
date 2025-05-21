@@ -655,5 +655,20 @@ ErrCode BmsExtensionDataMgr::RegisterPreInstallWithCard()
     }
     return bundleMgrExtPtr->RegisterPreInstallWithCard();
 }
+
+bool BmsExtensionDataMgr::IsMCFlagSet()
+{
+    if (Init() != ERR_OK) {
+        APP_LOGW("init failed");
+        return false;
+    }
+    std::shared_ptr<BundleMgrExt> bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("bundleMgrExtPtr null");
+        return false;
+    }
+    return bundleMgrExtPtr->IsMCFlagSet();
+}
 } // AppExecFwk
 } // OHOS

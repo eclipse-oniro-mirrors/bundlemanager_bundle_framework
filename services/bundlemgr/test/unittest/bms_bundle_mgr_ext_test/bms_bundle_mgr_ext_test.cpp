@@ -23,6 +23,7 @@
 #include "bundle_mgr_ext_proxy.h"
 #include "bundle_mgr_ext_host.h"
 #include "bundle_mgr_ext_host_impl.h"
+#include "bundle_mgr_ext_register.h"
 #include "bms_extension_data_mgr.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_mgr_service.h"
@@ -80,6 +81,23 @@ sptr<BundleMgrProxy> BmsBundleMgrExtTest::GetBundleMgrProxy()
 
     APP_LOGI("get bundle manager proxy success");
     return iface_cast<BundleMgrProxy>(remoteObject);
+}
+
+/**
+ * @tc.number: IsMCFlagSet_0100
+ * @tc.name: IsMCFlagSet_0100
+ * @tc.desc: test IsMCFlagSet
+ */
+HWTEST_F(BmsBundleMgrExtTest, IsMCFlagSet_0100, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    auto tmpMap = BundleMgrExtRegister::GetInstance().bundleMgrExts_;
+    BundleMgrExtRegister::GetInstance().bundleMgrExts_.clear();
+
+    bool ret = bmsExtensionDataMgr.IsMCFlagSet();
+    EXPECT_FALSE(ret);
+
+    BundleMgrExtRegister::GetInstance().bundleMgrExts_ = tmpMap;
 }
 
 /**
