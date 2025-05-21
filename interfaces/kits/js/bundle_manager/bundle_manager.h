@@ -183,6 +183,7 @@ struct DynamicIconCallbackInfo : public BaseCallbackInfo {
 struct DynamicIconInfoCallbackInfo : public BaseCallbackInfo {
     explicit DynamicIconInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
     int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName;
     std::vector<DynamicIconInfo> dynamicIconInfos;
 };
 
@@ -396,6 +397,7 @@ napi_value CleanAllBundleCache(napi_env env, napi_callback_info info);
 napi_value GetLaunchWant(napi_env env, napi_callback_info info);
 napi_value MigrateData(napi_env env, napi_callback_info info);
 napi_value GetAllDynamicIconInfo(napi_env env, napi_callback_info info);
+napi_value GetDynamicIconInfo(napi_env env, napi_callback_info info);
 napi_value GetAbilityInfos(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);

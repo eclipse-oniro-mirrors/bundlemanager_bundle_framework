@@ -33,15 +33,16 @@ constexpr const char* THREAD_POOL_NAME = "InstallerThreadPool";
 constexpr const char* RETAIL_MODE_KEY = "const.dfx.enable_retail";
 constexpr unsigned int TIME_OUT_SECONDS = 60 * 25;
 constexpr int8_t MAX_TASK_NUMBER = 10;
+constexpr int8_t RETAIL_MODE_THREAD_NUMBER = 1;
 constexpr int8_t DELAY_INTERVAL_SECONDS = 60;
 static std::atomic<int32_t> g_taskCounter = 0;
 }
 
 BundleInstallerManager::BundleInstallerManager()
 {
-    maxTaskNum_ = MAX_TASK_NUMBER;
     if (system::GetBoolParameter(RETAIL_MODE_KEY, false)) {
-        maxTaskNum_ = MAX_TASK_NUMBER / 2;
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "RETAIL_MODE");
+        threadNum_ = RETAIL_MODE_THREAD_NUMBER;
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "create bundle installer manager instance");
 }
@@ -216,8 +217,8 @@ void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::stri
     if (threadPool_ == nullptr) {
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to start InstallerThreadPool");
         threadPool_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME);
-        threadPool_->Start(THREAD_NUMBER);
-        threadPool_->SetMaxTaskNum(maxTaskNum_);
+        threadPool_->Start(threadNum_);
+        threadPool_->SetMaxTaskNum(MAX_TASK_NUMBER);
         auto delayCloseTask = std::bind(&BundleInstallerManager::DelayStopThreadPool, shared_from_this());
         std::thread t(delayCloseTask);
         t.detach();

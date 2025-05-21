@@ -88,6 +88,10 @@ constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
 constexpr const char* SCREEN_LOCK_FILE_DATA_PATH = "/data/app/el5";
 constexpr const char* GALLERY_DOWNLOAD_PATH = "/app_install/";
 constexpr const char* GALLERY_CLONE_PATH = "/app_clone/";
+constexpr const char* UNINSTALLED_PRELOAD_PATH = "/uninstalled_preload/";
+constexpr const char* UNINSTALLED_PRELOAD_FILE = "thirdPartyAppList.json";
+constexpr const char* PRELOAD_APP_DIR = "/preload/app/";
+constexpr const char* UNINSTALL_PRELOAD_LIST = "uninstall_preload_list";
 constexpr int NOT_EXIST_USERID = -5;
 constexpr int PATH_MAX_SIZE = 256;
 constexpr int32_t API_VERSION_NINE = 9;
@@ -169,6 +173,7 @@ constexpr const char* IS_ENTERPRISE_DEVICE = "const.edm.is_enterprise_device";
 constexpr const char* DEVELOPERMODE_STATE = "const.security.developermode.state";
 constexpr const char* BMS_DATA_PRELOAD = "persist.bms.data.preload";
 constexpr const char* IS_SUPPORT_PLUGIN = "const.bms.support_plugin";
+constexpr const char* IS_DRIVER_FOR_ALL_USERS = "const.bms.driverForAllUsers";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 // hmdfs and sharefs config

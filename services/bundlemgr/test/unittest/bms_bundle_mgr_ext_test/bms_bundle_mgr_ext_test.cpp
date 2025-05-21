@@ -114,6 +114,13 @@ HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtHost_0100, Function | Small
     MessageParcel reply;
     ErrCode ret = host.HandleGetBundleNamesForUidExt(data, reply);
     EXPECT_EQ(ret, ERR_OK);
+
+    MessageOption option(MessageOption::TF_SYNC);
+    ret = host.OnRemoteRequest(0, data, reply, option);
+    EXPECT_EQ(ret, 7);
+
+    ret = host.OnRemoteRequest(999, data, reply, option);
+    EXPECT_NE(ret, 0);
 }
 
 /**

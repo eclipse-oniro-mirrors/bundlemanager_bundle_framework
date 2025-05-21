@@ -56,6 +56,7 @@
 #include "preinstall_data_storage_interface.h"
 #include "router_data_storage_interface.h"
 #include "shortcut_data_storage_interface.h"
+#include "shortcut_visible_data_storage_rdb.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
 #endif
@@ -947,6 +948,7 @@ public:
         int32_t triggerMode);
     std::vector<std::string> GetAllBundleName() const;
     std::vector<std::string> GetAllSystemHspCodePaths() const;
+    std::vector<std::string> GetAllExtensionBundleNames(const std::vector<ExtensionAbilityType> &types) const;
     /**
      * @brief Get lite bundleInfo of all bundles under the specified user
      * @param userId Indicates the user ID
@@ -1055,6 +1057,11 @@ public:
 
     ErrCode GetAppIdByBundleName(const std::string &bundleName, std::string &appId) const;
 
+    ErrCode GetAppIdAndAppIdentifierByBundleName(const std::string &bundleName, std::string &appId,
+        std::string &appIdentifier) const;
+
+    std::string AppIdAndAppIdentifierTransform(const std::string appIdOrAppIdentifier) const;
+
     ErrCode GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) const;
 
     ErrCode GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo) const;
@@ -1095,7 +1102,7 @@ public:
         AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const;
     std::string GetDirForApp(const std::string &bundleName, const int32_t appIndex) const;
     ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
-        std::string &dataDir) const;
+        std::string &dataDir);
     std::vector<int32_t> GetCloneAppIndexesByInnerBundleInfo(const InnerBundleInfo &innerBundleInfo,
         int32_t userId) const;
     ErrCode GetBundleDir(int32_t userId, BundleType type, AccountSA::OhosAccountInfo &accountInfo,
@@ -1122,8 +1129,11 @@ public:
     ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
     ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
     void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData);
-    ErrCode GetAllDynamicInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos);
+    ErrCode GetDynamicIconInfo(const std::string &bundleName, std::vector<DynamicIconInfo> &dynamicIconInfos);
+    ErrCode GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos);
     std::string GetCurDynamicIconModule(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+    ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible);
+    ErrCode DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
 
 private:
     /**
@@ -1359,6 +1369,7 @@ private:
     std::shared_ptr<IRouterDataStorage> routerStorage_;
     std::shared_ptr<UninstallDataMgrStorageRdb> uninstallDataMgr_;
     std::shared_ptr<FirstInstallDataMgrStorageRdb> firstInstallDataMgr_;
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleStorage_;
     // use vector because these functions using for IPC, the bundleName may duplicate
     std::vector<sptr<IBundleStatusCallback>> callbackList_;
     // common event callback

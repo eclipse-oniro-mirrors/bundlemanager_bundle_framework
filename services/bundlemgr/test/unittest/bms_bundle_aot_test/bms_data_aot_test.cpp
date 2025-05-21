@@ -14,6 +14,7 @@
  */
 
 #define private public
+#define protected public
 
 #include <dlfcn.h>
 #include <fstream>
@@ -66,6 +67,8 @@ constexpr uint32_t OFFSET = 1001;
 constexpr uint32_t LENGTH = 2002;
 constexpr uint32_t SLEEP_INTERVAL_MILLI_SECONDS = 100;
 constexpr uint32_t VIRTUAL_CHILD_PID = 12345678;
+const int32_t TEST_U0 = 0;
+const int32_t TEST_U1 = 1;
 
 constexpr const char* OTA_COMPILE_TIME = "persist.bms.optimizing_apps.timing";
 constexpr const char* OTA_COMPILE_SWITCH = "const.bms.optimizing_apps.switch";
@@ -1897,5 +1900,60 @@ HWTEST_F(BmsAOTMgrTest, HandleCompile_4000, TestSize.Level1)
     ErrCode ret = AOTHandler::GetInstance().HandleCompile(bundleName, compileMode, isAllBundle, compileResults);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
     EXPECT_EQ(compileResults.size(), 0);
+}
+
+/**
+* @tc.number: CheckAllUser_0010
+* @tc.name: test CheckAllUser
+* @tc.desc: 1.test CheckAllUser
+*/
+HWTEST_F(BmsAOTMgrTest, CheckAllUser_0010, Function | SmallTest | Level1)
+{
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->AddUserId(TEST_U1);
+    DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
+}
+
+/**
+ * @tc.number: IsDriverForAllUser_0100
+ * @tc.name: test IsDriverForAllUser
+ * @tc.desc: 1.Test the IsDriverForAllUser
+*/
+HWTEST_F(BmsAOTMgrTest, IsDriverForAllUser_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+
+    InnerBundleInfo info;
+    ExtensionAbilityInfo abilityInfo;
+    abilityInfo.type = ExtensionAbilityType::DRIVER;
+    info.InsertExtensionInfo("key", abilityInfo);
+    installer.dataMgr_->bundleInfos_.try_emplace(AOT_BUNDLE_NAME, info);
+    bool ret = installer.IsDriverForAllUser(AOT_BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+    OHOS::system::SetParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, "false");
+    ret = installer.IsDriverForAllUser(AOT_BUNDLE_NAME);
+    EXPECT_FALSE(ret);
+    installer.dataMgr_->bundleInfos_.clear();
+    OHOS::system::SetParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, "true");
+}
+
+/**
+ * @tc.number: GetBundleNamesForNewUser_0100
+ * @tc.name: test GetBundleNamesForNewUser
+ */
+HWTEST_F(BmsAOTMgrTest, GetBundleNamesForNewUser_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    ExtensionAbilityInfo abilityInfo;
+    abilityInfo.type = ExtensionAbilityType::DRIVER;
+    info.InsertExtensionInfo("key", abilityInfo);
+    dataMgr->bundleInfos_.try_emplace(AOT_BUNDLE_NAME, info);
+    OHOS::system::SetParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, "false");
+    std::vector<std::string> ret = dataMgr->GetBundleNamesForNewUser();
+    EXPECT_EQ(ret.size(), 0);
+    dataMgr->bundleInfos_.clear();
+    OHOS::system::SetParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, "true");
 }
 } // OHOS

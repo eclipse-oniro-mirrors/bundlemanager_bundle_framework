@@ -1852,6 +1852,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
     baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
     baseApplicationInfo_->configuration = applicationInfo.configuration;
+    baseApplicationInfo_->startMode = applicationInfo.startMode;
     if (newInfo.HasEntry()) {
         baseApplicationInfo_->assetAccessGroups = applicationInfo.assetAccessGroups;
     }
@@ -4287,6 +4288,7 @@ void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, Shortcut
     shortcutInfo.id = oldShortcut.shortcutId;
     shortcutInfo.icon = oldShortcut.icon;
     shortcutInfo.label = oldShortcut.label;
+    shortcutInfo.visible = oldShortcut.visible;
     shortcutInfo.iconId = oldShortcut.iconId;
     if (shortcutInfo.iconId == 0) {
         auto iter = oldShortcut.icon.find(PORT_SEPARATOR);
@@ -5106,7 +5108,7 @@ const std::string InnerBundleInfo::GetCurDynamicIconModule(const int32_t userId,
     if (appIndex == 0) {
         return infoItem->second.curDynamicIconModule;
     }
-    
+
     std::string cloneInfoKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
     auto cloneInfoItem = infoItem->second.cloneInfos.find(cloneInfoKey);
     if (cloneInfoItem == infoItem->second.cloneInfos.end()) {

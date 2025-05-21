@@ -8104,6 +8104,42 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSelf_0200, Function | MediumTest 
 }
 
 /**
+ * @tc.number: GetBundleInfoForSelf_0300
+ * @tc.name: get bundle info for self
+ * @tc.desc: 1.system run normally
+ *           2.get bundle info for self success
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSelf_0300, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    int32_t flags = BundleFlag::GET_BUNDLE_DEFAULT;
+    bool getInfoResult = bundleMgrProxy->GetBundleInfoForSelf(flags, bundleInfo);
+    getInfoResult = bundleMgrProxy->GetBundleInfoForSelf(flags, bundleInfo);
+    EXPECT_TRUE(getInfoResult);
+}
+
+/**
+ * @tc.number: GetBundleInfoForSelfWithOutCache_0100
+ * @tc.name: get bundle info for self
+ * @tc.desc: 1.system run normally
+ *           2.get bundle info for self success
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSelfWithOutCache_0100, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    int32_t flags = BundleFlag::GET_BUNDLE_DEFAULT;
+    bool getInfoResult = bundleMgrProxy->GetBundleInfoForSelfWithOutCache(flags, bundleInfo);
+    EXPECT_TRUE(getInfoResult);
+}
+
+
+/**
  * @tc.number: VerifySystemApi_0100
  * @tc.name: test VerifySystemApi proxy
  * @tc.desc: 1.system run normally

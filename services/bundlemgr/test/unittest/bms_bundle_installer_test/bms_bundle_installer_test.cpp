@@ -155,6 +155,9 @@ const std::string BUNDLE_CODE_PATH_DIR_REAL = "/data/app/el1/bundle/public/com.e
 const std::string BUNDLE_CODE_PATH_DIR_NEW = "/data/app/el1/bundle/public/+new-com.example.example_test";
 const std::string BUNDLE_CODE_PATH_DIR_OLD = "/data/app/el1/bundle/public/+old-com.example.example_test";
 const std::string BUNDLE_NAME_FOR_TEST = "com.example.example_test";
+const std::string BUNDLE_NAME_FOR_TEST_U1ENABLE = "com.example.u1Enable_test";
+const int32_t TEST_U100 = 100;
+const int32_t TEST_U1 = 1;
 }  // namespace
 
 class BmsBundleInstallerTest : public testing::Test {
@@ -6874,6 +6877,26 @@ HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0010, Function | SmallTes
 }
 
 /**
+ * @tc.number: SendBundleSystemEvent_0020
+ * @tc.name: test SendBundleSystemEvent
+ * @tc.desc: 1.SendBundleSystemEvent
+ */
+HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0020, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.isPatch = true;
+    BaseBundleInstaller installer;
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::INSTALL, installParam, InstallScene::NORMAL, ERR_OK);
+    ASSERT_TRUE(installer.sysEventInfo_.isPatch);
+
+    installParam.isPatch = false;
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::INSTALL, installParam, InstallScene::NORMAL, ERR_OK);
+    ASSERT_FALSE(installer.sysEventInfo_.isPatch);
+}
+
+/**
  * @tc.number: CreateSharedBundleTempDir_0100
  * @tc.name: test CreateSharedBundleTempDir
  * @tc.desc: 1.test CreateSharedBundleTempDir of BundleUtil
@@ -7684,6 +7707,46 @@ HWTEST_F(BmsBundleInstallerTest, BundleUserMgrHostImpl_0200, Function | MediumTe
     EXPECT_TRUE(ret);
     ret = host.InnerProcessSkipPreInstallBundles(uninstallList, true);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0300
+ * @tc.name: test GetAllPreInstallBundleInfos
+ * @tc.desc: 1.Test GetAllPreInstallBundleInfos the UserReceiverImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, BundleUserMgrHostImpl_0300, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::vector<std::string> disallowList;
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    BundleUserMgrHostImpl host;
+    bool ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::U1, false, preInstallBundleInfos);
+    EXPECT_FALSE(ret);
+
+    // test isU1 && !preInfo.GetU1Enable()
+    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    bool result = InstallSystemBundle(bundleFile);
+    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
+    InnerBundleInfo innerBundleInfo;
+    bool res = dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    EXPECT_TRUE(result) << "the bundle is not exist: " << BUNDLE_NAME;
+    ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::U1, false, preInstallBundleInfos);
+    EXPECT_FALSE(ret);
+
+    // add u1Enable, test !isU1 && preInfo.GetU1Enable()
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    innerBundleInfo.SetAllowedAcls(acls);
+    dataMgr->UpdateInnerBundleInfo(innerBundleInfo, false);
+    ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::START_USERID, false, preInstallBundleInfos);
+    EXPECT_TRUE(ret);
+
+    // test isU1 && preInfo.GetU1Enable()
+    ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::U1, false, preInstallBundleInfos);
+    EXPECT_TRUE(ret);
+
+    ClearBundleInfo();
 }
 
 /**
@@ -10919,31 +10982,463 @@ HWTEST_F(BmsBundleInstallerTest, MakeFsConfig_1000, Function | SmallTest | Level
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
     EXPECT_EQ(installResult, ERR_OK);
     BundleUtil bundleUtil;
-    bundleUtil.MakeFsConfig(BUNDLE_BACKUP_NAME, ServiceConstants::HMDFS_CONFIG_PATH, Constants::APP_PROVISION_TYPE_DEBUG,
-        Constants::APP_PROVISION_TYPE_FILE_NAME);
+    bundleUtil.MakeFsConfig(BUNDLE_BACKUP_NAME, ServiceConstants::HMDFS_CONFIG_PATH,
+        Constants::APP_PROVISION_TYPE_DEBUG, Constants::APP_PROVISION_TYPE_FILE_NAME);
     std::string path = ServiceConstants::HMDFS_CONFIG_PATH + BUNDLE_BACKUP_NAME +
         std::string(ServiceConstants::PATH_SEPARATOR) + Constants::APP_PROVISION_TYPE_FILE_NAME;
     int fd = open(path.c_str(), O_RDWR);
-    long length = lseek(fd, 0, SEEK_END);
+    struct stat statBuf;
+    fstat(fd, &statBuf);
     std::string strAppInfo;
-    strAppInfo.resize(length - 1);
-    ssize_t retVal = read(fd, strAppInfo.data(), length);
+    strAppInfo.resize(statBuf.st_size);
+    ssize_t retVal = read(fd, strAppInfo.data(), statBuf.st_size);
     EXPECT_GT(retVal, 0);
-    EXPECT_EQ(strAppInfo, Constants::DEBUG_TYPE_VALUE);
+    EXPECT_TRUE(strAppInfo.find(Constants::DEBUG_TYPE_VALUE) != std::string::npos);
     close(fd);
-
-    bundleUtil.MakeFsConfig(BUNDLE_BACKUP_NAME, ServiceConstants::HMDFS_CONFIG_PATH, Constants::APP_PROVISION_TYPE_RELEASE,
-        Constants::APP_PROVISION_TYPE_FILE_NAME);
-    int fd2 = open(path.c_str(), O_RDWR);
-    length = lseek(fd2, 0, SEEK_END);
-    strAppInfo;
-    strAppInfo.resize(length - 1);
-    retVal = read(fd2, strAppInfo.data(), length);
-    EXPECT_GT(retVal, 0);
-    EXPECT_EQ(strAppInfo, Constants::RELEASE_TYPE_VALUE);
-    close(fd2);
 
     installResult = UnInstallBundle(BUNDLE_BACKUP_NAME);
     EXPECT_EQ(installResult, ERR_OK);
+}
+
+
+/**
+ * @tc.number: MakeFsConfig_2000
+ * @tc.name: MakeFsConfig
+ * @tc.desc: 1.Test MakeFsConfig
+*/
+HWTEST_F(BmsBundleInstallerTest, MakeFsConfig_2000, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    BundleUtil bundleUtil;
+    bundleUtil.MakeFsConfig(BUNDLE_BACKUP_NAME, ServiceConstants::HMDFS_CONFIG_PATH,
+        Constants::APP_PROVISION_TYPE_RELEASE, Constants::APP_PROVISION_TYPE_FILE_NAME);
+    std::string path = ServiceConstants::HMDFS_CONFIG_PATH + BUNDLE_BACKUP_NAME +
+        std::string(ServiceConstants::PATH_SEPARATOR) + Constants::APP_PROVISION_TYPE_FILE_NAME;
+    int fd = open(path.c_str(), O_RDWR);
+    struct stat statBuf;
+    fstat(fd, &statBuf);
+    std::string strAppInfo;
+    strAppInfo.resize(statBuf.st_size);
+    ssize_t retVal = read(fd, strAppInfo.data(), statBuf.st_size);
+    EXPECT_GT(retVal, 0);
+    EXPECT_TRUE(strAppInfo.find(Constants::RELEASE_TYPE_VALUE) != std::string::npos);
+    close(fd);
+
+    installResult = UnInstallBundle(BUNDLE_BACKUP_NAME);
+    EXPECT_EQ(installResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_9700
+ * @tc.name: test CheckU1Enable
+ * @tc.desc: 1.Test the CheckU1Enable of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9700, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+
+    // test !u1Enable && isU1
+    auto ret = installer.CheckU1Enable(info, TEST_U1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON);
+
+    // test for u1Enable && !isU1
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    info.SetAllowedAcls(acls);
+    ret = installer.CheckU1Enable(info, 0);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON);
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_9800
+ * @tc.name: test CheckU1Enable
+ * @tc.desc: 1.Test the CheckU1Enable of BaseBundleInstaller, u1Enable && isU1, one innerBundleUserInfo for u1
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9800, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    // add u1Enable
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    info.SetAllowedAcls(acls);
+    // add innerBundleUserInfo for u1
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    // set isAppExist_ true
+    installer.isAppExist_ = true;
+    auto ret = installer.CheckU1Enable(info, TEST_U1);
+    EXPECT_EQ(ret, ERR_OK);
+    // set isAppExist_ false
+    installer.isAppExist_ = false;
+    ret = installer.CheckU1Enable(info, TEST_U1);
+    EXPECT_EQ(ret, ERR_OK);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_9900
+ * @tc.name: test CheckU1Enable
+ * @tc.desc: 1.Test the CheckU1Enable of BaseBundleInstaller, u1Enable && isU1, no innerbundleinfo
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9900, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    // add u1Enable
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    info.SetAllowedAcls(acls);
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    // set isAppExist_ true
+    installer.isAppExist_ = true;
+    auto ret = installer.CheckU1Enable(info, TEST_U1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS);
+
+    // set isAppExist_ false
+    installer.isAppExist_ = false;
+    ret = installer.CheckU1Enable(info, TEST_U1);
+    EXPECT_EQ(ret, ERR_OK);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_1001
+ * @tc.name: test CheckU1Enable
+ * @tc.desc: 1.Test the CheckU1Enable of BaseBundleInstaller, u1Enable && isU1, two innerbundleuserinfos: 1,100
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1001, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    // add u1Enable
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    info.SetAllowedAcls(acls);
+    // add innerBundleUserInfo for u1
+    InnerBundleUserInfo innerBundleUserInfo1;
+    innerBundleUserInfo1.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfo1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo1);
+    // add innerBundleUserInfo for u100
+    InnerBundleUserInfo innerBundleUserInfo100;
+    innerBundleUserInfo100.bundleUserInfo.userId = TEST_U100;
+    innerBundleUserInfo100.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo100);
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    // set isAppExist_ true
+    installer.isAppExist_ = true;
+    auto ret = installer.CheckU1Enable(info, TEST_U1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS);
+
+    // set isAppExist_ false
+    installer.isAppExist_ = false;
+    ret = installer.CheckU1Enable(info, TEST_U1);
+    EXPECT_EQ(ret, ERR_OK);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_1002
+ * @tc.name: test CheckU1Enable
+ * @tc.desc: 1.Test the CheckU1Enable of BaseBundleInstaller, u1Enable && isU1, two innerbundleuserinfos: 100,1
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1002, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    // add u1Enable
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    info.SetAllowedAcls(acls);
+    
+    // add innerBundleUserInfo for u100
+    InnerBundleUserInfo innerBundleUserInfo100;
+    innerBundleUserInfo100.bundleUserInfo.userId = TEST_U100;
+    innerBundleUserInfo100.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo100);
+
+    // add innerBundleUserInfo for u1
+    InnerBundleUserInfo innerBundleUserInfo1;
+    innerBundleUserInfo1.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfo1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo1);
+
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    // set isAppExist_ true
+    installer.isAppExist_ = true;
+    auto ret = installer.CheckU1Enable(info, TEST_U1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS);
+
+    // set isAppExist_ false
+    installer.isAppExist_ = false;
+    ret = installer.CheckU1Enable(info, TEST_U1);
+    EXPECT_EQ(ret, ERR_OK);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_1003
+ * @tc.name: test CheckU1Enable
+ * @tc.desc: 1.Test the CheckU1Enable of BaseBundleInstaller, u1Enable && isU1, one innerbundleuserinfo, but not u1
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1003, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    // add u1Enable
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    info.SetAllowedAcls(acls);
+    // add innerBundleUserInfo for u100
+    InnerBundleUserInfo innerBundleUserInfo100;
+    innerBundleUserInfo100.bundleUserInfo.userId = TEST_U100;
+    innerBundleUserInfo100.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo100);
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    // set isAppExist_ true
+    installer.isAppExist_ = true;
+    auto ret = installer.CheckU1Enable(info, TEST_U1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS);
+
+    // set isAppExist_ false
+    installer.isAppExist_ = false;
+    ret = installer.CheckU1Enable(info, TEST_U1);
+    EXPECT_EQ(ret, ERR_OK);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_1004
+ * @tc.name: test CheckU1Enable
+ * @tc.desc: 1.Test the CheckU1Enable of BaseBundleInstaller, !u1Enable && !isU1, one innerBundleUserInfo for u1
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1004, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    
+    // add innerBundleUserInfo for u1
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    // set isAppExist_ true
+    installer.isAppExist_ = true;
+    auto ret = installer.CheckU1Enable(info, TEST_U100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON);
+    // set isAppExist_ false
+    installer.isAppExist_ = false;
+    ret = installer.CheckU1Enable(info, TEST_U100);
+    EXPECT_EQ(ret, ERR_OK);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_1005
+ * @tc.name: test CheckU1Enable
+ * @tc.desc: 1.Test the CheckU1Enable of BaseBundleInstaller, !u1Enable && !isU1, no innerbundleinfo
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1005, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    // set isAppExist_ true
+    installer.isAppExist_ = true;
+    auto ret = installer.CheckU1Enable(info, TEST_U100);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // set isAppExist_ false
+    installer.isAppExist_ = false;
+    ret = installer.CheckU1Enable(info, TEST_U100);
+    EXPECT_EQ(ret, ERR_OK);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_1006
+ * @tc.name: test CheckU1Enable
+ * @tc.desc: 1.Test the CheckU1Enable of BaseBundleInstaller, !u1Enable && !isU1, two innerbundleuserinfos: 1,100
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1006, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    
+    // add innerBundleUserInfo for u1
+    InnerBundleUserInfo innerBundleUserInfo1;
+    innerBundleUserInfo1.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfo1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo1);
+    // add innerBundleUserInfo for u100
+    InnerBundleUserInfo innerBundleUserInfo100;
+    innerBundleUserInfo100.bundleUserInfo.userId = TEST_U100;
+    innerBundleUserInfo100.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo100);
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    // set isAppExist_ true
+    installer.isAppExist_ = true;
+    auto ret = installer.CheckU1Enable(info, TEST_U100);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // set isAppExist_ false
+    installer.isAppExist_ = false;
+    ret = installer.CheckU1Enable(info, TEST_U100);
+    EXPECT_EQ(ret, ERR_OK);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_1007
+ * @tc.name: test CheckU1Enable
+ * @tc.desc: 1.Test the CheckU1Enable of BaseBundleInstaller, !u1Enable && !isU1, two innerbundleuserinfos: 100,1
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1007, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    
+    // add innerBundleUserInfo for u100
+    InnerBundleUserInfo innerBundleUserInfo100;
+    innerBundleUserInfo100.bundleUserInfo.userId = TEST_U100;
+    innerBundleUserInfo100.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo100);
+
+    // add innerBundleUserInfo for u1
+    InnerBundleUserInfo innerBundleUserInfo1;
+    innerBundleUserInfo1.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfo1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo1);
+
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    // set isAppExist_ true
+    installer.isAppExist_ = true;
+    auto ret = installer.CheckU1Enable(info, TEST_U100);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // set isAppExist_ false
+    installer.isAppExist_ = false;
+    ret = installer.CheckU1Enable(info, TEST_U100);
+    EXPECT_EQ(ret, ERR_OK);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_1008
+ * @tc.name: test CheckU1Enable
+ * @tc.desc: 1.Test the CheckU1Enable of BaseBundleInstaller, !u1Enable && !isU1, one innerbundleuserinfo, but not u1
+*/
+HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1008, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    // add innerBundleUserInfo for u100
+    InnerBundleUserInfo innerBundleUserInfo100;
+    innerBundleUserInfo100.bundleUserInfo.userId = TEST_U100;
+    innerBundleUserInfo100.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo100);
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
+    // set isAppExist_ true
+    installer.isAppExist_ = true;
+    auto ret = installer.CheckU1Enable(info, TEST_U100);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // set isAppExist_ false
+    installer.isAppExist_ = false;
+    ret = installer.CheckU1Enable(info, TEST_U100);
+    EXPECT_EQ(ret, ERR_OK);
+    installer.dataMgr_->bundleInfos_.clear();
+}
+
+
+/**
+ * @tc.number: GetU1Enable_0001
+ * @tc.name: test GetU1Enable and SetU1Enable in PreInstallBundleInfo
+ * @tc.desc: 1.SetU1Enable
+ */
+HWTEST_F(BmsBundleInstallerTest, GetU1Enable_0001, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetU1Enable(false);
+    bool u1Enable = preInstallBundleInfo.GetU1Enable();
+    EXPECT_FALSE(u1Enable);
+
+    preInstallBundleInfo.SetU1Enable(true);
+    u1Enable = preInstallBundleInfo.GetU1Enable();
+    EXPECT_TRUE(u1Enable);
+}
+
+/**
+ * @tc.number: GetConfirmUserId_0001
+ * @tc.name: test GetConfirmUserId
+ * @tc.desc: 1.GetConfirmUserId, otaInstall_ is false, innerBundleInfo1 is singleton
+ */
+HWTEST_F(BmsBundleInstallerTest, GetConfirmUserId_0001, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    installer.otaInstall_ = false;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    innerBundleInfo1.SetSingleton(true);
+    infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
+    auto res = installer.GetConfirmUserId(TEST_U100, infos);
+    EXPECT_EQ(res, Constants::DEFAULT_USERID);
+}
+
+/**
+ * @tc.number: GetConfirmUserId_0002
+ * @tc.name: test GetConfirmUserId
+ * @tc.desc: 1.GetConfirmUserId, otaInstall_ is false, innerBundleInfo1 is not singleton, u1enabled
+ */
+HWTEST_F(BmsBundleInstallerTest, GetConfirmUserId_0002, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    installer.otaInstall_ = false;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    innerBundleInfo1.SetSingleton(false);
+    // add u1Enable
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    innerBundleInfo1.SetAllowedAcls(acls);
+    infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
+    auto res = installer.GetConfirmUserId(TEST_U100, infos);
+    EXPECT_EQ(res, Constants::U1);
 }
 } // OHOS

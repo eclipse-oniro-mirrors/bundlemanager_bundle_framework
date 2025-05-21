@@ -32,6 +32,8 @@ constexpr const char* ICON_ID = "iconId";
 constexpr const char* SYSTEM_APP = "systemApp";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* FORCE_UNINSTALL_USERS = "forceUninstallUsers";
+constexpr const char* U1_ENABLE = "u1Enable";
+
 }  // namespace
 
 void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
@@ -48,6 +50,7 @@ void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[ICON_ID] = iconId_;
     jsonObject[SYSTEM_APP] = systemApp_;
     jsonObject[BUNDLE_TYPE] = bundleType_;
+    jsonObject[U1_ENABLE] = u1Enable_;
 }
 
 int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
@@ -78,6 +81,8 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         systemApp_, false, parseResult);
     GetValueIfFindKey<BundleType>(jsonObject, jsonObjectEnd, BUNDLE_TYPE,
         bundleType_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, U1_ENABLE,
+        u1Enable_, false, parseResult);
     return parseResult;
 }
 
@@ -96,6 +101,7 @@ std::string PreInstallBundleInfo::ToString() const
     jsonObject[ICON_ID] = iconId_;
     jsonObject[SYSTEM_APP] = systemApp_;
     jsonObject[BUNDLE_TYPE] = bundleType_;
+    jsonObject[U1_ENABLE] = u1Enable_;
     return jsonObject.dump();
 }
 

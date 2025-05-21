@@ -24,6 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 struct LauncherAbilityResourceInfo : Parcelable {
     int32_t appIndex = 0;
+    int32_t extensionAbilityType = -1;
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;

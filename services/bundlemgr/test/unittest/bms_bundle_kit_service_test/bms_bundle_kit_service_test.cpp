@@ -1671,7 +1671,7 @@ ErrCode BmsBundleKitServiceTest::MockGetAllBundleCacheStat(const sptr<IProcessCa
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     auto userId = MockGetCurrentActiveUserId();
-    if (userId <= Constants::DEFAULT_USERID) {
+    if (userId <= Constants::U1) {
         APP_LOGE("Invalid userid: %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
@@ -1688,7 +1688,7 @@ ErrCode BmsBundleKitServiceTest::MockCleanAllBundleCache(const sptr<IProcessCach
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     auto userId = MockGetCurrentActiveUserId();
-    if (userId <= Constants::DEFAULT_USERID) {
+    if (userId <= Constants::U1) {
         APP_LOGE("Invalid userid: %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
@@ -14683,5 +14683,54 @@ HWTEST_F(BmsBundleKitServiceTest, IsRenameInstall_4000, Function | SmallTest | L
     uint32_t size;
     parcel.ReadUint32(size);
     EXPECT_EQ(size, 0);
+}
+
+/**
+ * @tc.number: IsU1Enable_0001
+ * @tc.name: Test IsU1Enable
+ * @tc.desc: 1.Test IsU1Enable of InnerBundleInfo, acls has PERMISSION_U1_ENABLED
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsU1Enable_0001, Function | SmallTest | Level1)
+{
+    std::vector<std::string> acls;
+    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
+    InnerBundleInfo info;
+    bool isU1Enable = info.IsU1Enable();
+    EXPECT_FALSE(isU1Enable);
+    info.SetAllowedAcls(acls);
+    isU1Enable = info.IsU1Enable();
+    EXPECT_TRUE(isU1Enable);
+}
+
+/**
+ * @tc.number: NotifyBundleStatus_0100
+ * @tc.name: test NotifyBundleStatus
+ * @tc.desc: 1.NotifyBundleStatus
+ */
+HWTEST_F(BmsBundleKitServiceTest, NotifyBundleStatus_0100, Function | SmallTest | Level1)
+{
+    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
+    bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
+    bool result = GetBundleDataMgr()->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_TRUE(result);
+    EXPECT_NE(commonEventMgr_, nullptr);
+    installRes_.uid = 1;
+    commonEventMgr_->NotifyBundleStatus(installRes_, GetBundleDataMgr());
+    int32_t callbackResult = bundleStatusCallback->GetResultCode();
+    EXPECT_EQ(callbackResult, ERR_OK);
+}
+
+/**
+ * @tc.number: Mgr_Proxy_SetShortcutVisibleForSelf_0100
+ * @tc.name: test BundleMgrProxy interface SetShortcutVisibleForSelf
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_SetShortcutVisibleForSelf_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string shortcutId = "shortcutId";
+    bool visible = true;
+    auto ret = bundleMgrProxy->SetShortcutVisibleForSelf(shortcutId, visible);
+    EXPECT_NE(ret, ERR_OK);
 }
 }

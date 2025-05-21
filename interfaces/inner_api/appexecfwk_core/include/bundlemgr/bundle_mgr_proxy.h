@@ -166,7 +166,7 @@ public:
      * @param userId Indicates the user ID.
      * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
      */
-     virtual ErrCode GetBundleInfoForSelfWithOutCache(int32_t flags, BundleInfo &bundleInfo) override;
+    virtual ErrCode GetBundleInfoForSelfWithOutCache(int32_t flags, BundleInfo &bundleInfo) override;
     /**
      * @brief Obtains the BundleInfo based on a given bundle name, which the calling app depends on.
      * @param sharedBundleName Indicates the bundle name to be queried.
@@ -1205,6 +1205,8 @@ public:
     
     virtual ErrCode GetPluginHapModuleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const std::string &pluginModuleName, const int32_t userId, HapModuleInfo &hapModuleInfo) override;
+    
+    virtual ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

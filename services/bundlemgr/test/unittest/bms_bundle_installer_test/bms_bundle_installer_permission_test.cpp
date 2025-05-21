@@ -735,9 +735,31 @@ HWTEST_F(BmsBundleInstallerPermissionTest, InnerProcessBundleInstall_0100, TestS
     InstallParam installParam;
     installParam.needSavePreInstallInfo = false;
     installer.isAppExist_ = true;
-    installer.userId_ = 1;
+    installer.userId_ = 2;
     auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+}
+
+/**
+ * @tc.number: InnerProcessBundleInstall_0200
+ * @tc.name: InnerProcessBundleInstall
+ * @tc.desc: test InnerProcessBundleInstall
+ */
+HWTEST_F(BmsBundleInstallerPermissionTest, InnerProcessBundleInstall_0200, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetSingleton(false);
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>("com.example.testbundle", innerBundleInfo));
+    int32_t uid = 3057;
+    InnerBundleInfo oldInfo;
+    InstallParam installParam;
+    installParam.needSavePreInstallInfo = false;
+    installer.isAppExist_ = true;
+    installer.userId_ = 1;
+    auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON);
 }
 
 /**

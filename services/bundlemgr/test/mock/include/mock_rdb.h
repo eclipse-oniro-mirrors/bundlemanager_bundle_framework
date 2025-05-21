@@ -244,12 +244,12 @@ public:
         return E_ERROR;
     };
 
-    int Subscribe(const SubscribeOption& option, RdbStoreObserver* observer) override
+    int Subscribe(const SubscribeOption& option, std::shared_ptr<RdbStoreObserver> observer) override
     {
         return E_ERROR;
     };
 
-    int UnSubscribe(const SubscribeOption& option, RdbStoreObserver* observer) override
+    int UnSubscribe(const SubscribeOption& option, std::shared_ptr<RdbStoreObserver> observer) override
     {
         return E_ERROR;
     };

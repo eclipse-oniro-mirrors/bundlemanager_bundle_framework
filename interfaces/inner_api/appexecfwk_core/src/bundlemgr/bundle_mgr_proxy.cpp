@@ -6095,5 +6095,28 @@ ErrCode BundleMgrProxy::GetPluginHapModuleInfo(const std::string &hostBundleName
         BundleMgrInterfaceCode::GET_PLUGIN_HAP_MODULE_INFO, data, hapModuleInfo);
 }
 
+ErrCode BundleMgrProxy::SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("SetShortcutVisibleForSelf write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(shortcutId)) {
+        APP_LOGE("SetShortcutVisibleForSelf write shortcutId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(visible)) {
+        APP_LOGE("SetShortcutVisibleForSelf write visible fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_SHORTCUT_VISIBLE, data, reply)) {
+        APP_LOGE("fail to SetShortcutVisibleForSelf from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

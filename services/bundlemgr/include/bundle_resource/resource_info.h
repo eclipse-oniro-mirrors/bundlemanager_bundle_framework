@@ -46,6 +46,7 @@ public:
     uint32_t iconId_ = 0;
     // for app clone
     int32_t appIndex_ = 0;
+    int32_t extensionAbilityType_ = -1;
     // key
     std::string bundleName_;
     std::string moduleName_;

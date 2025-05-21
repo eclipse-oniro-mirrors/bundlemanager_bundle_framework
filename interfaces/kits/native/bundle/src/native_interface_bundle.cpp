@@ -376,7 +376,7 @@ bool CopyMetadataStringToChar(char *&name, const std::string &value)
         return false;
     }
     for (size_t i = 0; i < length; i++) {
-        name[i] = 0; 
+        name[i] = 0;
     }
     name[length] = '\0';
     if (strcpy_s(name, length + 1, value.c_str()) != EOK) {

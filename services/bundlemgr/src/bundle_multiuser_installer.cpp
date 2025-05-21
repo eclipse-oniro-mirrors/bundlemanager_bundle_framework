@@ -138,7 +138,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     newUserInfo.bundleName = bundleName;
     newUserInfo.bundleUserInfo.userId = userId;
     if (!dataMgr_->GenerateUidAndGid(newUserInfo)) {
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR;
     }
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);
@@ -264,9 +264,10 @@ void BundleMultiUserInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t
 ErrCode BundleMultiUserInstaller::RemoveDataDir(const std::string bundleName, int32_t userId)
 {
     std::string key = bundleName;
-    if (InstalldClient::GetInstance()->RemoveBundleDataDir(key, userId) != ERR_OK) {
+    ErrCode ret = InstalldClient::GetInstance()->RemoveBundleDataDir(key, userId);
+    if (ret != ERR_OK) {
         APP_LOGW("App cannot remove the data dir");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        return ret;
     }
     return ERR_OK;
 }
@@ -277,7 +278,7 @@ ErrCode BundleMultiUserInstaller::GetDataMgr()
         dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
         if (dataMgr_ == nullptr) {
             APP_LOGE("Get dataMgr shared_ptr nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+            return ERR_APPEXECFWK_NULL_PTR;
         }
     }
     return ERR_OK;

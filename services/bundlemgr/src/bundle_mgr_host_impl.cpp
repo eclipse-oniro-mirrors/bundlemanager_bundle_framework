@@ -2113,14 +2113,16 @@ bool BundleMgrHostImpl::DumpBundleInfo(
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo) &&
-        !GetBundleUserInfo(bundleName, Constants::DEFAULT_USERID, innerBundleUserInfo)) {
+        !GetBundleUserInfo(bundleName, Constants::DEFAULT_USERID, innerBundleUserInfo) &&
+        !GetBundleUserInfo(bundleName, Constants::U1, innerBundleUserInfo)) {
         APP_LOGE("get all userInfos in bundle(%{public}s) failed", bundleName.c_str());
         return false;
     }
     innerBundleUserInfos.emplace_back(innerBundleUserInfo);
     std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos;
     if (!GetPluginBundleInfo(bundleName, userId, pluginBundleInfos) &&
-        !GetPluginBundleInfo(bundleName, Constants::DEFAULT_USERID, pluginBundleInfos)) {
+        !GetPluginBundleInfo(bundleName, Constants::DEFAULT_USERID, pluginBundleInfos) &&
+        !GetPluginBundleInfo(bundleName, Constants::U1, pluginBundleInfos)) {
         APP_LOGE("get plugin info in bundle(%{public}s) failed", bundleName.c_str());
     }
     BundleInfo bundleInfo;
@@ -3476,7 +3478,8 @@ ErrCode BundleMgrHostImpl::GetSandboxAbilityInfo(const Want &want, int32_t appIn
     }
 
     if (!(dataMgr->QueryAbilityInfo(want, flags, userId, info, appIndex)
-        || dataMgr->QueryAbilityInfo(want, flags, Constants::DEFAULT_USERID, info, appIndex))) {
+        || dataMgr->QueryAbilityInfo(want, flags, Constants::DEFAULT_USERID, info, appIndex)
+        || dataMgr->QueryAbilityInfo(want, flags, Constants::U1, info, appIndex))) {
         APP_LOGE("query ability info failed");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
@@ -3505,7 +3508,8 @@ ErrCode BundleMgrHostImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t a
     }
 
     if (!(dataMgr->QueryExtensionAbilityInfos(want, flags, userId, infos, appIndex)
-        || dataMgr->QueryExtensionAbilityInfos(want, flags, Constants::DEFAULT_USERID, infos, appIndex))) {
+        || dataMgr->QueryExtensionAbilityInfos(want, flags, Constants::DEFAULT_USERID, infos, appIndex)
+        || dataMgr->QueryExtensionAbilityInfos(want, flags, Constants::U1, infos, appIndex))) {
         APP_LOGE("query extension ability info failed");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
@@ -4405,6 +4409,7 @@ ErrCode BundleMgrHostImpl::GetUninstalledBundleInfo(const std::string bundleName
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     if (dataMgr->HasUserInstallInBundle(bundleName, Constants::DEFAULT_USERID) ||
+        dataMgr->HasUserInstallInBundle(bundleName, Constants::U1) ||
         dataMgr->HasUserInstallInBundle(bundleName, userId)) {
         APP_LOGE("bundle has installed");
         return ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO;
@@ -5441,6 +5446,18 @@ bool BundleMgrHostImpl::GetLabelFromCache(const std::string &cacheKey, const std
         }
     }
     return false;
+}
+
+ErrCode BundleMgrHostImpl::SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+{
+    // The application itself is the caller, so there is no need for permission control.
+    APP_LOGD("SetShortcutVisibleForSelf begin");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->SetShortcutVisibleForSelf(shortcutId, visible);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

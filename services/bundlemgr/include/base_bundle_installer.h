@@ -192,7 +192,7 @@ protected:
 
     ErrCode RollbackHmpCommonInfo(const std::string &bundleName);
 
-    bool HasDriverExtensionAbility(const std::string &bundleName);
+    bool IsDriverForAllUser(const std::string &bundleName);
 
     bool IsEnterpriseForAllUser(const InstallParam &installParam, const std::string &bundleName);
 
@@ -397,6 +397,8 @@ private:
         std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     ErrCode CheckShellInstall(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
+    ErrCode CheckU1Enable(const InnerBundleInfo &info, const int32_t userId);
 
 #ifdef X86_EMULATOR_MODE
     ErrCode CheckShellInstallForEmulator(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
@@ -854,6 +856,7 @@ private:
     bool copyHapToInstallPath_ = false;
     bool needSetDisposeRule_ = false;
     bool needDeleteAppTempPath_ = false;
+    bool isBundleExist_ = false;
     InstallerState state_ = InstallerState::INSTALL_START;
     uint32_t versionCode_ = 0;
     uint32_t accessTokenId_ = 0;

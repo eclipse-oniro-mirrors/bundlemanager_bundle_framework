@@ -104,7 +104,7 @@ public:
     size_t GetCurTaskNum();
     int32_t GetThreadsNum()
     {
-        return THREAD_NUMBER;
+        return threadNum_;
     }
 
 private:
@@ -119,8 +119,7 @@ private:
 
     DISALLOW_COPY_AND_MOVE(BundleInstallerManager);
 
-    size_t maxTaskNum_ = 0;
-    const int32_t THREAD_NUMBER = std::thread::hardware_concurrency();
+    int32_t threadNum_ = std::thread::hardware_concurrency();
     std::mutex mutex_;
     std::shared_ptr<ThreadPool> threadPool_ = nullptr;
 };

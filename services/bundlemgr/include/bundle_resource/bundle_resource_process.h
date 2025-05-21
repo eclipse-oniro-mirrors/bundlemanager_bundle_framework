@@ -68,6 +68,8 @@ private:
 
     static ResourceInfo ConvertToBundleResourceInfo(const InnerBundleInfo &innerBundleInfo);
 
+    static ResourceInfo ConvertToExtensionAbilityResourceInfo(const ExtensionAbilityInfo &info);
+
     static bool InnerGetResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfos, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);
 

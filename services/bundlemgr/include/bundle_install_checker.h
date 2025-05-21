@@ -191,6 +191,11 @@ public:
     ErrCode CheckAppDistributionType(const std::string distributionType);
 
     int32_t GetAppDistributionTypeEnum(const std::string distributionType) const;
+
+    ErrCode CheckNoU1Enable(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+
+    ErrCode CheckU1EnableSameInHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const std::string &bundleName, bool &u1Enable);
 private:
 
     ErrCode ParseBundleInfo(

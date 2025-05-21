@@ -49,6 +49,12 @@ constexpr const char* ASSET_ACCESS_GROUPS = "assetAccessGroups";
 constexpr const char* DEVELOPERID = "developerId";
 constexpr const char* CHANGE_DEFAULT_APPLICATION = "ohos.permission.CHANGE_DEFAULT_APPLICATION";
 constexpr const char* UTD_IDS = "utdIds";
+constexpr const char* BUNDLE_NAME = "bundleName";
+constexpr const char* USER_ID = "userId";
+constexpr const char* SHORTCUT_CHANGED = "usual.event.SHORTCUT_CHANGED";
+constexpr const char* SHORTCUT_ID = "shortcutId";
+constexpr const char* MANAGE_SHORTCUTS = "ohos.permission.MANAGE_SHORTCUTS";
+constexpr const char* IS_BUNDLE_EXIST = "isBundleExist";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -99,7 +105,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
             static_cast<uint8_t>(InstallType::UNINSTALL_CALLBACK) :
             static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
     int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
-    int32_t publishUserId = (bundleUserId == Constants::DEFAULT_USERID) ?
+    int32_t publishUserId = (bundleUserId == Constants::DEFAULT_USERID || bundleUserId == Constants::U1) ?
         AccountHelper::GetCurrentActiveUserId() : bundleUserId;
 
     // trigger the status callback for status listening
@@ -202,6 +208,7 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
         want.SetParam(ASSET_ACCESS_GROUPS, installResult.assetAccessGroups);
         want.SetParam(DEVELOPERID, installResult.developerId);
     }
+    want.SetParam(IS_BUNDLE_EXIST, installResult.isBundleExist);
 }
 
 ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info, int32_t uid, int32_t userId,
@@ -385,6 +392,30 @@ void BundleCommonEventMgr::NotifyPluginEvents(const NotifyBundleEvents &event,
         dataMgr->NotifyPluginEventCallback(commonData);
         LOG_I(BMS_TAG_DEFAULT, "pluginEventBack end");
     }
+}
+
+
+void BundleCommonEventMgr::NotifyShortcutVisibleChanged(
+    const std::string &bundlename, const std::string &id, int32_t userId, int32_t appIndex, bool visible)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(SHORTCUT_CHANGED);
+    ElementName element;
+    element.SetBundleName(bundlename);
+    want.SetElement(element);
+    want.SetParam(SHORTCUT_ID, id);
+    want.SetParam(USER_ID, userId);
+    want.SetParam(APP_INDEX, appIndex);
+    want.SetParam("visible", visible);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { MANAGE_SHORTCUTS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
 }
 } // AppExecFwk
 } // OHOS

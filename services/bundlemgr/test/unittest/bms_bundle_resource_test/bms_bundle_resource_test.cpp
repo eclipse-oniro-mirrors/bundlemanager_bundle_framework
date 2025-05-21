@@ -86,6 +86,7 @@ const std::string BUNDLE_NAME_NO_ICON = "com.third.hiworld.example1";
 const std::string BUNDLE_NAME_LAYERED_IMAGE = "com.example.thumbnailtest";
 const std::string LAYERED_IMAGE_HAP_PATH = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
 const std::string TEST_BUNDLE_NAME = "testBundleName";
+const int32_t U1 = 1;
 }  // namespace
 
 class BmsBundleResourceTest : public testing::Test {
@@ -265,6 +266,23 @@ sptr<BundleMgrProxy> BmsBundleResourceTest::GetBundleMgrProxy()
 }
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+/**
+ * @tc.number: OnReceiveEvent_0010
+ * Function: OnReceiveEvent
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test OnReceiveEvent
+ */
+HWTEST_F(BmsBundleResourceTest, OnReceiveEvent_0010, Function | SmallTest | Level0)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+    OHOS::EventFwk::CommonEventData commonData2 { want };
+    commonData2.SetCode(U1); // userId not exist
+    bool ans = OnReceiveEvent(commonData2);
+    EXPECT_TRUE(ans);
+}
+
 /**
  * @tc.number: BmsBundleResourceTest_0001
  * Function: GetKey
@@ -1801,6 +1819,38 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0081, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleResourceTest_0082
+ * Function: GetAbilityResourceInfos
+ * @tc.name: test GetAbilityResourceInfos
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0082, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    ExtensionAbilityInfo extensionAbilityInfo;
+
+    extensionAbilityInfo.type = ExtensionAbilityType::INPUTMETHOD;
+    innerBundleInfo.baseExtensionInfos_.emplace("inputmethod_key", extensionAbilityInfo);
+    extensionAbilityInfo.type = ExtensionAbilityType::SHARE;
+    innerBundleInfo.baseExtensionInfos_.emplace("share_key", extensionAbilityInfo);
+    extensionAbilityInfo.type = ExtensionAbilityType::ACTION;
+    innerBundleInfo.baseExtensionInfos_.emplace("action_key", extensionAbilityInfo);
+    extensionAbilityInfo.type = ExtensionAbilityType::DRIVER;
+    innerBundleInfo.baseExtensionInfos_.emplace("driver_key", extensionAbilityInfo);
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.bundleType = BundleType::APP;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    std::vector<ResourceInfo> resourceInfos;
+    auto ans = BundleResourceProcess::GetAbilityResourceInfos(innerBundleInfo, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(resourceInfos.size(), 3);
+}
+
+
+/**
  * @tc.number: BmsBundleResourceTest_0088
  * Function: BundleResourceProcess
  * @tc.name: test BundleResourceProcess
@@ -2283,6 +2333,54 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0101, Function | SmallTest
     EXPECT_FALSE(infos.empty());
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0102
+ * Function: GetExtensionAbilityResourceInfo
+ * @tc.name: test Install
+ * @tc.desc: 1. system running normally
+ *           2. test GetExtensionAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0102, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    std::vector<LauncherAbilityResourceInfo> info;
+
+    auto ret = bundleResourceHostImpl->GetExtensionAbilityResourceInfo(BUNDLE_NAME, ExtensionAbilityType::FORM,
+        0, info, 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+    EXPECT_TRUE(info.empty());
+
+    ret = bundleResourceHostImpl->GetExtensionAbilityResourceInfo(BUNDLE_NAME, ExtensionAbilityType::FORM, 0, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(info.size(), 0);
+    if (!info.empty()) {
+        EXPECT_EQ(info[0].bundleName, BUNDLE_NAME);
+        EXPECT_EQ(info[0].moduleName, MODULE_NAME);
+        EXPECT_EQ(info[0].abilityName, ABILITY_NAME);
+        EXPECT_FALSE(info[0].label.empty());
+        EXPECT_FALSE(info[0].icon.empty());
+    }
+
+    ret = bundleResourceHostImpl->GetExtensionAbilityResourceInfo(BUNDLE_NAME, ExtensionAbilityType::FORM, 0, info, 1);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0103
+ * Function: CheckExtensionAbilityValid
+ * @tc.name: test CheckExtensionAbilityValid with appIndex 0
+ * @tc.desc: 1. system running normally
+ *           2. test CheckExtensionAbilityValid when appIndex is 0
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    std::vector<LauncherAbilityResourceInfo> info;
+    auto ret = bundleResourceHostImpl->GetExtensionAbilityResourceInfo(BUNDLE_NAME, ExtensionAbilityType::INPUTMETHOD,
+        0, info, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -4515,6 +4613,427 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0206, Function | SmallTest
         manager->LauncherAbilityResourceConvertToResourceInfo(launcherAbilityResourceInfo, resourceInfo2);
         EXPECT_NE(launcherAbilityResourceInfo.label, resourceInfo2.label_);
     }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0207
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetExtensionAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0207, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.moduleName_ = "moduleName";
+    resourceInfo.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD);
+    resourceInfo.abilityName_ = "abilityName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    bool ans = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    ans = manager->GetExtensionAbilityResourceInfo(resourceInfo.bundleName_, ExtensionAbilityType::INPUTMETHOD,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), infos);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(infos.size() == 1);
+    if (!infos.empty()) {
+        EXPECT_EQ(infos[0].bundleName, resourceInfo.bundleName_);
+        EXPECT_EQ(infos[0].moduleName, resourceInfo.moduleName_);
+        EXPECT_EQ(infos[0].abilityName, resourceInfo.abilityName_);
+        EXPECT_EQ(infos[0].label, resourceInfo.label_);
+        EXPECT_TRUE(infos[0].icon.empty());
+    }
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0208
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetExtensionAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0208, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    std::vector<LauncherAbilityResourceInfo> infos;
+    bool ans = manager->GetExtensionAbilityResourceInfo("bundleName", ExtensionAbilityType::INPUTMETHOD, 0, infos, 0);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0209
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetExtensionAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0209, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.moduleName_ = "moduleName";
+    resourceInfo.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD);
+    resourceInfo.abilityName_ = "abilityName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+    
+    std::vector<LauncherAbilityResourceInfo> infos;
+    ans = resourceRdb.GetExtensionAbilityResourceInfo(resourceInfo.bundleName_, ExtensionAbilityType::INPUTMETHOD,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), infos);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(infos.size() == 1);
+    if (!infos.empty()) {
+        EXPECT_EQ(infos[0].bundleName, resourceInfo.bundleName_);
+        EXPECT_EQ(infos[0].moduleName, resourceInfo.moduleName_);
+        EXPECT_EQ(infos[0].abilityName, resourceInfo.abilityName_);
+        EXPECT_EQ(infos[0].label, resourceInfo.label_);
+        EXPECT_TRUE(infos[0].icon.empty());
+    }
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0210
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetExtensionAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0210, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.moduleName_ = "moduleName";
+    resourceInfo.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD);
+    resourceInfo.abilityName_ = "SettingsForm";
+    resourceInfo.label_ = "Settings";
+    
+    ResourceInfo resourceInfo2;
+    resourceInfo2.bundleName_ = "bundleName";
+    resourceInfo.moduleName_ = "moduleName2";
+    resourceInfo2.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::SERVICE);
+    resourceInfo2.abilityName_ = "abilityName";
+    resourceInfo2.label_ = "label";
+    
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+    ans = resourceRdb.AddResourceInfo(resourceInfo2);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    ans = resourceRdb.GetExtensionAbilityResourceInfo("bundleName", ExtensionAbilityType::INPUTMETHOD, 0, infos, 0);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(infos.size(), 1);
+
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo2.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0211
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetExtensionAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0211, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    bool ans = resourceRdb.GetExtensionAbilityResourceInfo("bundleName", ExtensionAbilityType::INPUTMETHOD,
+        0, infos, 0);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0212
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetExtensionAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0212, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo info;
+    info.bundleName_ = "bundleName";
+    info.moduleName_ = "moduleName";
+    info.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD);
+    info.abilityName_ = "ZService";
+    info.label_ = "Z";
+    info.icon_ = "Zicon";
+
+    ResourceInfo info2;
+    info2.bundleName_ = "bundleName";
+    info2.moduleName_ = "moduleName2";
+    info2.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD);
+    info2.abilityName_ = "AService";
+    info2.label_ = "A";
+    info2.icon_ = "Aicon";
+
+    bool ans = resourceRdb.AddResourceInfo(info);
+    EXPECT_TRUE(ans);
+    ans = resourceRdb.AddResourceInfo(info2);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    uint32_t sortFlag = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL);
+    ans = resourceRdb.GetExtensionAbilityResourceInfo(info.bundleName_, ExtensionAbilityType::INPUTMETHOD,
+        sortFlag, infos, 0);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(infos.size(), 2);
+    EXPECT_EQ(infos[0].label, "A");
+    EXPECT_EQ(infos[1].label, "Z");
+
+    ans = resourceRdb.DeleteResourceInfo(info.GetKey());
+    EXPECT_TRUE(ans);
+    ans = resourceRdb.DeleteResourceInfo(info2.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0213
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetExtensionAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0213, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+
+    ResourceInfo info;
+    info.bundleName_ = "bundleName";
+    info.moduleName_ = "moduleName";
+    info.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD);
+    info.abilityName_ = "MainService";
+    info.label_ = "0";
+
+    ResourceInfo info2;
+    info2.bundleName_ = "bundleName";
+    info2.moduleName_ = "moduleName2";
+    info2.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD);
+    info2.abilityName_ = "SecondService";
+    info2.label_ = "1";
+
+    bool ans = resourceRdb.AddResourceInfo(info);
+    EXPECT_TRUE(ans);
+    ans = resourceRdb.AddResourceInfo(info2);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    ans = resourceRdb.GetExtensionAbilityResourceInfo(info.bundleName_, ExtensionAbilityType::INPUTMETHOD, 0, infos, 0);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(infos.size(), 2);
+    if (!infos.empty()) {
+        EXPECT_EQ(infos[0].abilityName, "MainService");
+    }
+    ans = resourceRdb.DeleteResourceInfo(info.GetKey());
+    EXPECT_TRUE(ans);
+    ans = resourceRdb.DeleteResourceInfo(info2.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0214
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllExtensionAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0214, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.moduleName_ = "moduleName";
+    resourceInfo.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD);
+    resourceInfo.abilityName_ = "MainService";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    ASSERT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL);
+    ans = resourceRdb.GetAllExtensionAbilityResourceInfo(resourceInfo.bundleName_, flags, infos, 0);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(infos.empty());
+    EXPECT_EQ(infos.size(), 1);
+    EXPECT_EQ(infos[0].bundleName, resourceInfo.bundleName_);
+    EXPECT_EQ(infos[0].moduleName, "moduleName");
+    EXPECT_EQ(infos[0].label, "label");
+
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0215
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllExtensionAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0215, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.moduleName_ = "moduleName";
+    resourceInfo.extensionAbilityType_ = -1;
+    resourceInfo.abilityName_ = "MainService";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    ans = resourceRdb.GetAllExtensionAbilityResourceInfo(resourceInfo.bundleName_, 0, infos, 0);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(infos.empty());
+    resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0216
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test ConvertToExtensionAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0216, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo info;
+    info.bundleName_ = "bundleName";
+    info.moduleName_ = "moduleName";
+    info.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD);
+    info.abilityName_ = "ZService";
+    info.label_ = "Z";
+    info.icon_ = "Zicon";
+
+    ResourceInfo info2;
+    info2.bundleName_ = "bundleName";
+    info2.moduleName_ = "moduleName2";
+    info2.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD);
+    info2.abilityName_ = "AService";
+    info2.label_ = "A";
+    info2.icon_ = "Aicon";
+
+    bool ans = resourceRdb.AddResourceInfo(info);
+    EXPECT_TRUE(ans);
+    ans = resourceRdb.AddResourceInfo(info2);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    ans = resourceRdb.GetExtensionAbilityResourceInfo(info.bundleName_, ExtensionAbilityType::INPUTMETHOD, 0, infos, 0);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(infos.size(), 2);
+    EXPECT_EQ(infos[0].bundleName, "bundleName");
+    EXPECT_EQ(infos[0].moduleName, "moduleName");
+    EXPECT_EQ(infos[0].abilityName, "ZService");
+    EXPECT_EQ(infos[0].label, "");
+    EXPECT_EQ(infos[0].icon, "");
+    EXPECT_EQ(infos[1].bundleName, "bundleName");
+    EXPECT_EQ(infos[1].moduleName, "moduleName2");
+    EXPECT_EQ(infos[1].abilityName, "AService");
+    EXPECT_EQ(infos[1].label, "");
+    EXPECT_EQ(infos[1].icon, "");
+
+    ans = resourceRdb.DeleteResourceInfo(info.GetKey());
+    EXPECT_TRUE(ans);
+    ans = resourceRdb.DeleteResourceInfo(info2.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0217
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test ConvertToExtensionAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0217, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo info;
+    info.bundleName_ = "bundleName";
+    info.moduleName_ = "moduleName";
+    info.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD);
+    info.abilityName_ = "ZService";
+    info.label_ = "Z";
+    info.icon_ = "Zicon";
+
+    ResourceInfo info2;
+    info2.bundleName_ = "bundleName";
+    info2.moduleName_ = "moduleName2";
+    info2.extensionAbilityType_ = static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD);
+    info2.abilityName_ = "AService";
+    info2.label_ = "A";
+    info2.icon_ = "Aicon";
+
+    bool ans = resourceRdb.AddResourceInfo(info);
+    EXPECT_TRUE(ans);
+    ans = resourceRdb.AddResourceInfo(info2);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    ans = resourceRdb.GetExtensionAbilityResourceInfo(info.bundleName_, ExtensionAbilityType::INPUTMETHOD,
+        flags, infos, 0);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(infos.size(), 2);
+    EXPECT_EQ(infos[0].bundleName, "bundleName");
+    EXPECT_EQ(infos[0].moduleName, "moduleName");
+    EXPECT_EQ(infos[0].abilityName, "ZService");
+    EXPECT_EQ(infos[0].label, "Z");
+    EXPECT_EQ(infos[0].icon, "Zicon");
+    EXPECT_EQ(infos[1].bundleName, "bundleName");
+    EXPECT_EQ(infos[1].moduleName, "moduleName2");
+    EXPECT_EQ(infos[1].abilityName, "AService");
+    EXPECT_EQ(infos[1].label, "A");
+    EXPECT_EQ(infos[1].icon, "Aicon");
+
+    ans = resourceRdb.DeleteResourceInfo(info.GetKey());
+    EXPECT_TRUE(ans);
+    ans = resourceRdb.DeleteResourceInfo(info2.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0218
+ * Function: CheckExtensionAbilityValid
+ * @tc.name: test CheckExtensionAbilityValid with non-existent bundle
+ * @tc.desc: 1. system running normally
+ *           2. test CheckExtensionAbilityValid when bundle does not exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0218, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    std::vector<LauncherAbilityResourceInfo> info;
+    auto ret = bundleResourceHostImpl->GetExtensionAbilityResourceInfo("non.existent.bundle", 
+        ExtensionAbilityType::INPUTMETHOD, 0, info, 1);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 #endif
 

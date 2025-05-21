@@ -27,6 +27,7 @@
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_client.h"
+#include "bundle_common_event_mgr.h"
 #include "bundle_data_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
 #include "bundle_event_callback_death_recipient.h"
@@ -142,6 +143,7 @@ BundleDataMgr::BundleDataMgr()
     sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     bundleStateStorage_ = std::make_shared<BundleStateStorage>();
     shortcutStorage_ = std::make_shared<ShortcutDataStorageRdb>();
+    shortcutVisibleStorage_ = std::make_shared<ShortcutVisibleDataStorageRdb>();
     routerStorage_ = std::make_shared<RouterDataStorageRdb>();
     uninstallDataMgr_ = std::make_shared<UninstallDataMgrStorageRdb>();
     firstInstallDataMgr_ = std::make_shared<FirstInstallDataMgrStorageRdb>();
@@ -3831,6 +3833,11 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
             recoverablePreInstallBundleInfos.emplace_back(preInstallBundleInfo);
             continue;
         }
+        if (infoItem->second.IsU1Enable() &&
+            !infoItem->second.HasInnerBundleUserInfo(Constants::U1)) {
+            recoverablePreInstallBundleInfos.emplace_back(preInstallBundleInfo);
+            continue;
+        }
         if (!infoItem->second.HasInnerBundleUserInfo(Constants::DEFAULT_USERID) &&
             !infoItem->second.HasInnerBundleUserInfo(userId)) {
             recoverablePreInstallBundleInfos.emplace_back(preInstallBundleInfo);
@@ -5293,6 +5300,19 @@ bool BundleDataMgr::GetShortcutInfos(
         return false;
     }
     GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
+
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    int32_t appIndex = 0;
+    std::string name;
+    auto ret = GetBundleNameAndIndex(uid, name, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGD("get Index failed");
+    }
+
+    // get shortcut visible status
+    for (auto &info : shortcutInfos) {
+        shortcutVisibleStorage_->GetShortcutVisibleStatus(requestUserId, appIndex, info);
+    }
     return true;
 }
 
@@ -5475,6 +5495,20 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
     }
 
     GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
+
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    int32_t appIndex = 0;
+    std::string name;
+    ret = GetBundleNameAndIndex(uid, name, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGD("get Index failed");
+        return ERR_OK;
+    }
+
+    // get shortcut visible status
+    for (auto &info : shortcutInfos) {
+        shortcutVisibleStorage_->GetShortcutVisibleStatus(requestUserId, appIndex, info);
+    }
     return ERR_OK;
 }
 
@@ -7564,6 +7598,23 @@ std::vector<std::string> BundleDataMgr::GetAllSystemHspCodePaths() const
     return systemHspCodePaths;
 }
 
+std::vector<std::string> BundleDataMgr::GetAllExtensionBundleNames(const std::vector<ExtensionAbilityType> &types) const
+{
+    APP_LOGD("GetAllExtensionBundleNames begin");
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::vector<std::string> bundleNames;
+    for (const auto &[bundleName, innerBundleInfo] : bundleInfos_) {
+        const auto extensionAbilityInfos = innerBundleInfo.GetInnerExtensionInfos();
+        for (const auto &extensionItem : extensionAbilityInfos) {
+            if (std::find(types.begin(), types.end(), extensionItem.second.type) != types.end()) {
+                bundleNames.emplace_back(bundleName);
+                break;
+            }
+        }
+    }
+    return bundleNames;
+}
+
 std::vector<std::tuple<std::string, int32_t, int32_t>> BundleDataMgr::GetAllLiteBundleInfo(const int32_t userId) const
 {
     std::set<int32_t> userIds = GetAllUser();
@@ -7608,7 +7659,8 @@ std::vector<std::string> BundleDataMgr::GetBundleNamesForNewUser() const
         }
         const auto extensions = item.second.GetInnerExtensionInfos();
         for (const auto &extensionItem : extensions) {
-            if (extensionItem.second.type == ExtensionAbilityType::DRIVER) {
+            if (extensionItem.second.type == ExtensionAbilityType::DRIVER && 
+                OHOS::system::GetBoolParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, true)) {
                 bundleNames.emplace_back(extensionItem.second.bundleName);
                 APP_LOGI("driver bundle found: %{public}s", extensionItem.second.bundleName.c_str());
                 break;
@@ -9389,6 +9441,10 @@ ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const in
     }
     innerBundleInfo.SetBundleStatus(nowBundleStatus);
     DeleteDesktopShortcutInfo(bundleName, userId, appIndex);
+    if (DeleteShortcutVisibleInfo(bundleName, userId, appIndex) != ERR_OK) {
+        APP_LOGE("DeleteShortcutVisibleInfo failed, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+            bundleName.c_str(), userId, appIndex);
+    }
     return ERR_OK;
 }
 
@@ -9784,6 +9840,41 @@ ErrCode BundleDataMgr::GetAppIdByBundleName(
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetAppIdAndAppIdentifierByBundleName(
+    const std::string &bundleName, std::string &appId, std::string &appIdentifier) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    appId = item->second.GetAppId();
+    appIdentifier = item->second.GetAppIdentifier();
+    return ERR_OK;
+}
+
+std::string BundleDataMgr::AppIdAndAppIdentifierTransform(const std::string appIdOrAppIdentifier) const
+{
+    if (appIdOrAppIdentifier.empty()) {
+        APP_LOGW("appIdOrAppIdentifier is empty");
+        return Constants::EMPTY_STRING;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto it = std::find_if(bundleInfos_.cbegin(), bundleInfos_.cend(), [&appIdOrAppIdentifier](const auto &pair) {
+        return (appIdOrAppIdentifier == pair.second.GetAppId() ||
+            appIdOrAppIdentifier == pair.second.GetAppIdentifier());
+    });
+    if (it == bundleInfos_.cend()) {
+        APP_LOGW("can't find appIdOrAppIdentifier in the installed bundle");
+        return Constants::EMPTY_STRING;
+    }
+    if (appIdOrAppIdentifier == it->second.GetAppId()) {
+        return it->second.GetAppIdentifier();
+    }
+    return it->second.GetAppId();
+}
+
 ErrCode BundleDataMgr::GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) const
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -10102,11 +10193,25 @@ std::string BundleDataMgr::GetDirForApp(const std::string &bundleName, const int
 }
 
 ErrCode BundleDataMgr::GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
-    std::string &dataDir) const
+    std::string &dataDir)
 {
     APP_LOGD("start GetDir bundleName : %{public}s appIndex : %{public}d", bundleName.c_str(), appIndex);
-    if (appIndex < 0) {
+    if (appIndex < 0 || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
         return ERR_BUNDLE_MANAGER_GET_DIR_INVALID_APP_INDEX;
+    }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        int32_t callingUid = IPCSkeleton::GetCallingUid();
+        int32_t userId = callingUid / Constants::BASE_USER_RANGE;
+        bool isBundleInstalled = false;
+        auto ret = IsBundleInstalled(bundleName, userId, appIndex, isBundleInstalled);
+        if (ret != ERR_OK) {
+            APP_LOGE("IsBundleInstalled failed, ret:%{public}d", ret);
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+        if (!isBundleInstalled) {
+            APP_LOGE("bundle %{public}s is not installed", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
     }
     BundleType type = BundleType::APP;
     GetBundleType(bundleName, type);
@@ -10584,7 +10689,7 @@ void BundleDataMgr::NotifyPluginEventCallback(const EventFwk::CommonEventData &e
     APP_LOGI("end");
 }
 
-ErrCode BundleDataMgr::GetAllDynamicInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos)
+ErrCode BundleDataMgr::GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos)
 {
     APP_LOGI("start userId %{public}d", userId);
     if (userId != Constants::UNSPECIFIED_USERID) {
@@ -10600,6 +10705,19 @@ ErrCode BundleDataMgr::GetAllDynamicInfo(const int32_t userId, std::vector<Dynam
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetDynamicIconInfo(const std::string &bundleName,
+    std::vector<DynamicIconInfo> &dynamicIconInfos)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGW("bundleName: %{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    item->second.GetAllDynamicIconInfo(Constants::UNSPECIFIED_USERID, dynamicIconInfos);
+    return ERR_OK;
+}
+
 std::string BundleDataMgr::GetCurDynamicIconModule(
     const std::string &bundleName, const int32_t userId, const int32_t appIndex)
 {
@@ -10609,6 +10727,62 @@ std::string BundleDataMgr::GetCurDynamicIconModule(
         return Constants::EMPTY_STRING;
     }
     return item->second.GetCurDynamicIconModule(userId, appIndex);
+}
+
+ErrCode BundleDataMgr::SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+{
+    APP_LOGD("SetShortcutVisibleForSelf begin");
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    int32_t appIndex = 0;
+    std::string bundleName;
+    auto ret = GetBundleNameAndIndex(uid, bundleName, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("get inner bundle info failed");
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+    int32_t userId = GetUserIdByCallingUid();
+    std::vector<ShortcutInfo> shortcutInfos;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto iter = bundleInfos_.find(bundleName);
+        if (iter != bundleInfos_.end()) {
+            GetShortcutInfosByInnerBundleInfo(iter->second, shortcutInfos);
+        } else {
+            APP_LOGE("%{public}s not exist", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
+    bool isShortcutIdExist = false;
+    for (const auto& shortcut : shortcutInfos) {
+        if (shortcut.id == shortcutId) {
+            isShortcutIdExist = true;
+        }
+    }
+    if (!isShortcutIdExist) {
+        APP_LOGE("shortcut id %{public}s not exist", shortcutId.c_str());
+        return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+    }
+    if (shortcutVisibleStorage_->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible)) {
+        return ERR_OK;
+    } 
+    if (!shortcutVisibleStorage_->SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible)) {
+        APP_LOGE("SaveStorageShortcutVisibleInfo failed");
+        return ERR_APPEXECFWK_DB_INSERT_ERROR;
+    }
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyShortcutVisibleChanged(bundleName, shortcutId, userId, appIndex, visible);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    APP_LOGD(
+        "DeleteShortcutVisibleInfo by remove cloneApp, bundleName:%{public}s, userId:%{public}d, appIndex:%{public}d",
+        bundleName.c_str(), userId, appIndex);
+    if (!shortcutVisibleStorage_->DeleteShortcutVisibleInfo(bundleName, userId, appIndex)) {
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

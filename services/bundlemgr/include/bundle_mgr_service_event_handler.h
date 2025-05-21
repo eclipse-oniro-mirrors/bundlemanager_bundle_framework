@@ -56,6 +56,7 @@ enum OTAFlag : uint32_t {
     CHECK_RECOVERABLE_APPLICATION_INFO = 0x00002000,
     CHECK_INSTALL_SOURCE = 0x00004000,
     DELETE_DEPRECATED_ARK_PATHS = 0x00008000,
+    CHECK_EXTENSION_ABILITY = 0x00010000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -568,6 +569,8 @@ private:
     bool InnerProcessUninstallAppServiceModule(const InnerBundleInfo &innerBundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos, bool &isDownGrade);
 
+    void ProcessCheckAppExtensionAbility();
+    void InnerProcessCheckAppExtensionAbility();
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();
     bool IsSystemFingerprintChanged();
@@ -682,6 +685,11 @@ private:
         std::unordered_map<std::string, InnerBundleInfo> &infos);
     void ConvertToOnDemandInstallBundleInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         PreInstallBundleInfo &preInstallBundleInfo);
+    void SavePreloadAppUninstallInfo(const std::string &bundleName,
+        std::vector<std::string> &preloadBundleNames);
+    void SaveUninstalledPreloadAppToFile(const std::vector<std::string> &preloadBundleNames);
+    void CreateUninstalledPreloadDir();
+    void RemoveUninstalledPreloadFile();
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
     // Used to notify bundle scan status

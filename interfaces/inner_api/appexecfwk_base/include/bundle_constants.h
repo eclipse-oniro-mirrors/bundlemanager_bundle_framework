@@ -30,6 +30,7 @@ constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
 constexpr const char* CACHE_DIR = "cache";
 constexpr int8_t START_USERID = 100;
 constexpr int8_t DEFAULT_USERID = 0;
+constexpr int8_t U1 = 1;
 constexpr int8_t INVALID_USERID = -1;
 constexpr int8_t UNSPECIFIED_USERID = -2;
 constexpr int8_t ALL_USERID = -3;
@@ -70,6 +71,7 @@ modulename max is 128
 constexpr int16_t MAX_CACHE_DIR_SIZE = 774;
 
 // permissions
+constexpr const char* PERMISSION_U1_ENABLED = "U1Enabled";
 constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_CLONE_BUNDLE = "ohos.permission.UNINSTALL_CLONE_BUNDLE";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO = "ohos.permission.GET_BUNDLE_INFO";
@@ -91,6 +93,7 @@ constexpr const char* PERMISSION_INSTALL_PLUGIN = "ohos.permission.INSTALL_PLUGI
 constexpr const char* PERMISSION_UNINSTALL_PLUGIN = "ohos.permission.UNINSTALL_PLUGIN_BUNDLE";
 constexpr const char* PERMISSION_PERFORM_LOCAL_DEBUG = "ohos.permission.PERFORM_LOCAL_DEBUG";
 constexpr const char* PERMISSION_GET_ABILITY_INFO = "ohos.permission.GET_ABILITY_INFO";
+constexpr const char* PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS = "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
 
 enum class AppType {
     SYSTEM_APP = 0,

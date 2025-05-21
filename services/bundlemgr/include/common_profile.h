@@ -545,6 +545,11 @@ constexpr const char* START_WINDOW_BRANDING_IMAGE = "startWindowBrandingImage";
 constexpr const char* START_WINDOW_BACKGROUND_COLOR = "startWindowBackgroundColor";
 constexpr const char* START_WINDOW_BACKGROUND_IMAGE = "startWindowBackgroundImage";
 constexpr const char* START_WINDOW_BACKGROUND_IMAGE_FIT = "startWindowBackgroundImageFit";
+
+// startMode in app
+constexpr const char* START_MODE = "startMode";
+constexpr const char* START_MODE_MAIN_TASK = "mainTask";
+constexpr const char* START_MODE_RECENT_TASK = "recentTask";
 }  // namespace Profile
 }  // namespace AppExecFwk
 }  // namespace OHOS

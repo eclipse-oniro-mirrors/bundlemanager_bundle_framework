@@ -213,6 +213,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_ADDITIONAL_INFO_FOR_ALL_USER = 187,
 	GET_ABILITY_INFOS = 188,
     GET_SANDBOX_DATA_DIR = 189,
+    SET_SHORTCUT_VISIBLE = 190,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -353,6 +354,7 @@ enum class BundleResourceInterfaceCode : uint8_t {
     ADD_RESOURCE_INFO_BY_BUNDLE_NAME = 4,
     ADD_RESOURCE_INFO_BY_ABILITY = 5,
     DELETE_RESOURCE_INFO = 6,
+    GET_EXTENSION_ABILITY_RESOURCE_INFO = 7,
 };
 
 /* SAID: 401-126 Interface No.126 subservice also provides the following interfaces */
@@ -372,6 +374,7 @@ enum class ExtendResourceManagerInterfaceCode : uint8_t {
     GET_DYNAMIC_ICON = 5,
     CREATE_FD = 6,
     GET_ALL_DYNAMIC_ICON_INFO = 7,
+    GET_DYNAMIC_ICON_INFO = 8,
 };
 
 /* SAID: 401-180 Interface No.180 subservice also provides the following interfaces */

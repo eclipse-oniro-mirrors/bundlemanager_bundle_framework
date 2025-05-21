@@ -311,6 +311,7 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
         APP_LOGI_NOFUNC("fwk not need install");
         return ERR_OK;
     }
+    
     ScopeGuard stateGuard([&] {
         dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_SUCCESS);
         dataMgr_->EnableBundle(bundleName_);
@@ -420,6 +421,10 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     result = bundleInstallChecker_->ParseHapFiles(
         checkedHspPaths, checkParam, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "Parse hsps file failed %{public}d");
+
+    // check u1Enable
+    result = bundleInstallChecker_->CheckNoU1Enable(newInfos);
+    CHECK_RESULT(result, "Check u1enable failed %{public}d");
 
     // check install permission
     result = bundleInstallChecker_->CheckInstallPermission(checkParam, hapVerifyResults);
@@ -1019,7 +1024,6 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
     }
     APP_LOGI_NOFUNC("%{public}s old version:%{public}d, new version:%{public}d",
         bundleName_.c_str(), oldInfo.GetVersionCode(), versionCode_);
-
     if ((oldInfo.GetVersionCode() == versionCode_) &&
         oldInfo.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
         APP_LOGW("bundle %{public}s type is not same, existing type is %{public}d",
