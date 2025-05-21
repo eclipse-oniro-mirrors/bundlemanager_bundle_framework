@@ -3092,9 +3092,17 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrService_0100, Function | MediumTest | Le
     MessageParcel data;
     MessageParcel reply;
     int32_t ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, data, reply);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, 0);
+    #else
     EXPECT_EQ(ret, -1);
+    #endif
     extension = "restore";
     ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, data, reply);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, 0);
+    #else
     EXPECT_EQ(ret, -1);
+    #endif
 }
 } // OHOS
