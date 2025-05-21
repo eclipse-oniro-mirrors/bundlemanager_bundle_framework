@@ -24,14 +24,14 @@ constexpr const char* BUNDLE_PROFILE_NAME = "config.json";
 constexpr const char* MODULE_PROFILE_NAME = "module.json";
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 }
-BundleExtractor::BundleExtractor(const std::string &source) : BaseExtractor(source)
+BundleExtractor::BundleExtractor(const std::string &source, bool parallel) : BaseExtractor(source, parallel)
 {
     APP_LOGD("BundleExtractor is created");
 }
 
 BundleExtractor::~BundleExtractor()
 {
-    APP_LOGD("BundleExtractoris destroyed");
+    APP_LOGD("BundleExtractor is destroyed");
 }
 
 bool BundleExtractor::ExtractProfile(std::ostream &dest) const
@@ -49,5 +49,29 @@ bool BundleExtractor::ExtractPackFile(std::ostream &dest) const
     APP_LOGD("start to parse pack.info");
     return ExtractByName(BUNDLE_PACKFILE_NAME, dest);
 }
+
+BundleParallelExtractor::BundleParallelExtractor(const std::string &source) : BundleExtractor(source, true)
+{
+    APP_LOGD("BundleParallelExtractor is created");
+}
+
+BundleParallelExtractor::~BundleParallelExtractor()
+{
+    APP_LOGD("BundleParallelExtractor is destroyed");
+}
+
+bool BundleParallelExtractor::ExtractByName(const std::string &fileName, std::ostream &dest) const
+{
+    if (!initial_) {
+        APP_LOGE("extractor is not initial");
+        return false;
+    }
+    if (!zipFile_.ExtractFileParallel(fileName, dest)) {
+        APP_LOGE("extractor is not ExtractFile");
+        return false;
+    }
+    return true;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
