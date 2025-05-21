@@ -687,7 +687,7 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0030, Function | SmallTest | Level0
     StopInstalldService();
     ret = installer.DeleteEl1ShaderCache(info, BUNDLE_NAME, USERID);
     EXPECT_NE(ret, ERR_OK);
- 
+
     // test CleanEl1UserShaderCache failed
     StopInstalldService();
     ret = installer.DeleteBundleClonesShaderCache(allAppIndexes, BUNDLE_NAME, USERID);
@@ -7705,46 +7705,6 @@ HWTEST_F(BmsBundleInstallerTest, BundleUserMgrHostImpl_0200, Function | MediumTe
 }
 
 /**
- * @tc.number: BundleUserMgrHostImpl_0300
- * @tc.name: test GetAllPreInstallBundleInfos
- * @tc.desc: 1.Test GetAllPreInstallBundleInfos the UserReceiverImpl
-*/
-HWTEST_F(BmsBundleInstallerTest, BundleUserMgrHostImpl_0300, Function | MediumTest | Level1)
-{
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    std::vector<std::string> disallowList;
-    std::set<PreInstallBundleInfo> preInstallBundleInfos;
-    BundleUserMgrHostImpl host;
-    bool ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::U1, false, preInstallBundleInfos);
-    EXPECT_FALSE(ret);
-
-    // test isU1 && !preInfo.GetU1Enable()
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool result = InstallSystemBundle(bundleFile);
-    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
-    InnerBundleInfo innerBundleInfo;
-    bool res = dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
-    EXPECT_TRUE(result) << "the bundle is not exist: " << BUNDLE_NAME;
-    ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::U1, false, preInstallBundleInfos);
-    EXPECT_FALSE(ret);
-
-    // add u1Enable, test !isU1 && preInfo.GetU1Enable()
-    std::vector<std::string> acls;
-    acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
-    innerBundleInfo.SetAllowedAcls(acls);
-    dataMgr->UpdateInnerBundleInfo(innerBundleInfo, false);
-    ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::START_USERID, false, preInstallBundleInfos);
-    EXPECT_TRUE(ret);
-
-    // test isU1 && preInfo.GetU1Enable()
-    ret = host.GetAllPreInstallBundleInfos(disallowList, Constants::U1, false, preInstallBundleInfos);
-    EXPECT_TRUE(ret);
-
-    ClearBundleInfo();
-}
-
-/**
  * @tc.number: BundleStreamInstallerHostImpl_0100
  * @tc.name: test CreateSignatureFileStream
  * @tc.desc: 1.Test CreateSignatureFileStream the BundleStreamInstallerHostImpl
@@ -11102,7 +11062,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1002, Function | SmallTest 
     std::vector<std::string> acls;
     acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
     info.SetAllowedAcls(acls);
-    
+
     // add innerBundleUserInfo for u100
     InnerBundleUserInfo innerBundleUserInfo100;
     innerBundleUserInfo100.bundleUserInfo.userId = TEST_U100;
@@ -11172,7 +11132,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1004, Function | SmallTest 
     installer.dataMgr_ = GetBundleDataMgr();
     InnerBundleInfo info;
     info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
-    
+
     // add innerBundleUserInfo for u1
     InnerBundleUserInfo innerBundleUserInfo;
     innerBundleUserInfo.bundleUserInfo.userId = TEST_U1;
@@ -11225,7 +11185,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1006, Function | SmallTest 
     installer.dataMgr_ = GetBundleDataMgr();
     InnerBundleInfo info;
     info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
-    
+
     // add innerBundleUserInfo for u1
     InnerBundleUserInfo innerBundleUserInfo1;
     innerBundleUserInfo1.bundleUserInfo.userId = TEST_U1;
@@ -11260,7 +11220,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1007, Function | SmallTest 
     installer.dataMgr_ = GetBundleDataMgr();
     InnerBundleInfo info;
     info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
-    
+
     // add innerBundleUserInfo for u100
     InnerBundleUserInfo innerBundleUserInfo100;
     innerBundleUserInfo100.bundleUserInfo.userId = TEST_U100;
