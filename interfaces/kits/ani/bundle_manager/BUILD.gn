@@ -217,6 +217,7 @@ ohos_copy("copy_bundleManager_ets") {
   sources = [
     "./ets/bundleManager/AbilityInfoInner.ets",
     "./ets/bundleManager/ApplicationInfoInner.ets",
+    "./ets/bundleManager/BundleInfoInner.ets",
     "./ets/bundleManager/ExtensionAbilityInfoInner.ets",
   ]
   outputs = [ "$ohos_ets_inner_path/bundleManager/{{source_file_part}}" ]

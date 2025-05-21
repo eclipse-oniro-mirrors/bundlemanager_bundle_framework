@@ -2721,7 +2721,7 @@ std::string CommonFunc::GetCloneBundleIdKey(const std::string &bundleName, const
 
 OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> CommonFunc::GetOverlayMgrProxy()
 {
-    auto bundleMgr = CommonFunc::GetBundleMgr();
+    auto bundleMgr = GetBundleMgr();
     if (bundleMgr == nullptr) {
         APP_LOGE("GetBundleMgr failed");
         return nullptr;
@@ -2736,7 +2736,7 @@ OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> CommonFunc::GetOverlayMgrProxy()
 
 OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> CommonFunc::GetAppControlProxy()
 {
-    auto bundleMgr = CommonFunc::GetBundleMgr();
+    auto bundleMgr = GetBundleMgr();
     if (bundleMgr == nullptr) {
         APP_LOGE("GetBundleMgr failed");
         return nullptr;
@@ -2747,6 +2747,21 @@ OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> CommonFunc::GetAppControlProxy()
         return nullptr;
     }
     return appControlProxy;
+}
+
+OHOS::sptr<OHOS::AppExecFwk::IDefaultApp> CommonFunc::GetDefaultAppProxy()
+{
+    auto bundleMgr = GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        return nullptr;
+    }
+    auto defaultAppProxy = bundleMgr->GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        APP_LOGE("GetDefaultAppProxy failed");
+        return nullptr;
+    }
+    return defaultAppProxy;
 }
 } // AppExecFwk
 } // OHOS

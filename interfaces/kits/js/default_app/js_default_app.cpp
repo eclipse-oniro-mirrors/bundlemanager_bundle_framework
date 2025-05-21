@@ -36,30 +36,8 @@ using namespace OHOS::AAFwk;
 
 namespace {
 constexpr int32_t NAPI_RETURN_ZERO = 0;
-const char* IS_DEFAULT_APPLICATION = "IsDefaultApplication";
-const char* IS_DEFAULT_APPLICATION_SYNC = "IsDefaultApplicationSync";
-const char* GET_DEFAULT_APPLICATION = "GetDefaultApplication";
-const char* GET_DEFAULT_APPLICATION_SYNC = "GetDefaultApplicationSync";
-const char* SET_DEFAULT_APPLICATION = "SetDefaultApplication";
-const char* SET_DEFAULT_APPLICATION_SYNC = "SetDefaultApplicationSync";
-const char* RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
-const char* RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
 const char* PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
-const char* TYPE_CHECK = "type";
-const char* WANT_CHECK = "want";
 }
-
-static const std::unordered_map<std::string, std::string> TYPE_MAPPING = {
-    {"Web Browser", "BROWSER"},
-    {"Image Gallery", "IMAGE"},
-    {"Audio Player", "AUDIO"},
-    {"Video Player", "VIDEO"},
-    {"PDF Viewer", "PDF"},
-    {"Word Viewer", "WORD"},
-    {"Excel Viewer", "EXCEL"},
-    {"PPT Viewer", "PPT"},
-    {"Email", "EMAIL"}
-};
 
 static bool ParseType(napi_env env, napi_value value, std::string& result)
 {
@@ -84,31 +62,6 @@ static bool ParseType(napi_env env, napi_value value, std::string& result)
         result = TYPE_MAPPING.at(result);
     }
     return true;
-}
-
-static OHOS::sptr<OHOS::AppExecFwk::IDefaultApp> GetDefaultAppProxy()
-{
-    auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (systemAbilityManager == nullptr) {
-        APP_LOGE("systemAbilityManager is null");
-        return nullptr;
-    }
-    auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (bundleMgrSa == nullptr) {
-        APP_LOGE("bundleMgrSa is null");
-        return nullptr;
-    }
-    auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
-    if (bundleMgr == nullptr) {
-        APP_LOGE("iface_cast failed");
-        return nullptr;
-    }
-    auto defaultAppProxy = bundleMgr->GetDefaultAppProxy();
-    if (defaultAppProxy == nullptr) {
-        APP_LOGE("GetDefaultAppProxy failed");
-        return nullptr;
-    }
-    return defaultAppProxy;
 }
 
 static void ConvertAbilityInfo(napi_env env, napi_value objAbilityInfo, const AbilityInfo &abilityInfo)
@@ -233,7 +186,7 @@ static ErrCode InnerIsDefaultApplication(DefaultAppCallbackInfo *info)
         APP_LOGE("info is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    auto defaultAppProxy = GetDefaultAppProxy();
+    auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         APP_LOGE("defaultAppProxy is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
@@ -352,7 +305,7 @@ napi_value IsDefaultApplicationSync(napi_env env, napi_callback_info info)
         return nRet;
     }
 
-    auto defaultAppProxy = GetDefaultAppProxy();
+    auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
             IS_DEFAULT_APPLICATION_SYNC);
@@ -380,7 +333,7 @@ static ErrCode InnerGetDefaultApplication(DefaultAppCallbackInfo *info)
         APP_LOGE("info is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    auto defaultAppProxy = GetDefaultAppProxy();
+    auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         APP_LOGE("defaultAppProxy is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
@@ -511,7 +464,7 @@ napi_value GetDefaultApplicationSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto defaultAppProxy = GetDefaultAppProxy();
+    auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
             GET_DEFAULT_APPLICATION_SYNC);
@@ -543,7 +496,7 @@ static ErrCode InnerSetDefaultApplication(const DefaultAppCallbackInfo *info)
         APP_LOGE("info is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    auto defaultAppProxy = GetDefaultAppProxy();
+    auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         APP_LOGE("defaultAppProxy is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
@@ -687,7 +640,7 @@ napi_value SetDefaultApplicationSync(napi_env env, napi_callback_info info)
     if (ParamsProcessSetDefaultApplicationSync(env, info, type, want, userId) != ERR_OK) {
         return nRet;
     }
-    auto defaultAppProxy = GetDefaultAppProxy();
+    auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
             SET_DEFAULT_APPLICATION_SYNC);
@@ -716,7 +669,7 @@ static ErrCode InnerResetDefaultApplication(const DefaultAppCallbackInfo *info)
         APP_LOGE("info is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    auto defaultAppProxy = GetDefaultAppProxy();
+    auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         APP_LOGE("defaultAppProxy is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
@@ -847,7 +800,7 @@ napi_value ResetDefaultApplicationSync(napi_env env, napi_callback_info info)
         return nRet;
     }
 
-    auto defaultAppProxy = GetDefaultAppProxy();
+    auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
             RESET_DEFAULT_APPLICATION_SYNC);

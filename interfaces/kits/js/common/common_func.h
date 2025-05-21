@@ -198,6 +198,7 @@ static void GetBundleNameAndIndexByName(
 static std::string GetCloneBundleIdKey(const std::string &bundleName, const int32_t appIndex);
 static OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> GetOverlayMgrProxy();
 static OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> GetAppControlProxy();
+static OHOS::sptr<OHOS::AppExecFwk::IDefaultApp> GetDefaultAppProxy();
 class BundleMgrCommonDeathRecipient : public IRemoteObject::DeathRecipient {
     void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
 };
