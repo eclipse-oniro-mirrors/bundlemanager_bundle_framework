@@ -32,7 +32,7 @@ public:
 
 private:
     static void RemoveSandboxDataDir(int32_t userId,
-        const std::map<int32_t, std::vector<std::string>> &toDeleteSandboxDir);
+        const std::map<int32_t, std::vector<std::string>> toDeleteSandboxDir);
 
     std::map<int32_t, std::vector<std::string>> toDeleteSandboxDir_;
 };
@@ -57,6 +57,7 @@ private:
     void ListeningUserUnlocked();
 
     std::weak_ptr<IBundleDataStorage> dataStorage_;
+    std::mutex sandboxDirsMutex_;
     std::map<int32_t, std::vector<std::string>> sandboxDirs_;
 };
 }  // namespace AppExecFwk

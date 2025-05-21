@@ -52,7 +52,7 @@ void BundleMgrCommonEventSubscriber::OnReceiveEvent(const CommonEventData &data)
 }
 
 void BundleMgrCommonEventSubscriber::RemoveSandboxDataDir(int32_t userId,
-    const std::map<int32_t, std::vector<std::string>> &toDeleteSandboxDir)
+    const std::map<int32_t, std::vector<std::string>> toDeleteSandboxDir)
 {
     // delete sandbox data dir
     if (toDeleteSandboxDir.empty() || (toDeleteSandboxDir.find(userId) == toDeleteSandboxDir.end())) {
@@ -127,6 +127,7 @@ void BundleSandboxExceptionHandler::KeepSandboxDirs(const std::string &bundleNam
 {
     APP_LOGD("start to keep sandbox dir");
     std::string innerBundleName = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
+    std::lock_guard<std::mutex> lock(sandboxDirsMutex_);
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
         std::string baseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
             std::to_string(userId) + ServiceConstants::BASE + innerBundleName;
@@ -153,6 +154,7 @@ void BundleSandboxExceptionHandler::ListeningUserUnlocked()
     CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
 
+    std::lock_guard<std::mutex> lock(sandboxDirsMutex_);
     auto subscriberPtr = std::make_shared<BundleMgrCommonEventSubscriber>(subscribeInfo, sandboxDirs_);
     if (!CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
         APP_LOGW("subscribe common event %{public}s failed",
@@ -164,7 +166,7 @@ void BundleSandboxExceptionHandler::RemoveDataDir()
 {
     APP_LOGD("start to remove sandbox data dir");
     auto execFunc =
-        [](const std::map<int32_t, std::vector<std::string>> &sandboxDirs, int32_t waitTimes,
+        [](const std::map<int32_t, std::vector<std::string>> sandboxDirs, int32_t waitTimes,
             int32_t eachTime) {
         int32_t currentUserId = Constants::INVALID_USERID;
         while (waitTimes--) {
@@ -199,6 +201,7 @@ void BundleSandboxExceptionHandler::RemoveDataDir()
         }
     };
 
+    std::lock_guard<std::mutex> lock(sandboxDirsMutex_);
     std::thread removeThread(execFunc, sandboxDirs_, WAIT_TIMES, EACH_TIME);
     removeThread.detach();
 }
