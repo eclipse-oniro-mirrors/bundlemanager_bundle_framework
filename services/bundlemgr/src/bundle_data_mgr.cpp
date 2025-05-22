@@ -10701,6 +10701,26 @@ ErrCode BundleDataMgr::GetAllDynamicIconInfo(const int32_t userId, std::vector<D
     return ERR_OK;
 }
 
+void BundleDataMgr::ProcessDynamicIconForOta()
+{
+    std::map<std::string, std::string> bundleNames;
+    {
+        // process all old curDynamicIconModule when first ota
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (const auto &item : bundleInfos_) {
+            if (!item.second.GetCurDynamicIconModule().empty()) {
+                bundleNames[item.first] = item.second.GetCurDynamicIconModule();
+            }
+        }
+    }
+    if (bundleNames.empty()) {
+        return;
+    }
+    for (const auto &item : bundleNames) {
+        UpateCurDynamicIconModule(item.first, item.second);
+    }
+}
+
 ErrCode BundleDataMgr::GetDynamicIconInfo(const std::string &bundleName,
     std::vector<DynamicIconInfo> &dynamicIconInfos)
 {

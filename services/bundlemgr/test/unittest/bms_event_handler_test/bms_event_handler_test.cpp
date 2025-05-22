@@ -2399,6 +2399,26 @@ HWTEST_F(BmsEventHandlerTest, SaveBmsSystemTimeForShortcut_0100, Function | Smal
 }
 
 /**
+ * @tc.number: InnerProcessAllDynamicIconInfoWhenOta_0100
+ * @tc.name: InnerProcessAllDynamicIconInfoWhenOta
+ * @tc.desc: test InnerProcessAllDynamicIconInfoWhenOta
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessAllDynamicIconInfoWhenOta_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+
+    handler->InnerProcessAllDynamicIconInfoWhenOta();
+    bool checkDynamicIcon = false;
+    handler->CheckOtaFlag(OTAFlag::PROCESS_DYNAMIC_CION, checkDynamicIcon);
+    EXPECT_TRUE(checkDynamicIcon);
+
+    handler->InnerProcessAllDynamicIconInfoWhenOta();
+    handler->CheckOtaFlag(OTAFlag::PROCESS_DYNAMIC_CION, checkDynamicIcon);
+    EXPECT_TRUE(checkDynamicIcon);
+}
+
+/**
  * @tc.number: InnerBundleInfo_0100
  * @tc.name: UpdateRemovable
  * @tc.desc: test UpdateRemovable

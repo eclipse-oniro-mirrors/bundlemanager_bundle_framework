@@ -57,6 +57,7 @@ enum OTAFlag : uint32_t {
     CHECK_INSTALL_SOURCE = 0x00004000,
     DELETE_DEPRECATED_ARK_PATHS = 0x00008000,
     CHECK_EXTENSION_ABILITY = 0x00010000,
+    PROCESS_DYNAMIC_CION = 0x00020000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -651,6 +652,7 @@ private:
     bool UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const;
     bool IsNeedToUpdateSharedAppByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void CheckALLResourceInfo();
+    void InnerProcessAllDynamicIconInfoWhenOta();
     // Used to add bundle resource Info that does not exist in rdb when OTA.
     void static ProcessBundleResourceInfo();
     // scan all bundle data group info
