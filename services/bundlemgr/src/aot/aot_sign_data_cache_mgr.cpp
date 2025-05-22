@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,35 +15,17 @@
 
 #include "aot/aot_sign_data_cache_mgr.h"
 
+#include <thread>
+#include <chrono>
+
 #include "installd_client.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-constexpr int8_t SLEEP_TIME_FOR_WAIT_SIGN_ENABLE = 1; // 1 s
-constexpr int8_t LOOP_TIMES_FOR_WAIT_SIGN_ENABLE = 5;
-}
-
 AOTSignDataCacheMgr& AOTSignDataCacheMgr::GetInstance()
 {
     static AOTSignDataCacheMgr signDataCacheMgr;
     return signDataCacheMgr;
-}
-
-void AOTSignDataCacheMgr::AddPendSignData(const AOTArgs &aotArgs, const uint32_t versionCode,
-    const std::vector<uint8_t> &pendSignData, const ErrCode ret)
-{
-    if (isLocked_ && (ret == ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) && !pendSignData.empty()) {
-        if (aotArgs.bundleName.empty() || aotArgs.moduleName.empty()) {
-            APP_LOGE("empty bundle or/and module name error");
-            return;
-        }
-        PendingData pendingData = {versionCode, pendSignData};
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            pendingSignData_[aotArgs.bundleName][aotArgs.moduleName] = pendingData;
-        }
-    }
 }
 
 void AOTSignDataCacheMgr::RegisterScreenUnlockListener()
@@ -59,6 +41,34 @@ void AOTSignDataCacheMgr::RegisterScreenUnlockListener()
         return;
     }
     APP_LOGI_NOFUNC("AOT register screen unlock event success");
+}
+
+void AOTSignDataCacheMgr::AddSignDataForSysComp(const std::string &anFileName, const std::vector<uint8_t> &signData,
+    const ErrCode ret)
+{
+    if (anFileName.empty() || signData.empty()) {
+        APP_LOGE_NOFUNC("empty anFileName or signData");
+        return;
+    }
+    if (!isLocked_ || ret != ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    sysCompSignDataMap_[anFileName] = signData;
+}
+
+void AOTSignDataCacheMgr::AddSignDataForHap(const AOTArgs &aotArgs, const uint32_t versionCode,
+    const std::vector<uint8_t> &signData, const ErrCode ret)
+{
+    if (aotArgs.bundleName.empty() || aotArgs.moduleName.empty() || signData.empty()) {
+        APP_LOGE_NOFUNC("empty bundleName or moduleName or signData");
+        return;
+    }
+    if (!isLocked_ || ret != ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    hapSignDataVector_.emplace_back(HapSignData{versionCode, aotArgs.bundleName, aotArgs.moduleName, signData});
 }
 
 void AOTSignDataCacheMgr::UnregisterScreenUnlockEvent()
@@ -86,62 +96,66 @@ void AOTSignDataCacheMgr::UnlockEventSubscriber::OnReceiveEvent(const EventFwk::
 
 void AOTSignDataCacheMgr::HandleUnlockEvent()
 {
-    APP_LOGI_NOFUNC("pending sign thread is wake up");
+    APP_LOGI_NOFUNC("begin to sign data");
+    isLocked_ = false;
     UnregisterScreenUnlockEvent();
 
-    sleep(SLEEP_TIME_FOR_WAIT_SIGN_ENABLE);
-    isLocked_ = false;
-    int32_t loopTimes = 0;
-    while (ExecutePendSign() != ERR_OK) {
-        if (++loopTimes > LOOP_TIMES_FOR_WAIT_SIGN_ENABLE) {
-            APP_LOGE_NOFUNC("wait for enforce sign enable time out");
+    uint8_t maxRetry = 5;
+    for (uint8_t i = 1; i <= maxRetry; ++i) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        if (EnforceCodeSign()) {
+            APP_LOGI_NOFUNC("sign data success");
             return;
         }
-        sleep(SLEEP_TIME_FOR_WAIT_SIGN_ENABLE);
     }
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        std::unordered_map<std::string, std::unordered_map<std::string, PendingData>>().swap(pendingSignData_);
-    }
-    APP_LOGI_NOFUNC("pending enforce sign success");
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::unordered_map<std::string, std::vector<uint8_t>>().swap(sysCompSignDataMap_);
+    hapSignDataVector_.clear();
+    APP_LOGE_NOFUNC("sign data failed");
 }
 
-ErrCode AOTSignDataCacheMgr::ExecutePendSign()
+bool AOTSignDataCacheMgr::EnforceCodeSign()
+{
+    return EnforceCodeSignForSysComp() && EnforceCodeSignForHap();
+}
+
+bool AOTSignDataCacheMgr::EnforceCodeSignForSysComp()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    ErrCode ret = ERR_OK;
-    for (auto itBundle = pendingSignData_.begin(); itBundle != pendingSignData_.end(); ++itBundle) {
-        auto &bundleName = itBundle->first;
-        auto &moduleSignData = itBundle->second;
-        for (auto itModule = moduleSignData.begin(); itModule != moduleSignData.end();) {
-            auto &moduleName = itModule->first;
-            auto &signData = itModule->second.signData;
-            std::string anFileName = ServiceConstants::ARK_CACHE_PATH + bundleName + ServiceConstants::PATH_SEPARATOR
-                + ServiceConstants::ARM64 + ServiceConstants::PATH_SEPARATOR + moduleName + ServiceConstants::AN_SUFFIX;
-
-            ErrCode retCS = InstalldClient::GetInstance()->PendSignAOT(anFileName, signData);
-            if (retCS == ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
-                APP_LOGE("enforce sign service is disable");
-                ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
-                ++itModule;
-                continue;
-            } else if (retCS != ERR_OK) {
-                itModule = moduleSignData.erase(itModule);
-                continue;
-            }
-            auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-            if (!dataMgr) {
-                APP_LOGE("dataMgr is null");
-                ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
-                ++itModule;
-                continue;
-            }
-            auto versionCode = itModule->second.versionCode;
-            dataMgr->SetAOTCompileStatus(bundleName, moduleName, AOTCompileStatus::COMPILE_SUCCESS, versionCode);
-            itModule = moduleSignData.erase(itModule);
+    for (const auto &[anFileName, signData] : sysCompSignDataMap_) {
+        ErrCode signRet = InstalldClient::GetInstance()->PendSignAOT(anFileName, signData);
+        if (signRet == ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
+            APP_LOGE_NOFUNC("sign service disabled");
+            return false;
         }
     }
-    return ret;
+    std::unordered_map<std::string, std::vector<uint8_t>>().swap(sysCompSignDataMap_);
+    return true;
+}
+
+bool AOTSignDataCacheMgr::EnforceCodeSignForHap()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (const HapSignData &hapSignData : hapSignDataVector_) {
+        std::filesystem::path anFileName(ServiceConstants::ARK_CACHE_PATH);
+        anFileName /= hapSignData.bundleName;
+        anFileName /= ServiceConstants::ARM64;
+        anFileName /= hapSignData.moduleName + ServiceConstants::AN_SUFFIX;
+        ErrCode signRet = InstalldClient::GetInstance()->PendSignAOT(anFileName.string(), hapSignData.signData);
+        if (signRet == ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
+            APP_LOGE_NOFUNC("sign service disabled");
+            return false;
+        }
+        if (signRet == ERR_OK) {
+            auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+            if (dataMgr != nullptr) {
+                dataMgr->SetAOTCompileStatus(hapSignData.bundleName, hapSignData.moduleName,
+                    AOTCompileStatus::COMPILE_SUCCESS, hapSignData.versionCode);
+            }
+        }
+    }
+    hapSignDataVector_.clear();
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

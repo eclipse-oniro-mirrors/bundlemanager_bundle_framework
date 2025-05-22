@@ -352,5 +352,10 @@ ErrCode InstalldHostImpl::BackUpFirstBootLog()
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

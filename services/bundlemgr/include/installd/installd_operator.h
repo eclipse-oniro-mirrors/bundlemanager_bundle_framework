@@ -322,7 +322,7 @@ public:
     static std::string GetFileName(const std::string &sourcePath);
     static std::string IncludeTrailingPathDelimiter(const std::string& path);
     static std::vector<std::string> GetFirstBootLogFile();
-
+    static bool ClearDir(const std::string &dir);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);

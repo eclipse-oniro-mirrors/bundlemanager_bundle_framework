@@ -617,5 +617,10 @@ ErrCode InstalldClient::BackUpFirstBootLog()
 {
     return CallService(&IInstalld::BackUpFirstBootLog);
 }
+
+ErrCode InstalldClient::ClearDir(const std::string &dir)
+{
+    return CallService(&IInstalld::ClearDir, dir);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
