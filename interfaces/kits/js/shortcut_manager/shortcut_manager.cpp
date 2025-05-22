@@ -318,7 +318,7 @@ void SetShortcutVisibleForSelfComplete(napi_env env, napi_status status, void *d
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ONE]));
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, SET_SHORTCUT_VISIBLE);
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, SET_SHORTCUT_VISIBLE);
     }
     CommonFunc::NapiReturnDeferred<SetShortcutVisibleForSelfCallbackInfo>(
         env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
@@ -398,7 +398,7 @@ void GetAllShortcutInfoForSelfComplete(napi_env env, napi_status status, void *d
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
         CommonFunc::ConvertShortCutInfos(env, asyncCallbackInfo->shortcutInfos, result[ARGS_POS_ONE]);
     } else {
-        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, GET_ALL_SHORTCUT_INFO_FOR_SELF);
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, GET_ALL_SHORTCUT_INFO_FOR_SELF);
     }
     CommonFunc::NapiReturnDeferred<GetAllShortcutInfoForSelfCallbackInfo>(
         env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
