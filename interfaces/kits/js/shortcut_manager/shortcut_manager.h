@@ -53,10 +53,16 @@ struct SetShortcutVisibleForSelfCallbackInfo : public BaseCallbackInfo {
     int32_t errCode = 0;
 };
 
+struct GetAllShortcutInfoForSelfCallbackInfo : public BaseCallbackInfo {
+    explicit GetAllShortcutInfoForSelfCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
+};
+
 napi_value AddDesktopShortcutInfo(napi_env env, napi_callback_info info);
 napi_value DeleteDesktopShortcutInfo(napi_env env, napi_callback_info info);
 napi_value GetAllDesktopShortcutInfo(napi_env env, napi_callback_info info);
 napi_value SetShortcutVisibleForSelf(napi_env env, napi_callback_info info);
+napi_value GetAllShortcutInfoForSelf(napi_env env, napi_callback_info info);
 }
 }
 #endif

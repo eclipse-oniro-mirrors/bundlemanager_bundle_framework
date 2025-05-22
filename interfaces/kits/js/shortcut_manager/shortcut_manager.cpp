@@ -36,6 +36,7 @@ constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
 constexpr const char* USER_ID = "userId";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 constexpr const char* SET_SHORTCUT_VISIBLE = "SetShortcutVisibleForSelf";
+constexpr const char* GET_ALL_SHORTCUT_INFO_FOR_SELF = "GetAllShortcutInfoForSelf"; 
 }
 static ErrCode InnerAddDesktopShortcutInfo(const OHOS::AppExecFwk::ShortcutInfo &shortcutInfo, int32_t userId)
 {
@@ -357,6 +358,67 @@ napi_value SetShortcutVisibleForSelf(napi_env env, napi_callback_info info)
         "SetShortcutVisibleForSelf", SetShortcutVisibleForSelfExec, SetShortcutVisibleForSelfComplete);
     callbackPtr.release();
     APP_LOGD("Call SetShortcutVisibleForSelf done");
+    return promise;
+}
+
+static ErrCode InnerGetAllShortcutInfoForSelf(std::vector<OHOS::AppExecFwk::ShortcutInfo> &shortcutInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return iBundleMgr->GetAllShortcutInfoForSelf(shortcutInfos);
+}
+ 
+void GetAllShortcutInfoForSelfExec(napi_env env, void *data)
+{
+    GetAllShortcutInfoForSelfCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<GetAllShortcutInfoForSelfCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(
+        InnerGetAllShortcutInfoForSelf(asyncCallbackInfo->shortcutInfos));
+}
+ 
+void GetAllShortcutInfoForSelfComplete(napi_env env, napi_status status, void *data)
+{
+    GetAllShortcutInfoForSelfCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<GetAllShortcutInfoForSelfCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<GetAllShortcutInfoForSelfCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        CommonFunc::ConvertShortCutInfos(env, asyncCallbackInfo->shortcutInfos, result[ARGS_POS_ONE]);
+    } else {
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, GET_ALL_SHORTCUT_INFO_FOR_SELF);
+    }
+    CommonFunc::NapiReturnDeferred<GetAllShortcutInfoForSelfCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+ 
+napi_value GetAllShortcutInfoForSelf(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("Napi begin GetAllShortcutInfoForSelf");
+    GetAllShortcutInfoForSelfCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) GetAllShortcutInfoForSelfCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<GetAllShortcutInfoForSelfCallbackInfo> callbackPtr {asyncCallbackInfo};
+ 
+    auto promise = CommonFunc::AsyncCallNativeMethod<GetAllShortcutInfoForSelfCallbackInfo>(env, asyncCallbackInfo,
+        "GetAllShortcutInfoForSelf", GetAllShortcutInfoForSelfExec, GetAllShortcutInfoForSelfComplete);
+    callbackPtr.release();
+    APP_LOGD("Call GetAllShortcutInfoForSelf done");
     return promise;
 }
 } // AppExecFwk

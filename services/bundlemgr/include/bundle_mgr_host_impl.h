@@ -1108,6 +1108,7 @@ public:
         const std::string &pluginModuleName, const int32_t userId, HapModuleInfo &hapModuleInfo) override;
     virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
     virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
+    virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
 
 private:
     ErrCode MigrateDataUserAuthentication();
