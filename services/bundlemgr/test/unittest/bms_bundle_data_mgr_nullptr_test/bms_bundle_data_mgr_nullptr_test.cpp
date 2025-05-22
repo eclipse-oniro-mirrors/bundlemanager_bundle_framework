@@ -1243,7 +1243,6 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, RdbDataManager_0002, Function | MediumTest
     std::string path;
     std::string fileName;
     rdbDataManager->CheckSystemSizeAndHisysEvent(path, fileName);
-    rdbDataManager->BackupRdb();
     EXPECT_TRUE(path.empty());
     EXPECT_TRUE(fileName.empty());
 }

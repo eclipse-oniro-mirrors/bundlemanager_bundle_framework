@@ -25,8 +25,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
-constexpr const char* TASK_NAME = "BackUpResourceDbTask";
-constexpr uint64_t DELAY_TIME_MILLI_SECONDS = 8 * 60 * 1000; // 8min
 }
 
 BundleResourceRdb::BundleResourceRdb()
@@ -49,8 +47,6 @@ BundleResourceRdb::BundleResourceRdb()
         " ADD BACKGROUND BLOB;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
-
-    delayedTaskMgr_ = std::make_shared<SingleDelayedTaskMgr>(TASK_NAME, DELAY_TIME_MILLI_SECONDS);
 }
 
 BundleResourceRdb::~BundleResourceRdb()
@@ -133,7 +129,6 @@ bool BundleResourceRdb::AddResourceInfos(const std::vector<ResourceInfo> &resour
         APP_LOGE("BatchInsert size not expected");
         return false;
     }
-    BackupRdb();
     return ret;
 }
 
@@ -627,9 +622,6 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
         }
         absRdbPredicates.Clear();
     }
-    if (ret) {
-        BackupRdb();
-    }
     return ret;
 }
 
@@ -775,22 +767,6 @@ void BundleResourceRdb::ParseKey(const std::string &key,
     info.ParseKey(key);
     bundleResourceInfo.bundleName = info.bundleName_;
     bundleResourceInfo.appIndex = info.appIndex_;
-}
-
-void BundleResourceRdb::BackupRdb()
-{
-    std::weak_ptr<BundleResourceRdb> weakPtr = weak_from_this();
-    auto task = [weakPtr] {
-        APP_LOGI("backup resource db begin");
-        auto sharedPtr = weakPtr.lock();
-        if (sharedPtr == nullptr || sharedPtr->rdbDataManager_ == nullptr) {
-            APP_LOGE("backup resource db failed");
-            return;
-        }
-        sharedPtr->rdbDataManager_->BackupRdb();
-        APP_LOGI("backup resource db end");
-    };
-    delayedTaskMgr_->ScheduleDelayedTask(task);
 }
 } // AppExecFwk
 } // OHOS

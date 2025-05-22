@@ -23,7 +23,6 @@
 #include "launcher_ability_resource_info.h"
 #include "rdb_data_manager.h"
 #include "resource_info.h"
-#include "single_delayed_task_mgr.h"
 #include "extension_ability_info.h"
 
 namespace OHOS {
@@ -93,10 +92,7 @@ private:
     void ParseKey(const std::string &key,
         BundleResourceInfo &bundleResourceInfo);
 
-    void BackupRdb();
-
     std::shared_ptr<RdbDataManager> rdbDataManager_;
-    std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_ = nullptr;
 
 #define CHECK_RDB_RESULT_RETURN_IF_FAIL(errcode, errmsg)                           \
     do {                                                                           \

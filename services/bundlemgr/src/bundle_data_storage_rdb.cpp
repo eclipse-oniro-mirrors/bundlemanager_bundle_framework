@@ -21,8 +21,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
-constexpr const char* TASK_NAME = "BackUpBMSDbTask";
-constexpr uint64_t DELAY_TIME_MILLI_SECONDS = 6 * 60 * 1000; // 6min
 }
 BundleDataStorageRdb::BundleDataStorageRdb()
 {
@@ -32,8 +30,6 @@ BundleDataStorageRdb::BundleDataStorageRdb()
     bmsRdbConfig.tableName = BUNDLE_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
-
-    delayedTaskMgr_ = std::make_shared<SingleDelayedTaskMgr>(TASK_NAME, DELAY_TIME_MILLI_SECONDS);
 }
 
 BundleDataStorageRdb::~BundleDataStorageRdb()
@@ -134,9 +130,6 @@ bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBun
     APP_LOGI("rdb SaveStorageBundleInfo -n %{public}s", innerBundleInfo.GetBundleName().c_str());
     bool ret = rdbDataManager_->InsertData(
         innerBundleInfo.GetBundleName(), innerBundleInfo.ToString());
-    if (ret) {
-        BackupRdb();
-    }
     return ret;
 }
 
@@ -149,31 +142,12 @@ bool BundleDataStorageRdb::DeleteStorageBundleInfo(const InnerBundleInfo &innerB
 
     bool ret = rdbDataManager_->DeleteData(innerBundleInfo.GetBundleName());
     APP_LOGD("DeleteStorageBundleInfo %{public}d", ret);
-    if (ret) {
-        BackupRdb();
-    }
     return ret;
 }
 
 bool BundleDataStorageRdb::ResetKvStore()
 {
     return true;
-}
-
-void BundleDataStorageRdb::BackupRdb()
-{
-    std::weak_ptr<BundleDataStorageRdb> weakPtr = weak_from_this();
-    auto task = [weakPtr] {
-        APP_LOGI("backup BMS db begin");
-        auto sharedPtr = weakPtr.lock();
-        if (sharedPtr == nullptr || sharedPtr->rdbDataManager_ == nullptr) {
-            APP_LOGE("backup BMS db failed");
-            return;
-        }
-        sharedPtr->rdbDataManager_->BackupRdb();
-        APP_LOGI("backup BMS db end");
-    };
-    delayedTaskMgr_->ScheduleDelayedTask(task);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

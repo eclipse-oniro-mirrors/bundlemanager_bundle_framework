@@ -52,8 +52,6 @@ public:
     bool UpdateOrInsertData(
         const NativeRdb::ValuesBucket &valuesBucket, const NativeRdb::AbsRdbPredicates &absRdbPredicates);
 
-    void BackupRdb();
-
     bool RdbIntegrityCheckNeedRestore();
 
     void CheckSystemSizeAndHisysEvent(const std::string &path, const std::string &fileName);

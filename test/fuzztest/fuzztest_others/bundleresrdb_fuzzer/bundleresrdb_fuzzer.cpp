@@ -84,7 +84,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     rdb.bundleResourceRdb.ParseKey(resourceInfo.GetKey(), info);
     LauncherAbilityResourceInfo launcherInfo;
     rdb.bundleResourceRdb.ParseKey(resourceInfo.GetKey(), launcherInfo);
-    rdb.bundleResourceRdb.BackupRdb();
     BundleResourceRegister::RegisterConfigurationObserver();
     BundleResourceRegister::RegisterCommonEventSubscriber();
     resourceInfo.ConvertFromBundleResourceInfo(info);
