@@ -212,6 +212,8 @@ public:
     static std::vector<std::string> GetUtdVectorByMimeType(const std::string &mimeType);
     static std::string GetBoolStrVal(bool val);
     static void MakeFsConfig(const std::string &bundleName, int32_t bundleId, const std::string &configPath);
+    static void MakeFsConfig(const std::string &bundleName, const std::string &configPath,
+        const std::string labelValue, const std::string labelPath);
     static void RemoveFsConfig(const std::string &bundleName, const std::string &configPath);
     static std::string CreateInstallTempDir(uint32_t installerId, const DirType &type);
     static std::string CreateSharedBundleTempDir(uint32_t installerId, uint32_t index);

@@ -128,6 +128,8 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     userInfo.bundleName = std::to_string(newAppIndex) + Constants::FILE_UNDERLINE + bundleName_;
     userInfo.gids.clear();
     dataMgr_->GenerateUidAndGid(userInfo);
+    BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
+        Constants::APP_PROVISION_TYPE_FILE_NAME);
     userInfo.bundleName = bundleName_;
     info.AddInnerBundleUserInfo(userInfo);
     info.SetBundleInstallTime(BundleUtil::GetCurrentTime(), userId_);

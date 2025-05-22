@@ -157,7 +157,9 @@ constexpr const char* APP_DISTRIBUTION_TYPE_CROWDTESTING = "crowdtesting";
 // app provision type
 constexpr const char* APP_PROVISION_TYPE_DEBUG = "debug";
 constexpr const char* APP_PROVISION_TYPE_RELEASE = "release";
-
+constexpr const char* APP_PROVISION_TYPE_FILE_NAME = "debug_type";
+constexpr const char* DEBUG_TYPE_VALUE = "3";
+constexpr const char* RELEASE_TYPE_VALUE = "2";
 // crowdtesting
 constexpr int8_t INVALID_CROWDTEST_DEADLINE = -1;
 constexpr int8_t INHERIT_CROWDTEST_DEADLINE = -2;

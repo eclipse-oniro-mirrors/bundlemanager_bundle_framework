@@ -140,6 +140,8 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     if (!dataMgr_->GenerateUidAndGid(newUserInfo)) {
         return ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR;
     }
+    BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
+        Constants::APP_PROVISION_TYPE_FILE_NAME);
     int32_t uid = newUserInfo.uid;
 
     // 4. generate the accesstoken id and inherit original permissions

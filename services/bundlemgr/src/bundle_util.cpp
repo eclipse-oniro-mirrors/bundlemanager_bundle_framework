@@ -351,6 +351,12 @@ int32_t BundleUtil::GetUserIdByUid(int32_t uid)
 
 void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, const std::string &configPath)
 {
+    MakeFsConfig(bundleName, configPath, std::to_string(bundleId), std::string(BUNDLE_ID_FILE));
+}
+
+void BundleUtil::MakeFsConfig(const std::string &bundleName, const std::string &configPath,
+    const std::string labelValue, const std::string labelPath)
+{
     std::string bundleDir = configPath + ServiceConstants::PATH_SEPARATOR + bundleName;
     if (access(bundleDir.c_str(), F_OK) != 0) {
         APP_LOGD("fail to access error:%{public}d", errno);
@@ -359,19 +365,21 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, c
             return;
         }
     }
-
+    std::string finalLabelValue = labelValue;
+    if (labelPath == Constants::APP_PROVISION_TYPE_FILE_NAME) {
+        finalLabelValue = finalLabelValue ==
+            Constants::APP_PROVISION_TYPE_DEBUG ? Constants::DEBUG_TYPE_VALUE : Constants::RELEASE_TYPE_VALUE;
+    }
     std::string realBundleDir;
     if (!PathToRealPath(bundleDir, realBundleDir)) {
         APP_LOGE("bundleIdFile is not real path");
         return;
     }
 
-    realBundleDir += (std::string(ServiceConstants::PATH_SEPARATOR) + BUNDLE_ID_FILE);
-
+    realBundleDir += std::string(ServiceConstants::PATH_SEPARATOR) + labelPath;
     int32_t bundleIdFd = open(realBundleDir.c_str(), O_WRONLY | O_TRUNC);
     if (bundleIdFd > 0) {
-        std::string bundleIdStr = std::to_string(bundleId);
-        if (write(bundleIdFd, bundleIdStr.c_str(), bundleIdStr.size()) < 0) {
+        if (write(bundleIdFd, finalLabelValue.c_str(), finalLabelValue.size()) < 0) {
             APP_LOGE("write bundleId error:%{public}d", errno);
         }
     }

@@ -201,6 +201,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     tmpUserInfo.bundleName = cloneBundleName;
     tmpUserInfo.bundleUserInfo.userId = userId;
     dataMgr->GenerateUidAndGid(tmpUserInfo);
+    BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
+        Constants::APP_PROVISION_TYPE_FILE_NAME);
     int32_t uid = tmpUserInfo.uid;
 
     // 4. generate the accesstoken id and inherit original permissions
