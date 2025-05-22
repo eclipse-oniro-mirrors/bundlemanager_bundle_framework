@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,15 +21,18 @@
 #include <string>
 #include <vector>
 
+#include "ability_info.h"
 #include "bundle_constants.h"
 #include "bundle_resource_change_type.h"
 #include "bundle_resource_rdb.h"
 #include "bundle_system_state.h"
 #include "inner_bundle_info.h"
+#include "launcher_ability_info.h"
 #include "resource_info.h"
 #include "resource_manager.h"
 #include "singleton.h"
 #include "single_delayed_task_mgr.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -76,6 +79,13 @@ public:
 
     bool GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
+
+    bool IsLauncherAbility(const LauncherAbilityResourceInfo &resourceInfo, std::vector<AbilityInfo> &abilityInfos);
+
+    bool GetLauncherAbilityInfos(const std::string &bundleName, std::vector<AbilityInfo> &abilityInfos);
+
+    bool FilterLauncherAbilityResourceInfoWithFlag(const uint32_t flags,
+        const std::string &bundleName, std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
 
     bool SaveResourceInfos(std::vector<ResourceInfo> &resourceInfos);
 

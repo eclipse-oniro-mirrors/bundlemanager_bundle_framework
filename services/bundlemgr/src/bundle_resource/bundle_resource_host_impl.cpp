@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -85,6 +85,7 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string
         APP_LOGE_NOFUNC("get resource failed -n %{public}s -f %{public}u", bundleName.c_str(), flags);
         return CheckBundleNameValid(bundleName, appIndex);
     }
+    manager->FilterLauncherAbilityResourceInfoWithFlag(flags, bundleName, launcherAbilityResourceInfo);
     return ERR_OK;
 }
 
@@ -176,6 +177,7 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
                 });
         }
     }
+    manager->FilterLauncherAbilityResourceInfoWithFlag(flags, Constants::EMPTY_STRING, launcherAbilityResourceInfos);
     BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
     APP_LOGI_NOFUNC("GetAllLauncherAbilityResourceInfo count:%{public}zu", launcherAbilityResourceInfos.size());
     return ERR_OK;

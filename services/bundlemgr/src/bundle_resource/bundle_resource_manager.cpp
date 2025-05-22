@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include "bundle_util.h"
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
+#include "bundle_mgr_service.h"
 #include "event_report.h"
 #include "hitrace_meter.h"
 #include "thread_pool.h"
@@ -41,6 +42,7 @@ constexpr const char* THEME_ICONS_A_FLAG = "/a/app/flag";
 constexpr const char* THEME_ICONS_B_FLAG = "/b/app/flag";
 constexpr const char* TASK_NAME = "ReleaseResourceTask";
 constexpr uint64_t DELAY_TIME_MILLI_SECONDS = 3 * 60 * 1000; // 3mins
+using Want = OHOS::AAFwk::Want;
 }
 std::mutex BundleResourceManager::g_sysResMutex;
 std::shared_ptr<Global::Resource::ResourceManager> BundleResourceManager::g_resMgr = nullptr;
@@ -488,6 +490,68 @@ bool BundleResourceManager::GetAllLauncherAbilityResourceInfo(const uint32_t fla
     return bundleResourceRdb_->GetAllLauncherAbilityResourceInfo(resourceFlags, launcherAbilityResourceInfos);
 }
 
+bool BundleResourceManager::FilterLauncherAbilityResourceInfoWithFlag(const uint32_t flags,
+    const std::string &bundleName, std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+{
+    if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY)) {
+        std::vector<AbilityInfo> abilityInfos;
+        if (!GetLauncherAbilityInfos(bundleName, abilityInfos)) {
+            launcherAbilityResourceInfos.clear();
+            APP_LOGE("GetLauncherAbilityInfos failed");
+            return false;
+        }
+        launcherAbilityResourceInfos.erase(
+            std::remove_if(launcherAbilityResourceInfos.begin(), launcherAbilityResourceInfos.end(),
+                [this, &abilityInfos](const LauncherAbilityResourceInfo& resource) {
+                    return !this->IsLauncherAbility(resource, abilityInfos);
+                }),
+            launcherAbilityResourceInfos.end()
+        );
+    }
+    return true;
+}
+
+bool BundleResourceManager::GetLauncherAbilityInfos(const std::string &bundleName,
+    std::vector<AbilityInfo> &abilityInfos)
+{
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    Want want;
+    want.SetAction(Want::ACTION_HOME);
+    want.AddEntity(Want::ENTITY_HOME);
+    if (!bundleName.empty()) {
+        ElementName elementName;
+        elementName.SetBundleName(bundleName);
+        want.SetElement(elementName);
+    }
+    ErrCode ret = dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos);
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ans = bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos);
+    if (ret != ERR_OK && ans != ERR_OK) {
+        APP_LOGE("GetLauncherAbilityInfos failed, ret:%{public}d, ans:%{public}d", ret, ans);
+        return false;
+    }
+    return true;
+}
+
+bool BundleResourceManager::IsLauncherAbility(const LauncherAbilityResourceInfo &resourceInfo,
+    std::vector<AbilityInfo> &abilityInfos)
+{
+    for (const auto& abilityInfo : abilityInfos) {
+        if (resourceInfo.bundleName == abilityInfo.bundleName &&
+            resourceInfo.moduleName == abilityInfo.moduleName &&
+            resourceInfo.abilityName == abilityInfo.name) {
+            return true;
+        }
+    }
+    return false;
+}
+
 uint32_t BundleResourceManager::CheckResourceFlags(const uint32_t flags)
 {
     APP_LOGD("flags:%{public}u", flags);
@@ -498,7 +562,9 @@ uint32_t BundleResourceManager::CheckResourceFlags(const uint32_t flags)
         ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ==
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ||
         ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) ==
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR))) {
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) ||
+        ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY))) {
         return flags;
     }
     APP_LOGD("illegal flags");
