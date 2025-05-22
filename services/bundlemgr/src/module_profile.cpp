@@ -138,6 +138,12 @@ const std::unordered_map<std::string, MultiAppModeType> MULTI_APP_MODE_MAP = {
     {"appClone", MultiAppModeType::APP_CLONE}
 };
 
+const std::unordered_map<std::string, AppPreloadPhase> APP_PRELOAD_PHASE_MAP = {
+    {"processCreated", AppPreloadPhase::PROCESS_CREATED},
+    {"abilityStageCreated", AppPreloadPhase::ABILITY_STAGE_CREATED},
+    {"windowStageCreated", AppPreloadPhase::WINDOW_STAGE_CREATED}
+};
+
 struct DeviceConfig {
     // pair first : if exist in module.json then true, otherwise false
     // pair second : actual value
@@ -275,6 +281,7 @@ struct App {
     std::vector<ApplicationEnvironment> appEnvironments;
     MultiAppMode multiAppMode;
     std::string configuration;
+    std::string appPreloadPhase;
     std::vector<std::string> assetAccessGroups;
     std::string startMode = Profile::START_MODE_MAIN_TASK;
 };
@@ -1327,6 +1334,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.startMode,
         false,
         g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        APP_PRELOAD_PHASE,
+        app.appPreloadPhase,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1959,6 +1972,15 @@ MultiAppModeType ToMultiAppModeType(const std::string &type)
     return MultiAppModeType::UNSPECIFIED;
 }
 
+AppPreloadPhase ToAppPreloadPhase(const std::string &type)
+{
+    auto iter = Profile::APP_PRELOAD_PHASE_MAP.find(type);
+    if (iter != Profile::APP_PRELOAD_PHASE_MAP.end()) {
+        return iter->second;
+    }
+    return AppPreloadPhase::DEFAULT;
+}
+
 void ToInnerProfileConfiguration(
     const BundleExtractor &bundleExtractor,
     const std::string &configuration,
@@ -2139,6 +2161,7 @@ bool ToApplicationInfo(
     applicationInfo.appEnvironments = app.appEnvironments;
     if (moduleJson.module.type == Profile::MODULE_TYPE_ENTRY) {
         applicationInfo.assetAccessGroups = app.assetAccessGroups;
+        applicationInfo.appPreloadPhase = ToAppPreloadPhase(app.appPreloadPhase);
     }
     // bundleType is app && moduleType is entry or feature
     if (applicationInfo.bundleType == BundleType::APP &&

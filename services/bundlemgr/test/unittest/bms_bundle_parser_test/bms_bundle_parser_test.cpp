@@ -1031,6 +1031,107 @@ const nlohmann::json MODULE_JSON_9 = R"(
     }
 }
 )"_json;
+
+const nlohmann::json MODULE_JSON_10 = R"(
+{
+    "app": {
+        "bundleName": "com.example.backuptest",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0",
+        "appPreloadPhase": "processCreated"
+    },
+    "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "deviceTypes": [
+            "default"
+        ],
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "name": "entry",
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark0.0.0.3",
+        "compressNativeLibs": false,
+        "extractNativeLibs": true
+    }
+}
+)"_json;
+
+const nlohmann::json MODULE_JSON_11 = R"(
+{
+    "app": {
+        "bundleName": "com.example.backuptest",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0"
+    },
+    "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "deviceTypes": [
+            "default"
+        ],
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "name": "entry",
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark0.0.0.3",
+        "compressNativeLibs": false,
+        "extractNativeLibs": true
+    }
+}
+)"_json;
 }  // namespace
 
 class BmsBundleParserTest : public testing::Test {
@@ -3713,5 +3814,53 @@ HWTEST_F(BmsBundleParserTest, ParseCompressExtractNativeLibs_0500, Function | Me
     auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
     EXPECT_NE(hapModule, std::nullopt);
     EXPECT_EQ(hapModule->compressNativeLibs, true);
+}
+
+/**
+ * @tc.number: ParseAppPreloadPhase_0100
+ * @tc.name: parse appPreloadPhase by config appPreloadPhase type
+ * @tc.desc: 1. system running normally
+ *           2. test parsing success when catch appPreloadPhase type in the config appPreloadPhase type
+ */
+HWTEST_F(BmsBundleParserTest, ParseAppPreloadPhase_0100, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_10;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
+    EXPECT_EQ(applicationInfo.appPreloadPhase, AppExecFwk::AppPreloadPhase::PROCESS_CREATED);
+}
+
+/**
+ * @tc.number: ParseAppPreloadPhase_0200
+ * @tc.name: parse appPreloadPhase by config appPreloadPhase type
+ * @tc.desc: 1. system running normally
+ *           2. test parsing success when not set config appPreloadPhase type
+ */
+HWTEST_F(BmsBundleParserTest, ParseAppPreloadPhase_0200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_11;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
+    EXPECT_EQ(applicationInfo.appPreloadPhase, AppExecFwk::AppPreloadPhase::DEFAULT);
 }
 } // OHOS

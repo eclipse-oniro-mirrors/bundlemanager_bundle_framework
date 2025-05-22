@@ -101,6 +101,13 @@ enum class StartMode : uint8_t {
     RECENT_TASK = 2
 };
 
+enum class AppPreloadPhase : uint8_t {
+    DEFAULT = 0,
+    PROCESS_CREATED = 1,
+    ABILITY_STAGE_CREATED = 2,
+    WINDOW_STAGE_CREATED = 3
+};
+
 struct MultiAppModeData : public Parcelable {
     MultiAppModeType multiAppModeType = MultiAppModeType::UNSPECIFIED;
     int32_t maxCount = 0;
@@ -340,6 +347,7 @@ struct ApplicationInfo : public Parcelable {
     std::map<std::string, std::vector<Metadata>> metadata;
     // quick fix info
     AppQuickFix appQuickFix;
+    AppPreloadPhase appPreloadPhase = AppPreloadPhase::DEFAULT;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
