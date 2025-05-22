@@ -62,6 +62,7 @@ const std::string FUNCTION_GET_BUNDLE_RESOURCE_PROXY = "BundleMgrHostImpl::GetBu
 const std::string FUNCTION_VERIFY_SYSTEM_API = "BundleMgrHostImpl::VerifySystemApi";
 const std::string FUNCTION_VERIFY_CALLING_PERMISSION = "BundleMgrHostImpl::VerifyCallingPermission";
 const std::string FUNCTION_GET_CLONE_BUNDLE_INFO = "BundleMgrHostImpl::GetCloneBundleInfo";
+const std::string FUNCTION_GET_CLONE_BUNDLE_INFO_Ext = "BundleMgrHostImpl::GetCloneBundleInfoExt";
 const std::string FUNCTION_GET_SHARED_BUNDLE_INFO_BY_SELF = "BundleMgrHostImpl::GetSharedBundleInfoBySelf";
 const std::string FUNCTION_GET_HAP_MODULE_INFO = "BundleMgrHostImpl::GetHapModuleInfo";
 const std::string FUNCTION_BATCH_BUNDLE_INFO = "BundleMgrHostImpl::BatchGetBundleInfo";
@@ -4663,6 +4664,36 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
         return res;
     }
     return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetCloneBundleInfoExt(const std::string &bundleName, uint32_t flags,
+    int32_t appIndex, int32_t userId, BundleInfo &bundleInfo)
+{
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_CLONE_BUNDLE_INFO_Ext);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+    APP_LOGD("verify permission success, begin to GetCloneBundleInfoExt");
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        LOG_E(BMS_TAG_DEFAULT, "uid: %{public}d not foundation", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
+    if (res != ERR_OK) {
+        if (isBrokerServiceExisted_) {
+            auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+            if (bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId, true) == ERR_OK) {
+                return ERR_OK;
+            }
+        }
+        APP_LOGE_NOFUNC("GetCloneBundleInfoExt fail -n %{public}s -u %{public}d -i %{public}d -f %{public}d"
+            " err:%{public}d", bundleName.c_str(), userId, appIndex, flags, res);
+    }
+    return res;
 }
 
 ErrCode BundleMgrHostImpl::GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
