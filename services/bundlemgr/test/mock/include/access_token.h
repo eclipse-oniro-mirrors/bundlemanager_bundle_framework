@@ -158,6 +158,7 @@ public:
     /* app type */
     std::string appDistributionType;
     bool isAtomicService;
+    bool dataRefresh = false;
 };
 
 class PreAuthorizationInfo final {

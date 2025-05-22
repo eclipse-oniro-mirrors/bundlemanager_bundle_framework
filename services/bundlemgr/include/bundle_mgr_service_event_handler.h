@@ -692,6 +692,9 @@ private:
     void SaveUninstalledPreloadAppToFile(const std::vector<std::string> &preloadBundleNames);
     void CreateUninstalledPreloadDir();
     void RemoveUninstalledPreloadFile();
+    void ProcessUpdatePermissions();
+    bool IsPermissionsUpdated();
+    bool SaveUpdatePermissionsFlag();
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
     // Used to notify bundle scan status

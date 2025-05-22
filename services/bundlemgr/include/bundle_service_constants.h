@@ -238,6 +238,10 @@ constexpr const char* BMS_SYSTEM_TIME_FOR_SHORTCUT = "SystemTimeForShortcut";
 constexpr const char* PRODUCT_SUFFIX = "/etc/app";
 constexpr const char* DEFAULT_DATA_PRE_BUNDLE_DIR = "/app_list.json";
 constexpr const char* DATA_PRELOAD_APP = "/data/preload/app/";
+
+//ota update permissions for not updated application, only updated once
+constexpr const char* UPDATE_PERMISSIONS_FLAG = "updatePermissionsFlag";
+constexpr const char* UPDATE_PERMISSIONS_FLAG_UPDATED = "updated";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -362,6 +362,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_CION);
     (void)SaveBmsSystemTimeForShortcut();
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
+    (void)SaveUpdatePermissionsFlag();
     PerfProfile::GetInstance().Dump();
 }
 
@@ -1233,6 +1234,8 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootAppServiceUninstall();
+    //refresh application permissions
+    ProcessUpdatePermissions();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
     ProcessBundleResourceInfo();
@@ -4900,6 +4903,80 @@ void BMSEventHandler::RemoveUninstalledPreloadFile()
     if (!BundleUtil::DeleteDir(path)) {
         LOG_E(BMS_TAG_DEFAULT, "remove uninstalled preload file %{public}d failed", errno);
     }
+}
+
+void BMSEventHandler::ProcessUpdatePermissions()
+{
+    LOG_I(BMS_TAG_DEFAULT, "update permissions begin");
+    if (IsPermissionsUpdated()) {
+        LOG_I(BMS_TAG_DEFAULT, "permissions already updated");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    bool updatePermissionsFlag = true;
+    std::map<std::string, InnerBundleInfo> infos = dataMgr->GetAllInnerBundleInfos();
+    for (auto &infoPair : infos) {
+        auto &innerBundleInfo = infoPair.second;
+        std::string bundleName = innerBundleInfo.GetBundleName();
+        auto &userInfos = innerBundleInfo.GetInnerBundleUserInfos();
+        AppProvisionInfo appProvisionInfo;
+        if (dataMgr->GetAppProvisionInfo(bundleName, userInfos.begin()->second.bundleUserInfo.userId,
+            appProvisionInfo) != ERR_OK) {
+            LOG_W(BMS_TAG_DEFAULT, "GetAppProvisionInfo failed -n:%{public}s", bundleName.c_str());
+        }
+        for (auto &uerInfo : userInfos) {
+            if (uerInfo.second.accessTokenId == 0) {
+                continue;
+            }
+            int32_t userId = uerInfo.second.bundleUserInfo.userId;
+            Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+            accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
+            Security::AccessToken::HapInfoCheckResult checkResult;
+            if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId, checkResult,
+                appProvisionInfo.appServiceCapabilities, true) != ERR_OK) {
+                LOG_W(BMS_TAG_DEFAULT, "UpdateHapToken failed %{public}s", bundleName.c_str());
+                updatePermissionsFlag = false;
+            }
+        }
+    }
+    if (updatePermissionsFlag) {
+        (void)SaveUpdatePermissionsFlag();
+    }
+    LOG_I(BMS_TAG_DEFAULT, "update permissions end");
+}
+
+bool BMSEventHandler::IsPermissionsUpdated()
+{
+    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsParam == nullptr) {
+        LOG_W(BMS_TAG_DEFAULT, "bmsParam is nullptr");
+        return false;
+    }
+    std::string value;
+    if (bmsParam->GetBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG, value)) {
+        LOG_I(BMS_TAG_DEFAULT, "already update permissions");
+        return true;
+    }
+    return false;
+}
+
+bool BMSEventHandler::SaveUpdatePermissionsFlag()
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
+        return false;
+    }
+    if (!bmsPara->SaveBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG,
+        std::string{ ServiceConstants::UPDATE_PERMISSIONS_FLAG_UPDATED })) {
+        LOG_E(BMS_TAG_DEFAULT, "save updatePermissionsFlag failed");
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

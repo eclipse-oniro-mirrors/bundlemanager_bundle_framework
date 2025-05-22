@@ -2544,4 +2544,87 @@ HWTEST_F(BmsEventHandlerTest, SavePreloadAppUninstallInfo_0100, Function | Small
     handler->SavePreloadAppUninstallInfo(BUNDLE_NAME, preloadBundleNames);
     EXPECT_TRUE(preloadBundleNames.empty());
 }
+
+/**
+ * @tc.number: ProcessUpdatePermissions_0100
+ * @tc.name: ProcessUpdatePermissions
+ * @tc.desc: test ProcessUpdatePermissions
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessUpdatePermissions_0100, Function | SmallTest | Level0)
+ {
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = nullptr;
+        handler->ProcessUpdatePermissions();
+        auto bmsParam = std::make_shared<BmsParam>();
+        EXPECT_NE(bmsParam, nullptr);
+        if (bmsParam) {
+            DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = std::make_shared<BmsParam>();
+            handler->ProcessUpdatePermissions();
+            DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+            handler->ProcessUpdatePermissions();   
+        }
+    }
+}
+
+/**
+ * @tc.number: IsPermissionsUpdated_0100
+ * @tc.name: IsPermissionsUpdated
+ * @tc.desc: test IsPermissionsUpdated
+ */
+HWTEST_F(BmsEventHandlerTest, IsPermissionsUpdated_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = nullptr;
+        bool ret = handler->IsPermissionsUpdated();
+        EXPECT_FALSE(ret);
+        auto bmsParam = std::make_shared<BmsParam>();
+        EXPECT_NE(bmsParam, nullptr);
+        if (bmsParam) {
+            ret = handler->IsPermissionsUpdated();
+            EXPECT_FALSE(ret);
+            DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = std::make_shared<BmsParam>();
+            ret = handler->IsPermissionsUpdated();
+            EXPECT_TRUE(ret);
+            ret = bmsParam->DeleteBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG);
+            EXPECT_TRUE(ret);
+            ret = handler->IsPermissionsUpdated();
+            EXPECT_FALSE(ret);
+            ret = bmsParam->SaveBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG, 
+                ServiceConstants::UPDATE_PERMISSIONS_FLAG_UPDATED);
+            EXPECT_TRUE(ret);
+        }
+    }
+}
+
+/**
+ * @tc.number: SaveUpdatePermissionsFlag_0100
+ * @tc.name: SaveUpdatePermissionsFlag
+ * @tc.desc: test SaveUpdatePermissionsFlag
+ */
+HWTEST_F(BmsEventHandlerTest, SaveUpdatePermissionsFlag_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = nullptr;
+        bool ret = handler->SaveUpdatePermissionsFlag();
+        EXPECT_FALSE(ret);
+        auto bmsParam = std::make_shared<BmsParam>();
+        EXPECT_NE(bmsParam, nullptr);
+        if (bmsParam) {
+            std::string value;
+            ret = bmsParam->GetBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG, value);
+            EXPECT_TRUE(ret);
+            DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = std::make_shared<BmsParam>();
+            ret = handler->SaveUpdatePermissionsFlag();
+            EXPECT_TRUE(ret);
+            ret = bmsParam->GetBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG, value);
+            EXPECT_TRUE(ret);
+        }
+    }
+}
 } // OHOS
