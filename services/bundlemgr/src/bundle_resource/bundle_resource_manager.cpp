@@ -808,10 +808,6 @@ bool BundleResourceManager::UpdateCloneBundleResourceInfo(const std::string &bun
         static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE))) {
         return UpdateCloneBundleResourceInfo(bundleName, appIndex, type);
     }
-    // theme first
-    if (InnerProcessWhetherThemeExist(bundleName, userId)) {
-        return UpdateCloneBundleResourceInfo(bundleName, appIndex, type);
-    }
     // check dynamic
     std::string mainDynamicIcon = BundleResourceProcess::GetCurDynamicIconModule(bundleName, userId, 0);
     std::string dynamicIcon = BundleResourceProcess::GetCurDynamicIconModule(bundleName, userId, appIndex);
