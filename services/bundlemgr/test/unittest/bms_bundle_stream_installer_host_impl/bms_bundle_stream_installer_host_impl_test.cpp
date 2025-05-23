@@ -403,6 +403,81 @@ HWTEST_F(bundle_stream_installer_host_impl_test, test_CreatePgoFileStream_0500, 
 }
 
 /**
+ * @tc.number: test_CreateExtProfileFileStream_0100
+ * @tc.name: test CreateExtProfileFileStream
+ * @tc.desc: 1. test CreateExtProfileFileStream_0200
+ */
+HWTEST_F(bundle_stream_installer_host_impl_test, test_CreateExtProfileFileStream_0100, Function | SmallTest | Level0)
+{
+    bundleStreamInstaller_ = std::make_shared<BundleStreamInstallerHostImpl>(0, 0);
+    std::string fileName = "";
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    IPCSkeleton::SetCallingUid(0);
+    int32_t installedUidOld = bundleStreamInstaller_->installedUid_;
+    bundleStreamInstaller_->installedUid_ = 1;
+    EXPECT_EQ(bundleStreamInstaller_->CreateExtProfileFileStream(fileName), Constants::DEFAULT_STREAM_FD);
+    IPCSkeleton::SetCallingUid(callingUid);
+    bundleStreamInstaller_->installedUid_ = installedUidOld;
+}
+
+/**
+* @tc.number: test_CreateExtProfileFileStream_0200
+* @tc.name: test CreateExtProfileFileStream
+* @tc.desc: 1. test CreateExtProfileFileStream_0200
+*/
+HWTEST_F(bundle_stream_installer_host_impl_test, test_CreateExtProfileFileStream_0200, Function | SmallTest | Level0)
+{
+    bundleStreamInstaller_ = std::make_shared<BundleStreamInstallerHostImpl>(0, 0);
+    std::string fileName = "fileName";
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    IPCSkeleton::SetCallingUid(0);
+    int32_t installedUidOld = bundleStreamInstaller_->installedUid_;
+    bundleStreamInstaller_->installedUid_ = 0;
+    EXPECT_EQ(bundleStreamInstaller_->CreateExtProfileFileStream(fileName), Constants::DEFAULT_STREAM_FD);
+    IPCSkeleton::SetCallingUid(callingUid);
+    bundleStreamInstaller_->installedUid_ = installedUidOld;
+}
+
+/**
+* @tc.number: test_CreateExtProfileFileStream_0300
+* @tc.name: test CreateExtProfileFileStream
+* @tc.desc: 1. test CreateExtProfileFileStream_0300
+*/
+HWTEST_F(bundle_stream_installer_host_impl_test, test_CreateExtProfileFileStream_0300, Function | SmallTest | Level0)
+{
+    bundleStreamInstaller_ = std::make_shared<BundleStreamInstallerHostImpl>(0, 0);
+    std::string fileName = "../fileName.json";
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    IPCSkeleton::SetCallingUid(0);
+    int32_t installedUidOld = bundleStreamInstaller_->installedUid_;
+    bundleStreamInstaller_->installedUid_ = 0;
+    string tempExtProfileDirOld = bundleStreamInstaller_->tempExtProfileDir_;
+    bundleStreamInstaller_->tempExtProfileDir_ = std::string(257, 'a');
+    EXPECT_TRUE(bundleStreamInstaller_->CreateExtProfileFileStream(fileName) < 0);
+    IPCSkeleton::SetCallingUid(callingUid);
+    bundleStreamInstaller_->installedUid_ = installedUidOld;
+    bundleStreamInstaller_->tempExtProfileDir_ = tempExtProfileDirOld;
+}
+
+/**
+* @tc.number: test_CreateExtProfileFileStream_0400
+* @tc.name: test CreateExtProfileFileStream
+* @tc.desc: 1. test CreateExtProfileFileStream_0400
+*/
+HWTEST_F(bundle_stream_installer_host_impl_test, test_CreateExtProfileFileStream_0400, Function | SmallTest | Level0)
+{
+    bundleStreamInstaller_ = std::make_shared<BundleStreamInstallerHostImpl>(0, 0);
+    std::string fileName = "fileName.json";
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    IPCSkeleton::SetCallingUid(0);
+    int32_t installedUidOld = bundleStreamInstaller_->installedUid_;
+    bundleStreamInstaller_->installedUid_ = 0;
+    EXPECT_TRUE(bundleStreamInstaller_->CreateExtProfileFileStream(fileName) > 0);
+    IPCSkeleton::SetCallingUid(callingUid);
+    bundleStreamInstaller_->installedUid_ = installedUidOld;
+}
+
+/**
  * @tc.number: test_Install_0100
  * @tc.name: test Install
  * @tc.desc: 1. test Install_0100
