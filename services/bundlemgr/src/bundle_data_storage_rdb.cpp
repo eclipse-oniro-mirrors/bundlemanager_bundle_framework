@@ -16,6 +16,7 @@
 #include "bundle_data_storage_rdb.h"
 
 #include "bundle_exception_handler.h"
+#include "inner_bundle_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -94,6 +95,7 @@ void BundleDataStorageRdb::TransformStrToInfo(
         // reset privilege capability when load info from db
         ApplicationInfo applicationInfo;
         innerBundleInfo.UpdatePrivilegeCapability(applicationInfo);
+        innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         infos.emplace(innerBundleInfo.GetBundleName(), innerBundleInfo);
         // database update
         std::string key = data.first;
