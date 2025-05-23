@@ -1232,7 +1232,8 @@ protected:
                 "applicationFlags":1,
                 "installedForAllUser": false,
                 "hasPlugin": false,
-                "startMode":1
+                "startMode":1,
+                "appPreloadPhase":0
             },
             "baseBundleInfo": {
                 "abilityInfos": [

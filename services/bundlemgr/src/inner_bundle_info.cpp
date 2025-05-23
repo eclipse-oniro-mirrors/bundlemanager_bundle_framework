@@ -1855,6 +1855,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->startMode = applicationInfo.startMode;
     if (newInfo.HasEntry()) {
         baseApplicationInfo_->assetAccessGroups = applicationInfo.assetAccessGroups;
+        baseApplicationInfo_->appPreloadPhase = applicationInfo.appPreloadPhase;
     }
 }
 
