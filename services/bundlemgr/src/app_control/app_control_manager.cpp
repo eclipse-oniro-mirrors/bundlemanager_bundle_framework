@@ -468,7 +468,7 @@ void AppControlManager::SetAbilityRunningRuleCache(const std::string &key,
 
 void AppControlManager::DeleteAbilityRunningRuleCache(const std::vector<std::string> &keyList)
 {
-    for (const std::string &key : keyList) { 
+    for (const std::string &key : keyList) {
         std::lock_guard<std::mutex> cacheLock(abilityRunningControlRuleMutex_);
         auto cacheIter = abilityRunningControlRuleCache_.find(key);
         if (cacheIter != abilityRunningControlRuleCache_.end()) {

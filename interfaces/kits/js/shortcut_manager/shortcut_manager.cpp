@@ -36,7 +36,7 @@ constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
 constexpr const char* USER_ID = "userId";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 constexpr const char* SET_SHORTCUT_VISIBLE = "SetShortcutVisibleForSelf";
-constexpr const char* GET_ALL_SHORTCUT_INFO_FOR_SELF = "GetAllShortcutInfoForSelf"; 
+constexpr const char* GET_ALL_SHORTCUT_INFO_FOR_SELF = "GetAllShortcutInfoForSelf";
 }
 static ErrCode InnerAddDesktopShortcutInfo(const OHOS::AppExecFwk::ShortcutInfo &shortcutInfo, int32_t userId)
 {

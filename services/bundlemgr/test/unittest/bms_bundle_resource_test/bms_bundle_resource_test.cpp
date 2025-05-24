@@ -5031,7 +5031,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0218, Function | SmallTest
 {
     std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
     std::vector<LauncherAbilityResourceInfo> info;
-    auto ret = bundleResourceHostImpl->GetExtensionAbilityResourceInfo("non.existent.bundle", 
+    auto ret = bundleResourceHostImpl->GetExtensionAbilityResourceInfo("non.existent.bundle",
         ExtensionAbilityType::INPUTMETHOD, 0, info, 1);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
