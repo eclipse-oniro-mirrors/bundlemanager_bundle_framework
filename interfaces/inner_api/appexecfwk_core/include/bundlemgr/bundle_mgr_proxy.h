@@ -1209,6 +1209,9 @@ public:
     virtual ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible) override;
 
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
+
+    virtual bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
+        const int32_t minorVersion, const int32_t patchVersion) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

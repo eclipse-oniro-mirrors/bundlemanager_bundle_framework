@@ -71,6 +71,7 @@ const std::string FUNCTION_BATCH_BUNDLE_INFO = "BundleMgrHostImpl::BatchGetBundl
 const std::string FUNCTION_GET_BUNDLE_INFO = "BundleMgrHostImpl::GetBundleInfo";
 const std::string FUNCTION_GET_BUNDLE_INFO_V9 = "BundleMgrHostImpl::GetBundleInfoV9";
 const std::string FUNCTION_GET_BUNDLE_INFO_FOR_SELF = "BundleMgrHostImpl::GetBundleInfoForSelf";
+const std::string FUNCTION_GREAT_OR_EQUAL_API_TARGET_VERSION = "BundleMgrHostImpl::GreatOrEqualTargetAPIVersion";
 const std::string CLONE_APP_DIR_PREFIX = "+clone-";
 const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.IAtomicServiceStatusCallback";
 const std::string PLUS = "+";
@@ -5469,6 +5470,18 @@ ErrCode BundleMgrHostImpl::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &
         return ERR_APPEXECFWK_NULL_PTR;
     }
     return dataMgr->GetAllShortcutInfoForSelf(shortcutInfos);
+}
+
+// Internal interface. The application compares the API version number saved in the package management. No permission control is required
+bool BundleMgrHostImpl::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion, const int32_t patchVersion)
+{
+    APP_LOGD("GreatOrEqualTargetAPIVersion begin");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    return dataMgr->GreatOrEqualTargetAPIVersion(platformVersion, minorVersion, patchVersion);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

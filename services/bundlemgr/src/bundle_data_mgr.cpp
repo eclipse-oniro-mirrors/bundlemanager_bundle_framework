@@ -10836,5 +10836,41 @@ ErrCode BundleDataMgr::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shor
     }
     return ERR_OK;
 }
+
+bool BundleDataMgr::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion, const int32_t patchVersion)
+{    
+    if (platformVersion > ServiceConstants::API_VERSION_MAX || platformVersion < 1) {
+        APP_LOGE("GreatOrEqualTargetAPIVersion Error, platformVersion is invalid: %{public}d", platformVersion);
+        return false;
+    }
+    if (minorVersion > ServiceConstants::API_VERSION_MAX || minorVersion < 0) {
+        APP_LOGE("GreatOrEqualTargetAPIVersion Error, minorVersion is invalid: %{public}d", minorVersion);
+        return false;
+    }
+    if (patchVersion > ServiceConstants::API_VERSION_MAX || patchVersion < 0) {
+        APP_LOGE("GreatOrEqualTargetAPIVersion Error, patchVersion is invalid: %{public}d", patchVersion);
+        return false;
+    }
+
+    BundleInfo bundleInfo;
+    auto ret = GetBundleInfoForSelf(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GreatOrEqualTargetAPIVersion, GetBundleInfoForSelf fail");
+        return false;
+    }
+    
+    APP_LOGE("BundleDataMgr::GreatOrEqualTargetAPIVersion, name: %{public}s, major: %{public}d, minor: %{public}d, patch: %{public}d",
+        bundleInfo.name.c_str(), (bundleInfo.targetVersion % ServiceConstants::API_VERSION_MOD),
+        bundleInfo.targetMinorApiVersion, bundleInfo.targetPatchApiVersion);
+    if (static_cast<uint32_t>(platformVersion) != (bundleInfo.targetVersion % ServiceConstants::API_VERSION_MOD)) {
+        return static_cast<uint32_t>(platformVersion) < (bundleInfo.targetVersion % ServiceConstants::API_VERSION_MOD);
+    }
+
+    if (minorVersion != bundleInfo.targetMinorApiVersion) {
+        return minorVersion < bundleInfo.targetMinorApiVersion;
+    }
+    return patchVersion <= bundleInfo.targetPatchApiVersion;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
