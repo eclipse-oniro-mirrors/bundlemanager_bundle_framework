@@ -218,7 +218,8 @@ void GenerateAbilityInfo(FuzzedDataProvider& fdp, AbilityInfo &abilityInfo)
     abilityInfo.appIndex = fdp.ConsumeIntegral<int32_t>();
     abilityInfo.uid = fdp.ConsumeIntegral<int32_t>();
     abilityInfo.type = static_cast<AbilityType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_FIVE));
-    abilityInfo.extensionAbilityType = static_cast<ExtensionAbilityType>(fdp.ConsumeIntegralInRange<uint16_t>(0, EXTENSION_ABILITY_MAX));
+    abilityInfo.extensionAbilityType =
+        static_cast<ExtensionAbilityType>(fdp.ConsumeIntegralInRange<uint16_t>(0, EXTENSION_ABILITY_MAX));
     abilityInfo.orientation = static_cast<DisplayOrientation>(fdp.ConsumeIntegralInRange<uint8_t>(0, ORIENTATION_MAX));
     abilityInfo.launchMode = static_cast<LaunchMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_TWO));
     abilityInfo.compileMode = static_cast<CompileMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_ONE));
@@ -361,8 +362,10 @@ void GenerateInstallParam(FuzzedDataProvider& fdp, InstallParam &installParam)
     installParam.isPatch = fdp.ConsumeBool();
     installParam.isDataPreloadHap = fdp.ConsumeBool();
     installParam.userId = fdp.ConsumeIntegral<int32_t>();
-    installParam.installFlag = static_cast<InstallFlag>(fdp.ConsumeIntegralInRange<int8_t>(0, CODE_MAX_ONE));
-    installParam.installLocation = static_cast<InstallLocation>(fdp.ConsumeIntegralInRange<int8_t>(CODE_MIN_ONE, CODE_MAX_TWO));
+    installParam.installFlag =
+        static_cast<InstallFlag>(fdp.ConsumeIntegralInRange<int8_t>(0, CODE_MAX_ONE));
+    installParam.installLocation =
+        static_cast<InstallLocation>(fdp.ConsumeIntegralInRange<int8_t>(CODE_MIN_ONE, CODE_MAX_TWO));
     installParam.installBundlePermissionStatus =
         static_cast<PermissionStatus>(fdp.ConsumeIntegralInRange<int8_t>(0, CODE_MAX_TWO));
     installParam.installEnterpriseBundlePermissionStatus =

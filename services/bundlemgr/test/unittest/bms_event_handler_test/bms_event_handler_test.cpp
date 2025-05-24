@@ -2551,7 +2551,7 @@ HWTEST_F(BmsEventHandlerTest, SavePreloadAppUninstallInfo_0100, Function | Small
  * @tc.desc: test ProcessUpdatePermissions
  */
 HWTEST_F(BmsEventHandlerTest, ProcessUpdatePermissions_0100, Function | SmallTest | Level0)
- {
+{
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     EXPECT_NE(handler, nullptr);
     if (handler) {
@@ -2563,7 +2563,7 @@ HWTEST_F(BmsEventHandlerTest, ProcessUpdatePermissions_0100, Function | SmallTes
             DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = std::make_shared<BmsParam>();
             handler->ProcessUpdatePermissions();
             DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-            handler->ProcessUpdatePermissions();   
+            handler->ProcessUpdatePermissions();
         }
     }
 }
@@ -2593,7 +2593,7 @@ HWTEST_F(BmsEventHandlerTest, IsPermissionsUpdated_0100, Function | SmallTest | 
             EXPECT_TRUE(ret);
             ret = handler->IsPermissionsUpdated();
             EXPECT_FALSE(ret);
-            ret = bmsParam->SaveBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG, 
+            ret = bmsParam->SaveBmsParam(ServiceConstants::UPDATE_PERMISSIONS_FLAG,
                 ServiceConstants::UPDATE_PERMISSIONS_FLAG_UPDATED);
             EXPECT_TRUE(ret);
         }

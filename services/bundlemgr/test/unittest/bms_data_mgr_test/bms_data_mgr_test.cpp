@@ -5554,7 +5554,7 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0200, Function | MediumTest | Level1)
 {
     MessageParcel data;
     MessageParcel reply;
-    data.WriteFileDescriptor(-1); 
+    data.WriteFileDescriptor(-1);
     auto ret = BundleBackupMgr::GetInstance().OnRestore(data, reply);
     EXPECT_EQ(ret, ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
 }
@@ -5579,7 +5579,7 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0300, Function | MediumTest | Level1)
     FILE* filePtr = fopen(BACKUP_FILE_PATH, "re");
     EXPECT_NE(filePtr, nullptr);
     int32_t fd = fileno(filePtr);
-    data.WriteFileDescriptor(fd); 
+    data.WriteFileDescriptor(fd);
     auto ret = BundleBackupMgr::GetInstance().OnRestore(data, reply);
     (void)close(fd);
     EXPECT_EQ(ret, ERR_OK);

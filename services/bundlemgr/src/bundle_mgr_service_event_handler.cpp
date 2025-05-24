@@ -3099,7 +3099,7 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
                 std::string moduleName;
                 DeletePreInfoInDb(bundleName, moduleName, true);
                 if (hasBundleInstalled) {
-                   SavePreloadAppUninstallInfo(bundleName, preloadBundleNames);
+                    SavePreloadAppUninstallInfo(bundleName, preloadBundleNames);
                 }
             }
 
