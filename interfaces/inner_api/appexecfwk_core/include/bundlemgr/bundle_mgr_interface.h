@@ -1770,6 +1770,12 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
+        const int32_t minorVersion, const int32_t patchVersion)
+    {
+        return false;
+    }
+
     virtual ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;

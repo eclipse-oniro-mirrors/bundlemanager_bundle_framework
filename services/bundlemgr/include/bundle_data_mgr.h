@@ -1136,6 +1136,7 @@ public:
     ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible);
     ErrCode DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
     ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos);
+    bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion, const int32_t patchVersion);
 
 private:
     /**
