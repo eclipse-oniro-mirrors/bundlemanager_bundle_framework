@@ -8460,6 +8460,49 @@ ErrCode BundleDataMgr::FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerB
     return ret;
 }
 
+ErrCode BundleDataMgr::HasAppOrAtomicServiceInUser(const std::string &bundleName, int32_t userId) const
+{
+    if (!HasUserId(userId)) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (bundleName.empty()) {
+        APP_LOGW("param -n %{public}s error", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto iter = bundleInfos_.find(bundleName);
+    if (iter == bundleInfos_.end()) {
+        APP_LOGW("bundle %{public}s not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    BundleType bundleType = iter->second.GetApplicationBundleType();
+    if (bundleType != BundleType::APP && bundleType != BundleType::ATOMIC_SERVICE) {
+        APP_LOGW("bundle %{public}s is not app or atomicservice", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    return iter->second.GetResponseUserId(userId) == Constants::INVALID_USERID ?
+        ERR_BUNDLE_MANAGER_INVALID_USER_ID : ERR_OK;
+}
+
+bool BundleDataMgr::GetAllAppAndAtomicServiceInUser(int32_t userId, std::vector<std::string> &bundleList) const
+{
+    if (!HasUserId(userId)) {
+        APP_LOGW("param -u %{public}d error", userId);
+        return false;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        BundleType bundleType = item.second.GetApplicationBundleType();
+        if (bundleType != BundleType::APP && bundleType != BundleType::ATOMIC_SERVICE) {
+            continue;
+        }
+        if (item.second.GetResponseUserId(userId) != Constants::INVALID_USERID) {
+            bundleList.emplace_back(item.first);
+        }
+    }
+    return !bundleList.empty();
+}
+
 void BundleDataMgr::ScanAllBundleGroupInfo()
 {
     // valid info, key: index, value: dataGroupId
@@ -10784,7 +10827,7 @@ ErrCode BundleDataMgr::SetShortcutVisibleForSelf(const std::string &shortcutId, 
     }
     if (shortcutVisibleStorage_->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible)) {
         return ERR_OK;
-    } 
+    }
     if (!shortcutVisibleStorage_->SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible)) {
         APP_LOGE("SaveStorageShortcutVisibleInfo failed");
         return ERR_APPEXECFWK_DB_INSERT_ERROR;

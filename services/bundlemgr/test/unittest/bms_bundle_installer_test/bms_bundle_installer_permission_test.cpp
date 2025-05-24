@@ -1015,4 +1015,35 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleSandboxInstaller_0002, Function
         bundleName, appProvisionInfo);
     EXPECT_TRUE(addRes);
 }
+
+/**
+ * @tc.number: BundleMgrHostImpl_0001
+ * @tc.name: BundleMgrHostImpl_0001
+ * @tc.desc: test GetAllBundleLabel
+ */
+HWTEST_F(BmsBundleInstallerPermissionTest, BundleMgrHostImpl_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    int32_t userId = 100;
+    std::string labels;
+    bool ret = localBundleMgrHostImpl->GetAllBundleLabel(userId, labels);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0002
+ * @tc.name: BundleMgrHostImpl_0002
+ * @tc.desc: test GetLabelByBundleName
+ */
+HWTEST_F(BmsBundleInstallerPermissionTest, BundleMgrHostImpl_0002, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string bundleName;
+    int32_t userId = 100;
+    std::string result;
+    bool ret = localBundleMgrHostImpl->GetLabelByBundleName(bundleName, userId, result);
+    EXPECT_EQ(ret, false);
+}
 } // OHOS

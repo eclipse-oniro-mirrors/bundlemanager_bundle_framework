@@ -186,7 +186,7 @@ std::vector<Skill> BmsDataMgrTest::CreateSkillsForMatchShareTest()
     uriMedia.scheme = "file";
     uriMedia.utd = "general.media";
     uriMedia.maxFileSupported = 9;
-    skill.uris.push_back(uriMedia); 
+    skill.uris.push_back(uriMedia);
 
     skills.push_back(skill);
 
@@ -2006,7 +2006,7 @@ HWTEST_F(BmsDataMgrTest, MatchShare_0200, Function | SmallTest | Level1)
 
     std::map<std::string, int32_t> utds2 = {{"general.png", 3}};
     EXPECT_EQ(MatchShare(utds2, skills), true);
-    
+
     std::map<std::string, int32_t> utds3 = {{"general.png", 4}};
     EXPECT_EQ(MatchShare(utds3, skills), false);
 
@@ -2057,7 +2057,7 @@ HWTEST_F(BmsDataMgrTest, MatchShare_0200, Function | SmallTest | Level1)
 
     std::map<std::string, int32_t> utds19 = {{"general.png", 2}, {"general.image", 1}, {"general.media", 7}};
     EXPECT_EQ(MatchShare(utds19, skills), false);
-    
+
     std::map<std::string, int32_t> utds20 = {{"general.png", 3}, {"general.image", 3}, {"general.media", 3}};
     EXPECT_EQ(MatchShare(utds20, skills), true);
 
@@ -3031,6 +3031,127 @@ HWTEST_F(BmsDataMgrTest, FromJson_001, Function | MediumTest | Level1)
     UninstallDataUserInfo uninstallDataUserInfo;
     from_json(jsonObject, uninstallDataUserInfo);
     EXPECT_EQ(parseResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetLabel_0001
+ * @tc.name: GetLabel_0001
+ * @tc.desc: test HasAppOrAtomicServiceInUser
+ */
+HWTEST_F(BmsDataMgrTest, GetLabel_0001, Function | MediumTest | Level1)
+{
+    std::string bundleName;
+    int32_t userId = 999;
+    auto res = dataMgr_->HasAppOrAtomicServiceInUser(bundleName, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    std::vector<std::string> bundleList;
+    bool result =  dataMgr_->GetAllAppAndAtomicServiceInUser(userId, bundleList);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: GetLabel_0002
+ * @tc.name: GetLabel_0002
+ * @tc.desc: test HasAppOrAtomicServiceInUser
+ */
+HWTEST_F(BmsDataMgrTest, GetLabel_0002, Function | MediumTest | Level1)
+{
+    std::string bundleName;
+    int32_t userId = 100;
+    dataMgr_->AddUserId(userId);
+    auto res = dataMgr_->HasAppOrAtomicServiceInUser(bundleName, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+
+    std::vector<std::string> bundleList;
+    bool result =  dataMgr_->GetAllAppAndAtomicServiceInUser(userId, bundleList);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: GetLabel_0003
+ * @tc.name: GetLabel_0003
+ * @tc.desc: test HasAppOrAtomicServiceInUser
+ */
+HWTEST_F(BmsDataMgrTest, GetLabel_0003, Function | MediumTest | Level1)
+{
+    std::string bundleName = "wrong.bundleName";
+    int32_t userId = 100;
+    dataMgr_->AddUserId(userId);
+    auto res = dataMgr_->HasAppOrAtomicServiceInUser(bundleName, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetLabel_0004
+ * @tc.name: GetLabel_0004
+ * @tc.desc: test GetAllAppAndAtomicServiceInUser
+ */
+HWTEST_F(BmsDataMgrTest, GetLabel_0004, Function | MediumTest | Level1)
+{
+    int32_t userId = 100;
+    dataMgr_->AddUserId(userId);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::SHARED;
+    dataMgr_->bundleInfos_.emplace("test.bundle", innerBundleInfo);
+
+    std::vector<std::string> bundleList;
+    bool result =  dataMgr_->GetAllAppAndAtomicServiceInUser(userId, bundleList);
+    EXPECT_FALSE(result);
+
+    auto res = dataMgr_->HasAppOrAtomicServiceInUser("test.bundle", userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetLabel_0005
+ * @tc.name: GetLabel_0005
+ * @tc.desc: test GetAllAppAndAtomicServiceInUser
+ */
+HWTEST_F(BmsDataMgrTest, GetLabel_0005, Function | MediumTest | Level1)
+{
+    int32_t userId = 100;
+    dataMgr_->AddUserId(userId);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
+    dataMgr_->bundleInfos_.emplace("test.bundle", innerBundleInfo);
+
+    std::vector<std::string> bundleList;
+    bool result =  dataMgr_->GetAllAppAndAtomicServiceInUser(userId, bundleList);
+    EXPECT_FALSE(result);
+
+    auto res = dataMgr_->HasAppOrAtomicServiceInUser("test.bundle", userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetLabel_0006
+ * @tc.name: GetLabel_0006
+ * @tc.desc: test GetAllAppAndAtomicServiceInUser
+ */
+HWTEST_F(BmsDataMgrTest, GetLabel_0006, Function | MediumTest | Level1)
+{
+    int32_t userId = 100;
+    dataMgr_->AddUserId(userId);
+    std::string bundleName = "test.bundle";
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
+    innerBundleInfo.baseApplicationInfo_->bundleName = bundleName;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleInfo.innerBundleUserInfos_["test.bundle_100"] = innerBundleUserInfo;
+    dataMgr_->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    std::vector<std::string> bundleList;
+    bool result =  dataMgr_->GetAllAppAndAtomicServiceInUser(userId, bundleList);
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(bundleList.empty());
+
+    auto res = dataMgr_->HasAppOrAtomicServiceInUser(bundleName, userId);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -5473,7 +5594,7 @@ HWTEST_F(BmsDataMgrTest, OnExtension_0010, Function | SmallTest | Level1)
 
     ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_TRUE(ret);
-    
+
     ret = shortcutDataStorageRdb->UpdateAllShortcuts(backupJson);
     EXPECT_TRUE(ret);
 
@@ -5554,7 +5675,7 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0200, Function | MediumTest | Level1)
 {
     MessageParcel data;
     MessageParcel reply;
-    data.WriteFileDescriptor(-1); 
+    data.WriteFileDescriptor(-1);
     auto ret = BundleBackupMgr::GetInstance().OnRestore(data, reply);
     EXPECT_EQ(ret, ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
 }
@@ -5572,14 +5693,14 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0300, Function | MediumTest | Level1)
     int32_t USERID = 100;
     bool isIdIllegal = false;
     shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
-    
+
     const char* BACKUP_FILE_PATH = "/data/service/el1/public/bms/bundle_manager_service/backup_config.conf";
     MessageParcel data;
     MessageParcel reply;
     FILE* filePtr = fopen(BACKUP_FILE_PATH, "re");
     EXPECT_NE(filePtr, nullptr);
     int32_t fd = fileno(filePtr);
-    data.WriteFileDescriptor(fd); 
+    data.WriteFileDescriptor(fd);
     auto ret = BundleBackupMgr::GetInstance().OnRestore(data, reply);
     (void)close(fd);
     EXPECT_EQ(ret, ERR_OK);

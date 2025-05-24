@@ -19,6 +19,7 @@
 #include <string>
 
 #include "bundle_info.h"
+#include "bundle_mgr_host_impl.h"
 #include "router_data_storage_rdb.h"
 #include "router_item_compare.h"
 #include "router_map_helper.h"
@@ -1313,6 +1314,103 @@ HWTEST_F(BmsBundleNavigationTest, IsRegexMatch_0001, Function | SmallTest | Leve
     str = "a\nb";
     result = RouterMapHelper::IsRegexMatch(str, pattern);
     EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0001
+ * @tc.name: BundleMgrHostImpl_0001
+ * @tc.desc: test GetAllBundleLabel
+ */
+HWTEST_F(BmsBundleNavigationTest, BundleMgrHostImpl_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    int32_t userId = 0;
+    std::string labels;
+    bool ret = localBundleMgrHostImpl->GetAllBundleLabel(userId, labels);
+    EXPECT_EQ(ret, false);
+    EXPECT_EQ(labels.empty(), true);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0002
+ * @tc.name: BundleMgrHostImpl_0002
+ * @tc.desc: test GetAllBundleLabel
+ */
+HWTEST_F(BmsBundleNavigationTest, BundleMgrHostImpl_0002, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    int32_t userId = 999;
+    std::string labels;
+    bool ret = localBundleMgrHostImpl->GetAllBundleLabel(userId, labels);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0003
+ * @tc.name: BundleMgrHostImpl_0003
+ * @tc.desc: test GetLabelByBundleName
+ */
+HWTEST_F(BmsBundleNavigationTest, BundleMgrHostImpl_0003, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string bundleName;
+    int32_t userId = 999;
+    std::string result;
+    bool ret = localBundleMgrHostImpl->GetLabelByBundleName(bundleName, userId, result);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0004
+ * @tc.name: BundleMgrHostImpl_0004
+ * @tc.desc: test GetLabelByBundleName
+ */
+HWTEST_F(BmsBundleNavigationTest, BundleMgrHostImpl_0004, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string bundleName;
+    int32_t userId = 0;
+    std::string result;
+    bool ret = localBundleMgrHostImpl->GetLabelByBundleName(bundleName, userId, result);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0005
+ * @tc.name: BundleMgrHostImpl_0005
+ * @tc.desc: test GetLabelByBundleName
+ */
+HWTEST_F(BmsBundleNavigationTest, BundleMgrHostImpl_0005, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string bundleName = AppExecFwk::Profile::SYSTEM_RESOURCES_APP;
+    int32_t userId = 0;
+    std::string result;
+    bool ret = localBundleMgrHostImpl->GetLabelByBundleName(bundleName, userId, result);
+    EXPECT_EQ(ret, false);
+    EXPECT_TRUE(result.empty());
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0006
+ * @tc.name: BundleMgrHostImpl_0006
+ * @tc.desc: test GetLabelByBundleName
+ */
+HWTEST_F(BmsBundleNavigationTest, BundleMgrHostImpl_0006, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string bundleName = "wrong.bundleName";
+    int32_t userId = 0;
+    std::string result;
+    bool ret = localBundleMgrHostImpl->GetLabelByBundleName(bundleName, userId, result);
+    EXPECT_EQ(ret, false);
+    EXPECT_TRUE(result.empty());
 }
 
 /**

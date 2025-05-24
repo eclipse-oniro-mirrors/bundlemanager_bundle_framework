@@ -187,7 +187,7 @@ private:
     std::shared_ptr<std::promise<int32_t>> cleanResult_;
     DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackImpl);
 };
- 
+
 void ProcessCacheCallbackImpl::OnGetAllBundleCacheFinished(uint64_t cacheStat)
 {
     if (cacheStat_ != nullptr) {
@@ -201,7 +201,7 @@ void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(int32_t result)
         cleanResult_->set_value(result);
     }
 }
- 
+
 uint64_t ProcessCacheCallbackImpl::GetCacheStat()
 {
     if (cacheStat_ != nullptr) {
@@ -8780,12 +8780,41 @@ HWTEST_F(ActsBmsKitSystemTest, DumpInfos_0001, Function | SmallTest | Level1)
     auto ret = bundleMgrProxy->DumpInfos(DumpFlag::DUMP_BUNDLE_INFO, appName, USERID, result);
     EXPECT_EQ(ret, true);
 
+    auto dumpLabelRes = bundleMgrProxy->DumpInfos(DumpFlag::DUMP_BUNDLE_LABEL, appName, USERID, result);
+    EXPECT_EQ(dumpLabelRes, true);
+
+    auto dumpAllLabelRes = bundleMgrProxy->DumpInfos(DumpFlag::DUMP_LABEL_LIST, appName, USERID, result);
+    EXPECT_EQ(dumpAllLabelRes, true);
+
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
     std::cout << "END GetAdditionalInfo_0002" << std::endl;
+}
+
+/**
+ * @tc.number: DumpInfos_0002
+ * @tc.name: test  DumpInfos proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, DumpInfos_0002, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string appName = BASE_BUNDLE_NAME + "999";
+    int32_t wrongUser = 99999;
+
+    std::string result;
+    auto ret = bundleMgrProxy->DumpInfos(DumpFlag::DUMP_BUNDLE_INFO, appName, wrongUser, result);
+    EXPECT_FALSE(ret);
+
+    auto dumpLabelRes = bundleMgrProxy->DumpInfos(DumpFlag::DUMP_BUNDLE_LABEL, appName, wrongUser, result);
+    EXPECT_FALSE(dumpLabelRes);
+
+    auto dumpAllLabelRes = bundleMgrProxy->DumpInfos(DumpFlag::DUMP_LABEL_LIST, appName, wrongUser, result);
+    EXPECT_FALSE(dumpAllLabelRes);
 }
 
 /**
@@ -9362,7 +9391,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllPluginInfo_0001, Function | MediumTest | Le
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetAllPluginInfo_0001" << std::endl;
 }
- 
+
 /**
  * @tc.number: GetPluginInfosForSelf_0001
  * @tc.name: test GetPluginInfosForSelf interface

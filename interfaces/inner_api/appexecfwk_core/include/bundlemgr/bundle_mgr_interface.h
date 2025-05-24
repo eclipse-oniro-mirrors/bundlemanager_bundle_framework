@@ -59,6 +59,8 @@ enum class DumpFlag {
     DUMP_BUNDLE_INFO,       // corresponse to option "-bundle [name]"
     DUMP_SHORTCUT_INFO,     // corresponse to option "-bundle [name] -shortcut-info"
     DUMP_DEBUG_BUNDLE_LIST, // corresponse to option "-debug-bundle-list"
+    DUMP_BUNDLE_LABEL,      // corresponse to option "-l"
+    DUMP_LABEL_LIST         // corresponse to option "-a -l"
 };
 
 class IBundleMgr : public IRemoteBroker {
