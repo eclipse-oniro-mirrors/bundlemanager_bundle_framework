@@ -23,6 +23,9 @@
 #include "bms_extension_data_mgr.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+#include "bundle_resource_manager.h"
+#endif
 #include "bundle_service_constants.h"
 #include "bundle_resource_helper.h"
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
@@ -76,6 +79,12 @@ const std::string CLONE_APP_DIR_PREFIX = "+clone-";
 const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.IAtomicServiceStatusCallback";
 const std::string PLUS = "+";
 const std::string AUTH_TITLE = "      ";
+const std::string BUNDLE_NAME = "bundleName";
+const std::string LABEL = "label";
+const std::string NEW_LINE = "\n";
+const std::string RESOURCE_NOT_SUPPORT =
+    "warning: dump label failed due to the device not supporting bundle resource!";
+const uint8_t JSON_INDENTATION = 4;
 const uint64_t BAD_CONTEXT_ID = 0;
 const uint64_t VECTOR_SIZE_MAX = 200;
 }
@@ -2014,6 +2023,14 @@ bool BundleMgrHostImpl::DumpInfos(
             ret = DumpShortcutInfo(bundleName, userId, result);
             break;
         }
+        case DumpFlag::DUMP_BUNDLE_LABEL: {
+            ret = GetLabelByBundleName(bundleName, userId, result);
+            break;
+        }
+        case DumpFlag::DUMP_LABEL_LIST: {
+            ret = GetAllBundleLabel(userId, result);
+            break;
+        }
         default:
             APP_LOGE("dump flag error");
             return false;
@@ -3939,6 +3956,101 @@ bool BundleMgrHostImpl::QueryAppGalleryBundleName(std::string &bundleName)
     }
     APP_LOGD("bundleName is %{public}s", bundleName.c_str());
     return  true;
+}
+
+bool BundleMgrHostImpl::GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &result)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGI("GetLabelByBundleName -n %{public}s -u %{public}d", bundleName.c_str(), userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return false;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return false;
+    }
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    auto findRes = dataMgr->HasAppOrAtomicServiceInUser(bundleName, userId);
+    if (findRes != ERR_OK) {
+        APP_LOGE("find fail");
+        return false;
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("manager nullptr, bundleName %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    BundleResourceInfo bundleResourceInfo;
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
+    if (!manager->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo)) {
+        APP_LOGE_NOFUNC("get resource failed -n %{public}s -f %{public}u", bundleName.c_str(), flags);
+        return false;
+    }
+    result.append(bundleResourceInfo.label);
+    result.append(NEW_LINE);
+#else
+    APP_LOGI("bundle resurce not support");
+    result.append(RESOURCE_NOT_SUPPORT);
+#endif
+    return true;
+}
+
+bool BundleMgrHostImpl::GetAllBundleLabel(int32_t userId, std::string &labels)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGI("GetAllBundleLabel -u %{public}d", userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return false;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return false;
+    }
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    std::vector<std::string> bundleList;
+    if (!dataMgr->GetAllAppAndAtomicServiceInUser(userId, bundleList)) {
+        APP_LOGE("get failed user %{public}d", userId);
+        return false;
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("manager nullptr");
+        return false;
+    }
+    nlohmann::json jsonArray = nlohmann::json::array();
+    for (const std::string &bundleName : bundleList) {
+        BundleResourceInfo bundleResourceInfo;
+        uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
+        if (!manager->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo)) {
+            APP_LOGE_NOFUNC("get resource failed -n %{public}s -f %{public}u", bundleName.c_str(), flags);
+            continue;
+        }
+        nlohmann::json entry;
+        entry[BUNDLE_NAME] = bundleResourceInfo.bundleName;
+        entry[LABEL] = bundleResourceInfo.label;
+        jsonArray.push_back(entry);
+    }
+    labels.append(jsonArray.dump(JSON_INDENTATION));
+    labels.append(NEW_LINE);
+#else
+    APP_LOGI("bundle resurce not support");
+    labels.append(RESOURCE_NOT_SUPPORT);
+#endif
+    return true;
 }
 
 ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &typeName,

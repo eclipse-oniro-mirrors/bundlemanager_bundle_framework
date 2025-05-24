@@ -1112,6 +1112,8 @@ public:
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
 
 private:
+    bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);
+    bool GetAllBundleLabel(int32_t userId, std::string &labels);
     ErrCode MigrateDataUserAuthentication();
     ErrCode MigrateDataParameterCheck(std::vector<std::string> &sourcePaths, std::string &destinationPath);
     ErrCode CheckSandboxPath(std::vector<std::string> &sourcePaths, std::string &destinationPath);
@@ -1167,6 +1169,7 @@ private:
     bool GetLabelFromCache(const std::string &cacheKey, const std::string &abilityName,
         const std::unordered_map<std::string, std::vector<LauncherAbilityResourceInfo>> &resourceCache,
         std::string &label);
+
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };
 }  // namespace AppExecFwk

@@ -51,6 +51,10 @@ ohos_unittest("BmsBundleDataMgrNullptrTest") {
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
+  sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
+  sources +=
+      [ "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp" ]
+
   sources += [ "bms_bundle_data_mgr_nullptr_test.cpp" ]
 
   configs = [
@@ -94,6 +98,22 @@ ohos_unittest("BmsBundleDataMgrNullptrTest") {
       "ets_runtime:libcompiler_service",
     ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
+  if (global_i18n_enable) {
+    defines += [ "GLOBAL_I18_ENABLE" ]
+    external_deps += [ "i18n:intl_util" ]
+  }
+  if (bundle_framework_bundle_resource) {
+    defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
+    external_deps += [ "ability_base:configuration" ]
+    if (bundle_framework_graphics) {
+      defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
+      external_deps += [
+        "ace_engine:drawable_descriptor",
+        "image_framework:image_native",
+      ]
+    }
+    sources += bundle_resource
   }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
