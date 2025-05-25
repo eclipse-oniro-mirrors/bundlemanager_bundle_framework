@@ -81,6 +81,7 @@ public:
     bool IsNeedToSkipPreBundleInstall();
     ErrCode GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames);
     ErrCode RegisterPreInstallWithCard();
+    bool IsMCFlagSet();
 private:
     bool OpenHandler();
     static void *handler_;

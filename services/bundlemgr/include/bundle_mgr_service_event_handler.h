@@ -404,6 +404,7 @@ private:
      * @return
      */
     static void ParsePreBundleProFile(const std::string &dir);
+    static void FilterVersionSpecialCustomApps(std::set<PreScanInfo> &installList);
     /**
      * @brief Set the flag indicates that all system and vendor applications installed.
      * @return

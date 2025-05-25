@@ -30,7 +30,6 @@ constexpr const char* INSTALL_TASK = "Install_Task";
 constexpr const char* UNINSTALL_TASK = "Uninstall_Task";
 constexpr const char* RECOVER_TASK = "Recover_Task";
 constexpr const char* THREAD_POOL_NAME = "InstallerThreadPool";
-constexpr const char* RETAIL_MODE_KEY = "const.dfx.enable_retail";
 constexpr unsigned int TIME_OUT_SECONDS = 60 * 25;
 constexpr int8_t MAX_TASK_NUMBER = 10;
 constexpr int8_t RETAIL_MODE_THREAD_NUMBER = 1;
@@ -40,7 +39,7 @@ static std::atomic<int32_t> g_taskCounter = 0;
 
 BundleInstallerManager::BundleInstallerManager()
 {
-    if (system::GetBoolParameter(RETAIL_MODE_KEY, false)) {
+    if (system::GetBoolParameter(ServiceConstants::RETAIL_MODE_KEY, false)) {
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "RETAIL_MODE");
         threadNum_ = RETAIL_MODE_THREAD_NUMBER;
     }
