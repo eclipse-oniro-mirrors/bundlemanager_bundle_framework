@@ -22,6 +22,7 @@
 #include "accesstoken_kit.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_distribution_type.h"
 #include "bundle_event_callback_host.h"
 #include "bundle_installer_proxy.h"
 #include "bundle_mgr_proxy.h"
@@ -8440,6 +8441,97 @@ HWTEST_F(ActsBmsKitSystemTest, GetSpecifiedDistributionType_0002, Function | Sma
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 }
 
+
+/**
+ * @tc.number: BatchGetSpecifiedDistributionType_0001
+ * @tc.name: test BatchGetSpecifiedDistributionType proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetSpecifiedDistributionType_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back(BASE_BUNDLE_NAME);
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleDistributionType> specifiedDistributionTypes;
+        ErrCode ret = bundleMgrProxy->BatchGetSpecifiedDistributionType(bundleNames, specifiedDistributionTypes);
+        if (specifiedDistributionTypes.empty()) {
+            EXPECT_FALSE(true);
+        } else {
+            EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(specifiedDistributionTypes[0].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        }
+    }
+}
+
+/**
+ * @tc.number: BatchGetSpecifiedDistributionType_0002
+ * @tc.name: test BatchGetSpecifiedDistributionType proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetSpecifiedDistributionType_0002, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleDistributionType> specifiedDistributionTypes;
+        ErrCode ret = bundleMgrProxy->BatchGetSpecifiedDistributionType(bundleNames, specifiedDistributionTypes);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    }
+}
+
+/**
+ * @tc.number: BatchGetSpecifiedDistributionType_0003
+ * @tc.name: test BatchGetSpecifiedDistributionType proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetSpecifiedDistributionType_0003, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames(1001, "BASE_BUNDLE_NAME");
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleDistributionType> specifiedDistributionTypes;
+        ErrCode ret = bundleMgrProxy->BatchGetSpecifiedDistributionType(bundleNames, specifiedDistributionTypes);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+    }
+}
+
+/**
+ * @tc.number: BatchGetSpecifiedDistributionType_0004
+ * @tc.name: test BatchGetSpecifiedDistributionType proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetSpecifiedDistributionType_0004, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back("");
+    bundleNames.push_back("BASE_BUNDLE_NAME");
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleDistributionType> specifiedDistributionTypes;
+        ErrCode ret = bundleMgrProxy->BatchGetSpecifiedDistributionType(bundleNames, specifiedDistributionTypes);
+        if (specifiedDistributionTypes.empty()) {
+            EXPECT_FALSE(true);
+        } else {
+            EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(specifiedDistributionTypes[0].bundleName, "");
+            EXPECT_EQ(specifiedDistributionTypes[1].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        }
+    }
+}
+
 /**
  * @tc.number: GetAdditionalInfo_0001
  * @tc.name: test GetAdditionalInfo proxy
@@ -8563,6 +8655,18 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0003, Function | SmallTest | Le
     ret = bundleMgrProxy->GetSpecifiedDistributionType(appName, specifiedDistributionType);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(installParam.specifiedDistributionType, specifiedDistributionType);
+
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back(appName);
+    std::vector<BundleDistributionType> specifiedDistributionTypes;
+    ret = bundleMgrProxy->BatchGetSpecifiedDistributionType(bundleNames, specifiedDistributionTypes);
+    EXPECT_EQ(ret, ERR_OK);
+    if (specifiedDistributionTypes.empty()) {
+        EXPECT_FALSE(true);
+    } else {
+        EXPECT_EQ(installParam.specifiedDistributionType, specifiedDistributionTypes[0].distributionType);
+        EXPECT_EQ(ERR_OK, specifiedDistributionTypes[0].errCode);
+    }
 
     resvec.clear();
     Uninstall(appName, resvec);

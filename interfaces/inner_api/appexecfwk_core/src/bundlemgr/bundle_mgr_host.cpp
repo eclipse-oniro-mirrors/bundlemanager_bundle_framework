@@ -671,6 +671,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::UNREGISTER_PLUGIN_EVENT_CALLBACK):
             errCode = HandleUnregisterPluginEventCallback(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_SPECIFIED_DISTRIBUTED_TYPE):
+            errCode = HandleBatchGetSpecifiedDistributionType(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO_EXT):
             errCode = HandleGetCloneBundleInfoExt(data, reply);
             break;
@@ -3444,6 +3447,32 @@ ErrCode BundleMgrHost::HandleGetSpecifiedDistributionType(MessageParcel &data, M
     }
     if ((ret == ERR_OK) && !reply.WriteString(specifiedDistributedType)) {
         APP_LOGE("write specifiedDistributedType failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleBatchGetSpecifiedDistributionType(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t bundleNameCount = data.ReadInt32();
+    if (bundleNameCount <= 0 || bundleNameCount > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("bundleName count is error");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    std::vector<std::string> bundleNames;
+    for (int i = 0; i < bundleNameCount; i++) {
+        std::string bundleName = data.ReadString();
+        bundleNames.push_back(bundleName);
+    }
+    std::vector<BundleDistributionType> specifiedDistributionTypes;
+    ErrCode ret = BatchGetSpecifiedDistributionType(bundleNames, specifiedDistributionTypes);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(specifiedDistributionTypes, reply)) {
+        APP_LOGE("write dataGroupInfo failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
