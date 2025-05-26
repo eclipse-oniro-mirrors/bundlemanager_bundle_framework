@@ -2737,5 +2737,41 @@ std::vector<std::string> InstalldOperator::GetFirstBootLogFile()
     logPaths.insert(logPaths.end(), path.begin(), path.end());
     return logPaths;
 }
+
+bool InstalldOperator::ClearDir(const std::string &dir)
+{
+    std::filesystem::path path(dir);
+    std::error_code ec;
+    if (!std::filesystem::exists(path, ec) || !std::filesystem::is_directory(path, ec)) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid path:%{public}s,err:%{public}s", dir.c_str(), ec.message().c_str());
+        return false;
+    }
+
+    std::filesystem::directory_iterator dirIter(path, std::filesystem::directory_options::skip_permission_denied, ec);
+    std::filesystem::directory_iterator endIter;
+    if (ec) {
+        LOG_E(BMS_TAG_INSTALLD, "create iterator failed,%{public}s,err:%{public}s", dir.c_str(), ec.message().c_str());
+        return false;
+    }
+
+    std::vector<std::filesystem::path> delPathVector;
+    for (; dirIter != endIter; dirIter.increment(ec)) {
+        if (ec) {
+            LOG_E(BMS_TAG_INSTALLD, "iteration failed,%{public}s,err:%{public}s", dir.c_str(), ec.message().c_str());
+            return false;
+        }
+        delPathVector.emplace_back(dirIter->path());
+    }
+
+    for (const auto &delPath : delPathVector) {
+        std::filesystem::remove_all(delPath, ec);
+        if (ec) {
+            LOG_E(BMS_TAG_INSTALLD, "remove_all failed,%{public}s,err:%{public}s", dir.c_str(), ec.message().c_str());
+            return false;
+        }
+    }
+    LOG_I(BMS_TAG_INSTALLD, "clearDir success");
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

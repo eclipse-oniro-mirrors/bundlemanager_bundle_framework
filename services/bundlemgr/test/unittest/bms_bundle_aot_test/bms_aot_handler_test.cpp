@@ -16,8 +16,10 @@
 #define private public
 #include <gtest/gtest.h>
 #include <string>
+#include <sys/stat.h>
 
 #include "aot_handler.h"
+#include "aot_sign_data_cache_mgr.h"
 #include "app_log_wrapper.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -187,4 +189,67 @@ HWTEST_F(BmsAOTHandlerTest, CreateArkProfilePaths_0100, Function | SmallTest | L
     (void)InstalldClient::GetInstance()->IsExistDir(path, isExist);
     EXPECT_TRUE(isExist);
 }
-} // OHOS
+
+/**
+ * @tc.number: HandleIdleWithSingleSysComp_0100
+ * @tc.name: test HandleIdleWithSingleSysComp
+ * @tc.desc: 1.call HandleIdleWithSingleSysComp, expect sysCompSignDataMap_ size is 0
+ */
+HWTEST_F(BmsAOTHandlerTest, HandleIdleWithSingleSysComp_0100, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.clear();
+
+    std::string path;
+    AOTHandler::GetInstance().HandleIdleWithSingleSysComp(path);
+    size_t sysCompSignDataMapSize = AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.size();
+    EXPECT_EQ(sysCompSignDataMapSize, 0);
+}
+
+/**
+ * @tc.number: IdleForSysComp_0100
+ * @tc.name: test IdleForSysComp
+ * @tc.desc: 1.call IdleForSysComp, expect sysCompSignDataMap_ size is 0
+ */
+HWTEST_F(BmsAOTHandlerTest, IdleForSysComp_0100, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.clear();
+
+    AOTHandler::GetInstance().IdleForSysComp();
+    size_t sysCompSignDataMapSize = AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.size();
+    EXPECT_EQ(sysCompSignDataMapSize, 0);
+}
+
+/**
+ * @tc.number: IdleForHap_0100
+ * @tc.name: test IdleForHap
+ * @tc.desc: 1.call IdleForHap, expect sysCompSignDataMap_ size is 0
+ */
+HWTEST_F(BmsAOTHandlerTest, IdleForHap_0100, Function | SmallTest | Level1)
+{
+    AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.clear();
+
+    std::string compilePartial = "partial";
+    AOTHandler::GetInstance().IdleForHap(compilePartial);
+    size_t sysCompSignDataMapSize = AOTSignDataCacheMgr::GetInstance().sysCompSignDataMap_.size();
+    EXPECT_EQ(sysCompSignDataMapSize, 0);
+}
+
+/**
+ * @tc.number: GetSysCompList_0100
+ * @tc.name: test GetSysCompList
+ * @tc.desc: 1.call GetSysCompList, if file exist and not empty, expect sysCompList not empty
+ *           2.call GetSysCompList, if file not exist, expect sysCompList empty
+ */
+HWTEST_F(BmsAOTHandlerTest, GetSysCompList_0100, Function | SmallTest | Level1)
+{
+    std::string sysCompConfigPath = "/system/etc/ark/system_framework_aot_enable_list.conf";
+    std::vector<std::string> sysCompList = AOTHandler::GetInstance().GetSysCompList();
+    struct stat st;
+    int32_t ret = stat(sysCompConfigPath.c_str(), &st);
+    if (ret == 0 && S_ISREG(st.st_mode) && st.st_size > 0) {
+        EXPECT_FALSE(sysCompList.empty());
+    } else {
+        EXPECT_TRUE(sysCompList.empty());
+    }
+}
+} // OHOS
