@@ -1435,7 +1435,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
 bool BundleInstallChecker::CheckSupportAppTypes(
     const std::unordered_map<std::string, InnerBundleInfo> &infos, const std::string &supportAppTypes) const
 {
-    LOG_D(BMS_TAG_INSTALLER, "CheckSupportAppTypes begin, supportAppTypes: %{public}s", supportAppTypes.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "supportAppTypes: %{public}s", supportAppTypes.c_str());
     std::vector<std::string> appTypesVec;
     OHOS::SplitStr(supportAppTypes, SUPPORT_APP_TYPES_SEPARATOR, appTypesVec);
     if (find(appTypesVec.begin(), appTypesVec.end(), DEVICE_TYPE_OF_DEFAULT) != appTypesVec.end() &&
