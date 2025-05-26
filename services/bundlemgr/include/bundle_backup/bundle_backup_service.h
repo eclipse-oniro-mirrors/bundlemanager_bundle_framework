@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_BACKUP_SERVICE_H
 
 #include "appexecfwk_errors.h"
+#include "bundle_data_mgr.h"
 #include "nlohmann/json.hpp"
 #include "shortcut_data_storage_interface.h"
 
@@ -33,6 +34,7 @@ public:
 
 private:
     std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
+    std::shared_ptr<BundleDataMgr> dataMgr_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

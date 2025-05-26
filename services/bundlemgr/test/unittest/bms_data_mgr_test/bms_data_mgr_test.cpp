@@ -5634,6 +5634,7 @@ HWTEST_F(BmsDataMgrTest, OnExtension_0030, Function | MediumTest | Level1)
 {
     std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
     ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    BundleBackupService::GetInstance().dataMgr_ = std::make_shared<BundleDataMgr>();
     nlohmann::json backupJson;
     auto ret = BundleBackupService::GetInstance().OnRestore(backupJson);
     EXPECT_EQ(ret, ERR_APPEXECFWK_DB_UPDATE_ERROR);
@@ -5694,6 +5695,7 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0300, Function | MediumTest | Level1)
     bool isIdIllegal = false;
     shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
 
+    BundleBackupService::GetInstance().dataMgr_ = std::make_shared<BundleDataMgr>();
     const char* BACKUP_FILE_PATH = "/data/service/el1/public/bms/bundle_manager_service/backup_config.conf";
     MessageParcel data;
     MessageParcel reply;
@@ -5869,5 +5871,156 @@ HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0040, Function | MediumTest |
     ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_FALSE(shortcutInfos[0].visible);
+}
+
+/**
+ * @tc.number: CheckIfShortcutBundleExist_0010
+ * @tc.name: test CheckIfShortcutBundleExist
+ * @tc.desc: 1.test CheckIfShortcutBundleExist json which is not array
+ */
+HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0010, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    nlohmann::json backupJson;
+    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    EXPECT_FALSE(backupJson.is_object());
+}
+
+/**
+ * @tc.number: CheckIfShortcutBundleExist_0020
+ * @tc.name: test CheckIfShortcutBundleExist
+ * @tc.desc: 1.test CheckIfShortcutBundleExist with invalid bundle name
+ */
+HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0020, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    nlohmann::json backupJson;
+    backupJson.push_back({{"BUNDLE_NAME", "com.invalid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", 100}});
+    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+}
+
+/**
+ * @tc.number: CheckIfShortcutBundleExist_0030
+ * @tc.name: test CheckIfShortcutBundleExist
+ * @tc.desc: 1.test CheckIfShortcutBundleExist with invalid userId
+ */
+HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0030, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    nlohmann::json backupJson;
+    std::string bundleName = "com.valid.bundle";
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", 100}});
+    InnerBundleInfo innerBundleInfo;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+}
+
+/**
+ * @tc.number: CheckIfShortcutBundleExist_0040
+ * @tc.name: test CheckIfShortcutBundleExist
+ * @tc.desc: 1.test CheckIfShortcutBundleExist with invalid userId
+ */
+HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0040, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    nlohmann::json backupJson;
+    std::string bundleName = "com.valid.bundle";
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", 100}});
+    InnerBundleInfo innerBundleInfo;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.multiUserIdsSet_.insert(100);
+    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+}
+
+/**
+ * @tc.number: CheckIfShortcutBundleExist_0050
+ * @tc.name: test CheckIfShortcutBundleExist
+ * @tc.desc: 1.test CheckIfShortcutBundleExist
+ */
+HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0050, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    nlohmann::json backupJson;
+    std::string bundleName = "com.valid.bundle";
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", -5}});
+    InnerBundleInfo innerBundleInfo;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.multiUserIdsSet_.insert(-5);
+    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    EXPECT_EQ(backupJson.size(), 1);
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    bool result = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(bundleName);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckIfShortcutBundleExist_0060
+ * @tc.name: test CheckIfShortcutBundleExist
+ * @tc.desc: 1.test CheckIfShortcutBundleExist with invalid appIndex
+ */
+HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0060, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    nlohmann::json backupJson;
+    std::string bundleName = "com.valid.bundle";
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 1}, {"USER_ID", 100}});
+    InnerBundleInfo innerBundleInfo;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    info.bundleUserInfo.userId = 100;
+    InnerBundleCloneInfo cloneInfo;
+    info.cloneInfos.emplace(bundleName, cloneInfo);
+    innerBundleUserInfos["_100"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.multiUserIdsSet_.insert(100);
+    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+}
+
+/**
+ * @tc.number: CheckIfShortcutBundleExist_0070
+ * @tc.name: test CheckIfShortcutBundleExist
+ * @tc.desc: 1.test CheckIfShortcutBundleExist with invalid json
+ */
+HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0130, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    nlohmann::json backupJson;
+    backupJson.push_back({{"APP_INDEX", 0}, {"USER_ID", 100}});
+    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+    
+    backupJson.clear();
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"USER_ID", 100}});
+    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+
+    backupJson.clear();
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}});
+    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+
+    backupJson.clear();
+    backupJson.push_back({{"BUNDLE_NAME", 1}, {"APP_INDEX", 0}, {"USER_ID", 100}});
+    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+
+    backupJson.clear();
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", "appIndex"}, {"USER_ID", 100}});
+    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
+
+    backupJson.clear();
+    backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", "userId"}});
+    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
 }
 } // OHOS
