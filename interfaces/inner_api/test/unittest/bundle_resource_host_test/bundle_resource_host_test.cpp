@@ -36,6 +36,17 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const uint32_t CODE_GET_BUNDLE_RESOURCE_INFO = 0;
+const uint32_t CODE_GET_LAUNCHER_ABILITY_RESOURCE_INFO = 1;
+const uint32_t CODE_GET_ALL_BUNDLE_RESOURCE_INFO = 2;
+const uint32_t CODE_GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = 3;
+const uint32_t CODE_ADD_RESOURCE_INFO_BY_BUNDLE_NAME = 4;
+const uint32_t CODE_ADD_RESOURCE_INFO_BY_ABILITY = 5;
+const uint32_t CODE_DELETE_RESOURCE_INFO = 6;
+const uint32_t CODE_GET_EXTENSION_ABILITY_RESOURCE_INFO = 7;
+const uint32_t CODE_ERR = 100;
+}
 
 class MockBundleResourceHostImpl : public BundleResourceHost {
 public:
@@ -172,7 +183,7 @@ HWTEST_F(BundleResourceHostTest, OnRemoteRequest_0200, Function | SmallTest | Le
 {
     GTEST_LOG_(INFO) << "OnRemoteRequest_0200 start";
     BundleResourceHost bundleResourceHost;
-    uint32_t code = 100;
+    uint32_t code = CODE_ERR;
     MessageParcel data;
     std::u16string descriptor = BundleResourceHost::GetDescriptor();
     data.WriteInterfaceToken(descriptor);
@@ -181,6 +192,174 @@ HWTEST_F(BundleResourceHostTest, OnRemoteRequest_0200, Function | SmallTest | Le
     auto ret = bundleResourceHost.OnRemoteRequest(code, data, reply, option);
     GTEST_LOG_(INFO) << "OnRemoteRequest_0200 end, " << ret;
     EXPECT_EQ(ret, IPC_STUB_UNKNOW_TRANS_ERR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0300
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BundleResourceHostTest, OnRemoteRequest_0300, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0300 start";
+    BundleResourceHost bundleResourceHost;
+    uint32_t code = CODE_GET_BUNDLE_RESOURCE_INFO;
+    MessageParcel data;
+    std::u16string descriptor = BundleResourceHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    auto ret = bundleResourceHost.OnRemoteRequest(code, data, reply, option);
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0300 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0400
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BundleResourceHostTest, OnRemoteRequest_0400, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0400 start";
+    BundleResourceHost bundleResourceHost;
+    uint32_t code = CODE_GET_LAUNCHER_ABILITY_RESOURCE_INFO;
+    MessageParcel data;
+    std::u16string descriptor = BundleResourceHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    auto ret = bundleResourceHost.OnRemoteRequest(code, data, reply, option);
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0400 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0500
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BundleResourceHostTest, OnRemoteRequest_0500, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0500 start";
+    BundleResourceHost bundleResourceHost;
+    uint32_t code = CODE_GET_ALL_BUNDLE_RESOURCE_INFO;
+    MessageParcel data;
+    std::u16string descriptor = BundleResourceHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    auto ret = bundleResourceHost.OnRemoteRequest(code, data, reply, option);
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0500 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0600
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BundleResourceHostTest, OnRemoteRequest_0600, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0600 start";
+    BundleResourceHost bundleResourceHost;
+    uint32_t code = CODE_GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO;
+    MessageParcel data;
+    std::u16string descriptor = BundleResourceHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    auto ret = bundleResourceHost.OnRemoteRequest(code, data, reply, option);
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0600 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0700
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BundleResourceHostTest, OnRemoteRequest_0700, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0700 start";
+    BundleResourceHost bundleResourceHost;
+    uint32_t code = CODE_ADD_RESOURCE_INFO_BY_BUNDLE_NAME;
+    MessageParcel data;
+    std::u16string descriptor = BundleResourceHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    auto ret = bundleResourceHost.OnRemoteRequest(code, data, reply, option);
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0700 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0800
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BundleResourceHostTest, OnRemoteRequest_0800, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0800 start";
+    BundleResourceHost bundleResourceHost;
+    uint32_t code = CODE_ADD_RESOURCE_INFO_BY_ABILITY;
+    MessageParcel data;
+    std::u16string descriptor = BundleResourceHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    auto ret = bundleResourceHost.OnRemoteRequest(code, data, reply, option);
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0700 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_0900
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BundleResourceHostTest, OnRemoteRequest_0900, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0700 start";
+    BundleResourceHost bundleResourceHost;
+    uint32_t code = CODE_DELETE_RESOURCE_INFO;
+    MessageParcel data;
+    std::u16string descriptor = BundleResourceHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    auto ret = bundleResourceHost.OnRemoteRequest(code, data, reply, option);
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0700 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1000
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BundleResourceHostTest, OnRemoteRequest_1000, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0700 start";
+    BundleResourceHost bundleResourceHost;
+    uint32_t code = CODE_GET_EXTENSION_ABILITY_RESOURCE_INFO;
+    MessageParcel data;
+    std::u16string descriptor = BundleResourceHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    auto ret = bundleResourceHost.OnRemoteRequest(code, data, reply, option);
+    GTEST_LOG_(INFO) << "OnRemoteRequest_0700 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

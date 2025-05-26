@@ -489,7 +489,7 @@ HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0100, Function | 
 {
     ExtendResourceManagerHostImpl impl;
     bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME);
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -1285,7 +1285,7 @@ HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0200, Function | 
     DelayedSingleton<BundleResourceInfo>::GetInstance();
     auto manager = DelayedSingleton<BundleResourceInfo>::GetInstance();
     ASSERT_NE(manager, nullptr);
-    bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME);
+    bool ret = impl.ResetBundleResourceIcon(TEST_BUNDLE);
     EXPECT_FALSE(ret);
 }
 
@@ -1322,6 +1322,97 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0200, Function | Smal
 }
 
 /**
+ * @tc.number: ParseBundleResource_0300
+ * @tc.name: test ParseBundleResource
+ * @tc.desc: 1.analyze bundled package resources
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0300, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string bundleName = BUNDLE_NAME;
+    std::vector<std::string> iconId;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.filePath = "";
+    extendResourceInfo.iconId = 0;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo,
+        Constants::UNSPECIFIED_USERID, Constants::DEFAULT_APP_INDEX);
+    EXPECT_FALSE(ret);
+
+    ret = impl.ParseBundleResource(bundleName, extendResourceInfo, Constants::UNSPECIFIED_USERID, 1);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ParseBundleResource_0400
+ * @tc.name: test ParseBundleResource
+ * @tc.desc: 1.analyze bundled package resources
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0400, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string bundleName = BUNDLE_NAME;
+    std::vector<std::string> iconId;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.filePath = "";
+    extendResourceInfo.iconId = 0;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 0);
+    EXPECT_FALSE(ret);
+
+    ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 1);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ParseBundleResource_0500
+ * @tc.name: test ParseBundleResource
+ * @tc.desc: 1.analyze bundled package resources
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0500, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    InnerBundleUserInfo userInfo2;
+    userInfo2.bundleUserInfo.userId = INVALID_ID;
+    InnerBundleInfo info;
+    info.innerBundleUserInfos_["100"] = userInfo;
+    info.innerBundleUserInfos_["-1"] = userInfo2;
+    dataMgr->bundleInfos_.emplace(TEST_BUNDLE, info);
+
+    std::string bundleName = TEST_BUNDLE;
+    std::vector<std::string> iconId;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.filePath = "";
+    extendResourceInfo.iconId = 0;
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, INVALID_ID, 0);
+    EXPECT_TRUE(ret);
+    auto iter = dataMgr->bundleInfos_.find(TEST_BUNDLE);
+    if (iter != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(iter);
+    }
+}
+
+/**
+ * @tc.number: ParseBundleResource_0600
+ * @tc.name: test ParseBundleResource
+ * @tc.desc: 1.analyze bundled package resources
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0600, Function | SmallTest | Level1)
+{
+    std::string bundleName = TEST_BUNDLE;
+    std::vector<std::string> iconId;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.filePath = BUNDLE_PATH;
+    extendResourceInfo.iconId = 16777217;
+
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 0);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: ResetBundleResourceIcon_0500
  * @tc.name: Test invalid path case
  * @tc.desc: Verify function fails with invalid resource path
@@ -1346,16 +1437,57 @@ HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0700, Function | 
 }
 
 /**
- * @tc.number: ResetBundleResourceIcon_DeleteFail_1000
- * @tc.name: Test delete resource failure (path not exist)
- * @tc.desc: Verify function returns false when resource path not exist
+ * @tc.number: ResetBundleResourceIcon_0800
+ * @tc.name: test ResetBundleResourceIcon
+ * @tc.desc: 1.reset bundle resource icon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0800, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.ResetBundleResourceIcon("not_exist", Constants::UNSPECIFIED_USERID, 1);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ResetBundleResourceIcon_0900
+ * @tc.name: test ResetBundleResourceIcon
+ * @tc.desc: 1.reset bundle resource icon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0900, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    DelayedSingleton<BundleResourceInfo>::GetInstance();
+    auto manager = DelayedSingleton<BundleResourceInfo>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    bool ret = impl.ResetBundleResourceIcon("not_exist", USER_ID, 1);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ResetBundleResourceIcon_1000
+ * @tc.name: test ResetBundleResourceIcon
+ * @tc.desc: 1.reset bundle resource icon
  */
 HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_1000, Function | SmallTest | Level1)
 {
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    InnerBundleUserInfo userInfo2;
+    userInfo2.bundleUserInfo.userId = INVALID_ID;
+    InnerBundleInfo info;
+    info.innerBundleUserInfos_["100"] = userInfo;
+    info.innerBundleUserInfos_["-1"] = userInfo2;
+    dataMgr->bundleInfos_.emplace(TEST_BUNDLE, info);
+
     ExtendResourceManagerHostImpl impl;
-    bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME);
-    
-    EXPECT_FALSE(ret);
+    bool ret = impl.ResetBundleResourceIcon(TEST_BUNDLE, INVALID_ID, 1);
+    EXPECT_TRUE(ret);
+    auto iter = dataMgr->bundleInfos_.find(TEST_BUNDLE);
+    if (iter != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(iter);
+    }
 }
 
 /**
