@@ -4890,6 +4890,8 @@ static void ConvertInstallResult(InstallResult &installResult)
         case static_cast<int32_t>(IStatusReceiver::ERR_NATIVE_HNP_EXTRACT_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_DEBUG_NOT_SAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS):
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID);
             installResult.resultMsg = "STATUS_INSTALL_FAILURE_INVALID";
             break;
@@ -4929,6 +4931,7 @@ static void ConvertInstallResult(InstallResult &installResult)
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SINGLETON_INCOMPATIBLE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INCONSISTENT_MODULE_NAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_CHECK_SYSCAP_FAILED_AND_DEVICE_TYPE_NOT_SUPPORTED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_U1_ENABLE_NOT_SAME_IN_ALL_BUNDLE_INFOS):
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT);
             installResult.resultMsg = "STATUS_INSTALL_FAILURE_CONFLICT";
             break;
