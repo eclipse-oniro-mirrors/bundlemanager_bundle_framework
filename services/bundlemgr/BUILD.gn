@@ -100,6 +100,7 @@ ohos_source_set("parser_common") {
 
   external_deps = [
     "c_utils:utils",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "zlib:shared_libz",
   ]
@@ -194,6 +195,7 @@ ohos_source_set("bundle_parser") {
     "ability_base:want",
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
+    "ffrt:libffrt",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",

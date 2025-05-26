@@ -367,7 +367,7 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
         return true;
     }
 
-    BundleExtractor extractor(sourcePath);
+    BundleParallelExtractor extractor(sourcePath);
     if (!extractor.Init()) {
         return false;
     }
@@ -378,13 +378,25 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
         return false;
     }
 
-    for_each(soEntryFiles.begin(), soEntryFiles.end(), [&extractor, &targetSoPath, &cpuAbi](const auto &entry) {
+    if (soEntryFiles.empty()) {
+        LOG_D(BMS_TAG_INSTALLD, "ExtractFiles no so files to extract");
+        return true;
+    }
+
+    std::vector<ffrt::dependence> handles;
+    for_each(soEntryFiles.begin(), soEntryFiles.end(),
+        [&extractor, &targetSoPath, &cpuAbi, &handles](const auto &entry) {
         ExtractParam param;
         param.targetPath = targetSoPath;
         param.cpuAbi = cpuAbi;
         param.extractFileType = ExtractFileType::SO;
-        ExtractTargetFile(extractor, entry, param);
+        ffrt::task_handle handle = ffrt::submit_h([&extractor, entry, param] () {
+            LOG_D(BMS_TAG_INSTALLD, "Extracting file %{private}s", entry.c_str());
+            ExtractTargetFile(extractor, entry, param);
+            }, {}, {});
+        handles.push_back(std::move(handle));
     });
+    ffrt::wait(handles);
 
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles end");
     return true;

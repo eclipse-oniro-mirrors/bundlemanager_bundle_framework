@@ -27,7 +27,7 @@ namespace {
 constexpr const char* MODULE_PROFILE_NAME = "module.json";
 }
 
-BaseExtractor::BaseExtractor(const std::string &source) : sourceFile_(source), zipFile_(source)
+BaseExtractor::BaseExtractor(const std::string &source, bool parallel) : sourceFile_(source), zipFile_(source, parallel)
 {
     APP_LOGD("BaseExtractor instance is created");
 }
