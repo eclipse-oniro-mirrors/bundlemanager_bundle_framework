@@ -27,6 +27,8 @@
 #include "common_event_support.h"
 #include "common_event_subscriber.h"
 #include "el5_filekey_callback.h"
+#include "installd_client.h"
+#include "installd_service.h"
 #include "patch_data_mgr.h"
 #include "want.h"
 #include "user_unlocked_event_subscriber.h"
@@ -64,6 +66,9 @@ namespace {
     constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
     const int32_t TEST_UID = 20020098;
     const std::string UNINSTALL_PREINSTALL_BUNDLE_NAME = "com.ohos.telephonydataability";
+    const std::string BUNDLE_NAME_FOR_TEST_U1ENABLE = "com.example.u1Enable_test";
+    const int32_t TEST_U100 = 100;
+    const int32_t TEST_U1 = 1;
 }
 class BmsEventHandlerTest : public testing::Test {
 public:
@@ -2453,6 +2458,50 @@ HWTEST_F(BmsEventHandlerTest, InnerBundleInfo_0200, Function | SmallTest | Level
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.UpdateRemovable(true, true);
     EXPECT_TRUE(innerBundleInfo.IsRemovable());
+}
+
+/**
+ * @tc.number: InnerProcessCheckAppLogDir_0100
+ * @tc.name: InnerProcessCheckAppLogDir
+ * @tc.desc: test InnerProcessCheckAppLogDir
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessCheckAppLogDir_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(Constants::DEFAULT_USERID);
+    dataMgr->AddUserId(Constants::U1);
+    dataMgr->bundleInfos_.clear();
+    // test bundleInfos_ only has bundleinfo in 0 and 100
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo0;
+    innerBundleUserInfo0.bundleUserInfo.userId = 0;
+    innerBundleUserInfo0.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo0);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, innerBundleInfo);
+ 
+    handler->InnerProcessCheckAppLogDir();
+    std::string parentDir1 = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(1) + ServiceConstants::LOG;
+    std::string bundleLogDir1 = parentDir1 + BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    bool isExist = false;
+    (void)InstalldClient::GetInstance()->IsExistDir(bundleLogDir1, isExist);
+    EXPECT_FALSE(isExist);
+    dataMgr->bundleInfos_.clear();
+    EXPECT_TRUE(dataMgr->bundleInfos_.empty());
+    // add innerBundleUserInfo for u1
+    InnerBundleUserInfo innerBundleUserInfo1;
+    innerBundleUserInfo1.bundleUserInfo.userId = TEST_U1;
+    innerBundleUserInfo1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo1);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, innerBundleInfo);
+    handler->InnerProcessCheckAppLogDir();
+    (void)InstalldClient::GetInstance()->IsExistDir(bundleLogDir1, isExist);
+    EXPECT_FALSE(isExist);
+    (void)InstalldClient::GetInstance()->RemoveDir(bundleLogDir1);
+    dataMgr->bundleInfos_.clear();
 }
 
 /**

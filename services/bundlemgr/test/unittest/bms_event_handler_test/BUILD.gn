@@ -144,8 +144,16 @@ ohos_unittest("BmsEventHandlerTest") {
   }
 
   if (code_signature_enable) {
-    sources +=
-        [ "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp" ]
+    sources += [
+      "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
+      "${services_path}/bundlemgr/src/code_sign_helper.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [
+      "bounds_checking_function:libsec_shared",
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 }
