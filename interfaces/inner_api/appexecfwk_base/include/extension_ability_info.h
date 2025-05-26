@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -154,6 +154,9 @@ struct ExtensionAbilityInfo : public Parcelable {
     bool enabled = true;
 
     bool needCreateSandbox = false;
+
+    // Specifies whether the ability can run in an independent process
+    bool isolationProcess = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;

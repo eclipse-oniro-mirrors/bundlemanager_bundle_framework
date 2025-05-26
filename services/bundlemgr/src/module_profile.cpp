@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -213,6 +213,7 @@ struct Ability {
 
 struct Extension {
     bool visible = false;
+    bool isolationProcess = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
@@ -822,6 +823,12 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         jsonObjectEnd,
         EXPORTED,
         extension.visible,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ABILITY_ISOLATION_PROCESS,
+        extension.isolationProcess,
         false,
         g_parseResult);
     GetValueIfFindKey<std::vector<Skill>>(jsonObject,
@@ -2386,6 +2393,7 @@ void ToExtensionInfo(
     extensionInfo.permissions = extension.permissions;
     extensionInfo.appIdentifierAllowList = extension.appIdentifierAllowList;
     extensionInfo.visible = extension.visible;
+    extensionInfo.isolationProcess = extension.isolationProcess;
     GetMetadata(extensionInfo.metadata, extension.metadata);
     extensionInfo.bundleName = moduleJson.app.bundleName;
     extensionInfo.moduleName = moduleJson.module.name;
