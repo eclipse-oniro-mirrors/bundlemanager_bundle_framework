@@ -116,6 +116,7 @@ public:
     bool IsFileExisted(const std::string &filePath) const;
 
 private:
+    bool IsDriverFileNotExisted() const;
     static bool isDriverDirNeedRemoved_;
     static std::shared_ptr<InstalldService> installdService_;
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
@@ -183,15 +184,6 @@ ErrCode BmsDriverInstallerTest::UninstallBundle(const std::string &bundleName) c
 
 void BmsDriverInstallerTest::SetUpTestCase()
 {
-}
-
-void BmsDriverInstallerTest::TearDownTestCase()
-{
-    bundleMgrService_->OnStop();
-}
-
-void BmsDriverInstallerTest::SetUp()
-{
     if (!installdService_->IsServiceReady()) {
         installdService_->Start();
     }
@@ -207,6 +199,14 @@ void BmsDriverInstallerTest::SetUp()
         isDriverDirNeedRemoved_ = true;
     }
 }
+
+void BmsDriverInstallerTest::TearDownTestCase()
+{
+    bundleMgrService_->OnStop();
+}
+
+void BmsDriverInstallerTest::SetUp()
+{}
 
 void BmsDriverInstallerTest::TearDown()
 {
@@ -264,6 +264,38 @@ bool BmsDriverInstallerTest::IsFileExisted(const std::string &filePath) const
     return access(filePath.c_str(), F_OK) == 0;
 }
 
+bool BmsDriverInstallerTest::IsDriverFileNotExisted() const
+{
+    if (IsDriverDirEmpty()) {
+        return true;
+    }
+    std::error_code ec;
+    std::filesystem::directory_iterator it(DRIVER_FILE_DIR, ec);
+    if (ec) {
+        return true;
+    }
+    for (const auto& entry : it) {
+        if (ec) {
+            return true;
+        }
+
+        bool is_file = entry.is_regular_file(ec);
+        if (ec) {
+            std::cerr << "Error checking file type: " << ec.message() << std::endl;
+            ec.clear();
+            continue;
+        }
+
+        if (is_file) {
+            std::string filename = entry.path().filename().string();
+            if (filename.find(BUNDLE_NAME) == 0) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 const std::shared_ptr<BundleDataMgr> BmsDriverInstallerTest::GetBundleDataMgr() const
 {
     return bundleMgrService_->GetDataMgr();
@@ -298,7 +330,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0100, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirExist();
     CheckModuleDirExist();
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -320,7 +352,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0200, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirExist();
     CheckModuleDirExist();
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -343,7 +375,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0300, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirExist();
     CheckModuleDirExist();
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -363,7 +395,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0400, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE2_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -378,7 +410,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0500, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE3_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -393,7 +425,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0600, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE4_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -409,7 +441,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0700, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE5_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -427,7 +459,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0800, Function | SmallTest | 
     CheckBundleDirExist();
     CheckModuleDirExist();
 
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -439,7 +471,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0800, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -457,7 +489,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0900, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirExist();
     CheckModuleDirExist();
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -480,7 +512,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1000, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirExist();
     CheckModuleDirExist();
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -504,7 +536,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1100, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirExist();
     CheckModuleDirExist();
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -525,7 +557,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1200, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE2_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -542,7 +574,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1300, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE3_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -558,7 +590,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1400, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE4_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -575,7 +607,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1500, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE5_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -591,7 +623,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1600, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -603,7 +635,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1600, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -619,7 +651,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1700, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE7_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -641,7 +673,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1800, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE1_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -663,7 +695,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1900, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE2_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -681,7 +713,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2000, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE3_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -698,7 +730,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2100, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE4_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -716,7 +748,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2200, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE5_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -734,7 +766,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2300, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -746,7 +778,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2300, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -763,7 +795,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2400, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE8_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -786,7 +818,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2500, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE2_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -804,7 +836,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2600, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE3_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -822,7 +854,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2700, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE4_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -840,7 +872,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2800, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE5_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -858,7 +890,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2900, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_linbpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -870,7 +902,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2900, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -887,7 +919,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3000, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE9_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -904,7 +936,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3100, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE9_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -921,7 +953,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3200, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE9_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -938,7 +970,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3300, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE9_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -956,7 +988,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3400, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -974,7 +1006,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3500, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -992,7 +1024,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3600, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1010,7 +1042,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3700, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1027,7 +1059,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3800, Function | SmallTest | 
         RESOURCE_ROOT_PATH + DRIVER_FEATURE10_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1044,7 +1076,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3800, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1064,7 +1096,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4300, Function | SmallTest | 
     bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + NON_DRIVER_ENTRY1_BUNDLE);
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -1089,7 +1121,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4400, Function | SmallTest | 
     bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE_BUNDLE);
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -1115,7 +1147,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4500, Function | SmallTest | 
     bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE1_BUNDLE);
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -1142,7 +1174,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4600, Function | SmallTest | 
     bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE2_BUNDLE);
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -1169,7 +1201,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4700, Function | SmallTest | 
     bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE3_BUNDLE);
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -1196,7 +1228,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4800, Function | SmallTest | 
     bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE4_BUNDLE);
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -1223,7 +1255,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4900, Function | SmallTest | 
     bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE5_BUNDLE);
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     result = UninstallBundle(BUNDLE_NAME);
@@ -1250,7 +1282,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5000, Function | SmallTest | 
     bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE);
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1262,7 +1294,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5000, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1277,7 +1309,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5100, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1289,7 +1321,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5100, Function | SmallTest | 
     bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE);
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     fileExisted = IsFileExisted(filePath);
     EXPECT_TRUE(fileExisted);
@@ -1298,7 +1330,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5100, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1315,7 +1347,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5200, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1327,7 +1359,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5200, Function | SmallTest | 
     bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + HIGHER_VERSION_NON_DRIVER_FEATURE11_BUNDLE);
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 
     // to check if the fetaure6 has been uninstalled
@@ -1345,7 +1377,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5200, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1362,7 +1394,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5300, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1375,7 +1407,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5300, Function | SmallTest | 
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
 
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1387,7 +1419,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5300, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1404,7 +1436,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5400, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1417,7 +1449,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5400, Function | SmallTest | 
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
 
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1429,7 +1461,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5400, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1446,7 +1478,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5500, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1459,7 +1491,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5500, Function | SmallTest | 
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
 
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1477,7 +1509,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5500, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1494,7 +1526,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5600, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1507,7 +1539,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5600, Function | SmallTest | 
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
 
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1519,7 +1551,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5600, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1536,7 +1568,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5700, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1549,7 +1581,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5700, Function | SmallTest | 
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
 
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature10_libpng.z.so
     filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE10 + PATH_UNDERLIND +
@@ -1561,7 +1593,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5700, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1576,7 +1608,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6000, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE15_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature15_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE15 + PATH_UNDERLIND +
@@ -1588,7 +1620,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6000, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1603,7 +1635,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6100, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE16_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature16_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE16 + PATH_UNDERLIND +
@@ -1615,7 +1647,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6100, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1630,7 +1662,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6200, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE17_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature17_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE17 + PATH_UNDERLIND +
@@ -1642,7 +1674,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6200, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1657,7 +1689,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6300, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE18_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature18_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE18 + PATH_UNDERLIND +
@@ -1669,7 +1701,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6300, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
@@ -1684,7 +1716,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6400, Function | SmallTest | 
     std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
     ErrCode result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_OK);
-    bool isDirEmpty = IsDriverDirEmpty();
+    bool isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_libpng.z.so
     std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
@@ -1697,7 +1729,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6400, Function | SmallTest | 
     bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE5_BUNDLE);
     result = InstallBundle(bundleFileVec);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_FALSE(isDirEmpty);
     fileExisted = IsFileExisted(filePath);
     EXPECT_TRUE(fileExisted);
@@ -1712,7 +1744,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6400, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
-    isDirEmpty = IsDriverDirEmpty();
+    isDirEmpty = IsDriverFileNotExisted();
     EXPECT_TRUE(isDirEmpty);
 }
 
