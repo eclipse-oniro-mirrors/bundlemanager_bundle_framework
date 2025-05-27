@@ -14,8 +14,12 @@
  */
 
 #include "ani_signature_builder.h"
-#include "ani_zip.h"
+#include "ani_zlib_callback_info.h"
+#include "business_error_ani.h"
+#include "common_fun_ani.h"
 #include "common_func.h"
+#include "enum_util.h"
+#include "zip.h"
 #include "zlib.h"
 
 namespace OHOS {
@@ -23,8 +27,12 @@ namespace AppExecFwk {
 
 namespace {
 constexpr const char* NS_NAME_ZLIB = "@ohos.zlib.zlib";
+constexpr const char* PROPERTY_NAME_LEVEL = "level";
+constexpr const char* PROPERTY_NAME_MEMLEVEL = "memLevel";
+constexpr const char* PROPERTY_NAME_STRATEGY = "strategy";
 constexpr const char* TYPE_NAME_CHECKSUMINTERNAL = "ChecksumInternal";
 constexpr const char* PARAM_NAME_IN_FILE = "inFile";
+constexpr const char* PARAM_NAME_IN_FILES = "inFiles";
 constexpr const char* PARAM_NAME_OUT_FILE = "outFile";
 constexpr const char* PARAM_NAME_OPTIONS = "options";
 constexpr const char* PARAM_NAME_BUF = "buf";
@@ -37,8 +45,6 @@ constexpr const char* PARAM_NAME_CRC2 = "crc2";
 constexpr const char* PARAM_NAME_LEN2 = "len2";
 constexpr const char* TYPE_ARRAYBUFFER = "ArrayBuffer";
 constexpr const size_t TABLE_SIZE = 256;
-
-
 constexpr int32_t SHIFT_AMOUNT = 8;
 constexpr uint64_t CRC64_TABLE[] = {
     0x0000000000000000, 0x3c3b78e888d80fe1, 0x7876f1d111b01fc2, 0x444d893999681023,
@@ -178,8 +184,37 @@ static ani_object ConvertCRCTable(ani_env* env, const tableType* table, const si
     return arrayObj;
 }
 
+static bool ANIParseOptions(ani_env* env, ani_object object, LIBZIP::OPTIONS& options)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_enum_item enumItem = nullptr;
+    // level?: CompressLevel
+    if (CommonFunAni::CallGetterOptional(env, object, PROPERTY_NAME_LEVEL, &enumItem)) {
+        RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, options.level));
+    }
+
+    // memLevel?: MemLevel
+    if (CommonFunAni::CallGetterOptional(env, object, PROPERTY_NAME_MEMLEVEL, &enumItem)) {
+        RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, options.memLevel));
+    }
+
+    // strategy?: CompressStrategy
+    if (CommonFunAni::CallGetterOptional(env, object, PROPERTY_NAME_STRATEGY, &enumItem)) {
+        RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, options.strategy));
+    }
+
+    return true;
+}
+
 static void CompressFile(ani_env* env, ani_string aniInFile, ani_string aniOutFile, ani_object aniOptions)
 {
+    RETURN_IF_NULL(env);
+    RETURN_IF_NULL(aniInFile);
+    RETURN_IF_NULL(aniOutFile);
+    RETURN_IF_NULL(aniOptions);
+
     std::string inFile = CommonFunAni::AniStrToString(env, aniInFile);
     if (inFile.empty()) {
         APP_LOGE("inFile is empty.");
@@ -189,29 +224,75 @@ static void CompressFile(ani_env* env, ani_string aniInFile, ani_string aniOutFi
     }
 
     std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
-    if (inFile.empty()) {
-        APP_LOGE("inFile is empty.");
+    if (outFile.empty()) {
+        APP_LOGE("outFile is empty.");
         BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, CommonFunAniNS::TYPE_STRING);
         return;
     }
 
     LIBZIP::OPTIONS options;
-    if (!LIBZIP::ANIParseOptions(env, aniOptions, options)) {
+    if (!ANIParseOptions(env, aniOptions, options)) {
         APP_LOGE("options parse failed.");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OPTIONS);
         return;
     }
 
-    int32_t errCode = CommonFunc::ConvertErrCode(LIBZIP::ANICompressFileImpl(inFile, outFile, options));
+    auto zlibCallbackInfo = std::make_shared<ANIZlibCallbackInfo>();
+    LIBZIP::Zip(inFile, outFile, options, false, zlibCallbackInfo);
+    const int32_t errCode = CommonFunc::ConvertErrCode(zlibCallbackInfo->GetResult());
     if (errCode != ERR_OK) {
-        APP_LOGE("DecompressFile failed, ret %{public}d", errCode);
+        APP_LOGE("CompressFile failed, ret %{public}d", errCode);
+        BusinessErrorAni::ThrowCommonError(env, errCode, "", "");
+    }
+}
+
+static void CompressFiles(ani_env* env, ani_object aniInFiles, ani_string aniOutFile, ani_object aniOptions)
+{
+    RETURN_IF_NULL(env);
+    RETURN_IF_NULL(aniInFiles);
+    RETURN_IF_NULL(aniOutFile);
+    RETURN_IF_NULL(aniOptions);
+
+    std::vector<std::string> inFiles;
+    if (aniInFiles == nullptr || !CommonFunAni::ParseStrArray(env, aniInFiles, inFiles)) {
+        APP_LOGE("inFiles parse failed.");
+        BusinessErrorAni::ThrowCommonError(
+            env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILES, CommonFunAniNS::TYPE_ARRAY);
+        return;
+    }
+
+    std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
+    if (outFile.empty()) {
+        APP_LOGE("outFile is empty.");
+        BusinessErrorAni::ThrowCommonError(
+            env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, CommonFunAniNS::TYPE_STRING);
+        return;
+    }
+
+    LIBZIP::OPTIONS options;
+    if (!ANIParseOptions(env, aniOptions, options)) {
+        APP_LOGE("options parse failed.");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OPTIONS);
+        return;
+    }
+
+    auto zlibCallbackInfo = std::make_shared<ANIZlibCallbackInfo>();
+    LIBZIP::Zips(inFiles, outFile, options, false, zlibCallbackInfo);
+    const int32_t errCode = CommonFunc::ConvertErrCode(zlibCallbackInfo->GetResult());
+    if (errCode != ERR_OK) {
+        APP_LOGE("CompressFiles failed, ret %{public}d", errCode);
         BusinessErrorAni::ThrowCommonError(env, errCode, "", "");
     }
 }
 
 static void DecompressFile(ani_env* env, ani_string aniInFile, ani_string aniOutFile, ani_object aniOptions)
 {
+    RETURN_IF_NULL(env);
+    RETURN_IF_NULL(aniInFile);
+    RETURN_IF_NULL(aniOutFile);
+    RETURN_IF_NULL(aniOptions);
+
     std::string inFile = CommonFunAni::AniStrToString(env, aniInFile);
     if (inFile.empty()) {
         APP_LOGE("inFile is empty.");
@@ -221,25 +302,47 @@ static void DecompressFile(ani_env* env, ani_string aniInFile, ani_string aniOut
     }
 
     std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
-    if (inFile.empty()) {
-        APP_LOGE("inFile is empty.");
+    if (outFile.empty()) {
+        APP_LOGE("outFile is empty.");
         BusinessErrorAni::ThrowCommonError(
             env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, CommonFunAniNS::TYPE_STRING);
         return;
     }
 
     LIBZIP::OPTIONS options;
-    if (!LIBZIP::ANIParseOptions(env, aniOptions, options)) {
+    if (!ANIParseOptions(env, aniOptions, options)) {
         APP_LOGE("options parse failed.");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OPTIONS);
         return;
     }
 
-    int32_t errCode = CommonFunc::ConvertErrCode(LIBZIP::ANIDecompressFileImpl(inFile, outFile, options));
+    auto zlibCallbackInfo = std::make_shared<ANIZlibCallbackInfo>();
+    LIBZIP::Unzip(inFile, outFile, options, zlibCallbackInfo);
+    const int32_t errCode = CommonFunc::ConvertErrCode(zlibCallbackInfo->GetResult());
     if (errCode != ERR_OK) {
         APP_LOGE("DecompressFile failed, ret %{public}d", errCode);
         BusinessErrorAni::ThrowCommonError(env, errCode, "", "");
     }
+}
+
+static ani_double GetOriginalSize(ani_env* env, ani_string aniCompressedFile)
+{
+    std::string compressedFile = CommonFunAni::AniStrToString(env, aniCompressedFile);
+    if (compressedFile.empty()) {
+        APP_LOGE("compressedFile is empty.");
+        BusinessErrorAni::ThrowCommonError(
+            env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, CommonFunAniNS::TYPE_STRING);
+        return 0;
+    }
+
+    int64_t originalSize = 0;
+    const int32_t errCode = CommonFunc::ConvertErrCode(LIBZIP::GetOriginalSize(compressedFile, originalSize));
+    if (errCode != ERR_OK) {
+        APP_LOGE("GetOriginalSize failed, ret %{public}d", errCode);
+        BusinessErrorAni::ThrowCommonError(env, errCode, "GetOriginalSize", "");
+    }
+
+    return originalSize;
 }
 
 static ani_object CreateChecksumSync(ani_env* env)
@@ -252,7 +355,8 @@ static ani_object CreateChecksumSync(ani_env* env)
     return objChecksum;
 }
 
-static ani_double Adler32(ani_env* env, ani_double aniAdler, ani_arraybuffer buf)
+static ani_double Adler32(
+    ani_env* env, [[maybe_unused]] ani_object checksumObj, ani_double aniAdler, ani_arraybuffer buf)
 {
     int64_t adler = 0;
 
@@ -286,7 +390,8 @@ static ani_double Adler32(ani_env* env, ani_double aniAdler, ani_arraybuffer buf
     return adler32(static_cast<uLong>(adler), reinterpret_cast<Bytef*>(buffer), static_cast<uInt>(bufferLength));
 }
 
-static ani_double Adler32Combine(ani_env* env, ani_double aniAdler1, ani_double aniAdler2, ani_double aniLen2)
+static ani_double Adler32Combine(ani_env* env,
+    [[maybe_unused]] ani_object checksumObj, ani_double aniAdler1, ani_double aniAdler2, ani_double aniLen2)
 {
     int64_t adler1 = 0;
     int64_t adler2 = 0;
@@ -319,7 +424,7 @@ static ani_double Adler32Combine(ani_env* env, ani_double aniAdler1, ani_double 
 #endif
 }
 
-static ani_double Crc32(ani_env* env, ani_double aniCrc, ani_arraybuffer buf)
+static ani_double Crc32(ani_env* env, [[maybe_unused]] ani_object checksumObj, ani_double aniCrc, ani_arraybuffer buf)
 {
     int64_t crc = 0;
 
@@ -353,7 +458,8 @@ static ani_double Crc32(ani_env* env, ani_double aniCrc, ani_arraybuffer buf)
     return crc32(static_cast<uLong>(crc), reinterpret_cast<Bytef*>(buffer), static_cast<uInt>(bufferLength));
 }
 
-static ani_double Crc32Combine(ani_env* env, ani_double aniCrc1, ani_double aniCrc2, ani_double aniLen2)
+static ani_double Crc32Combine(ani_env* env,
+    [[maybe_unused]] ani_object checksumObj, ani_double aniCrc1, ani_double aniCrc2, ani_double aniLen2)
 {
     int64_t crc1 = 0;
     int64_t crc2 = 0;
@@ -384,7 +490,7 @@ static ani_double Crc32Combine(ani_env* env, ani_double aniCrc1, ani_double aniC
 #endif
 }
 
-static ani_double Crc64(ani_env* env, ani_double aniCrc, ani_arraybuffer buf)
+static ani_double Crc64(ani_env* env, [[maybe_unused]] ani_object checksumObj, ani_double aniCrc, ani_arraybuffer buf)
 {
     uint64_t crc = 0;
 
@@ -418,14 +524,69 @@ static ani_double Crc64(ani_env* env, ani_double aniCrc, ani_arraybuffer buf)
     return ComputeCrc64(crc, reinterpret_cast<char*>(buffer), bufferLength);
 }
 
-static ani_object GetCrcTable(ani_env* env)
+static ani_object GetCrcTable(ani_env* env, [[maybe_unused]] ani_object checksumObj)
 {
     return ConvertCRCTable(env, get_crc_table(), TABLE_SIZE);
 }
 
-static ani_object GetCrc64Table(ani_env* env)
+static ani_object GetCrc64Table(ani_env* env, [[maybe_unused]] ani_object checksumObj)
 {
     return ConvertCRCTable(env, CRC64_TABLE, TABLE_SIZE);
+}
+
+static ani_status BindNSMethods(ani_env* env)
+{
+    Namespace zlibNS = Builder::BuildNamespace(NS_NAME_ZLIB);
+    ani_namespace kitNs = nullptr;
+    ani_status status = env->FindNamespace(zlibNS.Descriptor().c_str(), &kitNs);
+    if (status != ANI_OK) {
+        APP_LOGE("FindNamespace: %{public}s fail with %{public}d", NS_NAME_ZLIB, status);
+        return status;
+    }
+
+    std::array methods = {
+        ani_native_function { "CompressFile", nullptr, reinterpret_cast<void*>(CompressFile) },
+        ani_native_function { "CompressFiles", nullptr, reinterpret_cast<void*>(CompressFiles) },
+        ani_native_function { "DecompressFile", nullptr, reinterpret_cast<void*>(DecompressFile) },
+        ani_native_function { "GetOriginalSize", nullptr, reinterpret_cast<void*>(GetOriginalSize) },
+        ani_native_function { "createChecksumSync", nullptr, reinterpret_cast<void*>(CreateChecksumSync) },
+    };
+
+    status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
+    if (status != ANI_OK) {
+        APP_LOGE("Namespace_BindNativeFunctions: %{public}s fail with %{public}d", NS_NAME_ZLIB, status);
+        return status;
+    }
+
+    return status;
+}
+
+static ani_status BindChecksumMethods(ani_env* env)
+{
+    Type checksumType = Builder::BuildClass({ NS_NAME_ZLIB, TYPE_NAME_CHECKSUMINTERNAL });
+    ani_class clsChecksum = CommonFunAni::CreateClassByName(env, checksumType.Descriptor());
+    if (clsChecksum == nullptr) {
+        APP_LOGE("CreateClassByName: %{public}s fail", TYPE_NAME_CHECKSUMINTERNAL);
+        return ANI_ERROR;
+    }
+
+    std::array methodsChecksum = {
+        ani_native_function { "Adler32", nullptr, reinterpret_cast<void*>(Adler32) },
+        ani_native_function { "Adler32Combine", nullptr, reinterpret_cast<void*>(Adler32Combine) },
+        ani_native_function { "Crc32", nullptr, reinterpret_cast<void*>(Crc32) },
+        ani_native_function { "Crc32Combine", nullptr, reinterpret_cast<void*>(Crc32Combine) },
+        ani_native_function { "Crc64", nullptr, reinterpret_cast<void*>(Crc64) },
+        ani_native_function { "GetCrcTable", nullptr, reinterpret_cast<void*>(GetCrcTable) },
+        ani_native_function { "GetCrc64Table", nullptr, reinterpret_cast<void*>(GetCrc64Table) },
+    };
+
+    ani_status status = env->Class_BindNativeMethods(clsChecksum, methodsChecksum.data(), methodsChecksum.size());
+    if (status != ANI_OK) {
+        APP_LOGE("Class_BindNativeMethods: %{public}s fail with %{public}d", TYPE_NAME_CHECKSUMINTERNAL, status);
+        return ANI_ERROR;
+    }
+
+    return status;
 }
 
 extern "C" {
@@ -439,46 +600,15 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         return status;
     }
 
-    Namespace zlibNS = Builder::BuildNamespace(NS_NAME_ZLIB);
-    ani_namespace kitNs = nullptr;
-    status = env->FindNamespace(zlibNS.Descriptor().c_str(), &kitNs);
+    status = BindNSMethods(env);
     if (status != ANI_OK) {
-        APP_LOGE("FindNamespace: %{public}s fail with %{public}d", NS_NAME_ZLIB, status);
+        APP_LOGE("BindNSMethods: %{public}d", status);
         return status;
     }
 
-    std::array methods = {
-        ani_native_function { "CompressFile", nullptr, reinterpret_cast<void*>(CompressFile) },
-        ani_native_function { "DecompressFile", nullptr, reinterpret_cast<void*>(DecompressFile) },
-        ani_native_function { "createChecksumSync", nullptr, reinterpret_cast<void*>(CreateChecksumSync) },
-    };
-
-    status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
+    status = BindChecksumMethods(env);
     if (status != ANI_OK) {
-        APP_LOGE("Namespace_BindNativeFunctions: %{public}s fail with %{public}d", NS_NAME_ZLIB, status);
-        return status;
-    }
-
-    Type checksumType = Builder::BuildClass({ zlibNS.Name(), TYPE_NAME_CHECKSUMINTERNAL });
-    ani_class clsChecksum = CommonFunAni::CreateClassByName(env, checksumType.Descriptor());
-    if (clsChecksum == nullptr) {
-        APP_LOGE("CreateClassByName: %{public}s fail with %{public}d", TYPE_NAME_CHECKSUMINTERNAL, status);
-        return status;
-    }
-
-    std::array methodsChecksum = {
-        ani_native_function { "Adler32", nullptr, reinterpret_cast<void*>(Adler32) },
-        ani_native_function { "Adler32Combine", nullptr, reinterpret_cast<void*>(Adler32Combine) },
-        ani_native_function { "Crc32", nullptr, reinterpret_cast<void*>(Crc32) },
-        ani_native_function { "Crc32Combine", nullptr, reinterpret_cast<void*>(Crc32Combine) },
-        ani_native_function { "Crc64", nullptr, reinterpret_cast<void*>(Crc64) },
-        ani_native_function { "GetCrcTable", nullptr, reinterpret_cast<void*>(GetCrcTable) },
-        ani_native_function { "GetCrc64Table", nullptr, reinterpret_cast<void*>(GetCrc64Table) },
-    };
-
-    status = env->Class_BindNativeMethods(clsChecksum, methodsChecksum.data(), methodsChecksum.size());
-    if (status != ANI_OK) {
-        APP_LOGE("Class_BindNativeMethods: %{public}s fail with %{public}d", TYPE_NAME_CHECKSUMINTERNAL, status);
+        APP_LOGE("BindChecksumMethods: %{public}d", status);
         return status;
     }
 

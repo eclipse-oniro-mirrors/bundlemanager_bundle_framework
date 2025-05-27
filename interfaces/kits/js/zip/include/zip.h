@@ -15,14 +15,16 @@
 #ifndef FOUNDATION_APPEXECFWK_STANDARD_TOOLS_ZIP_H
 #define FOUNDATION_APPEXECFWK_STANDARD_TOOLS_ZIP_H
 
-#include <vector>
+#include <fcntl.h>
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <sys/stat.h>
 #include <time.h>
+#include <vector>
 #include "file_path.h"
 #include "zip_utils.h"
-#include "zlib_callback_info.h"
+#include "zlib_callback_info_base.h"
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
@@ -148,7 +150,7 @@ private:
 // destFile = /ziptest/hapresult/singlefile.zip
 // options is default value.
 bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS &options,
-    bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo);
+    bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfoBase> zlibCallbackInfo);
 
 // Convenience method for callers who don't need to set up the filter callback.
 // If |includeHiddenFiles| is true, files starting with "." are included.
@@ -158,7 +160,7 @@ bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS 
 // destFile = /ziptest/hapresult/hapfourfile.zip
 // options is default value.
 bool Zips(const std::vector<std::string> &srcFiles, const std::string &destPath, const OPTIONS &options,
-    bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo);
+    bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfoBase> zlibCallbackInfo);
 
 // Unzip the contents of zipFile into destDir.
 // example No1
@@ -169,7 +171,7 @@ bool Zips(const std::vector<std::string> &srcFiles, const std::string &destPath,
 // destFile = /ziptest/hapunzipdir/single
 // options is default value.
 bool Unzip(const std::string &srcFile, const std::string &destFile, const OPTIONS options,
-    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo);
+    std::shared_ptr<ZlibCallbackInfoBase> zlibCallbackInfo);
 
 ErrCode GetOriginalSize(const std::string &srcFile, int64_t &originalSize);
 }  // namespace LIBZIP

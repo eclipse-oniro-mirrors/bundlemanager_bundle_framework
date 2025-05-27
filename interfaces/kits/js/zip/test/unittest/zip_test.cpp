@@ -17,6 +17,7 @@
 #include <thread>
 
 #include "zip.h"
+#include "zlib_callback_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {

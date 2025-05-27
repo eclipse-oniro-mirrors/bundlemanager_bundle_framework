@@ -85,7 +85,7 @@ export default namespace zlib {
     return p;
   }
 
-  export native function CompressFile(inFile: string, outFile: string, options?: Options): void;
+  export native function CompressFile(inFile: string, outFile: string, options: Options): void;
 
   export function decompressFile(inFile: string, outFile: string, options: Options, callback: AsyncCallback<void>): void {
     let execFun = (): void => {
@@ -102,7 +102,7 @@ export default namespace zlib {
 
   export function decompressFile(inFile: string, outFile: string, callback: AsyncCallback<void>): void {
     let execFun = (): void => {
-      zlib.DecompressFile(inFile, outFile, undefined);
+      zlib.DecompressFile(inFile, outFile, new OptionsInner());
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
@@ -114,9 +114,10 @@ export default namespace zlib {
   }
 
   export function decompressFile(inFile: string, outFile: string, options?: Options): Promise<void> {
+    let optionsParam = options ?? new OptionsInner();
     let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Object) => void) : void => {
       let execFun = (): void => {
-        zlib.DecompressFile(inFile, outFile, options);
+        zlib.DecompressFile(inFile, outFile, optionsParam);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
@@ -262,5 +263,56 @@ export default namespace zlib {
     }
   }
 
+  export native function CompressFiles(inFiles: Array<string>, outFile: string, options: Options): void;
+
+  export function compressFiles(inFiles: Array<string>, outFile: string, options: Options): Promise<void> {
+    let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Object) => void) : void => {
+      let execFun = (): void => {
+        zlib.CompressFiles(inFiles, outFile, options);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    });
+    return p;
+  }
+
+  export native function GetOriginalSize(compressedFile: string): number;
+
+  export function getOriginalSize(compressedFile: string): Promise<number> {
+    let p: Promise<number> = new Promise<number>((resolve: (v:number) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): number => {
+        return zlib.GetOriginalSize(compressedFile);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let result: number = e as number;
+        resolve(result);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    });
+    return p;
+  }
+
   export native function createChecksumSync(): Checksum;
+
+  export function createChecksum(): Promise<Checksum> {
+    let p: Promise<Checksum> = new Promise<Checksum>((resolve: (v:Checksum) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): Checksum => {
+        return zlib.createChecksumSync();
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let result: Checksum = e as Checksum;
+        resolve(result);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    });
+    return p;
+  }
 }
