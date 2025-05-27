@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -61,6 +61,7 @@ const char* NEED_CREATE_SANDBOX = "needCreateSandbox";
 const char* DATA_GROUP_IDS = "dataGroupIds";
 const char* JSON_KEY_VALID_DATA_GROUP_IDS = "validDataGroupIds";
 const char* JSON_KEY_CUSTOM_PROCESS = "customProcess";
+const char* JSON_KEY_ISOLATION_PROCESS = "isolationProcess";
 
 const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP = {
     { "form", ExtensionAbilityType::FORM },
@@ -262,6 +263,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     }
 
     needCreateSandbox = parcel.ReadBool();
+    isolationProcess = parcel.ReadBool();
     int32_t dataGroupIdsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIdsSize);
     CONTAINER_SECURITY_VERIFY(parcel, dataGroupIdsSize, &dataGroupIds);
@@ -355,6 +357,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &skill);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needCreateSandbox);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isolationProcess);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIds.size());
     for (auto &dataGroupId : dataGroupIds) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));
@@ -403,7 +406,8 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {NEED_CREATE_SANDBOX, extensionInfo.needCreateSandbox},
         {DATA_GROUP_IDS, extensionInfo.dataGroupIds},
         {JSON_KEY_VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds},
-        {JSON_KEY_CUSTOM_PROCESS, extensionInfo.customProcess}
+        {JSON_KEY_CUSTOM_PROCESS, extensionInfo.customProcess},
+        {JSON_KEY_ISOLATION_PROCESS, extensionInfo.isolationProcess}
     };
 }
 
@@ -640,6 +644,13 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         extensionInfo.customProcess,
         false,
         parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_ISOLATION_PROCESS,
+        extensionInfo.isolationProcess,
+        false,
+        parseResult);
+
     if (parseResult != ERR_OK) {
         APP_LOGE("ExtensionAbilityInfo from_json error : %{public}d", parseResult);
     }

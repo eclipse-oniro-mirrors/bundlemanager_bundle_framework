@@ -1132,6 +1132,110 @@ const nlohmann::json MODULE_JSON_11 = R"(
     }
 }
 )"_json;
+
+const nlohmann::json MODULE_JSON_12 = R"(
+{
+    "app": {
+        "iconId": 33554433,
+        "debug": true,
+        "minAPIVersion": 16,
+        "icon": "$media:app_icon",
+        "label": "$string:app_name",
+        "bundleType": "app",
+        "versionName": "2.0.0",
+        "versionCode": 2000000,
+        "multiAppMode": {
+            "multiAppModeType": "appClone",
+            "maxCount": 5
+        },
+        "appEnvironments": [],
+        "compileSdkType": "OpenHarmony",
+        "labelId": 33554432,
+        "compileSdkVersion": "5.1.0.46",
+        "targetAPIVersion": 16,
+        "vendor": "example",
+        "bundleName": "com.example.myapplication",
+        "apiReleaseType": "Beta1"
+    },
+    "module": {
+        "virtualMachine": "ark13.0.1.0",
+        "mainElement": "EntryAbility",
+        "installationFree": false,
+        "deliveryWithInstall": true,
+        "description": "$string:module_desc",
+        "extensionAbilities": [
+            {
+                "exported": false,
+                "metadata": [
+                    {
+                        "resourceId": 33554448,
+                        "resource": "$profile:backup_config",
+                        "name": "ohos.extension.backup"
+                    }
+                ],
+                "srcEntry": "./ets/entrybackupability/EntryBackupAbility.ets",
+                "name": "EntryBackupAbility",
+                "isolationProcess": true,
+                "type": ""sys/commonUI"
+            },
+            {
+                "exported": false,
+                "metadata": [
+                    {
+                        "resourceId": 33554448,
+                        "resource": "$profile:backup_config",
+                        "name": "ohos.extension.backup"
+                    }
+                ],
+                "srcEntry": "./ets/entrybackupability/EntryBackupAbility.ets",
+                "name": "EntryBackupAbilitySecond",
+                "isolationProcess": false,
+                "type": ""sys/commonUI"
+            }
+        ],
+        "compileMode": "esmodule",
+        "type": "entry",
+        "dependencies": [],
+        "abilities": [
+            {
+                "exported": true,
+                "iconId": 33554442,
+                "startWindowIconId": 33554443,
+                "icon": "$media:layered_image",
+                "startWindowIcon": "$media:startIcon",
+                "startWindowBackgroundId": 33554439,
+                "description": "$string:EntryAbility_desc",
+                "startWindow": "$profile:start_window",
+                "label": "$string:EntryAbility_label",
+                "skills": [
+                    {
+                        "entities": [
+                            "entity.system.home"
+                        ],
+                        "actions": [
+                            "action.system.home"
+                        ]
+                    }
+                ],
+                "srcEntry": "./ets/entryability/EntryAbility.ets",
+                "descriptionId": 33554434,
+                "labelId": 33554435,
+                "startWindowBackground": "$color:start_window_background",
+                "startWindowId": 33554450,
+                "name": "EntryAbility"
+            }
+        ],
+        "deviceTypes": [
+            "default",
+            "tablet"
+        ],
+        "pages": "$profile:main_pages",
+        "descriptionId": 33554436,
+        "name": "entry",
+        "packageName": "entry"
+        }
+    }
+)"_json;
 }  // namespace
 
 class BmsBundleParserTest : public testing::Test {
@@ -3346,6 +3450,40 @@ HWTEST_F(BmsBundleParserTest, TestParse_6900, Function | SmallTest | Level1)
                 });
         }
     }
+}
+
+/**
+ * @tc.name: TestParse_7000
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ *           3. Verify that the value of the "isolationProcess" property of
+ *              the "extensionAbilities" attribute is true.
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7000, Function | SmallTest | Level1)
+{
+    const string moduleName = "entry";
+    const string extensionName = "EntryBackupAbility";
+    const string extensionNameSecond = "EntryBackupAbilitySecond";
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON_12;
+
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+
+    auto extensionAbilityInfo = innerBundleInfo.FindExtensionInfo(moduleName, extensionName);
+    EXPECT_NE(extensionAbilityInfo, std::nullopt);
+    EXPECT_TRUE(extensionAbilityInfo->isolationProcess);
+
+    auto extensionAbilityInfoSecond = innerBundleInfo.FindExtensionInfo(moduleName, extensionNameSecond);
+    EXPECT_NE(extensionAbilityInfoSecond, std::nullopt);
+    EXPECT_FALSE(extensionAbilityInfoSecond->isolationProcess);
 }
 
 /**
