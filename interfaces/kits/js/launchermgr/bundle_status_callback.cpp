@@ -92,6 +92,7 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
     work->data = reinterpret_cast<void*>(asyncCallbackInfo);
     if (loop == nullptr) {
         APP_LOGW("BundleStatusCallback OnBundleAdded loop is nullptr bundleName : %{public}s", bundleName.c_str());
+        delete asyncCallbackInfo;
         delete work;
         return;
     }
@@ -158,6 +159,7 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
     work->data = reinterpret_cast<void*>(asyncCallbackInfo);
     if (loop == nullptr) {
         APP_LOGW("BundleStatusCallback OnBundleUpdated loop is nullptr bundleName : %{public}s", bundleName.c_str());
+        delete asyncCallbackInfo;
         delete work;
         return;
     }
@@ -227,6 +229,7 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
     work->data = reinterpret_cast<void*>(asyncCallbackInfo);
     if (loop == nullptr) {
         APP_LOGW("BundleStatusCallback OnBundleRemoved loop is nullptr bundleName : %{public}s", bundleName.c_str());
+        delete asyncCallbackInfo;
         delete work;
         return;
     }
