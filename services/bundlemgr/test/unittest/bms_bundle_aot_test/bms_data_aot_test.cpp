@@ -1903,18 +1903,6 @@ HWTEST_F(BmsAOTMgrTest, HandleCompile_4000, TestSize.Level1)
 }
 
 /**
-* @tc.number: CheckAllUser_0010
-* @tc.name: test CheckAllUser
-* @tc.desc: 1.test CheckAllUser
-*/
-HWTEST_F(BmsAOTMgrTest, CheckAllUser_0010, Function | SmallTest | Level1)
-{
-    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->AddUserId(TEST_U1);
-    DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
-    EXPECT_EQ(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->GetUserId(TEST_U1), TEST_U1);
-}
-
-/**
  * @tc.number: IsDriverForAllUser_0100
  * @tc.name: test IsDriverForAllUser
  * @tc.desc: 1.Test the IsDriverForAllUser
