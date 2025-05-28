@@ -16,6 +16,7 @@
 #include "bundle_backup_service.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_mgr_service.h"
 #include "shortcut_data_storage_rdb.h"
 
 namespace OHOS {
@@ -24,6 +25,7 @@ namespace AppExecFwk {
 BundleBackupService::BundleBackupService()
 {
     shortcutStorage_ = std::make_shared<ShortcutDataStorageRdb>();
+    dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
 }
 
 BundleBackupService::~BundleBackupService() {}
@@ -45,6 +47,10 @@ ErrCode BundleBackupService::OnBackup(nlohmann::json &jsonObject)
 
 ErrCode BundleBackupService::OnRestore(nlohmann::json &jsonObject)
 {
+    if (dataMgr_ == nullptr) {
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    dataMgr_->CheckIfShortcutBundleExist(jsonObject);
     if (!shortcutStorage_->UpdateAllShortcuts(jsonObject)) {
         APP_LOGE("Failed to clear shortcut table");
         return ERR_APPEXECFWK_DB_UPDATE_ERROR;
