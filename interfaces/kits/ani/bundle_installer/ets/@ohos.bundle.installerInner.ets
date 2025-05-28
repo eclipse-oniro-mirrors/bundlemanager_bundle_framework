@@ -89,6 +89,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   native createAppCloneNative(bundleName: string, createAppCloneParam: installer.CreateAppCloneParam): number;
   native destroyAppCloneNative(bundleName: string, appIndex: number, options: installer.DestroyAppCloneParam): void;
   native installPreexistingAppNative(bundleName: string, userId: number): void;
+  native installPluginNative(hostBundleName: string, pluginFilePaths: Array<string>, pluginParam: installer.PluginParam): void;
+  native uninstallPluginNative(hostBundleName: string, pluginBundleName: string, pluginParam: installer.PluginParam): void;
   
   install(hapFilePaths: Array<string>, installParam?: installer.InstallParam): Promise<void> {
       let emptyParam = new InstallParamInner();
@@ -378,5 +380,35 @@ export class BundleInstallerInner implements installer.BundleInstaller {
         });
       });
       return p;
+  }
+
+  installPlugin(hostBundleName: string, pluginFilePaths: Array<string>, pluginParam?: installer.PluginParam): Promise<void> {
+    let emptyParam = new PluginParamInner();
+    let params = pluginParam ?? emptyParam;
+    let p = new Promise<void> ((resolve: (v: undefined) => void, reject: (error: BusinessError) => void): void => {
+      let execFun = (): void => { return this.installPluginNative(hostBundleName, pluginFilePaths, emptyParam); }
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    });
+    return p;
+  }
+
+  uninstallPlugin(hostBundleName: string, pluginBundleName: string, pluginParam?: installer.PluginParam): Promise<void> {
+    let emptyParam = new PluginParamInner();
+    let params = pluginParam ?? emptyParam;
+    let p = new Promise<void> ((resolve: (v: undefined) => void, reject: (error: BusinessError) => void): void => {
+      let execFun = (): void => { return this.uninstallPluginNative(hostBundleName, pluginBundleName, emptyParam); }
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: BusinessError): void => {
+        reject(err);
+      });
+    });
+    return p;
   }
 }

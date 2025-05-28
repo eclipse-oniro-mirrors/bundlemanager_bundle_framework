@@ -96,6 +96,10 @@ namespace installer {
     destroyAppClone(bundleName: string, appIndex: number, options?: number | DestroyAppCloneParam): Promise<void>;
 
     installPreexistingApp(bundleName: string, userId?: number): Promise<void>;
+
+    installPlugin(hostBundleName: string, pluginFilePaths: Array<string>, pluginParam?: PluginParam): Promise<void>;
+
+    uninstallPlugin(hostBundleName: string, pluginBundleName: string, pluginParam?: PluginParam): Promise<void>;
   }
 
   export interface HashParam {

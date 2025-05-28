@@ -2230,6 +2230,34 @@ bool CommonFunAni::ParseDestroyAppCloneParam(
     return true;
 }
 
+bool CommonFunAni::ParsePluginParam(ani_env* env, ani_object object, InstallPluginParam& installPluginParam)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_int intValue = 0;
+    ani_array array = nullptr;
+
+    // userId?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+        installPluginParam.userId = intValue;
+    } else {
+        installPluginParam.userId = Constants::UNSPECIFIED_USERID;
+        APP_LOGW("Parse userId failed, using default value");
+    }
+
+    // parameters?
+    if (CallGetterOptional(env, object, PROPERTYNAME_PARAMETERS, &array)) {
+        std::vector<std::pair<std::string, std::string>> parameters;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, parameters, ParseKeyValuePair));
+        for (const auto& parameter : parameters) {
+            installPluginParam.parameters[parameter.first] = parameter.second;
+        }
+    }
+
+    return true;
+}
+
 bool CommonFunAni::ParseCreateAppCloneParam(ani_env* env, ani_object object, int32_t& userId, int32_t& appIdx)
 {
     RETURN_FALSE_IF_NULL(env);
