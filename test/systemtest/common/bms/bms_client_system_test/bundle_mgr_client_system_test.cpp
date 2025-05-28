@@ -2333,7 +2333,12 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_0012, TestSize.Level1)
     impl.bundleMgr_ = proxy;
     impl.Connect();
     ErrCode res = impl.CreateBundleDataDir(DEFAULT_USERID);
-    EXPECT_EQ(res, ERR_OK);
+    auto ret = access("/data/app/el2/0/sharefiles", F_OK);
+    if (ret == 0) {
+        EXPECT_EQ(res, ERR_OK);
+    } else {
+        EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    }
     impl.OnDeath();
 }
 
