@@ -24,22 +24,25 @@
 #include "napi/native_common.h"
 #include "nocopyable.h"
 #include "zip_utils.h"
+#include "zlib_callback_info_base.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
-class ZlibCallbackInfo {
+class ZlibCallbackInfo : public ZlibCallbackInfoBase {
 public:
     ZlibCallbackInfo() = default;
     ZlibCallbackInfo(napi_env env, napi_ref callback, napi_deferred deferred, bool isCallback);
     virtual ~ZlibCallbackInfo();
-    void OnZipUnZipFinish(ErrCode result);
+    virtual void OnZipUnZipFinish(ErrCode result);
+    virtual void DoTask(const OHOS::AppExecFwk::InnerEvent::Callback& task);
     bool GetIsCallback() const;
     void SetIsCallback(bool isCallback);
     void SetCallback(napi_ref callback);
     void SetDeferred(napi_deferred deferred);
     void SetDeliverErrCode(bool isDeliverErrCode);
     void SetValid(bool valid);
+
 private:
     int32_t ExcuteWork(uv_loop_s* loop, uv_work_t* work);
 private:

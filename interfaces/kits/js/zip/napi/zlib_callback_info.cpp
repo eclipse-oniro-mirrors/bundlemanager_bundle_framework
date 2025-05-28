@@ -161,6 +161,11 @@ void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
     callbackPtr.release();
 }
 
+void ZlibCallbackInfo::DoTask(const OHOS::AppExecFwk::InnerEvent::Callback& task)
+{
+    PostTask(task);
+}
+
 bool ZlibCallbackInfo::GetIsCallback() const
 {
     return isCallBack_;

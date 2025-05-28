@@ -45,7 +45,7 @@ ohos_shared_library("ani_zlib") {
     "${kits_path}/js/zip/src/zip_reader.cpp",
     "${kits_path}/js/zip/src/zip_utils.cpp",
     "${kits_path}/js/zip/src/zip_writer.cpp",
-    "ani_zip.cpp",
+    "${kits_path}/js/zip/src/zip.cpp",
     "ani_zlib.cpp",
   ]
 
