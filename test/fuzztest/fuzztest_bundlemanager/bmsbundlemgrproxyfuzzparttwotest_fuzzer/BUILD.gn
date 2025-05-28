@@ -22,7 +22,7 @@ module_output_path = fuzz_test_path
 ohos_fuzztest("BMSBundleMgrProxyFuzzPartTwoTest") {
   module_out_path = module_output_path
   fuzz_config_file =
-      "../../../fuzztest/fuzztest_bundlemanager/bmsbundlemgrproxyparttwo_fuzzer"
+      "../../../fuzztest/fuzztest_bundlemanager/bmsbundlemgrproxyfuzzparttwotest_fuzzer"
 
   cflags = [
     "-g",

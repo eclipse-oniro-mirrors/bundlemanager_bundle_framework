@@ -35,13 +35,11 @@ const char NAME[] = "name";
         nlohmann::json infoJson;
         FuzzedDataProvider fdp(data, size);
         std::string name;
-        do {
-            name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-        } while (name.empty());
-
+        name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         infoJson[NAME] = name;
         AbilityInfo abilityInfo = infoJson;
-        return !abilityInfo.name.empty();
+        abilityInfo.name.empty();
+        return true;
     }
 }
 

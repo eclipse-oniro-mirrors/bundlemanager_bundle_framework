@@ -28,7 +28,7 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t U32_AT_SIZE = 4;
 constexpr size_t MESSAGE_SIZE = 10;
-constexpr size_t CODE_MAX = 13;
+constexpr size_t CODE_MAX = 20;
 
 uint32_t GetU32Data(const char* ptr)
 {

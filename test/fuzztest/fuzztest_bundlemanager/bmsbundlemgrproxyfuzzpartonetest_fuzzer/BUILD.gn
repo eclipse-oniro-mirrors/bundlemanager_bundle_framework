@@ -19,10 +19,10 @@ import("../../../../appexecfwk.gni")
 module_output_path = fuzz_test_path
 
 ##############################fuzztest##########################################
-ohos_fuzztest("BMSBundleMgrProxyFuzzPartThreeTest") {
+ohos_fuzztest("BMSBundleMgrProxyFuzzPartOneTest") {
   module_out_path = module_output_path
   fuzz_config_file =
-      "../../../fuzztest/fuzztest_bundlemanager/bmsbundlemgrproxypartthree_fuzzer"
+      "../../../fuzztest/fuzztest_bundlemanager/bmsbundlemgrproxyfuzzpartonetest_fuzzer"
 
   cflags = [
     "-g",
@@ -30,7 +30,7 @@ ohos_fuzztest("BMSBundleMgrProxyFuzzPartThreeTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  sources = [ "bmsbundlemgrproxypartthree_fuzzer.cpp" ]
+  sources = [ "bmsbundlemgrproxypartone_fuzzer.cpp" ]
 
   deps = [
     "${base_path}:appexecfwk_base",
