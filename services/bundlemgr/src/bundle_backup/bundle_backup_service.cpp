@@ -30,12 +30,6 @@ BundleBackupService::BundleBackupService()
 
 BundleBackupService::~BundleBackupService() {}
 
-BundleBackupService& BundleBackupService::GetInstance()
-{
-    static BundleBackupService bundleCloneService;
-    return bundleCloneService;
-}
-
 ErrCode BundleBackupService::OnBackup(nlohmann::json &jsonObject)
 {
     if (!shortcutStorage_->GetAllTableDataToJson(jsonObject)) {

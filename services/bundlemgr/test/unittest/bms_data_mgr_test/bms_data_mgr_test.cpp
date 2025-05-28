@@ -5653,7 +5653,9 @@ HWTEST_F(BmsDataMgrTest, OnExtension_0020, Function | MediumTest | Level1)
     nlohmann::json backupJson;
     NativeRdb::AbsRdbPredicates absRdbPredicates("shortcut_info");
     shortcutDataStorageRdb->rdbDataManager_->DeleteData(absRdbPredicates);
-    auto ret = BundleBackupService::GetInstance().OnBackup(backupJson);
+    std::shared_ptr<BundleBackupService> bundleBackupService = DelayedSingleton<BundleBackupService>::GetInstance();
+    ASSERT_NE(bundleBackupService, nullptr);
+    auto ret = bundleBackupService->OnBackup(backupJson);
     EXPECT_EQ(ret, ERR_APPEXECFWK_DB_GET_DATA_ERROR);
     EXPECT_EQ(shortcutDataStorageRdb->GetAllTableDataToJson(backupJson), false);
     shortcutDataStorageRdb->rdbDataManager_ = nullptr;
@@ -5669,9 +5671,11 @@ HWTEST_F(BmsDataMgrTest, OnExtension_0030, Function | MediumTest | Level1)
 {
     std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
     ASSERT_NE(shortcutDataStorageRdb, nullptr);
-    BundleBackupService::GetInstance().dataMgr_ = std::make_shared<BundleDataMgr>();
+    std::shared_ptr<BundleBackupService> bundleBackupService = DelayedSingleton<BundleBackupService>::GetInstance();
+    ASSERT_NE(bundleBackupService, nullptr);
+    bundleBackupService->dataMgr_ = std::make_shared<BundleDataMgr>();
     nlohmann::json backupJson;
-    auto ret = BundleBackupService::GetInstance().OnRestore(backupJson);
+    auto ret = bundleBackupService->OnRestore(backupJson);
     EXPECT_EQ(ret, ERR_APPEXECFWK_DB_UPDATE_ERROR);
     shortcutDataStorageRdb->rdbDataManager_ = nullptr;
     backupJson = nlohmann::json::array();
@@ -5694,7 +5698,9 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0100, Function | MediumTest | Level1)
 
     MessageParcel data;
     MessageParcel reply;
-    auto ret = BundleBackupMgr::GetInstance().OnBackup(data, reply);
+    std::shared_ptr<BundleBackupMgr> bundleBackupMgr = DelayedSingleton<BundleBackupMgr>::GetInstance();
+    ASSERT_NE(bundleBackupMgr, nullptr);
+    auto ret = bundleBackupMgr->OnBackup(data, reply);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_GE(reply.ReadFileDescriptor(), 0);
 
@@ -5712,7 +5718,9 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0200, Function | MediumTest | Level1)
     MessageParcel data;
     MessageParcel reply;
     data.WriteFileDescriptor(-1);
-    auto ret = BundleBackupMgr::GetInstance().OnRestore(data, reply);
+    std::shared_ptr<BundleBackupMgr> bundleBackupMgr = DelayedSingleton<BundleBackupMgr>::GetInstance();
+    ASSERT_NE(bundleBackupMgr, nullptr);
+    auto ret = bundleBackupMgr->OnRestore(data, reply);
     EXPECT_EQ(ret, ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
 }
 
@@ -5730,15 +5738,19 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0300, Function | MediumTest | Level1)
     bool isIdIllegal = false;
     shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
 
-    BundleBackupService::GetInstance().dataMgr_ = std::make_shared<BundleDataMgr>();
+    std::shared_ptr<BundleBackupService> bundleBackupService = DelayedSingleton<BundleBackupService>::GetInstance();
+    ASSERT_NE(bundleBackupService, nullptr);
+    bundleBackupService->dataMgr_ = std::make_shared<BundleDataMgr>();
     const char* BACKUP_FILE_PATH = "/data/service/el1/public/bms/bundle_manager_service/backup_config.conf";
     MessageParcel data;
     MessageParcel reply;
-    FILE* filePtr = fopen(BACKUP_FILE_PATH, "re");
+    FILE* filePtr = fopen(BACKUP_FILE_PATH, "r");
     EXPECT_NE(filePtr, nullptr);
     int32_t fd = fileno(filePtr);
     data.WriteFileDescriptor(fd);
-    auto ret = BundleBackupMgr::GetInstance().OnRestore(data, reply);
+    std::shared_ptr<BundleBackupMgr> bundleBackupMgr = DelayedSingleton<BundleBackupMgr>::GetInstance();
+    ASSERT_NE(bundleBackupMgr, nullptr);
+    auto ret = bundleBackupMgr->OnRestore(data, reply);
     (void)close(fd);
     EXPECT_EQ(ret, ERR_OK);
     bool result = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);

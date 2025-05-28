@@ -20,15 +20,16 @@
 #include "bundle_data_mgr.h"
 #include "nlohmann/json.hpp"
 #include "shortcut_data_storage_interface.h"
+#include "singleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 
-class BundleBackupService {
+class BundleBackupService : public DelayedSingleton<BundleBackupService> {
 public:
     BundleBackupService();
     ~BundleBackupService();
-    static BundleBackupService &GetInstance();
+
     ErrCode OnBackup(nlohmann::json &jsonObject);
     ErrCode OnRestore(nlohmann::json &jsonObject);
 
