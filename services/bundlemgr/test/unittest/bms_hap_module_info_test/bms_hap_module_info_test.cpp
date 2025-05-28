@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -87,6 +87,9 @@ const std::string BUNDLE_NAME2 = "testBundleName";
 const std::string MODULE_NAME2 = "testModuleName";
 const std::string ABILITY_NAME = "testAbilityName";
 const char* DEVICE_ID = "deviceId";
+const char* APP_ID = "appId";
+constexpr uint32_t APP_INDEX = 0;
+const char* DISPOSED_RULE = "disposedRule";
 
 void to_json(nlohmann::json &jsonObject, const PreloadItem &preloadItem);
 void from_json(const nlohmann::json &jsonObject, PreloadItem &preloadItem);
@@ -110,6 +113,8 @@ void to_json(nlohmann::json &jsonObject, const ElementName &elementName);
 void from_json(const nlohmann::json &jsonObject, ElementName &elementName);
 void to_json(nlohmann::json &jsonObject, const DisposedRule &disposedRule);
 void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule);
+void to_json(nlohmann::json &jsonObject, const DisposedRuleConfiguration &disposedRuleConfiguration);
+void from_json(const nlohmann::json &jsonObject, DisposedRuleConfiguration &disposedRuleConfiguration);
 
 class BmsHapModuleInfoTest : public testing::Test {
 public:
@@ -755,6 +760,56 @@ HWTEST_F(BmsHapModuleInfoTest, DeleteDir_0200, Function | SmallTest | Level0)
     errno = EACCES;
     auto ret1 = BundleFileUtil::DeleteDir(dirPath);
     EXPECT_TRUE(ret1);
+}
+
+/**
+ * @tc.number: ReadFromParcel_0300
+ * @tc.name: test ReadFromParcel interface in DisposedRuleConfiguration.
+ * @tc.desc: 1.construct parcel.
+ *           2.calling ReadFromParcel interface by using input parameter parcel.
+ */
+HWTEST_F(BmsHapModuleInfoTest, ReadFromParcel_0300, Function | SmallTest | Level0)
+{
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    DisposedRule disposedRule;
+    Parcel parcel;
+    parcel.WriteParcelable(&disposedRule);
+    parcel.WriteString16(Str8ToStr16(APP_ID));
+    parcel.WriteInt32(APP_INDEX);
+    bool result = disposedRuleConfiguration.ReadFromParcel(parcel);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: Marshalling_0600
+ * @tc.name: test Marshalling interface in DisposedRuleConfiguration.
+ */
+HWTEST_F(BmsHapModuleInfoTest, Marshalling_0600, Function | SmallTest | Level0)
+{
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    DisposedRule disposedRule;
+    Parcel parcel;
+    parcel.WriteParcelable(&disposedRule);
+    parcel.WriteString16(Str8ToStr16(APP_ID));
+    parcel.WriteInt32(APP_INDEX);
+    auto ret = disposedRuleConfiguration.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: Unmarshalling_0300
+ * @tc.name: test Unmarshalling interface in DisposedRuleConfiguration.
+ */
+HWTEST_F(BmsHapModuleInfoTest, Unmarshalling_0300, Function | SmallTest | Level0)
+{
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    DisposedRule disposedRule;
+    Parcel parcel;
+    parcel.WriteParcelable(&disposedRule);
+    parcel.WriteString16(Str8ToStr16(APP_ID));
+    parcel.WriteInt32(APP_INDEX);
+    auto result = disposedRuleConfiguration.Unmarshalling(parcel);
+    ASSERT_NE(result, nullptr);
 }
 }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,14 @@ using namespace testing::ext;
 using OHOS::AAFwk::Want;
 
 namespace OHOS {
+namespace {
+const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
+    "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+const int32_t USERID = 100;
+const int32_t APP_INDEX = 1;
+const int16_t MAX_VECTOR_NUM = 1001;
+
+}  // namespace
 
 class MockRemoteObject : public IRemoteObject {
 public:
@@ -740,6 +748,82 @@ HWTEST_F(BmsAppControlProxyTest, DeleteUninstallDisposedRule_0200, Function | Me
     int32_t userId = 100;
     auto result = appControlProxy.DeleteUninstallDisposedRule(appId, appIndex, userId);
     EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: SetDisposedRules_0100
+ * @tc.name: test the SetDisposedRules
+ * @tc.desc: 1. system running normally
+ *           2. test SetDisposedRules
+ */
+HWTEST_F(BmsAppControlProxyTest, SetDisposedRules_0100, Function | MediumTest | Level1)
+{
+    AppControlProxy appControlProxy(nullptr);
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    disposedRuleConfiguration.appId = APPID;
+    disposedRuleConfiguration.appIndex = APP_INDEX;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.push_back(disposedRuleConfiguration);
+    auto res = appControlProxy.SetDisposedRules(disposedRuleConfigurations, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: SetDisposedRules_0200
+ * @tc.name: test the SetDisposedRules
+ * @tc.desc: 1. system running normally
+ *           2. test SetDisposedRules
+ */
+HWTEST_F(BmsAppControlProxyTest, SetDisposedRules_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    disposedRuleConfiguration.appId = APPID;
+    disposedRuleConfiguration.appIndex = APP_INDEX;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.push_back(disposedRuleConfiguration);
+    auto res = appControlProxy.SetDisposedRules(disposedRuleConfigurations, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: SetDisposedRules_0300
+ * @tc.name: test the SetDisposedRules
+ * @tc.desc: 1. system running normally
+ *           2. test SetDisposedRules
+ */
+HWTEST_F(BmsAppControlProxyTest, SetDisposedRules_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.clear();
+    auto res = appControlProxy.SetDisposedRules(disposedRuleConfigurations, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDisposedRules_0400
+ * @tc.name: test the SetDisposedRules
+ * @tc.desc: 1. system running normally
+ *           2. test SetDisposedRules
+ */
+HWTEST_F(BmsAppControlProxyTest, SetDisposedRules_0400, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    disposedRuleConfiguration.appId = APPID;
+    disposedRuleConfiguration.appIndex = APP_INDEX;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.reserve(MAX_VECTOR_NUM);
+
+    for (int i = 0; i < MAX_VECTOR_NUM; ++i) {
+        disposedRuleConfigurations.push_back(disposedRuleConfiguration);
+    }
+    auto res = appControlProxy.SetDisposedRules(disposedRuleConfigurations, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 } // AppExecFwk
 } // OHOS

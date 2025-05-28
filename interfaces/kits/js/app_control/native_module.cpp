@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,6 +49,7 @@ static napi_value AppControlExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("deleteDisposedStatusSync", DeleteDisposedStatusSync),
         DECLARE_NAPI_FUNCTION("getDisposedRule", GetDisposedRule),
         DECLARE_NAPI_FUNCTION("setDisposedRule", SetDisposedRule),
+        DECLARE_NAPI_FUNCTION("setDisposedRules", SetDisposedRules),
         DECLARE_NAPI_FUNCTION("getUninstallDisposedRule", GetUninstallDisposedRule),
         DECLARE_NAPI_FUNCTION("setUninstallDisposedRule", SetUninstallDisposedRule),
         DECLARE_NAPI_FUNCTION("deleteUninstallDisposedRule", DeleteUninstallDisposedRule),
