@@ -130,6 +130,9 @@ constexpr int32_t MAX_APP_UID = 65535;
 constexpr int8_t ONLY_ONE_USER = 1;
 constexpr unsigned int OTA_CODE_ENCRYPTION_TIMEOUT = 4 * 60;
 const std::string FUNCATION_HANDLE_OTA_CODE_ENCRYPTION = "BundleDataMgr::HandleOTACodeEncryption()";
+const std::string BUNDLE_NAME = "BUNDLE_NAME";
+const std::string USER_ID = "USER_ID";
+const std::string APP_INDEX = "APP_INDEX";
 #ifndef BUNDLE_FRAMEWORK_FREE_INSTALL
 constexpr int APP_MGR_SERVICE_ID = 501;
 #endif
@@ -10915,5 +10918,54 @@ bool BundleDataMgr::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, 
     return patchVersion <= bundleInfo.targetPatchApiVersion;
 }
 
+void BundleDataMgr::CheckIfShortcutBundleExist(nlohmann::json &jsonResult)
+{
+    if (!jsonResult.is_array()) {
+        APP_LOGE("Invalid JSON format: expected array");
+        return;
+    }
+    for (auto it = jsonResult.begin(); it != jsonResult.end();) {
+        if (!it->contains(BUNDLE_NAME) || !it->at(BUNDLE_NAME).is_string()) {
+            it = jsonResult.erase(it);
+            continue;
+        }
+        if (!it->contains(APP_INDEX) || !it->at(APP_INDEX).is_number()) {
+            it = jsonResult.erase(it);
+            continue;
+        }
+        if (!it->contains(USER_ID) || !it->at(USER_ID).is_number()) {
+            it = jsonResult.erase(it);
+            continue;
+        }
+        std::string bundleName = (*it)[BUNDLE_NAME].get<std::string>();
+        int32_t appIndex = (*it)[APP_INDEX].get<int>();
+        int32_t userId = (*it)[USER_ID].get<int>();
+        {
+            std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+            auto iter = bundleInfos_.find(bundleName);
+            if (iter == bundleInfos_.end()) {
+                it = jsonResult.erase(it);
+                continue;
+            }
+            if (!HasUserId(userId)) {
+                it = jsonResult.erase(it);
+                continue;
+            }
+            InnerBundleUserInfo innerBundleUserInfo;
+            if (!iter->second.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+                it = jsonResult.erase(it);
+                continue;
+            }
+            if (appIndex != 0) {
+                auto cloneIter = innerBundleUserInfo.cloneInfos.find(std::to_string(appIndex));
+                if (cloneIter == innerBundleUserInfo.cloneInfos.end()) {
+                    it = jsonResult.erase(it);
+                    continue;
+                }
+            }
+        }
+        ++it;
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
