@@ -1176,7 +1176,7 @@ const nlohmann::json MODULE_JSON_12 = R"(
                 "srcEntry": "./ets/entrybackupability/EntryBackupAbility.ets",
                 "name": "EntryBackupAbility",
                 "isolationProcess": true,
-                "type": ""sys/commonUI"
+                "type": "sys/commonUI"
             },
             {
                 "exported": false,
@@ -1190,7 +1190,7 @@ const nlohmann::json MODULE_JSON_12 = R"(
                 "srcEntry": "./ets/entrybackupability/EntryBackupAbility.ets",
                 "name": "EntryBackupAbilitySecond",
                 "isolationProcess": false,
-                "type": ""sys/commonUI"
+                "type": "sys/commonUI"
             }
         ],
         "compileMode": "esmodule",
