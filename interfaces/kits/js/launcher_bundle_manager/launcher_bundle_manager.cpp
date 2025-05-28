@@ -37,7 +37,6 @@ namespace {
     constexpr const char* GET_ALL_LAUNCHER_ABILITY_INFO = "GetAllLauncherAbilityInfo";
     constexpr const char* GET_SHORTCUT_INFO = "GetShortcutInfo";
     constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
-    constexpr const char* BUNDLE_NAME = "bundleName";
     constexpr const char* USER_ID = "userId";
     constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
     constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";

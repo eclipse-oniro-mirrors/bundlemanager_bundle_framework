@@ -166,6 +166,8 @@ public:
 
     static ani_object ConvertLauncherAbilityInfo(ani_env* env, const LauncherAbilityInfo& launcherAbility);
 
+    static ani_object ConvertOverlayModuleInfo(ani_env* env, const OverlayModuleInfo& overlayModuleInfo);
+
     static ani_object CreateBundleChangedInfo(
         ani_env* env, const std::string& bundleName, int32_t userId, int32_t appIndex);
     static ani_object ConvertVersion(ani_env* env, const Version& version);

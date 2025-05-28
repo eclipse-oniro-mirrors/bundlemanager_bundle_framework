@@ -68,6 +68,8 @@ constexpr const char* CLASSNAME_ABILITY_FORM_INFO_INNER = "LbundleManager/Bundle
 constexpr const char* CLASSNAME_VERSION_INNER = "LbundleManager/BundlePackInfoInner/VersionInner;";
 constexpr const char* CLASSNAME_API_VERSION_INNER = "LbundleManager/BundlePackInfoInner/ApiVersionInner;";
 constexpr const char* CLASSNAME_DISPATCH_INFO_INNER = "LbundleManager/DispatchInfoInner/DispatchInfoInner;";
+constexpr const char* CLASSNAME_OVERLAY_MOUDLE_INFO_INNER =
+    "LbundleManager/OverlayModuleInfoInner/OverlayModuleInfoInner;";
 
 constexpr const char* PROPERTYNAME_NAME = "name";
 constexpr const char* PROPERTYNAME_VENDOR = "vendor";
@@ -223,6 +225,9 @@ constexpr const char* PROPERTYNAME_MODULES = "modules";
 constexpr const char* PROPERTYNAME_PACKAGES = "packages";
 constexpr const char* PROPERTYNAME_SUMMARY = "summary";
 constexpr const char* PROPERTYNAME_DISPATCHAPIVERSION = "dispatchAPIVersion";
+constexpr const char* PROPERTYNAME_TARGETMOUDLENAME = "targetModuleName";
+constexpr const char* PROPERTYNAME_PRIORITY = "priority";
+constexpr const char* PROPERTYNAME_STATE = "state";
 
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
 constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
@@ -1545,6 +1550,39 @@ ani_object CommonFunAni::ConvertLauncherAbilityInfo(ani_env* env, const Launcher
 
     // installTime: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_INSTALLTIME, launcherAbility.installTime));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertOverlayModuleInfo(ani_env* env, const OverlayModuleInfo& overlayModuleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_OVERLAY_MOUDLE_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, overlayModuleInfo.bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // moduleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, overlayModuleInfo.moduleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+
+    // targetModuleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, overlayModuleInfo.targetModuleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TARGETMOUDLENAME, string));
+
+    // priority: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PRIORITY, overlayModuleInfo.priority));
+
+    // state: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_STATE, overlayModuleInfo.state));
 
     return object;
 }

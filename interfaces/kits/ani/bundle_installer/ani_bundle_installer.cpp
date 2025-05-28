@@ -63,7 +63,6 @@ constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or 
 constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
 constexpr const char* INSTALL_SELF_PERMISSION = "ohos.permission.INSTALL_SELF_BUNDLE";
 constexpr const char* PARAMETERS = "parameters";
-constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* CREATE_APP_CLONE = "CreateAppClone";
 constexpr const char* DESTROY_APP_CLONE = "destroyAppClone";
 constexpr const char* CORRESPONDING_TYPE = "corresponding type";
