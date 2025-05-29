@@ -202,6 +202,8 @@ constexpr const char* NEW_CLOUD_SHADER_PATH = "/data/app/el1/public/shader_cache
 constexpr const char* API_RELEASE_TYPE_RELEASE = "Release";
 constexpr const char* API_RELEASE_TYPE_BETA = "Beta";
 constexpr const char* API_RELEASE_TYPE_CANARY = "Canary";
+// account constraint
+constexpr const char* CONSTRAINT_APPS_INSTALL = "constraint.bundles.install";
 // allow multi icon bundle
 const std::set<std::string> ALLOW_MULTI_ICON_BUNDLE = {
     "com.ohos.contacts"
