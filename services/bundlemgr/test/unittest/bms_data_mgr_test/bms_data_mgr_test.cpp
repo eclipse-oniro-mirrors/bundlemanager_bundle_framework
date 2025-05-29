@@ -20,6 +20,7 @@
 #include <nlohmann/json.hpp>
 
 #include "ability_manager_helper.h"
+#include "access_token.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_backup_mgr.h"
@@ -73,6 +74,8 @@ constexpr const char* WANT_PARAM_SUMMARY = "summary";
 constexpr const char* SUMMARY_TOTAL_COUNT = "totalCount";
 const int32_t ICON_ID = 2222;
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
+const uint32_t ACCESS_TOKEN_ID = 1765341;
+const std::string TOKEN_BUNDLE = "tokenBundle";
 }  // namespace
 
 class BmsDataMgrTest : public testing::Test {
@@ -2971,6 +2974,38 @@ HWTEST_F(BmsDataMgrTest, GetOdidByBundleName_0001, Function | MediumTest | Level
     std::string odid = "odid";
     auto ret = bundleDataMgr.GetOdidByBundleName(bundleName, odid);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAppIdentifierAndAppIndex_0001
+ * @tc.name: GetAppIdentifierAndAppIndex
+ * @tc.desc: test GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
+    std::string &appIdentifier, int32_t &appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, GetAppIdentifierAndAppIndex_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string appIdentifier;
+    int32_t appIndex;
+    auto ret = bundleDataMgr.GetAppIdentifierAndAppIndex(ACCESS_TOKEN_ID, appIdentifier, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAppIdentifierAndAppIndex_0002
+ * @tc.name: GetAppIdentifierAndAppIndex
+ * @tc.desc: test GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
+    std::string &appIdentifier, int32_t &appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, GetAppIdentifierAndAppIndex_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    std::string appIdentifier;
+    int32_t appIndex;
+    bundleDataMgr.bundleInfos_.emplace(TOKEN_BUNDLE, innerBundleInfo);
+    auto ret = bundleDataMgr.GetAppIdentifierAndAppIndex(ACCESS_TOKEN_ID, appIdentifier, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

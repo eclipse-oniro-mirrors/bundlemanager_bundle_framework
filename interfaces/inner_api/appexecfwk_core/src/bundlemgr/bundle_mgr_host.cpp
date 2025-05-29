@@ -163,6 +163,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_NAME_AND_APPINDEX_FOR_UID):
             errCode = this->HandleGetNameAndIndexForUid(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPIDENTIFIER_AND_APPINDEX):
+            errCode = HandleGetAppIdentifierAndAppIndex(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SIMPLE_APP_INFO_FOR_UID):
             errCode = this->HandleGetSimpleAppInfoForUid(data, reply);
             break;
@@ -1149,6 +1152,25 @@ ErrCode BundleMgrHost::HandleGetNameAndIndexForUid(MessageParcel &data, MessageP
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAppIdentifierAndAppIndex(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    uint32_t accessTokenId = data.ReadUint32();
+
+    std::string appIdentifier;
+    int32_t appIndex = 0;
+    auto ret = GetAppIdentifierAndAppIndex(accessTokenId, appIdentifier, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && (!reply.WriteString(appIdentifier) || !reply.WriteInt32(appIndex))) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

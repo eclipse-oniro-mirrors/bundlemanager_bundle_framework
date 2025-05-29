@@ -23,6 +23,7 @@
 #include "os_account_info.h"
 #endif
 #endif
+#include "accesstoken_kit.h"
 #include "account_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
@@ -30,6 +31,7 @@
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
+#include "hap_token_info.h"
 #include "bundle_event_callback_death_recipient.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_client.h"
@@ -4141,6 +4143,27 @@ ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
     }
     APP_LOGD("GetBundleNameForUid, uid %{public}d, bundleName %{public}s, appIndex %{public}d",
         uid, name.c_str(), appIndex);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
+    std::string &appIdentifier, int32_t &appIndex)
+{
+    Security::AccessToken::HapTokenInfo tokenInfo;
+    if (Security::AccessToken::AccessTokenKit::GetHapTokenInfo(accessTokenId, tokenInfo) != ERR_OK) {
+        APP_LOGE("accessTokenId %{public}d not exist", accessTokenId);
+        return ERR_BUNDLE_MANAGER_ACCESS_TOKENID_NOT_EXIST;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto infoItem = bundleInfos_.find(tokenInfo.bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("bundleName %{public}s not exist", tokenInfo.bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    appIdentifier = innerBundleInfo.GetAppIdentifier();
+    appIndex = tokenInfo.instIndex;
     return ERR_OK;
 }
 

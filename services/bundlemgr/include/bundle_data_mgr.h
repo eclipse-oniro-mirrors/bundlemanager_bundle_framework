@@ -384,6 +384,15 @@ public:
      */
     ErrCode GetNameForUid(const int uid, std::string &name) const;
     /**
+     * @brief Obtains the appIdentifier and appIndex with the given access tokenId.
+     * @param accessTokenId Indicates the access tokenId of the application.
+     * @param appIdentifier Indicates the app identifier of the application.
+     * @param appIndex Indicates the app index of the application.
+     * @return Returns ERR_OK if execute success; returns errCode otherwise.
+     */
+    ErrCode GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
+        std::string &appIdentifier, int32_t &appIndex);
+    /**
      * @brief Obtains an array of all group IDs associated with a specified bundle.
      * @param bundleName Indicates the bundle name.
      * @param gids Indicates the group IDs associated with the specified bundle.
