@@ -16,6 +16,8 @@ import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
 ohos_shared_library("ani_bundle_installer") {
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
     boundary_sanitize = true
     cfi = true
@@ -34,7 +36,6 @@ ohos_shared_library("ani_bundle_installer") {
   sources = [
     "${kits_path}/js/bundlemgr/bundle_death_recipient.cpp",
     "${kits_path}/js/bundlemgr/installer_callback.cpp",
-    "${kits_path}/js/installer/installer_helper.cpp",
     "ani_bundle_installer.cpp",
   ]
 

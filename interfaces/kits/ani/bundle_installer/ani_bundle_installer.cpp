@@ -43,7 +43,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr uint8_t INSTALLER_METHOD_COUNTS = 11;
+constexpr uint8_t INSTALLER_METHOD_COUNTS = 13;
 constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
 constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
 constexpr const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC = "GetBundleInstallerSync";
@@ -63,6 +63,9 @@ constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or 
 constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
 constexpr const char* INSTALL_SELF_PERMISSION = "ohos.permission.INSTALL_SELF_BUNDLE";
 constexpr const char* PARAMETERS = "parameters";
+constexpr const char* PLUGIN_BUNDLE_NAME = "pluginBundleName";
+constexpr const char* INSTALL_PLUGIN = "InstallPlugin";
+constexpr const char* UNINSTALL_PLUGIN = "UninstallPlugin";
 constexpr const char* CREATE_APP_CLONE = "CreateAppClone";
 constexpr const char* DESTROY_APP_CLONE = "destroyAppClone";
 constexpr const char* CORRESPONDING_TYPE = "corresponding type";
@@ -478,6 +481,78 @@ static void AniInstallPreexistingApp(ani_env* env, [[maybe_unused]] ani_object i
     }
 }
 
+static void AniInstallPlugin(ani_env* env, [[maybe_unused]] ani_object installerObj, ani_string aniHostBundleName,
+    ani_object aniPluginFilePaths, ani_object aniPluginParam)
+{
+    APP_LOGI("InstallPlugin");
+
+    std::string hostBundleName = CommonFunAni::AniStrToString(env, aniHostBundleName);
+    if (hostBundleName.empty()) {
+        APP_LOGE("hostBundleName is empty.");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return;
+    }
+
+    std::vector<std::string> pluginFilePaths;
+    if (aniPluginFilePaths == nullptr || !CommonFunAni::ParseStrArray(env, aniPluginFilePaths, pluginFilePaths)) {
+        APP_LOGE("pluginFilePaths parse failed.");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, FILE_PATH, TYPE_ARRAY);
+        return;
+    }
+
+    InstallPluginParam pluginParam;
+    if (aniPluginParam == nullptr || !CommonFunAni::ParsePluginParam(env, aniPluginParam, pluginParam)) {
+        APP_LOGE("pluginParam parse failed.");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        return;
+    }
+    if (pluginParam.userId == Constants::UNSPECIFIED_USERID) {
+        pluginParam.userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+
+    ErrCode result =
+        CommonFunc::ConvertErrCode(InstallerHelper::InnerInstallPlugin(hostBundleName, pluginFilePaths, pluginParam));
+    if (result != SUCCESS) {
+        BusinessErrorAni::ThrowCommonError(env, result, INSTALL_PLUGIN, Constants::PERMISSION_INSTALL_PLUGIN);
+    }
+}
+
+static void AniUninstallPlugin(ani_env* env, [[maybe_unused]] ani_object installerObj, ani_string aniHostBundleName,
+    ani_string aniPluginBundleName, ani_object aniPluginParam)
+{
+    APP_LOGI("UninstallPlugin");
+
+    std::string hostBundleName = CommonFunAni::AniStrToString(env, aniHostBundleName);
+    if (hostBundleName.empty()) {
+        APP_LOGE("hostBundleName is empty.");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return;
+    }
+
+    std::string pluginBundleName = CommonFunAni::AniStrToString(env, aniPluginBundleName);
+    if (pluginBundleName.empty()) {
+        APP_LOGE("hostBundleName is empty.");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PLUGIN_BUNDLE_NAME, TYPE_STRING);
+        return;
+    }
+
+    InstallPluginParam pluginParam;
+    if (aniPluginParam == nullptr || !CommonFunAni::ParsePluginParam(env, aniPluginParam, pluginParam)) {
+        APP_LOGE("pluginParam parse failed.");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+        return;
+    }
+    if (pluginParam.userId == Constants::UNSPECIFIED_USERID) {
+        pluginParam.userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+
+    ErrCode result = CommonFunc::ConvertErrCode(
+        InstallerHelper::InnerUninstallPlugin(hostBundleName, pluginBundleName, pluginParam));
+    if (result != SUCCESS) {
+        BusinessErrorAni::ThrowCommonError(env, result, UNINSTALL_PLUGIN, Constants::PERMISSION_UNINSTALL_PLUGIN);
+    }
+}
+
 static ani_object AniGetBundleInstallerSync(ani_env* env)
 {
     APP_LOGI("GetBundleInstallerSync");
@@ -514,6 +589,8 @@ static void GetInstallerMethods(std::array<ani_native_function, INSTALLER_METHOD
         ani_native_function { "destroyAppCloneNative", nullptr, reinterpret_cast<void*>(AniDestroyAppClone) },
         ani_native_function { "installPreexistingAppNative", nullptr,
             reinterpret_cast<void*>(AniInstallPreexistingApp) },
+        ani_native_function { "installPluginNative", nullptr, reinterpret_cast<void*>(AniInstallPlugin) },
+        ani_native_function { "uninstallPluginNative", nullptr, reinterpret_cast<void*>(AniUninstallPlugin) },
     };
 }
  

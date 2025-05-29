@@ -221,6 +221,7 @@ public:
     static bool ParseUninstallParam(ani_env* env, ani_object object, UninstallParam& uninstallParam);
     static bool ParseCreateAppCloneParam(ani_env* env, ani_object object, int32_t& userId, int32_t& appIdx);
     static bool ParseDestroyAppCloneParam(ani_env* env, ani_object object, DestroyAppCloneParam& destroyAppCloneParam);
+    static bool ParsePluginParam(ani_env* env, ani_object object, InstallPluginParam& installPluginParam);
     static bool ParseMetadata(ani_env* env, ani_object object, Metadata& metadata);
     static bool ParseResource(ani_env* env, ani_object object, Resource& resource);
     static bool ParseMultiAppMode(ani_env* env, ani_object object, MultiAppModeData& multiAppMode);

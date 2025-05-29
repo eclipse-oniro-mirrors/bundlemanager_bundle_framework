@@ -1684,24 +1684,6 @@ void ParseInstallPluginParam(napi_env env, napi_value args, InstallPluginParam &
     }
 }
 
-static ErrCode InnerInstallPlugin(const std::string &hostBundleName,
-    const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode result = iBundleInstaller->InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
-    APP_LOGD("InstallPlugin result is %{public}d", result);
-    return result;
-}
-
 void InstallPluginExec(napi_env env, void *data)
 {
     PluginCallbackInfo *asyncCallbackInfo = reinterpret_cast<PluginCallbackInfo *>(data);
@@ -1709,7 +1691,7 @@ void InstallPluginExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerInstallPlugin(asyncCallbackInfo->hostBundleName,
+    asyncCallbackInfo->err = InstallerHelper::InnerInstallPlugin(asyncCallbackInfo->hostBundleName,
         asyncCallbackInfo->pluginFilePaths, asyncCallbackInfo->installPluginParam);
 }
 
@@ -1778,24 +1760,6 @@ napi_value InstallPlugin(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerUninstallPlugin(const std::string &hostBundleName,
-    const std::string &pluginBundleName, const InstallPluginParam &installPluginParam)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode result = iBundleInstaller->UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);
-    APP_LOGD("UninstallPlugin result is %{public}d", result);
-    return result;
-}
-
 void UninstallPluginExec(napi_env env, void *data)
 {
     PluginCallbackInfo *asyncCallbackInfo = reinterpret_cast<PluginCallbackInfo *>(data);
@@ -1807,7 +1771,7 @@ void UninstallPluginExec(napi_env env, void *data)
         asyncCallbackInfo->hostBundleName.c_str(),
         asyncCallbackInfo->pluginBundleName.c_str(),
         asyncCallbackInfo->installPluginParam.userId);
-    asyncCallbackInfo->err = InnerUninstallPlugin(asyncCallbackInfo->hostBundleName,
+    asyncCallbackInfo->err = InstallerHelper::InnerUninstallPlugin(asyncCallbackInfo->hostBundleName,
         asyncCallbackInfo->pluginBundleName, asyncCallbackInfo->installPluginParam);
 }
 
