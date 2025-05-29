@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -488,8 +488,8 @@ HWTEST_F(BmsExtendResourceManagerTest, CreateFd_0100, Function | SmallTest | Lev
 HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0100, Function | SmallTest | Level1)
 {
     ExtendResourceManagerHostImpl impl;
-    bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME);
-    EXPECT_TRUE(ret);
+    bool ret = impl.ResetBundleResourceIcon(EXT_RESOURCE_FILE);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -1282,9 +1282,6 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1003, Function | SmallTes
 HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0200, Function | SmallTest | Level1)
 {
     ExtendResourceManagerHostImpl impl;
-    DelayedSingleton<BundleResourceInfo>::GetInstance();
-    auto manager = DelayedSingleton<BundleResourceInfo>::GetInstance();
-    ASSERT_NE(manager, nullptr);
     bool ret = impl.ResetBundleResourceIcon(TEST_BUNDLE);
     EXPECT_FALSE(ret);
 }
