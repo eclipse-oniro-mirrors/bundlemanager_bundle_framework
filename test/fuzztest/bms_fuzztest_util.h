@@ -23,6 +23,7 @@
 
 #include "bundle_info.h"
 #include "bundle_user_info.h"
+#include "form_info.h"
 #include "install_param.h"
 
 namespace OHOS {
@@ -400,6 +401,166 @@ void GenerateBundleUserInfo(FuzzedDataProvider& fdp, BundleUserInfo &bundleUserI
     bundleUserInfo.setEnabledCaller = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     bundleUserInfo.disabledAbilities = GenerateStringArray(fdp);
     bundleUserInfo.overlayModulesState = GenerateStringArray(fdp);
+}
+
+void GenerateCompatibleApplicationInfo(FuzzedDataProvider& fdp, CompatibleApplicationInfo &compatibleApplicationInfo)
+{
+    compatibleApplicationInfo.isCompressNativeLibs = fdp.ConsumeBool();
+    compatibleApplicationInfo.systemApp = fdp.ConsumeBool();
+    compatibleApplicationInfo.enabled = fdp.ConsumeBool();
+    compatibleApplicationInfo.debug = fdp.ConsumeBool();
+    compatibleApplicationInfo.iconId = fdp.ConsumeIntegral<uint32_t>();
+    compatibleApplicationInfo.labelId = fdp.ConsumeIntegral<uint32_t>();
+    compatibleApplicationInfo.descriptionId = fdp.ConsumeIntegral<uint32_t>();
+    compatibleApplicationInfo.supportedModes = fdp.ConsumeIntegral<int32_t>(); // supported modes.
+    // items set when installing.
+    compatibleApplicationInfo.name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleApplicationInfo.icon = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleApplicationInfo.label = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleApplicationInfo.description = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleApplicationInfo.cpuAbi = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleApplicationInfo.process = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleApplicationInfo.permissions = GenerateStringArray(fdp);
+}
+
+void GenerateCompatibleAbilityInfo(FuzzedDataProvider& fdp, CompatibleAbilityInfo &compatibleAbilityInfo)
+{
+    compatibleAbilityInfo.visible = fdp.ConsumeBool();
+    compatibleAbilityInfo.formEnabled = fdp.ConsumeBool();
+    compatibleAbilityInfo.multiUserShared = fdp.ConsumeBool();
+    compatibleAbilityInfo.supportPipMode = fdp.ConsumeBool();
+    compatibleAbilityInfo.grantPermission = fdp.ConsumeBool();
+    compatibleAbilityInfo.directLaunch = fdp.ConsumeBool();
+    compatibleAbilityInfo.enabled = fdp.ConsumeBool();
+    compatibleAbilityInfo.backgroundModes = fdp.ConsumeIntegral<uint32_t>();
+    compatibleAbilityInfo.packageSize = fdp.ConsumeIntegral<uint32_t>();
+
+    // form widget info
+    compatibleAbilityInfo.formEntity = 1; // where form can be displayed
+
+    compatibleAbilityInfo.iconId = fdp.ConsumeIntegral<uint32_t>();
+    compatibleAbilityInfo.labelId = fdp.ConsumeIntegral<uint32_t>();
+    compatibleAbilityInfo.descriptionId = fdp.ConsumeIntegral<uint32_t>();
+    compatibleAbilityInfo.minFormHeight = fdp.ConsumeIntegral<int32_t>(); // minimum height of ability.
+    compatibleAbilityInfo.defaultFormHeight = fdp.ConsumeIntegral<int32_t>(); // default height of ability.
+    compatibleAbilityInfo.minFormWidth = fdp.ConsumeIntegral<int32_t>(); // minimum width of ability.
+    compatibleAbilityInfo.defaultFormWidth = fdp.ConsumeIntegral<int32_t>(); // default width of ability.
+    // deprecated: remove this field in new package format.
+    compatibleAbilityInfo.type = static_cast<AbilityType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_FIVE));
+    compatibleAbilityInfo.subType = static_cast<AbilitySubType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_ONE));
+    compatibleAbilityInfo.orientation = static_cast<DisplayOrientation>(fdp.ConsumeIntegralInRange<uint8_t>(0, ORIENTATION_MAX));
+    compatibleAbilityInfo.launchMode = static_cast<LaunchMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_TWO));
+    // deprecated: ability code class simple name, use 'className' instead.
+    compatibleAbilityInfo.package = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.label = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH); // display name on screen.
+    compatibleAbilityInfo.description = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.iconPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH); // used as icon data (base64) for WEB Ability.
+    compatibleAbilityInfo.uri = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH); // uri of ability.
+    compatibleAbilityInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH); // indicates the name of the .hap package to which the capability belongs.
+    compatibleAbilityInfo.process = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.targetAbility = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.appName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.privacyUrl = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.privacyName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.downloadUrl = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.versionName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.readPermission = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.writePermission = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.uriPermissionMode = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.uriPermissionPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+
+    // set when install
+    compatibleAbilityInfo.bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.className = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.originalClassName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.deviceId = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    compatibleAbilityInfo.permissions = GenerateStringArray(fdp);
+    compatibleAbilityInfo.deviceTypes = GenerateStringArray(fdp);
+    compatibleAbilityInfo.deviceCapabilities = GenerateStringArray(fdp);
+    GenerateCompatibleApplicationInfo(fdp, compatibleAbilityInfo.applicationInfo);
+}
+
+void GenerateExtensionAbilityInfo(FuzzedDataProvider& fdp, ExtensionAbilityInfo &extensionAbilityInfo)
+{
+    extensionAbilityInfo.visible = fdp.ConsumeBool();
+
+    // set when install
+    extensionAbilityInfo.enabled = fdp.ConsumeBool();
+
+    extensionAbilityInfo.needCreateSandbox = fdp.ConsumeBool();
+    extensionAbilityInfo.iconId = fdp.ConsumeIntegral<uint32_t>();
+    extensionAbilityInfo.labelId = fdp.ConsumeIntegral<uint32_t>();
+    extensionAbilityInfo.descriptionId = fdp.ConsumeIntegral<uint32_t>();
+    extensionAbilityInfo.priority = fdp.ConsumeIntegral<int32_t>();
+    // for NAPI, save self query cache
+    extensionAbilityInfo.uid = fdp.ConsumeIntegral<int32_t>();
+    extensionAbilityInfo.appIndex = fdp.ConsumeIntegral<int32_t>();
+    extensionAbilityInfo.type =
+        static_cast<ExtensionAbilityType>(fdp.ConsumeIntegralInRange<uint16_t>(0, ARRAY_MAX_LENGTH));
+    extensionAbilityInfo.compileMode = static_cast<CompileMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MIN_ONE));
+    extensionAbilityInfo.extensionProcessMode =
+        static_cast<ExtensionProcessMode>(fdp.ConsumeIntegralInRange<int8_t>(-1, CODE_MAX_THREE));
+    extensionAbilityInfo.bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.srcEntrance = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.icon = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.label = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.description = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.readPermission = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.writePermission = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.uri = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.extensionTypeName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.resourcePath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.hapPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.process = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    extensionAbilityInfo.customProcess = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::vector<std::string> permissions = GenerateStringArray(fdp);
+    std::vector<std::string> appIdentifierAllowList = GenerateStringArray(fdp);
+    std::vector<std::string> dataGroupIds = GenerateStringArray(fdp);
+    std::vector<std::string> validDataGroupIds = GenerateStringArray(fdp);
+    GenerateApplicationInfo(fdp, extensionAbilityInfo.applicationInfo);
+}
+
+void GenerateFormInfo(FuzzedDataProvider& fdp, FormInfo &formInfo)
+{
+    formInfo.defaultFlag = fdp.ConsumeBool();
+    formInfo.formVisibleNotify = fdp.ConsumeBool();
+    formInfo.updateEnabled = fdp.ConsumeBool();
+    formInfo.isStatic = fdp.ConsumeBool();
+    formInfo.dataProxyEnabled = fdp.ConsumeBool();
+    formInfo.isDynamic = fdp.ConsumeBool();
+    formInfo.transparencyEnabled = fdp.ConsumeBool();
+    formInfo.fontScaleFollowSystem = fdp.ConsumeBool();
+    formInfo.enableBlurBackground = fdp.ConsumeBool();
+    formInfo.appFormVisibleNotify = fdp.ConsumeBool();
+    formInfo.colorMode = static_cast<FormsColorMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MIN_ONE));
+    formInfo.renderingMode = static_cast<FormsRenderingMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_TWO));
+    formInfo.displayNameId = fdp.ConsumeIntegral<uint32_t>();
+    formInfo.descriptionId = fdp.ConsumeIntegral<uint32_t>();
+    formInfo.versionCode = fdp.ConsumeIntegral<uint32_t>();
+    formInfo.updateDuration = fdp.ConsumeIntegral<int32_t>();
+    formInfo.defaultDimension = fdp.ConsumeIntegral<int32_t>();
+    formInfo.privacyLevel = fdp.ConsumeIntegral<int32_t>();
+    formInfo.type = static_cast<FormType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_TWO));
+    formInfo.uiSyntax = static_cast<FormType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_TWO));
+    formInfo.bundleType = static_cast<BundleType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_FOUR));
+    formInfo.package = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.originalBundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.relatedBundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);  // the "module.distro.moduleName" in config.json
+    formInfo.abilityName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.displayName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.description = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.jsComponentName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.deepLink = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.formConfigAbility = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.scheduledUpdateTime = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.multiScheduledUpdateTime = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    formInfo.src = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
 }
 }  // namespace BMSFuzzTestUtil
 }  // namespace AppExecFwk

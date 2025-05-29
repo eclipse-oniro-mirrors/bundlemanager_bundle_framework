@@ -19,6 +19,9 @@ group("bundlemanagerfuzztest") {
 
   deps += [
     # deps file
+    "bmsabilityinfofromjson_fuzzer:BMSAbilityInfoFromJsonFuzzTest",
+    "bmsabilityinfomarshalling_fuzzer:BMSAbilityInfoMarshallingFuzzTest",
+    "bmsabilityinfounmarshalling_fuzzer:BMSAbilityInfoUnmarshallingFuzzTest",
     "bmsappcontrolhost_fuzzer:BMSAppControlHostFuzzTest",
     "bmsapplicationinfo_fuzzer:BMSApplicationInfoFuzzTest",
     "bmsapplicationinfofromjson_fuzzer:BMSApplicationInfoFromJsonFuzzTest",
@@ -27,10 +30,10 @@ group("bundlemanagerfuzztest") {
     "bmsbundleinstallerhost_fuzzer:BMSBundleInstallerHostFuzzTest",
     "bmsbundleinstallerproxy_fuzzer:BMSBundleInstallerProxyFuzzTest",
     "bmsbundlemgrhost_fuzzer:BMSBundleMgrHostFuzzTest",
-    "bmsbundlemgrproxypartfour_fuzzer:BMSBundleMgrProxyFuzzPartFourTest",
-    "bmsbundlemgrproxypartone_fuzzer:BMSBundleMgrProxyFuzzPartOneTest",
-    "bmsbundlemgrproxypartthree_fuzzer:BMSBundleMgrProxyFuzzPartThreeTest",
-    "bmsbundlemgrproxyparttwo_fuzzer:BMSBundleMgrProxyFuzzPartTwoTest",
+    "bmsbundlemgrproxyfuzzpartfourtest_fuzzer:BMSBundleMgrProxyFuzzPartFourTest",
+    "bmsbundlemgrproxyfuzzpartonetest_fuzzer:BMSBundleMgrProxyFuzzPartOneTest",
+    "bmsbundlemgrproxyfuzzpartthreetest_fuzzer:BMSBundleMgrProxyFuzzPartThreeTest",
+    "bmsbundlemgrproxyfuzzparttwotest_fuzzer:BMSBundleMgrProxyFuzzPartTwoTest",
     "bmsbundleresourcehost_fuzzer:BMSBundleResourceHostFuzzTest",
     "bmsbundlestatuscallbackproxy_fuzzer:BMSBundleStatusCallbackProxyFuzzTest",
     "bmsbundlestreaminstallerhost_fuzzer:BMSBundleStreamInstallerHostFuzzTest",
@@ -43,6 +46,19 @@ group("bundlemanagerfuzztest") {
     "bmscleanbundlecachefiles_fuzzer:BMSCleanBundleCacheFilesFuzzTest",
     "bmscleanbundledatafiles_fuzzer:BMSCleanBundleDataFilesFuzzTest",
     "bmscleancachecallbackproxy_fuzzer:BMSCleanCacheCallbackProxyFuzzTest",
+    "bmscompatibleabilityinfo_fuzzer:BMSCompatibleAbilityInfoFuzzTest",
+    "bmscompatibleapplicationinfo_fuzzer:BMSCompatibleApplicationInfoFuzzTest",
+    "bmsextensionabilityinfo_fuzzer:BMSExtensionAbilityInfoFuzzTest",
+    "bmsforminfo_fuzzer:BMSFormInfoFuzzTest",
+    "bmsgetabilitylabel_fuzzer:BMSGetAbilityLabelFuzzTest",
+    "bmsgetappidbybundlename_fuzzer:BMSGetAppIdByBundleNameFuzzTest",
+    "bmsgetapplicationinfo_fuzzer:BMSGetApplicationInfoFuzzTest",
+    "bmsgetapplicationinfos_fuzzer:BMSGetApplicationInfosFuzzTest",
+    "bmsgetapptype_fuzzer:BMSGetAppTypeFuzzTest",
+    "bmsgetbundlearchiveinfo_fuzzer:BMSGetBundleArchiveInfoFuzzTest",
+    "bmsgetbundlegids_fuzzer:BMSGetBundleGidsFuzzTest",
+    "bmsgetbundlegidsbyuid_fuzzer:BMSGetBundleGidsByUidFuzzTest",
+    "bmsgetbundleinfo_fuzzer:BMSGetBundleInfoFuzzTest",
     "bmsverifymanagerhost_fuzzer:BMSVerifyManagerHostFuzzTest"
   ]
 
@@ -60,7 +76,9 @@ group("bundlemanagerfuzztest") {
       "bmsapprunningcontrolrule_fuzzer:BMSAppRunningControlRuleFuzzTest",
       "bmsapprunningcontrolruleresult_fuzzer:BMSAppRunningControlRuleResultFuzzTest",
       "bmsdeleteappinstallcontrolrule_fuzzer:BMSDeleteAppInstallControlRuleFuzzTest",
-      "bmsdeleteapprunningcontrolrule_fuzzer:BMSDeleteAppRunningControlRuleFuzzTest"
+      "bmsdeleteapprunningcontrolrule_fuzzer:BMSDeleteAppRunningControlRuleFuzzTest",
+      "bmsgetappinstallcontrolrule_fuzzer:BMSGetAppInstallControlRuleFuzzTest",
+      "bmsgetapprunningcontrolrule_fuzzer:BMSGetAppRunningControlRuleFuzzTest",
     ]
   }
 }
