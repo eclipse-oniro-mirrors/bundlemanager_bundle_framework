@@ -9926,7 +9926,7 @@ HWTEST_F(ActsBmsKitSystemTest, MigrateData_0003, Function | MediumTest | Level1)
         // 3. The tester entered the password incorrectly (8521782)
         std::array<int, 3> probability = { ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED,
             ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_TIME_OUT,
-            ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED };
+            ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED };
 
         auto ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
         bool isExist = std::find(probability.begin(), probability.end(), ret) != probability.end();
