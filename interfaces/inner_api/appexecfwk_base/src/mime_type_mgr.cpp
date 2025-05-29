@@ -44,7 +44,7 @@ bool MimeTypeMgr::GetMimeTypeByUri(const std::string &uri, std::vector<std::stri
     for (const std::string &utd : utdVector) {
         std::shared_ptr<UDMF::TypeDescriptor> typeDescriptor;
         auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(utd, typeDescriptor);
-        if (ret != ERR_OK || typeDescriptor == nullptr) {
+        if (ret != UDMF::E_OK || typeDescriptor == nullptr) {
             APP_LOGE("GetTypeDescriptor failed");
             continue;
         }
@@ -102,7 +102,7 @@ bool MimeTypeMgr::GetUtdVectorByUri(const std::string &uri, std::vector<std::str
         return false;
     }
     auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypesByFilenameExtension(suffix, utdVector);
-    if (ret != ERR_OK || utdVector.empty()) {
+    if (ret != UDMF::E_OK  || utdVector.empty()) {
         APP_LOGD("Get utd vector by suffix %{public}s failed. err %{public}d", suffix.c_str(), ret);
         return false;
     }
