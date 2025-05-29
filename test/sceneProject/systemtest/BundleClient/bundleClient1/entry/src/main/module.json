@@ -117,6 +117,8 @@
                 "name": "name",
                 "value": "value"
             }
-        ]
+        ],
+        "formExtensionModule": "formExtensionModuleTest",
+        "formWidgetModule": "formWidgetModuleTest"
     }
 }

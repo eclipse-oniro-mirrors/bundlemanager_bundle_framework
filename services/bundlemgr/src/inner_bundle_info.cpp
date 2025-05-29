@@ -149,6 +149,8 @@ constexpr const char* MODULE_GWP_ASAN_ENABLED = "gwpAsanEnabled";
 constexpr const char* MODULE_TSAN_ENABLED = "tsanEnabled";
 constexpr const char* MODULE_PACKAGE_NAME = "packageName";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
+constexpr const char* MODULE_FORM_EXTENSION_MODULE = "formExtensionModule";
+constexpr const char* MODULE_FORM_WIDGET_MODULE = "formWidgetModule";
 constexpr const char* MODULE_HWASAN_ENABLED = "hwasanEnabled";
 constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
 constexpr const char* MODULE_DEBUG = "debug";
@@ -453,6 +455,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_TSAN_ENABLED, info.tsanEnabled},
         {MODULE_PACKAGE_NAME, info.packageName},
         {MODULE_APP_STARTUP, info.appStartup},
+        {MODULE_FORM_EXTENSION_MODULE, info.formExtensionModule},
+        {MODULE_FORM_WIDGET_MODULE, info.formWidgetModule},
         {MODULE_CROS_APP_SHARED_CONFIG, info.crossAppSharedConfig},
         {MODULE_ABILITY_SRC_ENTRY_DELEGATOR, info.abilitySrcEntryDelegator},
         {MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR, info.abilityStageSrcEntryDelegator},
@@ -1026,6 +1030,18 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
+        MODULE_FORM_EXTENSION_MODULE,
+        info.formExtensionModule,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_FORM_WIDGET_MODULE,
+        info.formWidgetModule,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
         MODULE_CROS_APP_SHARED_CONFIG,
         info.crossAppSharedConfig,
         false,
@@ -1586,6 +1602,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.deviceTypes = it->second.deviceTypes;
     hapInfo.deviceFeatures = it->second.deviceFeatures;
     hapInfo.appStartup = it->second.appStartup;
+    hapInfo.formExtensionModule = it->second.formExtensionModule;
+    hapInfo.formWidgetModule = it->second.formWidgetModule;
     hapInfo.hasIntent = BundleUtil::GetBitValue(it->second.boolSet, InnerModuleInfoBoolFlag::HAS_INTENT);
     std::string moduleType = it->second.distro.moduleType;
     if (moduleType == Profile::MODULE_TYPE_ENTRY) {
