@@ -83,6 +83,7 @@ struct InnerModuleInfo {
     bool tsanEnabled = false;
     bool needDelete = false;
     bool debug = false;
+    bool resizeable = false;
     uint8_t boolSet = 0;
     uint32_t innerModuleInfoFlag = 0;
     uint32_t labelId = 0;
@@ -1573,6 +1574,14 @@ public:
      * @return
      */
     void DeleteModuleRemovableInfo(InnerModuleInfo &info, const std::string &stringUserId);
+
+    /**
+     * @brief Set atomic service resizeable.
+     * @param moduleName Indicates the moduleName.
+     * @param resizeable Indicates the atomic service resizeable.
+     * @return Return set atomic service resizeable result.
+     */
+    bool SetInnerModuleAtomicResizeable(const std::string &moduleName, bool resizeable);
 
     void SetEntryInstallationFree(bool installationFree)
     {

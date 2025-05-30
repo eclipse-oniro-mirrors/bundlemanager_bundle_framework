@@ -1845,6 +1845,26 @@ bool ParserNativeSo(
     return false;
 }
 
+bool ParserAtomicModuleResizeableConfig(const nlohmann::json &moduleAtomicObj, const std::string &moduleName,
+    InnerBundleInfo &innerBundleInfo)
+{
+    bool resizeable = false;
+    if (!moduleAtomicObj.is_object()) {
+        APP_LOGE("moduleAtomicObj is not object");
+        return false;
+    }
+    if (moduleAtomicObj.contains(Profile::MODULE_ATOMIC_SERVICE_RESIZEABLE)) {
+        nlohmann::json resizeableObj = moduleAtomicObj.at(Profile::MODULE_ATOMIC_SERVICE_RESIZEABLE);
+        if (!resizeableObj.is_boolean()) {
+            APP_LOGE("resizeable config in module.json is not boolean");
+            return false;
+        }
+        resizeable = resizeableObj;
+    }
+    innerBundleInfo.SetInnerModuleAtomicResizeable(moduleName, resizeable);
+    return true;
+}
+
 bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo &innerBundleInfo)
 {
     nlohmann::json moduleJson = jsonObject.at(Profile::MODULE);
@@ -1852,6 +1872,10 @@ bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo 
     std::string moduleName = moduleJson.at(Profile::MODULE_NAME);
     if (moduleJson.contains(Profile::ATOMIC_SERVICE)) {
         nlohmann::json moduleAtomicObj = moduleJson.at(Profile::ATOMIC_SERVICE);
+        if (!ParserAtomicModuleResizeableConfig(moduleAtomicObj, moduleName, innerBundleInfo)) {
+            APP_LOGE("parser resizeable failed");
+            return false;
+        }
         if (moduleAtomicObj.contains(Profile::MODULE_ATOMIC_SERVICE_PRELOADS)) {
             nlohmann::json preloadObj = moduleAtomicObj.at(Profile::MODULE_ATOMIC_SERVICE_PRELOADS);
             if (preloadObj.empty()) {

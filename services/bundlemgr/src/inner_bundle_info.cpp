@@ -125,6 +125,7 @@ constexpr const char* MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
 constexpr const char* DATA_GROUP_INFOS = "dataGroupInfos";
 constexpr const char* MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
 constexpr const char* MODULE_IS_ENCRYPTED = "isEncrypted";
+constexpr const char* MODULE_RESIZEABLE = "resizeable";
 constexpr const char* MODULE_ROUTER_MAP = "routerMap";
 constexpr const char* EXT_RESOURCE_MODULE_NAME = "moduleName";
 constexpr const char* EXT_RESOURCE_ICON_ID = "iconId";
@@ -429,6 +430,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_TARGET_PRIORITY, info.targetPriority},
         {MODULE_OVERLAY_MODULE_INFO, info.overlayModuleInfo},
         {MODULE_PRELOADS, info.preloads},
+        {MODULE_RESIZEABLE, info.resizeable},
         {MODULE_BUNDLE_TYPE, info.bundleType},
         {MODULE_VERSION_CODE, info.versionCode},
         {MODULE_VERSION_NAME, info.versionName},
@@ -872,6 +874,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_RESIZEABLE,
+        info.resizeable,
+        false,
+        parseResult);
     GetValueIfFindKey<BundleType>(jsonObject,
         jsonObjectEnd,
         MODULE_BUNDLE_TYPE,
@@ -1598,6 +1606,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         PreloadItem preload(item);
         hapInfo.preloads.emplace_back(preload);
     }
+    hapInfo.resizeable = it->second.resizeable;
     for (const auto &item : it->second.proxyDatas) {
         ProxyData proxyData(item);
         hapInfo.proxyDatas.emplace_back(proxyData);
@@ -5170,6 +5179,16 @@ void InnerBundleInfo::GetAllDynamicIconInfo(const int32_t userId, std::vector<Dy
             }
         }
     }
+}
+
+bool InnerBundleInfo::SetInnerModuleAtomicResizeable(const std::string &moduleName, bool resizeable)
+{
+    if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+        APP_LOGE("innerBundleInfo does not contain the module");
+        return false;
+    }
+    innerModuleInfos_.at(moduleName).resizeable = resizeable;
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
