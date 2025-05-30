@@ -503,6 +503,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     supportedModes = parcel.ReadInt32();
     appStartup = Str16ToStr8(parcel.ReadString16());
     codeLanguage = parcel.ReadString();
+    abilityStageCodeLanguage = parcel.ReadString();
 
     int32_t reqCapabilitiesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqCapabilitiesSize);
@@ -695,6 +696,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportedModes);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appStartup));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, abilityStageCodeLanguage);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqCapabilities.size());
     for (auto &reqCapability : reqCapabilities) {
@@ -844,7 +846,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_ABILITY_SRC_ENTRY_DELEGATOR, hapModuleInfo.abilitySrcEntryDelegator},
         {HAP_MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR, hapModuleInfo.abilityStageSrcEntryDelegator},
         {HAP_MODULE_INFO_APP_STARTUP, hapModuleInfo.appStartup},
-        {Constants::CODE_LANGUAGE, hapModuleInfo.codeLanguage}
+        {Constants::CODE_LANGUAGE, hapModuleInfo.codeLanguage},
+        {Constants::ABILITY_STAGE_CODE_LANGUAGE, hapModuleInfo.abilityStageCodeLanguage}
     };
 }
 
@@ -1258,6 +1261,12 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         Constants::CODE_LANGUAGE,
         hapModuleInfo.codeLanguage,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::ABILITY_STAGE_CODE_LANGUAGE,
+        hapModuleInfo.abilityStageCodeLanguage,
         false,
         parseResult);
     if (parseResult != ERR_OK) {

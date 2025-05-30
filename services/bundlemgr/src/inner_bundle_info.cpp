@@ -386,6 +386,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_COLOR_MODE, info.colorMode},
         {MODULE_DISTRO, info.distro},
         {Constants::CODE_LANGUAGE, info.codeLanguage},
+        {Constants::ABILITY_STAGE_CODE_LANGUAGE, info.abilityStageCodeLanguage},
         {MODULE_DESCRIPTION, info.description},
         {MODULE_DESCRIPTION_ID, info.descriptionId},
         {MODULE_ICON, info.icon},
@@ -586,6 +587,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         Constants::CODE_LANGUAGE,
         info.codeLanguage,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::ABILITY_STAGE_CODE_LANGUAGE,
+        info.abilityStageCodeLanguage,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
@@ -1591,6 +1598,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.abilitySrcEntryDelegator = it->second.abilitySrcEntryDelegator;
     hapInfo.abilityStageSrcEntryDelegator = it->second.abilityStageSrcEntryDelegator;
     hapInfo.codeLanguage = it->second.codeLanguage;
+    hapInfo.abilityStageCodeLanguage = it->second.abilityStageCodeLanguage;
     return hapInfo;
 }
 
