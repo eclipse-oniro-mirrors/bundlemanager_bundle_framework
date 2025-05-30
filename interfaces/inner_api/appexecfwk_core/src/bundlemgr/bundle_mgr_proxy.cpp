@@ -6162,7 +6162,8 @@ ErrCode BundleMgrProxy::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &sho
         BundleMgrInterfaceCode::GET_ALL_SHORTCUT_INFO_FOR_SELF, data, shortcutInfos);
 }
 
-bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion, const int32_t patchVersion)
+bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
+    const int32_t patchVersion)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("BundleMgrProxy::GreatOrEqualTargetAPIVersion, major: %{public}d, minor: %{public}d, patch: %{public}d",
