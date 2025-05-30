@@ -32,6 +32,7 @@ namespace AppExecFwk {
 
 namespace {
     const int32_t ERR_CODE = 8388613;
+    const uint32_t ACCESS_TOKEN_ID = 1765341;
 }
 
 class ICleanCacheCallbackTest : public ICleanCacheCallback {
@@ -1147,6 +1148,22 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAbilityInfos_0100, Function | MediumTest | Le
     int32_t flags = 2;
     std::vector<AbilityInfo> abilityInfos;
     auto res = bundleMgrProxy.GetAbilityInfos(uri, flags, abilityInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetAppIdentifierAndAppIndex_0100
+ * @tc.name: test the GetAppIdentifierAndAppIndex
+ * @tc.desc: 1. system running normally
+ *           2. test GetAppIdentifierAndAppIndex
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAppIdentifierAndAppIndex_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string appIdentifier;
+    int32_t appIndex;
+    auto res = bundleMgrProxy.GetAppIdentifierAndAppIndex(ACCESS_TOKEN_ID, appIdentifier, appIndex);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 }

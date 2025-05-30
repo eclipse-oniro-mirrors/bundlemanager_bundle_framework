@@ -619,6 +619,33 @@ ErrCode BundleMgrHostImpl::GetNameAndIndexForUid(const int uid, std::string &bun
     return dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
 }
 
+ErrCode BundleMgrHostImpl::GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
+    std::string &appIdentifier, int32_t &appIndex)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("start GetAppIdentifierAndAppIndex, accessTokenId : %{public}d", accessTokenId);
+    bool permissionVerify = []() {
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            return true;
+        }
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+            BundlePermissionMgr::IsSystemApp()) {
+            return true;
+        }
+        return false;
+    }();
+    if (!permissionVerify) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetAppIdentifierAndAppIndex(accessTokenId, appIdentifier, appIndex);
+}
+
 ErrCode BundleMgrHostImpl::GetSimpleAppInfoForUid(
     const std::vector<std::int32_t> &uids, std::vector<SimpleAppInfo> &simpleAppInfo)
 {

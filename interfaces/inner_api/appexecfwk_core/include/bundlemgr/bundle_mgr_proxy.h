@@ -282,6 +282,15 @@ public:
      */
     virtual ErrCode GetNameAndIndexForUid(const int32_t uid, std::string &bundleName, int32_t &appIndex) override;
     /**
+     * @brief Obtains the appIdentifier and appIndex with the given access tokenId.
+     * @param accessTokenId Indicates the access tokenId of the application.
+     * @param appIdentifier Indicates the app identifier of the application.
+     * @param appIndex Indicates the app index of the application.
+     * @return Returns ERR_OK if execute success; returns errCode otherwise.
+     */
+    virtual ErrCode GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
+        std::string &appIdentifier, int32_t &appIndex) override;
+    /**
      * @brief Obtains the formal name associated with the given UID.
      * @param uids Indicates the uid list.
      * @param simpleAppInfo Indicates all of the obtained SimpleAppInfo objects.
