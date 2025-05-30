@@ -18,12 +18,13 @@
 
 #include <string>
 #include "parcel.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 struct BundleDistributionType : public Parcelable {
     std::string bundleName;
     std::string distributionType;
-    int32_t errCode;
+    int32_t errCode = 0;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static BundleDistributionType *Unmarshalling(Parcel &parcel);

@@ -3855,21 +3855,17 @@ ErrCode BundleMgrHostImpl::BatchGetSpecifiedDistributionType(const std::vector<s
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
-    for (std::string bundleName : bundleNames) {
+    for (const std::string &bundleName : bundleNames) {
         AppExecFwk::BundleDistributionType specifiedDistributionType;
         if (bundleName.empty()) {
-            specifiedDistributionTypes.push_back(specifiedDistributionType);
+            specifiedDistributionType.errCode = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+            specifiedDistributionTypes.emplace_back(specifiedDistributionType);
             continue;
         }
         ErrCode ret = dataMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType.distributionType);
         specifiedDistributionType.bundleName = bundleName;
-        if (ret == ERR_OK) {
-            specifiedDistributionType.errCode = ERR_OK;
-            specifiedDistributionTypes.push_back(specifiedDistributionType);
-        } else {
-            specifiedDistributionType.errCode = ret;
-            specifiedDistributionTypes.push_back(specifiedDistributionType);
-        }
+        specifiedDistributionType.errCode = ret;
+        specifiedDistributionTypes.emplace_back(specifiedDistributionType);
     }
     
     return ERR_OK;
