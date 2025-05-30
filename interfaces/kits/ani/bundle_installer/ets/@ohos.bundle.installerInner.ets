@@ -91,7 +91,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   native installPreexistingAppNative(bundleName: string, userId: number): void;
   native installPluginNative(hostBundleName: string, pluginFilePaths: Array<string>, pluginParam: installer.PluginParam): void;
   native uninstallPluginNative(hostBundleName: string, pluginBundleName: string, pluginParam: installer.PluginParam): void;
-  
+
   install(hapFilePaths: Array<string>, installParam?: installer.InstallParam): Promise<void> {
       let emptyParam = new InstallParamInner();
       let params = installParam ?? emptyParam;
@@ -100,8 +100,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -110,13 +110,13 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   install(hapFilePaths: Array<string>, installParam: installer.InstallParam, callback: AsyncCallback<void>): void {
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.installNative(hapFilePaths, installParam); }
-          
+
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
               let r = new BusinessError();
               callback(r, undefined);
-          }, (err: BusinessError): void => {
-              callback(err, undefined);
+          }, (err: Error): void => {
+              callback(err as BusinessError, undefined);
           });
       });
   }
@@ -125,13 +125,13 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let emptyParam = new InstallParamInner();
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.installNative(hapFilePaths, emptyParam); }
-          
+
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
               let r = new BusinessError();
               callback(r, undefined);
-          }, (err: BusinessError): void => {
-              callback(err, undefined);
+          }, (err: Error): void => {
+              callback(err as BusinessError, undefined);
           });
       });
   }
@@ -144,8 +144,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -154,13 +154,13 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   uninstall(bundleName: string, installParam: installer.InstallParam, callback: AsyncCallback<void>): void {
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.uninstallNative(bundleName, installParam); }
-          
+
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
               let r = new BusinessError();
               callback(r, undefined);
-          }, (err: BusinessError): void => {
-              callback(err, undefined);
+          }, (err: Error): void => {
+              callback(err as BusinessError, undefined);
           });
       });
   }
@@ -169,13 +169,13 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let emptyParam = new InstallParamInner();
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.uninstallNative(bundleName, emptyParam); }
-          
+
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
               let r = new BusinessError();
               callback(r, undefined);
-          }, (err: BusinessError): void => {
-              callback(err, undefined);
+          }, (err: Error): void => {
+              callback(err as BusinessError, undefined);
           });
       });
   }
@@ -188,8 +188,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -198,13 +198,13 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   recover(bundleName: string, installParam: installer.InstallParam, callback: AsyncCallback<void>): void {
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.recoverNative(bundleName, installParam); }
-          
+
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
               let r = new BusinessError();
               callback(r, undefined);
-          }, (err: BusinessError): void => {
-              callback(err, undefined);
+          }, (err: Error): void => {
+              callback(err as BusinessError, undefined);
           });
       });
   }
@@ -217,8 +217,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           p1.then(() => {
               let r = new BusinessError();
               callback(r, undefined);
-          }, (err: BusinessError): void => {
-              callback(err, undefined);
+          }, (err: Error): void => {
+              callback(err as BusinessError, undefined);
           });
       });
   }
@@ -229,8 +229,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -243,8 +243,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           p1.then(() => {
               let r = new BusinessError();
               callback(r, undefined);
-          }, (err: BusinessError): void => {
-              callback(err, undefined);
+          }, (err: Error): void => {
+              callback(err as BusinessError, undefined);
           });
       });
   }
@@ -257,8 +257,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -271,8 +271,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           p1.then(() => {
               let r = new BusinessError();
               callback(r, undefined);
-          }, (err: BusinessError): void => {
-              callback(err, undefined);
+          }, (err: Error): void => {
+              callback(err as BusinessError, undefined);
           });
       });
   }
@@ -281,13 +281,13 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let emptyParam = new InstallParamInner();
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.updateBundleForSelfNative(hapFilePaths, emptyParam); }
-          
+
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
               let r = new BusinessError();
               callback(r, undefined);
-          }, (err: BusinessError): void => {
-              callback(err, undefined);
+          }, (err: Error): void => {
+              callback(err as BusinessError, undefined);
           });
       });
   }
@@ -300,8 +300,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -313,8 +313,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -326,8 +326,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -341,8 +341,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then((appIdx: NullishType) => {
           resolve(appIdx as number);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -361,8 +361,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -375,8 +375,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -390,8 +390,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;
@@ -405,8 +405,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;

@@ -23,12 +23,12 @@ namespace shortcutManager {
   export native function AddDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): void;
 
   function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): Promise<void> {
-    let p:Promise<void> = new Promise<void>((resolve:(v:undefined) =>void, reject: (error: Object) => void):void=> {
+    let p:Promise<void> = new Promise<void>((resolve:(v:PromiseLike<void>) =>void, reject: (error: Error) => void):void=> {
       let cb = ():NullishType=>{shortcutManager.AddDesktopShortcutInfo(shortcutInfo, userId);return undefined;}
       let p1 = taskpool.execute(cb);
       p1.then(():void =>  {
-        resolve(undefined);
-      }, (err: Object): void => {
+        resolve(Promise.resolve());
+      }, (err: Error): void => {
         let br = err as BusinessError<void>;
         reject(br);
       });
@@ -39,12 +39,12 @@ namespace shortcutManager {
   export native function DeleteDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): void;
 
   function deleteDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): Promise<void> {
-    let p:Promise<void> = new Promise<void>((resolve:(v:undefined) =>void, reject: (error: Object) => void):void=> {
+    let p:Promise<void> = new Promise<void>((resolve:(v:PromiseLike<void>) =>void, reject: (error: Error) => void):void=> {
       let cb = ():NullishType=>{shortcutManager.DeleteDesktopShortcutInfo(shortcutInfo, userId);return undefined;}
       let p1 = taskpool.execute(cb);
       p1.then(():void =>  {
-        resolve(undefined);
-      }, (err: Object): void => {
+        resolve(Promise.resolve());
+      }, (err: Error): void => {
         let br = err as BusinessError<void>;
         reject(br);
       });
