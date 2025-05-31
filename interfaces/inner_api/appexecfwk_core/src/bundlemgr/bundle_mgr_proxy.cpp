@@ -4036,7 +4036,7 @@ ErrCode BundleMgrProxy::BatchGetSpecifiedDistributionType(const std::vector<std:
         APP_LOGE("fail to BatchGetBundleInfo due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteInt32(bundleNames.size())) {
+    if (!data.WriteInt32(static_cast<int32_t>(bundleNames.size()))) {
         APP_LOGE("fail to BatchGetBundleInfo due to write bundle name count fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
