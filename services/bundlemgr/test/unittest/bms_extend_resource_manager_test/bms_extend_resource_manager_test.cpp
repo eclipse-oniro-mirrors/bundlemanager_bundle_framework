@@ -22,6 +22,7 @@
 
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_resource_process.h"
 #include "dynamic_icon_info.h"
 #include "extend_resource_manager_host_impl.h"
 #include "installd/installd_service.h"
@@ -29,6 +30,7 @@
 #include "mock_status_receiver.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
+
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -1635,5 +1637,96 @@ HWTEST_F(BmsExtendResourceManagerTest, ProcessDynamicIconForOta_0001, Function |
     if (item != dataMgr->bundleInfos_.end()) {
         dataMgr->bundleInfos_.erase(item);
     }
+}
+
+/**
+ * @tc.number: EnableDynamicIcon_0010
+ * @tc.name: test EnableDynamicIcon
+ * @tc.desc: 1.EnableDynamic test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, EnableDynamicIcon_0010, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.curDynamicIconModule = BUNDLE_NAME;
+    cloneInfo.appIndex = 1;
+    InnerBundleUserInfo userInfo;
+    userInfo.curDynamicIconModule = BUNDLE_NAME2;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    InnerBundleInfo info;
+    info.AddInnerBundleUserInfo(userInfo);
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    ExtendResourceManagerHostImpl impl;
+    auto ret = impl.EnableDynamicIcon(emptyStr, emptyStr);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ret = impl.EnableDynamicIcon(TEST_BUNDLE, emptyStr);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    ret = impl.EnableDynamicIcon(TEST_BUNDLE, TEST_MODULE);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: DisableDynamicIcon_0010
+ * @tc.name: test DisableDynamicIcon
+ * @tc.desc: 1.EnableDynamic test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, DisableDynamicIcon_0010, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string emptyStr;
+    auto ret = impl.EnableDynamicIcon(emptyStr, emptyStr);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ret = impl.EnableDynamicIcon(TEST_BUNDLE, emptyStr);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    ret = impl.EnableDynamicIcon(TEST_BUNDLE, TEST_MODULE);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CheckWhetherDynamicIconNeedProcess_0001
+ * @tc.name: Test CheckWhetherDynamicIconNeedProcess
+ * @tc.desc: 1.CheckWhetherDynamicIconNeedProcess
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CheckWhetherDynamicIconNeedProcess_0001, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, -1);
+    EXPECT_TRUE(ret);
+
+    ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, USER_ID);
+    EXPECT_TRUE(ret);
+
+    ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
+    EXPECT_TRUE(ret);
+
+    ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME2, USER_ID);
+    bool isPreSetTheme = true;
+    bool isThemeExist = BundleResourceProcess::CheckThemeType(BUNDLE_NAME2, USER_ID, isPreSetTheme);
+    if (isThemeExist && !isPreSetTheme) {
+        EXPECT_TRUE(ret);
+    } else {
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: CheckWhetherDynamicIconNeedProcess_0002
+ * @tc.name: Test CheckWhetherDynamicIconNeedProcess
+ * @tc.desc: 1.CheckWhetherDynamicIconNeedProcess
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CheckWhetherDynamicIconNeedProcess_0002, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    setuid(20020001);
+    bool ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
+    EXPECT_TRUE(ret);
 }
 } // OHOS

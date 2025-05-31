@@ -82,6 +82,10 @@ const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/b
 const std::string HAP_NOT_EXIST = "not exist";
 const std::string HAP_NO_ICON = "/data/test/resource/bms/accesstoken_bundle/bmsThirdBundle2.hap";
 const std::string BUNDLE_NAME_NO_ICON = "com.third.hiworld.example1";
+const std::string THEME_FILE_PATH = "/data/test/resource/bms/theme_description_test.json";
+const std::string THEME_A_FLAG = "/data/service/el1/public/themes/100/a/app/flag";
+const std::string THEME_A_ICON_MMS = "/data/service/el1/public/themes/100/a/app/icons/com.ohos.mms";
+const std::string THEME_B_ICON_MMS = "/data/service/el1/public/themes/100/b/app/icons/com.ohos.mms";
 // test layered image
 const std::string BUNDLE_NAME_LAYERED_IMAGE = "com.example.thumbnailtest";
 const std::string LAYERED_IMAGE_HAP_PATH = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
@@ -5274,6 +5278,121 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0229, Function | SmallTest
     EXPECT_EQ(ans, ERR_OK);
     ans = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
     EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: IsPreSetTheme_0010
+ * Function: IsPreSetTheme
+ * @tc.name: test IsPreSetTheme
+ * @tc.desc: 1. system running normally
+ *           2. test IsPreSetTheme
+ */
+HWTEST_F(BmsBundleResourceTest, IsPreSetTheme_0010, Function | SmallTest | Level0)
+{
+    bool isPreSetTheme = BundleResourceProcess::IsPreSetTheme("");
+    EXPECT_TRUE(isPreSetTheme);
+
+    std::ofstream file;
+    file.open(THEME_FILE_PATH, ios::out);
+    file << "{}" << endl;
+    file.close();
+
+    isPreSetTheme = BundleResourceProcess::IsPreSetTheme(THEME_FILE_PATH);
+    EXPECT_TRUE(isPreSetTheme);
+}
+
+/**
+ * @tc.number: IsPreSetTheme_0020
+ * Function: IsPreSetTheme
+ * @tc.name: test IsPreSetTheme
+ * @tc.desc: 1. system running normally
+ *           2. test IsPreSetTheme
+ */
+HWTEST_F(BmsBundleResourceTest, IsPreSetTheme_0020, Function | SmallTest | Level0)
+{
+    std::ofstream file;
+    file.open(THEME_FILE_PATH, ios::out);
+    file << "{\"origin\":\"preset\"}" << endl;
+    file.close();
+
+    bool isPreSetTheme = BundleResourceProcess::IsPreSetTheme(THEME_FILE_PATH);
+    EXPECT_TRUE(isPreSetTheme);
+}
+
+/**
+ * @tc.number: IsPreSetTheme_0030
+ * Function: IsPreSetTheme
+ * @tc.name: test IsPreSetTheme
+ * @tc.desc: 1. system running normally
+ *           2. test IsPreSetTheme
+ */
+HWTEST_F(BmsBundleResourceTest, IsPreSetTheme_0030, Function | SmallTest | Level0)
+{
+    std::ofstream file;
+    file.open(THEME_FILE_PATH, ios::out);
+    file << "{\"origin\":\"online\"}" << endl;
+    file.close();
+
+    bool isPreSetTheme = BundleResourceProcess::IsPreSetTheme(THEME_FILE_PATH);
+    EXPECT_FALSE(isPreSetTheme);
+}
+
+/**
+ * @tc.number: CheckThemeType_0010
+ * Function: CheckThemeType
+ * @tc.name: test CheckThemeType
+ * @tc.desc: 1. system running normally
+ *           2. test CheckThemeType
+ */
+HWTEST_F(BmsBundleResourceTest, CheckThemeType_0010, Function | SmallTest | Level0)
+{
+    bool isPreSetTheme = true;
+    // theme not exist
+    bool ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME_NOT_EXIST, USERID, isPreSetTheme);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(isPreSetTheme);
+}
+
+/**
+ * @tc.number: CheckThemeType_0020
+ * Function: CheckThemeType
+ * @tc.name: test CheckThemeType
+ * @tc.desc: 1. system running normally
+ *           2. test CheckThemeType
+ */
+HWTEST_F(BmsBundleResourceTest, CheckThemeType_0020, Function | SmallTest | Level0)
+{
+    bool isPreSetTheme = true;
+    // theme not exist
+    bool ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME_NOT_EXIST, -1, isPreSetTheme);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(isPreSetTheme);
+}
+
+/**
+ * @tc.number: CheckThemeType_0030
+ * Function: CheckThemeType
+ * @tc.name: test CheckThemeType
+ * @tc.desc: 1. system running normally
+ *           2. test CheckThemeType
+ */
+HWTEST_F(BmsBundleResourceTest, CheckThemeType_0030, Function | SmallTest | Level0)
+{
+    bool isPreSetTheme = true;
+    bool ret = BundleResourceProcess::CheckThemeType("com.ohos.mms", USERID, isPreSetTheme);
+    if (access(THEME_A_FLAG.c_str(), F_OK) == 0) {
+        if (access(THEME_A_ICON_MMS.c_str(), F_OK) == 0) {
+            EXPECT_TRUE(ret);
+        } else {
+            EXPECT_FALSE(ret);
+        }
+    } else {
+        if (access(THEME_A_ICON_MMS.c_str(), F_OK) == 0) {
+            EXPECT_TRUE(ret);
+        } else {
+            EXPECT_FALSE(ret);
+        }
+    }
 }
 #endif
 

@@ -22,6 +22,7 @@
 #include "bundle_permission_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "bundle_resource/bundle_resource_manager.h"
+#include "bundle_resource/bundle_resource_process.h"
 #include "bundle_resource/bundle_resource_parser.h"
 #include "bundle_resource/resource_info.h"
 #endif
@@ -456,13 +457,16 @@ ErrCode ExtendResourceManagerHostImpl::EnableDynamicIcon(
     ExtendResourceInfo extendResourceInfo;
     ErrCode ret = GetExtendResourceInfo(bundleName, moduleName, extendResourceInfo, userId, appIndex);
     CHECK_RESULT(ret, "GetExtendResourceInfo failed %{public}d");
-    if (!ParseBundleResource(bundleName, extendResourceInfo, userId, appIndex)) {
+    bool isNeedToProcessDynamicIcon = CheckWhetherDynamicIconNeedProcess(bundleName, userId);
+    if (isNeedToProcessDynamicIcon && !ParseBundleResource(bundleName, extendResourceInfo, userId, appIndex)) {
         APP_LOGE("%{public}s no extend Resources", bundleName.c_str());
         return ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED;
     }
 
     SaveCurDynamicIcon(bundleName, moduleName, userId, appIndex);
-    SendBroadcast(bundleName, true, userId, appIndex);
+    if (isNeedToProcessDynamicIcon) {
+        SendBroadcast(bundleName, true, userId, appIndex);
+    }
     return ERR_OK;
 }
 
@@ -610,8 +614,10 @@ ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bun
     }
 
     SaveCurDynamicIcon(bundleName, "", userId, appIndex);
-    (void)ResetBundleResourceIcon(bundleName, userId, appIndex);
-    SendBroadcast(bundleName, false, userId, appIndex);
+    if (CheckWhetherDynamicIconNeedProcess(bundleName, userId)) {
+        (void)ResetBundleResourceIcon(bundleName, userId, appIndex);
+        SendBroadcast(bundleName, false, userId, appIndex);
+    }
     return ERR_OK;
 }
 
@@ -881,6 +887,30 @@ bool ExtendResourceManagerHostImpl::CheckAcrossUserPermission(const int32_t user
         return false;
     }
     return true;
+}
+
+bool ExtendResourceManagerHostImpl::CheckWhetherDynamicIconNeedProcess(
+    const std::string &bundleName, const int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    int32_t currentUserId = userId;
+    if (currentUserId == Constants::UNSPECIFIED_USERID) {
+        if (BundlePermissionMgr::IsNativeTokenType()) {
+            currentUserId = AccountHelper::GetCurrentActiveUserId();
+        } else {
+            currentUserId = BundleUtil::GetUserIdByCallingUid();
+        }
+    }
+    bool isPreSetTheme = true;
+    if (BundleResourceProcess::CheckThemeType(bundleName, currentUserId, isPreSetTheme) && !isPreSetTheme) {
+        APP_LOGW("online theme first, no need to process -n %{public}s -u %{public}d dynamic icon",
+            bundleName.c_str(), currentUserId);
+        return false;
+    }
+    return true;
+#else
+    return true;
+#endif
 }
 } // AppExecFwk
 } // namespace OHOS
