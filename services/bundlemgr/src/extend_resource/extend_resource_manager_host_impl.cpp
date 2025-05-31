@@ -634,6 +634,7 @@ bool ExtendResourceManagerHostImpl::ResetBundleResourceIcon(const std::string &b
         }
         if (!manager->AddResourceInfoByBundleName(bundleName, currentUserId)) {
             APP_LOGE("No default icon, bundleName:%{public}s", bundleName.c_str());
+            return false;
         }
         return true;
     }
