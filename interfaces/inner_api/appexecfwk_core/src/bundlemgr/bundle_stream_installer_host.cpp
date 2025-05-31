@@ -97,6 +97,17 @@ ErrCode BundleStreamInstallerHost::HandleCreatePgoFileStream(MessageParcel &data
     return ERR_OK;
 }
 
+ErrCode BundleStreamInstallerHost::HandleCreateExtProfileFileStream(MessageParcel &data, MessageParcel &reply)
+{
+    std::string fileName = data.ReadString();
+    int32_t fd = CreateExtProfileFileStream(fileName);
+    if (!reply.WriteFileDescriptor(fd)) {
+        LOG_E(BMS_TAG_INSTALLER, "write fd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleStreamInstallerHost::HandleInstall(MessageParcel &data, MessageParcel &reply)
 {
     if (!Install()) {
@@ -129,6 +140,10 @@ void BundleStreamInstallerHost::Init()
     funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_PGO_FILE_STREAM),
         [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
             return this->HandleCreatePgoFileStream(data, reply);
+        });
+    funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_EXT_PROFILE_FILE_STREAM),
+        [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
+            return this->HandleCreateExtProfileFileStream(data, reply);
         });
 }
 } // AppExecFwk

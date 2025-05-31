@@ -838,6 +838,7 @@ private:
     ErrCode RecoverOnDemandInstallBundle(const std::string &bundleName,
         const InstallParam &installParam, int32_t &uid);
     void PrintStartWindowIconId(const InnerBundleInfo &info);
+    bool ProcessExtProfile(const InstallParam &installParam);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

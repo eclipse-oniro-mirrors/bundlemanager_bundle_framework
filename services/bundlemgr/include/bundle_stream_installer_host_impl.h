@@ -38,6 +38,7 @@ public:
     virtual int32_t CreateSignatureFileStream(const std::string &moduleName, const std::string &fileName) override;
     virtual int32_t CreateSharedBundleStream(const std::string &bundleName, uint32_t sharedBundleIdx) override;
     virtual int32_t CreatePgoFileStream(const std::string &moduleName, const std::string &fileName) override;
+    virtual int32_t CreateExtProfileFileStream(const std::string &fileName) override;
     virtual bool Install() override;
 
     virtual uint32_t GetInstallerId() const override;
@@ -55,6 +56,7 @@ private:
     std::vector<int32_t> streamFdVec_;
     std::vector<std::string> originHapPaths_;
     InstallParam installParam_;
+    std::string tempExtProfileDir_;
 };
 } // AppExecFwk
 } // OHOS
