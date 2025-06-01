@@ -4346,6 +4346,7 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, 
     eventInfo.versionCode = bundleInfo.versionCode;
     eventInfo.errCode = errorCode;
     eventInfo.isPreInstallApp = bundleInfo.isPreInstallApp;
+    eventInfo.callingUid = IPCSkeleton::GetCallingUid();
     EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
 }
 
