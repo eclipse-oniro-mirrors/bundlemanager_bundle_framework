@@ -27,7 +27,7 @@ using testing::_;
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t FUNCTION_SIZE_OF_STREAM_INSTALL_HOST = 5;
+const int32_t FUNCTION_SIZE_OF_STREAM_INSTALL_HOST = 6;
 const std::string TEST_FILE_NAME = "/data/test/test.hap";
 } // namespace
 
