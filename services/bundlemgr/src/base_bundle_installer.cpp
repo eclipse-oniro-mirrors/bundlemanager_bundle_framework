@@ -6685,6 +6685,7 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
                 return ERR_APPEXECFWK_ADD_BUNDLE_ERROR;
             }
         }
+        PrintStartWindowIconId(info);
         return ERR_OK;
     }
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, info, false)) {
@@ -6697,7 +6698,18 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
         LOG_W(BMS_TAG_INSTALLER, "save mark failed, -n:%{public}s", bundleName_.c_str());
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
+    PrintStartWindowIconId(info);
     return ERR_OK;
+}
+
+void BaseBundleInstaller::PrintStartWindowIconId(const InnerBundleInfo &info)
+{
+    const auto &abilityMap = info.GetInnerAbilityInfos();
+    for (const auto &ability : abilityMap) {
+        const auto &abilityInfo = ability.second;
+        APP_LOGI("startWindowIconId %{public}s_%{public}s_%{public}s_%{public}d", abilityInfo.bundleName.c_str(),
+            abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(), abilityInfo.startWindowIconId);
+    }
 }
 
 bool BaseBundleInstaller::HasDriverExtensionAbility(const std::string &bundleName)
