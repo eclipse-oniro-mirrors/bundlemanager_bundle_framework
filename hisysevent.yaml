@@ -181,6 +181,8 @@ BUNDLE_STATE_CHANGE:
   ABILITY_NAME: {type: STRING, desc: abilityName}
   TYPE: {type: STRING, desc: application or ability}
   STATE: {type: STRING, desc: isEnable}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  APP_INDEX: {type: INT32, desc: app index}
 
 BUNDLE_CLEAN_CACHE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle clean cache}
@@ -294,3 +296,11 @@ USER_DATA_SIZE:
    REMAIN_PARTITION_SIZE: {type: UINT64, desc: Remaining size of the partition}
    FILE_OR_FOLDER_PATH: {type: STRING, arrsize: 100, desc: File or folder path}
    FILE_OR_FOLDER_SIZE: {type: UINT64, arrsize: 100, desc: File or folder size}
+
+DEFAULT_APP:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: default application}
+  ACTION_TYPE: {type: INT32, desc: action type}
+  USERID: {type: INT32, desc: current userId}
+  CALLING_NAME: {type: STRING, desc: calling name}
+  WANT: {type: STRING, desc: want}
+  UTD: {type: STRING, desc: utd}

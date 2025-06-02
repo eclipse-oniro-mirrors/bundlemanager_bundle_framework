@@ -242,6 +242,18 @@ void EventReport::ReportDataPartitionUsageEvent()
     EventReport::SendSystemEvent(BMSEventType::DATA_PARTITION_USAGE_EVENT, eventInfo);
 }
 
+void EventReport::SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const std::string& callingName,
+    const std::string& want, const std::string& utd)
+{
+    EventInfo eventInfo;
+    eventInfo.actionType = static_cast<int32_t>(actionType);
+    eventInfo.userId = userId;
+    eventInfo.callingName = callingName;
+    eventInfo.want = want;
+    eventInfo.utd = utd;
+    EventReport::SendSystemEvent(BMSEventType::DEFAULT_APP, eventInfo);
+}
+
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
 {
 #ifdef HISYSEVENT_ENABLE

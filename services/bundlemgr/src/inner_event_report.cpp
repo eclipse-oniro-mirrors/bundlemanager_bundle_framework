@@ -48,6 +48,7 @@ constexpr const char* QUERY_OF_CONTINUE_TYPE = "QUERY_OF_CONTINUE_TYPE";
 constexpr const char* BMS_DISK_SPACE = "BMS_DISK_SPACE";
 constexpr const char* APP_CONTROL_RULE = "APP_CONTROL_RULE";
 constexpr const char* DB_ERROR = "DB_ERROR";
+constexpr const char* DEFAULT_APP = "DEFAULT_APP";
 
 // event params
 const char* EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -93,6 +94,8 @@ const char* COMPONENT_NAME_KEY = "COMPONENT_NAME";
 const char* PARTITION_NAME_KEY = "PARTITION_NAME";
 const char* REMAIN_PARTITION_SIZE_KEY = "REMAIN_PARTITION_SIZE";
 const char* USER_DATA_SIZE = "USER_DATA_SIZE";
+const char* EVENT_PARAM_WANT = "WANT";
+const char* EVENT_PARAM_UTD = "UTD";
 
 const char* FREE_INSTALL_TYPE = "FreeInstall";
 const char* PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -307,6 +310,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::DB_ERROR,
             [](const EventInfo& eventInfo) {
                 InnerSendDbErrorEvent(eventInfo);
+            } },
+        { BMSEventType::DEFAULT_APP,
+            [](const EventInfo& eventInfo) {
+                InnerSendDefaultAppEvent(eventInfo);
             } },
     };
 
@@ -703,6 +710,18 @@ void InnerEventReport::InnerSendDataPartitionUsageEvent(const EventInfo& eventIn
         REMAIN_PARTITION_SIZE_KEY, eventInfo.partitionSize,
         FILE_OR_FOLDER_PATH, eventInfo.filePath,
         FILE_OR_FOLDER_SIZE, eventInfo.fileSize);
+}
+
+void InnerEventReport::InnerSendDefaultAppEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        DEFAULT_APP,
+        HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_CALLING_NAME, eventInfo.callingName,
+        EVENT_PARAM_ACTION_TYPE, eventInfo.actionType,
+        EVENT_PARAM_WANT, eventInfo.want,
+        EVENT_PARAM_UTD, eventInfo.utd);
 }
 
 template<typename... Types>
