@@ -26,6 +26,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_verify_mgr.h"
+#include "extend_resource_manager_host_impl.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -1893,5 +1894,18 @@ HWTEST_F(BmsBundlePermissionFalseTest, GetAppIdentifierAndAppIndex_0001, Functio
     int32_t appIndex;
     auto testRet = bundleMgrHostImpl_->GetAppIdentifierAndAppIndex(ACCESS_TOKEN_ID, appIdentifier, appIndex);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CheckWhetherDynamicIconNeedProcess_1000
+ * @tc.name: Test CheckWhetherDynamicIconNeedProcess
+ * @tc.desc: 1.CheckWhetherDynamicIconNeedProcess
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, CheckWhetherDynamicIconNeedProcess_1000, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    // IsNativeTokenType false
+    bool ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
+    EXPECT_TRUE(ret);
 }
 } // OHOS

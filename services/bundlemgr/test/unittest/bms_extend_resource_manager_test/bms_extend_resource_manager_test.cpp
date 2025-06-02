@@ -31,7 +31,6 @@
 #include "parcel_macro.h"
 #include "string_ex.h"
 
-
 using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
@@ -1646,29 +1645,51 @@ HWTEST_F(BmsExtendResourceManagerTest, ProcessDynamicIconForOta_0001, Function |
  */
 HWTEST_F(BmsExtendResourceManagerTest, EnableDynamicIcon_0010, Function | SmallTest | Level1)
 {
-    ExtendResourceManagerHostImpl impl;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
-    InnerBundleCloneInfo cloneInfo;
-    cloneInfo.curDynamicIconModule = BUNDLE_NAME;
-    cloneInfo.appIndex = 1;
-    InnerBundleUserInfo userInfo;
-    userInfo.curDynamicIconModule = BUNDLE_NAME2;
-    userInfo.bundleUserInfo.userId = USER_ID;
-    userInfo.cloneInfos["1"] = cloneInfo;
     InnerBundleInfo info;
-    info.AddInnerBundleUserInfo(userInfo);
+    info.SetCurDynamicIconModule(BUNDLE_NAME);
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = BUNDLE_NAME;
+    info.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
     dataMgr->bundleInfos_[BUNDLE_NAME] = info;
 
     ExtendResourceManagerHostImpl impl;
-    auto ret = impl.EnableDynamicIcon(emptyStr, emptyStr);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    auto ret = impl.EnableDynamicIcon(BUNDLE_NAME, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED);
 
-    ret = impl.EnableDynamicIcon(TEST_BUNDLE, emptyStr);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    auto item = dataMgr->bundleInfos_.find(BUNDLE_NAME);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+    }
+}
 
-    ret = impl.EnableDynamicIcon(TEST_BUNDLE, TEST_MODULE);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+/**
+ * @tc.number: EnableDynamicIcon_0020
+ * @tc.name: test EnableDynamicIcon
+ * @tc.desc: 1.EnableDynamic test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, EnableDynamicIcon_0020, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.SetCurDynamicIconModule(BUNDLE_NAME);
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = BUNDLE_NAME;
+    extendResourceInfo.iconId = 16777217;
+    extendResourceInfo.filePath = BUNDLE_PATH;
+    info.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    ExtendResourceManagerHostImpl impl;
+    auto ret = impl.EnableDynamicIcon(BUNDLE_NAME, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto item = dataMgr->bundleInfos_.find(BUNDLE_NAME);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+    }
 }
 
 /**

@@ -86,6 +86,7 @@ const std::string THEME_FILE_PATH = "/data/test/resource/bms/theme_description_t
 const std::string THEME_A_FLAG = "/data/service/el1/public/themes/100/a/app/flag";
 const std::string THEME_A_ICON_MMS = "/data/service/el1/public/themes/100/a/app/icons/com.ohos.mms";
 const std::string THEME_B_ICON_MMS = "/data/service/el1/public/themes/100/b/app/icons/com.ohos.mms";
+const std::string THEME_TEST_BUNDLE_NAME = "com.ohos.mms";
 // test layered image
 const std::string BUNDLE_NAME_LAYERED_IMAGE = "com.example.thumbnailtest";
 const std::string LAYERED_IMAGE_HAP_PATH = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
@@ -5379,7 +5380,7 @@ HWTEST_F(BmsBundleResourceTest, CheckThemeType_0020, Function | SmallTest | Leve
 HWTEST_F(BmsBundleResourceTest, CheckThemeType_0030, Function | SmallTest | Level0)
 {
     bool isPreSetTheme = true;
-    bool ret = BundleResourceProcess::CheckThemeType("com.ohos.mms", USERID, isPreSetTheme);
+    bool ret = BundleResourceProcess::CheckThemeType(THEME_TEST_BUNDLE_NAME, USERID, isPreSetTheme);
     if (access(THEME_A_FLAG.c_str(), F_OK) == 0) {
         if (access(THEME_A_ICON_MMS.c_str(), F_OK) == 0) {
             EXPECT_TRUE(ret);
@@ -5392,6 +5393,26 @@ HWTEST_F(BmsBundleResourceTest, CheckThemeType_0030, Function | SmallTest | Leve
         } else {
             EXPECT_FALSE(ret);
         }
+    }
+}
+
+/**
+ * @tc.number: UpdateCloneBundleResourceInfo_0010
+ * Function: UpdateCloneBundleResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateCloneBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, UpdateCloneBundleResourceInfo_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->UpdateCloneBundleResourceInfo(THEME_TEST_BUNDLE_NAME, USERID, 1,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
+        EXPECT_TRUE(ret);
+        ret = manager->DeleteCloneBundleResourceInfo(THEME_TEST_BUNDLE_NAME, 1);
+        EXPECT_TRUE(ret);
     }
 }
 #endif

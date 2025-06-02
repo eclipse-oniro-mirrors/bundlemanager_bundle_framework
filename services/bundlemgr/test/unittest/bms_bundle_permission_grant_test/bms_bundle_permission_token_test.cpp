@@ -25,6 +25,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_verify_mgr.h"
+#include "extend_resource_manager_host_impl.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -266,5 +267,18 @@ HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1200, Functi
     HapModuleInfo info;
     auto ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionTokenTest_1300
+ * @tc.name: Test CheckWhetherDynamicIconNeedProcess
+ * @tc.desc: 1.CheckWhetherDynamicIconNeedProcess
+ */
+HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1300, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    // no bundle resource
+    bool ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
+    EXPECT_TRUE(ret);
 }
 } // OHOS
