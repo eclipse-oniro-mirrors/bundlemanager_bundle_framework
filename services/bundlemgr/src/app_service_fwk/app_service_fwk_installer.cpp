@@ -311,7 +311,7 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
         APP_LOGI_NOFUNC("fwk not need install");
         return ERR_OK;
     }
-    
+
     ScopeGuard stateGuard([&] {
         dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_SUCCESS);
         dataMgr_->EnableBundle(bundleName_);
@@ -936,7 +936,7 @@ ErrCode AppServiceFwkInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), Constants::DEFAULT_USERID);
     if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo)) {
         APP_LOGE(
-            "add module %{public}s to innerBundleInfo %{public}s failed", moduleName.c_str(), bundleName_.c_str());
+            "add module %{public}s to %{public}s failed", moduleName.c_str(), bundleName_.c_str());
         return ERR_APPEXECFWK_ADD_MODULE_ERROR;
     }
     return ERR_OK;
