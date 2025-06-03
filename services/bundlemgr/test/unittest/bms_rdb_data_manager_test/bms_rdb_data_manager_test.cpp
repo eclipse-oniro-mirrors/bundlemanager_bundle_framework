@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,8 @@
 #define private public
 
 #include <gtest/gtest.h>
+#include <sys/stat.h>
+#include <sys/statfs.h>
 
 #include "bundle_constants.h"
 #include "bundle_data_storage_rdb.h"
@@ -25,6 +27,7 @@
 #include "first_install_data_mgr_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
 #include "rdb_data_manager.h"
+#include "bundle_file_util.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -46,6 +49,7 @@ const uint32_t TEST_VERSION = 1;
 const std::string TEST_BUNDLE_NAME_TWO = "com.test.rdbtwo";
 const std::string TEST_NAME_TWO = "NameTwo";
 const uint32_t TEST_VERSION_TWO = 2;
+constexpr const char* PARTITION_NAME = "/data";
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 const int32_t TEST_USERID = 500;
 const std::string TEST_DEFAULT_APP_TYPE = "IMAGE";
@@ -690,6 +694,24 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1200, Function | SmallTest | Leve
 
     rdbStore = rdbDataManager->GetRdbStore();
     ASSERT_NE(rdbStore, nullptr);
+}
+
+/**
+ * @tc.number: RdbDataManager_1300
+ * @tc.name: test ReportReportRdbPartitionUsageEvent
+ * @tc.desc: 1.test ReportReportRdbPartitionUsageEvent
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1300, Function | SmallTest | Level1)
+{
+    const char* partitionName = "/data";
+    const char* pathName = "/data/partition/test.hap";
+    std::unique_ptr<BundleDataStorageRdb> dataStorage = std::make_unique<BundleDataStorageRdb>();
+    dataStorage->ReportReportRdbPartitionUsageEvent();
+    BundleFileUtil::IsReportDataPartitionUsageEvent(partitionName);
+    uint64_t bytes = BundleFileUtil::GetFreeSpaceInBytes(partitionName);
+    EXPECT_NE (bytes, 0);
+    uint64_t size = BundleFileUtil::GetFileSize(pathName);
+    EXPECT_EQ(size, UINT64_MAX);
 }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP

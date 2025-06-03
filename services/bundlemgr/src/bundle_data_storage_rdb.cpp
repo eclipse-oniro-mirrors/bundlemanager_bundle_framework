@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,11 +16,14 @@
 #include "bundle_data_storage_rdb.h"
 
 #include "bundle_exception_handler.h"
+#include "bundle_file_util.h"
+#include "event_report.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
+constexpr const char* PARTITION_NAME = "/data";
 }
 BundleDataStorageRdb::BundleDataStorageRdb()
 {
@@ -104,9 +107,37 @@ void BundleDataStorageRdb::TransformStrToInfo(
     }
 }
 
+static void ReportReportRdbPartitionUsageEvent()
+{
+    if (!BundleFileUtil::IsReportDataPartitionUsageEvent(PARTITION_NAME)) {
+        APP_LOGE("fialed obtained the timing for HisEvent");
+        return;
+    }
+    const std::vector<std::string> paths = {
+        "/data/service/el1/public/bms/bundle_manager_service/bmsdb.db"
+    };
+    EventInfo eventInfo;
+    eventInfo.partitionSize = BundleFileUtil::GetFreeSpaceInBytes(PARTITION_NAME);
+    if (eventInfo.partitionSize == UINT64_MAX) {
+        APP_LOGE("fialed get free space for Hisevent condition");
+        return;
+    }
+    for (auto item : paths) {
+        auto useSize = BundleFileUtil::GetFileSize(item);
+        if (useSize == UINT64_MAX) {
+            APP_LOGE("fialed get the size of file or folder");
+            continue;
+        }
+        eventInfo.filePath.push_back(item);
+        eventInfo.fileSize.push_back(useSize);
+    }
+    EventReport::SendSystemEvent(BMSEventType::DATA_PARTITION_USAGE_EVENT, eventInfo);
+}
+
 void BundleDataStorageRdb::UpdateDataBase(std::map<std::string, InnerBundleInfo> &infos)
 {
     APP_LOGD("Begin to update database");
+    ReportReportRdbPartitionUsageEvent();
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
         return;
@@ -122,6 +153,7 @@ void BundleDataStorageRdb::UpdateDataBase(std::map<std::string, InnerBundleInfo>
 
 bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo)
 {
+    ReportReportRdbPartitionUsageEvent();
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
         return false;

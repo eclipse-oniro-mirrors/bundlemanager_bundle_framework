@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@
 #include "ipc_skeleton.h"
 #include "parameters.h"
 #include "xcollie_helper.h"
+#include "bundle_file_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -30,11 +31,35 @@ constexpr const char* INSTALL_TASK = "Install_Task";
 constexpr const char* UNINSTALL_TASK = "Uninstall_Task";
 constexpr const char* RECOVER_TASK = "Recover_Task";
 constexpr const char* THREAD_POOL_NAME = "InstallerThreadPool";
+constexpr const char* RETAIL_MODE_KEY = "const.dfx.enable_retail";
+constexpr const char* PARTITION_NAME = "/data";
+constexpr const char* DIR_DATA_SERVICE = "/data/service";
+constexpr const char* DIR_ELS[] = {"/el1/", "/el2/", "/el3/", "/el4/", "/el5/"};
+constexpr const char* DIR_BACKUP = "/backup/bundles";
+constexpr const char* DIR_SHARE = "/share";
+constexpr const char* DIR_ACCOUNT_DATA = "/hmdfs/account/data";
+constexpr const char* DIR_NON_ACCOUNT = "/hmdfs/non_account/data";
+constexpr const char* DIR_CLOUD_DATA = "/hmdfs/cloud/data";
+constexpr const char* DIR_LOCAL = "/data/local/shader_cache/local";
+constexpr const char* DIR_DATA_APP = "/data/app";
+constexpr const char* DIR_APP_BUNDLE = "/bundle/public";
+constexpr const char* DIR_BASE = "/base";
+constexpr const char* DIR_DATA_BASE = "/database";
+constexpr const char* DIR_ARK_PRO = "/ark-profile";
+constexpr const char* DIR_SHADER_CACHE = "/shader_cache";
+constexpr const char* DIR_LOG = "/log";
+constexpr const char* DIR_SHARE_FILES = "/sharefiles";
+constexpr const char* DIR_GROUP = "/group";
+constexpr const char* DIR_APP_LOCAL = "/app/local";
+constexpr const char* DIR_CLOUD = "/cloud";
+constexpr const char* DIR_CLOUD_COMMON = "/cloud/common";
+constexpr const char* DIR_DATA_LOCAL_ARK = "/data/local/ark-cache";
 constexpr unsigned int TIME_OUT_SECONDS = 60 * 25;
 constexpr int8_t MAX_TASK_NUMBER = 10;
 constexpr int8_t RETAIL_MODE_THREAD_NUMBER = 1;
 constexpr int8_t DELAY_INTERVAL_SECONDS = 60;
 static std::atomic<int32_t> g_taskCounter = 0;
+constexpr int32_t DATA_USER_ID = 0;
 }
 
 BundleInstallerManager::BundleInstallerManager()
@@ -51,6 +76,77 @@ BundleInstallerManager::~BundleInstallerManager()
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "destroy bundle installer manager instance");
 }
 
+static void GetDataPartitionUsageDirs(std::vector<std::string> &dataDirs)
+{
+    std::set<int32_t> userIds;
+    userIds.insert(DATA_USER_ID);
+    AccountHelper::QueryAllCreatedOsAccounts(userIds);
+    dataDirs.push_back(DIR_LOCAL);
+    dataDirs.push_back(DIR_DATA_LOCAL_ARK);
+    for (auto userId : userIds) {
+        for (auto eli : DIR_ELS) {
+            dataDirs.push_back(
+                std::string(DIR_DATA_APP).append(eli).append(std::to_string(userId)).append(DIR_BASE));
+            dataDirs.push_back(
+                std::string(DIR_DATA_APP).append(eli).append(std::to_string(userId)).append(DIR_DATA_BASE));
+            dataDirs.push_back(
+                std::string(DIR_DATA_APP).append(eli).append(std::to_string(userId)).append(DIR_GROUP));
+            dataDirs.push_back(
+                std::string(DIR_DATA_APP).append(eli).append(DIR_APP_BUNDLE));
+            dataDirs.push_back(
+                std::string(DIR_DATA_APP).append(eli).append(std::to_string(userId)).append(DIR_LOG));
+            dataDirs.push_back(
+                std::string(DIR_DATA_APP).append(eli).append(std::to_string(userId)).append(DIR_SHARE_FILES));
+            dataDirs.push_back(
+                std::string(DIR_DATA_SERVICE).append(eli).append(std::to_string(userId)).append(DIR_BACKUP));
+            dataDirs.push_back(
+                std::string(DIR_DATA_SERVICE).append(eli).append(std::to_string(userId)).append(DIR_ACCOUNT_DATA));
+            dataDirs.push_back(
+                std::string(DIR_DATA_SERVICE).append(eli).append(std::to_string(userId)).append(DIR_ACCOUNT_DATA));
+            dataDirs.push_back(
+                std::string(DIR_DATA_SERVICE).append(eli).append(std::to_string(userId)).append(DIR_NON_ACCOUNT));
+            dataDirs.push_back(
+                std::string(DIR_DATA_SERVICE).append(eli).append(std::to_string(userId)).append(DIR_SHARE));
+            dataDirs.push_back(
+                std::string(DIR_APP_LOCAL).append(DIR_SHADER_CACHE).append(DIR_CLOUD));
+            dataDirs.push_back(
+                std::string(DIR_APP_LOCAL).append(DIR_SHADER_CACHE).append(DIR_CLOUD_COMMON));
+            dataDirs.push_back(
+                std::string(DIR_APP_LOCAL).append(DIR_ARK_PRO).append(std::to_string(userId)));
+        }
+    }
+    APP_LOGD("get data dirs count is %{public}zu", dataDirs.size());
+}
+
+static void ReportReportDataPartitionUsageEvent()
+{
+    if (!BundleFileUtil::IsReportDataPartitionUsageEvent(PARTITION_NAME)) {
+        APP_LOGE("get the timming of hisysevent fialed");
+        return;
+    }
+
+    EventInfo eventInfo;
+    eventInfo.partitionSize = BundleFileUtil::GetFreeSpaceInBytes(PARTITION_NAME);
+    if (eventInfo.partitionSize == UINT64_MAX) {
+        APP_LOGE("get the RemainPartitionSize of hisysevent fialed");
+        return;
+    }
+    std::vector<std::string> dataDirs;
+    GetDataPartitionUsageDirs(dataDirs);
+    for (auto &item : dataDirs) {
+        auto useSize = BundleFileUtil::GetFolderSizeInBytes(item);
+        if (useSize == UINT64_MAX) {
+            APP_LOGE("get the FileOrFolderSize of hisysevent fialed");
+            continue;
+        }
+
+        eventInfo.filePath.push_back(item);
+        eventInfo.fileSize.push_back(useSize);
+    }
+
+    EventReport::SendSystemEvent(BMSEventType::DATA_PARTITION_USAGE_EVENT, eventInfo);
+}
+
 void BundleInstallerManager::CreateInstallTask(
     const std::string &bundleFilePath, const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
@@ -62,6 +158,7 @@ void BundleInstallerManager::CreateInstallTask(
     auto task = [installer, bundleFilePath, installParam] {
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        ReportReportDataPartitionUsageEvent();
         installer->Install(bundleFilePath, installParam);
         g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
@@ -98,6 +195,7 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
     auto task = [installer, bundleFilePaths, installParam] {
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        ReportReportDataPartitionUsageEvent();
         installer->Install(bundleFilePaths, installParam);
         g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,6 +42,7 @@ constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 constexpr int PATH_MAX_SIZE = 256;
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr uint8_t MAX_HAP_NUMBER = 128;
+constexpr double LOW_PARTITION_SPACE_THRESHOLD = 0.1;
 } // namespace
 
 namespace OHOS {
@@ -256,6 +257,66 @@ bool BundleFileUtil::IsExistDir(const std::string &dirPath)
     }
 
     return S_ISDIR(result.st_mode);
+}
+
+uint64_t BundleFileUtil::GetFileSize(const std::string &filePath)
+{
+    if (filePath.empty()) {
+        APP_LOGE("input file path is empty.");
+        return UINT64_MAX;
+    }
+
+    struct stat fileInfo = { 0 };
+    if (stat(filePath.c_str(), &fileInfo) != 0) {
+        APP_LOGE("call stat error: %{public}d %{public}s", errno, filePath.c_str());
+        return UINT64_MAX;
+    }
+
+    if (!S_ISREG(fileInfo.st_mode)) {
+        APP_LOGE("path is not a regular file: %{public}s", filePath.c_str());
+        return UINT64_MAX;
+    }
+
+    return fileInfo.st_size;
+}
+
+uint64_t BundleFileUtil::GetFreeSpaceInBytes(const std::string &partitionName)
+{
+    struct statvfs stst;
+    if (statvfs(partitionName.c_str(), &stst) != 0) {
+        APP_LOGE("failed to get free space for partition %{public}s", partitionName.c_str());
+        return UINT64_MAX;
+    }
+
+    return static_cast<uint64_t>(stst.f_bavail) * stst.f_frsize;
+}
+
+uint64_t BundleFileUtil::GetFolderSizeInBytes(const std::string &pathName)
+{
+    struct statvfs stst;
+    if (statvfs(pathName.c_str(), &stst) != 0) {
+        APP_LOGE("failed to get space info for partition %{public}s",
+            pathName.c_str());
+        return UINT64_MAX;
+    }
+
+    uint64_t usedBlocks = static_cast<uint64_t>(stst.f_blocks) - stst.f_bfree;
+    return usedBlocks * stst.f_frsize;
+}
+
+bool BundleFileUtil::IsReportDataPartitionUsageEvent(const std::string &path)
+{
+    int64_t remainPartitionSize = BundleFileUtil::GetFreeSpaceInBytes(path);
+    int64_t fileOrFolderSize = BundleFileUtil::GetFolderSizeInBytes(path);
+    if (fileOrFolderSize == 0) {
+        return false;
+    }
+    double ratio = static_cast<double>(remainPartitionSize) / fileOrFolderSize;
+    if (ratio < LOW_PARTITION_SPACE_THRESHOLD) {
+        APP_LOGW("start hisysevent and partitionsize is smaller then 10%%");
+        return true;
+    }
+    return false;
 }
 } // AppExecFwk
 } // OHOS

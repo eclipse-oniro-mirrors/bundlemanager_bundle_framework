@@ -51,7 +51,8 @@ enum class BMSEventType : uint8_t {
     FREE_INSTALL_EVENT,
     BMS_DISK_SPACE,
     APP_CONTROL_RULE,
-    DB_ERROR
+    DB_ERROR,
+    DATA_PARTITION_USAGE_EVENT
 };
 
 enum class BundleEventType : uint8_t {
@@ -155,6 +156,7 @@ struct EventInfo {
     // only used in fault event
     ErrCode errCode = ERR_OK;
     int64_t costTimeSeconds = 0;
+    uint64_t partitionSize = 0;
     int64_t timeStamp = 0;
     int64_t freeSize = 0;
     int32_t errorCode = 0;
@@ -183,6 +185,7 @@ struct EventInfo {
     std::vector<std::string> hashValue;
     std::vector<std::string> totalBundleNames;
     std::vector<std::string> appIds;
+    std::vector<uint64_t> fileSize;
 
     void Reset()
     {
@@ -205,6 +208,7 @@ struct EventInfo {
         callingAppId.clear();
         callingBundleName.clear();
         filePath.clear();
+        fileSize.clear();
         hashValue.clear();
         fingerprint.clear();
         hideDesktopIcon = false;
@@ -216,6 +220,7 @@ struct EventInfo {
         compileResult = false;
         failureReason.clear();
         costTimeSeconds = 0;
+        partitionSize = 0;
         continueType.clear();
         sceneId = 0;
         processName.clear();

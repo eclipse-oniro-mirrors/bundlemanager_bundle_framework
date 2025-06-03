@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,8 @@
 #include <fstream>
 #include <future>
 #include <gtest/gtest.h>
+#include <sys/stat.h>
+#include <sys/statfs.h>
 
 #include "app_jump_control_rule.h"
 #include "application_info.h"
@@ -87,6 +89,9 @@ const std::string BUNDLE_NAME2 = "testBundleName";
 const std::string MODULE_NAME2 = "testModuleName";
 const std::string ABILITY_NAME = "testAbilityName";
 const char* DEVICE_ID = "deviceId";
+const std::string FILEPATH = "/data/test/bundle/test.hap";
+const std::string PARTITION_NAME = "/data";
+const std::string INVALPARTITION_NAME = "dataerrortest";
 
 void to_json(nlohmann::json &jsonObject, const PreloadItem &preloadItem);
 void from_json(const nlohmann::json &jsonObject, PreloadItem &preloadItem);
@@ -755,6 +760,113 @@ HWTEST_F(BmsHapModuleInfoTest, DeleteDir_0200, Function | SmallTest | Level0)
     errno = EACCES;
     auto ret1 = BundleFileUtil::DeleteDir(dirPath);
     EXPECT_TRUE(ret1);
+}
+
+/**
+ * @tc.number: BmsHapModuleInfoTest_GetFileSize_0100
+ * @tc.name: test GetFileSize when path is invalid or directory deletion fails.
+ */
+HWTEST_F(BmsHapModuleInfoTest, GetFileSize_0100, Function | SmallTest | Level0)
+{
+    uint64_t fileSize = BundleFileUtil::GetFileSize(FILEPATH);
+    EXPECT_EQ(fileSize, UINT64_MAX);
+    struct stat fileInfo = { 0 };
+    uint64_t fileInfoSize = stat(FILEPATH.c_str(), &fileInfo);
+    EXPECT_EQ(fileSize, fileInfoSize);
+    uint64_t fileModeSize = (S_ISREG(fileInfo.st_mode));
+    EXPECT_NE(fileModeSize, UINT64_MAX);
+    EXPECT_EQ(fileSize, UINT64_MAX);
+}
+
+/**
+ * @tc.number: BmsHapModuleInfoTest_GetFileSize_0200
+ * @tc.name: test GetFileSize when path is a valid directory.
+ */
+HWTEST_F(BmsHapModuleInfoTest, GetFileSize_0200, Function | SmallTest | Level0)
+{
+    std::string invalifilePath = "/dataerror/bundleerror/test.hap";
+    uint64_t fileSize1 = BundleFileUtil::GetFileSize(invalifilePath);
+    EXPECT_EQ(fileSize1, UINT64_MAX);
+    struct stat fileInfo1 = { 0 };
+    uint64_t fileInfoSize1 = stat(invalifilePath.c_str(), &fileInfo1);
+    EXPECT_EQ(fileSize1, fileInfoSize1);
+    uint64_t fileModeSize1 = (S_ISREG(fileInfo1.st_mode));
+    EXPECT_NE(fileModeSize1, UINT64_MAX);
+    EXPECT_EQ(fileSize1, UINT64_MAX);
+}
+
+/**
+ * @tc.number: BmsHapModuleInfoTest_GetFreeSpaceInBytes_0300
+ * @tc.name: test GetFreeSpaceInBytes when path is invalid or directory deletion fails.
+ */
+HWTEST_F(BmsHapModuleInfoTest, GetFreeSpaceInBytes_0300, Function | SmallTest | Level0)
+{
+    bool existResult = BundleFileUtil::IsExistDir(PARTITION_NAME);
+    EXPECT_NE(existResult, UINT64_MAX);
+    struct statvfs stat;
+    uint64_t freeSize = statvfs(PARTITION_NAME.c_str(), &stat);
+    EXPECT_NE(freeSize, UINT64_MAX);
+    uint64_t freeSpaceInBytes = BundleFileUtil::GetFreeSpaceInBytes(PARTITION_NAME);
+    EXPECT_NE(freeSpaceInBytes, UINT64_MAX);
+}
+
+/**
+ * @tc.number: BmsHapModuleInfoTest_GetFreeSpaceInBytes_0400
+ * @tc.name: test GetFreeSpaceInBytes when path is a valid directory.
+ */
+HWTEST_F(BmsHapModuleInfoTest, GetFreeSpaceInBytes_0400, Function | SmallTest | Level0)
+{
+    bool existResult1 = BundleFileUtil::IsExistDir(INVALPARTITION_NAME);
+    EXPECT_NE(existResult1, UINT64_MAX);
+    struct statvfs stat;
+    uint64_t freeSize1 = statvfs(INVALPARTITION_NAME.c_str(), &stat);
+    EXPECT_EQ(freeSize1, UINT64_MAX);
+    uint64_t freeSpaceInBytes1 = BundleFileUtil::GetFreeSpaceInBytes(INVALPARTITION_NAME);
+    EXPECT_EQ(freeSpaceInBytes1, UINT64_MAX);
+}
+
+/**
+ * @tc.number: BmsHapModuleInfoTest_GetFolderSizeInBytes_0500
+ * @tc.name: test GetFolderSizeInBytes when path is invalid or directory deletion fails.
+ */
+HWTEST_F(BmsHapModuleInfoTest, GetFolderSizeInBytes_0500, Function | SmallTest | Level0)
+{
+    bool existResult2 = BundleFileUtil::IsExistDir(PARTITION_NAME);
+    EXPECT_NE(existResult2, UINT64_MAX);
+    struct statvfs stat;
+    uint64_t folderSize = statvfs(PARTITION_NAME.c_str(), &stat);
+    ASSERT_NE(folderSize, UINT64_MAX);
+    uint64_t folderSpaceInBytes = BundleFileUtil::GetFolderSizeInBytes(PARTITION_NAME);
+    EXPECT_EQ(folderSpaceInBytes, (static_cast<uint64_t>(stat.f_blocks) - stat.f_bfree) * stat.f_frsize);
+}
+
+/**
+ * @tc.number: BmsHapModuleInfoTest_GetFolderSizeInBytes_0600
+ * @tc.name: test GetFolderSizeInBytes when path is a valid directory.
+ */
+HWTEST_F(BmsHapModuleInfoTest, GetFolderSizeInBytes_0600, Function | SmallTest | Level0)
+{
+    bool existResult3 = BundleFileUtil::IsExistDir(INVALPARTITION_NAME);
+    EXPECT_NE(existResult3, UINT64_MAX);
+    struct statvfs stat;
+    uint64_t folderSize1 = statvfs(INVALPARTITION_NAME.c_str(), &stat);
+    ASSERT_EQ(folderSize1, UINT64_MAX);
+    uint64_t folderSpaceInBytes1 = BundleFileUtil::GetFolderSizeInBytes(INVALPARTITION_NAME);
+    EXPECT_NE(folderSpaceInBytes1, (static_cast<uint64_t>(stat.f_blocks) - stat.f_bfree) * stat.f_frsize);
+}
+
+/**
+ * @tc.number: BmsHapModuleInfoTest_IsReportDataPartitionUsageEvent_0700
+ * @tc.name: test IsReportDataPartitionUsageEvent when path is invalid or directory deletion fails.
+ */
+HWTEST_F(BmsHapModuleInfoTest, IsReportDataPartitionUsageEvent_0700, Function | SmallTest | Level0)
+{
+    struct statvfs stst;
+    uint64_t remainPartitionSize = static_cast<uint64_t>(stst.f_blocks) * stst.f_frsize;
+    uint64_t fileOrFolderSize = static_cast<uint64_t>(stst.f_bavail) * stst.f_frsize;
+    EXPECT_EQ(fileOrFolderSize, false);
+    double ratio = static_cast<double>(remainPartitionSize) / fileOrFolderSize;
+    EXPECT_TRUE (ratio);
 }
 }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,8 @@
 #include <gtest/gtest.h>
 #include <map>
 #include <string>
+#include <sys/stat.h>
+#include <sys/statfs.h>
 #include "mock_status_receiver.h"
 
 #define private public
@@ -25,6 +27,7 @@
 #include "bundle_mgr_service.h"
 #include "event_runner.h"
 #include "inner_event.h"
+#include "bundle_file_util.h"
 #undef public
 #undef protected
 using namespace testing::ext;
@@ -39,7 +42,7 @@ const std::string BUNDLE_NAME = "com.ohos.launcher";
 const std::string MODULE_PACKAGE = "entry";
 const int32_t USERID = 100;
 const std::string EMPTY_STRING = "";
-}  // namespace
+} //namespace
 
 class BundleInstallerManagerTest : public testing::Test {
 public:
@@ -205,6 +208,72 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_020, TestSize.Le
     bundleInstallerManager->CreateUninstallAndRecoverTask(bundleName, installParam, receiver);
     ErrCode result = receiver->GetResultCode();
     EXPECT_NE(ERR_OK, result);
+}
+
+/**
+ * @tc.number: BundleInstallerManagerTest_021
+ * @tc.name: test ReportReportDataPartitionUsageEvent
+ * @tc.desc: Verify function ReportReportDataPartitionUsageEvent is called,
+ * receiver->GetResultCode() return value is ERR_OK
+ */
+HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_021, TestSize.Level1)
+{
+    const std::string partitionName = "DataErrorPath";
+    BundleInstallerManager::ReportReportDataPartitionUsageEvent();
+    bool result = BundleFileUtil::IsReportDataPartitionUsageEvent(partitionName);
+    EXPECT_EQ(result, false);
+    uint64_t bytes = BundleFileUtil::GetFreeSpaceInBytes(partitionName);
+    EXPECT_EQ(bytes, UINT64_MAX);
+    const std::string path = "datatest";
+    uint64_t size = BundleFileUtil::GetFolderSizeInBytes(path);
+    EXPECT_EQ(size, UINT64_MAX);
+}
+
+/**
+ * @tc.number: BundleInstallerManagerTest_022
+ * @tc.name: test GetDataPartitionUsageDirs
+ * @tc.desc: Verify function GetDataPartitionUsageDirs is called, receiver->GetResultCode() return value is ERR_OK
+ */
+HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_022, TestSize.Level1)
+{
+    const std::string partitionName = "DataErrorPath";
+    std::vector<std::string> dataDirs;
+    BundleInstallerManager::GetDataPartitionUsageDirs(dataDirs);
+    EXPECT_FALSE(dataDirs.empty());
+}
+
+/**
+ * @tc.number: BundleInstallerManagerTest_023
+ * @tc.name: test GetDataPartitionUsageDirs
+ * @tc.desc: Verify function GetDataPartitionUsageDirs is not called, receiver->GetResultCode() return value is ERR_OK
+ */
+HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_023, TestSize.Level1)
+{
+    const std::string partitionName = "/data";
+    std::vector<std::string> dataDirs;
+    BundleInstallerManager::GetDataPartitionUsageDirs(dataDirs);
+    EXPECT_FALSE(dataDirs.empty());
+}
+
+/**
+ * @tc.number: BundleInstallerManagerTest_024
+ * @tc.name: test ReportReportDataPartitionUsageEvent
+ * @tc.desc: Verify function ReportReportDataPartitionUsageEvent is not called, receiver->GetResultCode() return value is ERR_OK
+ */
+HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_024, TestSize.Level1)
+{
+    const std::string invalidPartition = "Invalid/Partition/Path";
+    const std::string nonExistPath = "non/exist/path";
+    const std::string validPath = "/data";
+    BundleInstallerManager::ReportReportDataPartitionUsageEvent();
+    bool reportResult = BundleFileUtil::IsReportDataPartitionUsageEvent(invalidPartition);
+    EXPECT_FALSE(reportResult);
+    uint64_t freeSpace = BundleFileUtil::GetFreeSpaceInBytes(invalidPartition);
+    EXPECT_EQ(freeSpace, UINT64_MAX);
+    uint64_t folderSize = BundleFileUtil::GetFolderSizeInBytes(nonExistPath);
+    EXPECT_EQ(folderSize, UINT64_MAX);
+    uint64_t validSize = BundleFileUtil::GetFolderSizeInBytes(validPath);
+    EXPECT_NE(validSize, UINT64_MAX);
 }
 }  // AppExecFwk
 }  // OHOS
