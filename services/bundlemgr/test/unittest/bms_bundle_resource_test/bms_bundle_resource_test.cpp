@@ -5282,60 +5282,78 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0229, Function | SmallTest
 }
 
 /**
- * @tc.number: IsPreSetTheme_0010
- * Function: IsPreSetTheme
- * @tc.name: test IsPreSetTheme
+ * @tc.number: IsOnlineTheme_0010
+ * Function: IsOnlineTheme
+ * @tc.name: test IsOnlineTheme
  * @tc.desc: 1. system running normally
- *           2. test IsPreSetTheme
+ *           2. test IsOnlineTheme
  */
-HWTEST_F(BmsBundleResourceTest, IsPreSetTheme_0010, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleResourceTest, IsOnlineTheme_0010, Function | SmallTest | Level0)
 {
-    bool isPreSetTheme = BundleResourceProcess::IsPreSetTheme("");
-    EXPECT_TRUE(isPreSetTheme);
+    bool isOnlineTheme = BundleResourceProcess::IsOnlineTheme("");
+    EXPECT_FALSE(isOnlineTheme);
 
     std::ofstream file;
     file.open(THEME_FILE_PATH, ios::out);
     file << "{}" << endl;
     file.close();
 
-    isPreSetTheme = BundleResourceProcess::IsPreSetTheme(THEME_FILE_PATH);
-    EXPECT_TRUE(isPreSetTheme);
+    isOnlineTheme = BundleResourceProcess::IsOnlineTheme(THEME_FILE_PATH);
+    EXPECT_FALSE(isOnlineTheme);
 }
 
 /**
- * @tc.number: IsPreSetTheme_0020
- * Function: IsPreSetTheme
- * @tc.name: test IsPreSetTheme
+ * @tc.number: IsOnlineTheme_0020
+ * Function: IsOnlineTheme
+ * @tc.name: test IsOnlineTheme
  * @tc.desc: 1. system running normally
- *           2. test IsPreSetTheme
+ *           2. test IsOnlineTheme
  */
-HWTEST_F(BmsBundleResourceTest, IsPreSetTheme_0020, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleResourceTest, IsOnlineTheme_0020, Function | SmallTest | Level0)
 {
     std::ofstream file;
     file.open(THEME_FILE_PATH, ios::out);
     file << "{\"origin\":\"preset\"}" << endl;
     file.close();
 
-    bool isPreSetTheme = BundleResourceProcess::IsPreSetTheme(THEME_FILE_PATH);
-    EXPECT_TRUE(isPreSetTheme);
+    bool isOnlineTheme = BundleResourceProcess::IsOnlineTheme(THEME_FILE_PATH);
+    EXPECT_FALSE(isOnlineTheme);
 }
 
 /**
- * @tc.number: IsPreSetTheme_0030
- * Function: IsPreSetTheme
- * @tc.name: test IsPreSetTheme
+ * @tc.number: IsOnlineTheme_0030
+ * Function: IsOnlineTheme
+ * @tc.name: test IsOnlineTheme
  * @tc.desc: 1. system running normally
- *           2. test IsPreSetTheme
+ *           2. test IsOnlineTheme
  */
-HWTEST_F(BmsBundleResourceTest, IsPreSetTheme_0030, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleResourceTest, IsOnlineTheme_0030, Function | SmallTest | Level0)
 {
     std::ofstream file;
     file.open(THEME_FILE_PATH, ios::out);
     file << "{\"origin\":\"online\"}" << endl;
     file.close();
 
-    bool isPreSetTheme = BundleResourceProcess::IsPreSetTheme(THEME_FILE_PATH);
-    EXPECT_FALSE(isPreSetTheme);
+    bool isOnlineTheme = BundleResourceProcess::IsOnlineTheme(THEME_FILE_PATH);
+    EXPECT_TRUE(isOnlineTheme);
+}
+
+/**
+ * @tc.number: IsOnlineTheme_0040
+ * Function: IsOnlineTheme
+ * @tc.name: test IsOnlineTheme
+ * @tc.desc: 1. system running normally
+ *           2. test IsOnlineTheme
+ */
+HWTEST_F(BmsBundleResourceTest, IsOnlineTheme_0030, Function | SmallTest | Level0)
+{
+    std::ofstream file;
+    file.open(THEME_FILE_PATH, ios::out);
+    file << "{origin" << endl;
+    file.close();
+
+    bool isOnlineTheme = BundleResourceProcess::IsOnlineTheme(THEME_FILE_PATH);
+    EXPECT_FALSE(isOnlineTheme);
 }
 
 /**
@@ -5347,11 +5365,11 @@ HWTEST_F(BmsBundleResourceTest, IsPreSetTheme_0030, Function | SmallTest | Level
  */
 HWTEST_F(BmsBundleResourceTest, CheckThemeType_0010, Function | SmallTest | Level0)
 {
-    bool isPreSetTheme = true;
+    bool isOnlineTheme = false;
     // theme not exist
-    bool ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME_NOT_EXIST, USERID, isPreSetTheme);
+    bool ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME_NOT_EXIST, USERID, isOnlineTheme);
     EXPECT_FALSE(ret);
-    EXPECT_TRUE(isPreSetTheme);
+    EXPECT_FALSE(isOnlineTheme);
 }
 
 /**
@@ -5363,11 +5381,11 @@ HWTEST_F(BmsBundleResourceTest, CheckThemeType_0010, Function | SmallTest | Leve
  */
 HWTEST_F(BmsBundleResourceTest, CheckThemeType_0020, Function | SmallTest | Level0)
 {
-    bool isPreSetTheme = true;
+    bool isOnlineTheme = true;
     // theme not exist
-    bool ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME_NOT_EXIST, -1, isPreSetTheme);
+    bool ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME_NOT_EXIST, -1, isOnlineTheme);
     EXPECT_FALSE(ret);
-    EXPECT_TRUE(isPreSetTheme);
+    EXPECT_FALSE(isOnlineTheme);
 }
 
 /**
@@ -5379,8 +5397,8 @@ HWTEST_F(BmsBundleResourceTest, CheckThemeType_0020, Function | SmallTest | Leve
  */
 HWTEST_F(BmsBundleResourceTest, CheckThemeType_0030, Function | SmallTest | Level0)
 {
-    bool isPreSetTheme = true;
-    bool ret = BundleResourceProcess::CheckThemeType(THEME_TEST_BUNDLE_NAME, USERID, isPreSetTheme);
+    bool isOnlineTheme = false;
+    bool ret = BundleResourceProcess::CheckThemeType(THEME_TEST_BUNDLE_NAME, USERID, isOnlineTheme);
     if (access(THEME_A_FLAG.c_str(), F_OK) == 0) {
         if (access(THEME_A_ICON_MMS.c_str(), F_OK) == 0) {
             EXPECT_TRUE(ret);

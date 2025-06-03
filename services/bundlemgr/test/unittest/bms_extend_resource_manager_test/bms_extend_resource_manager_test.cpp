@@ -1729,9 +1729,9 @@ HWTEST_F(BmsExtendResourceManagerTest, CheckWhetherDynamicIconNeedProcess_0001, 
     EXPECT_TRUE(ret);
 
     ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME2, USER_ID);
-    bool isPreSetTheme = true;
-    bool isThemeExist = BundleResourceProcess::CheckThemeType(BUNDLE_NAME2, USER_ID, isPreSetTheme);
-    if (isThemeExist && !isPreSetTheme) {
+    bool isOnlineTheme = false;
+    bool isThemeExist = BundleResourceProcess::CheckThemeType(BUNDLE_NAME2, USER_ID, isOnlineTheme);
+    if (isThemeExist && isOnlineTheme) {
         EXPECT_TRUE(ret);
     } else {
         EXPECT_FALSE(ret);

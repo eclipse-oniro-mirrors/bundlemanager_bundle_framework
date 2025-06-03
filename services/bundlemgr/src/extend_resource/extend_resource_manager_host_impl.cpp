@@ -901,8 +901,8 @@ bool ExtendResourceManagerHostImpl::CheckWhetherDynamicIconNeedProcess(
             currentUserId = BundleUtil::GetUserIdByCallingUid();
         }
     }
-    bool isPreSetTheme = true;
-    if (BundleResourceProcess::CheckThemeType(bundleName, currentUserId, isPreSetTheme) && !isPreSetTheme) {
+    bool isOnlineTheme = false;
+    if (BundleResourceProcess::CheckThemeType(bundleName, currentUserId, isOnlineTheme) && isOnlineTheme) {
         APP_LOGW("online theme first, no need to process -n %{public}s -u %{public}d dynamic icon",
             bundleName.c_str(), currentUserId);
         return false;

@@ -804,8 +804,8 @@ bool BundleResourceManager::UpdateCloneBundleResourceInfo(const std::string &bun
         return false;
     }
     // check theme
-    bool isPreSetTheme = true;
-    if (BundleResourceProcess::CheckThemeType(bundleName, userId, isPreSetTheme) && !isPreSetTheme) {
+    bool isOnlineTheme = false;
+    if (BundleResourceProcess::CheckThemeType(bundleName, userId, isOnlineTheme) && isOnlineTheme) {
         return UpdateCloneBundleResourceInfo(bundleName, appIndex, type);
     }
     // Need to consider dynamic icons when user switching

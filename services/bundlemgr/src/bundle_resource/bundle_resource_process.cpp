@@ -224,9 +224,9 @@ bool BundleResourceProcess::GetDynamicIcon(
         return false;
     }
     // need check theme
-    bool isPreSetTheme = true;
-    if (BundleResourceProcess::CheckThemeType(innerBundleInfo.GetBundleName(), userId, isPreSetTheme) &&
-        !isPreSetTheme) {
+    bool isOnlineTheme = false;
+    if (BundleResourceProcess::CheckThemeType(innerBundleInfo.GetBundleName(), userId, isOnlineTheme) &&
+        isOnlineTheme) {
         APP_LOGW("-n %{public}s -u %{public}d exist dynamic icon, but online theme first",
             innerBundleInfo.GetBundleName().c_str(), resourceInfo.appIndex_);
         return false;
@@ -617,12 +617,12 @@ bool BundleResourceProcess::GetExtendResourceInfo(const std::string &bundleName,
 }
 
 bool BundleResourceProcess::CheckThemeType(
-    const std::string &bundleName, const int32_t userId, bool &isPresetTheme)
+    const std::string &bundleName, const int32_t userId, bool &isOnlineTheme)
 {
     if (BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A_FLAG)) {
         // flag exist in ""/data/service/el1/public/themes/<userId>/a/app/flag"
         if (BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + bundleName)) {
-            isPresetTheme = IsPreSetTheme(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A +
+            isOnlineTheme = IsOnlineTheme(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A +
                 THEME_DESCRIPTION_FILE);
             return true;
         }
@@ -631,7 +631,7 @@ bool BundleResourceProcess::CheckThemeType(
     }
     // flag exist in ""/data/service/el1/public/themes/<userId>/b/app/flag"
     if (BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + bundleName)) {
-        isPresetTheme = IsPreSetTheme(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B +
+        isOnlineTheme = IsOnlineTheme(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B +
             THEME_DESCRIPTION_FILE);
         return true;
     }
@@ -639,13 +639,13 @@ bool BundleResourceProcess::CheckThemeType(
     return false;
 }
 
-bool BundleResourceProcess::IsPreSetTheme(const std::string &themePath)
+bool BundleResourceProcess::IsOnlineTheme(const std::string &themePath)
 {
     // read description.json
     nlohmann::json jsonBuf;
     if (!BundleParser::ReadFileIntoJson(themePath, jsonBuf)) {
-        APP_LOGI("themePath %{public}s read failed, errno %{public}d", themePath.c_str(), errno);
-        return true;
+        APP_LOGW("themePath %{public}s read failed, errno %{public}d", themePath.c_str(), errno);
+        return false;
     }
     int32_t parseResult = ERR_OK;
     std::string themeType;
@@ -653,9 +653,9 @@ bool BundleResourceProcess::IsPreSetTheme(const std::string &themePath)
     BMSJsonUtil::GetStrValueIfFindKey(jsonBuf, jsonObjectEnd, THEME_KEY_ORIGIN, themeType, false, parseResult);
     if (themeType == THEME_KEY_THEME_TYPE_ONLINE) {
         APP_LOGI("online theme first");
-        return false;
+        return true;
     }
-    return true;
+    return false;
 }
 } // AppExecFwk
 } // OHOS
