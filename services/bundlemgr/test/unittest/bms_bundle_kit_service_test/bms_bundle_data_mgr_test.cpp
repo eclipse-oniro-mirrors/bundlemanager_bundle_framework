@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -4033,5 +4033,207 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAllShortcutInfoForSelf_0001, 
     ret = lcalBundleMgrHostImpl->GetAllShortcutInfoForSelf(shortcutInfos);
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BatchGetBundleStats_0100
+ * @tc.name: test BatchGetBundleStats
+ * @tc.desc: 1.Test the BatchGetBundleStats by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> bundleNames;
+    std::vector<BundleStorageStats> bundleStats;
+    ErrCode ret = hostImpl->BatchGetBundleStats(bundleNames, USERID, bundleStats);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BatchGetBundleStats_0200
+ * @tc.name: test BatchGetBundleStats
+ * @tc.desc: 1.Test the BatchGetBundleStats by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0200, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> bundleNames = {"com.ohos.systemui", "com.ohos.launcher"};
+    std::vector<BundleStorageStats> bundleStats;
+    ErrCode ret = hostImpl->BatchGetBundleStats(bundleNames, USERID, bundleStats);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BatchGetBundleStats_0300
+ * @tc.name: test BatchGetBundleStats
+ * @tc.desc: 1.Test the BatchGetBundleStats by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0300, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> bundleNames = {"com.ohos.systemui", "com.ohos.launcher"};
+    std::vector<BundleStorageStats> bundleStats;
+    ClearDataMgr();
+    ErrCode ret = hostImpl->BatchGetBundleStats(bundleNames, USERID, bundleStats);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BatchGetBundleStats_0400
+ * @tc.name: test BatchGetBundleStats
+ * @tc.desc: 1.Test the BatchGetBundleStats by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
+    std::vector<BundleStorageStats> bundleStats;
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    ErrCode res = GetBundleDataMgr()->BatchGetBundleStats(bundleNames, USERID, bundleStats);
+    EXPECT_EQ(res, ERR_OK);
+
+    GetBundleDataMgr()->multiUserIdsSet_.erase(USERID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: BatchGetBundleStats_0500
+ * @tc.name: test BatchGetBundleStats
+ * @tc.desc: 1.Test the BatchGetBundleStats by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0500, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
+    std::vector<BundleStorageStats> bundleStats;
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    ErrCode res = GetBundleDataMgr()->BatchGetBundleStats(bundleNames, USERID, bundleStats);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GetBundleDataMgr()->multiUserIdsSet_.erase(USERID);
+}
+
+/**
+ * @tc.number: BatchGetBundleStats_0600
+ * @tc.name: test BatchGetBundleStats
+ * @tc.desc: 1.Test the BatchGetBundleStats by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0600, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    InnerBundleInfo innerBundleInfo;
+    std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
+    std::vector<BundleStorageStats> bundleStats;
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->BatchGetBundleStats(bundleNames, USERID, bundleStats);
+    EXPECT_EQ(res, ERR_OK);
+
+    GetBundleDataMgr()->multiUserIdsSet_.erase(USERID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: BatchGetBundleStats_0700
+ * @tc.name: test BatchGetBundleStats
+ * @tc.desc: 1.Test the BatchGetBundleStats by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0700, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    InnerBundleInfo innerBundleInfo;
+    std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
+    std::vector<BundleStorageStats> bundleStats;
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->BatchGetBundleStats(bundleNames, USERID, bundleStats);
+    EXPECT_EQ(res, ERR_OK);
+
+    GetBundleDataMgr()->multiUserIdsSet_.erase(USERID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: BatchGetBundleStats_0800
+ * @tc.name: test BatchGetBundleStats
+ * @tc.desc: 1.Test the BatchGetBundleStats by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0800, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    InnerBundleInfo innerBundleInfo;
+    std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
+    std::vector<BundleStorageStats> bundleStats;
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->BatchGetBundleStats(bundleNames, USERID, bundleStats);
+    EXPECT_EQ(res, ERR_OK);
+
+    GetBundleDataMgr()->multiUserIdsSet_.erase(USERID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: BatchGetBundleStats_0900
+ * @tc.name: test BatchGetBundleStats
+ * @tc.desc: 1.Test the BatchGetBundleStats by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0900, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    InnerBundleInfo innerBundleInfo;
+    std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
+    std::vector<BundleStorageStats> bundleStats;
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->BatchGetBundleStats(bundleNames, USERID, bundleStats);
+    EXPECT_EQ(res, ERR_OK);
+
+    GetBundleDataMgr()->multiUserIdsSet_.erase(USERID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: BundleMgrHostHandleBatchGetBundleStats_0100
+ * @tc.name: BundleMgrHostHandleBatchGetBundleStats_0100
+ * @tc.desc: test BundleMgrHostHandleBatchGetBundleStats(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostHandleBatchGetBundleStats_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    auto ret = localBundleMgrHost->HandleBatchGetBundleStats(data, reply);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleMgrProxyBatchGetBundleStats_0100_0100
+ * @tc.name: BundleMgrProxyBatchGetBundleStats_0100_0100
+ * @tc.desc: test BundleMgrProxyBatchGetBundleStats_0100(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrProxyBatchGetBundleStats_0100, Function | MediumTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    std::shared_ptr<BundleMgrProxy> localBundleMgrProxy = std::make_shared<BundleMgrProxy>(remoteObject);
+    std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
+    std::vector<BundleStorageStats> bundleStats;
+    ErrCode ret = localBundleMgrProxy->BatchGetBundleStats(bundleNames, USERID, bundleStats);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 } // OHOS

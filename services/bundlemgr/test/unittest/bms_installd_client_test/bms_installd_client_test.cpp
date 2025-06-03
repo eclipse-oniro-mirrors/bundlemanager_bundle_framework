@@ -1744,5 +1744,47 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalld_LoadInstalls0001, TestSize.Level0)
     auto result = installClient_->LoadInstalls();
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
+
+/**
+ * @tc.number: BmsInstalldClientTest_BatchGetBundleStats_0100
+ * @tc.name: BatchGetBundleStats
+ * @tc.desc: Test whether BatchGetBundleStats is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_BatchGetBundleStats_0100, TestSize.Level1)
+{
+    const std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
+    std::vector<BundleStorageStats> bundleStats;
+    const std::unordered_map<std::string, int32_t> uidMap = {{"com.example.bundlekit.test", 10000}};
+    auto ret = installClient_->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_BatchGetBundleStats_0200
+ * @tc.name: BatchGetBundleStats
+ * @tc.desc: Test BatchGetBundleStats bundleNames is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_BatchGetBundleStats_0200, TestSize.Level1)
+{
+    const std::vector<std::string> bundleNames = {};
+    std::vector<BundleStorageStats> bundleStats;
+    const std::unordered_map<std::string, int32_t> uidMap = {{"com.example.bundlekit.test", 10000}};
+    auto ret = installClient_->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_BatchGetBundleStats_0300
+ * @tc.name: BatchGetBundleStats
+ * @tc.desc: Test BatchGetBundleStats uidMap is empty.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_BatchGetBundleStats_0300, TestSize.Level1)
+{
+    const std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
+    std::vector<BundleStorageStats> bundleStats;
+    const std::unordered_map<std::string, int32_t> uidMap = {};
+    auto ret = installClient_->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
 } // namespace AppExecFwk
 } // namespace OHOS

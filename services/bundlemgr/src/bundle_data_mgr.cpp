@@ -3988,6 +3988,77 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     return true;
 }
 
+ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
+    std::vector<BundleStorageStats> &bundleStats) const
+{
+    int32_t uid = -1;
+    std::unordered_map<std::string, int32_t> uidMap;
+    std::vector<std::string> bundleNameList = bundleNames;
+    std::vector<BundleStorageStats> bundleStatsList;
+    if (!HasUserId(userId)) {
+        APP_LOGE("userId %{public}d not exist.", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (auto bundleName = bundleNameList.begin(); bundleName != bundleNameList.end();) {       
+            const auto infoItem = bundleInfos_.find(*bundleName);
+            InnerBundleUserInfo userInfo;
+            if (infoItem == bundleInfos_.end() ||
+                !infoItem->second.GetInnerBundleUserInfo(infoItem->second.GetResponseUserId(userId), userInfo)) {
+                BundleStorageStats stats;
+                stats.bundleName = *bundleName;  
+                bundleName = bundleNameList.erase(bundleName);
+                stats.errCode = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+                bundleStatsList.push_back(stats);
+                continue;
+            }
+            uidMap.emplace(*bundleName, userInfo.uid);
+            ++bundleName;
+        }
+    }
+    ErrCode ret = InstalldClient::GetInstance()->BatchGetBundleStats(
+        bundleNameList, userId, uidMap, bundleStats);
+    if (ret != ERR_OK) {
+        APP_LOGE("getStats failed");
+        return ret;
+    }
+    if (!bundleStatsList.empty()) {
+        bundleStats.insert(bundleStats.end(), bundleStatsList.begin(), bundleStatsList.end());
+    }
+    for (const auto &name : bundleNameList) {
+        GetPreBundleSize(name, bundleStats);
+    }
+    return ERR_OK;
+}
+
+void BundleDataMgr::GetPreBundleSize(const std::string &name, std::vector<BundleStorageStats> &bundleStats) const
+{
+    auto statsIter = std::find_if(bundleStats.begin(), bundleStats.end(),
+        [&name](const BundleStorageStats &stats) { return stats.bundleName == name; });
+    if (statsIter == bundleStats.end()) {
+        return;
+    }
+    std::string hapPath;
+    bool getPreBundleSize = false;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        const auto infoItem = bundleInfos_.find(name);
+        if (infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
+            for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+                if (innerModuleInfo.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
+                    continue;
+                }
+                hapPath = innerModuleInfo.second.hapPath;
+                getPreBundleSize = true;
+            }
+        }
+    }
+    if (getPreBundleSize) {
+        statsIter->bundleStats[0] += BundleUtil::GetFileSize(hapPath);
+    }
+}
+
 void BundleDataMgr::GetBundleModuleNames(const std::string &bundleName,
     std::vector<std::string> &moduleNameList) const
 {
