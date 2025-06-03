@@ -40,7 +40,6 @@ namespace {
     constexpr const char* USER_ID = "userId";
     constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
     constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
-    constexpr const char* PARSE_START_OPTIONS = "parse StartOptions failed";
     constexpr const char* START_SHORTCUT = "StartShortcut";
 
     const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
