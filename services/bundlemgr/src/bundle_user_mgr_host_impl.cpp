@@ -143,7 +143,7 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
 {
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendCpuSceneEvent(ACCESSTOKEN_PROCESS_NAME, 1 << 1); // second scene
-    APP_LOGI("CreateNewUser user(%{public}d) start", userId);
+    APP_LOGW("CreateNewUser user(%{public}d) start", userId);
     BmsExtensionDataMgr bmsExtensionDataMgr;
     bool needToSkipPreBundleInstall = bmsExtensionDataMgr.IsNeedToSkipPreBundleInstall();
     if (needToSkipPreBundleInstall) {
@@ -166,7 +166,7 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
     } else {
         EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
     }
-    APP_LOGI("CreateNewUser end userId: (%{public}d)", userId);
+    APP_LOGW("CreateNewUser end userId: (%{public}d)", userId);
     return ERR_OK;
 }
 
@@ -192,7 +192,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBu
     }
 
     if (dataMgr->HasUserId(userId)) {
-        APP_LOGW("Has create user %{public}d", userId);
+        APP_LOGE("Has create user %{public}d", userId);
         ErrCode ret = InnerRemoveUser(userId, false); // no need lock
         if (ret != ERR_OK) {
             APP_LOGW("remove user %{public}d failed, error %{public}d", userId, ret);
@@ -520,6 +520,8 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
         installParam.isPreInstallApp = info.isPreInstallApp;
         installParam.installFlag = InstallFlag::NORMAL;
         installParam.isRemoveUser = true;
+        // if user is 100, no need to kill process
+        installParam.SetKillProcess(userId != Constants::START_USERID);
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.name, false));
         if (userReceiverImpl == nullptr) {
