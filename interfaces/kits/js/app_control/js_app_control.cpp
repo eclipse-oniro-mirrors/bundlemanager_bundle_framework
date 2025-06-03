@@ -1046,7 +1046,7 @@ void CreateDisposedType(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(DisposedType::BLOCK_ABILITY),
         &nBlockAbility));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BLOCK_ABILITY",
-        nBlockApplication));
+        nBlockAbility));
     napi_value nNonBlock;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(DisposedType::NON_BLOCK),
         &nNonBlock));
