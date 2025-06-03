@@ -16,19 +16,24 @@
 import { AsyncCallback, BusinessError } from '@ohos.base';
 import { ShortcutInfo as _ShortcutInfo, ShortcutWant as _ShortcutWant, ParameterItem as _ParameterItem } from 'bundleManager.ShortcutInfo';
 import { LauncherAbilityInfo } from 'bundleManager.LauncherAbilityInfo';
+import StartOptions from '@ohos.app.ability.StartOptions';
 
 export default namespace launcherBundleManager {
   loadLibrary("ani_launcher_bundle_manager.z");
 
-  export native function StartShortcutSync(shortcutInfo: ShortcutInfo): void;
+  export native function StartShortcutSync(shortcutInfo: ShortcutInfo, options: StartOptions): void;
   export native function GetShortcutInfoSync(bundleName: string, userId: number): Array<ShortcutInfo>;
   export native function GetLauncherAbilityInfoSync(bundleName: string, userId: number): Array<LauncherAbilityInfo>;
   export native function GetAllLauncherAbilityInfo(userId: number): Array<LauncherAbilityInfo>;
 
-  function startShortcut(shortcutInfo: ShortcutInfo): Promise<void> {
+  function startShortcut(shortcutInfo: ShortcutInfo, options?: StartOptions): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void): void => {
+      let startOptions : StartOptions = {};
+      if (options != undefined) {
+        startOptions = options;
+      }
       let cb = (): NullishType => {
-        launcherBundleManager.StartShortcutSync(shortcutInfo);
+        launcherBundleManager.StartShortcutSync(shortcutInfo, startOptions);
       }
       let p1 = taskpool.execute(cb);
       p1.then((): void => {

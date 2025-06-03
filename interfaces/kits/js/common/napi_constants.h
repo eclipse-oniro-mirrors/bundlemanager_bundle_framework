@@ -84,6 +84,7 @@ constexpr const char* RESOURCE_FLAGS = "resourceFlags";
 constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
 constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
     "ohos.permission.GET_INSTALLED_BUNDLE_LIST and ohos.permission.GET_BUNDLE_RESOURCES";
+constexpr const char* PARSE_START_OPTIONS = "parse StartOptions failed";
 constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
 constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityResourceInfo";
 constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
