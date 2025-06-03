@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -386,7 +386,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
     let emptyParam = new PluginParamInner();
     let params = pluginParam ?? emptyParam;
     let p = new Promise<void> ((resolve: (v: undefined) => void, reject: (error: BusinessError) => void): void => {
-      let execFun = (): void => { return this.installPluginNative(hostBundleName, pluginFilePaths, emptyParam); }
+      let execFun = (): void => { return this.installPluginNative(hostBundleName, pluginFilePaths, params); }
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
@@ -401,7 +401,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
     let emptyParam = new PluginParamInner();
     let params = pluginParam ?? emptyParam;
     let p = new Promise<void> ((resolve: (v: undefined) => void, reject: (error: BusinessError) => void): void => {
-      let execFun = (): void => { return this.uninstallPluginNative(hostBundleName, pluginBundleName, emptyParam); }
+      let execFun = (): void => { return this.uninstallPluginNative(hostBundleName, pluginBundleName, params); }
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);

@@ -256,7 +256,7 @@ static bool ParseBundleNameAndInstallParam(ani_env* env, ani_string& aniBundleNa
 {
     bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
-        APP_LOGE("Bundle name is empty.");
+        APP_LOGE("Bundle name is empty");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
         return false;
     }
@@ -358,7 +358,7 @@ static bool ParseBundleNameAndFilePath(ani_env* env, ani_string aniBundleName, a
 {
     bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
-        APP_LOGE("Bundle name is empty.");
+        APP_LOGE("Bundle name is empty");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
         return false;
     }
@@ -408,7 +408,7 @@ static ani_double AniCreateAppClone(ani_env* env, [[maybe_unused]] ani_object in
     APP_LOGI("CreateAppClone");
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
-        APP_LOGE("Bundle name is empty.");
+        APP_LOGE("Bundle name is empty");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
         return (ani_double)Constants::INITIAL_APP_INDEX;
     }
@@ -431,7 +431,7 @@ static void AniDestroyAppClone(ani_env* env, [[maybe_unused]] ani_object install
     APP_LOGI("DestroyAppClone");
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
-        APP_LOGE("Bundle name is empty.");
+        APP_LOGE("Bundle name is empty");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
         return;
     }
@@ -464,7 +464,7 @@ static void AniInstallPreexistingApp(ani_env* env, [[maybe_unused]] ani_object i
     APP_LOGI("InstallPreexistingApp");
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
-        APP_LOGE("Bundle name is empty.");
+        APP_LOGE("Bundle name is empty");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CORRESPONDING_TYPE);
         return;
     }
@@ -488,21 +488,21 @@ static void AniInstallPlugin(ani_env* env, [[maybe_unused]] ani_object installer
 
     std::string hostBundleName = CommonFunAni::AniStrToString(env, aniHostBundleName);
     if (hostBundleName.empty()) {
-        APP_LOGE("hostBundleName is empty.");
+        APP_LOGE("hostBundleName is empty");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return;
     }
 
     std::vector<std::string> pluginFilePaths;
     if (aniPluginFilePaths == nullptr || !CommonFunAni::ParseStrArray(env, aniPluginFilePaths, pluginFilePaths)) {
-        APP_LOGE("pluginFilePaths parse failed.");
+        APP_LOGE("pluginFilePaths parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, FILE_PATH, TYPE_ARRAY);
         return;
     }
 
     InstallPluginParam pluginParam;
     if (aniPluginParam == nullptr || !CommonFunAni::ParsePluginParam(env, aniPluginParam, pluginParam)) {
-        APP_LOGE("pluginParam parse failed.");
+        APP_LOGE("pluginParam parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
         return;
     }
@@ -524,21 +524,21 @@ static void AniUninstallPlugin(ani_env* env, [[maybe_unused]] ani_object install
 
     std::string hostBundleName = CommonFunAni::AniStrToString(env, aniHostBundleName);
     if (hostBundleName.empty()) {
-        APP_LOGE("hostBundleName is empty.");
+        APP_LOGE("hostBundleName is empty");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return;
     }
 
     std::string pluginBundleName = CommonFunAni::AniStrToString(env, aniPluginBundleName);
     if (pluginBundleName.empty()) {
-        APP_LOGE("hostBundleName is empty.");
+        APP_LOGE("pluginBundleName is empty");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PLUGIN_BUNDLE_NAME, TYPE_STRING);
         return;
     }
 
     InstallPluginParam pluginParam;
     if (aniPluginParam == nullptr || !CommonFunAni::ParsePluginParam(env, aniPluginParam, pluginParam)) {
-        APP_LOGE("pluginParam parse failed.");
+        APP_LOGE("pluginParam parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
         return;
     }
@@ -611,7 +611,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     };
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
     RETURN_ANI_STATUS_IF_NOT_OK(res, "Cannot bind native methods");
-    APP_LOGI("BundleInstaller class binding..");
+    APP_LOGI("BundleInstaller class binding");
     ani_class installerClz;
     res = env->FindClass(Builder::BuildClass(INNERINSTALLER_CLASSNAME).Descriptor().c_str(), &installerClz);
     RETURN_ANI_STATUS_IF_NOT_OK(res, "Not found clsName");
