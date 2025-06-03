@@ -77,6 +77,7 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam,
 
     auto iter = installParam.parameters.find(ServiceConstants::ENTERPRISE_MANIFEST);
     if ((iter != installParam.parameters.end()) && !(iter->second.empty())) {
+        installParam_.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = "";
         tempExtProfileDir_ = BundleUtil::CreateInstallTempDir(installerId_, DirType::EXT_PROFILE_DIR);
         if (tempExtProfileDir_.empty()) {
             APP_LOGW("tempExtProfileDir_ is empty");
