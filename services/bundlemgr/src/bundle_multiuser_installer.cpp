@@ -258,7 +258,7 @@ ErrCode BundleMultiUserInstaller::RemoveDataDir(const std::string bundleName, in
 {
     std::string key = bundleName;
     if (InstalldClient::GetInstance()->RemoveBundleDataDir(key, userId) != ERR_OK) {
-        APP_LOGW("App cannot remove the data dir");
+        APP_LOGW("App cannot remove data dir");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     return ERR_OK;
