@@ -506,7 +506,7 @@ void BundleMgrService::CheckAllUser()
         }
 
         if (!isExists) {
-            APP_LOGI("Query user(%{public}d) success but not complete and remove it", userId);
+            APP_LOGE("Query user(%{public}d) success but not complete and remove it", userId);
             userMgrHost_->RemoveUser(userId);
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
             {
