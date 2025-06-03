@@ -1337,6 +1337,7 @@ private:
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
     void ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const;
     void ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
+    void ProcessCertificate(BundleInfo& bundleInfo, const std::string &bundleName, int32_t flags) const;
     void FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
         std::vector<AbilityInfo> &abilityInfos) const;
     void GetMultiLauncherAbilityInfo(const Want& want,

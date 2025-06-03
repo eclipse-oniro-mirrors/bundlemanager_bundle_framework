@@ -496,6 +496,26 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, BmsGetAppProvisionInfoTest_0011, Functio
 }
 
 /**
+ * @tc.number: ProcessCertificate_0001
+ * @tc.name: test ProcessCertificate success
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessCertificate_0001, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    ASSERT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO);
+    dataMgr->ProcessCertificate(bundleInfo, BUNDLE_NAME, flags);
+    EXPECT_FALSE(bundleInfo.signatureInfo.certificate.empty());
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
  * @tc.number: AddAppProvisionInfo_0001
  * @tc.name: test the start function of AddAppProvisionInfo
  * @tc.desc: 1. BaseBundleInstaller

@@ -6058,4 +6058,36 @@ HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0130, Function | MediumTest 
     bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
 }
+
+/**
+ * @tc.number: ProcessCertificate_0001
+ * @tc.name: ProcessCertificate
+ * @tc.desc: test ProcessCertificate(BundleInfo& bundleInfo, const std::string &bundleName, int32_t flags)
+ */
+HWTEST_F(BmsDataMgrTest, ProcessCertificate_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO);
+    dataMgr->ProcessCertificate(bundleInfo, BUNDLE_NAME, flags);
+    EXPECT_TRUE(bundleInfo.signatureInfo.certificate.empty());
+}
+
+/**
+ * @tc.number: ProcessCertificate_0002
+ * @tc.name: ProcessCertificate
+ * @tc.desc: test ProcessCertificate(BundleInfo& bundleInfo, const std::string &bundleName, int32_t flags)
+ */
+HWTEST_F(BmsDataMgrTest, ProcessCertificate_0002, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    BundleInfo bundleInfo;
+    int32_t flags = 0;
+    dataMgr->ProcessCertificate(bundleInfo, BUNDLE_NAME, flags);
+    EXPECT_TRUE(bundleInfo.signatureInfo.certificate.empty());
+}
 } // OHOS
