@@ -17,6 +17,8 @@
 
 #include "ability_manager_client.h"
 #include "ani.h"
+#include "ani_common_start_options.h"
+#include <ani_signature_builder.h>
 #include "app_log_wrapper.h"
 #include "business_error_ani.h"
 #include "common_fun_ani.h"
@@ -45,9 +47,10 @@ constexpr const char* PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.G
 constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
 constexpr const char* ERROR_EMPTY_BUNDLE_NAME = "bundle name is empty";
 constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
+constexpr const char* PARSE_START_OPTIONS = "parse StartOptions failed";
 } // namespace
 
-static void StartShortcutSync([[maybe_unused]] ani_env *env, ani_object aniShortcutInfo)
+static void StartShortcutSync(ani_env *env, ani_object aniShortcutInfo, ani_object aniStartOptions)
 {
     ShortcutInfo shortcutInfo;
     if (!CommonFunAni::ParseShortcutInfo(env, aniShortcutInfo, shortcutInfo)) {
@@ -76,6 +79,13 @@ static void StartShortcutSync([[maybe_unused]] ani_env *env, ani_object aniShort
         return;
     }
     StartOptions startOptions;
+    if (aniStartOptions != nullptr) {
+        if (!UnwrapStartOptions(env, aniStartOptions, startOptions)) {
+            APP_LOGE("ParseStartOptions error");
+            BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_START_OPTIONS);
+            return;
+        }
+    }
     ErrCode result = abilityManagerClient->StartShortcut(want, startOptions);
     auto iter = START_SHORTCUT_RES_MAP.find(result);
     result = iter == START_SHORTCUT_RES_MAP.end() ? ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED : iter->second;
@@ -86,7 +96,7 @@ static void StartShortcutSync([[maybe_unused]] ani_env *env, ani_object aniShort
     }
 }
 
-static ani_object GetShortcutInfoSync([[maybe_unused]] ani_env *env, ani_string aniBundleName, ani_double aniUserId)
+static ani_object GetShortcutInfoSync(ani_env *env, ani_string aniBundleName, ani_double aniUserId)
 {
     std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
     if (bundleName.empty()) {
@@ -146,28 +156,25 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         APP_LOGE("ANI_Constructor env is nullptr");
         return static_cast<ani_status>(ANI_CONSTRUCTOR_ENV_ERR);
     }
-    static const char* nsName = "L@ohos/bundle/launcherBundleManager/launcherBundleManager;";
+    auto nsName = arkts::ani_signature::Builder::BuildNamespace(
+        {"@ohos", "bundle", "launcherBundleManager", "launcherBundleManager"});
     ani_namespace kitNs;
-    if (env->FindNamespace(nsName, &kitNs) != ANI_OK) {
-        APP_LOGE("Not found nameSpace name: %{public}s", nsName);
+    if (env->FindNamespace(nsName.Descriptor().c_str(), &kitNs) != ANI_OK) {
+        APP_LOGE("Not found nameSpace name: %{public}s", nsName.Descriptor().c_str());
         return static_cast<ani_status>(ANI_CONSTRUCTOR_FIND_NAMESPACE_ERR);
     }
 
     std::array methods = {
         ani_native_function {
-            "StartShortcutSync",
-            "LbundleManager/ShortcutInfo/ShortcutInfo;:V",
-            reinterpret_cast<void*>(StartShortcutSync)
+            "StartShortcutSync", nullptr, reinterpret_cast<void*>(StartShortcutSync)
         },
         ani_native_function {
-            "GetShortcutInfoSync",
-            "Lstd/core/String;D:Lescompat/Array;",
-            reinterpret_cast<void*>(GetShortcutInfoSync)
+            "GetShortcutInfoSync", nullptr, reinterpret_cast<void*>(GetShortcutInfoSync)
         },
     };
 
     if (env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size()) != ANI_OK) {
-        APP_LOGE("Cannot bind native methods to %{public}s", nsName);
+        APP_LOGE("Cannot bind native methods to %{public}s", nsName.Descriptor().c_str());
         return static_cast<ani_status>(ANI_CONSTRUCTOR_BIND_NATIVE_FUNC_ERR);
     };
 
