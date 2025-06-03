@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,7 +42,9 @@ namespace {
     constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
     constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
     constexpr const char* PARSE_START_OPTIONS = "parse StartOptions failed";
+    constexpr const char* PARSE_REASON_MESSAGE = "parse ReasonMessage failed";
     constexpr const char* START_SHORTCUT = "StartShortcut";
+    constexpr const char* START_SHORTCUT_WITH_REASON = "StartShortcutWithReason";
     const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 
     const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
@@ -497,6 +499,116 @@ napi_value StartShortcut(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, "StartShortcut", StartShortcutExec, StartShortcutComplete);
     callbackPtr.release();
     APP_LOGI_NOFUNC("call StartShortcut done");
+    return promise;
+}
+
+static ErrCode InnerStartShortcutWithReason(const OHOS::AppExecFwk::ShortcutInfo &shortcutInfo,
+    std::string &startReason, const OHOS::AAFwk::StartOptions &startOptions)
+{
+    if (shortcutInfo.intents.empty()) {
+        APP_LOGW("intents is empty");
+        return ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED;
+    }
+    AAFwk::Want want;
+    ElementName element;
+    element.SetBundleName(shortcutInfo.intents[0].targetBundle);
+    element.SetModuleName(shortcutInfo.intents[0].targetModule);
+    element.SetAbilityName(shortcutInfo.intents[0].targetClass);
+    want.SetElement(element);
+    for (const auto &item : shortcutInfo.intents[0].parameters) {
+        want.SetParam(item.first, item.second);
+    }
+    want.SetParam(AAFwk::Want::PARM_LAUNCH_REASON_MESSAGE, startReason);
+    want.SetParam(AAFwk::Want::PARAM_APP_CLONE_INDEX_KEY, shortcutInfo.appIndex);
+    auto res = AAFwk::AbilityManagerClient::GetInstance()->StartShortcut(want, startOptions);
+    auto it = START_SHORTCUT_RES_MAP.find(res);
+    if (it == START_SHORTCUT_RES_MAP.end()) {
+        APP_LOGE("call AbilityManagerClient StartShortcut failed, res : %{public}d", res);
+        return ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED;
+    }
+    return it->second;
+}
+
+void StartShortcutWithReasonExec(napi_env env, void *data)
+{
+    StartShortcutWithReasonCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<StartShortcutWithReasonCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InnerStartShortcutWithReason(asyncCallbackInfo->shortcutInfo,
+        asyncCallbackInfo->reasonMessage, asyncCallbackInfo->startOptions);
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
+}
+
+void StartShortcutWithReasonComplete(napi_env env, napi_status status, void *data)
+{
+    StartShortcutWithReasonCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<StartShortcutWithReasonCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+
+    std::unique_ptr<StartShortcutWithReasonCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_POS_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else {
+        result[0] = BusinessError::CreateCommonError(
+            env, asyncCallbackInfo->err, START_SHORTCUT_WITH_REASON, Constants::PERMISSION_START_SHORTCUT);
+    }
+
+    CommonFunc::NapiReturnDeferred<StartShortcutWithReasonCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value StartShortcutWithReason(napi_env env, napi_callback_info info)
+{
+    APP_LOGI_NOFUNC("napi begin StartShortcutWithReason");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    StartShortcutWithReasonCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) StartShortcutWithReasonCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<StartShortcutWithReasonCallbackInfo> callbackPtr {asyncCallbackInfo};
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, args[i], &valueType));
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo)) {
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], asyncCallbackInfo->reasonMessage)) {
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_REASON_MESSAGE);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if ((valueType == napi_object) &&
+                (!AppExecFwk::UnwrapStartOptions(env, args[ARGS_POS_TWO], asyncCallbackInfo->startOptions))) {
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_START_OPTIONS);
+                return nullptr;
+            }
+        } else {
+            APP_LOGE("parameter is invalid");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<StartShortcutWithReasonCallbackInfo>(
+        env, asyncCallbackInfo, "StartShortcutWithReason",
+        StartShortcutWithReasonExec, StartShortcutWithReasonComplete);
+    callbackPtr.release();
+    APP_LOGI_NOFUNC("call StartShortcutWithReason done");
     return promise;
 }
 }
