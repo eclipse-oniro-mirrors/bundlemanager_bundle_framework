@@ -31,17 +31,15 @@ BundleBackupMgr::BundleBackupMgr() {}
 
 BundleBackupMgr::~BundleBackupMgr() {}
 
-BundleBackupMgr& BundleBackupMgr::GetInstance()
-{
-    static BundleBackupMgr bundleCloneManager;
-    return bundleCloneManager;
-}
-
 ErrCode BundleBackupMgr::OnBackup(MessageParcel& data, MessageParcel& reply)
 {
     nlohmann::json backupJson = nlohmann::json::array();
-    auto service = BundleBackupService::GetInstance();
-    auto ret = service.OnBackup(backupJson);
+    std::shared_ptr<BundleBackupService> service = DelayedSingleton<BundleBackupService>::GetInstance();
+    if (service == nullptr) {
+        APP_LOGE("Get BundleBackupService failed");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    auto ret = service->OnBackup(backupJson);
     if (ret != ERR_OK) {
         return ret;
     }
@@ -51,7 +49,7 @@ ErrCode BundleBackupMgr::OnBackup(MessageParcel& data, MessageParcel& reply)
         return ret;
     }
 
-    FILE* filePtr = fopen(BACKUP_FILE_PATH, "re");
+    FILE* filePtr = fopen(BACKUP_FILE_PATH, "r");
     if (filePtr == nullptr) {
         APP_LOGE("Open backup file failed");
         return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
@@ -88,8 +86,12 @@ ErrCode BundleBackupMgr::OnRestore(MessageParcel& data, MessageParcel& reply)
         APP_LOGE("Invalid JSON structure");
         return ERR_APPEXECFWK_BACKUP_INVALID_JSON_STRUCTURE;
     }
-    auto service = BundleBackupService::GetInstance();
-    ret = service.OnRestore(json);
+    std::shared_ptr<BundleBackupService> service = DelayedSingleton<BundleBackupService>::GetInstance();
+    if (service == nullptr) {
+        APP_LOGE("Get BundleBackupService failed");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    ret = service->OnRestore(json);
     if (ret != ERR_OK) {
         return ret;
     }

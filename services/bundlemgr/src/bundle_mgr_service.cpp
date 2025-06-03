@@ -593,22 +593,26 @@ bool BundleMgrService::IsBrokerServiceStarted() const
 int32_t BundleMgrService::OnExtension(const std::string& extension, MessageParcel& data, MessageParcel& reply)
 {
     APP_LOGI("extension is %{public}s.", extension.c_str());
-    auto bundleBackupMgr = BundleBackupMgr::GetInstance();
+    std::shared_ptr<BundleBackupMgr> bundleBackupMgr = DelayedSingleton<BundleBackupMgr>::GetInstance();
+    if (bundleBackupMgr == nullptr) {
+        APP_LOGE("Get BundleBackupMgr failed");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     ErrCode ret = ERR_OK;
     if (extension == EXTENSION_BACKUP) {
-        ret = bundleBackupMgr.OnBackup(data, reply);
+        ret = bundleBackupMgr->OnBackup(data, reply);
         if (ret != ERR_OK) {
             APP_LOGE("OnBackup failed, err is %{public}d.", ret);
-            return -1;
+            return ret;
         }
     } else if (extension == EXTENSION_RESTORE) {
-        ret = bundleBackupMgr.OnRestore(data, reply);
+        ret = bundleBackupMgr->OnRestore(data, reply);
         if (ret != ERR_OK) {
             APP_LOGE("OnRestore failed, err is %{public}d.", ret);
-            return -1;
+            return ret;
         }
     }
-    return 0;
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
