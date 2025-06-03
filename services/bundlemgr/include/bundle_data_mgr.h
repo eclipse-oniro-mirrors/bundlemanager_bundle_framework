@@ -1098,7 +1098,7 @@ public:
     ErrCode GetContinueBundleNames(
         const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId);
     void HandleOTACodeEncryption();
-    ErrCode HasAppOrAtomicServiceInUser(const std::string &bundleName, int32_t userId) const;
+    bool HasAppOrAtomicServiceInUser(const std::string &bundleName, int32_t userId) const;
     bool GetAllAppAndAtomicServiceInUser(int32_t userId, std::vector<std::string> &bundleList) const;
 
     ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled);

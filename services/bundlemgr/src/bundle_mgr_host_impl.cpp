@@ -3894,7 +3894,7 @@ ErrCode BundleMgrHostImpl::BatchGetSpecifiedDistributionType(const std::vector<s
         specifiedDistributionType.errCode = ret;
         specifiedDistributionTypes.emplace_back(specifiedDistributionType);
     }
-    
+
     return ERR_OK;
 }
 
@@ -4037,8 +4037,8 @@ bool BundleMgrHostImpl::GetLabelByBundleName(const std::string &bundleName, int3
         APP_LOGE("dataMgr is nullptr");
         return false;
     }
-    auto findRes = dataMgr->HasAppOrAtomicServiceInUser(bundleName, userId);
-    if (findRes != ERR_OK) {
+    
+    if (!dataMgr->HasAppOrAtomicServiceInUser(bundleName, userId)) {
         APP_LOGE("find fail");
         return false;
     }

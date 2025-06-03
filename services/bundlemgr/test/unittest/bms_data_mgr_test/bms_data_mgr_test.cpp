@@ -3078,7 +3078,7 @@ HWTEST_F(BmsDataMgrTest, GetLabel_0001, Function | MediumTest | Level1)
     std::string bundleName;
     int32_t userId = 999;
     auto res = dataMgr_->HasAppOrAtomicServiceInUser(bundleName, userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(res, false);
 
     std::vector<std::string> bundleList;
     bool result =  dataMgr_->GetAllAppAndAtomicServiceInUser(userId, bundleList);
@@ -3096,7 +3096,7 @@ HWTEST_F(BmsDataMgrTest, GetLabel_0002, Function | MediumTest | Level1)
     int32_t userId = 100;
     dataMgr_->AddUserId(userId);
     auto res = dataMgr_->HasAppOrAtomicServiceInUser(bundleName, userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    EXPECT_EQ(res, false);
 
     std::vector<std::string> bundleList;
     bool result =  dataMgr_->GetAllAppAndAtomicServiceInUser(userId, bundleList);
@@ -3114,7 +3114,7 @@ HWTEST_F(BmsDataMgrTest, GetLabel_0003, Function | MediumTest | Level1)
     int32_t userId = 100;
     dataMgr_->AddUserId(userId);
     auto res = dataMgr_->HasAppOrAtomicServiceInUser(bundleName, userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(res, false);
 }
 
 /**
@@ -3136,7 +3136,7 @@ HWTEST_F(BmsDataMgrTest, GetLabel_0004, Function | MediumTest | Level1)
     EXPECT_FALSE(result);
 
     auto res = dataMgr_->HasAppOrAtomicServiceInUser("test.bundle", userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(res, false);
 }
 
 /**
@@ -3158,7 +3158,7 @@ HWTEST_F(BmsDataMgrTest, GetLabel_0005, Function | MediumTest | Level1)
     EXPECT_FALSE(result);
 
     auto res = dataMgr_->HasAppOrAtomicServiceInUser("test.bundle", userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(res, false);
 }
 
 /**
@@ -3186,7 +3186,7 @@ HWTEST_F(BmsDataMgrTest, GetLabel_0006, Function | MediumTest | Level1)
     EXPECT_FALSE(bundleList.empty());
 
     auto res = dataMgr_->HasAppOrAtomicServiceInUser(bundleName, userId);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, true);
 }
 
 /**
@@ -6032,7 +6032,7 @@ HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0130, Function | MediumTest 
     backupJson.push_back({{"APP_INDEX", 0}, {"USER_ID", 100}});
     bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
-    
+
     backupJson.clear();
     backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"USER_ID", 100}});
     bundleDataMgr.CheckIfShortcutBundleExist(backupJson);

@@ -7685,7 +7685,7 @@ std::vector<std::string> BundleDataMgr::GetBundleNamesForNewUser() const
         }
         const auto extensions = item.second.GetInnerExtensionInfos();
         for (const auto &extensionItem : extensions) {
-            if (extensionItem.second.type == ExtensionAbilityType::DRIVER && 
+            if (extensionItem.second.type == ExtensionAbilityType::DRIVER &&
                 OHOS::system::GetBoolParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, true)) {
                 bundleNames.emplace_back(extensionItem.second.bundleName);
                 APP_LOGI("driver bundle found: %{public}s", extensionItem.second.bundleName.c_str());
@@ -8486,28 +8486,28 @@ ErrCode BundleDataMgr::FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerB
     return ret;
 }
 
-ErrCode BundleDataMgr::HasAppOrAtomicServiceInUser(const std::string &bundleName, int32_t userId) const
+bool BundleDataMgr::HasAppOrAtomicServiceInUser(const std::string &bundleName, int32_t userId) const
 {
     if (!HasUserId(userId)) {
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        APP_LOGW("user %{public}d error", userId);
+        return false;
     }
     if (bundleName.empty()) {
         APP_LOGW("param -n %{public}s error", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+        return false;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto iter = bundleInfos_.find(bundleName);
     if (iter == bundleInfos_.end()) {
         APP_LOGW("bundle %{public}s not found", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return false;
     }
     BundleType bundleType = iter->second.GetApplicationBundleType();
     if (bundleType != BundleType::APP && bundleType != BundleType::ATOMIC_SERVICE) {
         APP_LOGW("bundle %{public}s is not app or atomicservice", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return false;
     }
-    return iter->second.GetResponseUserId(userId) == Constants::INVALID_USERID ?
-        ERR_BUNDLE_MANAGER_INVALID_USER_ID : ERR_OK;
+    return iter->second.GetResponseUserId(userId) != Constants::INVALID_USERID;
 }
 
 bool BundleDataMgr::GetAllAppAndAtomicServiceInUser(int32_t userId, std::vector<std::string> &bundleList) const
@@ -10907,7 +10907,7 @@ ErrCode BundleDataMgr::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shor
 }
 
 bool BundleDataMgr::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion, const int32_t patchVersion)
-{    
+{
     if (platformVersion > ServiceConstants::API_VERSION_MAX || platformVersion < 1) {
         APP_LOGE("GreatOrEqualTargetAPIVersion Error, platformVersion is invalid: %{public}d", platformVersion);
         return false;
@@ -10927,7 +10927,7 @@ bool BundleDataMgr::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, 
         APP_LOGE("GreatOrEqualTargetAPIVersion, GetBundleInfoForSelf fail");
         return false;
     }
-    
+
     APP_LOGE("BundleDataMgr::GreatOrEqualTargetAPIVersion, name: %{public}s, major: %{public}d, minor: %{public}d, patch: %{public}d",
         bundleInfo.name.c_str(), (bundleInfo.targetVersion % ServiceConstants::API_VERSION_MOD),
         bundleInfo.targetMinorApiVersion, bundleInfo.targetPatchApiVersion);
