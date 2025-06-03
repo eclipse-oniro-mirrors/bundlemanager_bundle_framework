@@ -620,7 +620,7 @@ bool BundleResourceProcess::CheckThemeType(
     const std::string &bundleName, const int32_t userId, bool &isOnlineTheme)
 {
     if (BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A_FLAG)) {
-        // flag exist in ""/data/service/el1/public/themes/<userId>/a/app/flag"
+        // flag exist in "/data/service/el1/public/themes/<userId>/a/app/flag"
         if (BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + bundleName)) {
             isOnlineTheme = IsOnlineTheme(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A +
                 THEME_DESCRIPTION_FILE);
@@ -629,7 +629,7 @@ bool BundleResourceProcess::CheckThemeType(
         APP_LOGW("-n %{public}s -u %{public}d does not exist in theme a", bundleName.c_str(), userId);
         return false;
     }
-    // flag exist in ""/data/service/el1/public/themes/<userId>/b/app/flag"
+    // flag exist in "/data/service/el1/public/themes/<userId>/b/app/flag"
     if (BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + bundleName)) {
         isOnlineTheme = IsOnlineTheme(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B +
             THEME_DESCRIPTION_FILE);

@@ -52,6 +52,7 @@
 
 #include "bundle_verify_mgr.h"
 #include "common_event_support.h"
+#include "directory_ex.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -87,6 +88,19 @@ const std::string THEME_A_FLAG = "/data/service/el1/public/themes/100/a/app/flag
 const std::string THEME_A_ICON_MMS = "/data/service/el1/public/themes/100/a/app/icons/com.ohos.mms";
 const std::string THEME_B_ICON_MMS = "/data/service/el1/public/themes/100/b/app/icons/com.ohos.mms";
 const std::string THEME_TEST_BUNDLE_NAME = "com.ohos.mms";
+const std::string THEME_A_ICON_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/icons/com.example.bmsaccesstoken1";
+const std::string THEME_B_ICON_BUNDLE_NAME  =
+    "/data/service/el1/public/themes/20000/b/app/icons/com.example.bmsaccesstoken1";
+const std::string THEME_A_FLAG_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/flag";
+const std::string THEME_BUNDLE_NAME_PATH =
+    "/data/service/el1/public/themes/20000";
+const std::string THEME_A_ICON_JSON_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/icons/description.json";
+const std::string THEME_B_ICON_JSON_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/b/app/icons/description.json";
+const int32_t THEME_TEST_USERID = 20000;
 // test layered image
 const std::string BUNDLE_NAME_LAYERED_IMAGE = "com.example.thumbnailtest";
 const std::string LAYERED_IMAGE_HAP_PATH = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
@@ -5345,7 +5359,7 @@ HWTEST_F(BmsBundleResourceTest, IsOnlineTheme_0030, Function | SmallTest | Level
  * @tc.desc: 1. system running normally
  *           2. test IsOnlineTheme
  */
-HWTEST_F(BmsBundleResourceTest, IsOnlineTheme_0030, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleResourceTest, IsOnlineTheme_0040, Function | SmallTest | Level0)
 {
     std::ofstream file;
     file.open(THEME_FILE_PATH, ios::out);
@@ -5381,7 +5395,7 @@ HWTEST_F(BmsBundleResourceTest, CheckThemeType_0010, Function | SmallTest | Leve
  */
 HWTEST_F(BmsBundleResourceTest, CheckThemeType_0020, Function | SmallTest | Level0)
 {
-    bool isOnlineTheme = true;
+    bool isOnlineTheme = false;
     // theme not exist
     bool ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME_NOT_EXIST, -1, isOnlineTheme);
     EXPECT_FALSE(ret);
@@ -5415,6 +5429,154 @@ HWTEST_F(BmsBundleResourceTest, CheckThemeType_0030, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: CheckThemeType_0040
+ * Function: CheckThemeType
+ * @tc.name: test CheckThemeType
+ * @tc.desc: 1. system running normally
+ *           2. test CheckThemeType
+ */
+HWTEST_F(BmsBundleResourceTest, CheckThemeType_0040, Function | SmallTest | Level0)
+{
+    OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+    // flag not exist
+    bool isOnlineTheme = false;
+    // theme exist, not exist description.json
+    bool ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME, THEME_TEST_USERID, isOnlineTheme);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(isOnlineTheme);
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+}
+
+/**
+ * @tc.number: CheckThemeType_0050
+ * Function: CheckThemeType
+ * @tc.name: test CheckThemeType
+ * @tc.desc: 1. system running normally
+ *           2. test CheckThemeType
+ */
+HWTEST_F(BmsBundleResourceTest, CheckThemeType_0050, Function | SmallTest | Level0)
+{
+    OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+    std::ofstream file;
+    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
+    file << "" << endl;
+    file.close();
+    // flag  exist
+    bool isOnlineTheme = false;
+    // theme exist, not exist description.json
+    bool ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME, THEME_TEST_USERID, isOnlineTheme);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(isOnlineTheme);
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+}
+
+/**
+ * @tc.number: CheckThemeType_0060
+ * Function: CheckThemeType
+ * @tc.name: test CheckThemeType
+ * @tc.desc: 1. system running normally
+ *           2. test CheckThemeType
+ */
+HWTEST_F(BmsBundleResourceTest, CheckThemeType_0060, Function | SmallTest | Level0)
+{
+    OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+    std::ofstream file;
+    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
+    file << "" << endl;
+    file.close();
+    // flag exist
+
+    // description.json exist
+    std::ofstream file2;
+    file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
+    file2 << "{origin" << endl;
+    file2.close();
+
+    bool isOnlineTheme = false;
+    // theme exist, description.json exist
+    bool ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME, THEME_TEST_USERID, isOnlineTheme);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(isOnlineTheme);
+
+    file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
+    file2 << "{\"origin\":\"online\"}" << endl;
+    file2.close();
+
+    ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME, THEME_TEST_USERID, isOnlineTheme);
+    EXPECT_TRUE(ret);
+    EXPECT_TRUE(isOnlineTheme);
+
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+}
+
+/**
+ * @tc.number: CheckThemeType_0070
+ * Function: CheckThemeType
+ * @tc.name: test CheckThemeType
+ * @tc.desc: 1. system running normally
+ *           2. test CheckThemeType
+ */
+HWTEST_F(BmsBundleResourceTest, CheckThemeType_0070, Function | SmallTest | Level0)
+{
+    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+    // description.json exist
+    std::ofstream file2;
+    file2.open(THEME_B_ICON_JSON_BUNDLE_NAME, ios::out);
+    file2 << "{origin" << endl;
+    file2.close();
+
+    bool isOnlineTheme = false;
+    // theme exist, description.json exist
+    bool ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME, THEME_TEST_USERID, isOnlineTheme);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(isOnlineTheme);
+
+    file2.open(THEME_B_ICON_JSON_BUNDLE_NAME, ios::out);
+    file2 << "{\"origin\":\"online\"}" << endl;
+    file2.close();
+    isOnlineTheme = false;
+    ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME, THEME_TEST_USERID, isOnlineTheme);
+    EXPECT_TRUE(ret);
+    EXPECT_TRUE(isOnlineTheme);
+
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+}
+
+/**
+ * @tc.number: CheckThemeType_0080
+ * Function: CheckThemeType
+ * @tc.name: test CheckThemeType
+ * @tc.desc: 1. system running normally
+ *           2. test CheckThemeType
+ */
+HWTEST_F(BmsBundleResourceTest, CheckThemeType_0080, Function | SmallTest | Level0)
+{
+    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+    // description.json exist
+    std::ofstream file2;
+    file2.open(THEME_B_ICON_JSON_BUNDLE_NAME, ios::out);
+    file2 << "{origin" << endl;
+    file2.close();
+
+    bool isOnlineTheme = false;
+    // theme exist, description.json exist
+    bool ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME, THEME_TEST_USERID, isOnlineTheme);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(isOnlineTheme);
+
+    file2.open(THEME_B_ICON_JSON_BUNDLE_NAME, ios::out);
+    file2 << "{\"origin\":\"preset\"}" << endl;
+    file2.close();
+
+    ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME, THEME_TEST_USERID, isOnlineTheme);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(isOnlineTheme);
+
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+}
+
+/**
  * @tc.number: UpdateCloneBundleResourceInfo_0010
  * Function: UpdateCloneBundleResourceInfo
  * @tc.name: test
@@ -5432,6 +5594,136 @@ HWTEST_F(BmsBundleResourceTest, UpdateCloneBundleResourceInfo_0010, Function | S
         ret = manager->DeleteCloneBundleResourceInfo(THEME_TEST_BUNDLE_NAME, 1);
         EXPECT_TRUE(ret);
     }
+}
+
+/**
+ * @tc.number: UpdateCloneBundleResourceInfo_0020
+ * Function: UpdateCloneBundleResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateCloneBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, UpdateCloneBundleResourceInfo_0020, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+        std::ofstream file;
+        file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
+        file << "" << endl;
+        file.close();
+        // description.json not exist
+        bool ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, THEME_TEST_USERID, 1,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
+        EXPECT_TRUE(ret);
+
+        // description.json exist
+        std::ofstream file2;
+        file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
+        file2 << "{\"origin\":\"online\"}" << endl;
+        file2.close();
+
+        ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, THEME_TEST_USERID, 1,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
+        EXPECT_TRUE(ret);
+        ret = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, 1);
+        EXPECT_TRUE(ret);
+
+        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: UpdateCloneBundleResourceInfo_0030
+ * Function: UpdateCloneBundleResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateCloneBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, UpdateCloneBundleResourceInfo_0030, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+        std::ofstream file;
+        file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
+        file << "" << endl;
+        file.close();
+        // description.json exist
+        std::ofstream file2;
+        file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
+        file2 << "{\"origin\":\"preset\"}" << endl;
+        file2.close();
+        bool ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, THEME_TEST_USERID, 1,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
+        EXPECT_TRUE(ret);
+        ret = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, 1);
+        EXPECT_TRUE(ret);
+
+        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    }
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDynamicIcon_0010
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetDynamicIcon
+ */
+HWTEST_F(BmsBundleResourceTest, GetDynamicIcon_0010, Function | SmallTest | Level0)
+{
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = THEME_TEST_USERID;
+    userInfo.curDynamicIconModule = BUNDLE_NAME;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    bundleInfo.AddInnerBundleUserInfo(userInfo);
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = BUNDLE_NAME;
+    bundleInfo.extendResourceInfos_[BUNDLE_NAME] = extendResourceInfo;
+
+    ResourceInfo resourceInfo;
+    resourceInfo.appIndex_ = 0;
+    bool ret = BundleResourceProcess::GetDynamicIcon(bundleInfo, THEME_TEST_USERID, resourceInfo);
+    EXPECT_FALSE(ret);
+
+    OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+    std::ofstream file;
+    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
+    file << "" << endl;
+    file.close();
+    ret = BundleResourceProcess::GetDynamicIcon(bundleInfo, THEME_TEST_USERID, resourceInfo);
+    EXPECT_FALSE(ret);
+
+    // description.json exist
+    std::ofstream file2;
+    file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
+    file2 << "{\"origin\":\"preset\"}" << endl;
+    file2.close();
+    ret = BundleResourceProcess::GetDynamicIcon(bundleInfo, THEME_TEST_USERID, resourceInfo);
+    EXPECT_FALSE(ret);
+
+    // description.json exist
+    file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
+    file2 << "{\"origin\":\"online\"}" << endl;
+    file2.close();
+    ret = BundleResourceProcess::GetDynamicIcon(bundleInfo, THEME_TEST_USERID, resourceInfo);
+    EXPECT_FALSE(ret);
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
 }
 #endif
 
