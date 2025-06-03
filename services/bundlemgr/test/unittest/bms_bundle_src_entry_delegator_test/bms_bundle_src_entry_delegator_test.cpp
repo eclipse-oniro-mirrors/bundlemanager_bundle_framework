@@ -82,6 +82,7 @@ const nlohmann::json MODULE_JSON = R"(
         "mainElement": "MainAbility",
         "pages": "$profile:main_pages",
         "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "crossAppSharedConfig": "$profile:shared_config",
         "type": "entry",
         "virtualMachine": "ark0.0.0.3"
     }
@@ -189,6 +190,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoMarshallingTest_0100, Func
     info.abilitySrcEntryDelegator = "abilitySrcEntryDelegator";
     info.abilityStageSrcEntryDelegator = "abilityStageSrcEntryDelegator";
     info.deviceFeatures = { "multi_process", "free_multi_window" };
+    info.crossAppSharedConfig = "$profile:shared_config";
     Parcel parcel{};
     auto ret = info.Marshalling(parcel);
     EXPECT_TRUE(ret);
@@ -198,6 +200,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoMarshallingTest_0100, Func
     EXPECT_TRUE(ret);
     EXPECT_EQ(info2.abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(info2.abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
+    EXPECT_EQ(info2.crossAppSharedConfig, "$profile:shared_config");
     EXPECT_EQ(info2.deviceFeatures.size(), 2);
 }
 
@@ -236,6 +239,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoToJsonTest_0100, Function 
     HapModuleInfo info;
     info.abilitySrcEntryDelegator = "abilitySrcEntryDelegator";
     info.abilityStageSrcEntryDelegator = "abilityStageSrcEntryDelegator";
+    info.crossAppSharedConfig = "$profile:shared_config";
     info.deviceFeatures = { "multi_process", "free_multi_window" };
     nlohmann::json json;
     to_json(json, info);
@@ -244,6 +248,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoToJsonTest_0100, Function 
     from_json(json, info2);
     EXPECT_EQ(info.abilitySrcEntryDelegator, info2.abilitySrcEntryDelegator);
     EXPECT_EQ(info.abilityStageSrcEntryDelegator, info2.abilityStageSrcEntryDelegator);
+    EXPECT_EQ(info.crossAppSharedConfig, info2.crossAppSharedConfig);
     EXPECT_EQ(info.deviceFeatures.size(), info2.deviceFeatures.size());
 }
 
@@ -270,6 +275,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, ModuleProfileToInnerModuleInfoTest_0100
     EXPECT_NE(innerModuleInfo, std::nullopt);
     EXPECT_EQ(innerModuleInfo->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(innerModuleInfo->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
+    EXPECT_EQ(innerModuleInfo->crossAppSharedConfig, "$profile:shared_config");
     EXPECT_EQ(innerModuleInfo->deviceFeatures.size(), 0);
 
     auto bundleInfo = innerBundleInfo.GetBaseBundleInfo();
@@ -305,6 +311,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, ModuleProfileToInnerModuleInfoTest_0200
     EXPECT_EQ(innerModuleInfo->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(innerModuleInfo->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
     EXPECT_EQ(innerModuleInfo->deviceFeatures.size(), 3);
+    EXPECT_TRUE(innerModuleInfo->crossAppSharedConfig.empty());
 
     auto bundleInfo = innerBundleInfo.GetBaseBundleInfo();
     EXPECT_EQ(bundleInfo.targetMinorApiVersion, 0);
@@ -339,6 +346,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, FindHapModuleInfoTest_0100, Function | 
     EXPECT_EQ(hapModule->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(hapModule->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
     EXPECT_EQ(hapModule->deviceFeatures.size(), 0);
+    EXPECT_EQ(hapModule->crossAppSharedConfig, "$profile:shared_config");
 }
 
 /**
@@ -365,6 +373,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, FindHapModuleInfoTest_0200, Function | 
     EXPECT_EQ(hapModule->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(hapModule->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
     EXPECT_EQ(hapModule->deviceFeatures.size(), 3);
+    EXPECT_TRUE(hapModule->crossAppSharedConfig.empty());
 }
 
 /**
@@ -445,5 +454,58 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, BundleInfoToJsonTest_0100, Function | S
     from_json(json, info2);
     EXPECT_EQ(info.targetMinorApiVersion, info2.targetMinorApiVersion);
     EXPECT_EQ(info.targetPatchApiVersion, info2.targetPatchApiVersion);
+}
+
+/**
+ * @tc.number: IsBundleCrossAppSharedConfig_0100
+ * @tc.name: test IsBundleCrossAppSharedConfig_0100
+ * @tc.desc: IsBundleCrossAppSharedConfig_0100
+ */
+HWTEST_F(BmsBundleSrcEntryDelegatorTest, IsBundleCrossAppSharedConfig_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    EXPECT_FALSE(bundleInfo.IsBundleCrossAppSharedConfig());
+
+    InnerModuleInfo module1;
+    bundleInfo.InsertInnerModuleInfo("module1", module1);
+    EXPECT_FALSE(bundleInfo.IsBundleCrossAppSharedConfig());
+
+    InnerModuleInfo module2;
+    module2.crossAppSharedConfig = "test2";
+    bundleInfo.InsertInnerModuleInfo("module2", module2);
+    EXPECT_TRUE(bundleInfo.IsBundleCrossAppSharedConfig());
+}
+
+/**
+ * @tc.number: IsBundleCrossAppSharedConfig_0200
+ * @tc.name: test IsBundleCrossAppSharedConfig_0200
+ * @tc.desc: IsBundleCrossAppSharedConfig_0200
+ */
+HWTEST_F(BmsBundleSrcEntryDelegatorTest, IsBundleCrossAppSharedConfig_0200, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    EXPECT_FALSE(installer.IsBundleCrossAppSharedConfig(newInfos));
+
+    InnerBundleInfo bundleInfo1;
+    InnerModuleInfo module1;
+    bundleInfo1.InsertInnerModuleInfo("module1", module1);
+    newInfos["bundleInfo1"] = bundleInfo1;
+    EXPECT_FALSE(installer.IsBundleCrossAppSharedConfig(newInfos));
+
+    InnerBundleInfo bundleInfo2;
+    InnerModuleInfo module2;
+    bundleInfo2.InsertInnerModuleInfo("module2", module2);
+    newInfos["bundleInfo2"] = bundleInfo2;
+    EXPECT_FALSE(installer.IsBundleCrossAppSharedConfig(newInfos));
+
+    InnerBundleInfo bundleInfo3;
+    InnerModuleInfo module3;
+    bundleInfo3.InsertInnerModuleInfo("module3", module3);
+    InnerModuleInfo module4;
+    module4.crossAppSharedConfig = "test";
+    bundleInfo3.InsertInnerModuleInfo("module4", module4);
+    newInfos["bundleInfo3"] = bundleInfo3;
+    EXPECT_TRUE(installer.IsBundleCrossAppSharedConfig(newInfos));
 }
 } // OHOS

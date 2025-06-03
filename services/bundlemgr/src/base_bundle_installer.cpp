@@ -219,6 +219,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .bundleName = bundleName_,
             .modulePackage = moduleName_,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .abilityName = mainAbility_,
             .appDistributionType = appDistributionType_,
         };
@@ -263,6 +264,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .bundleType = static_cast<int32_t>(bundleType_),
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .bundleName = bundleName,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .appDistributionType = appDistributionType_
         };
         if (installParam.concentrateSendEvent) {
@@ -304,6 +306,7 @@ ErrCode BaseBundleInstaller::Recover(
             .uid = uid,
             .bundleType = static_cast<int32_t>(bundleType_),
             .bundleName = bundleName,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .appDistributionType = appDistributionType_
         };
         NotifyBundleStatus(installRes);
@@ -376,6 +379,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .appId = uninstallBundleAppId_,
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .keepData = installParam.isKeepData
         };
 
@@ -579,6 +583,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .isBundleExist = isBundleExist_
         };
         NotifyBundleStatus(installRes);
@@ -1421,6 +1426,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_SUCCESS);                         // ---- 100%
     LOG_D(BMS_TAG_INSTALLER, "finish ProcessBundleInstall bundlePath install touch off aging");
     moduleName_ = GetModuleNames(newInfos);
+    isBundleCrossAppSharedConfig_ = IsBundleCrossAppSharedConfig(newInfos);
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     if (installParam.installFlag == InstallFlag::FREE_INSTALL) {
         DelayedSingleton<BundleMgrService>::GetInstance()->GetAgingMgr()->Start(
@@ -1654,6 +1660,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
     appIdentifier_ = oldInfo.GetAppIdentifier();
+    isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
@@ -1961,6 +1968,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_MODULE;
     }
+    isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();
 
     if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
         LOG_D(BMS_TAG_INSTALLER, "bundleName: %{public}s is not allow uninstall", bundleName.c_str());
@@ -5188,6 +5196,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     isPreBundleRecovered_ = false;
     callerToken_ = 0;
     isBundleExist_ = false;
+    isBundleCrossAppSharedConfig_ = false;
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool killProcess)
@@ -7621,6 +7630,16 @@ bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
         return false;
     }
     return true;
+}
+
+bool BaseBundleInstaller::IsBundleCrossAppSharedConfig(const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    for (const auto &item : newInfos) {
+        if (item.second.IsBundleCrossAppSharedConfig()) {
+            return true;
+        }
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

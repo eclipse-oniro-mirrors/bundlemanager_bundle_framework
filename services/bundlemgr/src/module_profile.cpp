@@ -327,6 +327,7 @@ struct Module {
     std::string routerMap;
     std::vector<AppEnvironment> appEnvironments;
     std::string packageName;
+    std::string crossAppSharedConfig;
     std::string appStartup;
 };
 
@@ -1623,6 +1624,12 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
+        MODULE_CROS_APP_SHARED_CONFIG,
+        module.crossAppSharedConfig,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
         MODULE_APP_STARTUP,
         module.appStartup,
         false,
@@ -2551,6 +2558,7 @@ bool ToInnerModuleInfo(
     // abilities and fileContextMenu store in InnerBundleInfo
     innerModuleInfo.appEnvironments = moduleJson.module.appEnvironments;
     innerModuleInfo.packageName = moduleJson.module.packageName;
+    innerModuleInfo.crossAppSharedConfig = moduleJson.module.crossAppSharedConfig;
     innerModuleInfo.appStartup = moduleJson.module.appStartup;
     innerModuleInfo.debug = moduleJson.app.debug;
     innerModuleInfo.abilitySrcEntryDelegator = moduleJson.module.abilitySrcEntryDelegator;
