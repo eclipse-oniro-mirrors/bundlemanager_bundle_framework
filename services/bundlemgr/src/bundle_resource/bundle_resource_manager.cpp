@@ -803,6 +803,11 @@ bool BundleResourceManager::UpdateCloneBundleResourceInfo(const std::string &bun
         APP_LOGW("-n %{public}s -i %{public}d invalid", bundleName.c_str(), appIndex);
         return false;
     }
+    // check theme
+    bool isOnlineTheme = false;
+    if (BundleResourceProcess::CheckThemeType(bundleName, userId, isOnlineTheme) && isOnlineTheme) {
+        return UpdateCloneBundleResourceInfo(bundleName, appIndex, type);
+    }
     // Need to consider dynamic icons when user switching
     if (((type & static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE)) !=
         static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE))) {

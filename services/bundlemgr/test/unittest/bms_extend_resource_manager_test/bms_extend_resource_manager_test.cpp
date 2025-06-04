@@ -22,6 +22,8 @@
 
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_resource_process.h"
+#include "directory_ex.h"
 #include "dynamic_icon_info.h"
 #include "extend_resource_manager_host_impl.h"
 #include "installd/installd_service.h"
@@ -53,6 +55,16 @@ const std::string EMPTY_STRING = "";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t USER_ID = 100;
 const int32_t INVALID_ID = -1;
+const std::string THEME_BUNDLE_NAME = "com.example.testTheme";
+const std::string THEME_A_ICON_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/icons/com.example.testTheme";
+const std::string THEME_A_FLAG_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/flag";
+const std::string THEME_BUNDLE_NAME_PATH =
+    "/data/service/el1/public/themes/20000";
+const std::string THEME_A_ICON_JSON_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/icons/description.json";
+const int32_t THEME_TEST_USERID = 20000;
 }  // namespace
 
 class BmsExtendResourceManagerTest : public testing::Test {
@@ -1635,5 +1647,148 @@ HWTEST_F(BmsExtendResourceManagerTest, ProcessDynamicIconForOta_0001, Function |
     if (item != dataMgr->bundleInfos_.end()) {
         dataMgr->bundleInfos_.erase(item);
     }
+}
+
+/**
+ * @tc.number: EnableDynamicIcon_0010
+ * @tc.name: test EnableDynamicIcon
+ * @tc.desc: 1.EnableDynamic test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, EnableDynamicIcon_0010, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.SetCurDynamicIconModule(BUNDLE_NAME);
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = BUNDLE_NAME;
+    info.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    ExtendResourceManagerHostImpl impl;
+    auto ret = impl.EnableDynamicIcon(BUNDLE_NAME, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED);
+
+    auto item = dataMgr->bundleInfos_.find(BUNDLE_NAME);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+    }
+}
+
+/**
+ * @tc.number: EnableDynamicIcon_0020
+ * @tc.name: test EnableDynamicIcon
+ * @tc.desc: 1.EnableDynamic test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, EnableDynamicIcon_0020, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = THEME_TEST_USERID;
+    userInfo.curDynamicIconModule = THEME_BUNDLE_NAME;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = THEME_BUNDLE_NAME;
+    info.AddInnerBundleUserInfo(userInfo);
+    info.SetCurDynamicIconModule(THEME_BUNDLE_NAME);
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = THEME_BUNDLE_NAME;
+    extendResourceInfo.iconId = 16777217;
+    extendResourceInfo.filePath = INVALID_SUFFIX;
+    info.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_[THEME_BUNDLE_NAME] = info;
+    dataMgr->AddUserId(THEME_TEST_USERID);
+
+    bool ret = OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+    std::ofstream file;
+    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
+    file << "" << endl;
+    file.close();
+    std::ofstream file2;
+    file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
+    file2 << "{\"origin\":\"online\"}" << endl;
+    file2.close();
+
+    ExtendResourceManagerHostImpl impl;
+    auto errCode = impl.EnableDynamicIcon(THEME_BUNDLE_NAME, THEME_BUNDLE_NAME, THEME_TEST_USERID, 0);
+    EXPECT_EQ(errCode, ERR_OK);
+
+    errCode = impl.DisableDynamicIcon(THEME_BUNDLE_NAME, THEME_TEST_USERID, 0);
+    EXPECT_EQ(errCode, ERR_OK);
+
+    auto item = dataMgr->bundleInfos_.find(THEME_BUNDLE_NAME);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+        dataMgr->RemoveUserId(THEME_TEST_USERID);
+    }
+    ret = OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: CheckWhetherDynamicIconNeedProcess_0001
+ * @tc.name: Test CheckWhetherDynamicIconNeedProcess
+ * @tc.desc: 1.CheckWhetherDynamicIconNeedProcess
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CheckWhetherDynamicIconNeedProcess_0001, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, -1);
+    EXPECT_TRUE(ret);
+
+    ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, USER_ID);
+    EXPECT_TRUE(ret);
+
+    ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
+    EXPECT_TRUE(ret);
+
+    ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME2, USER_ID);
+    bool isOnlineTheme = false;
+    bool isThemeExist = BundleResourceProcess::CheckThemeType(BUNDLE_NAME2, USER_ID, isOnlineTheme);
+    if (isThemeExist && isOnlineTheme) {
+        EXPECT_FALSE(ret);
+    } else {
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: CheckWhetherDynamicIconNeedProcess_0002
+ * @tc.name: Test CheckWhetherDynamicIconNeedProcess
+ * @tc.desc: 1.CheckWhetherDynamicIconNeedProcess
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CheckWhetherDynamicIconNeedProcess_0002, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    setuid(20020001);
+    bool ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: CheckWhetherDynamicIconNeedProcess_0003
+ * @tc.name: Test CheckWhetherDynamicIconNeedProcess
+ * @tc.desc: 1.CheckWhetherDynamicIconNeedProcess
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CheckWhetherDynamicIconNeedProcess_0003, Function | SmallTest | Level1)
+{
+    bool ret = OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+
+    std::ofstream file;
+    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
+    file << "" << endl;
+    file.close();
+    std::ofstream file2;
+    file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
+    file2 << "{\"origin\":\"online\"}" << endl;
+    file2.close();
+    ExtendResourceManagerHostImpl impl;
+    ret = impl.CheckWhetherDynamicIconNeedProcess(THEME_BUNDLE_NAME, THEME_TEST_USERID);
+    EXPECT_FALSE(ret);
+
+    ret = OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    EXPECT_TRUE(ret);
 }
 } // OHOS
