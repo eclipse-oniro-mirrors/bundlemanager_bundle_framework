@@ -27,12 +27,14 @@
 #include "bundle_mgr_interface.h"
 #include "bundle_resource_info.h"
 #include "clone_param.h"
+#include "disposed_rule.h"
 #include "enum_util.h"
 #include "install_param.h"
 #include "launcher_ability_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+using Want = OHOS::AAFwk::Want;
 namespace CommonFunAniNS {
 constexpr const char* TYPE_ARRAY = "array";
 constexpr const char* TYPE_INT = "int";
@@ -169,6 +171,9 @@ public:
 
     static ani_object ConvertOverlayModuleInfo(ani_env* env, const OverlayModuleInfo& overlayModuleInfo);
 
+    static ani_object ConvertDisposedRule(ani_env* env, const DisposedRule& disposedRule);
+    static ani_object ConvertUninstallDisposedRule(ani_env* env, const UninstallDisposedRule& uninstallDisposedRule);
+
     static ani_object CreateBundleChangedInfo(
         ani_env* env, const std::string& bundleName, int32_t userId, int32_t appIndex);
     static ani_object ConvertVersion(ani_env* env, const Version& version);
@@ -246,6 +251,11 @@ public:
         return ParseAbilitySkillInner(env, object, skill, true);
     }
     static bool ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo& abilityInfo);
+    static bool ParseElementName(ani_env* env, ani_object object, ElementName& elementName);
+    static bool ParseWantWithoutVerification(ani_env* env, ani_object object, Want& want);
+    static bool ParseDisposedRule(ani_env* env, ani_object object, DisposedRule& disposedRule);
+    static bool ParseUninstallDisposedRule(ani_env* env,
+        ani_object object, UninstallDisposedRule& uninstallDisposedRule);
 
     template<typename toType>
     static bool TryCastDoubleTo(const double fromValue, toType* toValue)

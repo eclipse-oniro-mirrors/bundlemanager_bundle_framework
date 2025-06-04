@@ -2733,5 +2733,20 @@ OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> CommonFunc::GetOverlayMgrProxy()
     }
     return overlayMgrProxy;
 }
+
+OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> CommonFunc::GetAppControlProxy()
+{
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        return nullptr;
+    }
+    auto appControlProxy = bundleMgr->GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("GetAppControlProxy failed");
+        return nullptr;
+    }
+    return appControlProxy;
+}
 } // AppExecFwk
 } // OHOS
