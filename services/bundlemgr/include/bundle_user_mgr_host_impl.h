@@ -77,6 +77,10 @@ private:
 
     ErrCode ProcessRemoveUser(int32_t userId);
 
+    ErrCode CreateArkStartupCacheDir(int32_t userId);
+
+    ErrCode RemoveSystemOptimizeDir(int32_t userId);
+
     std::mutex bundleUserMgrMutex_;
 
     std::mutex bundleEventMutex_;

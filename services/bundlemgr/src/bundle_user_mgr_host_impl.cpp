@@ -174,6 +174,7 @@ void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
 {
     ClearBundleEvents();
     InstalldClient::GetInstance()->AddUserDirDeleteDfx(userId);
+    CreateArkStartupCacheDir(userId);
 }
 
 void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBundleInstall,
@@ -443,6 +444,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
     InnerUninstallBundle(userId, bundleInfos);
     RemoveArkProfile(userId);
     RemoveAsanLogDirectory(userId);
+    RemoveSystemOptimizeDir(userId);
     dataMgr->RemoveUserId(userId);
     dataMgr->RemoveAppInstallDir(userId);
     dataMgr->DeleteFirstInstallBundleInfo(userId);
@@ -685,6 +687,26 @@ void BundleUserMgrHostImpl::SavePreInstallException(const std::string &bundleNam
     }
 
     preInstallExceptionMgr->SavePreInstallExceptionBundleName(bundleName);
+}
+
+ErrCode BundleUserMgrHostImpl::CreateArkStartupCacheDir(int32_t userId)
+{
+    std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
+        el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(userId));
+    APP_LOGI("create system optimize directory %{public}s when create user: %{public}d",
+        el1ArkStartupCachePath.c_str(), userId);
+    return InstalldClient::GetInstance()->Mkdir(el1ArkStartupCachePath, ServiceConstants::SYSTEM_OPTIMIZE_MODE, 0, 0);
+}
+ 
+ErrCode BundleUserMgrHostImpl::RemoveSystemOptimizeDir(int32_t userId)
+{
+    std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
+        el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(userId));
+    APP_LOGI("remove system optimize directory %{public}s when remove user: %{public}d",
+        el1ArkStartupCachePath.c_str(), userId);
+    return InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

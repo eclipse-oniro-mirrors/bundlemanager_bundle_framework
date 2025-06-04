@@ -956,6 +956,7 @@ void BMSEventHandler::OnBundleBootStart(int32_t userId)
 #else
     ProcessBootBundleInstallFromScan(userId);
 #endif
+    ProcessCheckSystemOptimizeDir();
 }
 
 void BMSEventHandler::ProcessBootBundleInstallFromScan(int32_t userId)
@@ -1282,6 +1283,8 @@ void BMSEventHandler::ProcessRebootBundle()
     // Driver update may cause shader cache invalidity and need to be cleared
     CleanAllBundleShaderCache();
     CleanAllBundleEl1ShaderCacheLocal();
+    CleanAllBundleEl1ArkStartupCacheLocal();
+    ProcessCheckSystemOptimizeDir();
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
@@ -4999,6 +5002,49 @@ bool BMSEventHandler::SaveUpdatePermissionsFlag()
         std::string{ ServiceConstants::UPDATE_PERMISSIONS_FLAG_UPDATED })) {
         LOG_E(BMS_TAG_DEFAULT, "save updatePermissionsFlag failed");
         return false;
+    }
+    return true;
+}
+
+bool BMSEventHandler::ProcessCheckSystemOptimizeDir()
+{
+    LOG_I(BMS_TAG_DEFAULT, "Need to check system optimize dir");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
+        el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+            std::to_string(userId));
+        LOG_I(BMS_TAG_DEFAULT, "create system optimize dir for -u: %{public}d", userId);
+        InstalldClient::GetInstance()->Mkdir(el1ArkStartupCachePath, ServiceConstants::SYSTEM_OPTIMIZE_MODE, 0, 0);
+    }
+    return true;
+}
+
+bool BMSEventHandler::CleanAllBundleEl1ArkStartupCacheLocal()
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
+    for (const auto &userId : userIds) {
+        std::string el1ArkStartupCachePath = std::string(ServiceConstants::SYSTEM_OPTIMIZE_PATH);
+        el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"),
+            1, std::to_string(userId));
+        for (auto &bundleName : bundleNames) {
+            std::string el1BundleArkStartupCachePath = el1ArkStartupCachePath +
+                bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
+            InstalldClient::GetInstance()->CleanBundleDataDir(el1BundleArkStartupCachePath);
+        }
     }
     return true;
 }

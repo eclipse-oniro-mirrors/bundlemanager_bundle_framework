@@ -19,7 +19,7 @@
 #include <map>
 #include <unordered_map>
 #include <string>
-
+#include <sys/stat.h>
 #include "nocopyable.h"
 
 #include "access_token.h"
@@ -40,6 +40,14 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct ArkStartupCache {
+    BundleType bundleType;
+    int32_t mode = (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    int32_t uid = 0;
+    int32_t gid = 0;
+    std::string bundleName;
+    std::string cacheDir;
+};
 class BaseBundleInstaller {
 public:
     BaseBundleInstaller();
@@ -736,6 +744,9 @@ private:
     ErrCode DeleteEl1ShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
     ErrCode DeleteBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
         const std::string &bundleName, int32_t userId) const;
+    ErrCode CreateArkStartupCache(const ArkStartupCache &createArk) const;
+    ErrCode CleanArkStartupCache(const std::string &cacheDir, const std::string &bundleName, int32_t userId) const;
+    ErrCode DeleteArkStartupCache(const std::string &cacheDir, const std::string &bundleName, int32_t userId) const;
     bool VerifyActivationLock() const;
     bool VerifyActivationLockToken() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;

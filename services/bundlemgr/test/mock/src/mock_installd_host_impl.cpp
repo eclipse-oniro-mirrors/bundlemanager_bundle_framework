@@ -138,6 +138,11 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::SetArkStartupCacheApl(const std::string &dir)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
 {
     return ERR_OK;

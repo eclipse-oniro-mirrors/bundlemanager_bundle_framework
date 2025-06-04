@@ -203,6 +203,16 @@ ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bun
     return CallService(&IInstalld::SetDirApl, dir, bundleName, apl, isPreInstallApp, debug);
 }
 
+ErrCode InstalldClient::SetArkStartupCacheApl(const std::string &dir)
+{
+    if (dir.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::SetArkStartupCacheApl, dir);
+}
+
 ErrCode InstalldClient::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
 {
     if (dir.empty()) {

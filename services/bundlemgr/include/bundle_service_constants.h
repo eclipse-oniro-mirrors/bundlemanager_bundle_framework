@@ -19,6 +19,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <sys/stat.h>
 #include <vector>
 
 namespace OHOS {
@@ -162,6 +163,12 @@ constexpr int32_t OVERLAY_MINIMUM_PRIORITY = 1;
 // ark compile mode
 constexpr const char* COMPILE_PARTIAL = "partial";
 constexpr const char* ARK_CACHE_PATH = "/data/app/el1/public/aot_compiler/ark_cache/";
+
+constexpr int32_t SYSTEM_OPTIMIZE_MODE = (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+constexpr const char* ARK_STARTUP_CACHE_DIR = "/ark_startup_cache/";
+constexpr const char* SYSTEM_OPTIMIZE_PATH = "/data/app/el1/%/system_optimize/";
+// configuration of app startup list
+constexpr const char* APP_STARTUP_CACHE_CONG = "/system/etc/ark/app_startup_snapshot.conf";
 // code signature
 constexpr const char* CODE_SIGNATURE_FILE_SUFFIX = ".sig";
 constexpr const char* CODE_SIGNATURE_HAP = "Hap";

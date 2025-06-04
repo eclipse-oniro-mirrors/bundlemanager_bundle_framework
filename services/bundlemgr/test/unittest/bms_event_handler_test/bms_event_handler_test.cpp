@@ -69,6 +69,7 @@ namespace {
     const std::string BUNDLE_NAME_FOR_TEST_U1ENABLE = "com.example.u1Enable_test";
     const int32_t TEST_U100 = 100;
     const int32_t TEST_U1 = 1;
+    const int32_t TEST_U101 = 101;
 }
 class BmsEventHandlerTest : public testing::Test {
 public:
@@ -2386,6 +2387,120 @@ HWTEST_F(BmsEventHandlerTest, BundleEl1ShaderCacheLocal_0100, Function | SmallTe
     handler->CleanAllBundleEl1ShaderCacheLocal();
     isExist = CheckShaderCachePathExist(UNINSTALL_PREINSTALL_BUNDLE_NAME, 0, Constants::START_USERID);
     EXPECT_FALSE(isExist) << "the shader cache path not exist: " << UNINSTALL_PREINSTALL_BUNDLE_NAME;
+    setuid(Constants::ROOT_UID);
+}
+
+/**
+ * @tc.number: CleanAllBundleEl1ArkStartupCacheLocal_0100
+ * @tc.name: CleanAllBundleEl1ArkStartupCacheLocal
+ * @tc.desc: test CleanAllBundleEl1ArkStartupCacheLocal
+ */
+HWTEST_F(BmsEventHandlerTest, CleanAllBundleEl1ArkStartupCacheLocal_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+
+    // DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+    // test dataMgr_ is null
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    bool res = handler->CleanAllBundleEl1ArkStartupCacheLocal();
+    EXPECT_FALSE(res);
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(TEST_U100);
+    dataMgr->AddUserId(TEST_U101);
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.uid = TEST_UID;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    // mkdir /data/app/el1/100/system_optimize/
+    std::string el1ArkStartupCachePath = std::string(ServiceConstants::SYSTEM_OPTIMIZE_PATH);
+    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(Constants::START_USERID));
+    setuid(Constants::FOUNDATION_UID);
+    ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
+    ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->CreateBundleDir(el1ArkStartupCachePath);
+    EXPECT_EQ(ret, ERR_OK);
+
+    setuid(Constants::FOUNDATION_UID);
+    // test CleanAllBundleEl1ShaderCacheLocal succeed
+    res = handler->CleanAllBundleEl1ArkStartupCacheLocal();
+    EXPECT_TRUE(res);
+
+    setuid(Constants::ROOT_UID);
+    // test CleanAllBundleEl1ShaderCacheLocal failed
+    res = handler->CleanAllBundleEl1ArkStartupCacheLocal();
+    EXPECT_TRUE(res);
+
+    setuid(Constants::FOUNDATION_UID);
+    (void)InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath);
+    dataMgr->bundleInfos_.clear();
+    setuid(Constants::ROOT_UID);
+}
+
+/**
+ * @tc.number: ProcessCheckSystemOptimizeDir_0100
+ * @tc.name: ProcessCheckSystemOptimizeDir
+ * @tc.desc: test ProcessCheckSystemOptimizeDir
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessCheckSystemOptimizeDir_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+
+    // test dataMgr_ is null
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    bool res = handler->ProcessCheckSystemOptimizeDir();
+    EXPECT_FALSE(res);
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(TEST_U100);
+    dataMgr->AddUserId(TEST_U101);
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.uid = TEST_UID;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    // mkdir /data/app/el1/100/system_optimize/
+    std::string el1ArkStartupCachePath = std::string(ServiceConstants::SYSTEM_OPTIMIZE_PATH);
+    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(TEST_U100));
+    setuid(Constants::FOUNDATION_UID);
+    ASSERT_NE(AppExecFwk::InstalldClient::GetInstance(), nullptr);
+    ErrCode ret = AppExecFwk::InstalldClient::GetInstance()->CreateBundleDir(el1ArkStartupCachePath);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // test IsExistDir failed
+    setuid(Constants::ROOT_UID);
+    res = handler->ProcessCheckSystemOptimizeDir();
+    EXPECT_TRUE(res);
+
+    // test 101 not exist
+    setuid(Constants::FOUNDATION_UID);
+    res = handler->ProcessCheckSystemOptimizeDir();
+    EXPECT_TRUE(res);
+
+    (void)InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath);
+    dataMgr->bundleInfos_.clear();
     setuid(Constants::ROOT_UID);
 }
 
