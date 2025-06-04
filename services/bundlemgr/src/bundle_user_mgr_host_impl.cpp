@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@
 #include "aot_handler.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
+#include "bundle_hitrace_chain.h"
 #include "bundle_mgr_service.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
@@ -141,6 +142,7 @@ bool BundleUserMgrHostImpl::SkipThirdPreloadAppInstallation(const int32_t userId
 ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList,
     const std::optional<std::vector<std::string>> &allowList)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("CreateNewUser", HITRACE_FLAG_INCLUDE_ASYNC);
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendCpuSceneEvent(ACCESSTOKEN_PROCESS_NAME, 1 << 1); // second scene
     APP_LOGI("CreateNewUser user(%{public}d) start", userId);
@@ -393,6 +395,7 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 
 ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("RemoveUser", HITRACE_FLAG_INCLUDE_ASYNC);
     return InnerRemoveUser(userId, true);
 }
 

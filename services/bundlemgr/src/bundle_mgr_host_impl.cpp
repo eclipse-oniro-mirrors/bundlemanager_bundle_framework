@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #include "aot/aot_handler.h"
 #include "bms_extension_client.h"
 #include "bms_extension_data_mgr.h"
+#include "bundle_hitrace_chain.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -1664,6 +1665,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
     int32_t userId, int32_t appIndex)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("CleanBundleCacheFiles", HITRACE_FLAG_INCLUDE_ASYNC);
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
@@ -1737,8 +1739,9 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     std::vector<std::string> moduleNameList;
     dataMgr->GetBundleModuleNames(bundleName, moduleNameList);
     rootDir = BundleCacheMgr().GetBundleCachePath(bundleName, userId, appIndex, moduleNameList);
-
-    auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, appIndex, this]() {
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, appIndex, traceId, this]() {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         std::vector<std::string> caches = rootDir;
         std::string shaderCachePath;
         shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
@@ -2317,6 +2320,7 @@ ErrCode BundleMgrHostImpl::IsCloneApplicationEnabled(const std::string &bundleNa
 
 ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("SetApplicationEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
     std::string caller = GetCallerName();
     APP_LOGW_NOFUNC("SetApplicationEnabled %{public}s %{public}d %{public}d caller:%{public}s",
         bundleName.c_str(), isEnable, userId, caller.c_str());
@@ -2378,6 +2382,7 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
 ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
     const std::string &bundleName, int32_t appIndex, bool isEnable, int32_t userId)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("SetCloneApplicationEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
     std::string caller = GetCallerName();
     APP_LOGW_NOFUNC("SetCloneApplicationEnabled param %{public}s %{public}d %{public}d %{public}d caller:%{public}s",
         bundleName.c_str(), appIndex, isEnable, userId, caller.c_str());
@@ -2462,6 +2467,7 @@ ErrCode BundleMgrHostImpl::IsCloneAbilityEnabled(const AbilityInfo &abilityInfo,
 
 ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("SetAbilityEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
     std::string caller = GetCallerName();
     APP_LOGW_NOFUNC("SetAbilityEnabled %{public}s %{public}d %{public}d caller:%{public}s",
         abilityInfo.name.c_str(), isEnabled, userId, caller.c_str());
@@ -2521,6 +2527,7 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
 ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo,
     int32_t appIndex, bool isEnabled, int32_t userId)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("SetCloneAbilityEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
     std::string caller = GetCallerName();
     APP_LOGW_NOFUNC("SetCloneAbilityEnabled %{public}s %{public}d %{public}d %{public}d caller:%{public}s",
         abilityInfo.name.c_str(), appIndex, isEnabled, userId, caller.c_str());

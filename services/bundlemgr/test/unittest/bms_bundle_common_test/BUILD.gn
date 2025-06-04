@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -188,9 +188,56 @@ ohos_unittest("BmsBundleCommonTest") {
   }
 }
 
+ohos_unittest("BmsBundleTaskHitraceChainTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  use_exceptions = true
+  module_out_path = module_output_path
+  include_dirs = [ "${services_path}/bundlemgr/include/common" ]
+  sources = []
+  sources += [
+    "task_hitrace_chain_test.cpp",
+    "${services_path}/bundlemgr/src/common/bundle_hitrace_chain.cpp"
+  ]
+  external_deps = []
+  external_deps += bundle_install_external_deps
+  external_deps += [
+    "bounds_checking_function:libsec_shared",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("BmsBundleHitraceChainTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  use_exceptions = true
+  module_out_path = module_output_path
+  include_dirs = [ "${services_path}/bundlemgr/include/common" ]
+  sources = []
+  sources += [
+    "hitrace_chain_test.cpp",
+    "${services_path}/bundlemgr/src/common/bundle_hitrace_chain.cpp"
+  ]
+  external_deps = []
+  external_deps += bundle_install_external_deps
+  external_deps += [
+    "bounds_checking_function:libsec_shared",
+    "hilog:libhilog",
+  ]
+}
 group("unittest") {
   testonly = true
   if (ability_runtime_enable) {
-    deps = [ ":BmsBundleCommonTest" ]
+    deps = [
+      ":BmsBundleHitraceChainTest",
+      ":BmsBundleTaskHitraceChainTest",
+      ":BmsBundleCommonTest",
+    ]
   }
 }

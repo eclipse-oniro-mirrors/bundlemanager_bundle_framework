@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "bundle_stream_installer_host_impl.h"
 
+#include "bundle_hitrace_chain.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "ipc_skeleton.h"
@@ -305,6 +306,7 @@ int32_t BundleStreamInstallerHostImpl::CreatePgoFileStream(const std::string &mo
 
 bool BundleStreamInstallerHostImpl::Install()
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Install", HITRACE_FLAG_INCLUDE_ASYNC);
     if (receiver_ == nullptr) {
         APP_LOGE("receiver_ is nullptr");
         return false;
