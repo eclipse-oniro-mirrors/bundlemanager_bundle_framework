@@ -5194,14 +5194,18 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, HapModuleInfo_0001, Function | SmallT
     EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
 
     sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    sourceInfo.abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
     jsonObject = sourceInfo;
     fromJsonInfo = jsonObject;
     EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(fromJsonInfo.abilityStageCodeLanguage, Constants::CODE_LANGUAGE_1_1);
 
     sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    sourceInfo.abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_2;
     jsonObject = sourceInfo;
     fromJsonInfo = jsonObject;
     EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+    EXPECT_EQ(fromJsonInfo.abilityStageCodeLanguage, Constants::CODE_LANGUAGE_1_2);
 }
 
 /**
@@ -5219,20 +5223,25 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, HapModuleInfo_0002, Function | SmallT
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
     EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(targetInfo.abilityStageCodeLanguage, Constants::CODE_LANGUAGE_1_1);
     
     sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    sourceInfo.abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_2;
     ret = sourceInfo.Marshalling(parcel);
     EXPECT_EQ(ret, true);
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
     EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(targetInfo.abilityStageCodeLanguage, Constants::CODE_LANGUAGE_1_2);
 
     sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    sourceInfo.abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
     ret = sourceInfo.Marshalling(parcel);
     EXPECT_EQ(ret, true);
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
     EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+    EXPECT_EQ(targetInfo.abilityStageCodeLanguage, Constants::CODE_LANGUAGE_1_1);
 }
 
 /**

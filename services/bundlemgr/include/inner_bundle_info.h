@@ -126,6 +126,7 @@ struct InnerModuleInfo {
     std::string abilitySrcEntryDelegator;
     std::string abilityStageSrcEntryDelegator;
     std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    std::string abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
     Distro distro;
     // all user's value of isRemovable
     // key:userId

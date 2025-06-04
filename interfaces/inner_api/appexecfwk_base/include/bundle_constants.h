@@ -179,6 +179,7 @@ constexpr const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
 constexpr const char* APP_DISTRIBUTION_TYPE_WHITE_LIST = "appDistributionTypeWhiteList";
 
 constexpr const char* CODE_LANGUAGE = "codeLanguage";
+constexpr const char* ABILITY_STAGE_CODE_LANGUAGE = "abilityStageCodeLanguage";
 constexpr const char* CODE_LANGUAGE_1_1 = "1.1";
 constexpr const char* CODE_LANGUAGE_1_2 = "1.2";
 constexpr const char* CODE_LANGUAGE_HYBRID = "hybrid";
