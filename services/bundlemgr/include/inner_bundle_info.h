@@ -2317,6 +2317,7 @@ public:
         const InnerModuleInfo &moduleInfo) const;
     void CheckSoEncryption(const CheckEncryptionParam &checkEncryptionParam, const std::string &requestPackage,
         const InnerModuleInfo &moduleInfo) const;
+    std::string GetModuleCodeLanguage(const std::string &moduleName) const;
 
     void SetMultiAppMode(MultiAppModeData multiAppMode)
     {

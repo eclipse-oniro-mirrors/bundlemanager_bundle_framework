@@ -351,5 +351,10 @@ ErrCode InstalldClient::DeleteDataGroupDirs(const std::vector<std::string> &uuid
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::ClearDir(const std::string &dir)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

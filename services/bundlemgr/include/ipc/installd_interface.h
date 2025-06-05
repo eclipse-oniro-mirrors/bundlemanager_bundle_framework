@@ -463,6 +463,11 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode ClearDir(const std::string &dir)
+    {
+        return ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
+    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

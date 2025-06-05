@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,11 +45,14 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* ABC_RELATIVE_PATH = "ets/modules.abc";
+constexpr const char* STATIC_ABC_RELATIVE_PATH = "ets/modules_static.abc";
 constexpr const char* HEX_PREFIX = "0x";
 constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* PKG_PATH = "pkgPath";
 constexpr const char* ABC_NAME = "abcName";
+constexpr const char* ABC_PATH = "ABC-Path";
+constexpr const char* AN_FILE_NAME = "anFileName";
 constexpr const char* ABC_OFFSET = "abcOffset";
 constexpr const char* ABC_SIZE = "abcSize";
 constexpr const char* PROCESS_UID = "processUid";
@@ -58,6 +61,9 @@ constexpr const char* APP_IDENTIFIER = "appIdentifier";
 constexpr const char* IS_ENCRYPTED_BUNDLE = "isEncryptedBundle";
 constexpr const char* IS_SCREEN_OFF = "isScreenOff";
 constexpr const char* PGO_DIR = "pgoDir";
+constexpr const char* IS_SYS_COMP = "isSysComp";
+constexpr const char* IS_SYS_COMP_FALSE = "0";
+constexpr const char* IS_SYS_COMP_TRUE = "1";
 #if defined(CODE_SIGNATURE_ENABLE)
 constexpr int16_t ERR_AOT_COMPILER_SIGN_FAILED = 10004;
 constexpr int16_t ERR_AOT_COMPILER_CALL_CRASH = 10008;
@@ -94,14 +100,32 @@ bool AOTExecutor::CheckArgs(const AOTArgs &aotArgs) const
     return true;
 }
 
-bool AOTExecutor::GetAbcFileInfo(const std::string &hapPath, uint32_t &offset, uint32_t &length) const
+std::string AOTExecutor::GetAbcRelativePath(const std::string &codeLanguage) const
+{
+    if (codeLanguage == Constants::CODE_LANGUAGE_1_1) {
+        return ABC_RELATIVE_PATH;
+    }
+    if (codeLanguage == Constants::CODE_LANGUAGE_1_2 || codeLanguage == Constants::CODE_LANGUAGE_HYBRID) {
+        return STATIC_ABC_RELATIVE_PATH;
+    }
+    APP_LOGW("invalid codeLanguage : %{public}s", codeLanguage.c_str());
+    return Constants::EMPTY_STRING;
+}
+
+bool AOTExecutor::GetAbcFileInfo(const std::string &hapPath, const std::string &codeLanguage,
+    uint32_t &offset, uint32_t &length) const
 {
     BundleExtractor extractor(hapPath);
     if (!extractor.Init()) {
         APP_LOGE("init BundleExtractor failed");
         return false;
     }
-    if (!extractor.GetFileInfo(ABC_RELATIVE_PATH, offset, length)) {
+    std::string abcRelativePath = GetAbcRelativePath(codeLanguage);
+    if (abcRelativePath.empty()) {
+        APP_LOGE("abcRelativePath empty");
+        return false;
+    }
+    if (!extractor.GetFileInfo(abcRelativePath, offset, length)) {
         APP_LOGE("GetFileInfo failed");
         return false;
     }
@@ -112,18 +136,24 @@ bool AOTExecutor::GetAbcFileInfo(const std::string &hapPath, uint32_t &offset, u
 ErrCode AOTExecutor::PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) const
 {
     APP_LOGD("PrepareArgs begin");
+    if (aotArgs.isSysComp) {
+        APP_LOGD("sysComp, no need to prepare args");
+        completeArgs = aotArgs;
+        return ERR_OK;
+    }
     if (!CheckArgs(aotArgs)) {
         APP_LOGE("param check failed");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     completeArgs = aotArgs;
-    if (!GetAbcFileInfo(completeArgs.hapPath, completeArgs.offset, completeArgs.length)) {
+    if (!GetAbcFileInfo(completeArgs.hapPath, completeArgs.codeLanguage,
+        completeArgs.offset, completeArgs.length)) {
         APP_LOGE("GetAbcFileInfo failed");
         return ERR_APPEXECFWK_INSTALLD_AOT_ABC_NOT_EXIST;
     }
     // handle hsp
     for (auto &hspInfo : completeArgs.hspVector) {
-        (void)GetAbcFileInfo(hspInfo.hapPath, hspInfo.offset, hspInfo.length);
+        (void)GetAbcFileInfo(hspInfo.hapPath, hspInfo.codeLanguage, hspInfo.offset, hspInfo.length);
     }
     APP_LOGD("PrepareArgs success");
     return ERR_OK;
@@ -139,7 +169,7 @@ nlohmann::json AOTExecutor::GetSubjectInfo(const AOTArgs &aotArgs) const
     subject[BUNDLE_NAME] = aotArgs.bundleName;
     subject[MODULE_NAME] = aotArgs.moduleName;
     subject[PKG_PATH] = aotArgs.hapPath;
-    subject[ABC_NAME] = ABC_RELATIVE_PATH;
+    subject[ABC_NAME] = GetAbcRelativePath(aotArgs.codeLanguage);
     subject[ABC_OFFSET] = DecToHex(aotArgs.offset);
     subject[ABC_SIZE] = DecToHex(aotArgs.length);
     subject[PROCESS_UID] = DecToHex(currentProcessUid);
@@ -151,9 +181,23 @@ nlohmann::json AOTExecutor::GetSubjectInfo(const AOTArgs &aotArgs) const
     return subject;
 }
 
-void AOTExecutor::MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap)
+void AOTExecutor::MapSysCompArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap)
 {
-    APP_LOGI("ExecuteInCompilerServiceProcess, args %{public}s", aotArgs.ToString().c_str());
+    APP_LOGI_NOFUNC("MapSysCompArgs : %{public}s", aotArgs.ToString().c_str());
+    argsMap.emplace(IS_SYS_COMP, IS_SYS_COMP_TRUE);
+    argsMap.emplace(ABC_PATH, aotArgs.sysCompPath);
+    argsMap.emplace(AN_FILE_NAME, aotArgs.anFileName);
+    uid_t uid = getuid();
+    if (uid > UINT32_MAX) {
+        APP_LOGE_NOFUNC("invalid uid");
+        return;
+    }
+    argsMap.emplace(PROCESS_UID, DecToHex(uid));
+}
+
+void AOTExecutor::MapHapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap)
+{
+    APP_LOGI_NOFUNC("MapHapArgs : %{public}s", aotArgs.ToString().c_str());
     nlohmann::json subject = GetSubjectInfo(aotArgs);
 
     nlohmann::json objectArray = nlohmann::json::array();
@@ -162,7 +206,8 @@ void AOTExecutor::MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string
         object[BUNDLE_NAME] = hspInfo.bundleName;
         object[MODULE_NAME] = hspInfo.moduleName;
         object[PKG_PATH] = hspInfo.hapPath;
-        object[ABC_NAME] = ABC_RELATIVE_PATH;
+        object[ABC_NAME] = GetAbcRelativePath(hspInfo.codeLanguage);
+        object[Constants::CODE_LANGUAGE] = hspInfo.codeLanguage;
         object[ABC_OFFSET] = DecToHex(hspInfo.offset);
         object[ABC_SIZE] = DecToHex(hspInfo.length);
         objectArray.push_back(object);
@@ -174,11 +219,14 @@ void AOTExecutor::MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string
     argsMap.emplace("compiler-opt-bc-range", aotArgs.optBCRangeList);
     argsMap.emplace("compiler-device-state", std::to_string(aotArgs.isScreenOff));
     argsMap.emplace("compiler-baseline-pgo", std::to_string(aotArgs.isEnableBaselinePgo));
-    argsMap.emplace("ABC-Path", aotArgs.hapPath + ServiceConstants::PATH_SEPARATOR + ABC_RELATIVE_PATH);
+    std::string abcPath = aotArgs.hapPath + ServiceConstants::PATH_SEPARATOR + GetAbcRelativePath(aotArgs.codeLanguage);
+    argsMap.emplace(ABC_PATH, abcPath);
     argsMap.emplace("BundleUid", std::to_string(aotArgs.bundleUid));
     argsMap.emplace("BundleGid", std::to_string(aotArgs.bundleGid));
-    argsMap.emplace("anFileName", aotArgs.anFileName);
+    argsMap.emplace(AN_FILE_NAME, aotArgs.anFileName);
     argsMap.emplace("appIdentifier", aotArgs.appIdentifier);
+    argsMap.emplace(Constants::CODE_LANGUAGE, aotArgs.codeLanguage);
+    argsMap.emplace(IS_SYS_COMP, IS_SYS_COMP_FALSE);
 
     for (const auto &arg : argsMap) {
         APP_LOGI("%{public}s: %{public}s", arg.first.c_str(), arg.second.c_str());
@@ -220,17 +268,21 @@ ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<uint8_
 {
 #if defined(CODE_SIGNATURE_ENABLE)
     std::unordered_map<std::string, std::string> argsMap;
-    MapArgs(aotArgs, argsMap);
-    std::string aotFilePath = ServiceConstants::ARK_CACHE_PATH + aotArgs.bundleName;
-    int32_t ret = InstalldHostImpl().Mkdir(aotFilePath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH,
-        aotArgs.bundleUid, aotArgs.bundleGid);
-    if (ret != ERR_OK) {
-        APP_LOGE("make aot file output directory fail");
-        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    if (aotArgs.isSysComp) {
+        MapSysCompArgs(aotArgs, argsMap);
+    } else {
+        MapHapArgs(aotArgs, argsMap);
+        std::string aotFilePath = ServiceConstants::ARK_CACHE_PATH + aotArgs.bundleName;
+        ErrCode result = InstalldHostImpl().Mkdir(aotFilePath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH,
+            aotArgs.bundleUid, aotArgs.bundleGid);
+        if (result != ERR_OK) {
+            APP_LOGE("make aot file output directory fail");
+            return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+        }
     }
     APP_LOGI("start to aot compiler");
     std::vector<int16_t> fileData;
-    ret = ArkCompiler::AotCompilerClient::GetInstance().AotCompiler(argsMap, fileData);
+    ErrCode ret = ArkCompiler::AotCompilerClient::GetInstance().AotCompiler(argsMap, fileData);
     if (ret == ERR_AOT_COMPILER_SIGN_FAILED) {
         APP_LOGE("aot compiler local signature fail");
         return ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;

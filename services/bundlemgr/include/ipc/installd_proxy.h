@@ -250,6 +250,8 @@ public:
     virtual ErrCode DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId) override;
 
     virtual ErrCode LoadInstalls() override;
+
+    virtual ErrCode ClearDir(const std::string &dir) override;
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);
