@@ -27,6 +27,9 @@ BUNDLE_INSTALL_EXCEPTION:
   SCENE: {type: STRING, desc: boot reboot or createUser}
   ERROR_CODE: {type: INT32, desc: error code}
   APP_INDEX: {type: INT32, desc: app index}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
 
 BUNDLE_UNINSTALL_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle uninstall}
@@ -38,6 +41,9 @@ BUNDLE_UNINSTALL_EXCEPTION:
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
   ERROR_CODE: {type: INT32, desc: error code}
   APP_INDEX: {type: INT32, desc: app index}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
 
 BUNDLE_UPDATE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle update}
@@ -48,6 +54,9 @@ BUNDLE_UPDATE_EXCEPTION:
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
   ERROR_CODE: {type: INT32, desc: error code}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
 
 PRE_BUNDLE_RECOVER_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when prebundle recover}
@@ -58,6 +67,9 @@ PRE_BUNDLE_RECOVER_EXCEPTION:
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: only prebundle}
   ERROR_CODE: {type: INT32, desc: error code}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
 
 BUNDLE_STATE_CHANGE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when state change}

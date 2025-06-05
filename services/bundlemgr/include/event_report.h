@@ -183,6 +183,7 @@ struct EventInfo {
     std::vector<std::string> hashValue;
     std::vector<std::string> totalBundleNames;
     std::vector<std::string> appIds;
+    bool isIntercepted = false;
 
     void Reset()
     {
@@ -344,6 +345,12 @@ public:
      * @param rebuildType DB rebuild type.
      */
     static void SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode);
+
+    /**
+     * @brief process is intercepted.
+     * @param eventInfo event info.
+     */
+    static EventInfo ProcessIsIntercepted(const EventInfo &eventInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
