@@ -81,6 +81,7 @@ const char* JSON_KEY_ABILITY_NAME = "abilityName";
 const char* JSON_KEY_IS_ALWAYS_ACTIVE = "isAlwaysActive";
 const char* JSON_KEY_DISABLED_DESKTOP_BEHAVIORS = "disabledDesktopBehaviors";
 const char* JSON_KEY_TARGET_BUNDLE_NAME = "targetBundleName";
+const char* JSON_KEY_SUB_BUNDLE_NAME = "subBundleName";
 const char* JSON_KEY_KEEP_STATE_DURATION = "keepStateDuration";
 }  // namespace
 
@@ -125,6 +126,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     }
     funInteractionParams.abilityName = formInfo.funInteractionParams.abilityName;
     funInteractionParams.targetBundleName = formInfo.funInteractionParams.targetBundleName;
+    funInteractionParams.subBundleName = formInfo.funInteractionParams.subBundleName;
     funInteractionParams.keepStateDuration = formInfo.funInteractionParams.keepStateDuration;
     sceneAnimationParams.abilityName = formInfo.sceneAnimationParams.abilityName;
     sceneAnimationParams.isAlwaysActive = formInfo.sceneAnimationParams.isAlwaysActive;
@@ -279,6 +281,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     appFormVisibleNotify = parcel.ReadBool();
     funInteractionParams.abilityName = Str16ToStr8(parcel.ReadString16());
     funInteractionParams.targetBundleName = Str16ToStr8(parcel.ReadString16());
+    funInteractionParams.subBundleName = Str16ToStr8(parcel.ReadString16());
     funInteractionParams.keepStateDuration = parcel.ReadInt32();
     sceneAnimationParams.abilityName = Str16ToStr8(parcel.ReadString16());
     sceneAnimationParams.isAlwaysActive = parcel.ReadBool();
@@ -381,6 +384,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, appFormVisibleNotify);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(funInteractionParams.abilityName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(funInteractionParams.targetBundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(funInteractionParams.subBundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, funInteractionParams.keepStateDuration);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.abilityName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, sceneAnimationParams.isAlwaysActive);
@@ -415,6 +419,7 @@ void to_json(nlohmann::json &jsonObject, const FormFunInteractionParams &funInte
 {
     jsonObject[JSON_KEY_ABILITY_NAME] = funInteractionParams.abilityName,
     jsonObject[JSON_KEY_TARGET_BUNDLE_NAME] = funInteractionParams.targetBundleName,
+    jsonObject[JSON_KEY_SUB_BUNDLE_NAME] = funInteractionParams.subBundleName,
     jsonObject[JSON_KEY_KEEP_STATE_DURATION] = funInteractionParams.keepStateDuration;
 }
 
@@ -535,6 +540,12 @@ void from_json(const nlohmann::json &jsonObject, FormFunInteractionParams &funIn
         jsonObjectEnd,
         JSON_KEY_TARGET_BUNDLE_NAME,
         funInteractionParams.targetBundleName,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SUB_BUNDLE_NAME,
+        funInteractionParams.subBundleName,
         false,
         parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
