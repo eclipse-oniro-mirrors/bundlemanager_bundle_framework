@@ -20,6 +20,7 @@
 #include "appexecfwk_errors.h"
 #include "application_info.h"
 #include "app_provision_info.h"
+#include "bundle_additional_info.h"
 #include "bundle_constants.h"
 #include "bundle_dir.h"
 #include "bundle_distribution_type.h"
@@ -1459,6 +1460,12 @@ public:
     }
 
     virtual ErrCode GetAdditionalInfo(const std::string &bundleName, std::string &additionalInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode BatchGetAdditionalInfo(const std::vector<std::string> &bundleNames,
+        std::vector<BundleAdditionalInfo> &additionalInfos)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

@@ -21,6 +21,7 @@
 
 #include "accesstoken_kit.h"
 #include "app_log_wrapper.h"
+#include "bundle_additional_info.h"
 #include "bundle_constants.h"
 #include "bundle_distribution_type.h"
 #include "bundle_event_callback_host.h"
@@ -8668,6 +8669,16 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0003, Function | SmallTest | Le
         EXPECT_EQ(ERR_OK, specifiedDistributionTypes[0].errCode);
     }
 
+    std::vector<BundleAdditionalInfo> additionalInfos;
+    ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    if (additionalInfos.empty()) {
+        EXPECT_FALSE(true);
+    } else {
+        EXPECT_EQ(installParam.additionalInfo, additionalInfos[0].additionalInfo);
+        EXPECT_EQ(ERR_OK, additionalInfos[0].errCode);
+    }
+
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -8717,6 +8728,96 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0004, Function | SmallTest | Le
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: BatchGetAdditionalInfo_0001
+ * @tc.name: test BatchGetAdditionalInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back(BASE_BUNDLE_NAME);
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleAdditionalInfo> additionalInfos;
+        ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+        if (additionalInfos.empty()) {
+            EXPECT_FALSE(true);
+        } else {
+            EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(additionalInfos[0].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        }
+    }
+}
+
+/**
+ * @tc.number: BatchGetAdditionalInfo_0002
+ * @tc.name: test BatchGetAdditionalInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0002, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleAdditionalInfo> additionalInfos;
+        ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    }
+}
+
+/**
+ * @tc.number: BatchGetAdditionalInfo_0003
+ * @tc.name: test BatchGetAdditionalInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0003, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames(1001, "BASE_BUNDLE_NAME");
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleAdditionalInfo> additionalInfos;
+        ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+    }
+}
+
+/**
+ * @tc.number: BatchGetAdditionalInfo_0004
+ * @tc.name: test BatchGetAdditionalInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0004, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back("");
+    bundleNames.push_back("BASE_BUNDLE_NAME");
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleAdditionalInfo> additionalInfos;
+        ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+        if (additionalInfos.empty()) {
+            EXPECT_FALSE(true);
+        } else {
+            EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(additionalInfos[0].bundleName, "");
+            EXPECT_EQ(additionalInfos[1].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        }
+    }
 }
 
 /**

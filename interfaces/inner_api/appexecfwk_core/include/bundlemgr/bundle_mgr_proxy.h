@@ -1015,6 +1015,9 @@ public:
     virtual ErrCode GetAdditionalInfo(const std::string &bundleName,
         std::string &additionalInfo) override;
 
+    virtual ErrCode BatchGetAdditionalInfo(const std::vector<std::string> &bundleNames,
+        std::vector<BundleAdditionalInfo> &additionalInfos) override;
+
     virtual ErrCode GetAdditionalInfoForAllUser(const std::string &bundleName,
         std::string &additionalInfo) override;
 

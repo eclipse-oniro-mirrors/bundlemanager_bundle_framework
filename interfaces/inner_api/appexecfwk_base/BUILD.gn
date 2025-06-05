@@ -56,6 +56,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/app_running_control_rule_result.cpp",
     "src/application_info.cpp",
     "src/bms_json_util.cpp",
+    "src/bundle_additional_info.cpp",
     "src/bundle_dir.cpp",
     "src/bundle_distribution_type.cpp",
     "src/bundle_info.cpp",

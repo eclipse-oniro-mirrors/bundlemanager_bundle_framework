@@ -1695,6 +1695,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetAdditionalInfo_0100, Function | MediumTe
 }
 
 /**
+ * @tc.number: HandleBatchGetAdditionalInfo
+ * @tc.name: test the HandleBatchGetAdditionalInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleBatchGetAdditionalInfo
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetAdditionalInfo_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleBatchGetAdditionalInfo(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
  * @tc.number: HandleSetExtNameOrMIMEToApp
  * @tc.name: test the HandleSetExtNameOrMIMEToApp
  * @tc.desc: 1. system running normally

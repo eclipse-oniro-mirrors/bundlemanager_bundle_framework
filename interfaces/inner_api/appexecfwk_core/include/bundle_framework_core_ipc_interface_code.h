@@ -218,6 +218,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GREAT_OR_EQUAL_API_TARGET_VERSION  = 192,
     BATCH_GET_SPECIFIED_DISTRIBUTED_TYPE = 193,
     GET_APPIDENTIFIER_AND_APPINDEX = 194,
+    BATCH_GET_ADDITIONAL_INFO = 195,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
