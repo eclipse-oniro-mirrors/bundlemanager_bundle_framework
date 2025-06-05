@@ -152,6 +152,7 @@ constexpr const char* MODULE_APP_STARTUP = "appStartup";
 constexpr const char* MODULE_HWASAN_ENABLED = "hwasanEnabled";
 constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
 constexpr const char* MODULE_DEBUG = "debug";
+constexpr const char* MODULE_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 constexpr const char* MODULE_BOOL_SET = "boolSet";
@@ -450,6 +451,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_TSAN_ENABLED, info.tsanEnabled},
         {MODULE_PACKAGE_NAME, info.packageName},
         {MODULE_APP_STARTUP, info.appStartup},
+        {MODULE_CROS_APP_SHARED_CONFIG, info.crossAppSharedConfig},
         {MODULE_ABILITY_SRC_ENTRY_DELEGATOR, info.abilitySrcEntryDelegator},
         {MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR, info.abilityStageSrcEntryDelegator},
         {MODULE_HWASAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
@@ -1006,6 +1008,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_APP_STARTUP,
         info.appStartup,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_CROS_APP_SHARED_CONFIG,
+        info.crossAppSharedConfig,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
@@ -1620,6 +1628,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.routerMap = it->second.routerMap;
     hapInfo.appEnvironments = it->second.appEnvironments;
     hapInfo.packageName = it->second.packageName;
+    hapInfo.crossAppSharedConfig = it->second.crossAppSharedConfig;
     hapInfo.abilitySrcEntryDelegator = it->second.abilitySrcEntryDelegator;
     hapInfo.abilityStageSrcEntryDelegator = it->second.abilityStageSrcEntryDelegator;
     return hapInfo;
@@ -3477,6 +3486,16 @@ const std::string InnerBundleInfo::GetCurModuleName() const
     }
 
     return Constants::EMPTY_STRING;
+}
+
+bool InnerBundleInfo::IsBundleCrossAppSharedConfig() const
+{
+    for (const auto &info : innerModuleInfos_) {
+        if (!info.second.crossAppSharedConfig.empty()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool InnerBundleInfo::IsBundleRemovable() const

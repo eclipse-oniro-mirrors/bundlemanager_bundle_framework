@@ -127,6 +127,7 @@ struct InnerModuleInfo {
     std::string routerMap;
     std::string packageName;
     std::string appStartup;
+    std::string crossAppSharedConfig;
     std::string abilitySrcEntryDelegator;
     std::string abilityStageSrcEntryDelegator;
     Distro distro;
@@ -965,6 +966,7 @@ public:
     }
 
     const std::string GetCurModuleName() const;
+    bool IsBundleCrossAppSharedConfig() const;
 
     std::vector<DefinePermission> GetDefinePermissions() const
     {

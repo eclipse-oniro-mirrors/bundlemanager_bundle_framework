@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -98,6 +98,7 @@ const char* HAP_MODULE_INFO_APP_ENVIRONMENTS = "appEnvironments";
 const char* APP_ENVIRONMENTS_NAME = "name";
 const char* APP_ENVIRONMENTS_VALUE = "value";
 const char* HAP_MODULE_INFO_PACKAGE_NAME = "packageName";
+const char* HAP_MODULE_INFO_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 const char* HAP_MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 const char* HAP_MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 const char* HAP_MODULE_INFO_APP_STARTUP = "appStartup";
@@ -661,6 +662,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         appEnvironments.emplace_back(*appEnvironment);
     }
     packageName = Str16ToStr8(parcel.ReadString16());
+    crossAppSharedConfig = Str16ToStr8(parcel.ReadString16());
     abilitySrcEntryDelegator = Str16ToStr8(parcel.ReadString16());
     abilityStageSrcEntryDelegator = Str16ToStr8(parcel.ReadString16());
     hasIntent = parcel.ReadBool();
@@ -796,6 +798,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(packageName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(crossAppSharedConfig));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilitySrcEntryDelegator));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilityStageSrcEntryDelegator));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasIntent);
@@ -864,6 +867,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_ROUTER_ARRAY, hapModuleInfo.routerArray},
         {HAP_MODULE_INFO_APP_ENVIRONMENTS, hapModuleInfo.appEnvironments},
         {HAP_MODULE_INFO_PACKAGE_NAME, hapModuleInfo.packageName},
+        {HAP_MODULE_INFO_CROS_APP_SHARED_CONFIG, hapModuleInfo.crossAppSharedConfig},
         {HAP_MODULE_ABILITY_SRC_ENTRY_DELEGATOR, hapModuleInfo.abilitySrcEntryDelegator},
         {HAP_MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR, hapModuleInfo.abilityStageSrcEntryDelegator},
         {HAP_MODULE_INFO_APP_STARTUP, hapModuleInfo.appStartup},
@@ -1277,6 +1281,12 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         HAP_MODULE_INFO_PACKAGE_NAME,
         hapModuleInfo.packageName,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_CROS_APP_SHARED_CONFIG,
+        hapModuleInfo.crossAppSharedConfig,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -376,6 +376,7 @@ constexpr const char* MODULE_PROCESS = "process";
 constexpr const char* MODULE_MAIN_ELEMENT = "mainElement";
 constexpr const char* MODULE_DEVICE_TYPES = "deviceTypes";
 constexpr const char* MODULE_DEVICE_FEATURES = "deviceFeatures";
+constexpr const char* MODULE_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 constexpr const char* MODULE_HNP_PACKAGE = "hnpPackages";
