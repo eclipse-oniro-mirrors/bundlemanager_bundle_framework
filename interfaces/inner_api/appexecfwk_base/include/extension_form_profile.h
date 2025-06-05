@@ -63,6 +63,7 @@ constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* IS_ALWAYS_ACTIVE = "isAlwaysActive";
 constexpr const char* DISABLED_DESKTOP_BEHAVIORS = "disabledDesktopBehaviors";
 constexpr const char* TARGET_BUNDLE_NAME = "targetBundleName";
+constexpr const char* SUB_BUNDLE_NAME = "subBundleName";
 constexpr const char* KEEP_STATE_DURATION = "keepStateDuration";
 }
 

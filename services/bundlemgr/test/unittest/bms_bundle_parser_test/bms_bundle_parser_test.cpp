@@ -163,6 +163,7 @@ const nlohmann::json CONFIG_JSON = R"(
                         "funInteractionParams": {
                             "abilityName": "GameLoaderExtensionAbility",
                             "targetBundleName": "Game",
+                            "subBundleName": "subGame",
                             "keepStateDuration": 10000
                         },
                         "sceneAnimationParams": {
