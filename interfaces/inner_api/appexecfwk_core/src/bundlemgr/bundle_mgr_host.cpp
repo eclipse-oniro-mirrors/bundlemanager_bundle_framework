@@ -3529,7 +3529,7 @@ ErrCode BundleMgrHost::HandleBatchGetAdditionalInfo(MessageParcel &data, Message
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     std::vector<std::string> bundleNames;
-    for (int i = 0; i < bundleNameCount; i++) {
+    for (int32_t i = 0; i < bundleNameCount; i++) {
         std::string bundleName = data.ReadString();
         bundleNames.push_back(bundleName);
     }

@@ -4094,11 +4094,12 @@ ErrCode BundleMgrProxy::BatchGetAdditionalInfo(const std::vector<std::string> &b
         APP_LOGE("fail to batchGetAdditionalInfo due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteInt32(static_cast<int32_t>(bundleNames.size()))) {
+    int32_t bundleNameCount = static_cast<int32_t>(bundleNames.size());
+    if (!data.WriteInt32(bundleNameCount)) {
         APP_LOGE("fail to batchGetAdditionalInfo due to write bundle name count fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    for (size_t i = 0; i < bundleNames.size(); i++) {
+    for (int32_t i = 0; i < bundleNameCount; i++) {
         if (!data.WriteString(bundleNames[i])) {
             APP_LOGE("write bundleName %{public}zu failed", i);
             return ERR_APPEXECFWK_PARCEL_ERROR;

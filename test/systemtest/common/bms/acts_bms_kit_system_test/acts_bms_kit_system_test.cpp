@@ -8672,9 +8672,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0003, Function | SmallTest | Le
     std::vector<BundleAdditionalInfo> additionalInfos;
     ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
     EXPECT_EQ(ret, ERR_OK);
-    if (additionalInfos.empty()) {
-        EXPECT_FALSE(true);
-    } else {
+    EXPECT_FALSE(additionalInfos.empty());
+    if (!additionalInfos.empty()) {
         EXPECT_EQ(installParam.additionalInfo, additionalInfos[0].additionalInfo);
         EXPECT_EQ(ERR_OK, additionalInfos[0].errCode);
     }
