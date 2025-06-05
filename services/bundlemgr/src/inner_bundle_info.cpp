@@ -388,6 +388,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_METADATA, info.metaData},
         {MODULE_COLOR_MODE, info.colorMode},
         {MODULE_DISTRO, info.distro},
+        {Constants::CODE_LANGUAGE, info.codeLanguage},
+        {Constants::ABILITY_STAGE_CODE_LANGUAGE, info.abilityStageCodeLanguage},
         {MODULE_DESCRIPTION, info.description},
         {MODULE_DESCRIPTION_ID, info.descriptionId},
         {MODULE_ICON, info.icon},
@@ -588,6 +590,18 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::CODE_LANGUAGE,
+        info.codeLanguage,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::ABILITY_STAGE_CODE_LANGUAGE,
+        info.abilityStageCodeLanguage,
+        false,
+        parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_DESCRIPTION,
@@ -1622,6 +1636,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.packageName = it->second.packageName;
     hapInfo.abilitySrcEntryDelegator = it->second.abilitySrcEntryDelegator;
     hapInfo.abilityStageSrcEntryDelegator = it->second.abilityStageSrcEntryDelegator;
+    hapInfo.codeLanguage = it->second.codeLanguage;
+    hapInfo.abilityStageCodeLanguage = it->second.abilityStageCodeLanguage;
     return hapInfo;
 }
 
@@ -2284,6 +2300,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
     appInfo = *baseApplicationInfo_;
+    appInfo.codeLanguage = GetApplicationCodeLanguage();
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
         return;
     }
@@ -2345,6 +2362,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
+    appInfo.codeLanguage = GetApplicationCodeLanguage();
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -2506,6 +2524,7 @@ bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo)
     bundleInfo = *baseBundleInfo_;
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, Constants::ALL_USERID);
     bundleInfo.applicationInfo = *baseApplicationInfo_;
+    bundleInfo.applicationInfo.codeLanguage = GetApplicationCodeLanguage();
     return true;
 }
 
@@ -4164,6 +4183,7 @@ ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
     }
     bundleInfo = *baseBundleInfo_;
     bundleInfo.applicationInfo = *baseApplicationInfo_;
+    bundleInfo.applicationInfo.codeLanguage = GetApplicationCodeLanguage();
     for (const auto &info : innerModuleInfos_) {
         if (info.second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
             auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, Constants::ALL_USERID);
@@ -5189,6 +5209,29 @@ bool InnerBundleInfo::SetInnerModuleAtomicResizeable(const std::string &moduleNa
     }
     innerModuleInfos_.at(moduleName).resizeable = resizeable;
     return true;
+}
+
+std::string InnerBundleInfo::GetApplicationCodeLanguage() const
+{
+    size_t language1_1_cnt = 0;
+    size_t language1_2_cnt = 0;
+    for (const auto& [moduleName, innerModuleInfo] : innerModuleInfos_) {
+        if (innerModuleInfo.codeLanguage == Constants::CODE_LANGUAGE_1_1) {
+            language1_1_cnt++;
+        }
+        if (innerModuleInfo.codeLanguage == Constants::CODE_LANGUAGE_1_2) {
+            language1_2_cnt++;
+        }
+    }
+
+    size_t moduleSize = innerModuleInfos_.size();
+    if (language1_1_cnt == moduleSize) {
+        return Constants::CODE_LANGUAGE_1_1;
+    }
+    if (language1_2_cnt == moduleSize) {
+        return Constants::CODE_LANGUAGE_1_2;
+    }
+    return Constants::CODE_LANGUAGE_HYBRID;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

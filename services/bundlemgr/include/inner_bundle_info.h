@@ -129,6 +129,8 @@ struct InnerModuleInfo {
     std::string appStartup;
     std::string abilitySrcEntryDelegator;
     std::string abilityStageSrcEntryDelegator;
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    std::string abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
     Distro distro;
     // all user's value of isRemovable
     // key:userId
@@ -2331,6 +2333,7 @@ public:
     bool UpdatePluginBundleInfo(const PluginBundleInfo &pluginBundleInfo);
     bool RemovePluginFromUserInfo(const std::string &pluginBundleName, const int32_t userId);
     void GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos) const;
+    std::string GetApplicationCodeLanguage() const;
 
 private:
     bool IsExistLauncherAbility() const;

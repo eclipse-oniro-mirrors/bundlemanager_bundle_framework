@@ -209,6 +209,7 @@ struct Ability {
     std::vector<std::string> continueType;
     std::vector<std::string> continueBundleNames;
     std::string process;
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
 };
 
 struct Extension {
@@ -234,6 +235,7 @@ struct Extension {
     std::string extensionProcessMode;
     std::vector<std::string> dataGroupIds;
     std::string customProcess;
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
 };
 
 struct MultiAppMode {
@@ -328,6 +330,8 @@ struct Module {
     std::vector<AppEnvironment> appEnvironments;
     std::string packageName;
     std::string appStartup;
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    std::string abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
 };
 
 struct ModuleJson {
@@ -682,6 +686,12 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
+        Constants::CODE_LANGUAGE,
+        ability.codeLanguage,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
         ABILITY_START_WINDOW,
         ability.startWindow,
         false,
@@ -865,6 +875,12 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         jsonObjectEnd,
         MODULE_PROCESS,
         extension.customProcess,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::CODE_LANGUAGE,
+        extension.codeLanguage,
         false,
         g_parseResult);
 }
@@ -1633,6 +1649,18 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.hasInsightIntent,
         false,
         g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::CODE_LANGUAGE,
+        module.codeLanguage,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::ABILITY_STAGE_CODE_LANGUAGE,
+        module.abilityStageCodeLanguage,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -2372,6 +2400,7 @@ bool ToAbilityInfo(
     }
     abilityInfo.orientationId = ability.orientationId;
     abilityInfo.process = ability.process;
+    abilityInfo.codeLanguage = ability.codeLanguage;
     APP_LOGI("startWindowIconId %{public}s_%{public}s_%{public}s_%{public}d", abilityInfo.bundleName.c_str(),
         abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(), abilityInfo.startWindowIconId);
     return true;
@@ -2435,6 +2464,7 @@ void ToExtensionInfo(
         extensionInfo.dataGroupIds.emplace_back(dataGroup);
     }
     extensionInfo.customProcess = extension.customProcess;
+    extensionInfo.codeLanguage = extension.codeLanguage;
 }
 
 bool GetPermissions(
@@ -2552,6 +2582,8 @@ bool ToInnerModuleInfo(
     innerModuleInfo.appEnvironments = moduleJson.module.appEnvironments;
     innerModuleInfo.packageName = moduleJson.module.packageName;
     innerModuleInfo.appStartup = moduleJson.module.appStartup;
+    innerModuleInfo.codeLanguage = moduleJson.module.codeLanguage;
+    innerModuleInfo.abilityStageCodeLanguage = moduleJson.module.abilityStageCodeLanguage;
     innerModuleInfo.debug = moduleJson.app.debug;
     innerModuleInfo.abilitySrcEntryDelegator = moduleJson.module.abilitySrcEntryDelegator;
     innerModuleInfo.abilityStageSrcEntryDelegator = moduleJson.module.abilityStageSrcEntryDelegator;
