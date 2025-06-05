@@ -4997,6 +4997,7 @@ bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
         baseApplicationInfo_->nativeLibraryPath;
     pluginBundleInfo.abilityInfos.insert(baseAbilityInfos_.begin(), baseAbilityInfos_.end());
     pluginBundleInfo.appInfo = *baseApplicationInfo_;
+    pluginBundleInfo.appInfo.codeLanguage = GetApplicationCodeLanguage();
     for (const auto &info : innerModuleInfos_) {
         PluginModuleInfo pluginModuleInfo;
         pluginModuleInfo.moduleName = info.second.name;
