@@ -20,6 +20,7 @@
 #include "bundle_mgr_proxy.h"
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"
+#include "process_cache_callback_host.h"
 #include "system_ability_definition.h"
 #include "want.h"
 
@@ -31,9 +32,66 @@ namespace OHOS {
 namespace AppExecFwk {
 
 namespace {
-    const int32_t ERR_CODE = 8388613;
-    const uint32_t ACCESS_TOKEN_ID = 1765341;
+const int32_t ERR_CODE = 8388613;
+const uint32_t ACCESS_TOKEN_ID = 1765341;
+const int32_t MAX_WAITING_TIME = 600;
 }
+
+class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
+public:
+    ProcessCacheCallbackImpl() : cacheStat_(std::make_shared<std::promise<uint64_t>>()),
+        cleanResult_(std::make_shared<std::promise<int32_t>>()) {}
+    ~ProcessCacheCallbackImpl() override
+    {}
+    void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
+    void OnCleanAllBundleCacheFinished(int32_t result) override;
+    uint64_t GetCacheStat();
+    int32_t GetDelRet();
+private:
+    std::shared_ptr<std::promise<uint64_t>> cacheStat_;
+    std::shared_ptr<std::promise<int32_t>> cleanResult_;
+    DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackImpl);
+};
+
+void ProcessCacheCallbackImpl::OnGetAllBundleCacheFinished(uint64_t cacheStat)
+{
+    if (cacheStat_ != nullptr) {
+        cacheStat_->set_value(cacheStat);
+    }
+}
+
+void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(int32_t result)
+{
+    if (cleanResult_ != nullptr) {
+        cleanResult_->set_value(result);
+    }
+}
+
+uint64_t ProcessCacheCallbackImpl::GetCacheStat()
+{
+    if (cacheStat_ != nullptr) {
+        auto future = cacheStat_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return 0;
+        }
+        return future.get();
+    }
+    return 0;
+};
+
+int32_t ProcessCacheCallbackImpl::GetDelRet()
+{
+    if (cleanResult_ != nullptr) {
+        auto future = cleanResult_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return -1;
+        }
+        return future.get();
+    }
+    return -1;
+};
 
 class ICleanCacheCallbackTest : public ICleanCacheCallback {
 public:
@@ -1165,6 +1223,119 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAppIdentifierAndAppIndex_0100, Function | Med
     int32_t appIndex;
     auto res = bundleMgrProxy.GetAppIdentifierAndAppIndex(ACCESS_TOKEN_ID, appIdentifier, appIndex);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetAllFormsInfo_0100
+ * @tc.name: test the GetAllFormsInfo
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllFormsInfo
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAllFormsInfo_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<FormInfo> formInfos;
+    auto result = bundleMgrProxy.GetAllFormsInfo(formInfos);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CleanAllBundleCache_0100
+ * @tc.name: test the CleanAllBundleCache
+ * @tc.desc: 1. system running normally
+ *           2. test CleanAllBundleCache
+ */
+HWTEST_F(BmsBundleMgrProxyTest, CleanAllBundleCache_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    sptr<ProcessCacheCallbackImpl> delCache = new (std::nothrow) ProcessCacheCallbackImpl();
+    auto ret = bundleMgrProxy.CleanAllBundleCache(delCache);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetLaunchWant_0100
+ * @tc.name: test the GetLaunchWant
+ * @tc.desc: 1. system running normally
+ *           2. test GetLaunchWant
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetLaunchWant_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    AAFwk::Want want;
+    auto ret = bundleMgrProxy.GetLaunchWant(want);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetPluginHapModuleInfo_0100
+ * @tc.name: test the GetPluginHapModuleInfo
+ * @tc.desc: 1. system running normally
+ *           2. test GetPluginHapModuleInfo
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetPluginHapModuleInfo_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string hostBundleName;
+    std::string pluginBundleName;
+    std::string pluginModuleName;
+    int32_t userId = 100;
+    HapModuleInfo hapModuleInfo;
+    auto ret = bundleMgrProxy.GetPluginHapModuleInfo(hostBundleName, pluginBundleName, pluginModuleName, userId,
+        hapModuleInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SetShortcutVisibleForSelf_0100
+ * @tc.name: test the SetShortcutVisibleForSelf
+ * @tc.desc: 1. system running normally
+ *           2. test SetShortcutVisibleForSelf
+ */
+HWTEST_F(BmsBundleMgrProxyTest, SetShortcutVisibleForSelf_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string shortcutId;
+    bool visible = true;
+    auto ret = bundleMgrProxy.SetShortcutVisibleForSelf(shortcutId, visible);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllShortcutInfoForSelf_0100
+ * @tc.name: test the GetAllShortcutInfoForSelf
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllShortcutInfoForSelf
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAllShortcutInfoForSelf_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto ret = bundleMgrProxy.GetAllShortcutInfoForSelf(shortcutInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GreatOrEqualTargetAPIVersion_0100
+ * @tc.name: test the GreatOrEqualTargetAPIVersion
+ * @tc.desc: 1. system running normally
+ *           2. test GreatOrEqualTargetAPIVersion
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GreatOrEqualTargetAPIVersion_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    int32_t platformVersion = 1;
+    int32_t minorVersion = 2;
+    int32_t patchVersion = 3;
+    auto ret = bundleMgrProxy.GreatOrEqualTargetAPIVersion(platformVersion, minorVersion, patchVersion);
+    EXPECT_NE(ret, true);
 }
 }
 }
