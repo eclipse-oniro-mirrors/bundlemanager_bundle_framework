@@ -30,15 +30,11 @@ struct RetOptions {
     int32_t strategy;
 };
 
-struct CArrUI8 {
-    uint8_t *data;
-    int32_t len;
-};
-
 extern "C" {
-    FFI_EXPORT int32_t FfiBundleManagerCompressFile(CArrUI8 inFile, CArrUI8 outFile, RetOptions options);
-    FFI_EXPORT int32_t FfiBundleManagerDeCompressFileOptions(CArrUI8 inFile, CArrUI8 outFile, RetOptions options);
-    FFI_EXPORT int32_t FfiBundleManagerDeCompressFile(CArrUI8 inFile, CArrUI8 outFile);
+    FFI_EXPORT int32_t FfiBundleManagerCompressFile(const char* inFile, const char* outFile, RetOptions options);
+    FFI_EXPORT int32_t FfiBundleManagerDeCompressFileOptions(const char* inFile, const char* outFile,
+        RetOptions options);
+    FFI_EXPORT int32_t FfiBundleManagerDeCompressFile(const char* inFile, const char* outFile);
 }
 
 

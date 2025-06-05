@@ -150,6 +150,17 @@ extern "C" {
         std::string cLink(link);
         return BundleManagerImpl::InnerCanOpenLink(link, code);
     }
+
+    uint32_t FfiOHOSGetAPITargetVersion()
+    {
+        AppExecFwk::BundleInfo bundleInfo = BundleManagerImpl::GetBundleInfoForSelf(
+            AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT |
+            AppExecFwk::BundleFlag::GET_BUNDLE_WITH_ABILITIES |
+            AppExecFwk::BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION |
+            AppExecFwk::BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
+            AppExecFwk::BundleFlag::GET_BUNDLE_WITH_HASH_VALUE);
+        return bundleInfo.targetVersion;
+    }
 }
 
 } // BundleManager
