@@ -102,6 +102,8 @@ const char* HAP_MODULE_INFO_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 const char* HAP_MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 const char* HAP_MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 const char* HAP_MODULE_INFO_APP_STARTUP = "appStartup";
+const char* HAP_MODULE_INFO_FORM_EXTENSION_MODULE = "formExtensionModule";
+const char* HAP_MODULE_INFO_FORM_WIDGET_MODULE = "formWidgetModule";
 const char* HAP_MODULE_INFO_HAS_INTENT = "hasIntent";
 const uint32_t MODULE_CAPACITY = 204800; // 200K
 }
@@ -507,6 +509,8 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     hapPath = Str16ToStr8(parcel.ReadString16());
     supportedModes = parcel.ReadInt32();
     appStartup = Str16ToStr8(parcel.ReadString16());
+    formExtensionModule = Str16ToStr8(parcel.ReadString16());
+    formWidgetModule = Str16ToStr8(parcel.ReadString16());
     codeLanguage = parcel.ReadString();
     abilityStageCodeLanguage = parcel.ReadString();
 
@@ -711,6 +715,8 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportedModes);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appStartup));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(formExtensionModule));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(formWidgetModule));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, abilityStageCodeLanguage);
 
@@ -875,6 +881,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_ABILITY_SRC_ENTRY_DELEGATOR, hapModuleInfo.abilitySrcEntryDelegator},
         {HAP_MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR, hapModuleInfo.abilityStageSrcEntryDelegator},
         {HAP_MODULE_INFO_APP_STARTUP, hapModuleInfo.appStartup},
+        {HAP_MODULE_INFO_FORM_EXTENSION_MODULE, hapModuleInfo.formExtensionModule},
+        {HAP_MODULE_INFO_FORM_WIDGET_MODULE, hapModuleInfo.formWidgetModule},
         {HAP_MODULE_INFO_HAS_INTENT, hapModuleInfo.hasIntent},
         {Constants::CODE_LANGUAGE, hapModuleInfo.codeLanguage},
         {Constants::ABILITY_STAGE_CODE_LANGUAGE, hapModuleInfo.abilityStageCodeLanguage}
@@ -1311,6 +1319,18 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         HAP_MODULE_INFO_APP_STARTUP,
         hapModuleInfo.appStartup,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_FORM_EXTENSION_MODULE,
+        hapModuleInfo.formExtensionModule,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_FORM_WIDGET_MODULE,
+        hapModuleInfo.formWidgetModule,
         false,
         parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,

@@ -1444,6 +1444,42 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0025, Function | MediumTest | Lev
 }
 
 /**
+ * @tc.number: GetBundleInfoV9_0026
+ * @tc.name: test query bundle information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.get BundleInfo successfully
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0026, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInfoV9_0026" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    auto getInfoResult = bundleMgrProxy->GetBundleInfoV9(appName,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE), bundleInfo, USERID);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    EXPECT_EQ(bundleInfo.name, appName);
+    EXPECT_FALSE(bundleInfo.hapModuleInfos.empty());
+    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].formExtensionModule.empty());
+    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].formWidgetModule.empty());
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetBundleInfoV9_0026" << std::endl;
+}
+
+/**
  * @tc.number: GetBundleInfos_0100
  * @tc.name: test query bundleinfos
  * @tc.desc: 1.under '/data/test/bms_bundle',there exist three bundles

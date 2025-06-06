@@ -127,6 +127,8 @@ struct InnerModuleInfo {
     std::string routerMap;
     std::string packageName;
     std::string appStartup;
+    std::string formExtensionModule;
+    std::string formWidgetModule;
     std::string crossAppSharedConfig;
     std::string abilitySrcEntryDelegator;
     std::string abilityStageSrcEntryDelegator;
