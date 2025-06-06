@@ -27,14 +27,14 @@ constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
 
 static void StartShortcutSync(ani_env *env, ani_object aniShortcutInfo, ani_object aniStartOptions)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     BusinessErrorAni::ThrowParameterTypeError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, START_SHORTCUT, "");
     return nullptr;
 }
 
 static ani_object GetShortcutInfoSync(ani_env *env, ani_string aniBundleName, ani_double aniUserId)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     BusinessErrorAni::ThrowParameterTypeError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_SHORTCUT_INFO_SYNC, "");
     return nullptr;
 }
