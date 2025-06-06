@@ -3123,7 +3123,7 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
                 std::string moduleName;
                 DeletePreInfoInDb(bundleName, moduleName, true);
                 if (hasBundleInstalled) {
-                    SavePreloadAppUninstallInfo(bundleName, preloadBundleNames);
+                    SavePreloadAppUninstallInfo(loadIter.second, preloadBundleNames);
                 }
             }
 
@@ -3161,7 +3161,7 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
     LOG_I(BMS_TAG_DEFAULT, "Reboot scan and OTA uninstall success");
 }
 
-void BMSEventHandler::SavePreloadAppUninstallInfo(const std::string &bundleName,
+void BMSEventHandler::SavePreloadAppUninstallInfo(const PreInstallBundleInfo &info,
     std::vector<std::string> &preloadBundleNames)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -3169,8 +3169,18 @@ void BMSEventHandler::SavePreloadAppUninstallInfo(const std::string &bundleName,
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
     }
+    std::string bundleName = info.GetBundleName();
+    std::vector<std::string> bundlePaths = info.GetBundlePaths();
+    if (bundlePaths.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "-n %{public}s bundle path is empty.", bundleName.c_str());
+        return;
+    }
+    bool isPreloadApp = std::all_of(bundlePaths.begin(), bundlePaths.end(),
+        [] (const std::string &path) {
+            return path.find(ServiceConstants::PRELOAD_APP_DIR) == 0;
+        });
     bool isBundleExist = dataMgr->IsBundleExist(bundleName);
-    if (!isBundleExist) {
+    if (isPreloadApp && !isBundleExist) {
         preloadBundleNames.emplace_back(bundleName);
     }
 }

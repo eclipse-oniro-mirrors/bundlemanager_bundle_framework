@@ -59,6 +59,7 @@ namespace {
     const std::string BUNDLE_TEST_NAME = "bundleTestName";
     const std::string BUNDLE_TEST_PATH = "/data/app/el1/bundle/public/test/";
     const std::string MODULE_UPDATE_PATH = "/module_update/test/";
+    const std::string PRELOAD_BUNDLE_PATH = "/preload/app/test";
     constexpr const char* SYSTEM_RESOURCES_CAMERA_PATH = "/system/app/Camera";
     constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
     constexpr const char* VERSION_CODE = "versionCode";
@@ -2595,15 +2596,43 @@ HWTEST_F(BmsEventHandlerTest, SavePreloadAppUninstallInfo_0100, Function | Small
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
     std::vector<std::string> preloadBundleNames;
+    PreInstallBundleInfo info;
+    info.SetBundleName(BUNDLE_NAME);
     dataMgr->bundleInfos_.clear();
-    handler->SavePreloadAppUninstallInfo(BUNDLE_NAME, preloadBundleNames);
+    handler->SavePreloadAppUninstallInfo(info, preloadBundleNames);
+    EXPECT_TRUE(preloadBundleNames.empty());
+
+    InnerBundleInfo innerBundleInfo;
+    preloadBundleNames.clear();
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+
+    handler->SavePreloadAppUninstallInfo(info, preloadBundleNames);
+    EXPECT_TRUE(preloadBundleNames.empty());
+}
+
+/**
+ * @tc.number: SavePreloadAppUninstallInfo_0200
+ * @tc.name: SavePreloadAppUninstallInfo
+ * @tc.desc: test SavePreloadAppUninstallInfo
+ */
+HWTEST_F(BmsEventHandlerTest, SavePreloadAppUninstallInfo_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<std::string> preloadBundleNames;
+    PreInstallBundleInfo info;
+    info.SetBundleName(BUNDLE_NAME);
+    dataMgr->bundleInfos_.clear();
+    info.AddBundlePath(PRELOAD_BUNDLE_PATH);
+    handler->SavePreloadAppUninstallInfo(info, preloadBundleNames);
     EXPECT_FALSE(preloadBundleNames.empty());
 
     InnerBundleInfo innerBundleInfo;
     preloadBundleNames.clear();
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
 
-    handler->SavePreloadAppUninstallInfo(BUNDLE_NAME, preloadBundleNames);
+    handler->SavePreloadAppUninstallInfo(info, preloadBundleNames);
     EXPECT_TRUE(preloadBundleNames.empty());
 }
 
