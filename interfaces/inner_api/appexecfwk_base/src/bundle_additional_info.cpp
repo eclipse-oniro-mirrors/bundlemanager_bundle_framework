@@ -22,7 +22,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-
 bool BundleAdditionalInfo::ReadFromParcel(Parcel &parcel)
 {
     bundleName = Str16ToStr8(parcel.ReadString16());
@@ -49,6 +48,5 @@ BundleAdditionalInfo *BundleAdditionalInfo::Unmarshalling(Parcel &parcel)
     }
     return info;
 }
-
 }
 }

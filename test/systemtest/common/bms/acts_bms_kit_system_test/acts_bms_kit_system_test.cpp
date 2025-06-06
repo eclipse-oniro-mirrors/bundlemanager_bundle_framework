@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -8740,17 +8740,12 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0001, Function | SmallTest
     std::vector<std::string> bundleNames;
     bundleNames.push_back(BASE_BUNDLE_NAME);
     ASSERT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    } else {
-        std::vector<BundleAdditionalInfo> additionalInfos;
-        ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
-        if (additionalInfos.empty()) {
-            EXPECT_FALSE(true);
-        } else {
-            EXPECT_EQ(ret, ERR_OK);
-            EXPECT_EQ(additionalInfos[0].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-        }
+    std::vector<BundleAdditionalInfo> additionalInfos;
+    ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+    EXPECT_FALSE(additionalInfos.empty());
+    if (!additionalInfos.empty()) {
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(additionalInfos[0].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
 }
 
@@ -8764,13 +8759,9 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0002, Function | SmallTest
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     std::vector<std::string> bundleNames;
     ASSERT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    } else {
-        std::vector<BundleAdditionalInfo> additionalInfos;
-        ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
-    }
+    std::vector<BundleAdditionalInfo> additionalInfos;
+    ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 
 /**
@@ -8783,13 +8774,9 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0003, Function | SmallTest
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     std::vector<std::string> bundleNames(1001, "BASE_BUNDLE_NAME");
     ASSERT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    } else {
-        std::vector<BundleAdditionalInfo> additionalInfos;
-        ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
-        EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
-    }
+    std::vector<BundleAdditionalInfo> additionalInfos;
+    ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -8804,18 +8791,13 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0004, Function | SmallTest
     bundleNames.push_back("");
     bundleNames.push_back("BASE_BUNDLE_NAME");
     ASSERT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        EXPECT_NE(bundleMgrProxy, nullptr);
-    } else {
-        std::vector<BundleAdditionalInfo> additionalInfos;
-        ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
-        if (additionalInfos.empty()) {
-            EXPECT_FALSE(true);
-        } else {
-            EXPECT_EQ(ret, ERR_OK);
-            EXPECT_EQ(additionalInfos[0].bundleName, "");
-            EXPECT_EQ(additionalInfos[1].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-        }
+    std::vector<BundleAdditionalInfo> additionalInfos;
+    ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+    EXPECT_FALSE(additionalInfos.empty());
+    if (!additionalInfos.empty()) {
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(additionalInfos[0].bundleName, "");
+        EXPECT_EQ(additionalInfos[1].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
 }
 

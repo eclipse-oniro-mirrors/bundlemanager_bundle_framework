@@ -3933,7 +3933,7 @@ ErrCode BundleMgrHostImpl::BatchGetAdditionalInfo(const std::vector<std::string>
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     
     for (const std::string &bundleName : bundleNames) {
