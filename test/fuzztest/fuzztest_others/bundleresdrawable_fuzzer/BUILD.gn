@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -21,10 +21,7 @@ ohos_fuzztest("BundleResDrawableFuzzTest") {
       "../../../fuzztest/fuzztest_others/bundleresdrawable_fuzzer"
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "//third_party/json/include",
-  ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
@@ -69,6 +66,8 @@ ohos_fuzztest("BundleResDrawableFuzzTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "json:nlohmann_json_static",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",

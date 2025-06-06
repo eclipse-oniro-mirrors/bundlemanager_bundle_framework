@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -36,7 +36,6 @@ ohos_systemtest("ExtendResourceManagerProxyTest") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
-    "//third_party/googletest:gtest_main",
   ]
 
   defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
@@ -47,6 +46,8 @@ ohos_systemtest("ExtendResourceManagerProxyTest") {
     "access_token:libtoken_setproc",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
+    "cJSON:cjson",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",

@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -24,7 +24,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -99,6 +99,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -210,7 +211,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -285,6 +286,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -394,7 +396,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -469,6 +471,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -584,7 +587,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -659,6 +662,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -771,7 +775,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -846,6 +850,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -959,7 +964,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -1031,6 +1036,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -1142,7 +1148,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -1203,6 +1209,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",

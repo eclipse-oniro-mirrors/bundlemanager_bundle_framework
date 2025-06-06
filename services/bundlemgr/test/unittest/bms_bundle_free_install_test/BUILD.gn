@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -24,10 +24,7 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "//third_party/json/include",
-  ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -93,6 +90,7 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "json:nlohmann_json_static",
     "jsoncpp:jsoncpp",
     "power_manager:powermgr_client",
     "safwk:api_cache_manager",
@@ -208,10 +206,7 @@ ohos_unittest("BmsBundleFreeInstallTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "//third_party/json/include",
-  ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -279,6 +274,7 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "json:nlohmann_json_static",
     "jsoncpp:jsoncpp",
     "power_manager:powermgr_client",
     "safwk:system_ability_fwk",
