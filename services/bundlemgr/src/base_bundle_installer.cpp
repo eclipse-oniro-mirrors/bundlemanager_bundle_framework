@@ -7489,7 +7489,9 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     }
     // process dynamic icon file
     result = ProcessDynamicIconFileWhenUpdate(oldInfo, oldAppCodePath, realAppCodePath);
-    CHECK_RESULT(result, "copy extend resource to install path failed %{public}d");
+    if (result != ERR_OK) {
+        APP_LOGE("copy extend resource to install path failed %{public}d", result);
+    }
     LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s processBundleCodePath end", bundleName.c_str());
     return ERR_OK;
 }
@@ -7509,6 +7511,7 @@ ErrCode BaseBundleInstaller::ProcessDynamicIconFileWhenUpdate(
     bool isExtResource = false;
     InstalldClient::GetInstance()->IsExistDir(oldExtendResourcePath, isExtResource);
     if (!isExtResource) {
+        APP_LOGW("-n %{public}s old ext_resource path not exist", oldInfo.GetBundleName().c_str());
         return ERR_OK;
     }
     std::string newExtendResourcePath = newPath + ServiceConstants::PATH_SEPARATOR +
