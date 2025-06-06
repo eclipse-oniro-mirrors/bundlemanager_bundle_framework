@@ -7487,7 +7487,48 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     for (const auto &item : newInfos) {
         RemoveTempPathOnlyUsedForSo(item.second);
     }
+    // process dynamic icon file
+    result = ProcessDynamicIconFileWhenUpdate(oldInfo, oldAppCodePath, realAppCodePath);
+    CHECK_RESULT(result, "copy extend resource to install path failed %{public}d");
     LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s processBundleCodePath end", bundleName.c_str());
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ProcessDynamicIconFileWhenUpdate(
+    const InnerBundleInfo &oldInfo,
+    const std::string &oldPath,
+    const std::string &newPath)
+{
+    auto extendResourceInfos = oldInfo.GetExtendResourceInfos();
+    if (extendResourceInfos.empty()) {
+        return ERR_OK;
+    }
+    APP_LOGI("-n %{public}s has dynamic icon, process start", oldInfo.GetBundleName().c_str());
+    std::string oldExtendResourcePath = oldPath + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::EXT_RESOURCE_FILE_PATH;
+    bool isExtResource = false;
+    InstalldClient::GetInstance()->IsExistDir(oldExtendResourcePath, isExtResource);
+    if (!isExtResource) {
+        return ERR_OK;
+    }
+    std::string newExtendResourcePath = newPath + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::EXT_RESOURCE_FILE_PATH;
+    auto result = InstalldClient::GetInstance()->CreateBundleDir(newExtendResourcePath);
+    if (result != ERR_OK) {
+        APP_LOGE("-n %{public}s create ext_resource failed", oldInfo.GetBundleName().c_str());
+        return result;
+    }
+    for (const auto &extendResource : extendResourceInfos) {
+        std::string fileName = ServiceConstants::PATH_SEPARATOR +extendResource.second.moduleName +
+            ServiceConstants::HSP_FILE_SUFFIX;
+        result = InstalldClient::GetInstance()->CopyFile(oldExtendResourcePath + fileName,
+            newExtendResourcePath + fileName);
+        if (result != ERR_OK) {
+            APP_LOGE("-n %{public}s copy ext_resource failed", oldInfo.GetBundleName().c_str());
+            return result;
+        }
+    }
+    APP_LOGI("-n %{public}s has dynamic icon, process end", oldInfo.GetBundleName().c_str());
     return ERR_OK;
 }
 
