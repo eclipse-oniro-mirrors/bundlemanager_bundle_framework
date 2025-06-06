@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -57,12 +57,20 @@ struct StartShortcutCallbackInfo : public BaseCallbackInfo {
     OHOS::AAFwk::StartOptions startOptions;
 };
 
+struct StartShortcutWithReasonCallbackInfo : public BaseCallbackInfo {
+    explicit StartShortcutWithReasonCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    OHOS::AppExecFwk::ShortcutInfo shortcutInfo;
+    std::string reasonMessage;
+    OHOS::AAFwk::StartOptions startOptions;
+};
+
 napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info);
 napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info);
 napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info);
 napi_value GetShortcutInfo(napi_env env, napi_callback_info info);
 napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info);
 napi_value StartShortcut(napi_env env, napi_callback_info info);
+napi_value StartShortcutWithReason(napi_env env, napi_callback_info info);
 }
 }
 #endif
