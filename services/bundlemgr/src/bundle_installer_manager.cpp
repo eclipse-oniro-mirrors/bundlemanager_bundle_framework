@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #include "bundle_installer_manager.h"
 
 #include "app_log_tag_wrapper.h"
+#include "bundle_hitrace_chain.h"
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "datetime_ex.h"
@@ -59,7 +60,9 @@ void BundleInstallerManager::CreateInstallTask(
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
-    auto task = [installer, bundleFilePath, installParam] {
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto task = [installer, bundleFilePath, installParam, traceId] {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Install(bundleFilePath, installParam);
@@ -77,7 +80,9 @@ void BundleInstallerManager::CreateRecoverTask(
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
-    auto task = [installer, bundleName, installParam] {
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto task = [installer, bundleName, installParam, traceId] {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(RECOVER_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Recover(bundleName, installParam);
@@ -95,7 +100,9 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
-    auto task = [installer, bundleFilePaths, installParam] {
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto task = [installer, bundleFilePaths, installParam, traceId] {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Install(bundleFilePaths, installParam);
@@ -117,8 +124,9 @@ void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bu
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
-
-    auto task = [installer, bundleName, installParam] {
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto task = [installer, bundleName, installParam, traceId] {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->InstallByBundleName(bundleName, installParam);
@@ -136,7 +144,9 @@ void BundleInstallerManager::CreateUninstallTask(
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
-    auto task = [installer, bundleName, installParam] {
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto task = [installer, bundleName, installParam, traceId] {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(bundleName, installParam);
@@ -154,7 +164,9 @@ void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, 
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
-    auto task = [installer, bundleName, modulePackage, installParam] {
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto task = [installer, bundleName, modulePackage, installParam, traceId] {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(bundleName, modulePackage, installParam);
@@ -172,7 +184,9 @@ void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstall
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
-    auto task = [installer, uninstallParam] {
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto task = [installer, uninstallParam, traceId] {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(uninstallParam);
@@ -190,7 +204,9 @@ void BundleInstallerManager::CreateUninstallAndRecoverTask(const std::string &bu
         LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
-    auto task = [installer, bundleName, installParam] {
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto task = [installer, bundleName, installParam, traceId] {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->UninstallAndRecover(bundleName, installParam);
