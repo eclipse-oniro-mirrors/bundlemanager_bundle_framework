@@ -2192,6 +2192,9 @@ bool ToApplicationInfo(
     applicationInfo.appEnvironments = app.appEnvironments;
     if (moduleJson.module.type == Profile::MODULE_TYPE_ENTRY) {
         applicationInfo.assetAccessGroups = app.assetAccessGroups;
+    }
+    if (applicationInfo.bundleType == BundleType::APP &&
+        moduleJson.module.type == Profile::MODULE_TYPE_ENTRY) {
         applicationInfo.appPreloadPhase = ToAppPreloadPhase(app.appPreloadPhase);
     }
     // bundleType is app && moduleType is entry or feature
